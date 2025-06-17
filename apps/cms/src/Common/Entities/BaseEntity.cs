@@ -1,4 +1,5 @@
 using System.Reflection;
+using HotChocolate.Types;
 
 namespace GameGuild.Common.Entities;
 
@@ -9,6 +10,55 @@ namespace GameGuild.Common.Entities;
 /// </summary>
 public class BaseEntity : BaseEntity<Guid>
 {
+    /// <summary>
+    /// Unique identifier for the entity
+    /// </summary>
+    [GraphQLType(typeof(NonNullType<UuidType>))]
+    [GraphQLDescription("The unique identifier for the entity (UUID).")]
+    public override Guid Id { get; set; }
+
+    /// <summary>
+    /// Version number for optimistic concurrency control
+    /// </summary>
+    [GraphQLType(typeof(NonNullType<IntType>))]
+    [GraphQLDescription("Version number for optimistic concurrency control.")]
+    public override int Version { get; set; }
+
+    /// <summary>
+    /// Timestamp when the entity was created
+    /// </summary>
+    [GraphQLType(typeof(NonNullType<DateTimeType>))]
+    [GraphQLDescription("The date and time when the entity was created.")]
+    public override DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Timestamp when the entity was last updated
+    /// </summary>
+    [GraphQLType(typeof(NonNullType<DateTimeType>))]
+    [GraphQLDescription("The date and time when the entity was last updated.")]
+    public override DateTime UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Timestamp when the entity was soft-deleted (null if not deleted)
+    /// </summary>
+    [GraphQLType(typeof(DateTimeType))]
+    [GraphQLDescription("The date and time when the entity was soft deleted (null if not deleted).")]
+    public override DateTime? DeletedAt { get; set; }
+
+    /// <summary>
+    /// Whether the entity is soft-deleted
+    /// </summary>
+    [GraphQLType(typeof(NonNullType<BooleanType>))]
+    [GraphQLDescription("Indicates whether the entity has been soft deleted.")]
+    public override bool IsDeleted { get; set; }
+
+    /// <summary>
+    /// The tenant this entity belongs to (null if global)
+    /// </summary>
+    [GraphQLType(typeof(cms.Modules.Tenant.GraphQL.TenantType))]
+    [GraphQLDescription("The tenant this entity belongs to (null if global).")]
+    public override Modules.Tenant.Models.Tenant? Tenant { get; set; }
+
     /// <summary>
     /// Default constructor
     /// </summary>

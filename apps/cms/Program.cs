@@ -151,6 +151,11 @@ builder.Services
     .AddTypeExtension<GameGuild.Modules.Auth.GraphQL.AuthMutations>()
     .AddType<UserType>()
     .AddType<CredentialType>()
+    .AddType<cms.Modules.Tenant.GraphQL.TenantType>()
+    .AddType<cms.Modules.Tenant.GraphQL.TenantPermissionType>()
+    .AddType<cms.Modules.UserProfile.GraphQL.UserProfileType>()
+    // Add permission types
+    .AddType<cms.Common.Entities.ContentTypePermission>();
     .AddType<GameGuild.Modules.Tenant.GraphQL.TenantType>()
     .AddType<GameGuild.Modules.Tenant.GraphQL.TenantPermissionType>()
     .AddType<GameGuild.Modules.UserProfile.GraphQL.UserProfileType>()
