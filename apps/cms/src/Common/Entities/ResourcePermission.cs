@@ -21,7 +21,7 @@ public abstract class ResourcePermission<T> : WithPermissions where T : BaseEnti
     /// <summary>
     /// Navigation property to the resource entity
     /// </summary>
-    [GraphQLType(typeof(ObjectType<T>))]
+    [GraphQLIgnore] // Cannot use generic type parameters in GraphQL attributes
     [GraphQLDescription("The resource this permission applies to")]
     [ForeignKey(nameof(ResourceId))]
     public virtual T Resource { get; set; } = null!;
