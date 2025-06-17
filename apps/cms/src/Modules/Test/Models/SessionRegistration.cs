@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Cms.Models;
+using GameGuild.Models;
 using GameGuild.Common.Entities;
 
 namespace GameGuild.Modules.Test.Models

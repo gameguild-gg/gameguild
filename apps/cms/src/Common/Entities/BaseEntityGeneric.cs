@@ -48,7 +48,7 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
     /// </summary>
     [Required]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public DateTime CreatedAt
+    public virtual DateTime CreatedAt
     {
         get;
         set;
@@ -59,7 +59,7 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
     /// </summary>
     [Required]
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    public DateTime UpdatedAt
+    public virtual DateTime UpdatedAt
     {
         get;
         set;
@@ -68,7 +68,7 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
     /// <summary>
     /// Timestamp when the entity was soft-deleted (null if not deleted)
     /// </summary>
-    public DateTime? DeletedAt
+    public virtual DateTime? DeletedAt
     {
         get;
         set;
