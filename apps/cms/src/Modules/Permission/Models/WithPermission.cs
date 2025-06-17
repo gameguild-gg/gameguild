@@ -1,6 +1,7 @@
-
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq; // do not remove this, it's needed for IQueryable extensions
+using HotChocolate.Types;
 
 // do not remove this, it's needed for IQueryable extensions
 
@@ -120,33 +121,46 @@ public enum PermissionType
 }
 
 // this is a base permission model that can be used to store permissions for any entity
+[ObjectType]
 public class WithPermissions: BaseEntity
 {
+	[GraphQLType(typeof(NonNullType<LongType>))]
+	[GraphQLDescription("Permission flags for bits 0-63")]
 	[Column(TypeName = "bigint")]
-	public ulong PermissionFlags1 { get; set; } = 0; // bits 0-63
+	public ulong PermissionFlags1 { get; set; } = 0;
 	
+	[GraphQLType(typeof(NonNullType<LongType>))]
+	[GraphQLDescription("Permission flags for bits 64-127")]
 	[Column(TypeName = "bigint")]
-	public ulong PermissionFlags2 { get; set; } = 0; // bits 64-127
+	public ulong PermissionFlags2 { get; set; } = 0;
 	
 	/// <summary>
 	/// User relationship - NULL means default permissions
 	/// </summary>
+	[GraphQLType(typeof(UuidType))]
+	[GraphQLDescription("The user ID this permission applies to (null for default permissions)")]
 	public Guid? UserId { get; set; }
 	
 	/// <summary>
 	/// Navigation property to the User entity
 	/// </summary>
+	[GraphQLType(typeof(cms.Modules.User.GraphQL.UserType))]
+	[GraphQLDescription("The user this permission applies to")]
 	[ForeignKey(nameof(UserId))]
 	public virtual Modules.User.Models.User? User { get; set; }
 	
 	/// <summary>
 	/// Tenant relationship - NULL means global defaults
 	/// </summary>
+	[GraphQLType(typeof(UuidType))]
+	[GraphQLDescription("The tenant ID this permission applies to (null for global defaults)")]
 	public Guid? TenantId { get; set; }
 	
 	/// <summary>
 	/// Navigation property to the Tenant entity
 	/// </summary>
+	[GraphQLType(typeof(cms.Modules.Tenant.GraphQL.TenantType))]
+	[GraphQLDescription("The tenant this permission applies to")]
 	[ForeignKey(nameof(TenantId))]
 	public virtual new Modules.Tenant.Models.Tenant? Tenant { get; set; }
 	
@@ -155,6 +169,8 @@ public class WithPermissions: BaseEntity
 	/// If null, permission never expires
 	/// If date has passed, permission is expired
 	/// </summary>
+	[GraphQLType(typeof(DateTimeType))]
+	[GraphQLDescription("When this permission expires (null if it never expires)")]
 	public DateTime? ExpiresAt { get; set; }
 	
 	// Computed properties
@@ -162,26 +178,36 @@ public class WithPermissions: BaseEntity
 	/// <summary>
 	/// Check if the permission is expired based on ExpiresAt date
 	/// </summary>
+	[GraphQLType(typeof(NonNullType<BooleanType>))]
+	[GraphQLDescription("Whether this permission has expired")]
 	public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.UtcNow;
 	
 	/// <summary>
 	/// Check if the permission is valid (not deleted and not expired)
 	/// </summary>
+	[GraphQLType(typeof(NonNullType<BooleanType>))]
+	[GraphQLDescription("Whether this permission is valid (not deleted and not expired)")]
 	public bool IsValid => !IsDeleted && !IsExpired;
 	
 	/// <summary>
 	/// Check if this is a default permission for a specific tenant
 	/// </summary>
+	[GraphQLType(typeof(NonNullType<BooleanType>))]
+	[GraphQLDescription("Whether this is a default permission for a specific tenant")]
 	public bool IsDefaultPermission => UserId == null && TenantId != null;
 	
 	/// <summary>
 	/// Check if this is a global default permission
 	/// </summary>
+	[GraphQLType(typeof(NonNullType<BooleanType>))]
+	[GraphQLDescription("Whether this is a global default permission")]
 	public bool IsGlobalDefaultPermission => UserId == null && TenantId == null;
 	
 	/// <summary>
 	/// Check if this is a user-specific permission
 	/// </summary>
+	[GraphQLType(typeof(NonNullType<BooleanType>))]
+	[GraphQLDescription("Whether this is a user-specific permission")]
 	public bool IsUserPermission => UserId != null;
 
 	public bool HasPermission(PermissionType permission)

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using HotChocolate.Types;
 
 namespace GameGuild.Common.Entities;
 
@@ -12,12 +13,16 @@ public abstract class ResourcePermission<T> : WithPermissions where T : BaseEnti
     /// <summary>
     /// Resource reference - strongly typed to the content entity
     /// </summary>
+    [GraphQLType(typeof(NonNullType<UuidType>))]
+    [GraphQLDescription("The ID of the resource this permission applies to")]
     [Required]
     public Guid ResourceId { get; set; }
     
     /// <summary>
     /// Navigation property to the resource entity
     /// </summary>
+    [GraphQLType(typeof(ObjectType<T>))]
+    [GraphQLDescription("The resource this permission applies to")]
     [ForeignKey(nameof(ResourceId))]
     public virtual T Resource { get; set; } = null!;
     
@@ -26,15 +31,21 @@ public abstract class ResourcePermission<T> : WithPermissions where T : BaseEnti
     /// <summary>
     /// Check if this is a default permission for this resource in a specific tenant
     /// </summary>
+    [GraphQLType(typeof(NonNullType<BooleanType>))]
+    [GraphQLDescription("Whether this is a default permission for this resource in a specific tenant")]
     public bool IsDefaultResourcePermission => UserId == null && TenantId != null;
     
     /// <summary>
     /// Check if this is a global default permission for this resource
     /// </summary>
+    [GraphQLType(typeof(NonNullType<BooleanType>))]
+    [GraphQLDescription("Whether this is a global default permission for this resource")]
     public bool IsGlobalResourceDefault => UserId == null && TenantId == null;
     
     /// <summary>
     /// Check if this is a user-specific permission for this resource
     /// </summary>
+    [GraphQLType(typeof(NonNullType<BooleanType>))]
+    [GraphQLDescription("Whether this is a user-specific permission for this resource")]
     public bool IsUserResourcePermission => UserId != null;
 }
