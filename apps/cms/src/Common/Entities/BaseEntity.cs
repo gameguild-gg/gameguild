@@ -50,12 +50,12 @@ public class BaseEntity : BaseEntity<Guid>
     /// </summary>
     [GraphQLType(typeof(NonNullType<BooleanType>))]
     [GraphQLDescription("Indicates whether the entity has been soft deleted.")]
-    public override bool IsDeleted { get; set; }
+    public override bool IsDeleted => DeletedAt.HasValue;
 
     /// <summary>
     /// The tenant this entity belongs to (null if global)
     /// </summary>
-    [GraphQLType(typeof(cms.Modules.Tenant.GraphQL.TenantType))]
+    [GraphQLType(typeof(GameGuild.Modules.Tenant.GraphQL.TenantType))]
     [GraphQLDescription("The tenant this entity belongs to (null if global).")]
     public override Modules.Tenant.Models.Tenant? Tenant { get; set; }
 

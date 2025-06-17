@@ -144,7 +144,7 @@ public class WithPermissions: BaseEntity
 	/// <summary>
 	/// Navigation property to the User entity
 	/// </summary>
-	[GraphQLType(typeof(cms.Modules.User.GraphQL.UserType))]
+	[GraphQLType(typeof(GameGuild.Modules.User.GraphQL.UserType))]
 	[GraphQLDescription("The user this permission applies to")]
 	[ForeignKey(nameof(UserId))]
 	public virtual Modules.User.Models.User? User { get; set; }
@@ -159,7 +159,7 @@ public class WithPermissions: BaseEntity
 	/// <summary>
 	/// Navigation property to the Tenant entity
 	/// </summary>
-	[GraphQLType(typeof(cms.Modules.Tenant.GraphQL.TenantType))]
+	[GraphQLType(typeof(GameGuild.Modules.Tenant.GraphQL.TenantType))]
 	[GraphQLDescription("The tenant this permission applies to")]
 	[ForeignKey(nameof(TenantId))]
 	public virtual new Modules.Tenant.Models.Tenant? Tenant { get; set; }

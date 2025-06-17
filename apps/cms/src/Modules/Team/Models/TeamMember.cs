@@ -1,6 +1,6 @@
 using GameGuild.Common.Entities;
 
-namespace Cms.Models
+namespace GameGuild.Models
 {
     public class TeamMember : BaseEntity
     {
