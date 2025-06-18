@@ -11,6 +11,12 @@ namespace GameGuild.Modules.Product.Controllers;
 /// <summary>
 /// REST API controller for managing products
 /// Implements 3-layer DAC permission system for all routes
+/// 
+/// DAC Attribute Usage Examples:
+/// - Tenant Level: [RequireTenantPermission(PermissionType.Create)]
+/// - Content-Type Level: [RequireContentTypePermission<ProductEntity>(PermissionType.Read)]
+/// - Resource Level (Preferred): [RequireResourcePermission<ProductEntity>(PermissionType.Update)]
+/// - Resource Level (Explicit): [RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Update)]
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -262,7 +268,7 @@ public class ProductController : ControllerBase
     /// </summary>
     [HttpPut("{id}/visibility")]
     [RequireResourcePermission<ProductEntity>(PermissionType.Edit)]
-    public async Task<ActionResult<ProductEntity>> SetProductVisibility(Guid id, [FromBody] Common.Entities.Visibility visibility)
+    public async Task<ActionResult<ProductEntity>> SetProductVisibility(Guid id, [FromBody] Common.Entities.AccessLevel visibility)
     {
         var product = await _productService.SetVisibilityAsync(id, visibility);
         return Ok(product);
@@ -457,7 +463,7 @@ public class ProductController : ControllerBase
     [RequireContentTypePermission<ProductEntity>(PermissionType.Read)]
     public async Task<ActionResult<int>> GetProductCount(
         [FromQuery] ProductType? type = null, 
-        [FromQuery] Common.Entities.Visibility? visibility = null)
+        [FromQuery] Common.Entities.AccessLevel? visibility = null)
     {
         var count = await _productService.GetProductCountAsync(type, visibility);
         return Ok(count);

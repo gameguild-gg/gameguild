@@ -124,7 +124,7 @@ public class ProductMutations
     /// </summary>
     public async Task<ProductEntity?> SetProductVisibility(
         Guid id,
-        Common.Entities.Visibility visibility,
+        Common.Entities.AccessLevel visibility,
         [Service] IProductService productService)
     {
         return await productService.SetVisibilityAsync(id, visibility);
