@@ -77,8 +77,8 @@ public class ProductType : ObjectType<ProductEntity>
 
         descriptor
             .Field(p => p.Visibility)
-            .Type<NonNullType<EnumType<Common.Entities.Visibility>>>()
-            .Description("The visibility status of the product.");
+            .Type<NonNullType<EnumType<Common.Entities.AccessLevel>>>()
+            .Description("The access level of the product.");
 
         descriptor
             .Field(p => p.IsBundle)

@@ -1,9 +1,9 @@
 namespace GameGuild.Common.Entities;
 
 /// <summary>
-/// Enumeration of visibility statuses for resources
+/// Enumeration of access levels for resources
 /// </summary>
-public enum Visibility
+public enum AccessLevel
 {
     /// <summary>
     /// Resource is private and only visible to owner and explicitly granted users
@@ -17,7 +17,6 @@ public enum Visibility
 
     /// <summary>
     /// Resource is restricted and only visible to users with specific permissions
-    /// </summary>
     Restricted = 2,
 
     /// <summary>
