@@ -193,7 +193,7 @@ public class ProductQueries
     public async Task<int> GetProductCount(
         [Service] IProductService productService,
         ProductTypeEnum? type = null,
-        Common.Entities.Visibility? visibility = null)
+        Common.Entities.AccessLevel? visibility = null)
     {
         return await productService.GetProductCountAsync(type, visibility);
     }
