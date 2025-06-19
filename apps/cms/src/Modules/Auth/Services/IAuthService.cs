@@ -16,6 +16,8 @@ namespace GameGuild.Modules.Auth.Services
 
         Task<SignInResponseDto> GoogleSignInAsync(OAuthSignInRequestDto request);
 
+        Task<SignInResponseDto> GoogleIdTokenSignInAsync(GoogleIdTokenRequestDto request);
+
         Task<string> GetGitHubAuthUrlAsync(string redirectUri);
 
         Task<string> GetGoogleAuthUrlAsync(string redirectUri);

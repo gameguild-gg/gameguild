@@ -7,6 +7,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { WebVitals } from '@/components/analytics/web-vitals';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { Web3Provider } from '@/components/web3/web3-context';
+import { TenantProvider } from '@/lib/context/TenantContext';
 import { auth } from '@/auth';
 import { environment } from '@/configs/environment';
 import { routing } from '@/i18n/routing';
@@ -43,14 +44,15 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
           <GoogleAnalytics gaId={environment.googleAnalyticsMeasurementId} />
           <GoogleTagManager gtmId={environment.googleTagManagerId} />
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            {/*TODO: see if the session has a user and the user is authenticated by web3 and if so set the account address*/}
-            <Web3Provider>
+            {/*TODO: see if the session has a user and the user is authenticated by web3 and if so set the account address*/}            <Web3Provider>
               <SessionProvider session={session}>
-                {/*TODO: Move this to a better place*/}
-                {/*<ThemeToggle />*/}
-                {children}
-                {/*TODO: Move this to a better place*/}
-                {/*<FeedbackFloatingButton />*/}
+                <TenantProvider>
+                  {/*TODO: Move this to a better place*/}
+                  {/*<ThemeToggle />*/}
+                  {children}
+                  {/*TODO: Move this to a better place*/}
+                  {/*<FeedbackFloatingButton />*/}
+                </TenantProvider>
               </SessionProvider>
             </Web3Provider>
           </ThemeProvider>

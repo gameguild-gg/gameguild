@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using GameGuild.Data;
 using Microsoft.EntityFrameworkCore;
+using GameGuild.Modules.Auth.Attributes;
 
 namespace GameGuild.Common.Controllers;
 
@@ -16,9 +17,10 @@ public class HealthController : ControllerBase
     }
 
     /// <summary>
-    /// Health check endpoint
+    /// Health check endpoint - publicly accessible for connectivity testing
     /// </summary>
     [HttpGet]
+    [Public]
     public async Task<IActionResult> GetHealth()
     {
         try

@@ -170,7 +170,7 @@ namespace GameGuild.Modules.Auth.Services
             return walletLine?.Substring("Wallet: ".Length) ?? "";
         }
 
-        private async Task<bool> VerifyEthereumSignature(string message, string signature, string walletAddress)
+        private Task<bool> VerifyEthereumSignature(string message, string signature, string walletAddress)
         {
             try
             {
@@ -180,30 +180,30 @@ namespace GameGuild.Modules.Auth.Services
                 // Basic validation checks
                 if (string.IsNullOrEmpty(signature) || signature.Length < 132) // 0x + 130 hex chars
                 {
-                    return false;
+                    return Task.FromResult(false);
                 }
 
                 if (!signature.StartsWith("0x"))
                 {
-                    return false;
+                    return Task.FromResult(false);
                 }
 
                 if (!IsValidEthereumAddress(walletAddress))
                 {
-                    return false;
+                    return Task.FromResult(false);
                 }
 
                 // For now, return true if basic validation passes
                 // TODO: Implement actual signature verification using Nethereum
                 _logger.LogInformation("Web3 signature verification for wallet {WalletAddress} - basic validation passed", walletAddress);
 
-                return true;
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error verifying Web3 signature for wallet {WalletAddress}", walletAddress);
 
-                return false;
+                return Task.FromResult(false);
             }
         }
 

@@ -17,7 +17,7 @@ namespace GameGuild.Tests.Modules.Auth.Services
             var configData = new Dictionary<string, string>
             {
                 {
-                    "Jwt:Key", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"
+                    "Jwt:SecretKey", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"
                 },
                 {
                     "Jwt:Issuer", "test-issuer"
@@ -26,10 +26,10 @@ namespace GameGuild.Tests.Modules.Auth.Services
                     "Jwt:Audience", "test-audience"
                 },
                 {
-                    "Jwt:AccessTokenExpiryMinutes", "15"
+                    "Jwt:ExpiryInMinutes", "15"
                 },
                 {
-                    "Jwt:RefreshTokenExpiryDays", "7"
+                    "Jwt:RefreshTokenExpiryInDays", "7"
                 }
             };
 
@@ -132,7 +132,7 @@ namespace GameGuild.Tests.Modules.Auth.Services
             var expiredConfigData = new Dictionary<string, string>
             {
                 {
-                    "Jwt:Key", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"
+                    "Jwt:SecretKey", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"
                 },
                 {
                     "Jwt:Issuer", "test-issuer"
@@ -141,10 +141,10 @@ namespace GameGuild.Tests.Modules.Auth.Services
                     "Jwt:Audience", "test-audience"
                 },
                 {
-                    "Jwt:AccessTokenExpiryMinutes", "-1"
+                    "Jwt:ExpiryInMinutes", "-1"
                 }, // Expired
                 {
-                    "Jwt:RefreshTokenExpiryDays", "7"
+                    "Jwt:RefreshTokenExpiryInDays", "7"
                 }
             };
 
@@ -164,6 +164,9 @@ namespace GameGuild.Tests.Modules.Auth.Services
             };
             string expiredToken = expiredTokenService.GenerateAccessToken(user, roles);
 
+            // Wait a moment to ensure the token is truly expired
+            Thread.Sleep(100);
+
             // Act
             ClaimsPrincipal? principal = _jwtTokenService.ValidateToken(expiredToken);
 
@@ -178,7 +181,7 @@ namespace GameGuild.Tests.Modules.Auth.Services
             var expiredConfigData = new Dictionary<string, string>
             {
                 {
-                    "Jwt:Key", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"
+                    "Jwt:SecretKey", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"
                 },
                 {
                     "Jwt:Issuer", "test-issuer"
@@ -187,10 +190,10 @@ namespace GameGuild.Tests.Modules.Auth.Services
                     "Jwt:Audience", "test-audience"
                 },
                 {
-                    "Jwt:AccessTokenExpiryMinutes", "-1"
+                    "Jwt:ExpiryInMinutes", "-1"
                 }, // Expired
                 {
-                    "Jwt:RefreshTokenExpiryDays", "7"
+                    "Jwt:RefreshTokenExpiryInDays", "7"
                 }
             };
 
@@ -340,7 +343,7 @@ namespace GameGuild.Tests.Modules.Auth.Services
             var expiredConfigData = new Dictionary<string, string>
             {
                 {
-                    "Jwt:Key", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"
+                    "Jwt:SecretKey", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"
                 },
                 {
                     "Jwt:Issuer", "test-issuer"
@@ -349,10 +352,10 @@ namespace GameGuild.Tests.Modules.Auth.Services
                     "Jwt:Audience", "test-audience"
                 },
                 {
-                    "Jwt:AccessTokenExpiryMinutes", "-1"
+                    "Jwt:ExpiryInMinutes", "-1"
                 }, // Expired
                 {
-                    "Jwt:RefreshTokenExpiryDays", "7"
+                    "Jwt:RefreshTokenExpiryInDays", "7"
                 }
             };
 
