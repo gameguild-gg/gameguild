@@ -1,6 +1,4 @@
 using Xunit;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using System.Text.Json;
 using GameGuild.Data;
@@ -63,7 +61,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
         
-        var token = await CreateJWTTokenForUserAsync(admin, tenant);
+        var token = await CreateJwtTokenForUserAsync(admin, tenant);
         SetAuthorizationHeader(token);
 
         var mutation = @"
@@ -92,7 +90,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var response = await PostGraphQLAsync(request);
+        var response = await PostGraphQlAsync(request);
 
         // Assert
         if (response.IsSuccessStatusCode)
@@ -126,12 +124,14 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         var tenant = await CreateTestTenantAsync();
         
         // Grant specific permissions
-        await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id, new[] { 
+        await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id,
+        [
             PermissionType.Read, 
-            PermissionType.Comment 
-        });
+            PermissionType.Comment
+        ]
+        );
         
-        var token = await CreateJWTTokenForUserAsync(user, tenant);
+        var token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
 
         var query = @"
@@ -142,7 +142,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         // Test for granted permission
         var requestGranted = new
         {
-            query = query,
+            query,
             variables = new
             {
                 userId = user.Id,
@@ -154,7 +154,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         // Test for non-granted permission
         var requestNotGranted = new
         {
-            query = query,
+            query,
             variables = new
             {
                 userId = user.Id,
@@ -164,8 +164,8 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var responseGranted = await PostGraphQLAsync(requestGranted);
-        var responseNotGranted = await PostGraphQLAsync(requestNotGranted);
+        var responseGranted = await PostGraphQlAsync(requestGranted);
+        var responseNotGranted = await PostGraphQlAsync(requestNotGranted);
 
         // Assert
         if (responseGranted.IsSuccessStatusCode)
@@ -209,7 +209,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         
         await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id, grantedPermissions);
         
-        var token = await CreateJWTTokenForUserAsync(user, tenant);
+        var token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
 
         var query = @"
@@ -219,7 +219,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
 
         var request = new
         {
-            query = query,
+            query,
             variables = new
             {
                 userId = user.Id,
@@ -228,7 +228,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var response = await PostGraphQLAsync(request);
+        var response = await PostGraphQlAsync(request);
 
         // Assert
         if (response.IsSuccessStatusCode)
@@ -264,7 +264,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
         
-        var token = await CreateJWTTokenForUserAsync(admin, tenant);
+        var token = await CreateJwtTokenForUserAsync(admin, tenant);
         SetAuthorizationHeader(token);
 
         var grantPermissionDto = new
@@ -309,13 +309,15 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         var tenant = await CreateTestTenantAsync();
         
         // First, grant permissions
-        await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id, new[] { 
+        await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id,
+        [
             PermissionType.Read, 
             PermissionType.Edit, 
-            PermissionType.Comment 
-        });
+            PermissionType.Comment
+        ]
+        );
         
-        var token = await CreateJWTTokenForUserAsync(admin, tenant);
+        var token = await CreateJwtTokenForUserAsync(admin, tenant);
         SetAuthorizationHeader(token);
 
         var revokePermissionDto = new
@@ -352,11 +354,13 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
         
-        await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id, new[] { 
-            PermissionType.Read 
-        });
+        await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id,
+        [
+            PermissionType.Read
+        ]
+        );
         
-        var token = await CreateJWTTokenForUserAsync(user, tenant);
+        var token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
 
         // Act - Check granted permission
@@ -393,7 +397,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         var tenant = await CreateTestTenantAsync();
         var comment = await CreateTestCommentAsync();
         
-        var token = await CreateJWTTokenForUserAsync(user, tenant);
+        var token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
 
         var mutation = @"
@@ -423,7 +427,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var response = await PostGraphQLAsync(request);
+        var response = await PostGraphQlAsync(request);
 
         // Assert
         if (response.IsSuccessStatusCode)
@@ -460,9 +464,11 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         
         // Grant owner permission to share
         await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
-            owner.Id, tenant.Id, comment.Id, new[] { PermissionType.Share, PermissionType.Edit });
+            owner.Id, tenant.Id, comment.Id,
+            [PermissionType.Share, PermissionType.Edit]
+        );
         
-        var token = await CreateJWTTokenForUserAsync(owner, tenant);
+        var token = await CreateJwtTokenForUserAsync(owner, tenant);
         SetAuthorizationHeader(token);
 
         var shareResourceDto = new
@@ -506,10 +512,10 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         var tenant = await CreateTestTenantAsync();
         
         // Set up permission hierarchy
-        await _permissionService.SetTenantDefaultPermissionsAsync(tenant.Id, new[] { PermissionType.Read });
-        await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id, new[] { PermissionType.Comment });
+        await _permissionService.SetTenantDefaultPermissionsAsync(tenant.Id, [PermissionType.Read]);
+        await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id, [PermissionType.Comment]);
         
-        var token = await CreateJWTTokenForUserAsync(user, tenant);
+        var token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
 
         var query = @"
@@ -519,7 +525,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
 
         var request = new
         {
-            query = query,
+            query,
             variables = new
             {
                 userId = user.Id,
@@ -528,7 +534,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var response = await PostGraphQLAsync(request);
+        var response = await PostGraphQlAsync(request);
 
         // Assert
         if (response.IsSuccessStatusCode)
@@ -566,11 +572,15 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         
         // Grant permissions to some resources
         await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
-            user.Id, tenant.Id, comment1.Id, new[] { PermissionType.Read, PermissionType.Edit });
+            user.Id, tenant.Id, comment1.Id,
+            [PermissionType.Read, PermissionType.Edit]
+        );
         await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
-            user.Id, tenant.Id, comment3.Id, new[] { PermissionType.Read });
+            user.Id, tenant.Id, comment3.Id,
+            [PermissionType.Read]
+        );
         
-        var token = await CreateJWTTokenForUserAsync(user, tenant);
+        var token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
 
         var bulkCheckDto = new
@@ -650,12 +660,14 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         
         // Grant admin permissions (in real app, this would be done differently)
         var tenant = await CreateTestTenantAsync();
-        await _permissionService.GrantTenantPermissionAsync(admin.Id, tenant.Id, new[] { 
+        await _permissionService.GrantTenantPermissionAsync(admin.Id, tenant.Id,
+        [
             PermissionType.Draft, 
             PermissionType.Edit, 
             PermissionType.Delete,
             PermissionType.Read
-        });
+        ]
+        );
         
         return admin;
     }
@@ -690,7 +702,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         return comment;
     }
 
-    private async Task<string> CreateJWTTokenForUserAsync(User user, Tenant tenant)
+    private async Task<string> CreateJwtTokenForUserAsync(User user, Tenant tenant)
     {
         var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
         
@@ -716,7 +728,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
-    private async Task<HttpResponseMessage> PostGraphQLAsync(object request)
+    private async Task<HttpResponseMessage> PostGraphQlAsync(object request)
     {
         var json = JsonSerializer.Serialize(request, new JsonSerializerOptions
         {

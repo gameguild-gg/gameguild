@@ -109,12 +109,12 @@ public class CredentialsController : ControllerBase
         var credential = new Credential(
             new
             {
-                UserId = createDto.UserId,
-                Type = createDto.Type,
-                Value = createDto.Value,
-                Metadata = createDto.Metadata,
-                ExpiresAt = createDto.ExpiresAt,
-                IsActive = createDto.IsActive
+                createDto.UserId,
+                createDto.Type,
+                createDto.Value,
+                createDto.Metadata,
+                createDto.ExpiresAt,
+                createDto.IsActive
             }
         );
 

@@ -72,10 +72,10 @@ public class WithPermissionTests
         var entity = new TestPermissionEntity();
 
         // Act - Test permission in second 64-bit flag
-        entity.AddPermission(PermissionType.SMS); // SMS = 70, should be in PermissionFlags2
+        entity.AddPermission(PermissionType.Sms); // SMS = 70, should be in PermissionFlags2
 
         // Assert
-        Assert.True(entity.HasPermission(PermissionType.SMS));
+        Assert.True(entity.HasPermission(PermissionType.Sms));
         Assert.Equal(0UL, entity.PermissionFlags1); // Should remain 0
         Assert.NotEqual(0UL, entity.PermissionFlags2); // Should be set
     }
@@ -235,11 +235,11 @@ public class WithPermissionTests
         
         // Act - Add permissions across both flag boundaries
         entity.AddPermission(PermissionType.Read); // Low bit (1)
-        entity.AddPermission(PermissionType.SMS);  // High bit (70)
+        entity.AddPermission(PermissionType.Sms);  // High bit (70)
 
         // Assert
         Assert.True(entity.HasPermission(PermissionType.Read));
-        Assert.True(entity.HasPermission(PermissionType.SMS));
+        Assert.True(entity.HasPermission(PermissionType.Sms));
         Assert.NotEqual(0UL, entity.PermissionFlags1);
         Assert.NotEqual(0UL, entity.PermissionFlags2);
     }

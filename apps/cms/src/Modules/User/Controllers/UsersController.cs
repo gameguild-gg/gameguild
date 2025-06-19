@@ -91,7 +91,7 @@ public class UsersController : ControllerBase
         var user = new Models.User(
             new
             {
-                Name = createUserDto.Name, Email = createUserDto.Email, IsActive = true
+                createUserDto.Name, createUserDto.Email, IsActive = true
             }
         );
 

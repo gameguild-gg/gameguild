@@ -6,7 +6,7 @@ using Newtonsoft.Json.Serialization;
 /// </summary>
 public static class SnakeCase
 {
-    private static readonly SnakeCaseNamingStrategy _namingStrategy = new();
+    private static readonly SnakeCaseNamingStrategy NamingStrategy = new();
     private static IMemoryCache _cache;
 
     static SnakeCase()
@@ -38,7 +38,7 @@ public static class SnakeCase
             entry.Size = 1; // Each entry counts as 1 towards the size limit
             entry.SlidingExpiration = TimeSpan.FromMinutes(30); // Expire after 30 minutes of inactivity
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2); // Absolute expiration after 2 hours
-            return _namingStrategy.GetPropertyName(name, false);
+            return NamingStrategy.GetPropertyName(name, false);
         }) ?? string.Empty;
     }
 
@@ -71,7 +71,7 @@ public static class SnakeCase
             entry.Size = 1; // Each entry counts as 1 towards the size limit
             entry.SlidingExpiration = TimeSpan.FromMinutes(30); // Expire after 30 minutes of inactivity
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2); // Absolute expiration after 2 hours
-            return _namingStrategy.GetPropertyName(type.Name, false);
+            return NamingStrategy.GetPropertyName(type.Name, false);
         }) ?? string.Empty;
     }
 
@@ -87,7 +87,7 @@ public static class SnakeCase
             return string.Empty;
         }
 
-        return _namingStrategy.GetPropertyName(name, false);
+        return NamingStrategy.GetPropertyName(name, false);
     }
 
     /// <summary>
@@ -99,7 +99,7 @@ public static class SnakeCase
     {
         if (names == null || names.Length == 0)
         {
-            return Array.Empty<string>();
+            return [];
         }
 
         var result = new string[names.Length];
@@ -119,7 +119,7 @@ public static class SnakeCase
     {
         if (types == null || types.Length == 0)
         {
-            return Array.Empty<string>();
+            return [];
         }
 
         var result = new string[types.Length];

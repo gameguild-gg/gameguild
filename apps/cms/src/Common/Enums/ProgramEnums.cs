@@ -104,7 +104,7 @@ public enum GradingMethod
     Peer,
 
     [Description("Automated grading using AI algorithms")]
-    AI,
+    Ai,
 
     [Description("Graded automatically using predefined test cases")]
     AutomatedTests

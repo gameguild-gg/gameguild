@@ -1,5 +1,4 @@
 using System.Reflection;
-using HotChocolate.Types;
 
 namespace GameGuild.Common.Entities;
 
