@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Tenant.Middleware;
 public class TenantContextMiddleware
 {
     private readonly RequestDelegate _next;
-    private const string TENANT_HEADER = "X-Tenant-ID";
+    private const string TenantHeader = "X-Tenant-ID";
 
     public TenantContextMiddleware(RequestDelegate next)
     {
@@ -19,7 +19,7 @@ public class TenantContextMiddleware
     public async Task InvokeAsync(HttpContext context, ITenantContextService tenantContextService)
     {
         // Extract tenant ID from header
-        string? tenantHeader = context.Request.Headers[TENANT_HEADER];
+        string? tenantHeader = context.Request.Headers[TenantHeader];
         
         // Get authenticated user (if any)
         ClaimsPrincipal? user = context.User.Identity?.IsAuthenticated == true ? context.User : null;

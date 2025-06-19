@@ -1,7 +1,5 @@
 using Xunit;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
 using GameGuild.Data;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
@@ -56,10 +54,10 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
         var contentType = "Comment";
 
         // Set content-type permission (Allow Read)
-        await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, new[] { PermissionType.Read });
+        await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, [PermissionType.Read]);
         
         // Set resource-specific permission (Deny by not granting Read, but grant Edit)
-        await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(userId, tenantId, resourceId, new[] { PermissionType.Edit });
+        await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(userId, tenantId, resourceId, [PermissionType.Edit]);
 
         // Act
         var hasContentTypeRead = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
@@ -81,10 +79,10 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
         var contentType = "Comment";
 
         // Set tenant-wide permission (Allow Read and Edit)
-        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, new[] { PermissionType.Read, PermissionType.Edit });
+        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Read, PermissionType.Edit]);
         
         // Set content-type permission (Only Read, no Edit)
-        await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, new[] { PermissionType.Read });
+        await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, [PermissionType.Read]);
 
         // Act
         var hasTenantRead = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
@@ -107,10 +105,10 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
         var tenantId = Guid.NewGuid();
 
         // Set global default permissions
-        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, new[] { PermissionType.Read });
+        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, [PermissionType.Read]);
         
         // Set tenant default permissions
-        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, new[] { PermissionType.Comment });
+        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, [PermissionType.Comment]);
 
         // User has no specific permissions
 
@@ -133,13 +131,13 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
         var tenantId = Guid.NewGuid();
 
         // Set global default permissions
-        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, new[] { PermissionType.Read, PermissionType.Comment });
+        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, [PermissionType.Read, PermissionType.Comment]);
         
         // Set tenant default permissions
-        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, new[] { PermissionType.Read, PermissionType.Edit });
+        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, [PermissionType.Read, PermissionType.Edit]);
         
         // Set user-specific permissions (different set)
-        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, new[] { PermissionType.Vote });
+        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Vote]);
 
         // Act
         var hasRead = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
@@ -171,22 +169,22 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
         var contentType = "Article";
 
         // Set global defaults (everyone can read)
-        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, new[] { PermissionType.Read });
+        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, [PermissionType.Read]);
         
         // Set tenant defaults for Article content type (basic commenting)
-        await _permissionService.GrantContentTypePermissionAsync(userId: null, tenantId, contentType, new[] { PermissionType.Comment });
+        await _permissionService.GrantContentTypePermissionAsync(userId: null, tenantId, contentType, [PermissionType.Comment]);
         
         // Author: tenant-wide permissions for content creation
-        await _permissionService.GrantTenantPermissionAsync(authorId, tenantId, new[] { PermissionType.Draft, PermissionType.Submit });
+        await _permissionService.GrantTenantPermissionAsync(authorId, tenantId, [PermissionType.Draft, PermissionType.Submit]);
         
         // Author: content-type permissions for articles
-        await _permissionService.GrantContentTypePermissionAsync(authorId, tenantId, contentType, new[] { PermissionType.Edit, PermissionType.Delete });
+        await _permissionService.GrantContentTypePermissionAsync(authorId, tenantId, contentType, [PermissionType.Edit, PermissionType.Delete]);
         
         // Editor: content-type permissions for review
-        await _permissionService.GrantContentTypePermissionAsync(editorId, tenantId, contentType, new[] { PermissionType.Review, PermissionType.Approve, PermissionType.Publish });
+        await _permissionService.GrantContentTypePermissionAsync(editorId, tenantId, contentType, [PermissionType.Review, PermissionType.Approve, PermissionType.Publish]);
         
         // Admin: tenant-wide admin permissions
-        await _permissionService.GrantTenantPermissionAsync(adminId, tenantId, new[] { PermissionType.Review, PermissionType.Ban, PermissionType.HardDelete });
+        await _permissionService.GrantTenantPermissionAsync(adminId, tenantId, [PermissionType.Review, PermissionType.Ban, PermissionType.HardDelete]);
 
         // Act & Assert - Test various permission scenarios
         
@@ -236,10 +234,10 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
         var contentType = "Comment";
 
         // Set content-type permissions for all comments
-        await _permissionService.GrantContentTypePermissionAsync(moderatorId, tenantId, contentType, new[] { PermissionType.Review, PermissionType.Hide });
+        await _permissionService.GrantContentTypePermissionAsync(moderatorId, tenantId, contentType, [PermissionType.Review, PermissionType.Hide]);
         
         // Grant special permissions for sensitive comment
-        await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(moderatorId, tenantId, sensitiveCommentId, new[] { PermissionType.Delete, PermissionType.Ban });
+        await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(moderatorId, tenantId, sensitiveCommentId, [PermissionType.Delete, PermissionType.Ban]);
 
         // Act & Assert
         
@@ -278,13 +276,13 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
         var resource2Id = Guid.NewGuid();
 
         // Grant permissions in tenant 1
-        await _permissionService.GrantTenantPermissionAsync(userId, tenant1Id, new[] { PermissionType.Read, PermissionType.Edit });
-        await _permissionService.GrantContentTypePermissionAsync(userId, tenant1Id, contentType, new[] { PermissionType.Delete });
-        await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(userId, tenant1Id, resource1Id, new[] { PermissionType.Review });
+        await _permissionService.GrantTenantPermissionAsync(userId, tenant1Id, [PermissionType.Read, PermissionType.Edit]);
+        await _permissionService.GrantContentTypePermissionAsync(userId, tenant1Id, contentType, [PermissionType.Delete]);
+        await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(userId, tenant1Id, resource1Id, [PermissionType.Review]);
 
         // Grant different permissions in tenant 2
-        await _permissionService.GrantTenantPermissionAsync(userId, tenant2Id, new[] { PermissionType.Read });
-        await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(userId, tenant2Id, resource2Id, new[] { PermissionType.Comment });
+        await _permissionService.GrantTenantPermissionAsync(userId, tenant2Id, [PermissionType.Read]);
+        await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(userId, tenant2Id, resource2Id, [PermissionType.Comment]);
 
         // Act & Assert - Verify tenant isolation
         
@@ -322,7 +320,7 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
         Assert.True(membership.IsActiveMembership);
 
         // Grant additional permissions
-        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, new[] { PermissionType.Edit, PermissionType.Delete });
+        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Edit, PermissionType.Delete]);
 
         // Verify active permissions
         Assert.True(await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit));
@@ -366,9 +364,9 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
         var tenantId = Guid.NewGuid();
 
         // Set up complex permission hierarchy
-        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, new[] { PermissionType.Read }); // Global default
-        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, new[] { PermissionType.Comment, PermissionType.Vote }); // Tenant default
-        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, new[] { PermissionType.Edit, PermissionType.Share }); // User specific
+        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, [PermissionType.Read]); // Global default
+        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, [PermissionType.Comment, PermissionType.Vote]); // Tenant default
+        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Edit, PermissionType.Share]); // User specific
 
         // Act
         var effectivePermissions = await _permissionService.GetEffectiveTenantPermissionsAsync(userId, tenantId);
@@ -410,12 +408,16 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
             if (i % 2 == 0) // Even resources for user1
             {
                 await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
-                    user1Id, tenantId, resourceIds[i], new[] { PermissionType.Read, PermissionType.Edit });
+                    user1Id, tenantId, resourceIds[i],
+                    [PermissionType.Read, PermissionType.Edit]
+                );
             }
             if (i % 3 == 0) // Every third resource for user2
             {
                 await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
-                    user2Id, tenantId, resourceIds[i], new[] { PermissionType.Read, PermissionType.Delete });
+                    user2Id, tenantId, resourceIds[i],
+                    [PermissionType.Read, PermissionType.Delete]
+                );
             }
         }
 

@@ -29,12 +29,12 @@ public static class ModelBuilderExtensions
                     // In TPC inheritance, each concrete type gets its own complete table
                     // We need to configure base properties for all concrete types, not just root types
                     bool isAbstractType = entityType.ClrType.IsAbstract;
-                    bool isTPCInheritanceType = IsTPCInheritanceEntity(entityType.ClrType);
+                    bool isTpcInheritanceType = IsTpcInheritanceEntity(entityType.ClrType);
 
                     if (!isAbstractType)
                     {
                         // Skip key configuration for TPC inheritance entities - EF handles it automatically
-                        if (!isTPCInheritanceType)
+                        if (!isTpcInheritanceType)
                         {
                             // Id configuration (UUID) - for entities not using TPC inheritance
                             builder.HasKey(nameof(BaseEntity.Id));
@@ -91,7 +91,7 @@ public static class ModelBuilderExtensions
 
             // Skip types that are part of TPC inheritance hierarchies
             // These are handled differently by EF Core and would cause conflicts
-            if (IsTPCInheritanceEntity(entityType.ClrType))
+            if (IsTpcInheritanceEntity(entityType.ClrType))
                 continue;
 
             // Add global query filter to exclude soft-deleted entities for concrete types
@@ -130,7 +130,7 @@ public static class ModelBuilderExtensions
     /// Checks if a type is part of a TPC inheritance hierarchy
     /// In this case, we check if it inherits from ResourceBase which uses TPC mapping strategy
     /// </summary>
-    private static bool IsTPCInheritanceEntity(Type type)
+    private static bool IsTpcInheritanceEntity(Type type)
     {
         if (type == null) return false;
 

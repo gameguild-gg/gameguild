@@ -8,7 +8,6 @@ using GameGuild.Modules.User.Models;
 using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace GameGuild.Tests.Modules.Auth.Integration
