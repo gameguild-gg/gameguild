@@ -11,6 +11,8 @@ namespace GameGuild.Modules.Auth.Services
     {
         string GenerateAccessToken(UserDto user, string[] roles);
 
+        string GenerateAccessToken(UserDto user, string[] roles, IEnumerable<Claim>? additionalClaims = null);
+
         string GenerateRefreshToken();
 
         ClaimsPrincipal? GetPrincipalFromExpiredToken(string token);
@@ -29,14 +31,30 @@ namespace GameGuild.Modules.Auth.Services
 
         public string GenerateAccessToken(UserDto user, string[] roles)
         {
+            return GenerateAccessToken(user, roles, null);
+        }
+
+        public string GenerateAccessToken(UserDto user, string[] roles, IEnumerable<Claim>? additionalClaims = null)
+        {
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), new Claim(JwtRegisteredClaimNames.Email, user.Email), new Claim("username", user.Username)
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), 
+                new Claim(JwtRegisteredClaimNames.Email, user.Email), 
+                new Claim("username", user.Username)
             };
+            
             foreach (string role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
-            }            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "dev-key"));
+            }
+            
+            // Add any additional claims (like tenant claims)
+            if (additionalClaims != null)
+            {
+                claims.AddRange(additionalClaims);
+            }
+            
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "dev-key"));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             
             int expiryMinutes = int.Parse(_configuration["Jwt:AccessTokenExpiryMinutes"] ?? "60");

@@ -28,15 +28,15 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
         var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
         
         // Extract user ID and tenant ID from JWT token
-        var userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userIdClaim, out var userId))
+        string? userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdClaim, out Guid userId))
         {
             context.Result = new UnauthorizedResult();
             return;
         }
 
-        var tenantIdClaim = context.HttpContext.User.FindFirst("tenant_id")?.Value;
-        if (!Guid.TryParse(tenantIdClaim, out var tenantId))
+        string? tenantIdClaim = context.HttpContext.User.FindFirst("tenant_id")?.Value;
+        if (!Guid.TryParse(tenantIdClaim, out Guid tenantId))
         {
             context.Result = new UnauthorizedResult();
             return;
@@ -44,7 +44,7 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
 
         // Extract resource ID from route parameters
         var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
-        if (!Guid.TryParse(resourceIdValue, out var resourceId))
+        if (!Guid.TryParse(resourceIdValue, out Guid resourceId))
         {
             context.Result = new BadRequestResult();
             return;
@@ -52,7 +52,7 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
 
         // Check resource-level permission with hierarchical fallback
         // This uses the specific CommentPermission and Comment types
-        var hasPermission = await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(userId, tenantId, resourceId, _requiredPermission);
+        bool hasPermission = await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(userId, tenantId, resourceId, _requiredPermission);
         if (!hasPermission)
         {
             context.Result = new ForbidResult();

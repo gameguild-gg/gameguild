@@ -6,17 +6,22 @@ using System.Net;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Tests.Helpers;
+using Xunit.Abstractions;
 
 namespace GameGuild.Tests.Modules.Auth.Integration
 {
-    public class AuthIntegrationTests 
+    public class AuthIntegrationTests
     {
+        private readonly ITestOutputHelper _testOutputHelper;
+
         private readonly WebApplicationFactory<Program> _factory;
+
         private readonly HttpClient _client;
 
-        public AuthIntegrationTests()
+        public AuthIntegrationTests(ITestOutputHelper testOutputHelper)
         {
-            // Use our helper to get a factory with mock database already configured
+            _testOutputHelper = testOutputHelper;
+            // Use our helper to get a factory with the mock database already configured
             _factory = IntegrationTestHelper.GetTestFactory();
             _client = _factory.CreateClient();
 
@@ -29,34 +34,33 @@ namespace GameGuild.Tests.Modules.Auth.Integration
         /// </summary>
         private async Task SetupTestDataAsync()
         {
-            using (IServiceScope scope = _factory.Services.CreateScope())
+            using IServiceScope scope = _factory.Services.CreateScope();
+            try
             {
-                try
+                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                // Ensure the database is clean and recreated before each test
+                if (Microsoft.EntityFrameworkCore.InMemoryDatabaseFacadeExtensions.IsInMemory(context.Database))
                 {
-                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                    
-                    // Ensure database is clean and recreated before each test
-                    if (Microsoft.EntityFrameworkCore.InMemoryDatabaseFacadeExtensions.IsInMemory(context.Database))
-                    {
-                        // Clean and recreate the database to avoid test interference
-                        await context.Database.EnsureDeletedAsync();
-                        await context.Database.EnsureCreatedAsync();
-                        
-                        // Set up necessary data for tests
-                        // This could include seeding test users, tenants, or other data required by the auth module
-                        await SetupAuthRequiredDataAsync(context);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Log any errors during database setup
-                    var logger = scope.ServiceProvider.GetService<ILogger<AuthIntegrationTests>>();
-                    logger?.LogError(ex, "An error occurred while setting up the test database");
-                    throw;
+                    // Clean and recreate the database to avoid test interference
+                    await context.Database.EnsureDeletedAsync();
+                    await context.Database.EnsureCreatedAsync();
+
+                    // Set up necessary data for tests
+                    // This could include seeding test users, tenants, or other data required by the auth module
+                    await SetupAuthRequiredDataAsync(context);
                 }
             }
+            catch (Exception ex)
+            {
+                // Log any errors during database setup
+                var logger = scope.ServiceProvider.GetService<ILogger<AuthIntegrationTests>>();
+                logger?.LogError(ex, "An error occurred while setting up the test database");
+
+                throw;
+            }
         }
-        
+
         /// <summary>
         /// Set up required data for Auth module tests
         /// </summary>
@@ -64,14 +68,28 @@ namespace GameGuild.Tests.Modules.Auth.Integration
         {
             try
             {
-                // Typically auth module might need users, credentials, or other data
-                // No initial data needed for these specific tests as we create test users during the tests
-                await Task.CompletedTask;
+                // Set up a default test tenant
+                var testTenant = new GameGuild.Modules.Tenant.Models.Tenant
+                {
+                    Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Test Tenant", Slug = "test-tenant", IsActive = true
+                };
+
+                await context.Tenants.AddAsync(testTenant);
+                await context.SaveChangesAsync();
+
+                // Configure the mock tenant context service with our test tenant
+                using IServiceScope serviceScope = _factory.Services.CreateScope();
+                var mockTenantService = serviceScope.ServiceProvider.GetRequiredService<GameGuild.Modules.Tenant.Services.ITenantContextService>() as MockTenantContextService;
+                mockTenantService?.AddTenant(testTenant);
+
+                // For test users with tenant permissions, we'll create them during the specific tests
+                // as needed with the correct tenant associations
             }
             catch (Exception ex)
             {
                 var logger = _factory.Services.GetService<ILogger<AuthIntegrationTests>>();
                 logger?.LogError(ex, "An error occurred while setting up auth required data");
+
                 throw;
             }
         }
@@ -82,9 +100,7 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             // Arrange
             var registerRequest = new LocalSignUpRequestDto
             {
-                Email = "integration-test@example.com",
-                Password = "password123",
-                Username = "integrationuser"
+                Email = "integration-test@example.com", Password = "P455W0RD", Username = "integration-user"
             };
 
             string json = JsonSerializer.Serialize(registerRequest);
@@ -93,11 +109,13 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             // Act
             HttpResponseMessage response = await _client.PostAsync("/auth/sign-up", content);
 
-            // Assert - In test environments, the endpoint returns Unauthorized due to auth configuration
-            // In a production environment, this would return OK with tokens
-            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-            
-            // Skip the rest of the assertions since we're getting Unauthorized
+            // Assert - The endpoint should return OK and create a new user
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+            var responseData = await response.Content.ReadFromJsonAsync<SignInResponseDto>();
+            Assert.NotNull(responseData);
+            Assert.NotEmpty(responseData.AccessToken);
+            Assert.NotEmpty(responseData.RefreshToken);
         }
 
         [Fact]
@@ -106,20 +124,17 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             // Arrange - First register a user
             var registerRequest = new LocalSignUpRequestDto
             {
-                Email = "login-test@example.com",
-                Password = "password123",
-                Username = "loginuser"
+                Email = "login-test@example.com", Password = "P455W0RD", Username = "login-user"
             };
 
             string registerJson = JsonSerializer.Serialize(registerRequest);
             var registerContent = new StringContent(registerJson, Encoding.UTF8, "application/json");
             await _client.PostAsync("/auth/sign-up", registerContent);
 
-            // Now try to login
+            // Now try to log in
             var loginRequest = new LocalSignInRequestDto
             {
-                Email = "login-test@example.com",
-                Password = "password123"
+                Email = "login-test@example.com", Password = "P455W0RD"
             };
 
             string loginJson = JsonSerializer.Serialize(loginRequest);
@@ -128,11 +143,13 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             // Act
             HttpResponseMessage response = await _client.PostAsync("/auth/sign-in", loginContent);
 
-            // Assert - In test environments, the endpoint returns Unauthorized due to auth configuration
-            // In a production environment, this would return OK with tokens
-            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-            
-            // Skip the rest of the assertions since we're getting Unauthorized
+            // Assert - The endpoint should return OK and provide tokens
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+            var responseData = await response.Content.ReadFromJsonAsync<SignInResponseDto>();
+            Assert.NotNull(responseData);
+            Assert.NotEmpty(responseData.AccessToken);
+            Assert.NotEmpty(responseData.RefreshToken);
         }
 
         [Fact]
@@ -141,8 +158,7 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             // Arrange
             var loginRequest = new LocalSignInRequestDto
             {
-                Email = "nonexistent@example.com",
-                Password = "wrongpassword"
+                Email = "nonexistent@example.com", Password = "wrong-password"
             };
 
             string json = JsonSerializer.Serialize(loginRequest);
@@ -161,22 +177,22 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             // Arrange - First register and get tokens
             var registerRequest = new LocalSignUpRequestDto
             {
-                Email = "refresh-test@example.com",
-                Password = "password123",
-                Username = "refreshuser"
+                Email = "refresh-test@example.com", Password = "P455W0RD", Username = "refresh-user"
             };
 
             string registerJson = JsonSerializer.Serialize(registerRequest);
             var registerContent = new StringContent(registerJson, Encoding.UTF8, "application/json");
             HttpResponseMessage registerResponse = await _client.PostAsync("/auth/sign-up", registerContent);
-            
-            // Due to the auth configuration in the test environment, we expect unauthorized
-            Assert.Equal(HttpStatusCode.Unauthorized, registerResponse.StatusCode);
 
-            // Now try to refresh a dummy token (since we can't get a real one due to auth issues)
+            // Registration should now work and return tokens
+            Assert.Equal(HttpStatusCode.OK, registerResponse.StatusCode);
+            var registerData = await registerResponse.Content.ReadFromJsonAsync<SignInResponseDto>();
+            Assert.NotNull(registerData);
+
+            // Now use the real refresh token
             var refreshRequest = new RefreshTokenRequestDto
             {
-                RefreshToken = "dummy-refresh-token-for-testing"
+                RefreshToken = registerData.RefreshToken
             };
 
             string refreshJson = JsonSerializer.Serialize(refreshRequest);
@@ -185,8 +201,13 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             // Act
             HttpResponseMessage response = await _client.PostAsync("/auth/refresh-token", refreshContent);
 
-            // Assert - In test environments, the endpoint returns Unauthorized due to auth configuration
-            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+            // Assert - The refresh should work and return new tokens
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            
+            var responseData = await response.Content.ReadFromJsonAsync<SignInResponseDto>();
+            Assert.NotNull(responseData);
+            Assert.NotEmpty(responseData.AccessToken);
+            Assert.NotEmpty(responseData.RefreshToken);
         }
 
         [Fact]
@@ -195,8 +216,7 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             // Arrange
             var challengeRequest = new Web3ChallengeRequestDto
             {
-                WalletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower(),
-                ChainId = "1"
+                WalletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower(), ChainId = "1"
             };
 
             string json = JsonSerializer.Serialize(challengeRequest);
@@ -209,10 +229,13 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
             string responseContent = await response.Content.ReadAsStringAsync();
-            var challengeResponse = JsonSerializer.Deserialize<Web3ChallengeResponseDto>(responseContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            var challengeResponse = JsonSerializer.Deserialize<Web3ChallengeResponseDto>(
+                responseContent,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }
+            );
 
             Assert.NotNull(challengeResponse);
             Assert.NotEmpty(challengeResponse.Challenge);
@@ -226,8 +249,7 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             // Arrange
             var challengeRequest = new Web3ChallengeRequestDto
             {
-                WalletAddress = "invalid-address",
-                ChainId = "1"
+                WalletAddress = "invalid-address", ChainId = "1"
             };
 
             string json = JsonSerializer.Serialize(challengeRequest);
@@ -259,15 +281,18 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
             string responseContent = await response.Content.ReadAsStringAsync();
-            var emailResponse = JsonSerializer.Deserialize<EmailOperationResponseDto>(responseContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            var emailResponse = JsonSerializer.Deserialize<EmailOperationResponseDto>(
+                responseContent,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }
+            );
 
             Assert.NotNull(emailResponse);
             // Print out the actual response for debugging
-            Console.WriteLine($"Email response content: {responseContent}");
-            // In test environment, the email service might not actually send emails, so success could be false
+            _testOutputHelper.WriteLine($"Email response content: {responseContent}");
+            // In a test environment, the email service might not send emails, so success could be false
             // This is still a valid response from the endpoint, so we'll just check that we got a non-null response
             //Assert.True(emailResponse.Success);
         }
@@ -276,7 +301,7 @@ namespace GameGuild.Tests.Modules.Auth.Integration
         public async Task GitHubSignIn_ValidRedirectUri_ReturnsAuthUrl()
         {
             // Arrange
-            var redirectUri = "https://example.com/callback";
+            const string redirectUri = "https://example.com/callback";
 
             // Act
             HttpResponseMessage response = await _client.GetAsync($"/auth/github/signin?redirectUri={redirectUri}");
@@ -294,9 +319,7 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             // Arrange - First register a user
             var registerRequest = new LocalSignUpRequestDto
             {
-                Email = "duplicate-test@example.com",
-                Password = "password123",
-                Username = "duplicateuser"
+                Email = "duplicate-test@example.com", Password = "P455W0RD", Username = "duplicate-user"
             };
 
             string json = JsonSerializer.Serialize(registerRequest);
@@ -309,8 +332,8 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             // Act
             HttpResponseMessage response = await _client.PostAsync("/auth/sign-up", content2);
 
-            // Assert - In test environments, the endpoint returns Unauthorized due to auth configuration
-            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+            // Assert - Should return BadRequest for duplicate email
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
     }
 }

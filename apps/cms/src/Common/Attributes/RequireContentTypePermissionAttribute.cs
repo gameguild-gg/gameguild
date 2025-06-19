@@ -26,25 +26,25 @@ public class RequireContentTypePermissionAttribute<T> : Attribute, IAsyncAuthori
         var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
         
         // Extract user ID and tenant ID from JWT token
-        var userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userIdClaim, out var userId))
+        string? userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdClaim, out Guid userId))
         {
             context.Result = new UnauthorizedResult();
             return;
         }
 
-        var tenantIdClaim = context.HttpContext.User.FindFirst("tenant_id")?.Value;
-        if (!Guid.TryParse(tenantIdClaim, out var tenantId))
+        string? tenantIdClaim = context.HttpContext.User.FindFirst("tenant_id")?.Value;
+        if (!Guid.TryParse(tenantIdClaim, out Guid tenantId))
         {
             context.Result = new UnauthorizedResult();
             return;
         }
 
         // Get content type name from generic type parameter
-        var contentTypeName = typeof(T).Name;
+        string contentTypeName = typeof(T).Name;
 
         // Check content-type level permission with hierarchical fallback
-        var hasPermission = await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
+        bool hasPermission = await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
         if (!hasPermission)
         {
             context.Result = new ForbidResult();

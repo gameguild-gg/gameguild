@@ -160,7 +160,7 @@ public class LocalSignUpHandlerTests
         var command = new LocalSignUpCommand
         {
             Email = "test@example.com",
-            Password = "password123",
+            Password = "P455W0RD",
             Username = "testuser"
         };
 

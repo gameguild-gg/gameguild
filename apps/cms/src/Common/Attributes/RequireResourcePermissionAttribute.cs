@@ -29,15 +29,15 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
         var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
         
         // Extract user ID and tenant ID from JWT token
-        var userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userIdClaim, out var userId))
+        string? userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdClaim, out Guid userId))
         {
             context.Result = new UnauthorizedResult();
             return;
         }
 
-        var tenantIdClaim = context.HttpContext.User.FindFirst("tenant_id")?.Value;
-        if (!Guid.TryParse(tenantIdClaim, out var tenantId))
+        string? tenantIdClaim = context.HttpContext.User.FindFirst("tenant_id")?.Value;
+        if (!Guid.TryParse(tenantIdClaim, out Guid tenantId))
         {
             context.Result = new UnauthorizedResult();
             return;
@@ -45,7 +45,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
 
         // Extract resource ID from route parameters
         var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
-        if (!Guid.TryParse(resourceIdValue, out var resourceId))
+        if (!Guid.TryParse(resourceIdValue, out Guid resourceId))
         {
             context.Result = new BadRequestResult();
             return;
@@ -60,7 +60,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
             try
             {
                 // Use the specific Comment resource permission checking
-                var hasResourcePermission = await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
+                bool hasResourcePermission = await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
                     userId, tenantId, resourceId, _requiredPermission);
                     
                 if (hasResourcePermission)
@@ -75,8 +75,8 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
         }
         
         // Step 2 - Check content-type level permission (fallback)
-        var contentTypeName = typeof(TResource).Name;
-        var hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(
+        string contentTypeName = typeof(TResource).Name;
+        bool hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(
             userId, tenantId, contentTypeName, _requiredPermission);
             
         if (hasContentTypePermission)
@@ -85,7 +85,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
         }
 
         // Step 3 - Check tenant-level permission (final fallback)
-        var hasTenantPermission = await permissionService.HasTenantPermissionAsync(
+        bool hasTenantPermission = await permissionService.HasTenantPermissionAsync(
             userId, tenantId, _requiredPermission);
         
         if (!hasTenantPermission)

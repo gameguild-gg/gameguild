@@ -44,9 +44,11 @@ namespace GameGuild.Tests.Helpers
                         // Add test-specific configuration settings
                         config.AddInMemoryCollection(new Dictionary<string, string?>
                         {
+                            { "Jwt:Key", "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters" },
                             { "Jwt:SecretKey", "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters" },
                             { "Jwt:Issuer", "TestIssuer" },
                             { "Jwt:Audience", "TestAudience" },
+                            { "Jwt:AccessTokenExpiryMinutes", "15" },
                             { "Jwt:ExpiryInMinutes", "15" },
                             { "Jwt:RefreshTokenExpiryInDays", "7" },
                             { "OAuth:GitHub:ClientId", "test-github-client-id" },
@@ -74,8 +76,8 @@ namespace GameGuild.Tests.Helpers
                         // Add in-memory database for testing
                         services.AddDbContext<ApplicationDbContext>(options =>
                         {
-                            // Use a unique database name for each test run
-                            options.UseInMemoryDatabase("TestDatabase_" + Guid.NewGuid().ToString());
+                            // Use a consistent database name for all contexts in tests
+                            options.UseInMemoryDatabase("TestDatabase");
                             // Enable sensitive data logging for tests
                             options.EnableSensitiveDataLogging();
                         });
@@ -94,6 +96,9 @@ namespace GameGuild.Tests.Helpers
                         {
                             services.Remove(filter);
                         }
+                        
+                        // Register mock tenant context service for tests
+                        services.AddSingleton<GameGuild.Modules.Tenant.Services.ITenantContextService, MockTenantContextService>();
                         
                         // Add controllers with test filter that bypasses authentication
                         services.AddControllers(options => 

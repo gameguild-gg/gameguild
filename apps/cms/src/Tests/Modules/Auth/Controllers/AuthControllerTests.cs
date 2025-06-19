@@ -44,7 +44,7 @@ namespace GameGuild.Tests.Modules.Auth.Controllers
             // Arrange
             var request = new LocalSignInRequestDto
             {
-                Email = "test@example.com", Password = "password123"
+                Email = "test@example.com", Password = "P455W0RD"
             };
 
             var expectedResponse = new SignInResponseDto
@@ -75,9 +75,13 @@ namespace GameGuild.Tests.Modules.Auth.Controllers
         public async Task LocalSignUp_ValidRequest_ReturnsOkWithSignInResponse()
         {
             // Arrange
+            var tenantId = Guid.NewGuid();
             var request = new LocalSignUpRequestDto
             {
-                Email = "test@example.com", Password = "password123", Username = "testuser"
+                Email = "test@example.com", 
+                Password = "P455W0RD",
+                Username = "testuser",
+                TenantId = tenantId
             };
 
             var expectedResponse = new SignInResponseDto
@@ -87,11 +91,21 @@ namespace GameGuild.Tests.Modules.Auth.Controllers
                 User = new UserDto
                 {
                     Email = "test@example.com", Username = "testuser"
+                },
+                TenantId = tenantId,
+                AvailableTenants = new List<TenantInfoDto>
+                {
+                    new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true }
                 }
             };
 
             // Mock the MediatR response for the LocalSignUpCommand
-            _mockMediator.Setup(x => x.Send(It.IsAny<LocalSignUpCommand>(), It.IsAny<CancellationToken>()))
+            _mockMediator.Setup(x => x.Send(It.Is<LocalSignUpCommand>(cmd =>
+                cmd.Email == request.Email &&
+                cmd.Password == request.Password &&
+                cmd.Username == request.Username &&
+                cmd.TenantId == request.TenantId), 
+                It.IsAny<CancellationToken>()))
                 .ReturnsAsync(expectedResponse);
 
             // Act
@@ -357,7 +371,7 @@ namespace GameGuild.Tests.Modules.Auth.Controllers
             // Arrange
             var request = new ChangePasswordRequestDto
             {
-                CurrentPassword = "oldpassword", NewPassword = "newpassword123"
+                CurrentPassword = "oldpassword", NewPassword = "newP455W0RD"
             };
 
             var expectedResponse = new EmailOperationResponseDto

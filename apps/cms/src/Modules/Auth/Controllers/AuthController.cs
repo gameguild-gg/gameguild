@@ -10,15 +10,16 @@ namespace GameGuild.Modules.Auth.Controllers
     [ApiController]
     [Route("[controller]")]
     public class AuthController(IAuthService authService, IMediator mediator) : ControllerBase
-    {
-        [HttpPost("sign-in")]
+    {        [HttpPost("sign-in")]
+        [Public]
         public async Task<ActionResult<SignInResponseDto>> LocalSignIn([FromBody] LocalSignInRequestDto request)
         {
             try
-            {
-                var command = new LocalSignInCommand
+            {                var command = new LocalSignInCommand
                 {
-                    Email = request.Email, Password = request.Password
+                    Email = request.Email, 
+                    Password = request.Password,
+                    TenantId = request.TenantId
                 };
 
                 SignInResponseDto result = await mediator.Send(command);
@@ -44,16 +45,17 @@ namespace GameGuild.Modules.Auth.Controllers
                     }
                 );
             }
-        }
-
-        [HttpPost("sign-up")]
+        }        [HttpPost("sign-up")]
+        [Public]
         public async Task<ActionResult<SignInResponseDto>> LocalSignUp([FromBody] LocalSignUpRequestDto request)
         {
             try
-            {
-                var command = new LocalSignUpCommand
+            {                var command = new LocalSignUpCommand
                 {
-                    Email = request.Email, Password = request.Password, Username = request.Username!
+                    Email = request.Email,
+                    Password = request.Password,
+                    Username = request.Username!,
+                    TenantId = request.TenantId
                 };
 
                 SignInResponseDto result = await mediator.Send(command);
@@ -79,9 +81,8 @@ namespace GameGuild.Modules.Auth.Controllers
                     }
                 );
             }
-        }
-
-        [HttpPost("refresh-token")]
+        }        [HttpPost("refresh-token")]
+        [Public]
         public async Task<ActionResult<RefreshTokenResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto request)
         {
             RefreshTokenResponseDto result = await authService.RefreshTokenAsync(request);

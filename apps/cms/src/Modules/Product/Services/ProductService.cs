@@ -99,7 +99,7 @@ public class ProductService : IProductService
 
     public async Task DeleteProductAsync(Guid id)
     {
-        var product = await _context.Products.FindAsync(id);
+        ProductEntity? product = await _context.Products.FindAsync(id);
         if (product != null)
         {
             product.SoftDelete();
@@ -117,7 +117,7 @@ public class ProductService : IProductService
     // Visibility and publishing
     public async Task<ProductEntity> PublishProductAsync(Guid id)
     {
-        var product = await GetProductByIdAsync(id);
+        ProductEntity? product = await GetProductByIdAsync(id);
         if (product == null)
             throw new ArgumentException("Product not found", nameof(id));
 
@@ -129,7 +129,7 @@ public class ProductService : IProductService
 
     public async Task<ProductEntity> UnpublishProductAsync(Guid id)
     {
-        var product = await GetProductByIdAsync(id);
+        ProductEntity? product = await GetProductByIdAsync(id);
         if (product == null)
             throw new ArgumentException("Product not found", nameof(id));
 
@@ -141,7 +141,7 @@ public class ProductService : IProductService
 
     public async Task<ProductEntity> ArchiveProductAsync(Guid id)
     {
-        var product = await GetProductByIdAsync(id);
+        ProductEntity? product = await GetProductByIdAsync(id);
         if (product == null)
             throw new ArgumentException("Product not found", nameof(id));
 
@@ -153,7 +153,7 @@ public class ProductService : IProductService
 
     public async Task<ProductEntity> SetVisibilityAsync(Guid id, Common.Entities.Visibility visibility)
     {
-        var product = await GetProductByIdAsync(id);
+        ProductEntity? product = await GetProductByIdAsync(id);
         if (product == null)
             throw new ArgumentException("Product not found", nameof(id));
 
@@ -166,7 +166,7 @@ public class ProductService : IProductService
     // Bundle management
     public async Task<IEnumerable<ProductEntity>> GetBundleItemsAsync(Guid bundleId)
     {
-        var bundle = await GetProductByIdAsync(bundleId);
+        ProductEntity? bundle = await GetProductByIdAsync(bundleId);
         if (bundle == null || !bundle.IsBundle)
             return Enumerable.Empty<ProductEntity>();
 
@@ -184,14 +184,14 @@ public class ProductService : IProductService
 
     public async Task<ProductEntity> AddToBundleAsync(Guid bundleId, Guid productId)
     {
-        var bundle = await GetProductByIdAsync(bundleId);
+        ProductEntity? bundle = await GetProductByIdAsync(bundleId);
         if (bundle == null)
             throw new ArgumentException("Bundle not found", nameof(bundleId));
 
         if (!bundle.IsBundle)
             throw new InvalidOperationException("Product is not a bundle");
 
-        var product = await ProductExistsAsync(productId);
+        bool product = await ProductExistsAsync(productId);
         if (!product)
             throw new ArgumentException("Product not found", nameof(productId));
 
@@ -209,7 +209,7 @@ public class ProductService : IProductService
 
     public async Task<ProductEntity> RemoveFromBundleAsync(Guid bundleId, Guid productId)
     {
-        var bundle = await GetProductByIdAsync(bundleId);
+        ProductEntity? bundle = await GetProductByIdAsync(bundleId);
         if (bundle == null)
             throw new ArgumentException("Bundle not found", nameof(bundleId));
 
@@ -229,7 +229,7 @@ public class ProductService : IProductService
 
     public async Task<bool> IsProductInBundleAsync(Guid bundleId, Guid productId)
     {
-        var bundle = await GetProductByIdAsync(bundleId);
+        ProductEntity? bundle = await GetProductByIdAsync(bundleId);
         if (bundle == null || !bundle.IsBundle)
             return false;
 
@@ -256,12 +256,12 @@ public class ProductService : IProductService
 
     public async Task<ProductPricing> SetPricingAsync(Guid productId, decimal basePrice, string currency = "USD")
     {
-        var product = await ProductExistsAsync(productId);
+        bool product = await ProductExistsAsync(productId);
         if (!product)
             throw new ArgumentException("Product not found", nameof(productId));
 
         // Set existing default pricing to non-default
-        var existingDefault = await GetCurrentPricingAsync(productId);
+        ProductPricing? existingDefault = await GetCurrentPricingAsync(productId);
         if (existingDefault != null)
         {
             existingDefault.IsDefault = false;
@@ -285,7 +285,7 @@ public class ProductService : IProductService
 
     public async Task<ProductPricing> UpdatePricingAsync(Guid pricingId, decimal basePrice)
     {
-        var pricing = await _context.ProductPricings
+        ProductPricing? pricing = await _context.ProductPricings
             .Where(pp => !pp.IsDeleted)
             .FirstOrDefaultAsync(pp => pp.Id == pricingId);
 
@@ -331,7 +331,7 @@ public class ProductService : IProductService
 
     public async Task DeleteSubscriptionPlanAsync(Guid planId)
     {
-        var plan = await _context.ProductSubscriptionPlans.FindAsync(planId);
+        ProductSubscriptionPlan? plan = await _context.ProductSubscriptionPlans.FindAsync(planId);
         if (plan != null)
         {
             plan.SoftDelete();
@@ -373,7 +373,7 @@ public class ProductService : IProductService
         decimal purchasePrice = 0, string currency = "USD", DateTime? expiresAt = null)
     {
         // Check if user already has access
-        var existingAccess = await GetUserProductAsync(userId, productId);
+        UserProduct? existingAccess = await GetUserProductAsync(userId, productId);
         if (existingAccess != null && existingAccess.AccessStatus == ProductAccessStatus.Active)
         {
             return existingAccess;
@@ -397,7 +397,7 @@ public class ProductService : IProductService
 
     public async Task RevokeUserAccessAsync(Guid userId, Guid productId)
     {
-        var userProduct = await GetUserProductAsync(userId, productId);
+        UserProduct? userProduct = await GetUserProductAsync(userId, productId);
         if (userProduct != null)
         {
             userProduct.AccessStatus = ProductAccessStatus.Revoked;
@@ -432,7 +432,7 @@ public class ProductService : IProductService
 
     public async Task DeletePromoCodeAsync(Guid id)
     {
-        var promoCode = await _context.PromoCodes.FindAsync(id);
+        PromoCode? promoCode = await _context.PromoCodes.FindAsync(id);
         if (promoCode != null)
         {
             promoCode.SoftDelete();
@@ -442,7 +442,7 @@ public class ProductService : IProductService
 
     public async Task<PromoCodeUse> UsePromoCodeAsync(Guid userId, string code, decimal discountAmount)
     {
-        var promoCode = await GetPromoCodeAsync(code);
+        PromoCode? promoCode = await GetPromoCodeAsync(code);
         if (promoCode == null)
             throw new ArgumentException("Promo code not found", nameof(code));
 
@@ -468,11 +468,11 @@ public class ProductService : IProductService
 
     public async Task<bool> IsPromoCodeValidAsync(string code, Guid? productId = null)
     {
-        var promoCode = await GetPromoCodeAsync(code);
+        PromoCode? promoCode = await GetPromoCodeAsync(code);
         if (promoCode == null)
             return false;
 
-        var now = DateTime.UtcNow;
+        DateTime now = DateTime.UtcNow;
 
         // Check if promo code is within valid date range
         if (promoCode.ValidFrom.HasValue && now < promoCode.ValidFrom.Value)
@@ -484,7 +484,7 @@ public class ProductService : IProductService
         // Check usage limits
         if (promoCode.MaxUses.HasValue)
         {
-            var currentUsageCount = await _context.PromoCodeUses
+            int currentUsageCount = await _context.PromoCodeUses
                 .Where(pcu => !pcu.IsDeleted && pcu.PromoCodeId == promoCode.Id)
                 .CountAsync();
             

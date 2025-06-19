@@ -1,13 +1,6 @@
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
 using Xunit;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
 using Moq;
 
 namespace GameGuild.Tests.Integration.GraphQL;
@@ -53,7 +46,7 @@ public class DACPermissionLogicTest
         var commentId = Guid.NewGuid();
 
         // Act
-        var result = await CheckCommentPermissionHierarchy(
+        bool result = await CheckCommentPermissionHierarchy(
             mockPermissionService.Object, userId, tenantId, commentId, PermissionType.Comment);
 
         // Assert
@@ -79,7 +72,7 @@ public class DACPermissionLogicTest
         var commentId = Guid.NewGuid();
 
         // Act
-        var result = await CheckCommentPermissionHierarchy(
+        bool result = await CheckCommentPermissionHierarchy(
             mockPermissionService.Object, userId, tenantId, commentId, PermissionType.Comment);
 
         // Assert
@@ -109,7 +102,7 @@ public class DACPermissionLogicTest
         var commentId = Guid.NewGuid();
 
         // Act
-        var result = await CheckCommentPermissionHierarchy(
+        bool result = await CheckCommentPermissionHierarchy(
             mockPermissionService.Object, userId, tenantId, commentId, PermissionType.Comment);
 
         // Assert
@@ -139,7 +132,7 @@ public class DACPermissionLogicTest
         var commentId = Guid.NewGuid();
 
         // Act
-        var result = await CheckCommentPermissionHierarchy(
+        bool result = await CheckCommentPermissionHierarchy(
             mockPermissionService.Object, userId, tenantId, commentId, PermissionType.Comment);
 
         // Assert
@@ -160,7 +153,7 @@ public class DACPermissionLogicTest
         try
         {
             // 1. Check resource-level permission
-            var hasResourcePermission = await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
+            bool hasResourcePermission = await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
                 userId, tenantId, commentId, permission);
             if (hasResourcePermission) return true;
         }
@@ -170,12 +163,12 @@ public class DACPermissionLogicTest
         }
         
         // 2. Check content-type permission
-        var hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(
+        bool hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(
             userId, tenantId, "Comment", permission);
         if (hasContentTypePermission) return true;
         
         // 3. Check tenant permission
-        var hasTenantPermission = await permissionService.HasTenantPermissionAsync(
+        bool hasTenantPermission = await permissionService.HasTenantPermissionAsync(
             userId, tenantId, permission);
         return hasTenantPermission;
     }

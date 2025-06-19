@@ -4,8 +4,6 @@ using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.User.Models;
 using Microsoft.EntityFrameworkCore;
-using UserModel = GameGuild.Modules.User.Models.User;
-using CredentialModel = GameGuild.Modules.User.Models.Credential;
 
 namespace GameGuild.Modules.Auth.Services
 {
