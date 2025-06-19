@@ -25,7 +25,7 @@ public interface IProductService
     Task<ProductEntity> PublishProductAsync(Guid id);
     Task<ProductEntity> UnpublishProductAsync(Guid id);
     Task<ProductEntity> ArchiveProductAsync(Guid id);
-    Task<ProductEntity> SetVisibilityAsync(Guid id, Common.Entities.Visibility visibility);
+    Task<ProductEntity> SetVisibilityAsync(Guid id, Common.Entities.AccessLevel visibility);
 
     // Bundle management
     Task<IEnumerable<ProductEntity>> GetBundleItemsAsync(Guid bundleId);
@@ -63,7 +63,7 @@ public interface IProductService
     Task<bool> IsPromoCodeValidAsync(string code, Guid? productId = null);
 
     // Analytics and statistics
-    Task<int> GetProductCountAsync(ProductType? type = null, Common.Entities.Visibility? visibility = null);
+    Task<int> GetProductCountAsync(ProductType? type = null, Common.Entities.AccessLevel? visibility = null);
     Task<int> GetUserCountForProductAsync(Guid productId);
     Task<decimal> GetTotalRevenueForProductAsync(Guid productId);
     Task<IEnumerable<ProductEntity>> GetPopularProductsAsync(int count = 10);

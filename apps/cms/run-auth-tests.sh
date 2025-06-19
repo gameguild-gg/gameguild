@@ -33,7 +33,7 @@ if [ $? -eq 0 ]; then
     
     echo ""
     echo "=== All Auth Tests ==="
-    dotnet test --filter "FullyQualifiedName~cms.Tests.Modules.Auth" --logger "console;verbosity=normal"
+    dotnet test --filter "FullyQualifiedName~GameGuild.Tests.Modules.Auth" --logger "console;verbosity=normal"
     
 else
     echo "Build failed. Please check for compilation errors."

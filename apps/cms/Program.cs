@@ -154,6 +154,8 @@ builder.Services
     .AddType<GameGuild.Modules.Tenant.GraphQL.TenantType>()
     .AddType<GameGuild.Modules.Tenant.GraphQL.TenantPermissionType>()
     .AddType<GameGuild.Modules.UserProfile.GraphQL.UserProfileType>()
+    // Add permission types
+    .AddType<GameGuild.Common.Entities.ContentTypePermission>()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment());
 
 WebApplication app = builder.Build();
