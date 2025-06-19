@@ -17,60 +17,117 @@ namespace GameGuild.Modules.Subscription.Models;
 [Index(nameof(ExternalSubscriptionId))]
 public class UserSubscription : BaseEntity
 {
-    public Guid UserId { get; set; }
-    public Guid SubscriptionPlanId { get; set; }
-    
-    public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Active;
-    
+    public Guid UserId
+    {
+        get;
+        set;
+    }
+
+    public Guid SubscriptionPlanId
+    {
+        get;
+        set;
+    }
+
+    public SubscriptionStatus Status
+    {
+        get;
+        set;
+    } = SubscriptionStatus.Active;
+
     /// <summary>
     /// External subscription ID from payment provider (Stripe, PayPal, etc.)
     /// </summary>
     [MaxLength(255)]
-    public string? ExternalSubscriptionId { get; set; }
-    
+    public string? ExternalSubscriptionId
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Current billing period start date
     /// </summary>
-    public DateTime CurrentPeriodStart { get; set; }
-    
+    public DateTime CurrentPeriodStart
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Current billing period end date
     /// </summary>
-    public DateTime CurrentPeriodEnd { get; set; }
-    
+    public DateTime CurrentPeriodEnd
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Date when the subscription was canceled (null if not canceled)
     /// </summary>
-    public DateTime? CanceledAt { get; set; }
-    
+    public DateTime? CanceledAt
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Date when the subscription will end (null if indefinite)
     /// </summary>
-    public DateTime? EndsAt { get; set; }
-    
+    public DateTime? EndsAt
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Date when the trial period ends (null if no trial)
     /// </summary>
-    public DateTime? TrialEndsAt { get; set; }
-    
+    public DateTime? TrialEndsAt
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Last successful payment date
     /// </summary>
-    public DateTime? LastPaymentAt { get; set; }
-    
+    public DateTime? LastPaymentAt
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Next scheduled billing date
     /// </summary>
-    public DateTime? NextBillingAt { get; set; }
-    
+    public DateTime? NextBillingAt
+    {
+        get;
+        set;
+    }
+
     // Navigation properties
     [ForeignKey(nameof(UserId))]
-    public virtual User.Models.User User { get; set; } = null!;
-    
+    public virtual User.Models.User User
+    {
+        get;
+        set;
+    } = null!;
+
     [ForeignKey(nameof(SubscriptionPlanId))]
-    public virtual Product.Models.ProductSubscriptionPlan SubscriptionPlan { get; set; } = null!;
-    
-    public virtual ICollection<Product.Models.UserProduct> UserProducts { get; set; } = new List<Product.Models.UserProduct>();
+    public virtual Product.Models.ProductSubscriptionPlan SubscriptionPlan
+    {
+        get;
+        set;
+    } = null!;
+
+    public virtual ICollection<Product.Models.UserProduct> UserProducts
+    {
+        get;
+        set;
+    } = new List<Product.Models.UserProduct>();
 }
 
 public class UserSubscriptionConfiguration : IEntityTypeConfiguration<UserSubscription>

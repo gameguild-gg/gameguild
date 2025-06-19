@@ -101,9 +101,12 @@ public class WithPermissionTests
     {
         // Arrange
         var entity = new TestPermissionEntity();
-        var permissions = new Collection<PermissionType> { PermissionType.Read, PermissionType.Comment, PermissionType.Vote };
-        
-        foreach (var permission in permissions)
+        var permissions = new Collection<PermissionType>
+        {
+            PermissionType.Read, PermissionType.Comment, PermissionType.Vote
+        };
+
+        foreach (PermissionType permission in permissions)
         {
             entity.AddPermission(permission);
         }
@@ -121,7 +124,10 @@ public class WithPermissionTests
         entity.AddPermission(PermissionType.Comment);
         // Missing Vote permission
 
-        var permissions = new Collection<PermissionType> { PermissionType.Read, PermissionType.Comment, PermissionType.Vote };
+        var permissions = new Collection<PermissionType>
+        {
+            PermissionType.Read, PermissionType.Comment, PermissionType.Vote
+        };
 
         // Act & Assert
         Assert.False(entity.HasAllPermissions(permissions));
@@ -134,7 +140,10 @@ public class WithPermissionTests
         var entity = new TestPermissionEntity();
         entity.AddPermission(PermissionType.Read);
 
-        var permissions = new Collection<PermissionType> { PermissionType.Read, PermissionType.Comment, PermissionType.Vote };
+        var permissions = new Collection<PermissionType>
+        {
+            PermissionType.Read, PermissionType.Comment, PermissionType.Vote
+        };
 
         // Act & Assert
         Assert.True(entity.HasAnyPermission(permissions));
@@ -146,7 +155,10 @@ public class WithPermissionTests
         // Arrange
         var entity = new TestPermissionEntity();
 
-        var permissions = new Collection<PermissionType> { PermissionType.Read, PermissionType.Comment, PermissionType.Vote };
+        var permissions = new Collection<PermissionType>
+        {
+            PermissionType.Read, PermissionType.Comment, PermissionType.Vote
+        };
 
         // Act & Assert
         Assert.False(entity.HasAnyPermission(permissions));
@@ -157,10 +169,13 @@ public class WithPermissionTests
     {
         // Arrange
         var entity = new TestPermissionEntity();
-        var permissions = new Collection<PermissionType> { PermissionType.Read, PermissionType.Comment, PermissionType.Vote };
+        var permissions = new Collection<PermissionType>
+        {
+            PermissionType.Read, PermissionType.Comment, PermissionType.Vote
+        };
 
         // Act
-        foreach (var permission in permissions)
+        foreach (PermissionType permission in permissions)
         {
             entity.AddPermission(permission);
         }
@@ -174,8 +189,11 @@ public class WithPermissionTests
     {
         // Arrange
         var entity = new TestPermissionEntity();
-        var permissions = new Collection<PermissionType> { PermissionType.Read, PermissionType.Comment, PermissionType.Vote };
-        foreach (var permission in permissions)
+        var permissions = new Collection<PermissionType>
+        {
+            PermissionType.Read, PermissionType.Comment, PermissionType.Vote
+        };
+        foreach (PermissionType permission in permissions)
         {
             entity.AddPermission(permission);
         }
@@ -194,8 +212,7 @@ public class WithPermissionTests
         // Arrange
         var entity = new TestPermissionEntity
         {
-            UserId = null,
-            TenantId = null
+            UserId = null, TenantId = null
         };
 
         // Act & Assert
@@ -208,8 +225,7 @@ public class WithPermissionTests
         // Arrange
         var entity = new TestPermissionEntity
         {
-            UserId = Guid.NewGuid(),
-            TenantId = Guid.NewGuid()
+            UserId = Guid.NewGuid(), TenantId = Guid.NewGuid()
         };
 
         // Act & Assert
@@ -232,10 +248,10 @@ public class WithPermissionTests
     {
         // Arrange
         var entity = new TestPermissionEntity();
-        
+
         // Act - Add permissions across both flag boundaries
         entity.AddPermission(PermissionType.Read); // Low bit (1)
-        entity.AddPermission(PermissionType.Sms);  // High bit (70)
+        entity.AddPermission(PermissionType.Sms); // High bit (70)
 
         // Assert
         Assert.True(entity.HasPermission(PermissionType.Read));

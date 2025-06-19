@@ -11,7 +11,9 @@ namespace GameGuild.Tests.Modules.Auth.Services
     public class Web3ServiceTests : IDisposable
     {
         private readonly ApplicationDbContext _context;
+
         private readonly Mock<ILogger<Web3Service>> _mockLogger;
+
         private readonly Web3Service _web3Service;
 
         public Web3ServiceTests()
@@ -19,7 +21,7 @@ namespace GameGuild.Tests.Modules.Auth.Services
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            
+
             _context = new ApplicationDbContext(options);
             _mockLogger = new Mock<ILogger<Web3Service>>();
             _web3Service = new Web3Service(_context, _mockLogger.Object);
@@ -31,8 +33,7 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Arrange
             var request = new Web3ChallengeRequestDto
             {
-                WalletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower(),
-                ChainId = "1"
+                WalletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower(), ChainId = "1"
             };
 
             // Act
@@ -52,13 +53,11 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Arrange
             var request = new Web3ChallengeRequestDto
             {
-                WalletAddress = "invalid-address",
-                ChainId = "1"
+                WalletAddress = "invalid-address", ChainId = "1"
             };
 
             // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(
-                () => _web3Service.GenerateChallengeAsync(request)
+            await Assert.ThrowsAsync<ArgumentException>(() => _web3Service.GenerateChallengeAsync(request)
             );
         }
 
@@ -98,14 +97,14 @@ namespace GameGuild.Tests.Modules.Auth.Services
         {
             // Arrange
             string walletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower();
-            
+
             // First generate a challenge
             var challengeRequest = new Web3ChallengeRequestDto
             {
                 WalletAddress = walletAddress
             };
             Web3ChallengeResponseDto challenge = await _web3Service.GenerateChallengeAsync(challengeRequest);
-            
+
             // Now create the verify request with the generated nonce
             var verifyRequest = new Web3VerifyRequestDto
             {
@@ -161,18 +160,14 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Create existing user first
             var existingUser = new User
             {
-                Name = "Existing Web3 User",
-                Email = $"{walletAddress}@web3.local"
+                Name = "Existing Web3 User", Email = $"{walletAddress}@web3.local"
             };
             _context.Users.Add(existingUser);
             await _context.SaveChangesAsync();
 
             var existingCredential = new Credential
             {
-                UserId = existingUser.Id,
-                Type = "web3_wallet",
-                Value = walletAddress,
-                IsActive = true
+                UserId = existingUser.Id, Type = "web3_wallet", Value = walletAddress, IsActive = true
             };
             _context.Credentials.Add(existingCredential);
             await _context.SaveChangesAsync();
@@ -212,7 +207,7 @@ namespace GameGuild.Tests.Modules.Auth.Services
                 .Where(c => c.UserId == user1.Id && c.Type == "web3_wallet")
                 .ToListAsync();
 
-            Assert.Equal(1, credentials.Count);
+            Assert.Single(credentials);
             Assert.Equal(walletAddress, credentials.First().Value);
         }
 

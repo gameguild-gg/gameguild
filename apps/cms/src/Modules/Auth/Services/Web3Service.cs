@@ -205,7 +205,9 @@ namespace GameGuild.Modules.Auth.Services
 
                 return false;
             }
-        }        public bool IsValidEthereumAddress(string address)
+        }
+
+        public bool IsValidEthereumAddress(string address)
         {
             if (string.IsNullOrEmpty(address) || !address.StartsWith("0x") || address.Length != 42)
             {

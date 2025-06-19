@@ -15,32 +15,40 @@ public abstract class ResourcePermission<T> : WithPermissions where T : BaseEnti
     [GraphQLType(typeof(NonNullType<UuidType>))]
     [GraphQLDescription("The ID of the resource this permission applies to")]
     [Required]
-    public Guid ResourceId { get; set; }
-    
+    public Guid ResourceId
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Navigation property to the resource entity
     /// </summary>
     [GraphQLIgnore] // Cannot use generic type parameters in GraphQL attributes
     [GraphQLDescription("The resource this permission applies to")]
     [ForeignKey(nameof(ResourceId))]
-    public virtual T Resource { get; set; } = null!;
-    
+    public virtual T Resource
+    {
+        get;
+        set;
+    } = null!;
+
     // Computed properties specific to resource permissions
-    
+
     /// <summary>
     /// Check if this is a default permission for this resource in a specific tenant
     /// </summary>
     [GraphQLType(typeof(NonNullType<BooleanType>))]
     [GraphQLDescription("Whether this is a default permission for this resource in a specific tenant")]
     public bool IsDefaultResourcePermission => UserId == null && TenantId != null;
-    
+
     /// <summary>
     /// Check if this is a global default permission for this resource
     /// </summary>
     [GraphQLType(typeof(NonNullType<BooleanType>))]
     [GraphQLDescription("Whether this is a global default permission for this resource")]
     public bool IsGlobalResourceDefault => UserId == null && TenantId == null;
-    
+
     /// <summary>
     /// Check if this is a user-specific permission for this resource
     /// </summary>

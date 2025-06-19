@@ -18,8 +18,12 @@ public class LogAnalyticsEventHandler : INotificationHandler<UserSignedUpNotific
     public async Task Handle(UserSignedUpNotification notification, CancellationToken cancellationToken)
     {
         // In a real application, you would send this to an analytics service
-        _logger.LogInformation("Analytics: User sign-up event - UserId: {UserId}, Email: {Email}, Time: {SignUpTime}", 
-            notification.UserId, notification.Email, notification.SignUpTime);
+        _logger.LogInformation(
+            "Analytics: User sign-up event - UserId: {UserId}, Email: {Email}, Time: {SignUpTime}",
+            notification.UserId,
+            notification.Email,
+            notification.SignUpTime
+        );
 
         // Simulate analytics API call
         await Task.Delay(50, cancellationToken);

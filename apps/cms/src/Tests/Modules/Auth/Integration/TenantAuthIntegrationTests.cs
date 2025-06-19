@@ -20,8 +20,9 @@ namespace GameGuild.Tests.Modules.Auth.Integration
 
         public TenantAuthIntegrationTests(WebApplicationFactory<Program> factory)
         {
-            // Use the IntegrationTestHelper which already configures all required services
-            _factory = IntegrationTestHelper.GetTestFactory();
+            // Use a unique database name for this test class to avoid interference
+            var uniqueDbName = $"TenantAuthIntegrationTests_{Guid.NewGuid()}";
+            _factory = IntegrationTestHelper.GetTestFactory(uniqueDbName);
             _client = _factory.CreateClient();
         }
 
@@ -34,7 +35,7 @@ namespace GameGuild.Tests.Modules.Auth.Integration
                 await db.Database.EnsureDeletedAsync();
                 await db.Database.EnsureCreatedAsync();
             }
-            
+
             // Check if data already exists
             if (await db.Users.AnyAsync())
                 return;
@@ -117,15 +118,14 @@ namespace GameGuild.Tests.Modules.Auth.Integration
         }
 
 
-
         [Fact]
         public async Task Login_WithTenantId_ReturnsTenantInformationInResponse()
         {
             // Setup test data in the same scope as the test
-            using var scope = _factory.Services.CreateScope();
+            using IServiceScope scope = _factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             await SetupTestTenantData(db);
-            
+
             // Arrange
             var request = new LocalSignInRequestDto
             {
@@ -154,10 +154,10 @@ namespace GameGuild.Tests.Modules.Auth.Integration
         public async Task Login_WithoutTenantId_ReturnsFirstTenant()
         {
             // Setup test data in the same scope as the test
-            using var scope = _factory.Services.CreateScope();
+            using IServiceScope scope = _factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             await SetupTestTenantData(db);
-            
+
             // Arrange
             var request = new LocalSignInRequestDto
             {
@@ -186,10 +186,10 @@ namespace GameGuild.Tests.Modules.Auth.Integration
         public async Task RefreshToken_WithTenantId_ReturnsTenantSpecificToken()
         {
             // Setup test data in the same scope as the test
-            using var scope = _factory.Services.CreateScope();
+            using IServiceScope scope = _factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             await SetupTestTenantData(db);
-            
+
             // First login to get a refresh token
             var loginRequest = new LocalSignInRequestDto
             {
@@ -201,15 +201,14 @@ namespace GameGuild.Tests.Modules.Auth.Integration
 
             HttpResponseMessage loginResponse = await _client.PostAsync("/auth/sign-in", loginContent);
             var loginData = await loginResponse.Content.ReadFromJsonAsync<SignInResponseDto>();
-            
+
             Assert.NotNull(loginData);
             Assert.NotNull(loginData.RefreshToken);
 
             // Now refresh the token with a specific tenant ID
             var refreshRequest = new RefreshTokenRequestDto
             {
-                RefreshToken = loginData.RefreshToken,
-                TenantId = Guid.Parse("33333333-3333-3333-3333-333333333333") // Use the second tenant
+                RefreshToken = loginData.RefreshToken, TenantId = Guid.Parse("33333333-3333-3333-3333-333333333333") // Use the second tenant
             };
 
             string refreshJson = JsonSerializer.Serialize(refreshRequest);
@@ -227,6 +226,5 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             Assert.NotEmpty(responseData.RefreshToken);
             Assert.Equal(refreshRequest.TenantId, responseData.TenantId);
         }
-
     }
 }

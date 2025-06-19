@@ -16,47 +16,47 @@ namespace GameGuild.Modules.Product.Models;
 public class ProductPermission : ResourcePermission<Product>
 {
     // Product-specific computed properties
-    
+
     /// <summary>
     /// Check if user can edit this specific product
     /// </summary>
     public bool CanEdit => HasPermission(PermissionType.Edit) && IsValid;
-    
+
     /// <summary>
     /// Check if user can delete this specific product
     /// </summary>
     public bool CanDelete => HasPermission(PermissionType.Delete) && IsValid;
-    
+
     /// <summary>
     /// Check if user can publish this specific product
     /// </summary>
     public bool CanPublish => HasPermission(PermissionType.Publish) && IsValid;
-    
+
     /// <summary>
     /// Check if user can manage pricing for this specific product
     /// </summary>
     public bool CanManagePricing => HasPermission(PermissionType.Pricing) && IsValid;
-    
+
     /// <summary>
     /// Check if user can manage subscriptions for this specific product
     /// </summary>
     public bool CanManageSubscriptions => HasPermission(PermissionType.Subscription) && IsValid;
-    
+
     /// <summary>
     /// Check if user can view sales analytics for this specific product
     /// </summary>
     public bool CanViewAnalytics => HasPermission(PermissionType.Analytics) && IsValid;
-    
+
     /// <summary>
     /// Check if user can manage promo codes for this specific product
     /// </summary>
     public bool CanManagePromoCodes => HasPermission(PermissionType.Monetize) && IsValid;
-    
+
     /// <summary>
     /// Check if user can grant access to other users for this specific product
     /// </summary>
     public bool CanGrantAccess => HasPermission(PermissionType.Share) && IsValid;
-    
+
     /// <summary>
     /// Check if user can moderate this product (e.g., handle reports, moderate reviews)
     /// </summary>

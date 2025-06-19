@@ -5,12 +5,17 @@ using MediatR;
 namespace GameGuild.Modules.User.GraphQL;
 
 public class Query
-{    /// <summary>
+{
+    /// <summary>
     /// Gets all active users using CQRS pattern with MediatR.
     /// </summary>
     public async Task<IEnumerable<Models.User>> GetUsers([Service] IMediator mediator)
     {
-        var query = new GetAllUsersQuery { IncludeDeleted = false };
+        var query = new GetAllUsersQuery
+        {
+            IncludeDeleted = false
+        };
+
         return await mediator.Send(query);
     }
 

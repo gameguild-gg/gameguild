@@ -14,7 +14,7 @@ namespace GameGuild.Tests.Helpers
         {
             return database.ProviderName?.Contains("Sqlite") ?? false;
         }
-        
+
         /// <summary>
         /// Gets the provider name of the database
         /// </summary>

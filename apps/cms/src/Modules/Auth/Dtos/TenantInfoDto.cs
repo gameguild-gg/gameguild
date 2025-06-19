@@ -8,15 +8,27 @@ public class TenantInfoDto
     /// <summary>
     /// Tenant ID
     /// </summary>
-    public Guid Id { get; set; }
-    
+    public Guid Id
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Tenant name
     /// </summary>
-    public string Name { get; set; } = string.Empty;
-    
+    public string Name
+    {
+        get;
+        set;
+    } = string.Empty;
+
     /// <summary>
     /// Whether tenant is active
     /// </summary>
-    public bool IsActive { get; set; }
+    public bool IsActive
+    {
+        get;
+        set;
+    }
 }

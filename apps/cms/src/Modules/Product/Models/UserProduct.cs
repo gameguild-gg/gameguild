@@ -79,7 +79,7 @@ public class UserProduct : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// How the user acquired this product
     /// </summary>
@@ -97,7 +97,7 @@ public class UserProduct : BaseEntity
         get;
         set;
     } = ProductAccessStatus.Active;
-    
+
     /// <summary>
     /// Amount the user paid for this product
     /// </summary>
@@ -107,7 +107,7 @@ public class UserProduct : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Currency code for the price paid
     /// </summary>
@@ -135,7 +135,7 @@ public class UserProduct : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// User who gifted this product (if acquisition type is Gift)
     /// </summary>
@@ -175,6 +175,7 @@ public class UserProduct : BaseEntity
             return false;
 
         DateTime now = DateTime.UtcNow;
+
         return (AccessStartDate == null || AccessStartDate <= now) &&
                (AccessEndDate == null || AccessEndDate > now);
     }

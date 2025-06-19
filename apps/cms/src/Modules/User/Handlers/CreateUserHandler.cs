@@ -20,9 +20,7 @@ public class CreateUserHandler : IRequestHandler<CreateUserCommand, Models.User>
     {
         var user = new Models.User
         {
-            Name = request.Name,
-            Email = request.Email,
-            IsActive = request.IsActive
+            Name = request.Name, Email = request.Email, IsActive = request.IsActive
         };
 
         return await _userService.CreateUserAsync(user);

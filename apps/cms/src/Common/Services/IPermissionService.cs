@@ -23,6 +23,15 @@ public interface IPermissionService
     Task<TenantPermission> GrantTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions);
 
     /// <summary>
+    /// Grant permissions to multiple users in a tenant efficiently in a single transaction
+    /// </summary>
+    /// <param name="userIds">User IDs to grant permissions to</param>
+    /// <param name="tenantId">Tenant ID</param>
+    /// <param name="permissions">Permissions to grant</param>
+    /// <returns>List of tenant permission entities</returns>
+    Task<List<TenantPermission>> BulkGrantTenantPermissionAsync(Guid[] userIds, Guid tenantId, PermissionType[] permissions);
+
+    /// <summary>
     /// Check if user has a specific tenant permission
     /// Resolves through hierarchy: user -> tenant default -> global default
     /// </summary>
@@ -128,9 +137,9 @@ public interface IPermissionService
     /// <param name="contentTypeName">Name of the content type</param>
     /// <param name="permissions">Permissions to revoke</param>
     Task RevokeContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType[] permissions);
-    
+
     // ===== LAYER 3: RESOURCE-ENTRY PERMISSIONS =====
-    
+
     /// <summary>
     /// Grant resource-specific permissions to a user
     /// </summary>
@@ -140,10 +149,10 @@ public interface IPermissionService
     /// <param name="tenantId">Tenant ID (null for global defaults)</param>
     /// <param name="resourceId">ID of the specific resource</param>
     /// <param name="permissions">Permissions to grant</param>
-    Task GrantResourcePermissionAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid resourceId, PermissionType[] permissions) 
-        where TPermission : ResourcePermission<TResource>, new() 
+    Task GrantResourcePermissionAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid resourceId, PermissionType[] permissions)
+        where TPermission : ResourcePermission<TResource>, new()
         where TResource : BaseEntity;
-        
+
     /// <summary>
     /// Check if user has a specific resource permission
     /// </summary>
@@ -153,10 +162,10 @@ public interface IPermissionService
     /// <param name="tenantId">Tenant ID</param>
     /// <param name="resourceId">ID of the specific resource</param>
     /// <param name="permission">Permission to check</param>
-    Task<bool> HasResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permission) 
-        where TPermission : ResourcePermission<TResource> 
+    Task<bool> HasResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permission)
+        where TPermission : ResourcePermission<TResource>
         where TResource : BaseEntity;
-        
+
     /// <summary>
     /// Get all resource permissions for a user on a specific resource
     /// </summary>
@@ -165,10 +174,10 @@ public interface IPermissionService
     /// <param name="userId">User ID (null for default permissions)</param>
     /// <param name="tenantId">Tenant ID</param>
     /// <param name="resourceId">ID of the specific resource</param>
-    Task<IEnumerable<PermissionType>> GetResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid resourceId) 
-        where TPermission : ResourcePermission<TResource> 
+    Task<IEnumerable<PermissionType>> GetResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid resourceId)
+        where TPermission : ResourcePermission<TResource>
         where TResource : BaseEntity;
-        
+
     /// <summary>
     /// Revoke specific resource permissions from a user
     /// </summary>
@@ -178,10 +187,10 @@ public interface IPermissionService
     /// <param name="tenantId">Tenant ID</param>
     /// <param name="resourceId">ID of the specific resource</param>
     /// <param name="permissions">Permissions to revoke</param>
-    Task RevokeResourcePermissionAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid resourceId, PermissionType[] permissions) 
-        where TPermission : ResourcePermission<TResource> 
+    Task RevokeResourcePermissionAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid resourceId, PermissionType[] permissions)
+        where TPermission : ResourcePermission<TResource>
         where TResource : BaseEntity;
-    
+
     /// <summary>
     /// Get resource permissions for multiple resources at once (bulk operation)
     /// </summary>
@@ -190,10 +199,10 @@ public interface IPermissionService
     /// <param name="userId">User ID</param>
     /// <param name="tenantId">Tenant ID</param>
     /// <param name="resourceIds">IDs of the resources</param>
-    Task<Dictionary<Guid, IEnumerable<PermissionType>>> GetBulkResourcePermissionsAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[] resourceIds) 
-        where TPermission : ResourcePermission<TResource> 
+    Task<Dictionary<Guid, IEnumerable<PermissionType>>> GetBulkResourcePermissionsAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[] resourceIds)
+        where TPermission : ResourcePermission<TResource>
         where TResource : BaseEntity;
-        
+
     /// <summary>
     /// Share a resource with another user with specific permissions
     /// </summary>
@@ -204,10 +213,10 @@ public interface IPermissionService
     /// <param name="tenantId">Tenant context</param>
     /// <param name="permissions">Permissions to grant</param>
     /// <param name="expiresAt">Optional expiration date</param>
-    Task ShareResourceAsync<TPermission, TResource>(Guid resourceId, Guid targetUserId, Guid? tenantId, PermissionType[] permissions, DateTime? expiresAt = null) 
-        where TPermission : ResourcePermission<TResource>, new() 
+    Task ShareResourceAsync<TPermission, TResource>(Guid resourceId, Guid targetUserId, Guid? tenantId, PermissionType[] permissions, DateTime? expiresAt = null)
+        where TPermission : ResourcePermission<TResource>, new()
         where TResource : BaseEntity;
-    
+
     // ===== HELPER METHODS =====
 
     /// <summary>

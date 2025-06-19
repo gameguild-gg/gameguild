@@ -11,6 +11,7 @@ namespace GameGuild.Modules.UserProfile.Handlers;
 public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand, Models.UserProfile>
 {
     private readonly ApplicationDbContext _context;
+
     private readonly ILogger<UpdateUserProfileHandler> _logger;
 
     public UpdateUserProfileHandler(ApplicationDbContext context, ILogger<UpdateUserProfileHandler> logger)

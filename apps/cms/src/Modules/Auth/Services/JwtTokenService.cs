@@ -16,7 +16,7 @@ namespace GameGuild.Modules.Auth.Services
         string GenerateRefreshToken();
 
         ClaimsPrincipal? GetPrincipalFromExpiredToken(string token);
-        
+
         ClaimsPrincipal? ValidateToken(string token);
     }
 
@@ -38,28 +38,26 @@ namespace GameGuild.Modules.Auth.Services
         {
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), 
-                new Claim(JwtRegisteredClaimNames.Email, user.Email), 
-                new Claim("username", user.Username)
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), new Claim(JwtRegisteredClaimNames.Email, user.Email), new Claim("username", user.Username)
             };
-            
+
             foreach (string role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
-            
+
             // Add any additional claims (like tenant claims)
             if (additionalClaims != null)
             {
                 claims.AddRange(additionalClaims);
             }
-            
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "dev-key"));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            
+
             int expiryMinutes = int.Parse(_configuration["Jwt:AccessTokenExpiryMinutes"] ?? "60");
             DateTime expires = DateTime.UtcNow.AddMinutes(expiryMinutes);
-            
+
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],

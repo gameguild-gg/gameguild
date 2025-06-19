@@ -8,7 +8,6 @@ namespace GameGuild.Common.Entities;
 /// Content-type-wide permissions (Layer 3 of DAC permission system)
 /// Allows setting permissions for specific content types within a tenant
 /// </summary>
-[ObjectType]
 [Table("ContentTypePermissions")]
 [Index(nameof(ContentType), nameof(UserId), nameof(TenantId), IsUnique = true, Name = "IX_ContentTypePermissions_ContentType_User_Tenant")]
 [Index(nameof(ContentType), nameof(TenantId), Name = "IX_ContentTypePermissions_ContentType_Tenant")]
@@ -24,5 +23,9 @@ public class ContentTypePermission : WithPermissions
     [GraphQLDescription("The content type this permission applies to (e.g., 'Article', 'Video', 'Discussion')")]
     [Required]
     [MaxLength(100)]
-    public string ContentType { get; set; } = string.Empty;
+    public string ContentType
+    {
+        get;
+        set;
+    } = string.Empty;
 }

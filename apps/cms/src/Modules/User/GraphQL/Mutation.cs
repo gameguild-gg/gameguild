@@ -5,16 +5,15 @@ using MediatR;
 namespace GameGuild.Modules.User.GraphQL;
 
 public class Mutation
-{    /// <summary>
+{
+    /// <summary>
     /// Creates a new user using CQRS pattern with MediatR.
     /// </summary>
     public async Task<Models.User> CreateUser(CreateUserInput input, [Service] IMediator mediator)
     {
         var command = new CreateUserCommand
         {
-            Name = input.Name,
-            Email = input.Email,
-            IsActive = input.IsActive
+            Name = input.Name, Email = input.Email, IsActive = input.IsActive
         };
 
         return await mediator.Send(command);

@@ -37,7 +37,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
             options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
         );
 
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
         _context = serviceProvider.GetRequiredService<ApplicationDbContext>();
     }
 
@@ -53,10 +53,34 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GraphQL_TenantQueries_RequireValidAuthentication()
     {
-        // Arrange
+        // Arrange - Ensure no authorization header is set
+        ClearAuthorizationHeader();
+        
+        // Try introspection first to see what's available
+        var introspectionQuery = @"
+            query IntrospectionQuery {
+                __schema {
+                    queryType {
+                        fields {
+                            name
+                        }
+                    }
+                }
+            }";
+
+        var introspectionRequest = new
+        {
+            query = introspectionQuery
+        };
+
+        // Act - Get schema information
+        HttpResponseMessage introspectionResponse = await PostGraphQlAsync(introspectionRequest);
+        var introspectionContent = await introspectionResponse.Content.ReadAsStringAsync();
+        
+        // Now try the actual query
         var query = @"
             query {
-                getTenants {
+                tenants {
                     id
                     name
                     description
@@ -69,13 +93,36 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act - Request without authentication
-        var response = await PostGraphQlAsync(request);
+        HttpResponseMessage response = await PostGraphQlAsync(request);
 
-        // Assert
-        Assert.False(response.IsSuccessStatusCode);
-        Assert.True(
-            response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
-            response.StatusCode == System.Net.HttpStatusCode.Forbidden
+        // Assert - GraphQL returns HTTP 200 with errors in response body
+        Assert.True(response.IsSuccessStatusCode, "GraphQL should return HTTP 200 even with authentication errors");
+        
+        string content = await response.Content.ReadAsStringAsync();
+        var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
+
+        // Check that there are authentication-related errors
+        Assert.True(jsonResponse.TryGetProperty("errors", out JsonElement errors), "Expected GraphQL errors in response");
+        
+        var errorMessages = errors.EnumerateArray()
+            .SelectMany(e => {
+                var messages = new List<string>();
+                if (e.TryGetProperty("message", out var message) && message.ValueKind == JsonValueKind.String)
+                    messages.Add(message.GetString()!);
+                if (e.TryGetProperty("extensions", out var extensions) && 
+                    extensions.TryGetProperty("message", out var extMessage) && 
+                    extMessage.ValueKind == JsonValueKind.String)
+                    messages.Add(extMessage.GetString()!);
+                return messages;
+            })
+            .ToList();
+
+        Assert.Contains(
+            errorMessages,
+            m => m != null && (
+                m.Contains("Authentication required", StringComparison.OrdinalIgnoreCase) ||
+                m.Contains("Unauthorized", StringComparison.OrdinalIgnoreCase)
+            )
         );
     }
 
@@ -83,11 +130,11 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     public async Task GraphQL_PermissionMutations_EnforcePermissionChecks()
     {
         // Arrange - Create test data
-        var user = await CreateTestUserAsync();
-        var tenant = await CreateTestTenantAsync();
+        User user = await CreateTestUserAsync();
+        Tenant tenant = await CreateTestTenantAsync();
 
         // Create JWT token for user
-        var token = await CreateJwtTokenForUserAsync(user, tenant);
+        string token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
 
         var mutation = @"
@@ -112,19 +159,28 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act - Request without CREATE permission
-        var response = await PostGraphQlAsync(request);
+        HttpResponseMessage response = await PostGraphQlAsync(request);
 
         // Assert - Should be forbidden due to missing permissions
         if (response.IsSuccessStatusCode)
         {
-            var content = await response.Content.ReadAsStringAsync();
+            string content = await response.Content.ReadAsStringAsync();
             var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
 
             // Check if there are permission-related errors
-            if (jsonResponse.TryGetProperty("errors", out var errors))
+            if (jsonResponse.TryGetProperty("errors", out JsonElement errors))
             {
                 var errorMessages = errors.EnumerateArray()
-                    .Select(e => e.GetProperty("message").GetString())
+                    .SelectMany(e => {
+                        var messages = new List<string>();
+                        if (e.TryGetProperty("message", out var message) && message.ValueKind == JsonValueKind.String)
+                            messages.Add(message.GetString()!);
+                        if (e.TryGetProperty("extensions", out var extensions) && 
+                            extensions.TryGetProperty("message", out var extMessage) && 
+                            extMessage.ValueKind == JsonValueKind.String)
+                            messages.Add(extMessage.GetString()!);
+                        return messages;
+                    })
                     .ToList();
 
                 Assert.Contains(
@@ -132,15 +188,15 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
                     m => m != null &&
                          (m.Contains("permission", StringComparison.OrdinalIgnoreCase) ||
                           m.Contains("unauthorized", StringComparison.OrdinalIgnoreCase) ||
-                          m.Contains("forbidden", StringComparison.OrdinalIgnoreCase))
+                          m.Contains("forbidden", StringComparison.OrdinalIgnoreCase) ||
+                          m.Contains("Insufficient permissions", StringComparison.OrdinalIgnoreCase))
                 );
             }
         }
         else
         {
             Assert.True(
-                response.StatusCode == System.Net.HttpStatusCode.Forbidden ||
-                response.StatusCode == System.Net.HttpStatusCode.Unauthorized
+                response.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized
             );
         }
     }
@@ -149,8 +205,8 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     public async Task GraphQL_WithValidPermissions_AllowsResourceAccess()
     {
         // Arrange - Create test data with proper permissions
-        var user = await CreateTestUserAsync();
-        var tenant = await CreateTestTenantAsync();
+        User user = await CreateTestUserAsync();
+        Tenant tenant = await CreateTestTenantAsync();
 
         // Grant tenant permissions to user
         await GrantTenantPermissionsAsync(
@@ -162,7 +218,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
             ]
         );
 
-        var token = await CreateJwtTokenForUserAsync(user, tenant);
+        string token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
 
         var query = @"
@@ -180,18 +236,18 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await PostGraphQlAsync(request);
+        HttpResponseMessage response = await PostGraphQlAsync(request);
 
         // Assert
         if (response.IsSuccessStatusCode)
         {
-            var content = await response.Content.ReadAsStringAsync();
+            string content = await response.Content.ReadAsStringAsync();
             var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
 
             // Should have data and no permission errors
             Assert.True(jsonResponse.TryGetProperty("data", out _));
 
-            if (jsonResponse.TryGetProperty("errors", out var errors))
+            if (jsonResponse.TryGetProperty("errors", out JsonElement errors))
             {
                 var errorMessages = errors.EnumerateArray()
                     .Select(e => e.GetProperty("message").GetString())
@@ -220,12 +276,11 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     public async Task REST_TenantEndpoints_RequireAuthentication()
     {
         // Act - Request without authentication
-        var response = await _client.GetAsync("/tenants");
+        HttpResponseMessage response = await _client.GetAsync("/tenants");
 
         // Assert
         Assert.True(
-            response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
-            response.StatusCode == System.Net.HttpStatusCode.Forbidden
+            response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden
         );
     }
 
@@ -233,10 +288,10 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     public async Task REST_CreateTenant_EnforcesCreatePermission()
     {
         // Arrange
-        var user = await CreateTestUserAsync();
-        var tenant = await CreateTestTenantAsync();
+        User user = await CreateTestUserAsync();
+        Tenant tenant = await CreateTestTenantAsync();
 
-        var token = await CreateJwtTokenForUserAsync(user, tenant);
+        string token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
 
         var createTenantDto = new
@@ -244,16 +299,15 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
             name = "Test Tenant REST", description = "Created via REST API", isActive = true
         };
 
-        var json = JsonSerializer.Serialize(createTenantDto);
+        string json = JsonSerializer.Serialize(createTenantDto);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // Act - Request without CREATE permission
-        var response = await _client.PostAsync("/tenants", content);
+        HttpResponseMessage response = await _client.PostAsync("/tenants", content);
 
         // Assert
         Assert.True(
-            response.StatusCode == System.Net.HttpStatusCode.Forbidden ||
-            response.StatusCode == System.Net.HttpStatusCode.Unauthorized
+            response.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized
         );
     }
 
@@ -261,8 +315,8 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     public async Task REST_WithValidPermissions_AllowsResourceOperations()
     {
         // Arrange
-        var user = await CreateTestUserAsync();
-        var tenant = await CreateTestTenantAsync();
+        User user = await CreateTestUserAsync();
+        Tenant tenant = await CreateTestTenantAsync();
 
         // Grant necessary permissions
         await GrantTenantPermissionsAsync(
@@ -274,11 +328,11 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
             ]
         );
 
-        var token = await CreateJwtTokenForUserAsync(user, tenant);
+        string token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
 
         // Act - Get tenants (should work with Read permission)
-        var response = await _client.GetAsync("/tenants");
+        HttpResponseMessage response = await _client.GetAsync("/tenants");
 
         // Assert
         if (!response.IsSuccessStatusCode)
@@ -297,22 +351,22 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     public async Task E2E_HierarchicalPermissionResolution_WorksCorrectly()
     {
         // Arrange - Create a complex permission hierarchy
-        var user = await CreateTestUserAsync();
-        var tenant = await CreateTestTenantAsync();
-        var comment = await CreateTestCommentAsync();
+        User user = await CreateTestUserAsync();
+        Tenant tenant = await CreateTestTenantAsync();
+        Comment comment = await CreateTestCommentAsync();
 
         // Grant different permissions at different layers
         await GrantTenantPermissionsAsync(user.Id, tenant.Id, [PermissionType.Read]);
         await GrantContentTypePermissionsAsync(user.Id, tenant.Id, "Comment", [PermissionType.Comment]);
         await GrantResourcePermissionsAsync(user.Id, tenant.Id, comment.Id, [PermissionType.Edit]);
 
-        var token = await CreateJwtTokenForUserAsync(user, tenant);
+        string token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
 
         // Act & Assert - Test different permission levels through API
 
         // 1. Tenant-level READ should work
-        var tenantResponse = await _client.GetAsync("/tenants");
+        HttpResponseMessage tenantResponse = await _client.GetAsync("/tenants");
         if (tenantResponse.IsSuccessStatusCode || tenantResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
             Assert.NotEqual(System.Net.HttpStatusCode.Forbidden, tenantResponse.StatusCode);
@@ -331,15 +385,15 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
         {
             query = commentQuery
         };
-        var commentResponse = await PostGraphQlAsync(commentQueryRequest);
+        HttpResponseMessage commentResponse = await PostGraphQlAsync(commentQueryRequest);
 
         if (commentResponse.IsSuccessStatusCode)
         {
-            var content = await commentResponse.Content.ReadAsStringAsync();
+            string content = await commentResponse.Content.ReadAsStringAsync();
             var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
 
             // Should not have permission errors for comment access
-            if (jsonResponse.TryGetProperty("errors", out var errors))
+            if (jsonResponse.TryGetProperty("errors", out JsonElement errors))
             {
                 var errorMessages = errors.EnumerateArray()
                     .Select(e => e.GetProperty("message").GetString())
@@ -359,9 +413,9 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     public async Task E2E_PermissionInheritance_OverridesWorkCorrectly()
     {
         // Arrange - Create a test scenario where resource permissions override content-type permissions
-        var user = await CreateTestUserAsync();
-        var tenant = await CreateTestTenantAsync();
-        var comment = await CreateTestCommentAsync();
+        User user = await CreateTestUserAsync();
+        Tenant tenant = await CreateTestTenantAsync();
+        Comment comment = await CreateTestCommentAsync();
 
         // Grant different permissions that demonstrate hierarchy
         await GrantTenantPermissionsAsync(user.Id, tenant.Id, [PermissionType.Read]);
@@ -378,7 +432,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
             ]
         );
 
-        var token = await CreateJwtTokenForUserAsync(user, tenant);
+        string token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
 
         // Act - Try to perform actions that should be allowed by resource-level permissions
@@ -387,10 +441,10 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
             content = "Updated comment content", isEdited = true
         };
 
-        var json = JsonSerializer.Serialize(updateCommentDto);
+        string json = JsonSerializer.Serialize(updateCommentDto);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _client.PutAsync($"/comments/{comment.Id}", content);
+        HttpResponseMessage response = await _client.PutAsync($"/comments/{comment.Id}", content);
 
         // Assert - Resource-level permissions should allow the operation
         if (!response.IsSuccessStatusCode)
@@ -409,26 +463,24 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     public async Task E2E_CrossTenantIsolation_PreventsCrossTenantAccess()
     {
         // Arrange - Create users in different tenants
-        var user1 = await CreateTestUserAsync("user1@test.com");
-        var user2 = await CreateTestUserAsync("user2@test.com");
-        var tenant1 = await CreateTestTenantAsync("Tenant 1");
-        var tenant2 = await CreateTestTenantAsync("Tenant 2");
+        User user1 = await CreateTestUserAsync("user1@test.com");
+        User user2 = await CreateTestUserAsync("user2@test.com");
+        Tenant tenant1 = await CreateTestTenantAsync("Tenant 1");
+        Tenant tenant2 = await CreateTestTenantAsync("Tenant 2");
 
         // Grant permissions to users in their respective tenants
         await GrantTenantPermissionsAsync(user1.Id, tenant1.Id, [PermissionType.Read, PermissionType.Edit]);
         await GrantTenantPermissionsAsync(user2.Id, tenant2.Id, [PermissionType.Read, PermissionType.Edit]);
 
         // Act - User1 tries to access Tenant2's resources
-        var token1 = await CreateJwtTokenForUserAsync(user1, tenant2); // Wrong tenant context
+        string token1 = await CreateJwtTokenForUserAsync(user1, tenant2); // Wrong tenant context
         SetAuthorizationHeader(token1);
 
-        var response = await _client.GetAsync($"/tenants/{tenant2.Id}");
+        HttpResponseMessage response = await _client.GetAsync($"/tenants/{tenant2.Id}");
 
         // Assert - Should be forbidden due to cross-tenant access
         Assert.True(
-            response.StatusCode == System.Net.HttpStatusCode.Forbidden ||
-            response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
-            response.StatusCode == System.Net.HttpStatusCode.NotFound
+            response.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.NotFound
         );
     }
 
@@ -484,7 +536,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
             UserId = userId, TenantId = tenantId
         };
 
-        foreach (var permission in permissions)
+        foreach (PermissionType permission in permissions)
         {
             tenantPermission.AddPermission(permission);
         }
@@ -500,7 +552,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
             UserId = userId, TenantId = tenantId, ContentType = contentTypeName // The correct property name is ContentType, not ContentTypeName
         };
 
-        foreach (var permission in permissions)
+        foreach (PermissionType permission in permissions)
         {
             contentTypePermission.AddPermission(permission);
         }
@@ -516,7 +568,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
             UserId = userId, TenantId = tenantId, ResourceId = resourceId
         };
 
-        foreach (var permission in permissions)
+        foreach (PermissionType permission in permissions)
         {
             resourcePermission.AddPermission(permission);
         }
@@ -554,9 +606,14 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
+    private void ClearAuthorizationHeader()
+    {
+        _client.DefaultRequestHeaders.Authorization = null;
+    }
+
     private async Task<HttpResponseMessage> PostGraphQlAsync(object request)
     {
-        var json = JsonSerializer.Serialize(
+        string json = JsonSerializer.Serialize(
             request,
             new JsonSerializerOptions
             {

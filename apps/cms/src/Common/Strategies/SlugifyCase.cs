@@ -9,8 +9,9 @@ using Slugify;
 public static class SlugCase
 {
     private static readonly SlugHelper SlugHelper;
+
     private static IMemoryCache _cache;
-    
+
     static SlugCase()
     {
         var config = new SlugHelperConfiguration
@@ -22,13 +23,17 @@ public static class SlugCase
             // Use Unidecode if we need a more comprehensive transliteration
             StringReplacements = new Dictionary<string, string>
             {
-                {"&", "and"},
-                {"+", "plus"}
+                {
+                    "&", "and"
+                },
+                {
+                    "+", "plus"
+                }
             }
         };
-        
+
         SlugHelper = new SlugHelper(config);
-        
+
         // Initialize cache with the same configuration as SnakeCase
         var cacheOptions = new MemoryCacheOptions
         {
@@ -58,22 +63,26 @@ public static class SlugCase
         }
 
         var cacheKey = $"slugify:{text}:{maxLength}";
-        return _cache.GetOrCreate(cacheKey, entry =>
-        {
-            entry.Size = 1; // Each entry counts as 1 towards the size limit
-            entry.SlidingExpiration = TimeSpan.FromMinutes(30); // Expire after 30 minutes of inactivity
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2); // Absolute expiration after 2 hours
-            
-            string slug = SlugHelper.GenerateSlug(text);
-            
-            // Truncate if necessary
-            if (slug.Length > maxLength)
+
+        return _cache.GetOrCreate(
+            cacheKey,
+            entry =>
             {
-                slug = slug.Substring(0, maxLength).TrimEnd('-');
+                entry.Size = 1; // Each entry counts as 1 towards the size limit
+                entry.SlidingExpiration = TimeSpan.FromMinutes(30); // Expire after 30 minutes of inactivity
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2); // Absolute expiration after 2 hours
+
+                string slug = SlugHelper.GenerateSlug(text);
+
+                // Truncate if necessary
+                if (slug.Length > maxLength)
+                {
+                    slug = slug.Substring(0, maxLength).TrimEnd('-');
+                }
+
+                return slug;
             }
-            
-            return slug;
-        }) ?? string.Empty;
+        ) ?? string.Empty;
     }
 
     /// <summary>
@@ -86,12 +95,12 @@ public static class SlugCase
     public static string Convert(string text, string separator, int maxLength = 100)
     {
         string slug = Convert(text, maxLength);
-        
+
         if (!string.IsNullOrEmpty(separator) && separator != "-")
         {
             slug = slug.Replace("-", separator);
         }
-        
+
         return slug;
     }
 
@@ -108,10 +117,11 @@ public static class SlugCase
         }
 
         var result = new string[texts.Length];
-        for (int i = 0; i < texts.Length; i++)
+        for (var i = 0; i < texts.Length; i++)
         {
             result[i] = Convert(texts[i]);
         }
+
         return result;
     }
 
@@ -125,7 +135,7 @@ public static class SlugCase
     public static string GenerateUnique(string text, IEnumerable<string> existingSlugs, int maxLength = 100)
     {
         string baseSlug = Convert(text, maxLength);
-        
+
         if (existingSlugs == null || !existingSlugs.Contains(baseSlug))
         {
             return baseSlug;
@@ -134,28 +144,27 @@ public static class SlugCase
         var existingSet = new HashSet<string>(existingSlugs, StringComparer.OrdinalIgnoreCase);
         var counter = 1;
         string uniqueSlug;
-        
+
         do
         {
             var suffix = $"-{counter}";
             int availableLength = maxLength - suffix.Length;
-            
+
             if (availableLength <= 0)
             {
                 uniqueSlug = counter.ToString();
             }
             else
             {
-                string truncatedBase = baseSlug.Length > availableLength 
+                string truncatedBase = baseSlug.Length > availableLength
                     ? baseSlug.Substring(0, availableLength).TrimEnd('-')
                     : baseSlug;
                 uniqueSlug = truncatedBase + suffix;
             }
-            
+
             counter++;
-        } 
-        while (existingSet.Contains(uniqueSlug));
-        
+        } while (existingSet.Contains(uniqueSlug));
+
         return uniqueSlug;
     }
 
@@ -223,13 +232,13 @@ public static class SlugCase
         }
 
         string slug = SlugHelper.GenerateSlug(text);
-        
+
         // Truncate if necessary
         if (slug.Length > maxLength)
         {
             slug = slug.Substring(0, maxLength).TrimEnd('-');
         }
-        
+
         return slug;
     }
 

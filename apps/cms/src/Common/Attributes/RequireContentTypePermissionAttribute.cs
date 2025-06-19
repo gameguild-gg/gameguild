@@ -24,12 +24,13 @@ public class RequireContentTypePermissionAttribute<T> : Attribute, IAsyncAuthori
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
         var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
-        
+
         // Extract user ID and tenant ID from JWT token
         string? userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdClaim, out Guid userId))
         {
             context.Result = new UnauthorizedResult();
+
             return;
         }
 
@@ -37,6 +38,7 @@ public class RequireContentTypePermissionAttribute<T> : Attribute, IAsyncAuthori
         if (!Guid.TryParse(tenantIdClaim, out Guid tenantId))
         {
             context.Result = new UnauthorizedResult();
+
             return;
         }
 

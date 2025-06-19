@@ -169,6 +169,7 @@ public class TenantResponseDto
         set;
     } = new List<TenantPermissionResponseDto>();
 }
+
 /// <summary>
 /// DTO for tenant permission response
 /// </summary>
@@ -299,4 +300,3 @@ public class TenantPermissionResponseDto
         set;
     }
 }
-

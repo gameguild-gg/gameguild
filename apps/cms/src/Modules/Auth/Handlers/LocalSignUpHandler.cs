@@ -12,6 +12,7 @@ namespace GameGuild.Modules.Auth.Handlers;
 public class LocalSignUpHandler : IRequestHandler<LocalSignUpCommand, SignInResponseDto>
 {
     private readonly IAuthService _authService;
+
     private readonly IMediator _mediator;
 
     public LocalSignUpHandler(IAuthService authService, IMediator mediator)
@@ -24,10 +25,7 @@ public class LocalSignUpHandler : IRequestHandler<LocalSignUpCommand, SignInResp
     {
         var signUpRequest = new LocalSignUpRequestDto
         {
-            Email = request.Email,
-            Password = request.Password,
-            Username = request.Username,
-            TenantId = request.TenantId
+            Email = request.Email, Password = request.Password, Username = request.Username, TenantId = request.TenantId
         };
 
         SignInResponseDto result = await _authService.LocalSignUpAsync(signUpRequest);
@@ -35,10 +33,7 @@ public class LocalSignUpHandler : IRequestHandler<LocalSignUpCommand, SignInResp
         // Publish notification for side effects (email, analytics, etc.)
         var notification = new UserSignedUpNotification
         {
-            UserId = result.User.Id,
-            Email = result.User.Email,
-            Username = request.Username,
-            TenantId = result.TenantId // Include the tenant ID from the response
+            UserId = result.User.Id, Email = result.User.Email, Username = request.Username, TenantId = result.TenantId // Include the tenant ID from the response
         };
 
         await _mediator.Publish(notification, cancellationToken);

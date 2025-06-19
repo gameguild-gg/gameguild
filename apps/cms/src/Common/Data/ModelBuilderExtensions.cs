@@ -9,7 +9,8 @@ namespace GameGuild.Common.Data;
 /// Extension methods for configuring base entity properties in Entity Framework
 /// </summary>
 public static class ModelBuilderExtensions
-{    /// <summary>
+{
+    /// <summary>
     /// Configures all entities that inherit from BaseEntity with common configurations
     /// </summary>
     /// <param name="modelBuilder">The model builder</param>
@@ -72,7 +73,9 @@ public static class ModelBuilderExtensions
                 }
             );
         }
-    }    /// <summary>
+    }
+
+    /// <summary>
     /// Configures global query filters for soft delete
     /// </summary>
     /// <param name="modelBuilder">The model builder</param>
@@ -86,6 +89,7 @@ public static class ModelBuilderExtensions
         {
             // Skip abstract types - they don't get tables in TPC inheritance
             bool isAbstractType = entityType.ClrType.IsAbstract;
+
             if (isAbstractType)
                 continue;
 
@@ -103,7 +107,9 @@ public static class ModelBuilderExtensions
 
             modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
         }
-    }/// <summary>
+    }
+
+    /// <summary>
     /// Checks if a type inherits from BaseEntity or BaseEntity&lt;T&gt;
     /// </summary>
     private static bool IsBaseEntity(Type type)

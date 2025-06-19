@@ -83,9 +83,10 @@ public class ProductService : IProductService
     {
         product.Status = ContentStatus.Draft;
         product.Visibility = Common.Entities.AccessLevel.Private;
-        
+
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
+
         return product;
     }
 
@@ -94,6 +95,7 @@ public class ProductService : IProductService
         product.Touch();
         _context.Products.Update(product);
         await _context.SaveChangesAsync();
+
         return product;
     }
 
@@ -118,48 +120,56 @@ public class ProductService : IProductService
     public async Task<ProductEntity> PublishProductAsync(Guid id)
     {
         ProductEntity? product = await GetProductByIdAsync(id);
+
         if (product == null)
             throw new ArgumentException("Product not found", nameof(id));
 
         product.Status = ContentStatus.Published;
         product.Touch();
         await _context.SaveChangesAsync();
+
         return product;
     }
 
     public async Task<ProductEntity> UnpublishProductAsync(Guid id)
     {
         ProductEntity? product = await GetProductByIdAsync(id);
+
         if (product == null)
             throw new ArgumentException("Product not found", nameof(id));
 
         product.Status = ContentStatus.Draft;
         product.Touch();
         await _context.SaveChangesAsync();
+
         return product;
     }
 
     public async Task<ProductEntity> ArchiveProductAsync(Guid id)
     {
         ProductEntity? product = await GetProductByIdAsync(id);
+
         if (product == null)
             throw new ArgumentException("Product not found", nameof(id));
 
         product.Status = ContentStatus.Archived;
         product.Touch();
         await _context.SaveChangesAsync();
+
         return product;
     }
 
     public async Task<ProductEntity> SetVisibilityAsync(Guid id, Common.Entities.AccessLevel visibility)
     {
         ProductEntity? product = await GetProductByIdAsync(id);
+
         if (product == null)
             throw new ArgumentException("Product not found", nameof(id));
 
         product.Visibility = visibility;
         product.Touch();
         await _context.SaveChangesAsync();
+
         return product;
     }
 
@@ -167,10 +177,12 @@ public class ProductService : IProductService
     public async Task<IEnumerable<ProductEntity>> GetBundleItemsAsync(Guid bundleId)
     {
         ProductEntity? bundle = await GetProductByIdAsync(bundleId);
+
         if (bundle == null || !bundle.IsBundle)
             return [];
 
         var bundleItemIds = bundle.GetBundleItemIds();
+
         if (!bundleItemIds.Any())
             return [];
 
@@ -185,6 +197,7 @@ public class ProductService : IProductService
     public async Task<ProductEntity> AddToBundleAsync(Guid bundleId, Guid productId)
     {
         ProductEntity? bundle = await GetProductByIdAsync(bundleId);
+
         if (bundle == null)
             throw new ArgumentException("Bundle not found", nameof(bundleId));
 
@@ -192,6 +205,7 @@ public class ProductService : IProductService
             throw new InvalidOperationException("Product is not a bundle");
 
         bool product = await ProductExistsAsync(productId);
+
         if (!product)
             throw new ArgumentException("Product not found", nameof(productId));
 
@@ -210,6 +224,7 @@ public class ProductService : IProductService
     public async Task<ProductEntity> RemoveFromBundleAsync(Guid bundleId, Guid productId)
     {
         ProductEntity? bundle = await GetProductByIdAsync(bundleId);
+
         if (bundle == null)
             throw new ArgumentException("Bundle not found", nameof(bundleId));
 
@@ -230,10 +245,12 @@ public class ProductService : IProductService
     public async Task<bool> IsProductInBundleAsync(Guid bundleId, Guid productId)
     {
         ProductEntity? bundle = await GetProductByIdAsync(bundleId);
+
         if (bundle == null || !bundle.IsBundle)
             return false;
 
         var bundleItemIds = bundle.GetBundleItemIds();
+
         return bundleItemIds.Contains(productId);
     }
 
@@ -257,6 +274,7 @@ public class ProductService : IProductService
     public async Task<ProductPricing> SetPricingAsync(Guid productId, decimal basePrice, string currency = "USD")
     {
         bool product = await ProductExistsAsync(productId);
+
         if (!product)
             throw new ArgumentException("Product not found", nameof(productId));
 
@@ -280,6 +298,7 @@ public class ProductService : IProductService
 
         _context.ProductPricings.Add(pricing);
         await _context.SaveChangesAsync();
+
         return pricing;
     }
 
@@ -295,6 +314,7 @@ public class ProductService : IProductService
         pricing.BasePrice = basePrice;
         pricing.Touch();
         await _context.SaveChangesAsync();
+
         return pricing;
     }
 
@@ -318,6 +338,7 @@ public class ProductService : IProductService
     {
         _context.ProductSubscriptionPlans.Add(plan);
         await _context.SaveChangesAsync();
+
         return plan;
     }
 
@@ -326,6 +347,7 @@ public class ProductService : IProductService
         plan.Touch();
         _context.ProductSubscriptionPlans.Update(plan);
         await _context.SaveChangesAsync();
+
         return plan;
     }
 
@@ -343,11 +365,12 @@ public class ProductService : IProductService
     public async Task<bool> HasUserAccessAsync(Guid userId, Guid productId)
     {
         return await _context.UserProducts
-            .Where(up => !up.IsDeleted && 
-                        up.UserId == userId && 
-                        up.ProductId == productId &&
-                        up.AccessStatus == ProductAccessStatus.Active &&
-                        (up.AccessEndDate == null || up.AccessEndDate > DateTime.UtcNow))
+            .Where(up => !up.IsDeleted &&
+                         up.UserId == userId &&
+                         up.ProductId == productId &&
+                         up.AccessStatus == ProductAccessStatus.Active &&
+                         (up.AccessEndDate == null || up.AccessEndDate > DateTime.UtcNow)
+            )
             .AnyAsync();
     }
 
@@ -369,7 +392,7 @@ public class ProductService : IProductService
             .ToListAsync();
     }
 
-    public async Task<UserProduct> GrantUserAccessAsync(Guid userId, Guid productId, ProductAcquisitionType acquisitionType, 
+    public async Task<UserProduct> GrantUserAccessAsync(Guid userId, Guid productId, ProductAcquisitionType acquisitionType,
         decimal purchasePrice = 0, string currency = "USD", DateTime? expiresAt = null)
     {
         // Check if user already has access
@@ -392,6 +415,7 @@ public class ProductService : IProductService
 
         _context.UserProducts.Add(userProduct);
         await _context.SaveChangesAsync();
+
         return userProduct;
     }
 
@@ -419,6 +443,7 @@ public class ProductService : IProductService
     {
         _context.PromoCodes.Add(promoCode);
         await _context.SaveChangesAsync();
+
         return promoCode;
     }
 
@@ -427,6 +452,7 @@ public class ProductService : IProductService
         promoCode.Touch();
         _context.PromoCodes.Update(promoCode);
         await _context.SaveChangesAsync();
+
         return promoCode;
     }
 
@@ -443,6 +469,7 @@ public class ProductService : IProductService
     public async Task<PromoCodeUse> UsePromoCodeAsync(Guid userId, string code, decimal discountAmount)
     {
         PromoCode? promoCode = await GetPromoCodeAsync(code);
+
         if (promoCode == null)
             throw new ArgumentException("Promo code not found", nameof(code));
 
@@ -463,12 +490,14 @@ public class ProductService : IProductService
         promoCode.Touch();
 
         await _context.SaveChangesAsync();
+
         return promoCodeUse;
     }
 
     public async Task<bool> IsPromoCodeValidAsync(string code, Guid? productId = null)
     {
         PromoCode? promoCode = await GetPromoCodeAsync(code);
+
         if (promoCode == null)
             return false;
 
@@ -487,7 +516,7 @@ public class ProductService : IProductService
             int currentUsageCount = await _context.PromoCodeUses
                 .Where(pcu => !pcu.IsDeleted && pcu.PromoCodeId == promoCode.Id)
                 .CountAsync();
-            
+
             if (currentUsageCount >= promoCode.MaxUses.Value)
                 return false;
         }
@@ -516,18 +545,20 @@ public class ProductService : IProductService
     public async Task<int> GetUserCountForProductAsync(Guid productId)
     {
         return await _context.UserProducts
-            .Where(up => !up.IsDeleted && 
-                        up.ProductId == productId && 
-                        up.AccessStatus == ProductAccessStatus.Active)
+            .Where(up => !up.IsDeleted &&
+                         up.ProductId == productId &&
+                         up.AccessStatus == ProductAccessStatus.Active
+            )
             .CountAsync();
     }
 
     public async Task<decimal> GetTotalRevenueForProductAsync(Guid productId)
     {
         return await _context.UserProducts
-            .Where(up => !up.IsDeleted && 
-                        up.ProductId == productId && 
-                        up.AccessStatus == ProductAccessStatus.Active)
+            .Where(up => !up.IsDeleted &&
+                         up.ProductId == productId &&
+                         up.AccessStatus == ProductAccessStatus.Active
+            )
             .SumAsync(up => up.PricePaid);
     }
 
@@ -562,9 +593,10 @@ public class ProductService : IProductService
         return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
-            .Where(p => !p.IsDeleted && 
-                       (p.Name.Contains(searchTerm) || 
-                        (p.ShortDescription != null && p.ShortDescription.Contains(searchTerm))))
+            .Where(p => !p.IsDeleted &&
+                        (p.Name.Contains(searchTerm) ||
+                         (p.ShortDescription != null && p.ShortDescription.Contains(searchTerm)))
+            )
             .OrderBy(p => p.Name)
             .Skip(skip)
             .Take(take)
@@ -583,15 +615,16 @@ public class ProductService : IProductService
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<ProductEntity>> GetProductsInPriceRangeAsync(decimal minPrice, decimal maxPrice, 
+    public async Task<IEnumerable<ProductEntity>> GetProductsInPriceRangeAsync(decimal minPrice, decimal maxPrice,
         string currency = "USD", int skip = 0, int take = 50)
     {
         var productIds = await _context.ProductPricings
-            .Where(pp => !pp.IsDeleted && 
-                        pp.IsDefault && 
-                        pp.Currency == currency &&
-                        pp.BasePrice >= minPrice && 
-                        pp.BasePrice <= maxPrice)
+            .Where(pp => !pp.IsDeleted &&
+                         pp.IsDefault &&
+                         pp.Currency == currency &&
+                         pp.BasePrice >= minPrice &&
+                         pp.BasePrice <= maxPrice
+            )
             .Select(pp => pp.ProductId)
             .ToListAsync();
 

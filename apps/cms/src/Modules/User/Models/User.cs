@@ -37,13 +37,21 @@ public class User : BaseEntity
     /// Total wallet balance including pending/frozen funds
     /// </summary>
     [Column(TypeName = "decimal(10,2)")]
-    public decimal Balance { get; set; } = 0;
+    public decimal Balance
+    {
+        get;
+        set;
+    } = 0;
 
     /// <summary>
     /// Available balance that can be spent (excludes frozen/pending funds)
     /// </summary>
     [Column(TypeName = "decimal(10,2)")]
-    public decimal AvailableBalance { get; set; } = 0;
+    public decimal AvailableBalance
+    {
+        get;
+        set;
+    } = 0;
 
     /// <summary>
     /// Navigation property to user credentials

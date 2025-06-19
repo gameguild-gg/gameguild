@@ -9,17 +9,28 @@ namespace GameGuild.Tests.Modules.Auth.Services
     public class JwtTokenServiceTests
     {
         private readonly JwtTokenService _jwtTokenService;
+
         private readonly IConfiguration _configuration;
 
         public JwtTokenServiceTests()
         {
             var configData = new Dictionary<string, string>
             {
-                {"Jwt:Key", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"},
-                {"Jwt:Issuer", "test-issuer"},
-                {"Jwt:Audience", "test-audience"},
-                {"Jwt:AccessTokenExpiryMinutes", "15"},
-                {"Jwt:RefreshTokenExpiryDays", "7"}
+                {
+                    "Jwt:Key", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"
+                },
+                {
+                    "Jwt:Issuer", "test-issuer"
+                },
+                {
+                    "Jwt:Audience", "test-audience"
+                },
+                {
+                    "Jwt:AccessTokenExpiryMinutes", "15"
+                },
+                {
+                    "Jwt:RefreshTokenExpiryDays", "7"
+                }
             };
 
             _configuration = new ConfigurationBuilder()
@@ -35,11 +46,12 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Arrange
             var user = new UserDto
             {
-                Id = Guid.NewGuid(),
-                Username = "testuser",
-                Email = "test@example.com"
+                Id = Guid.NewGuid(), Username = "testuser", Email = "test@example.com"
             };
-            var roles = new[] { "User", "Admin" };
+            var roles = new[]
+            {
+                "User", "Admin"
+            };
 
             // Act
             string token = _jwtTokenService.GenerateAccessToken(user, roles);
@@ -51,7 +63,7 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Verify token structure
             var handler = new JwtSecurityTokenHandler();
             JwtSecurityToken? jsonToken = handler.ReadJwtToken(token);
-            
+
             Assert.Equal("test-issuer", jsonToken.Issuer);
             Assert.Contains(jsonToken.Audiences, a => a == "test-audience");
             Assert.Equal(user.Id.ToString(), jsonToken.Claims.First(c => c.Type == JwtRegisteredClaimNames.Sub).Value);
@@ -65,11 +77,12 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Arrange
             var user = new UserDto
             {
-                Id = Guid.NewGuid(),
-                Username = "testuser",
-                Email = "test@example.com"
+                Id = Guid.NewGuid(), Username = "testuser", Email = "test@example.com"
             };
-            var roles = new[] { "User" };
+            var roles = new[]
+            {
+                "User"
+            };
             string token = _jwtTokenService.GenerateAccessToken(user, roles);
 
             // Act
@@ -78,18 +91,16 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Assert
             Assert.NotNull(principal);
             Assert.True(principal.Identity?.IsAuthenticated);
-            
+
             // Debug: Check all claims to understand what's available
             var allClaims = principal.Claims.ToList();
-            Claim? subClaim = allClaims.FirstOrDefault(c => 
-                c.Type == JwtRegisteredClaimNames.Sub || 
-                c.Type == "sub" ||
-                c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
-            Claim? emailClaim = allClaims.FirstOrDefault(c => 
-                c.Type == JwtRegisteredClaimNames.Email || 
-                c.Type == "email" ||
-                c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
-            
+            Claim? subClaim = allClaims.FirstOrDefault(c =>
+                c.Type is JwtRegisteredClaimNames.Sub or "sub" or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+            );
+            Claim? emailClaim = allClaims.FirstOrDefault(c =>
+                c.Type is JwtRegisteredClaimNames.Email or "email" or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+            );
+
             // Debug output - remove after fixing
             // foreach (var claim in allClaims)
             // {
@@ -120,11 +131,21 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Arrange - Create a token that expires immediately
             var expiredConfigData = new Dictionary<string, string>
             {
-                {"Jwt:Key", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"},
-                {"Jwt:Issuer", "test-issuer"},
-                {"Jwt:Audience", "test-audience"},
-                {"Jwt:AccessTokenExpiryMinutes", "-1"}, // Expired
-                {"Jwt:RefreshTokenExpiryDays", "7"}
+                {
+                    "Jwt:Key", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"
+                },
+                {
+                    "Jwt:Issuer", "test-issuer"
+                },
+                {
+                    "Jwt:Audience", "test-audience"
+                },
+                {
+                    "Jwt:AccessTokenExpiryMinutes", "-1"
+                }, // Expired
+                {
+                    "Jwt:RefreshTokenExpiryDays", "7"
+                }
             };
 
             IConfigurationRoot expiredConfig = new ConfigurationBuilder()
@@ -135,11 +156,12 @@ namespace GameGuild.Tests.Modules.Auth.Services
 
             var user = new UserDto
             {
-                Id = Guid.NewGuid(),
-                Username = "testuser",
-                Email = "test@example.com"
+                Id = Guid.NewGuid(), Username = "testuser", Email = "test@example.com"
             };
-            var roles = new[] { "User" };
+            var roles = new[]
+            {
+                "User"
+            };
             string expiredToken = expiredTokenService.GenerateAccessToken(user, roles);
 
             // Act
@@ -155,11 +177,21 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Arrange - Create a token that expires immediately
             var expiredConfigData = new Dictionary<string, string>
             {
-                {"Jwt:Key", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"},
-                {"Jwt:Issuer", "test-issuer"},
-                {"Jwt:Audience", "test-audience"},
-                {"Jwt:AccessTokenExpiryMinutes", "-1"}, // Expired
-                {"Jwt:RefreshTokenExpiryDays", "7"}
+                {
+                    "Jwt:Key", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"
+                },
+                {
+                    "Jwt:Issuer", "test-issuer"
+                },
+                {
+                    "Jwt:Audience", "test-audience"
+                },
+                {
+                    "Jwt:AccessTokenExpiryMinutes", "-1"
+                }, // Expired
+                {
+                    "Jwt:RefreshTokenExpiryDays", "7"
+                }
             };
 
             IConfigurationRoot expiredConfig = new ConfigurationBuilder()
@@ -170,11 +202,12 @@ namespace GameGuild.Tests.Modules.Auth.Services
 
             var user = new UserDto
             {
-                Id = Guid.NewGuid(),
-                Username = "testuser",
-                Email = "test@example.com"
+                Id = Guid.NewGuid(), Username = "testuser", Email = "test@example.com"
             };
-            var roles = new[] { "User" };
+            var roles = new[]
+            {
+                "User"
+            };
             string expiredToken = expiredTokenService.GenerateAccessToken(user, roles);
 
             // Act
@@ -182,15 +215,13 @@ namespace GameGuild.Tests.Modules.Auth.Services
 
             // Assert
             Assert.NotNull(principal);
-            Claim? subClaim = principal.Claims.FirstOrDefault(c => 
-                c.Type == JwtRegisteredClaimNames.Sub || 
-                c.Type == "sub" ||
-                c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
-            Claim? emailClaim = principal.Claims.FirstOrDefault(c => 
-                c.Type == JwtRegisteredClaimNames.Email || 
-                c.Type == "email" ||
-                c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
-            
+            Claim? subClaim = principal.Claims.FirstOrDefault(c =>
+                c.Type is JwtRegisteredClaimNames.Sub or "sub" or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+            );
+            Claim? emailClaim = principal.Claims.FirstOrDefault(c =>
+                c.Type is JwtRegisteredClaimNames.Email or "email" or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+            );
+
             Assert.Equal(user.Id.ToString(), subClaim?.Value);
             Assert.Equal(user.Email, emailClaim?.Value);
         }
@@ -217,11 +248,12 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Arrange
             var user = new UserDto
             {
-                Id = Guid.NewGuid(),
-                Username = "testuser",
-                Email = "test@example.com"
+                Id = Guid.NewGuid(), Username = "testuser", Email = "test@example.com"
             };
-            var roles = new[] { "User", "Admin", "Moderator" };
+            var roles = new[]
+            {
+                "User", "Admin", "Moderator"
+            };
 
             // Act
             string token = _jwtTokenService.GenerateAccessToken(user, roles);
@@ -229,7 +261,7 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Assert
             var handler = new JwtSecurityTokenHandler();
             JwtSecurityToken? jsonToken = handler.ReadJwtToken(token);
-            
+
             var roleClaims = jsonToken.Claims.Where(c => c.Type == ClaimTypes.Role).ToArray();
             Assert.Equal(3, roleClaims.Length);
             Assert.Contains(roleClaims, c => c.Value == "User");
@@ -243,9 +275,7 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Arrange
             var user = new UserDto
             {
-                Id = Guid.NewGuid(),
-                Username = "testuser",
-                Email = "test@example.com"
+                Id = Guid.NewGuid(), Username = "testuser", Email = "test@example.com"
             };
             string[] roles = [];
 
@@ -256,7 +286,7 @@ namespace GameGuild.Tests.Modules.Auth.Services
             Assert.NotNull(token);
             var handler = new JwtSecurityTokenHandler();
             JwtSecurityToken? jsonToken = handler.ReadJwtToken(token);
-            
+
             var roleClaims = jsonToken.Claims.Where(c => c.Type == ClaimTypes.Role);
             Assert.Empty(roleClaims);
         }
@@ -267,19 +297,18 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Arrange
             var user = new UserDto
             {
-                Id = Guid.NewGuid(),
-                Username = "testuser",
-                Email = "test@example.com"
+                Id = Guid.NewGuid(), Username = "testuser", Email = "test@example.com"
             };
-            var roles = new[] { "User" };
-            
+            var roles = new[]
+            {
+                "User"
+            };
+
             // Create tenant claims
             var tenantId = Guid.NewGuid();
             var tenantClaims = new List<Claim>
             {
-                new Claim("tenant_id", tenantId.ToString()),
-                new Claim("tenant_permission_flags1", "42"),
-                new Claim("tenant_permission_flags2", "24")
+                new Claim("tenant_id", tenantId.ToString()), new Claim("tenant_permission_flags1", "42"), new Claim("tenant_permission_flags2", "24")
             };
 
             // Act
@@ -289,16 +318,16 @@ namespace GameGuild.Tests.Modules.Auth.Services
             Assert.NotNull(token);
             var handler = new JwtSecurityTokenHandler();
             JwtSecurityToken? jsonToken = handler.ReadJwtToken(token);
-            
+
             // Verify tenant claims are present
             Claim? tenantIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "tenant_id");
             Assert.NotNull(tenantIdClaim);
             Assert.Equal(tenantId.ToString(), tenantIdClaim.Value);
-            
+
             Claim? permissionFlags1Claim = jsonToken.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags1");
             Assert.NotNull(permissionFlags1Claim);
             Assert.Equal("42", permissionFlags1Claim.Value);
-            
+
             Claim? permissionFlags2Claim = jsonToken.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags2");
             Assert.NotNull(permissionFlags2Claim);
             Assert.Equal("24", permissionFlags2Claim.Value);
@@ -310,11 +339,21 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Arrange - Create a token that expires immediately but has tenant claims
             var expiredConfigData = new Dictionary<string, string>
             {
-                {"Jwt:Key", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"},
-                {"Jwt:Issuer", "test-issuer"},
-                {"Jwt:Audience", "test-audience"},
-                {"Jwt:AccessTokenExpiryMinutes", "-1"}, // Expired
-                {"Jwt:RefreshTokenExpiryDays", "7"}
+                {
+                    "Jwt:Key", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"
+                },
+                {
+                    "Jwt:Issuer", "test-issuer"
+                },
+                {
+                    "Jwt:Audience", "test-audience"
+                },
+                {
+                    "Jwt:AccessTokenExpiryMinutes", "-1"
+                }, // Expired
+                {
+                    "Jwt:RefreshTokenExpiryDays", "7"
+                }
             };
 
             IConfigurationRoot expiredConfig = new ConfigurationBuilder()
@@ -325,21 +364,20 @@ namespace GameGuild.Tests.Modules.Auth.Services
 
             var user = new UserDto
             {
-                Id = Guid.NewGuid(),
-                Username = "testuser",
-                Email = "test@example.com"
+                Id = Guid.NewGuid(), Username = "testuser", Email = "test@example.com"
             };
-            var roles = new[] { "User" };
-            
+            var roles = new[]
+            {
+                "User"
+            };
+
             // Create tenant claims
             var tenantId = Guid.NewGuid();
             var tenantClaims = new List<Claim>
             {
-                new Claim("tenant_id", tenantId.ToString()),
-                new Claim("tenant_permission_flags1", "42"),
-                new Claim("tenant_permission_flags2", "24")
+                new Claim("tenant_id", tenantId.ToString()), new Claim("tenant_permission_flags1", "42"), new Claim("tenant_permission_flags2", "24")
             };
-            
+
             string expiredToken = expiredTokenService.GenerateAccessToken(user, roles, tenantClaims);
 
             // Act
@@ -347,16 +385,16 @@ namespace GameGuild.Tests.Modules.Auth.Services
 
             // Assert
             Assert.NotNull(principal);
-            
+
             // Verify tenant claims are preserved
             Claim? tenantIdClaim = principal.Claims.FirstOrDefault(c => c.Type == "tenant_id");
             Assert.NotNull(tenantIdClaim);
             Assert.Equal(tenantId.ToString(), tenantIdClaim.Value);
-            
+
             Claim? permissionFlags1Claim = principal.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags1");
             Assert.NotNull(permissionFlags1Claim);
             Assert.Equal("42", permissionFlags1Claim.Value);
-            
+
             Claim? permissionFlags2Claim = principal.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags2");
             Assert.NotNull(permissionFlags2Claim);
             Assert.Equal("24", permissionFlags2Claim.Value);

@@ -41,7 +41,7 @@ public class BaseEntityIntegrationTests
         Assert.True(createdUser.UpdatedAt > DateTime.MinValue);
         Assert.Null(createdUser.DeletedAt);
         Assert.False(createdUser.IsDeleted);
-        
+
         // Version is set to 1 when entity is saved to the database by ApplicationDbContext.UpdateTimestamps()
         Assert.Equal(1, createdUser.Version);
     }

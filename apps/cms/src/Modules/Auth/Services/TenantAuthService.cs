@@ -14,12 +14,12 @@ public interface ITenantAuthService
     /// Validate user's tenant access and include tenant data in authentication result
     /// </summary>
     Task<SignInResponseDto> EnhanceWithTenantDataAsync(SignInResponseDto authResult, GameGuild.Modules.User.Models.User user, Guid? tenantId = null);
-    
+
     /// <summary>
     /// Get tenant-specific claims for a user
     /// </summary>
     Task<IEnumerable<Claim>> GetTenantClaimsAsync(GameGuild.Modules.User.Models.User user, Guid tenantId);
-    
+
     /// <summary>
     /// Get all available tenants for a user
     /// </summary>
@@ -32,9 +32,11 @@ public interface ITenantAuthService
 public class TenantAuthService : ITenantAuthService
 {
     private readonly ITenantService _tenantService;
+
     private readonly ITenantContextService _tenantContextService;
+
     private readonly IJwtTokenService _jwtTokenService;
-    
+
     public TenantAuthService(
         ITenantService tenantService,
         ITenantContextService tenantContextService,
@@ -44,7 +46,7 @@ public class TenantAuthService : ITenantAuthService
         _tenantContextService = tenantContextService;
         _jwtTokenService = jwtTokenService;
     }
-    
+
     /// <summary>
     /// Enhance authentication result with tenant data
     /// </summary>
@@ -53,16 +55,16 @@ public class TenantAuthService : ITenantAuthService
         // Get available tenants for the user
         var tenantPermissions = await _tenantService.GetTenantsForUserAsync(user.Id);
         var availableTenants = tenantPermissions.Where(tp => tp.IsValid).ToList();
-        
+
         // If no tenants available, return original result
         if (!availableTenants.Any())
         {
             return authResult;
         }
-        
+
         // Use specified tenant ID or the first available tenant
         Guid selectedTenantId;
-        
+
         if (tenantId.HasValue)
         {
             selectedTenantId = tenantId.Value;
@@ -76,7 +78,7 @@ public class TenantAuthService : ITenantAuthService
             // If we somehow don't have a valid tenant ID, return original result
             return authResult;
         }
-        
+
         // Validate tenant access
         TenantPermission? tenantPermission = availableTenants.FirstOrDefault(tp => tp.TenantId.HasValue && tp.TenantId.Value == selectedTenantId);
         if (tenantPermission == null)
@@ -93,30 +95,35 @@ public class TenantAuthService : ITenantAuthService
                 return authResult;
             }
         }
-        
+
         // Get tenant claims
         var tenantClaims = await GetTenantClaimsAsync(user, selectedTenantId);
-        
+
         // Generate new token with tenant claims
-        var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-        var roles = new[] { "User" };  // TODO: fetch actual tenant-specific roles
+        var userDto = new UserDto
+        {
+            Id = user.Id, Username = user.Name, Email = user.Email
+        };
+        var roles = new[]
+        {
+            "User"
+        }; // TODO: fetch actual tenant-specific roles
         string accessToken = _jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
-        
+
         // Update response with new token and tenant info
         authResult.AccessToken = accessToken;
         authResult.TenantId = selectedTenantId;
         authResult.AvailableTenants = availableTenants
             .Where(tp => tp.TenantId.HasValue)
-            .Select(tp => new TenantInfoDto 
-            {
-                Id = tp.TenantId.Value,
-                Name = tp.Tenant?.Name ?? "Unknown Tenant",
-                IsActive = tp.Tenant?.IsActive ?? false
-            }).ToList();
-        
+            .Select(tp => new TenantInfoDto
+                {
+                    Id = tp.TenantId.Value, Name = tp.Tenant?.Name ?? "Unknown Tenant", IsActive = tp.Tenant?.IsActive ?? false
+                }
+            ).ToList();
+
         return authResult;
     }
-    
+
     /// <summary>
     /// Get tenant-specific claims for a user
     /// </summary>
@@ -126,20 +133,20 @@ public class TenantAuthService : ITenantAuthService
         {
             new Claim("tenant_id", tenantId.ToString()),
         };
-        
+
         // Get tenant permission for additional claims
         TenantPermission? tenantPermission = await _tenantContextService.GetTenantPermissionAsync(user.Id, tenantId);
-        
+
         // Add permission flags if available
         if (tenantPermission != null)
         {
             claims.Add(new Claim("tenant_permission_flags1", tenantPermission.PermissionFlags1.ToString()));
             claims.Add(new Claim("tenant_permission_flags2", tenantPermission.PermissionFlags2.ToString()));
         }
-        
+
         return claims;
     }
-    
+
     /// <summary>
     /// Get all available tenants for a user
     /// </summary>

@@ -13,7 +13,7 @@ namespace GameGuild.Modules.Auth.Dtos
             get;
             set;
         } = string.Empty;
-        
+
         /// <summary>
         /// Optional tenant ID to generate tenant-specific claims
         /// If not specified, no tenant claims will be included
@@ -56,7 +56,7 @@ namespace GameGuild.Modules.Auth.Dtos
             get;
             set;
         }
-        
+
         /// <summary>
         /// Tenant ID associated with this token (if any)
         /// </summary>

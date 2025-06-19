@@ -219,23 +219,22 @@ public class BaseEntityTests
             .Options;
 
         await using var context = new ApplicationDbContext(options);
-        
+
         // Create new entity
-        var user = new User 
-        { 
-            Name = "Test User", 
-            Email = "test@example.com" 
+        var user = new User
+        {
+            Name = "Test User", Email = "test@example.com"
         };
-        
+
         // Assert - Before saving to database
         Assert.Equal(0, user.Version); // New entity starts with version 0
         Assert.True(user.IsNew); // Should be new
         Assert.NotEqual(Guid.Empty, user.Id); // Should have generated GUID
-        
+
         // Act - Save to database
         context.Users.Add(user);
         await context.SaveChangesAsync();
-        
+
         // Assert - After saving to database
         Assert.NotEqual(0, user.Version); // Version should be incremented by ApplicationDbContext.UpdateTimestamps()
         Assert.False(user.IsNew); // Still not new 
@@ -250,27 +249,26 @@ public class BaseEntityTests
             .Options;
 
         await using var context = new ApplicationDbContext(options);
-        
+
         // Create and save entity
-        var user = new User 
-        { 
-            Name = "Test User", 
-            Email = "test@example.com" 
+        var user = new User
+        {
+            Name = "Test User", Email = "test@example.com"
         };
 
         // should be new
         Assert.True(user.IsNew);
-        
+
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         int version = user.Version; // Capture initial version
         Assert.NotEqual(0, user.Version); // After first save
-        
+
         // Act - Update and save again
         user.Name = "Updated User";
         await context.SaveChangesAsync();
-        
+
         // Assert - Version should increment again
         Assert.NotEqual(version, user.Version); // After second save
     }
@@ -284,30 +282,36 @@ public class BaseEntityTests
             .Options;
 
         await using var context = new ApplicationDbContext(options);
-        
+
         // Create multiple entities
-        var user1 = new User { Name = "User 1", Email = "user1@example.com" };
-        var user2 = new User { Name = "User 2", Email = "user2@example.com" };
-        
+        var user1 = new User
+        {
+            Name = "User 1", Email = "user1@example.com"
+        };
+        var user2 = new User
+        {
+            Name = "User 2", Email = "user2@example.com"
+        };
+
         // Both start with version 0
         Assert.Equal(0, user1.Version);
         Assert.Equal(0, user2.Version);
-        
+
         // Act - Save both
         context.Users.AddRange(user1, user2);
         await context.SaveChangesAsync();
-        
+
         // Assert - Both should have version 1
         Assert.NotEqual(0, user1.Version);
         Assert.NotEqual(0, user2.Version);
 
         int user1Version = user1.Version;
         int user2Version = user2.Version;
-        
+
         // Update only user1
         user1.Name = "Updated User 1";
         await context.SaveChangesAsync();
-        
+
         // Assert - Only user1's version should increment
         Assert.NotEqual(user1Version, user1.Version);
         Assert.Equal(user2Version, user2.Version);

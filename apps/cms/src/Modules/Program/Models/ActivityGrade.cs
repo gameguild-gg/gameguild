@@ -9,8 +9,6 @@ namespace GameGuild.Modules.Program.Models;
 [Table("activity_grades")]
 public class ActivityGrade : BaseEntity
 {
-   
-
     public Guid ContentInteractionId
     {
         get;

@@ -8,9 +8,7 @@ namespace GameGuild.Tests.Helpers
     /// </summary>
     public class TestJwtAuthenticationFilter : JwtAuthenticationFilter
     {
-        public TestJwtAuthenticationFilter(IConfiguration configuration) : base(configuration)
-        {
-        }
+        public TestJwtAuthenticationFilter(IConfiguration configuration) : base(configuration) { }
 
         public override void OnAuthorization(AuthorizationFilterContext context)
         {

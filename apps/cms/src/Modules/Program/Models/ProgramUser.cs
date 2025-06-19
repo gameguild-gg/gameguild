@@ -125,7 +125,6 @@ public class ProgramUser : BaseEntity
     }
 
 
-
     public virtual ICollection<ContentInteraction> ContentInteractions
     {
         get;

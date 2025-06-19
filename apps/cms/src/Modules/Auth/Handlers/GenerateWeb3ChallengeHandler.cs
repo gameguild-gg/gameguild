@@ -21,8 +21,7 @@ public class GenerateWeb3ChallengeHandler : IRequestHandler<GenerateWeb3Challeng
     {
         var challengeRequest = new Web3ChallengeRequestDto
         {
-            WalletAddress = request.WalletAddress,
-            ChainId = request.ChainId
+            WalletAddress = request.WalletAddress, ChainId = request.ChainId
         };
 
         return await _authService.GenerateWeb3ChallengeAsync(challengeRequest);

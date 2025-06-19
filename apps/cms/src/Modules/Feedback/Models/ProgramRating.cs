@@ -17,83 +17,166 @@ namespace GameGuild.Modules.Feedback.Models;
 [Index(nameof(SubmittedAt))]
 public class ProgramRating : BaseEntity
 {
-    public Guid UserId { get; set; }
-    public Guid ProgramId { get; set; }
-    public Guid? ProductId { get; set; }
-    public Guid ProgramUserId { get; set; }
-    
+    public Guid UserId
+    {
+        get;
+        set;
+    }
+
+    public Guid ProgramId
+    {
+        get;
+        set;
+    }
+
+    public Guid? ProductId
+    {
+        get;
+        set;
+    }
+
+    public Guid ProgramUserId
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Overall rating for the program (1-5)
     /// </summary>
     [Column(TypeName = "decimal(2,1)")]
-    public decimal Rating { get; set; }
-    
+    public decimal Rating
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Written review of the program
     /// </summary>
-    public string? Review { get; set; }
-    
+    public string? Review
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Rating for content quality (1-5)
     /// </summary>
     [Column(TypeName = "decimal(2,1)")]
-    public decimal? ContentQualityRating { get; set; }
-    
+    public decimal? ContentQualityRating
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Rating for instructor effectiveness (1-5)
     /// </summary>
     [Column(TypeName = "decimal(2,1)")]
-    public decimal? InstructorRating { get; set; }
-    
+    public decimal? InstructorRating
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Rating for program difficulty (1-5)
     /// </summary>
     [Column(TypeName = "decimal(2,1)")]
-    public decimal? DifficultyRating { get; set; }
-    
+    public decimal? DifficultyRating
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Rating for value for money (1-5)
     /// </summary>
     [Column(TypeName = "decimal(2,1)")]
-    public decimal? ValueRating { get; set; }
-    
+    public decimal? ValueRating
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Whether the user would recommend this program
     /// </summary>
-    public bool? WouldRecommend { get; set; }
-    
-    public ModerationStatus ModerationStatus { get; set; } = ModerationStatus.Pending;
-    
+    public bool? WouldRecommend
+    {
+        get;
+        set;
+    }
+
+    public ModerationStatus ModerationStatus
+    {
+        get;
+        set;
+    } = ModerationStatus.Pending;
+
     /// <summary>
     /// User who moderated this rating (approved/rejected)
     /// </summary>
-    public Guid? ModeratedBy { get; set; }
-    
+    public Guid? ModeratedBy
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Date when rating was moderated
     /// </summary>
-    public DateTime? ModeratedAt { get; set; }
-    
+    public DateTime? ModeratedAt
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Date when rating was submitted
     /// </summary>
-    public DateTime SubmittedAt { get; set; }
-    
+    public DateTime SubmittedAt
+    {
+        get;
+        set;
+    }
+
     // Navigation properties
     [ForeignKey(nameof(UserId))]
-    public virtual User.Models.User User { get; set; } = null!;
-    
+    public virtual User.Models.User User
+    {
+        get;
+        set;
+    } = null!;
+
     [ForeignKey(nameof(ProgramId))]
-    public virtual Program.Models.Program Program { get; set; } = null!;
-    
+    public virtual Program.Models.Program Program
+    {
+        get;
+        set;
+    } = null!;
+
     [ForeignKey(nameof(ProductId))]
-    public virtual Product.Models.Product? Product { get; set; }
-    
+    public virtual Product.Models.Product? Product
+    {
+        get;
+        set;
+    }
+
     [ForeignKey(nameof(ProgramUserId))]
-    public virtual Program.Models.ProgramUser ProgramUser { get; set; } = null!;
-    
+    public virtual Program.Models.ProgramUser ProgramUser
+    {
+        get;
+        set;
+    } = null!;
+
     [ForeignKey(nameof(ModeratedBy))]
-    public virtual User.Models.User? Moderator { get; set; }
+    public virtual User.Models.User? Moderator
+    {
+        get;
+        set;
+    }
 }
 
 public class ProgramRatingConfiguration : IEntityTypeConfiguration<ProgramRating>

@@ -17,7 +17,8 @@ namespace GameGuild.Modules.Auth.Configuration
         /// Add authentication services to the service collection
         /// </summary>
         public static IServiceCollection AddAuthModule(this IServiceCollection services, IConfiguration configuration)
-        {            // Register auth services
+        {
+            // Register auth services
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IJwtTokenService, JwtTokenService>();
             services.AddScoped<IOAuthService, OAuthService>();
