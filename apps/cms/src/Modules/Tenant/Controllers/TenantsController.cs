@@ -85,7 +85,7 @@ public class TenantsController : ControllerBase
         var tenant = new Models.Tenant(
             new
             {
-                Name = createDto.Name, Description = createDto.Description, IsActive = createDto.IsActive
+                createDto.Name, createDto.Description, createDto.IsActive
             }
         );
 

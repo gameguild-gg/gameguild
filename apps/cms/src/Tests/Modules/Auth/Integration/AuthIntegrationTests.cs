@@ -204,7 +204,7 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             // Assert - The refresh should work and return new tokens
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             
-            var responseData = await response.Content.ReadFromJsonAsync<SignInResponseDto>();
+            var responseData = await response.Content.ReadFromJsonAsync<RefreshTokenResponseDto>();
             Assert.NotNull(responseData);
             Assert.NotEmpty(responseData.AccessToken);
             Assert.NotEmpty(responseData.RefreshToken);

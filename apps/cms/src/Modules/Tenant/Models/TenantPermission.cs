@@ -39,5 +39,5 @@ public static class TenantPermissionConstants
     /// <summary>
     /// Default permissions that every user gets
     /// </summary>
-    public static readonly PermissionType[] MinimalUserPermissions = { PermissionType.Comment, PermissionType.Vote, PermissionType.Share };
+    public static readonly PermissionType[] MinimalUserPermissions = [PermissionType.Comment, PermissionType.Vote, PermissionType.Share];
 }

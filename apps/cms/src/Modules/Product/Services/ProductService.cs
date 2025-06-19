@@ -168,11 +168,11 @@ public class ProductService : IProductService
     {
         ProductEntity? bundle = await GetProductByIdAsync(bundleId);
         if (bundle == null || !bundle.IsBundle)
-            return Enumerable.Empty<ProductEntity>();
+            return [];
 
         var bundleItemIds = bundle.GetBundleItemIds();
         if (!bundleItemIds.Any())
-            return Enumerable.Empty<ProductEntity>();
+            return [];
 
         return await _context.Products
             .Include(p => p.Creator)

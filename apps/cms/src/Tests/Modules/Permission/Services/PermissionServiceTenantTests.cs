@@ -1,5 +1,4 @@
 using Xunit;
-using Moq;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
 using GameGuild.Common.Services;
@@ -61,10 +60,10 @@ public class PermissionServiceTenantTests : IDisposable
         var tenantId = Guid.NewGuid();
         
         // Grant initial permissions
-        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, new[] { PermissionType.Read });
+        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Read]);
         
         // Act - Grant additional permissions
-        var result = await _permissionService.GrantTenantPermissionAsync(userId, tenantId, new[] { PermissionType.Comment });
+        var result = await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Comment]);
 
         // Assert
         Assert.True(result.HasPermission(PermissionType.Read));
@@ -146,7 +145,7 @@ public class PermissionServiceTenantTests : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
-        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, new[] { PermissionType.Read });
+        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Read]);
 
         // Act
         var result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
@@ -177,7 +176,7 @@ public class PermissionServiceTenantTests : IDisposable
         var tenantId = Guid.NewGuid();
         
         // Set tenant default permission
-        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, new[] { PermissionType.Read });
+        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, [PermissionType.Read]);
 
         // Act
         var result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
@@ -194,7 +193,7 @@ public class PermissionServiceTenantTests : IDisposable
         var tenantId = Guid.NewGuid();
         
         // Set global default permission
-        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, new[] { PermissionType.Read });
+        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, [PermissionType.Read]);
 
         // Act
         var result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
@@ -211,10 +210,10 @@ public class PermissionServiceTenantTests : IDisposable
         var tenantId = Guid.NewGuid();
         
         // Set tenant default with Read permission
-        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, new[] { PermissionType.Read });
+        await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, [PermissionType.Read]);
         
         // Grant user-specific permissions without Read
-        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, new[] { PermissionType.Comment });
+        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Comment]);
 
         // Act
         var hasRead = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
@@ -497,13 +496,13 @@ public class PermissionServiceTenantTests : IDisposable
         var tenantId = Guid.NewGuid();
         
         // Set global defaults
-        await _permissionService.GrantTenantPermissionAsync(null, null, new[] { PermissionType.Read });
+        await _permissionService.GrantTenantPermissionAsync(null, null, [PermissionType.Read]);
         
         // Set tenant defaults
-        await _permissionService.GrantTenantPermissionAsync(null, tenantId, new[] { PermissionType.Comment });
+        await _permissionService.GrantTenantPermissionAsync(null, tenantId, [PermissionType.Comment]);
         
         // Set user-specific permissions
-        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, new[] { PermissionType.Vote });
+        await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Vote]);
 
         // Act
         var result = await _permissionService.GetEffectiveTenantPermissionsAsync(userId, tenantId);

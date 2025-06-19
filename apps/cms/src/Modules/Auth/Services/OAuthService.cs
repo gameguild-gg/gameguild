@@ -33,7 +33,7 @@ namespace GameGuild.Modules.Auth.Services
 
             var tokenRequest = new
             {
-                client_id = clientId, client_secret = clientSecret, code = code, redirect_uri = redirectUri
+                client_id = clientId, client_secret = clientSecret, code, redirect_uri = redirectUri
             };
 
             var content = new StringContent(

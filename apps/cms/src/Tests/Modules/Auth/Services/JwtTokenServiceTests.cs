@@ -247,7 +247,7 @@ namespace GameGuild.Tests.Modules.Auth.Services
                 Username = "testuser",
                 Email = "test@example.com"
             };
-            string[] roles = Array.Empty<string>();
+            string[] roles = [];
 
             // Act
             string token = _jwtTokenService.GenerateAccessToken(user, roles);

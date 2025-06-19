@@ -37,8 +37,8 @@ public interface ITenantContextService
 public class TenantContextService : ITenantContextService
 {
     private readonly ApplicationDbContext _context;
-    private const string TENANT_CLAIM = "tenant_id";
-    private const string TENANT_HEADER = "X-Tenant-ID";
+    private const string TenantClaim = "tenant_id";
+    private const string TenantHeader = "X-Tenant-ID";
 
     public TenantContextService(ApplicationDbContext context)
     {
@@ -63,7 +63,7 @@ public class TenantContextService : ITenantContextService
         // Check user claims
         if (user?.Identity?.IsAuthenticated == true)
         {
-            Claim? tenantClaim = user.FindFirst(TENANT_CLAIM);
+            Claim? tenantClaim = user.FindFirst(TenantClaim);
             if (tenantClaim != null && Guid.TryParse(tenantClaim.Value, out Guid tenantClaimId))
             {
                 // Verify tenant exists

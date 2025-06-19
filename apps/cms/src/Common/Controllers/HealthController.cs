@@ -63,7 +63,7 @@ public class HealthController : ControllerBase
             return Ok(
                 new
                 {
-                    status = "healthy", connected = canConnect, userCount = userCount, timestamp = DateTime.UtcNow
+                    status = "healthy", connected = canConnect, userCount, timestamp = DateTime.UtcNow
                 }
             );
         }

@@ -29,7 +29,7 @@ public class Mutation
         var user = new Models.User(
             new
             {
-                Name = input.Name, Email = input.Email, IsActive = input.IsActive
+                input.Name, input.Email, input.IsActive
             }
         );
 

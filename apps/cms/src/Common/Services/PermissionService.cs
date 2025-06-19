@@ -113,7 +113,7 @@ public class PermissionService : IPermissionService
                                      tp.DeletedAt == null && (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow));
 
         if (permission?.IsValid != true)
-            return Enumerable.Empty<PermissionType>();
+            return [];
 
         return GetPermissionsFromEntity(permission);
     }
@@ -348,7 +348,12 @@ public class PermissionService : IPermissionService
                                            ctp.ContentType == contentTypeName && 
                                            ctp.DeletedAt == null && (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow));
 
-            if (tenantDefault?.HasPermission(permission) == true)                return true;
+            if (tenantDefault?.HasPermission(permission) == true)
+                return true;
+
+            // If content-type specific permissions don't exist, fall back to tenant-level permissions
+            // This implements the permission hierarchy where tenant permissions apply to all content types
+            return await HasTenantPermissionAsync(userId, tenantId, permission);
         }
         
         // Check global default for this content type
@@ -358,13 +363,17 @@ public class PermissionService : IPermissionService
                                        ctp.ContentType == contentTypeName && 
                                        ctp.DeletedAt == null && (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow));
 
-        return globalDefault?.HasPermission(permission) == true;
+        if (globalDefault?.HasPermission(permission) == true)
+            return true;
+
+        // If no content-type specific permissions exist, fall back to global tenant permissions
+        return await HasTenantPermissionAsync(null, null, permission);
     }
 
     public async Task<IEnumerable<PermissionType>> GetContentTypePermissionsAsync(Guid? userId, Guid? tenantId, string contentTypeName)
     {
         if (string.IsNullOrWhiteSpace(contentTypeName))
-            return Enumerable.Empty<PermissionType>();
+            return [];
 
         ContentTypePermission? contentTypePermission = await _context.ContentTypePermissions
             .FirstOrDefaultAsync(ctp => ctp.UserId == userId && 
@@ -373,7 +382,7 @@ public class PermissionService : IPermissionService
                                        ctp.DeletedAt == null && (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow));
 
         if (contentTypePermission == null)
-            return Enumerable.Empty<PermissionType>();
+            return [];
 
         return GetPermissionsFromContentTypeEntity(contentTypePermission);
     }    public async Task RevokeContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType[] permissions)
@@ -399,14 +408,12 @@ public class PermissionService : IPermissionService
             existingPermission.Touch();
             await _context.SaveChangesAsync();
         }
-    }
-
-    private static IEnumerable<PermissionType> GetPermissionsFromContentTypeEntity(ContentTypePermission permission)
+    }    private static IEnumerable<PermissionType> GetPermissionsFromContentTypeEntity(ContentTypePermission permission)
     {
         var permissions = new List<PermissionType>();
 
-        // Check all possible permission types
-        foreach (PermissionType permissionType in Enum.GetValues<PermissionType>())
+        // Check all possible permission types, using distinct values to avoid duplicates like Delete/SoftDelete
+        foreach (PermissionType permissionType in Enum.GetValues<PermissionType>().Distinct())
         {
             if (permission.HasPermission(permissionType))
             {
@@ -438,14 +445,12 @@ public class PermissionService : IPermissionService
                                      tp.ExpiresAt == null && tp.DeletedAt == null);
 
         return globalDefault?.IsValid == true && globalDefault.HasPermission(permission);
-    }
-
-    private static IEnumerable<PermissionType> GetPermissionsFromEntity(TenantPermission permission)
+    }    private static IEnumerable<PermissionType> GetPermissionsFromEntity(TenantPermission permission)
     {
         var permissions = new List<PermissionType>();
 
-        // Check all possible permission types
-        foreach (PermissionType permissionType in Enum.GetValues<PermissionType>())
+        // Check all possible permission types, using distinct values to avoid duplicates like Delete/SoftDelete
+        foreach (PermissionType permissionType in Enum.GetValues<PermissionType>().Distinct())
         {
             if (permission.HasPermission(permissionType))
             {
@@ -527,7 +532,7 @@ public class PermissionService : IPermissionService
         TPermission? resourcePermission = await _context.Set<TPermission>()
             .FirstOrDefaultAsync(p => p.UserId == userId && p.TenantId == tenantId && p.ResourceId == resourceId && p.ExpiresAt == null && p.DeletedAt == null);
 
-        if (resourcePermission == null) return Enumerable.Empty<PermissionType>();
+        if (resourcePermission == null) return [];
 
         var permissions = new List<PermissionType>();
         foreach (PermissionType permissionType in Enum.GetValues<PermissionType>())

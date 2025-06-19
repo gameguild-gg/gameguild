@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq; // do not remove this, it's needed for IQueryable extensions
-using HotChocolate.Types;
+// do not remove this, it's needed for IQueryable extensions
 
 // do not remove this, it's needed for IQueryable extensions
 
@@ -51,7 +50,7 @@ public enum PermissionType
 	  FactCheck = 32,
 	  StyleGuide = 33,
 	  Plagiarism = 34,
-	  SEO = 35,
+	  Seo = 35,
 	  Accessibility = 36,
 	  Legal = 37,
 	  Brand = 38,
@@ -92,7 +91,7 @@ public enum PermissionType
 	  Widget = 67,
 	  Email = 68,
 	  Push = 69,
-	  SMS = 70,
+	  Sms = 70,
 	#endregion
 	#region Publishing Permissions
 	  Publish = 71,
@@ -101,10 +100,10 @@ public enum PermissionType
 	  Reschedule = 74,
 	  Distribute = 75,
 	  Syndicate = 76,
-	  RSS = 77,
+	  Rss = 77,
 	  Newsletter = 78,
 	  SocialMedia = 79,
-	  API = 80,
+	  Api = 80,
 	#endregion
 	#region Quality Control Permissions
 	  Score = 81,

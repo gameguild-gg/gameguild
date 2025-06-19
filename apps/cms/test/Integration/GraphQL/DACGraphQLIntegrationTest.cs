@@ -9,7 +9,7 @@ namespace GameGuild.Tests.Integration.GraphQL;
 /// Integration tests for DAC permission system with GraphQL
 /// Tests the 3-layer hierarchical permission checking in HotChocolate resolvers
 /// </summary>
-public class DACGraphQLIntegrationTest
+public class DacGraphQlIntegrationTest
 {
     [Fact]
     public async Task GraphQL_Schema_Contains_Comment_Operations()
@@ -29,7 +29,7 @@ public class DACGraphQLIntegrationTest
 /// Unit tests for DAC permission checking logic in GraphQL resolvers
 /// Tests the permission service integration without HTTP layer
 /// </summary>
-public class DACPermissionLogicTest
+public class DacPermissionLogicTest
 {
     [Fact]
     public async Task CheckCommentPermissionHierarchy_WithResourcePermission_ReturnsTrue()

@@ -8,7 +8,7 @@ using Slugify;
 /// </summary>
 public static class SlugCase
 {
-    private static readonly SlugHelper _slugHelper;
+    private static readonly SlugHelper SlugHelper;
     private static IMemoryCache _cache;
     
     static SlugCase()
@@ -27,7 +27,7 @@ public static class SlugCase
             }
         };
         
-        _slugHelper = new SlugHelper(config);
+        SlugHelper = new SlugHelper(config);
         
         // Initialize cache with the same configuration as SnakeCase
         var cacheOptions = new MemoryCacheOptions
@@ -64,7 +64,7 @@ public static class SlugCase
             entry.SlidingExpiration = TimeSpan.FromMinutes(30); // Expire after 30 minutes of inactivity
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2); // Absolute expiration after 2 hours
             
-            string slug = _slugHelper.GenerateSlug(text);
+            string slug = SlugHelper.GenerateSlug(text);
             
             // Truncate if necessary
             if (slug.Length > maxLength)
@@ -104,7 +104,7 @@ public static class SlugCase
     {
         if (texts == null || texts.Length == 0)
         {
-            return Array.Empty<string>();
+            return [];
         }
 
         var result = new string[texts.Length];
@@ -222,7 +222,7 @@ public static class SlugCase
             throw new ArgumentException("Max length must be greater than zero.", nameof(maxLength));
         }
 
-        string slug = _slugHelper.GenerateSlug(text);
+        string slug = SlugHelper.GenerateSlug(text);
         
         // Truncate if necessary
         if (slug.Length > maxLength)
