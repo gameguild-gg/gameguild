@@ -260,5 +260,106 @@ namespace GameGuild.Tests.Modules.Auth.Services
             var roleClaims = jsonToken.Claims.Where(c => c.Type == ClaimTypes.Role);
             Assert.Empty(roleClaims);
         }
+
+        [Fact]
+        public void GenerateAccessToken_WithTenantClaims_IncludesClaimsInToken()
+        {
+            // Arrange
+            var user = new UserDto
+            {
+                Id = Guid.NewGuid(),
+                Username = "testuser",
+                Email = "test@example.com"
+            };
+            var roles = new[] { "User" };
+            
+            // Create tenant claims
+            var tenantId = Guid.NewGuid();
+            var tenantClaims = new List<Claim>
+            {
+                new Claim("tenant_id", tenantId.ToString()),
+                new Claim("tenant_permission_flags1", "42"),
+                new Claim("tenant_permission_flags2", "24")
+            };
+
+            // Act
+            string token = _jwtTokenService.GenerateAccessToken(user, roles, tenantClaims);
+
+            // Assert
+            Assert.NotNull(token);
+            var handler = new JwtSecurityTokenHandler();
+            JwtSecurityToken? jsonToken = handler.ReadJwtToken(token);
+            
+            // Verify tenant claims are present
+            Claim? tenantIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "tenant_id");
+            Assert.NotNull(tenantIdClaim);
+            Assert.Equal(tenantId.ToString(), tenantIdClaim.Value);
+            
+            Claim? permissionFlags1Claim = jsonToken.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags1");
+            Assert.NotNull(permissionFlags1Claim);
+            Assert.Equal("42", permissionFlags1Claim.Value);
+            
+            Claim? permissionFlags2Claim = jsonToken.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags2");
+            Assert.NotNull(permissionFlags2Claim);
+            Assert.Equal("24", permissionFlags2Claim.Value);
+        }
+
+        [Fact]
+        public void GetPrincipalFromExpiredToken_WithTenantClaims_PreservesTenantClaims()
+        {
+            // Arrange - Create a token that expires immediately but has tenant claims
+            var expiredConfigData = new Dictionary<string, string>
+            {
+                {"Jwt:Key", "your-very-long-secret-key-for-testing-purposes-at-least-256-bits"},
+                {"Jwt:Issuer", "test-issuer"},
+                {"Jwt:Audience", "test-audience"},
+                {"Jwt:AccessTokenExpiryMinutes", "-1"}, // Expired
+                {"Jwt:RefreshTokenExpiryDays", "7"}
+            };
+
+            IConfigurationRoot expiredConfig = new ConfigurationBuilder()
+                .AddInMemoryCollection(expiredConfigData!)
+                .Build();
+
+            var expiredTokenService = new JwtTokenService(expiredConfig);
+
+            var user = new UserDto
+            {
+                Id = Guid.NewGuid(),
+                Username = "testuser",
+                Email = "test@example.com"
+            };
+            var roles = new[] { "User" };
+            
+            // Create tenant claims
+            var tenantId = Guid.NewGuid();
+            var tenantClaims = new List<Claim>
+            {
+                new Claim("tenant_id", tenantId.ToString()),
+                new Claim("tenant_permission_flags1", "42"),
+                new Claim("tenant_permission_flags2", "24")
+            };
+            
+            string expiredToken = expiredTokenService.GenerateAccessToken(user, roles, tenantClaims);
+
+            // Act
+            ClaimsPrincipal? principal = _jwtTokenService.GetPrincipalFromExpiredToken(expiredToken);
+
+            // Assert
+            Assert.NotNull(principal);
+            
+            // Verify tenant claims are preserved
+            Claim? tenantIdClaim = principal.Claims.FirstOrDefault(c => c.Type == "tenant_id");
+            Assert.NotNull(tenantIdClaim);
+            Assert.Equal(tenantId.ToString(), tenantIdClaim.Value);
+            
+            Claim? permissionFlags1Claim = principal.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags1");
+            Assert.NotNull(permissionFlags1Claim);
+            Assert.Equal("42", permissionFlags1Claim.Value);
+            
+            Claim? permissionFlags2Claim = principal.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags2");
+            Assert.NotNull(permissionFlags2Claim);
+            Assert.Equal("24", permissionFlags2Claim.Value);
+        }
     }
 }

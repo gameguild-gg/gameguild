@@ -22,7 +22,8 @@ public class LocalSignInHandler : IRequestHandler<LocalSignInCommand, SignInResp
         var signInRequest = new LocalSignInRequestDto
         {
             Email = request.Email,
-            Password = request.Password
+            Password = request.Password,
+            TenantId = request.TenantId
         };
 
         return await _authService.LocalSignInAsync(signInRequest);

@@ -1,4 +1,3 @@
-using HotChocolate.Types;
 using GameGuild.Common.Services;
 using GameGuild.Common.Enums;
 using GameGuild.Common.Entities;
@@ -123,7 +122,7 @@ public class ProductType : ObjectType<ProductEntity>
             .Resolve(async context =>
             {
                 var product = context.Parent<ProductEntity>();
-                var user = context.GetUser();
+                ClaimsPrincipal? user = context.GetUser();
                 var userId = GetUserId(user);
                 
                 if (userId == null) return false;
@@ -134,7 +133,7 @@ public class ProductType : ObjectType<ProductEntity>
                 try
                 {
                     // 1. Check resource-level permission
-                    var hasResourcePermission = await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
+                    bool hasResourcePermission = await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
                         userId.Value, product.Tenant?.Id, product.Id, PermissionType.Edit);
                     if (hasResourcePermission) return true;
                 }
@@ -144,12 +143,12 @@ public class ProductType : ObjectType<ProductEntity>
                 }
                 
                 // 2. Check content-type permission
-                var hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(
+                bool hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(
                     userId.Value, product.Tenant?.Id, "Product", PermissionType.Edit);
                 if (hasContentTypePermission) return true;
                 
                 // 3. Check tenant permission
-                var hasTenantPermission = await permissionService.HasTenantPermissionAsync(
+                bool hasTenantPermission = await permissionService.HasTenantPermissionAsync(
                     userId.Value, product.Tenant?.Id, PermissionType.Edit);
                 return hasTenantPermission;
             });
@@ -160,7 +159,7 @@ public class ProductType : ObjectType<ProductEntity>
             .Resolve(async context =>
             {
                 var product = context.Parent<ProductEntity>();
-                var user = context.GetUser();
+                ClaimsPrincipal? user = context.GetUser();
                 var userId = GetUserId(user);
                 
                 if (userId == null) return false;
@@ -169,17 +168,17 @@ public class ProductType : ObjectType<ProductEntity>
                 
                 try
                 {
-                    var hasResourcePermission = await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
+                    bool hasResourcePermission = await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
                         userId.Value, product.Tenant?.Id, product.Id, PermissionType.Delete);
                     if (hasResourcePermission) return true;
                 }
                 catch { }
                 
-                var hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(
+                bool hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(
                     userId.Value, product.Tenant?.Id, "Product", PermissionType.Delete);
                 if (hasContentTypePermission) return true;
                 
-                var hasTenantPermission = await permissionService.HasTenantPermissionAsync(
+                bool hasTenantPermission = await permissionService.HasTenantPermissionAsync(
                     userId.Value, product.Tenant?.Id, PermissionType.Delete);
                 return hasTenantPermission;
             });
@@ -190,7 +189,7 @@ public class ProductType : ObjectType<ProductEntity>
             .Resolve(async context =>
             {
                 var product = context.Parent<ProductEntity>();
-                var user = context.GetUser();
+                ClaimsPrincipal? user = context.GetUser();
                 var userId = GetUserId(user);
                 
                 if (userId == null) return false;
@@ -199,17 +198,17 @@ public class ProductType : ObjectType<ProductEntity>
                 
                 try
                 {
-                    var hasResourcePermission = await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
+                    bool hasResourcePermission = await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
                         userId.Value, product.Tenant?.Id, product.Id, PermissionType.Publish);
                     if (hasResourcePermission) return true;
                 }
                 catch { }
                 
-                var hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(
+                bool hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(
                     userId.Value, product.Tenant?.Id, "Product", PermissionType.Publish);
                 if (hasContentTypePermission) return true;
                 
-                var hasTenantPermission = await permissionService.HasTenantPermissionAsync(
+                bool hasTenantPermission = await permissionService.HasTenantPermissionAsync(
                     userId.Value, product.Tenant?.Id, PermissionType.Publish);
                 return hasTenantPermission;
             });
@@ -220,7 +219,7 @@ public class ProductType : ObjectType<ProductEntity>
             .Resolve(async context =>
             {
                 var product = context.Parent<ProductEntity>();
-                var user = context.GetUser();
+                ClaimsPrincipal? user = context.GetUser();
                 var userId = GetUserId(user);
                 
                 if (userId == null) return false;
@@ -257,8 +256,8 @@ public class ProductType : ObjectType<ProductEntity>
         if (user?.Identity?.IsAuthenticated != true)
             return null;
             
-        var userIdClaim = user.FindFirst("sub") ?? user.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
+        Claim? userIdClaim = user.FindFirst("sub") ?? user.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out Guid userId))
             return userId;
             
         return null;

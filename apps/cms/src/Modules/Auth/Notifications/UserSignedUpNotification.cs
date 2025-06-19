@@ -11,4 +11,5 @@ public class UserSignedUpNotification : INotification
     public string Email { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public DateTime SignUpTime { get; set; } = DateTime.UtcNow;
+    public Guid? TenantId { get; set; }
 }

@@ -23,5 +23,15 @@ namespace GameGuild.Modules.Auth.Dtos
             get;
             set;
         } = string.Empty;
+        
+        /// <summary>
+        /// Optional tenant ID to use for the sign-up
+        /// If not provided, a default tenant may be assigned
+        /// </summary>
+        public Guid? TenantId
+        {
+            get;
+            set;
+        }
     }
 }

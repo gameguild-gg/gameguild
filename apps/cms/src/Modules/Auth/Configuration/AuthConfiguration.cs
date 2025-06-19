@@ -17,13 +17,13 @@ namespace GameGuild.Modules.Auth.Configuration
         /// Add authentication services to the service collection
         /// </summary>
         public static IServiceCollection AddAuthModule(this IServiceCollection services, IConfiguration configuration)
-        {
-            // Register auth services
+        {            // Register auth services
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IJwtTokenService, JwtTokenService>();
             services.AddScoped<IOAuthService, OAuthService>();
             services.AddScoped<IWeb3Service, Web3Service>();
             services.AddScoped<IEmailVerificationService, EmailVerificationService>();
+            services.AddScoped<ITenantAuthService, TenantAuthService>();
 
             // Register HTTP client for OAuth services
             services.AddHttpClient<OAuthService>();
