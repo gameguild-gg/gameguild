@@ -104,6 +104,9 @@ builder.Services.AddTenantModule();
 builder.Services.AddUserProfileModule(); // Register the UserProfile module
 builder.Services.AddAuthModule(builder.Configuration); // Register the Auth module
 
+// Add HTTP context accessor for GraphQL authorization
+builder.Services.AddHttpContextAccessor();
+
 // Add MediatR for CQRS
 builder.Services.AddMediatR(typeof(Program));
 
@@ -154,8 +157,7 @@ builder.Services
     .AddType<GameGuild.Modules.Tenant.GraphQL.TenantType>()
     .AddType<GameGuild.Modules.Tenant.GraphQL.TenantPermissionType>()
     .AddType<GameGuild.Modules.UserProfile.GraphQL.UserProfileType>()
-    // Add permission types
-    .AddType<GameGuild.Common.Entities.ContentTypePermission>()
+    .ModifyOptions(opt => { opt.RemoveUnreachableTypes = true; })
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment());
 
 WebApplication app = builder.Build();

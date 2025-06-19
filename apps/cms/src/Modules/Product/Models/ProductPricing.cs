@@ -36,7 +36,7 @@ public class ProductPricing : BaseEntity
         get;
         set;
     } = null!;
-    
+
     /// <summary>
     /// Name of this pricing option (e.g., "Standard", "Premium", "Early Bird")
     /// </summary>
@@ -47,7 +47,7 @@ public class ProductPricing : BaseEntity
         get;
         set;
     } = string.Empty;
-    
+
     /// <summary>
     /// Regular price for this product
     /// </summary>
@@ -57,7 +57,7 @@ public class ProductPricing : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Sale price (if on sale)
     /// </summary>
@@ -67,7 +67,7 @@ public class ProductPricing : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Currency code for prices
     /// </summary>
@@ -77,7 +77,7 @@ public class ProductPricing : BaseEntity
         get;
         set;
     } = "USD";
-    
+
     /// <summary>
     /// When the sale price becomes active
     /// </summary>
@@ -95,7 +95,7 @@ public class ProductPricing : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Whether this is the default pricing option for the product
     /// </summary>
@@ -125,6 +125,7 @@ public class ProductPricing : BaseEntity
         {
             return SalePrice.Value;
         }
+
         return BasePrice;
     }
 
@@ -136,6 +137,7 @@ public class ProductPricing : BaseEntity
         if (!SalePrice.HasValue) return false;
 
         DateTime now = DateTime.UtcNow;
+
         return (SaleStartDate == null || SaleStartDate <= now) &&
                (SaleEndDate == null || SaleEndDate > now);
     }

@@ -14,9 +14,13 @@ namespace GameGuild.Tests.Modules.Auth.Services
     public class TenantAuthServiceTests : IDisposable
     {
         private readonly ApplicationDbContext _context;
+
         private readonly Mock<ITenantService> _mockTenantService;
+
         private readonly Mock<ITenantContextService> _mockTenantContextService;
+
         private readonly Mock<IJwtTokenService> _mockJwtTokenService;
+
         private readonly TenantAuthService _tenantAuthService;
 
         public TenantAuthServiceTests()
@@ -25,14 +29,14 @@ namespace GameGuild.Tests.Modules.Auth.Services
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            
+
             _context = new ApplicationDbContext(options);
-            
+
             // Set up mocks
             _mockTenantService = new Mock<ITenantService>();
             _mockTenantContextService = new Mock<ITenantContextService>();
             _mockJwtTokenService = new Mock<IJwtTokenService>();
-            
+
             // Create service instance
             _tenantAuthService = new TenantAuthService(
                 _mockTenantService.Object,
@@ -47,13 +51,11 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Arrange
             var user = new User
             {
-                Id = Guid.NewGuid(),
-                Name = "testuser",
-                Email = "test@example.com"
+                Id = Guid.NewGuid(), Name = "testuser", Email = "test@example.com"
             };
-            
+
             var tenantId = Guid.NewGuid();
-            
+
             var tenantPermissions = new List<TenantPermission>
             {
                 new TenantPermission
@@ -66,30 +68,28 @@ namespace GameGuild.Tests.Modules.Auth.Services
                     // IsDeleted is false by default
                     Tenant = new GameGuild.Modules.Tenant.Models.Tenant
                     {
-                        Id = tenantId,
-                        Name = "Test Tenant",
-                        IsActive = true
+                        Id = tenantId, Name = "Test Tenant", IsActive = true
                     }
                 }
             };
-            
+
             _mockTenantService.Setup(x => x.GetTenantsForUserAsync(user.Id))
                 .ReturnsAsync(tenantPermissions);
-                
+
             var claims = new List<Claim>
             {
-                new Claim("tenant_id", tenantId.ToString()),
-                new Claim("tenant_permission_flags1", "1"),
-                new Claim("tenant_permission_flags2", "2")
+                new Claim("tenant_id", tenantId.ToString()), new Claim("tenant_permission_flags1", "1"), new Claim("tenant_permission_flags2", "2")
             };
-            
+
             _mockTenantContextService.Setup(x => x.GetTenantPermissionAsync(user.Id, tenantId))
                 .ReturnsAsync(tenantPermissions.First());
-                
+
             _mockJwtTokenService.Setup(x => x.GenerateAccessToken(
-                    It.IsAny<UserDto>(),
-                    It.IsAny<string[]>(),
-                    It.IsAny<IEnumerable<Claim>>()))
+                        It.IsAny<UserDto>(),
+                        It.IsAny<string[]>(),
+                        It.IsAny<IEnumerable<Claim>>()
+                    )
+                )
                 .Returns("enhanced-token-with-tenant-claims");
 
             var authResult = new SignInResponseDto
@@ -98,15 +98,13 @@ namespace GameGuild.Tests.Modules.Auth.Services
                 RefreshToken = "refresh-token",
                 User = new UserDto
                 {
-                    Id = user.Id,
-                    Username = user.Name,
-                    Email = user.Email
+                    Id = user.Id, Username = user.Name, Email = user.Email
                 }
             };
-            
+
             // Act
             SignInResponseDto result = await _tenantAuthService.EnhanceWithTenantDataAsync(authResult, user, tenantId);
-            
+
             // Assert
             Assert.NotNull(result);
             Assert.Equal("enhanced-token-with-tenant-claims", result.AccessToken);
@@ -125,43 +123,42 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Arrange
             var user = new User
             {
-                Id = Guid.NewGuid(),
-                Name = "testuser",
-                Email = "test@example.com"
+                Id = Guid.NewGuid(), Name = "testuser", Email = "test@example.com"
             };
-            
+
             // Empty tenant list
             _mockTenantService.Setup(x => x.GetTenantsForUserAsync(user.Id))
                 .ReturnsAsync(new List<TenantPermission>());
-                
+
             var authResult = new SignInResponseDto
             {
                 AccessToken = "original-token",
                 RefreshToken = "refresh-token",
                 User = new UserDto
                 {
-                    Id = user.Id,
-                    Username = user.Name,
-                    Email = user.Email
+                    Id = user.Id, Username = user.Name, Email = user.Email
                 }
             };
-            
+
             // Act
             SignInResponseDto result = await _tenantAuthService.EnhanceWithTenantDataAsync(authResult, user, null);
-            
+
             // Assert
             Assert.NotNull(result);
             Assert.Equal("original-token", result.AccessToken);
             Assert.Equal("refresh-token", result.RefreshToken);
             Assert.Null(result.TenantId);
             Assert.Null(result.AvailableTenants);
-            
+
             // Verify token was not regenerated
-            _mockJwtTokenService.Verify(x => x.GenerateAccessToken(
-                It.IsAny<UserDto>(),
-                It.IsAny<string[]>(),
-                It.IsAny<IEnumerable<Claim>>()), 
-                Times.Never);
+            _mockJwtTokenService.Verify(
+                x => x.GenerateAccessToken(
+                    It.IsAny<UserDto>(),
+                    It.IsAny<string[]>(),
+                    It.IsAny<IEnumerable<Claim>>()
+                ),
+                Times.Never
+            );
         }
 
         [Fact]
@@ -170,23 +167,23 @@ namespace GameGuild.Tests.Modules.Auth.Services
             // Arrange
             var userId = Guid.NewGuid();
             var tenantId = Guid.NewGuid();
-            
+
             var tenantPermission = new TenantPermission
             {
-                UserId = userId,
-                TenantId = tenantId,
-                PermissionFlags1 = 42,
-                PermissionFlags2 = 24
+                UserId = userId, TenantId = tenantId, PermissionFlags1 = 42, PermissionFlags2 = 24
             };
-            
+
             _mockTenantContextService.Setup(x => x.GetTenantPermissionAsync(userId, tenantId))
                 .ReturnsAsync(tenantPermission);
-                
-            var user = new User { Id = userId };
-                
+
+            var user = new User
+            {
+                Id = userId
+            };
+
             // Act
             var claims = await _tenantAuthService.GetTenantClaimsAsync(user, tenantId);
-            
+
             // Assert
             Assert.NotNull(claims);
             var claimsList = claims.ToList();
@@ -198,7 +195,7 @@ namespace GameGuild.Tests.Modules.Auth.Services
             Assert.Equal("tenant_permission_flags2", claimsList[2].Type);
             Assert.Equal("24", claimsList[2].Value);
         }
-        
+
         public void Dispose()
         {
             _context.Dispose();

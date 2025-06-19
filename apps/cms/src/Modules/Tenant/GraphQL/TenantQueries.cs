@@ -1,6 +1,8 @@
 using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Tenant.Services;
 using GameGuild.Modules.User.GraphQL;
+using GameGuild.Common.Services;
+using System.Security.Claims;
 
 namespace GameGuild.Modules.Tenant.GraphQL;
 
@@ -13,32 +15,67 @@ public class TenantQueries
     /// <summary>
     /// Get all tenants (non-deleted only)
     /// </summary>
-    public async Task<IEnumerable<Models.Tenant>> GetTenants([Service] ITenantService tenantService)
+    public async Task<IEnumerable<Models.Tenant>> GetTenants(
+        [Service] ITenantService tenantService,
+        [Service] IHttpContextAccessor httpContextAccessor)
     {
+        // Require authentication for tenant queries
+        var httpContext = httpContextAccessor.HttpContext;
+        if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true)
+        {
+            throw new UnauthorizedAccessException("Authentication required");
+        }
+
         return await tenantService.GetAllTenantsAsync();
     }
 
     /// <summary>
     /// Get a tenant by ID
     /// </summary>
-    public async Task<Models.Tenant?> GetTenantById([Service] ITenantService tenantService, Guid id)
+    public async Task<Models.Tenant?> GetTenantById(
+        [Service] ITenantService tenantService,
+        [Service] IHttpContextAccessor httpContextAccessor,
+        Guid id)
     {
+        // Require authentication for tenant queries
+        var httpContext = httpContextAccessor.HttpContext;
+        if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true)
+        {
+            throw new UnauthorizedAccessException("Authentication required");        }
+
         return await tenantService.GetTenantByIdAsync(id);
     }
 
     /// <summary>
     /// Get soft-deleted tenants
     /// </summary>
-    public async Task<IEnumerable<Models.Tenant>> GetDeletedTenants([Service] ITenantService tenantService)
+    public async Task<IEnumerable<Models.Tenant>> GetDeletedTenants(
+        [Service] ITenantService tenantService,
+        [Service] IHttpContextAccessor httpContextAccessor)
     {
-        return await tenantService.GetDeletedTenantsAsync();
+        // Require authentication for tenant queries
+        var httpContext = httpContextAccessor.HttpContext;
+        if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true)
+        {
+            throw new UnauthorizedAccessException("Authentication required");
+        }        return await tenantService.GetDeletedTenantsAsync();
     }
 
     /// <summary>
     /// Get users in a tenant
     /// </summary>
-    public async Task<IEnumerable<TenantPermission>> GetUsersInTenant([Service] ITenantService tenantService, Guid tenantId)
+    public async Task<IEnumerable<TenantPermission>> GetUsersInTenant(
+        [Service] ITenantService tenantService,
+        [Service] IHttpContextAccessor httpContextAccessor,
+        Guid tenantId)
     {
+        // Require authentication for tenant queries
+        var httpContext = httpContextAccessor.HttpContext;
+        if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true)
+        {
+            throw new UnauthorizedAccessException("Authentication required");
+        }
+
         return await tenantService.GetUsersInTenantAsync(tenantId);
     }
 }

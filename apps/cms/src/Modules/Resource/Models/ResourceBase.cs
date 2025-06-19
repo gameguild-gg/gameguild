@@ -100,7 +100,6 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable
     }
 
 
-
     /// <summary>
     /// Assigns this resource to a specific tenant
     /// </summary>

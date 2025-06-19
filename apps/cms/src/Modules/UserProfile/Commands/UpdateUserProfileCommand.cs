@@ -7,8 +7,27 @@ namespace GameGuild.Modules.UserProfile.Commands;
 /// </summary>
 public class UpdateUserProfileCommand : IRequest<Models.UserProfile>
 {
-    public Guid UserProfileId { get; set; }
-    public string? GivenName { get; set; }
-    public string? FamilyName { get; set; }
-    public string? DisplayName { get; set; }
+    public Guid UserProfileId
+    {
+        get;
+        set;
+    }
+
+    public string? GivenName
+    {
+        get;
+        set;
+    }
+
+    public string? FamilyName
+    {
+        get;
+        set;
+    }
+
+    public string? DisplayName
+    {
+        get;
+        set;
+    }
 }

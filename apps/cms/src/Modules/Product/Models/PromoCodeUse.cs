@@ -72,7 +72,7 @@ public class PromoCodeUse : BaseEntity
         get;
         set;
     } = null!;
-    
+
     /// <summary>
     /// The actual discount amount that was applied
     /// </summary>

@@ -7,5 +7,9 @@ namespace GameGuild.Modules.Auth.Queries;
 /// </summary>
 public class GetUserByEmailQuery : IRequest<User.Models.User?>
 {
-    public string Email { get; set; } = string.Empty;
+    public string Email
+    {
+        get;
+        set;
+    } = string.Empty;
 }

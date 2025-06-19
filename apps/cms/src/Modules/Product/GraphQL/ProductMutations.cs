@@ -45,6 +45,7 @@ public class ProductMutations
         [Service] IProductService productService)
     {
         ProductEntity? product = await productService.GetProductByIdAsync(input.Id);
+
         if (product == null) return null;
 
         // Update only provided properties
@@ -83,6 +84,7 @@ public class ProductMutations
         [Service] IProductService productService)
     {
         await productService.DeleteProductAsync(id);
+
         return true;
     }
 
@@ -180,7 +182,8 @@ public class ProductMutations
             input.AcquisitionType,
             input.PurchasePrice,
             input.Currency,
-            input.ExpiresAt);
+            input.ExpiresAt
+        );
     }
 
     /// <summary>
@@ -192,6 +195,7 @@ public class ProductMutations
         [Service] IProductService productService)
     {
         await productService.RevokeUserAccessAsync(userId, productId);
+
         return true;
     }
 
@@ -236,6 +240,7 @@ public class ProductMutations
         [Service] IProductService productService)
     {
         PromoCode? promoCode = await productService.GetPromoCodeAsync(input.Code ?? "");
+
         if (promoCode == null) return null;
 
         // Update only provided properties
@@ -282,6 +287,7 @@ public class ProductMutations
         [Service] IProductService productService)
     {
         await productService.DeletePromoCodeAsync(id);
+
         return true;
     }
 

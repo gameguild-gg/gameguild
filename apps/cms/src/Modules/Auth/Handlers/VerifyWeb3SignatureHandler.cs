@@ -21,10 +21,7 @@ public class VerifyWeb3SignatureHandler : IRequestHandler<VerifyWeb3SignatureCom
     {
         var verifyRequest = new Web3VerifyRequestDto
         {
-            WalletAddress = request.WalletAddress,
-            Signature = request.Signature,
-            Nonce = request.Nonce,
-            ChainId = request.ChainId
+            WalletAddress = request.WalletAddress, Signature = request.Signature, Nonce = request.Nonce, ChainId = request.ChainId
         };
 
         return await _authService.VerifyWeb3SignatureAsync(verifyRequest);

@@ -9,7 +9,8 @@ namespace GameGuild.Modules.Program.Models;
 
 [Table("content_interactions")]
 public class ContentInteraction : BaseEntity
-{    public Guid ProgramUserId
+{
+    public Guid ProgramUserId
     {
         get;
         set;

@@ -26,18 +26,26 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         try
         {
             TResponse response = await next();
-            
+
             stopwatch.Stop();
-            _logger.LogInformation("Handled {RequestName} in {ElapsedMilliseconds}ms", 
-                requestName, stopwatch.ElapsedMilliseconds);
+            _logger.LogInformation(
+                "Handled {RequestName} in {ElapsedMilliseconds}ms",
+                requestName,
+                stopwatch.ElapsedMilliseconds
+            );
 
             return response;
         }
         catch (Exception ex)
         {
             stopwatch.Stop();
-            _logger.LogError(ex, "Error handling {RequestName} after {ElapsedMilliseconds}ms", 
-                requestName, stopwatch.ElapsedMilliseconds);
+            _logger.LogError(
+                ex,
+                "Error handling {RequestName} after {ElapsedMilliseconds}ms",
+                requestName,
+                stopwatch.ElapsedMilliseconds
+            );
+
             throw;
         }
     }

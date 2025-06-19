@@ -11,6 +11,7 @@ namespace GameGuild.Modules.Tenant.Services;
 public class TenantService : ITenantService
 {
     private readonly ApplicationDbContext _context;
+
     private readonly IPermissionService _permissionService;
 
     public TenantService(ApplicationDbContext context, IPermissionService permissionService)
@@ -235,6 +236,7 @@ public class TenantService : ITenantService
     public async Task<bool> RemoveUserFromTenantAsync(Guid userId, Guid tenantId)
     {
         await _permissionService.LeaveTenantAsync(userId, tenantId);
+
         return true;
     }
 

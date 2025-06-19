@@ -14,46 +14,90 @@ namespace GameGuild.Modules.Certificate.Models;
 [Index(nameof(AnchoredAt))]
 public class CertificateBlockchainAnchor : BaseEntity
 {
-    public Guid CertificateId { get; set; }
-    
+    public Guid CertificateId
+    {
+        get;
+        set;
+    }
+
     [Required]
     [MaxLength(100)]
-    public string BlockchainNetwork { get; set; } = string.Empty;
-    
+    public string BlockchainNetwork
+    {
+        get;
+        set;
+    } = string.Empty;
+
     [Required]
     [MaxLength(200)]
-    public string TransactionHash { get; set; } = string.Empty;
-    
+    public string TransactionHash
+    {
+        get;
+        set;
+    } = string.Empty;
+
     [MaxLength(200)]
-    public string? BlockHash { get; set; }
-    
-    public long? BlockNumber { get; set; }
-    
+    public string? BlockHash
+    {
+        get;
+        set;
+    }
+
+    public long? BlockNumber
+    {
+        get;
+        set;
+    }
+
     [MaxLength(500)]
-    public string? ContractAddress { get; set; }
-    
+    public string? ContractAddress
+    {
+        get;
+        set;
+    }
+
     [MaxLength(100)]
-    public string? TokenId { get; set; }
-    
+    public string? TokenId
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Status of the blockchain anchoring
     /// </summary>
     [MaxLength(50)]
-    public string Status { get; set; } = "pending";
-    
+    public string Status
+    {
+        get;
+        set;
+    } = "pending";
+
     /// <summary>
     /// Date when the anchoring was initiated
     /// </summary>
-    public DateTime AnchoredAt { get; set; }
-    
+    public DateTime AnchoredAt
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Date when the anchoring was confirmed on-chain
     /// </summary>
-    public DateTime? ConfirmedAt { get; set; }
-    
+    public DateTime? ConfirmedAt
+    {
+        get;
+        set;
+    }
+
     // Navigation properties
     [ForeignKey(nameof(CertificateId))]
-    public virtual UserCertificate Certificate { get; set; } = null!;
+    public virtual UserCertificate Certificate
+    {
+        get;
+        set;
+    } = null!;
 }
 
 public class CertificateBlockchainAnchorConfiguration : IEntityTypeConfiguration<CertificateBlockchainAnchor>

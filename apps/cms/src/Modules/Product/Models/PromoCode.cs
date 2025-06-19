@@ -29,7 +29,7 @@ public class PromoCode : BaseEntity
         get;
         set;
     } = string.Empty;
-    
+
     /// <summary>
     /// Display name for the promotional code
     /// </summary>
@@ -40,7 +40,7 @@ public class PromoCode : BaseEntity
         get;
         set;
     } = string.Empty;
-    
+
     /// <summary>
     /// Description of what the promo code does
     /// </summary>
@@ -49,7 +49,7 @@ public class PromoCode : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Type of discount this promo code provides
     /// </summary>
@@ -58,7 +58,7 @@ public class PromoCode : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Discount percentage (for PercentageOff type)
     /// </summary>
@@ -68,7 +68,7 @@ public class PromoCode : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Fixed discount amount (for FixedAmountOff type)
     /// </summary>
@@ -78,7 +78,7 @@ public class PromoCode : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Currency code for fixed amount discounts
     /// </summary>
@@ -88,7 +88,7 @@ public class PromoCode : BaseEntity
         get;
         set;
     } = "USD";
-    
+
     /// <summary>
     /// Minimum order amount required to use this promo code
     /// </summary>
@@ -98,7 +98,7 @@ public class PromoCode : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Maximum number of times this code can be used (null = unlimited)
     /// </summary>
@@ -107,7 +107,7 @@ public class PromoCode : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Maximum uses per user (null = unlimited per user)
     /// </summary>
@@ -116,7 +116,7 @@ public class PromoCode : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// When this promo code becomes valid
     /// </summary>
@@ -134,7 +134,7 @@ public class PromoCode : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Whether this promo code is currently active
     /// </summary>
@@ -143,7 +143,7 @@ public class PromoCode : BaseEntity
         get;
         set;
     } = true;
-    
+
     /// <summary>
     /// Specific product this code applies to (null = applies to all products)
     /// </summary>
@@ -162,7 +162,7 @@ public class PromoCode : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Foreign key to the user who created this promo code
     /// </summary>
@@ -220,6 +220,7 @@ public class PromoCode : BaseEntity
         if (!IsActive) return false;
 
         DateTime now = DateTime.UtcNow;
+
         return (ValidFrom == null || ValidFrom <= now) &&
                (ValidUntil == null || ValidUntil > now);
     }

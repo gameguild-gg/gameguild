@@ -20,10 +20,7 @@ public class AuthMutations
     {
         var command = new LocalSignUpCommand
         {
-            Email = input.Email,
-            Password = input.Password,
-            Username = input.Username,
-            TenantId = input.TenantId
+            Email = input.Email, Password = input.Password, Username = input.Username, TenantId = input.TenantId
         };
 
         return await mediator.Send(command);
@@ -38,9 +35,7 @@ public class AuthMutations
     {
         var command = new LocalSignInCommand
         {
-            Email = input.Email,
-            Password = input.Password,
-            TenantId = input.TenantId
+            Email = input.Email, Password = input.Password, TenantId = input.TenantId
         };
 
         return await mediator.Send(command);

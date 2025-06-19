@@ -39,7 +39,7 @@ public class ProductSubscriptionPlan : BaseEntity
         get;
         set;
     } = null!;
-    
+
     /// <summary>
     /// Name of the subscription plan
     /// </summary>
@@ -50,7 +50,7 @@ public class ProductSubscriptionPlan : BaseEntity
         get;
         set;
     } = string.Empty;
-    
+
     /// <summary>
     /// Description of what's included in this plan
     /// </summary>
@@ -60,7 +60,7 @@ public class ProductSubscriptionPlan : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Price for each billing cycle
     /// </summary>
@@ -70,7 +70,7 @@ public class ProductSubscriptionPlan : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Currency code for the price
     /// </summary>
@@ -80,7 +80,7 @@ public class ProductSubscriptionPlan : BaseEntity
         get;
         set;
     } = "USD";
-    
+
     /// <summary>
     /// How often the subscription is billed
     /// </summary>
@@ -89,7 +89,7 @@ public class ProductSubscriptionPlan : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Number of billing intervals between charges (e.g., 3 months = interval_count: 3, billing_interval: Month)
     /// </summary>
@@ -98,7 +98,7 @@ public class ProductSubscriptionPlan : BaseEntity
         get;
         set;
     } = 1;
-    
+
     /// <summary>
     /// Free trial period in days
     /// </summary>
@@ -107,7 +107,7 @@ public class ProductSubscriptionPlan : BaseEntity
         get;
         set;
     }
-    
+
     /// <summary>
     /// Whether this plan is currently available for new subscriptions
     /// </summary>
@@ -116,7 +116,7 @@ public class ProductSubscriptionPlan : BaseEntity
         get;
         set;
     } = true;
-    
+
     /// <summary>
     /// Whether this is the default plan for the product
     /// </summary>
@@ -136,7 +136,12 @@ public class ProductSubscriptionPlan : BaseEntity
     /// </summary>
     /// <param name="partial">Partial product subscription plan data</param>
     public ProductSubscriptionPlan(object partial) : base(partial) { }
-    public virtual ICollection<Subscription.Models.UserSubscription> UserSubscriptions { get; set; } = new List<Subscription.Models.UserSubscription>();
+
+    public virtual ICollection<Subscription.Models.UserSubscription> UserSubscriptions
+    {
+        get;
+        set;
+    } = new List<Subscription.Models.UserSubscription>();
 }
 
 /// <summary>
@@ -155,19 +160,19 @@ public class ProductSubscriptionPlanConfiguration : IEntityTypeConfiguration<Pro
         // Configure additional indexes for performance
         builder.HasIndex(psp => psp.ProductId)
             .HasDatabaseName("IX_ProductSubscriptionPlans_ProductId");
-            
+
         builder.HasIndex(psp => psp.Name)
             .HasDatabaseName("IX_ProductSubscriptionPlans_Name");
-            
+
         builder.HasIndex(psp => psp.IsActive)
             .HasDatabaseName("IX_ProductSubscriptionPlans_IsActive");
-            
+
         builder.HasIndex(psp => psp.IsDefault)
             .HasDatabaseName("IX_ProductSubscriptionPlans_IsDefault");
-            
+
         builder.HasIndex(psp => psp.Price)
             .HasDatabaseName("IX_ProductSubscriptionPlans_Price");
-            
+
         builder.HasIndex(psp => psp.BillingInterval)
             .HasDatabaseName("IX_ProductSubscriptionPlans_BillingInterval");
     }

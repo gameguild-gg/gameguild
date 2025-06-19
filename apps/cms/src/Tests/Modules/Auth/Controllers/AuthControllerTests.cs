@@ -78,10 +78,7 @@ namespace GameGuild.Tests.Modules.Auth.Controllers
             var tenantId = Guid.NewGuid();
             var request = new LocalSignUpRequestDto
             {
-                Email = "test@example.com", 
-                Password = "P455W0RD",
-                Username = "testuser",
-                TenantId = tenantId
+                Email = "test@example.com", Password = "P455W0RD", Username = "testuser", TenantId = tenantId
             };
 
             var expectedResponse = new SignInResponseDto
@@ -95,17 +92,24 @@ namespace GameGuild.Tests.Modules.Auth.Controllers
                 TenantId = tenantId,
                 AvailableTenants = new List<TenantInfoDto>
                 {
-                    new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true }
+                    new TenantInfoDto
+                    {
+                        Id = tenantId, Name = "Test Tenant", IsActive = true
+                    }
                 }
             };
 
             // Mock the MediatR response for the LocalSignUpCommand
-            _mockMediator.Setup(x => x.Send(It.Is<LocalSignUpCommand>(cmd =>
-                cmd.Email == request.Email &&
-                cmd.Password == request.Password &&
-                cmd.Username == request.Username &&
-                cmd.TenantId == request.TenantId), 
-                It.IsAny<CancellationToken>()))
+            _mockMediator.Setup(x => x.Send(
+                        It.Is<LocalSignUpCommand>(cmd =>
+                            cmd.Email == request.Email &&
+                            cmd.Password == request.Password &&
+                            cmd.Username == request.Username &&
+                            cmd.TenantId == request.TenantId
+                        ),
+                        It.IsAny<CancellationToken>()
+                    )
+                )
                 .ReturnsAsync(expectedResponse);
 
             // Act
