@@ -1,9 +1,6 @@
-using GameGuild.Modules.Product.GraphQL;
-using GameGuild.Common.Enums;
-using GameGuild.Common.Entities;
+using GameGuild.Modules.Product.Models;
 using GameGuild.Modules.Product.Services;
 using ProductEntity = GameGuild.Modules.Product.Models.Product;
-using ProductTypeEnum = GameGuild.Common.Enums.ProductType;
 using PromoCodeTypeEnum = GameGuild.Common.Enums.PromoCodeType;
 
 namespace GameGuild.Modules.Product.GraphQL;
@@ -47,7 +44,7 @@ public class ProductMutations
         UpdateProductInput input,
         [Service] IProductService productService)
     {
-        var product = await productService.GetProductByIdAsync(input.Id);
+        ProductEntity? product = await productService.GetProductByIdAsync(input.Id);
         if (product == null) return null;
 
         // Update only provided properties
@@ -238,7 +235,7 @@ public class ProductMutations
         UpdatePromoCodeInput input,
         [Service] IProductService productService)
     {
-        var promoCode = await productService.GetPromoCodeAsync(input.Code ?? "");
+        PromoCode? promoCode = await productService.GetPromoCodeAsync(input.Code ?? "");
         if (promoCode == null) return null;
 
         // Update only provided properties

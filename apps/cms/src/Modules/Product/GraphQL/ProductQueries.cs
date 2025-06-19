@@ -1,6 +1,3 @@
-using GameGuild.Common.Enums;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Product.GraphQL;
 using GameGuild.Modules.Product.Services;
 using ProductEntity = GameGuild.Modules.Product.Models.Product;
 using ProductTypeEnum = GameGuild.Common.Enums.ProductType;

@@ -26,7 +26,8 @@ public class LocalSignUpHandler : IRequestHandler<LocalSignUpCommand, SignInResp
         {
             Email = request.Email,
             Password = request.Password,
-            Username = request.Username
+            Username = request.Username,
+            TenantId = request.TenantId
         };
 
         SignInResponseDto result = await _authService.LocalSignUpAsync(signUpRequest);
@@ -36,7 +37,8 @@ public class LocalSignUpHandler : IRequestHandler<LocalSignUpCommand, SignInResp
         {
             UserId = result.User.Id,
             Email = result.User.Email,
-            Username = request.Username
+            Username = request.Username,
+            TenantId = result.TenantId // Include the tenant ID from the response
         };
 
         await _mediator.Publish(notification, cancellationToken);

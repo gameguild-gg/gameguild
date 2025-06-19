@@ -1,6 +1,5 @@
 using GameGuild.Common.Enums;
 using GameGuild.Common.Entities;
-using GameGuild.Modules.Product.Models;
 using PromoCodeTypeEnum = GameGuild.Common.Enums.PromoCodeType;
 
 namespace GameGuild.Modules.Product.GraphQL;
