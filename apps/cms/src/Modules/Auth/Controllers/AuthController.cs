@@ -85,9 +85,30 @@ namespace GameGuild.Modules.Auth.Controllers
         [Public]
         public async Task<ActionResult<RefreshTokenResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto request)
         {
-            RefreshTokenResponseDto result = await authService.RefreshTokenAsync(request);
-
-            return Ok(result);
+            try
+            {
+                RefreshTokenResponseDto result = await authService.RefreshTokenAsync(request);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(
+                    new
+                    {
+                        message = ex.Message
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    500,
+                    new
+                    {
+                        message = "Internal server error", details = ex.Message
+                    }
+                );
+            }
         }
 
         [HttpPost("revoke-token")]

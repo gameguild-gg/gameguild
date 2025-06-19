@@ -10,12 +10,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<Modules.User.Services.IUserService, Modules.User.Services.UserService>();
 
         return services;
-    }
-
-    public static IServiceCollection AddTenantModule(this IServiceCollection services)
+    }    public static IServiceCollection AddTenantModule(this IServiceCollection services)
     {
         // Register Tenant module services
         services.AddScoped<Modules.Tenant.Services.ITenantService, Modules.Tenant.Services.TenantService>();
+        services.AddScoped<Modules.Tenant.Services.ITenantContextService, Modules.Tenant.Services.TenantContextService>();
 
         return services;
     }
