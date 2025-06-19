@@ -72,7 +72,7 @@ public class ProductService : IProductService
         return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
-            .Where(p => !p.IsDeleted && p.Status == ContentStatus.Published && p.Visibility == Common.Entities.Visibility.Public)
+            .Where(p => !p.IsDeleted && p.Status == ContentStatus.Published && p.Visibility == Common.Entities.AccessLevel.Public)
             .OrderBy(p => p.Name)
             .Skip(skip)
             .Take(take)
@@ -82,7 +82,7 @@ public class ProductService : IProductService
     public async Task<ProductEntity> CreateProductAsync(ProductEntity product)
     {
         product.Status = ContentStatus.Draft;
-        product.Visibility = Common.Entities.Visibility.Private;
+        product.Visibility = Common.Entities.AccessLevel.Private;
         
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
@@ -151,7 +151,7 @@ public class ProductService : IProductService
         return product;
     }
 
-    public async Task<ProductEntity> SetVisibilityAsync(Guid id, Common.Entities.Visibility visibility)
+    public async Task<ProductEntity> SetVisibilityAsync(Guid id, Common.Entities.AccessLevel visibility)
     {
         ProductEntity? product = await GetProductByIdAsync(id);
         if (product == null)
@@ -500,7 +500,7 @@ public class ProductService : IProductService
     }
 
     // Analytics and statistics
-    public async Task<int> GetProductCountAsync(ProductType? type = null, Common.Entities.Visibility? visibility = null)
+    public async Task<int> GetProductCountAsync(ProductType? type = null, Common.Entities.AccessLevel? visibility = null)
     {
         var query = _context.Products.Where(p => !p.IsDeleted);
 

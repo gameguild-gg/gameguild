@@ -22,7 +22,7 @@ public class UpdateProductInput
     public GameGuild.Common.Enums.ProductType? Type { get; set; }
     public bool? IsBundle { get; set; }
     public ContentStatus? Status { get; set; }
-    public Common.Entities.Visibility? Visibility { get; set; }
+    public Common.Entities.AccessLevel? Visibility { get; set; }
 }
 
 public class BundleManagementInput
