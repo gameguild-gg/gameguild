@@ -3,6 +3,8 @@ using GameGuild.Modules.Tenant.Dtos;
 using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Tenant.Services;
 using GameGuild.Modules.User.Dtos;
+using GameGuild.Common.Attributes;
+using GameGuild.Common.Entities;
 
 namespace GameGuild.Modules.Tenant.Controllers;
 
@@ -75,6 +77,7 @@ public class TenantsController : ControllerBase
     /// <param name="createDto">Tenant data</param>
     /// <returns>Created tenant</returns>
     [HttpPost]
+    [RequireTenantPermission(PermissionType.Create)]
     public async Task<ActionResult<TenantResponseDto>> CreateTenant([FromBody] CreateTenantDto createDto)
     {
         if (!ModelState.IsValid)

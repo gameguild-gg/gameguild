@@ -17,7 +17,11 @@ public class AuthQueries
         string email,
         [Service] IMediator mediator)
     {
-        var query = new GetUserByEmailQuery { Email = email };
+        var query = new GetUserByEmailQuery
+        {
+            Email = email
+        };
+
         return await mediator.Send(query);
     }
 }

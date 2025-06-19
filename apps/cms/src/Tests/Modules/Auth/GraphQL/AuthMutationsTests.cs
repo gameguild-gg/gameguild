@@ -10,6 +10,7 @@ namespace GameGuild.Tests.Modules.Auth.GraphQL
     public class AuthMutationsTests
     {
         private readonly Mock<IMediator> _mockMediator;
+
         private readonly AuthMutations _authMutations;
 
         public AuthMutationsTests()
@@ -25,10 +26,7 @@ namespace GameGuild.Tests.Modules.Auth.GraphQL
             var tenantId = Guid.NewGuid();
             var input = new LocalSignUpRequestDto
             {
-                Email = "test@example.com",
-                Password = "P455W0RD",
-                Username = "testuser",
-                TenantId = tenantId
+                Email = "test@example.com", Password = "P455W0RD", Username = "testuser", TenantId = tenantId
             };
 
             var expectedResponse = new SignInResponseDto
@@ -37,14 +35,15 @@ namespace GameGuild.Tests.Modules.Auth.GraphQL
                 RefreshToken = "mock-refresh-token",
                 User = new UserDto
                 {
-                    Id = Guid.NewGuid(),
-                    Email = "test@example.com",
-                    Username = "testuser"
+                    Id = Guid.NewGuid(), Email = "test@example.com", Username = "testuser"
                 },
                 TenantId = tenantId,
                 AvailableTenants = new List<TenantInfoDto>
                 {
-                    new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true }
+                    new TenantInfoDto
+                    {
+                        Id = tenantId, Name = "Test Tenant", IsActive = true
+                    }
                 }
             };
 
@@ -78,9 +77,7 @@ namespace GameGuild.Tests.Modules.Auth.GraphQL
             var tenantId = Guid.NewGuid();
             var input = new LocalSignInRequestDto
             {
-                Email = "test@example.com",
-                Password = "P455W0RD",
-                TenantId = tenantId
+                Email = "test@example.com", Password = "P455W0RD", TenantId = tenantId
             };
 
             var expectedResponse = new SignInResponseDto
@@ -89,23 +86,28 @@ namespace GameGuild.Tests.Modules.Auth.GraphQL
                 RefreshToken = "mock-refresh-token",
                 User = new UserDto
                 {
-                    Id = Guid.NewGuid(),
-                    Email = "test@example.com",
-                    Username = "testuser"
+                    Id = Guid.NewGuid(), Email = "test@example.com", Username = "testuser"
                 },
                 TenantId = tenantId,
                 AvailableTenants = new List<TenantInfoDto>
                 {
-                    new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true }
+                    new TenantInfoDto
+                    {
+                        Id = tenantId, Name = "Test Tenant", IsActive = true
+                    }
                 }
             };
 
             // Setup mediator to capture the command and return expected response
-            _mockMediator.Setup(x => x.Send(It.Is<LocalSignInCommand>(cmd => 
-                cmd.Email == input.Email &&
-                cmd.Password == input.Password &&
-                cmd.TenantId == input.TenantId), 
-                It.IsAny<CancellationToken>()))
+            _mockMediator.Setup(x => x.Send(
+                        It.Is<LocalSignInCommand>(cmd =>
+                            cmd.Email == input.Email &&
+                            cmd.Password == input.Password &&
+                            cmd.TenantId == input.TenantId
+                        ),
+                        It.IsAny<CancellationToken>()
+                    )
+                )
                 .ReturnsAsync(expectedResponse);
 
             // Act
@@ -119,13 +121,17 @@ namespace GameGuild.Tests.Modules.Auth.GraphQL
             Assert.Single(result.AvailableTenants);
 
             // Verify that mediator was called with the correct command
-            _mockMediator.Verify(x => x.Send(
-                It.Is<LocalSignInCommand>(cmd =>
-                    cmd.Email == input.Email &&
-                    cmd.Password == input.Password &&
-                    cmd.TenantId == input.TenantId),
-                It.IsAny<CancellationToken>()), 
-                Times.Once);
+            _mockMediator.Verify(
+                x => x.Send(
+                    It.Is<LocalSignInCommand>(cmd =>
+                        cmd.Email == input.Email &&
+                        cmd.Password == input.Password &&
+                        cmd.TenantId == input.TenantId
+                    ),
+                    It.IsAny<CancellationToken>()
+                ),
+                Times.Once
+            );
         }
     }
 }

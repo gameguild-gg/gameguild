@@ -15,6 +15,7 @@ namespace GameGuild.Common.Attributes;
 public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationFilter
 {
     private readonly PermissionType _requiredPermission;
+
     private readonly string _resourceIdParameterName;
 
     public RequireCommentPermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id")
@@ -26,12 +27,13 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
         var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
-        
+
         // Extract user ID and tenant ID from JWT token
         string? userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdClaim, out Guid userId))
         {
             context.Result = new UnauthorizedResult();
+
             return;
         }
 
@@ -39,6 +41,7 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
         if (!Guid.TryParse(tenantIdClaim, out Guid tenantId))
         {
             context.Result = new UnauthorizedResult();
+
             return;
         }
 
@@ -47,6 +50,7 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
         if (!Guid.TryParse(resourceIdValue, out Guid resourceId))
         {
             context.Result = new BadRequestResult();
+
             return;
         }
 

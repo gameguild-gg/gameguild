@@ -7,8 +7,27 @@ namespace GameGuild.Modules.UserProfile.Notifications;
 /// </summary>
 public class UserProfileUpdatedNotification : INotification
 {
-    public Guid UserProfileId { get; set; }
-    public Guid UserId { get; set; }
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-    public Dictionary<string, object> Changes { get; set; } = new();
+    public Guid UserProfileId
+    {
+        get;
+        set;
+    }
+
+    public Guid UserId
+    {
+        get;
+        set;
+    }
+
+    public DateTime UpdatedAt
+    {
+        get;
+        set;
+    } = DateTime.UtcNow;
+
+    public Dictionary<string, object> Changes
+    {
+        get;
+        set;
+    } = new();
 }

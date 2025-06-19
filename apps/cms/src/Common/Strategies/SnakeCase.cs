@@ -7,6 +7,7 @@ using Newtonsoft.Json.Serialization;
 public static class SnakeCase
 {
     private static readonly SnakeCaseNamingStrategy NamingStrategy = new();
+
     private static IMemoryCache _cache;
 
     static SnakeCase()
@@ -33,13 +34,18 @@ public static class SnakeCase
         }
 
         var cacheKey = $"string:{name}";
-        return _cache.GetOrCreate(cacheKey, entry =>
-        {
-            entry.Size = 1; // Each entry counts as 1 towards the size limit
-            entry.SlidingExpiration = TimeSpan.FromMinutes(30); // Expire after 30 minutes of inactivity
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2); // Absolute expiration after 2 hours
-            return NamingStrategy.GetPropertyName(name, false);
-        }) ?? string.Empty;
+
+        return _cache.GetOrCreate(
+            cacheKey,
+            entry =>
+            {
+                entry.Size = 1; // Each entry counts as 1 towards the size limit
+                entry.SlidingExpiration = TimeSpan.FromMinutes(30); // Expire after 30 minutes of inactivity
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2); // Absolute expiration after 2 hours
+
+                return NamingStrategy.GetPropertyName(name, false);
+            }
+        ) ?? string.Empty;
     }
 
     /// <summary>
@@ -66,13 +72,18 @@ public static class SnakeCase
         }
 
         var cacheKey = $"type:{type.FullName}";
-        return _cache.GetOrCreate(cacheKey, entry =>
-        {
-            entry.Size = 1; // Each entry counts as 1 towards the size limit
-            entry.SlidingExpiration = TimeSpan.FromMinutes(30); // Expire after 30 minutes of inactivity
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2); // Absolute expiration after 2 hours
-            return NamingStrategy.GetPropertyName(type.Name, false);
-        }) ?? string.Empty;
+
+        return _cache.GetOrCreate(
+            cacheKey,
+            entry =>
+            {
+                entry.Size = 1; // Each entry counts as 1 towards the size limit
+                entry.SlidingExpiration = TimeSpan.FromMinutes(30); // Expire after 30 minutes of inactivity
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2); // Absolute expiration after 2 hours
+
+                return NamingStrategy.GetPropertyName(type.Name, false);
+            }
+        ) ?? string.Empty;
     }
 
     /// <summary>
@@ -103,10 +114,11 @@ public static class SnakeCase
         }
 
         var result = new string[names.Length];
-        for (int i = 0; i < names.Length; i++)
+        for (var i = 0; i < names.Length; i++)
         {
             result[i] = Convert(names[i]);
         }
+
         return result;
     }
 
@@ -123,10 +135,11 @@ public static class SnakeCase
         }
 
         var result = new string[types.Length];
-        for (int i = 0; i < types.Length; i++)
+        for (var i = 0; i < types.Length; i++)
         {
             result[i] = Convert(types[i]);
         }
+
         return result;
     }
 

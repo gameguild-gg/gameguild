@@ -31,7 +31,7 @@ namespace GameGuild.Modules.Auth.Dtos
             get;
             set;
         } = string.Empty;
-        
+
         /// <summary>
         /// Optional tenant ID to use for the sign-in
         /// If not provided, will use the first available tenant for the user

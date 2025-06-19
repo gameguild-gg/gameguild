@@ -1,6 +1,9 @@
 using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Tenant.Services;
 using GameGuild.Modules.User.GraphQL;
+using GameGuild.Common.Services;
+using GameGuild.Common.Entities;
+using System.Security.Claims;
 
 namespace GameGuild.Modules.Tenant.GraphQL;
 
@@ -15,8 +18,36 @@ public class TenantMutations
     /// </summary>
     public async Task<Models.Tenant> CreateTenant(
         [Service] ITenantService tenantService,
+        [Service] IPermissionService permissionService,
+        [Service] IHttpContextAccessor httpContextAccessor,
         CreateTenantInput input)
     {
+        // Extract user ID and tenant ID from JWT token for permission check
+        HttpContext? httpContext = httpContextAccessor.HttpContext;
+        if (httpContext == null)
+        {
+            throw new UnauthorizedAccessException("No HTTP context available");
+        }
+
+        string? userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdClaim, out Guid userId))
+        {
+            throw new UnauthorizedAccessException("Invalid or missing user ID in token");
+        }
+
+        string? tenantIdClaim = httpContext.User.FindFirst("tenant_id")?.Value;
+        if (!Guid.TryParse(tenantIdClaim, out Guid tenantId))
+        {
+            throw new UnauthorizedAccessException("Invalid or missing tenant ID in token");
+        }
+
+        // Check if user has permission to create tenants
+        bool hasPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Create);
+        if (!hasPermission)
+        {
+            throw new UnauthorizedAccessException("Insufficient permissions to create tenant");
+        }
+
         var tenant = new Models.Tenant
         {
             Name = input.Name, Description = input.Description, IsActive = input.IsActive

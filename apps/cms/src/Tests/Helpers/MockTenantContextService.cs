@@ -10,6 +10,7 @@ namespace GameGuild.Tests.Helpers
     public class MockTenantContextService : ITenantContextService
     {
         private readonly Dictionary<Guid, Tenant> _tenants = new();
+
         private readonly Dictionary<(Guid userId, Guid tenantId), TenantPermission> _permissions = new();
 
         /// <summary>
@@ -20,10 +21,7 @@ namespace GameGuild.Tests.Helpers
             // Create default test tenant
             var testTenant = new Tenant
             {
-                Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-                Name = "Test Tenant",
-                Slug = "test-tenant",
-                IsActive = true
+                Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Test Tenant", Slug = "test-tenant", IsActive = true
             };
 
             _tenants.Add(testTenant.Id, testTenant);
@@ -62,7 +60,7 @@ namespace GameGuild.Tests.Helpers
                     return Task.FromResult<Guid?>(tenantHeaderId);
                 }
             }
-            
+
             // Check user claims
             if (user?.Identity?.IsAuthenticated == true)
             {
@@ -76,16 +74,16 @@ namespace GameGuild.Tests.Helpers
                     }
                 }
             }
-            
+
             // Return default test tenant if available
             if (_tenants.Any(t => t.Value.IsActive))
             {
                 return Task.FromResult<Guid?>(_tenants.First(t => t.Value.IsActive).Key);
             }
-            
+
             return Task.FromResult<Guid?>(null);
         }
-        
+
         /// <summary>
         /// Get the current tenant entity 
         /// </summary>
@@ -96,10 +94,10 @@ namespace GameGuild.Tests.Helpers
             {
                 return null;
             }
-            
+
             return _tenants.TryGetValue(tenantId.Value, out Tenant? tenant) && tenant.IsActive ? tenant : null;
         }
-        
+
         /// <summary>
         /// Get permission data for user in the specified tenant
         /// </summary>
@@ -109,7 +107,7 @@ namespace GameGuild.Tests.Helpers
             {
                 return Task.FromResult<TenantPermission?>(permission);
             }
-            
+
             // For testing, if a permission doesn't exist but the user and tenant do,
             // create a default permission with access
             if (!_permissions.ContainsKey((userId, tenantId)) && _tenants.ContainsKey(tenantId))
@@ -120,16 +118,17 @@ namespace GameGuild.Tests.Helpers
                     UserId = userId,
                     TenantId = tenantId,
                     // Set some default permissions
-                    PermissionFlags1 = 0x000000000000000F  // First 4 permissions enabled
+                    PermissionFlags1 = 0x000000000000000F // First 4 permissions enabled
                 };
-                
+
                 _permissions[(userId, tenantId)] = newPermission;
+
                 return Task.FromResult<TenantPermission?>(newPermission);
             }
-            
+
             return Task.FromResult<TenantPermission?>(null);
         }
-        
+
         /// <summary>
         /// Check if user has permission to access the specified tenant
         /// </summary>
@@ -139,10 +138,10 @@ namespace GameGuild.Tests.Helpers
             {
                 return false;
             }
-            
+
             Guid userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             TenantPermission? permission = await GetTenantPermissionAsync(userId, tenantId);
-            
+
             return permission != null;
         }
     }

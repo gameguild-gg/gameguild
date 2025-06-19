@@ -21,8 +21,9 @@ namespace GameGuild.Tests.Modules.Auth.Integration
         public AuthIntegrationTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
-            // Use our helper to get a factory with the mock database already configured
-            _factory = IntegrationTestHelper.GetTestFactory();
+            // Use a unique database name for this test class to avoid interference
+            var uniqueDbName = $"AuthIntegrationTests_{Guid.NewGuid()}";
+            _factory = IntegrationTestHelper.GetTestFactory(uniqueDbName);
             _client = _factory.CreateClient();
 
             // Set up test data in the in-memory database
@@ -203,7 +204,7 @@ namespace GameGuild.Tests.Modules.Auth.Integration
 
             // Assert - The refresh should work and return new tokens
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            
+
             var responseData = await response.Content.ReadFromJsonAsync<RefreshTokenResponseDto>();
             Assert.NotNull(responseData);
             Assert.NotEmpty(responseData.AccessToken);

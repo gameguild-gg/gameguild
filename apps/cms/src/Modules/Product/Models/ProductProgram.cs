@@ -55,7 +55,7 @@ public class ProductProgram : BaseEntity
         get;
         set;
     } = null!;
-    
+
     /// <summary>
     /// Display order of programs within the product
     /// </summary>
@@ -97,7 +97,11 @@ public class ProductProgramConfiguration : IEntityTypeConfiguration<ProductProgr
             .OnDelete(DeleteBehavior.Cascade);
 
         // Filtered unique constraint (can't be done with annotations)
-        builder.HasIndex(pp => new { pp.ProductId, pp.ProgramId })
+        builder.HasIndex(pp => new
+                {
+                    pp.ProductId, pp.ProgramId
+                }
+            )
             .IsUnique()
             .HasFilter("\"DeletedAt\" IS NULL");
     }

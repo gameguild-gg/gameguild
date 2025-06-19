@@ -18,10 +18,14 @@ public class TenantPermission : WithPermissions
     /// <summary>
     /// Navigation property to content type permissions for this user within this tenant (Layer 2 of permission system)
     /// </summary>
-    public virtual ICollection<ContentTypePermission> ContentTypePermissions { get; set; } = new List<ContentTypePermission>();
-    
+    public virtual ICollection<ContentTypePermission> ContentTypePermissions
+    {
+        get;
+        set;
+    } = new List<ContentTypePermission>();
+
     // Computed properties specific to tenant permissions
-    
+
     /// <summary>
     /// Whether this represents an active membership
     /// </summary>
@@ -34,8 +38,9 @@ public class TenantPermission : WithPermissions
 public static class TenantPermissionConstants
 {
     public const int MaxPermissionsPerGrant = 50;
+
     public const int MaxExpirationDays = 365;
-    
+
     /// <summary>
     /// Default permissions that every user gets
     /// </summary>

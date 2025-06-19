@@ -51,7 +51,7 @@ namespace GameGuild.Modules.Auth.Dtos
             get;
             set;
         }
-        
+
         /// <summary>
         /// List of tenants the user has access to
         /// </summary>

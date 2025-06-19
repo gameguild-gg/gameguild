@@ -14,17 +14,17 @@ public interface ITenantContextService
     /// Get the current tenant ID from the request or claims
     /// </summary>
     Task<Guid?> GetCurrentTenantIdAsync(ClaimsPrincipal? user = null, string? tenantHeader = null);
-    
+
     /// <summary>
     /// Get the current tenant entity 
     /// </summary>
     Task<Models.Tenant?> GetCurrentTenantAsync(ClaimsPrincipal? user = null, string? tenantHeader = null);
-    
+
     /// <summary>
     /// Get permission data for user in the specified tenant
     /// </summary>
     Task<TenantPermission?> GetTenantPermissionAsync(Guid userId, Guid tenantId);
-    
+
     /// <summary>
     /// Check if user has permission to access the specified tenant
     /// </summary>
@@ -37,7 +37,9 @@ public interface ITenantContextService
 public class TenantContextService : ITenantContextService
 {
     private readonly ApplicationDbContext _context;
+
     private const string TenantClaim = "tenant_id";
+
     private const string TenantHeader = "X-Tenant-ID";
 
     public TenantContextService(ApplicationDbContext context)
@@ -59,7 +61,7 @@ public class TenantContextService : ITenantContextService
                 return tenantHeaderId;
             }
         }
-        
+
         // Check user claims
         if (user?.Identity?.IsAuthenticated == true)
         {
@@ -73,7 +75,7 @@ public class TenantContextService : ITenantContextService
                 }
             }
         }
-        
+
         return null;
     }
 
@@ -87,23 +89,24 @@ public class TenantContextService : ITenantContextService
         {
             return null;
         }
-        
+
         return await _context.Tenants
             .FirstOrDefaultAsync(t => t.Id == tenantId && t.IsActive);
     }
-    
+
     /// <summary>
     /// Get permission data for user in the specified tenant
     /// </summary>
     public async Task<TenantPermission?> GetTenantPermissionAsync(Guid userId, Guid tenantId)
     {
         return await _context.TenantPermissions
-            .FirstOrDefaultAsync(tp => 
+            .FirstOrDefaultAsync(tp =>
                 tp.UserId == userId &&
                 tp.TenantId == tenantId &&
-                tp.IsValid);
+                tp.IsValid
+            );
     }
-    
+
     /// <summary>
     /// Check if user has permission to access the specified tenant
     /// </summary>
@@ -113,10 +116,10 @@ public class TenantContextService : ITenantContextService
         {
             return false;
         }
-        
+
         Guid userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         TenantPermission? permission = await GetTenantPermissionAsync(userId, tenantId);
-        
+
         return permission != null;
     }
 }

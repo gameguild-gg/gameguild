@@ -24,16 +24,16 @@ namespace GameGuild.Modules.Auth.Services
         private readonly IWeb3Service _web3Service;
 
         private readonly IEmailVerificationService _emailVerificationService;
-        
+
         private readonly ITenantAuthService _tenantAuthService;
 
         private readonly ITenantService _tenantService;
 
         public AuthService(
-            ApplicationDbContext context, 
-            IJwtTokenService jwtTokenService, 
-            IOAuthService oauthService, 
-            IConfiguration configuration, 
+            ApplicationDbContext context,
+            IJwtTokenService jwtTokenService,
+            IOAuthService oauthService,
+            IConfiguration configuration,
             IWeb3Service web3Service,
             IEmailVerificationService emailVerificationService,
             ITenantAuthService tenantAuthService,
@@ -66,25 +66,27 @@ namespace GameGuild.Modules.Auth.Services
             {
                 Id = user.Id, Username = user.Name, Email = user.Email
             };
-            var roles = new[] { "User" }; // TODO: fetch actual roles if available
-            
+            var roles = new[]
+            {
+                "User"
+            }; // TODO: fetch actual roles if available
+
             string accessToken = _jwtTokenService.GenerateAccessToken(userDto, roles);
             string refreshToken = _jwtTokenService.GenerateRefreshToken();
-            
+
             // Save refresh token
             await SaveRefreshTokenAsync(user.Id, refreshToken);
-            
+
             // Create initial response
             var response = new SignInResponseDto
             {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                User = userDto
+                AccessToken = accessToken, RefreshToken = refreshToken, User = userDto
             };
-            
+
             // Enhance response with tenant data
             // Note: We need to cast the user to the expected type for TenantAuthService
-            Guid? requestedTenantId = request.TenantId;
+            var requestedTenantId = request.TenantId;
+
             return await _tenantAuthService.EnhanceWithTenantDataAsync(response, (GameGuild.Modules.User.Models.User)user, requestedTenantId);
         }
 
@@ -95,10 +97,7 @@ namespace GameGuild.Modules.Auth.Services
 
             var user = new User.Models.User
             {
-                Name = request.Username ?? request.Email,
-                Email = request.Email,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                Name = request.Username ?? request.Email, Email = request.Email, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
             };
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -132,26 +131,25 @@ namespace GameGuild.Modules.Auth.Services
 
             var userDto = new UserDto
             {
-                Id = user.Id,
-                Username = user.Name,
-                Email = user.Email
+                Id = user.Id, Username = user.Name, Email = user.Email
             };
-            var roles = new[] { "User" }; // TODO: fetch actual roles if available
-            
+            var roles = new[]
+            {
+                "User"
+            }; // TODO: fetch actual roles if available
+
             string accessToken = _jwtTokenService.GenerateAccessToken(userDto, roles);
             string refreshToken = _jwtTokenService.GenerateRefreshToken();
-            
+
             // Save refresh token
             await SaveRefreshTokenAsync(user.Id, refreshToken);
-            
+
             // Create initial response
             var response = new SignInResponseDto
             {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                User = userDto
+                AccessToken = accessToken, RefreshToken = refreshToken, User = userDto
             };
-            
+
             // Enhance response with tenant data
             return await _tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
         }
@@ -170,76 +168,71 @@ namespace GameGuild.Modules.Auth.Services
             return HashPassword(password) == hash;
         }
 
-    public async Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request)
-    {        RefreshToken? refreshToken = await _context.RefreshTokens
-            .Where(rt => rt.Token == request.RefreshToken)
-            .Where(rt => !rt.IsRevoked)
-            .Where(rt => rt.ExpiresAt > DateTime.UtcNow)
-            .FirstOrDefaultAsync();
-
-        if (refreshToken == null)
-            throw new UnauthorizedAccessException("Invalid refresh token");
-
-        User.Models.User? user = await _context.Users.FindAsync(refreshToken.UserId);
-
-        if (user == null)
-            throw new UnauthorizedAccessException("User not found");
-
-        // Get the tenantId from the request or from the claims
-        Guid? tenantId = request.TenantId;
-
-        // Generate new tokens
-        var userDto = new UserDto
+        public async Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request)
         {
-            Id = user.Id, Username = user.Name, Email = user.Email
-        };
-        var roles = new[]
-        {
-            "User"
-        }; // TODO: fetch actual roles if available
-        
-        // Get tenant claims if a tenantId was provided
-        IEnumerable<Claim>? tenantClaims = null;
-        if (tenantId.HasValue)
-        {
-            // Verify the user has access to this tenant
-            if (await _tenantAuthService.GetUserTenantsAsync(user) is var tenants && 
-                tenants.Any(t => t.TenantId.HasValue && t.TenantId.Value == tenantId.Value))
+            RefreshToken? refreshToken = await _context.RefreshTokens
+                .Where(rt => rt.Token == request.RefreshToken)
+                .Where(rt => !rt.IsRevoked)
+                .Where(rt => rt.ExpiresAt > DateTime.UtcNow)
+                .FirstOrDefaultAsync();
+
+            if (refreshToken == null)
+                throw new UnauthorizedAccessException("Invalid refresh token");
+
+            User.Models.User? user = await _context.Users.FindAsync(refreshToken.UserId);
+
+            if (user == null)
+                throw new UnauthorizedAccessException("User not found");
+
+            // Get the tenantId from the request or from the claims
+            var tenantId = request.TenantId;
+
+            // Generate new tokens
+            var userDto = new UserDto
             {
-                tenantClaims = await _tenantAuthService.GetTenantClaimsAsync(user, tenantId.Value);
+                Id = user.Id, Username = user.Name, Email = user.Email
+            };
+            var roles = new[]
+            {
+                "User"
+            }; // TODO: fetch actual roles if available
+
+            // Get tenant claims if a tenantId was provided
+            IEnumerable<Claim>? tenantClaims = null;
+            if (tenantId.HasValue)
+            {
+                // Verify the user has access to this tenant
+                if (await _tenantAuthService.GetUserTenantsAsync(user) is var tenants &&
+                    tenants.Any(t => t.TenantId.HasValue && t.TenantId.Value == tenantId.Value))
+                {
+                    tenantClaims = await _tenantAuthService.GetTenantClaimsAsync(user, tenantId.Value);
+                }
             }
-        }
-        
-        // Generate token with tenant claims if available
-        string newAccessToken = _jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
-        string newRefreshToken = _jwtTokenService.GenerateRefreshToken();
 
-        // Revoke old refresh token
-        refreshToken.IsRevoked = true;
-        refreshToken.RevokedAt = DateTime.UtcNow;
-        refreshToken.ReplacedByToken = newRefreshToken;
+            // Generate token with tenant claims if available
+            string newAccessToken = _jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
+            string newRefreshToken = _jwtTokenService.GenerateRefreshToken();
 
-        // Create new refresh token
-        var newRefreshTokenEntity = new RefreshToken
-        {
-            UserId = user.Id, 
-            Token = newRefreshToken, 
-            ExpiresAt = DateTime.UtcNow.AddDays(7), 
-            CreatedByIp = "0.0.0.0" // TODO: get real IP address
-        };
+            // Revoke old refresh token
+            refreshToken.IsRevoked = true;
+            refreshToken.RevokedAt = DateTime.UtcNow;
+            refreshToken.ReplacedByToken = newRefreshToken;
 
-        _context.RefreshTokens.Add(newRefreshTokenEntity);
-        await _context.SaveChangesAsync();
+            // Create new refresh token
+            var newRefreshTokenEntity = new RefreshToken
+            {
+                UserId = user.Id, Token = newRefreshToken, ExpiresAt = DateTime.UtcNow.AddDays(7), CreatedByIp = "0.0.0.0" // TODO: get real IP address
+            };
 
-        var response = new RefreshTokenResponseDto
-        {
-            AccessToken = newAccessToken, 
-            RefreshToken = newRefreshToken, 
-            ExpiresAt = newRefreshTokenEntity.ExpiresAt,
-            TenantId = tenantId
-        };
-        
-        return response;
+            _context.RefreshTokens.Add(newRefreshTokenEntity);
+            await _context.SaveChangesAsync();
+
+            var response = new RefreshTokenResponseDto
+            {
+                AccessToken = newAccessToken, RefreshToken = newRefreshToken, ExpiresAt = newRefreshTokenEntity.ExpiresAt, TenantId = tenantId
+            };
+
+            return response;
         }
 
         public async Task RevokeRefreshTokenAsync(string token, string ipAddress)
@@ -255,78 +248,78 @@ namespace GameGuild.Modules.Auth.Services
             refreshToken.RevokedByIp = ipAddress;
 
             await _context.SaveChangesAsync();
-        }    public async Task<SignInResponseDto> GitHubSignInAsync(OAuthSignInRequestDto request)
-    {
-        // Exchange code for access token
-        string accessToken = await _oauthService.ExchangeGitHubCodeAsync(request.Code, request.RedirectUri);
+        }
 
-        // Get user info from GitHub
-        GitHubUserDto githubUser = await _oauthService.GetGitHubUserAsync(accessToken);
-
-        // Find or create user
-        User.Models.User user = await FindOrCreateOAuthUserAsync(githubUser.Email, githubUser.Name, "github", githubUser.Id.ToString());
-
-        // Generate tokens
-        var userDto = new UserDto
+        public async Task<SignInResponseDto> GitHubSignInAsync(OAuthSignInRequestDto request)
         {
-            Id = user.Id, Username = user.Name, Email = user.Email
-        };
-        var roles = new[]
+            // Exchange code for access token
+            string accessToken = await _oauthService.ExchangeGitHubCodeAsync(request.Code, request.RedirectUri);
+
+            // Get user info from GitHub
+            GitHubUserDto githubUser = await _oauthService.GetGitHubUserAsync(accessToken);
+
+            // Find or create user
+            User.Models.User user = await FindOrCreateOAuthUserAsync(githubUser.Email, githubUser.Name, "github", githubUser.Id.ToString());
+
+            // Generate tokens
+            var userDto = new UserDto
+            {
+                Id = user.Id, Username = user.Name, Email = user.Email
+            };
+            var roles = new[]
+            {
+                "User"
+            }; // TODO: fetch actual roles
+            string jwtToken = _jwtTokenService.GenerateAccessToken(userDto, roles);
+            string refreshToken = _jwtTokenService.GenerateRefreshToken();
+
+            // Save refresh token
+            await SaveRefreshTokenAsync(user.Id, refreshToken);
+
+            // Create initial response
+            var response = new SignInResponseDto
+            {
+                AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto
+            };
+
+            // Enhance with tenant data
+            return await _tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
+        }
+
+        public async Task<SignInResponseDto> GoogleSignInAsync(OAuthSignInRequestDto request)
         {
-            "User"
-        }; // TODO: fetch actual roles
-        string jwtToken = _jwtTokenService.GenerateAccessToken(userDto, roles);
-        string refreshToken = _jwtTokenService.GenerateRefreshToken();
+            // Exchange code for access token
+            string accessToken = await _oauthService.ExchangeGoogleCodeAsync(request.Code, request.RedirectUri);
 
-        // Save refresh token
-        await SaveRefreshTokenAsync(user.Id, refreshToken);
+            // Get user info from Google
+            GoogleUserDto googleUser = await _oauthService.GetGoogleUserAsync(accessToken);
 
-        // Create initial response
-        var response = new SignInResponseDto
-        {
-            AccessToken = jwtToken,
-            RefreshToken = refreshToken,
-            User = userDto
-        };
-            
-        // Enhance with tenant data
-        return await _tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
-        }    public async Task<SignInResponseDto> GoogleSignInAsync(OAuthSignInRequestDto request)
-    {
-        // Exchange code for access token
-        string accessToken = await _oauthService.ExchangeGoogleCodeAsync(request.Code, request.RedirectUri);
+            // Find or create user
+            User.Models.User user = await FindOrCreateOAuthUserAsync(googleUser.Email, googleUser.Name, "google", googleUser.Id);
 
-        // Get user info from Google
-        GoogleUserDto googleUser = await _oauthService.GetGoogleUserAsync(accessToken);
+            // Generate tokens
+            var userDto = new UserDto
+            {
+                Id = user.Id, Username = user.Name, Email = user.Email
+            };
+            var roles = new[]
+            {
+                "User"
+            }; // TODO: fetch actual roles
+            string jwtToken = _jwtTokenService.GenerateAccessToken(userDto, roles);
+            string refreshToken = _jwtTokenService.GenerateRefreshToken();
 
-        // Find or create user
-        User.Models.User user = await FindOrCreateOAuthUserAsync(googleUser.Email, googleUser.Name, "google", googleUser.Id);
+            // Save refresh token
+            await SaveRefreshTokenAsync(user.Id, refreshToken);
 
-        // Generate tokens
-        var userDto = new UserDto
-        {
-            Id = user.Id, Username = user.Name, Email = user.Email
-        };
-        var roles = new[]
-        {
-            "User"
-        }; // TODO: fetch actual roles
-        string jwtToken = _jwtTokenService.GenerateAccessToken(userDto, roles);
-        string refreshToken = _jwtTokenService.GenerateRefreshToken();
+            // Create initial response
+            var response = new SignInResponseDto
+            {
+                AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto
+            };
 
-        // Save refresh token
-        await SaveRefreshTokenAsync(user.Id, refreshToken);
-
-        // Create initial response
-        var response = new SignInResponseDto
-        {
-            AccessToken = jwtToken,
-            RefreshToken = refreshToken,
-            User = userDto
-        };
-            
-        // Enhance with tenant data
-        return await _tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
+            // Enhance with tenant data
+            return await _tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
         }
 
         public Task<string> GetGitHubAuthUrlAsync(string redirectUri)
@@ -400,18 +393,20 @@ namespace GameGuild.Modules.Auth.Services
             await _context.SaveChangesAsync();
 
             return user;
-        }        private async Task SaveRefreshTokenAsync(Guid userId, string refreshToken)
+        }
+
+        private async Task SaveRefreshTokenAsync(Guid userId, string refreshToken)
         {
             if (string.IsNullOrEmpty(refreshToken))
             {
                 throw new ArgumentException("Refresh token cannot be null or empty", nameof(refreshToken));
             }
-            
+
             var refreshTokenEntity = new RefreshToken
             {
-                UserId = userId, 
+                UserId = userId,
                 Token = refreshToken, // This is required and must not be empty
-                ExpiresAt = DateTime.UtcNow.AddDays(7), 
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
                 IsRevoked = false, // Explicitly set IsRevoked to false
                 CreatedByIp = "0.0.0.0" // TODO: get real IP address
             };
@@ -423,43 +418,43 @@ namespace GameGuild.Modules.Auth.Services
         public async Task<Web3ChallengeResponseDto> GenerateWeb3ChallengeAsync(Web3ChallengeRequestDto request)
         {
             return await _web3Service.GenerateChallengeAsync(request);
-        }    public async Task<SignInResponseDto> VerifyWeb3SignatureAsync(Web3VerifyRequestDto request)
-    {
-        // Verify the signature
-        bool isValid = await _web3Service.VerifySignatureAsync(request);
-        if (!isValid)
-        {
-            throw new UnauthorizedAccessException("Invalid Web3 signature");
         }
 
-        // Find or create user
-        User.Models.User user = await _web3Service.FindOrCreateWeb3UserAsync(request.WalletAddress, request.ChainId ?? "1");
-
-        // Generate tokens
-        var userDto = new UserDto
+        public async Task<SignInResponseDto> VerifyWeb3SignatureAsync(Web3VerifyRequestDto request)
         {
-            Id = user.Id, Username = user.Name, Email = user.Email
-        };
-        var roles = new[]
-        {
-            "User"
-        }; // TODO: fetch actual roles
-        string jwtToken = _jwtTokenService.GenerateAccessToken(userDto, roles);
-        string refreshToken = _jwtTokenService.GenerateRefreshToken();
+            // Verify the signature
+            bool isValid = await _web3Service.VerifySignatureAsync(request);
+            if (!isValid)
+            {
+                throw new UnauthorizedAccessException("Invalid Web3 signature");
+            }
 
-        // Save refresh token
-        await SaveRefreshTokenAsync(user.Id, refreshToken);
+            // Find or create user
+            User.Models.User user = await _web3Service.FindOrCreateWeb3UserAsync(request.WalletAddress, request.ChainId ?? "1");
 
-        // Create initial response
-        var response = new SignInResponseDto
-        {
-            AccessToken = jwtToken,
-            RefreshToken = refreshToken,
-            User = userDto
-        };
-            
-        // Enhance with tenant data
-        return await _tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
+            // Generate tokens
+            var userDto = new UserDto
+            {
+                Id = user.Id, Username = user.Name, Email = user.Email
+            };
+            var roles = new[]
+            {
+                "User"
+            }; // TODO: fetch actual roles
+            string jwtToken = _jwtTokenService.GenerateAccessToken(userDto, roles);
+            string refreshToken = _jwtTokenService.GenerateRefreshToken();
+
+            // Save refresh token
+            await SaveRefreshTokenAsync(user.Id, refreshToken);
+
+            // Create initial response
+            var response = new SignInResponseDto
+            {
+                AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto
+            };
+
+            // Enhance with tenant data
+            return await _tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
         }
 
         public async Task<EmailOperationResponseDto> SendEmailVerificationAsync(SendEmailVerificationRequestDto request)

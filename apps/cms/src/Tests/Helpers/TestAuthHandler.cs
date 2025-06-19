@@ -14,19 +14,15 @@ namespace GameGuild.Tests.Helpers
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            ISystemClock clock) 
-            : base(options, logger, encoder, clock)
-        {
-        }
+            ISystemClock clock)
+            : base(options, logger, encoder, clock) { }
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             // Create test identity with admin claims for testing
             var claims = new[]
             {
-                new Claim(ClaimTypes.Name, "Test User"),
-                new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Email, "test@example.com"),
+                new Claim(ClaimTypes.Name, "Test User"), new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()), new Claim(ClaimTypes.Email, "test@example.com"),
                 new Claim("UserId", Guid.NewGuid().ToString())
             };
 

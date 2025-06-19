@@ -12,6 +12,7 @@ namespace GameGuild.Tests.Modules.Permission.Services;
 public class PermissionServiceContentTypeTests : IDisposable
 {
     private readonly ApplicationDbContext _context;
+
     private readonly PermissionService _permissionService;
 
     public PermissionServiceContentTypeTests()
@@ -19,7 +20,7 @@ public class PermissionServiceContentTypeTests : IDisposable
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-            
+
         _context = new ApplicationDbContext(options);
         _permissionService = new PermissionService(_context);
     }
@@ -38,15 +39,18 @@ public class PermissionServiceContentTypeTests : IDisposable
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var contentType = "Article";
-        var permissions = new[] { PermissionType.Read, PermissionType.Edit };
+        var permissions = new[]
+        {
+            PermissionType.Read, PermissionType.Edit
+        };
 
         // Act
         await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, permissions);
 
         // Assert
-        var permission = await _context.ContentTypePermissions
+        ContentTypePermission? permission = await _context.ContentTypePermissions
             .FirstOrDefaultAsync(ctp => ctp.UserId == userId && ctp.TenantId == tenantId && ctp.ContentType == contentType);
-            
+
         Assert.NotNull(permission);
         Assert.True(permission.HasPermission(PermissionType.Read));
         Assert.True(permission.HasPermission(PermissionType.Edit));
@@ -60,23 +64,39 @@ public class PermissionServiceContentTypeTests : IDisposable
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var contentType = "Article";
-        
+
         // Grant initial permissions
-        await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, [PermissionType.Read]);
-        
+        await _permissionService.GrantContentTypePermissionAsync(
+            userId,
+            tenantId,
+            contentType,
+            new[]
+            {
+                PermissionType.Read
+            }
+        );
+
         // Act - Grant additional permissions
-        await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, [PermissionType.Edit]);
+        await _permissionService.GrantContentTypePermissionAsync(
+            userId,
+            tenantId,
+            contentType,
+            new[]
+            {
+                PermissionType.Edit
+            }
+        );
 
         // Assert
-        var permission = await _context.ContentTypePermissions
+        ContentTypePermission? permission = await _context.ContentTypePermissions
             .FirstOrDefaultAsync(ctp => ctp.UserId == userId && ctp.TenantId == tenantId && ctp.ContentType == contentType);
-            
+
         Assert.NotNull(permission);
         Assert.True(permission.HasPermission(PermissionType.Read));
         Assert.True(permission.HasPermission(PermissionType.Edit));
-        
+
         // Verify only one record exists
-        var count = await _context.ContentTypePermissions
+        int count = await _context.ContentTypePermissions
             .CountAsync(ctp => ctp.UserId == userId && ctp.TenantId == tenantId && ctp.ContentType == contentType);
         Assert.Equal(1, count);
     }
@@ -87,15 +107,18 @@ public class PermissionServiceContentTypeTests : IDisposable
         // Arrange
         var tenantId = Guid.NewGuid();
         var contentType = "Article";
-        var permissions = new[] { PermissionType.Read, PermissionType.Comment };
+        var permissions = new[]
+        {
+            PermissionType.Read, PermissionType.Comment
+        };
 
         // Act
         await _permissionService.GrantContentTypePermissionAsync(userId: null, tenantId, contentType, permissions);
 
         // Assert
-        var permission = await _context.ContentTypePermissions
+        ContentTypePermission? permission = await _context.ContentTypePermissions
             .FirstOrDefaultAsync(ctp => ctp.UserId == null && ctp.TenantId == tenantId && ctp.ContentType == contentType);
-            
+
         Assert.NotNull(permission);
         Assert.Null(permission.UserId);
         Assert.Equal(tenantId, permission.TenantId);
@@ -109,15 +132,18 @@ public class PermissionServiceContentTypeTests : IDisposable
     {
         // Arrange
         var contentType = "Article";
-        var permissions = new[] { PermissionType.Read };
+        var permissions = new[]
+        {
+            PermissionType.Read
+        };
 
         // Act
         await _permissionService.GrantContentTypePermissionAsync(userId: null, tenantId: null, contentType, permissions);
 
         // Assert
-        var permission = await _context.ContentTypePermissions
+        ContentTypePermission? permission = await _context.ContentTypePermissions
             .FirstOrDefaultAsync(ctp => ctp.UserId == null && ctp.TenantId == null && ctp.ContentType == contentType);
-            
+
         Assert.NotNull(permission);
         Assert.Null(permission.UserId);
         Assert.Null(permission.TenantId);
@@ -134,11 +160,15 @@ public class PermissionServiceContentTypeTests : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
-        var permissions = new[] { PermissionType.Read };
+        var permissions = new[]
+        {
+            PermissionType.Read
+        };
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => 
-            _permissionService.GrantContentTypePermissionAsync(userId, tenantId, invalidContentType, permissions));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _permissionService.GrantContentTypePermissionAsync(userId, tenantId, invalidContentType, permissions)
+        );
     }
 
     [Fact]
@@ -151,8 +181,9 @@ public class PermissionServiceContentTypeTests : IDisposable
         var permissions = Array.Empty<PermissionType>();
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => 
-            _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, permissions));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, permissions)
+        );
     }
 
     #endregion
@@ -166,11 +197,19 @@ public class PermissionServiceContentTypeTests : IDisposable
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var contentType = "Article";
-        
-        await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, [PermissionType.Read]);
+
+        await _permissionService.GrantContentTypePermissionAsync(
+            userId,
+            tenantId,
+            contentType,
+            new[]
+            {
+                PermissionType.Read
+            }
+        );
 
         // Act
-        var result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
+        bool result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
 
         // Assert
         Assert.True(result);
@@ -185,7 +224,7 @@ public class PermissionServiceContentTypeTests : IDisposable
         var contentType = "Article";
 
         // Act
-        var result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
+        bool result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
 
         // Assert
         Assert.False(result);
@@ -198,12 +237,20 @@ public class PermissionServiceContentTypeTests : IDisposable
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var contentType = "Article";
-        
+
         // Set tenant default permission
-        await _permissionService.GrantContentTypePermissionAsync(userId: null, tenantId, contentType, [PermissionType.Read]);
+        await _permissionService.GrantContentTypePermissionAsync(
+            userId: null,
+            tenantId,
+            contentType,
+            new[]
+            {
+                PermissionType.Read
+            }
+        );
 
         // Act
-        var result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
+        bool result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
 
         // Assert
         Assert.True(result);
@@ -216,12 +263,20 @@ public class PermissionServiceContentTypeTests : IDisposable
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var contentType = "Article";
-        
+
         // Set global default permission
-        await _permissionService.GrantContentTypePermissionAsync(userId: null, tenantId: null, contentType, [PermissionType.Read]);
+        await _permissionService.GrantContentTypePermissionAsync(
+            userId: null,
+            tenantId: null,
+            contentType,
+            new[]
+            {
+                PermissionType.Read
+            }
+        );
 
         // Act
-        var result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
+        bool result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
 
         // Assert
         Assert.True(result);
@@ -234,20 +289,36 @@ public class PermissionServiceContentTypeTests : IDisposable
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var contentType = "Article";
-        
+
         // Set tenant default with Read permission
-        await _permissionService.GrantContentTypePermissionAsync(userId: null, tenantId, contentType, [PermissionType.Read]);
-        
+        await _permissionService.GrantContentTypePermissionAsync(
+            userId: null,
+            tenantId,
+            contentType,
+            new[]
+            {
+                PermissionType.Read
+            }
+        );
+
         // Grant user-specific permissions without Read
-        await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, [PermissionType.Comment]);
+        await _permissionService.GrantContentTypePermissionAsync(
+            userId,
+            tenantId,
+            contentType,
+            new[]
+            {
+                PermissionType.Comment
+            }
+        );
 
         // Act
-        var hasRead = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
-        var hasComment = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Comment);
+        bool hasRead = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
+        bool hasComment = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Comment);
 
         // Assert
         Assert.True(hasComment); // User has comment permission
-        Assert.True(hasRead);    // Should get Read from tenant default (since user permission is additive)
+        Assert.True(hasRead); // Should get Read from tenant default (since user permission is additive)
     }
 
     [Fact]
@@ -257,22 +328,19 @@ public class PermissionServiceContentTypeTests : IDisposable
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var contentType = "Article";
-        
+
         // Create permission with past expiration
         var permission = new ContentTypePermission
         {
-            UserId = userId,
-            TenantId = tenantId,
-            ContentType = contentType,
-            ExpiresAt = DateTime.UtcNow.AddDays(-1)
+            UserId = userId, TenantId = tenantId, ContentType = contentType, ExpiresAt = DateTime.UtcNow.AddDays(-1)
         };
         permission.AddPermission(PermissionType.Read);
-        
+
         _context.ContentTypePermissions.Add(permission);
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
+        bool result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
 
         // Assert
         Assert.False(result);
@@ -285,22 +353,20 @@ public class PermissionServiceContentTypeTests : IDisposable
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var contentType = "Article";
-        
+
         // Create and delete permission
         var permission = new ContentTypePermission
         {
-            UserId = userId,
-            TenantId = tenantId,
-            ContentType = contentType
+            UserId = userId, TenantId = tenantId, ContentType = contentType
         };
         permission.AddPermission(PermissionType.Read);
         permission.SoftDelete();
-        
+
         _context.ContentTypePermissions.Add(permission);
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
+        bool result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
 
         // Assert
         Assert.False(result);
@@ -317,7 +383,7 @@ public class PermissionServiceContentTypeTests : IDisposable
         var tenantId = Guid.NewGuid();
 
         // Act
-        var result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, invalidContentType, PermissionType.Read);
+        bool result = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, invalidContentType, PermissionType.Read);
 
         // Assert
         Assert.False(result);
@@ -334,8 +400,11 @@ public class PermissionServiceContentTypeTests : IDisposable
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var contentType = "Article";
-        var expectedPermissions = new[] { PermissionType.Read, PermissionType.Edit, PermissionType.Delete };
-        
+        var expectedPermissions = new[]
+        {
+            PermissionType.Read, PermissionType.Edit, PermissionType.Delete
+        };
+
         await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, expectedPermissions);
 
         // Act
@@ -343,13 +412,11 @@ public class PermissionServiceContentTypeTests : IDisposable
 
         // Assert
         var resultArray = result.ToArray();
-        // We expect 4 permissions because Delete and SoftDelete have the same enum value (25)
-        // but are enumerated as separate permissions in the GetContentTypePermissionsAsync method
+        // We expect 3 permissions since we granted Read, Edit, and Delete (Delete and SoftDelete have same enum value)
         Assert.Equal(3, resultArray.Length);
         Assert.Contains(PermissionType.Read, resultArray);
         Assert.Contains(PermissionType.Edit, resultArray);
         Assert.Contains(PermissionType.Delete, resultArray);
-        Assert.Contains(PermissionType.SoftDelete, resultArray);
     }
 
     [Fact]
@@ -395,21 +462,27 @@ public class PermissionServiceContentTypeTests : IDisposable
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var contentType = "Article";
-        var grantedPermissions = new[] { PermissionType.Read, PermissionType.Edit, PermissionType.Delete };
-        var revokePermissions = new[] { PermissionType.Edit };
-        
+        var grantedPermissions = new[]
+        {
+            PermissionType.Read, PermissionType.Edit, PermissionType.Delete
+        };
+        var revokePermissions = new[]
+        {
+            PermissionType.Edit
+        };
+
         await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, grantedPermissions);
 
         // Act
         await _permissionService.RevokeContentTypePermissionAsync(userId, tenantId, contentType, revokePermissions);
 
         // Assert
-        var hasRead = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
-        var hasEdit = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Edit);
-        var hasDelete = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Delete);
-        
+        bool hasRead = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
+        bool hasEdit = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Edit);
+        bool hasDelete = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Delete);
+
         Assert.True(hasRead);
-        Assert.False(hasEdit);   // Should be revoked
+        Assert.False(hasEdit); // Should be revoked
         Assert.True(hasDelete);
     }
 
@@ -420,7 +493,10 @@ public class PermissionServiceContentTypeTests : IDisposable
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var contentType = "Article";
-        var revokePermissions = new[] { PermissionType.Edit };
+        var revokePermissions = new[]
+        {
+            PermissionType.Edit
+        };
 
         // Act & Assert - Should not throw
         await _permissionService.RevokeContentTypePermissionAsync(userId, tenantId, contentType, revokePermissions);
@@ -434,15 +510,23 @@ public class PermissionServiceContentTypeTests : IDisposable
         var tenantId = Guid.NewGuid();
         var contentType = "Article";
         var emptyPermissions = Array.Empty<PermissionType>();
-        
+
         // Grant some initial permissions
-        await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, [PermissionType.Read]);
+        await _permissionService.GrantContentTypePermissionAsync(
+            userId,
+            tenantId,
+            contentType,
+            new[]
+            {
+                PermissionType.Read
+            }
+        );
 
         // Act
         await _permissionService.RevokeContentTypePermissionAsync(userId, tenantId, contentType, emptyPermissions);
 
         // Assert - Should still have the original permissions
-        var hasRead = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
+        bool hasRead = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
         Assert.True(hasRead);
     }
 
@@ -455,11 +539,15 @@ public class PermissionServiceContentTypeTests : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
-        var permissions = new[] { PermissionType.Read };
+        var permissions = new[]
+        {
+            PermissionType.Read
+        };
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => 
-            _permissionService.RevokeContentTypePermissionAsync(userId, tenantId, invalidContentType, permissions));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _permissionService.RevokeContentTypePermissionAsync(userId, tenantId, invalidContentType, permissions)
+        );
     }
 
     #endregion
@@ -474,21 +562,37 @@ public class PermissionServiceContentTypeTests : IDisposable
         var tenantId = Guid.NewGuid();
         var articleType = "Article";
         var videoType = "Video";
-        
+
         // Grant different permissions to different content types
-        await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, articleType, [PermissionType.Read, PermissionType.Edit]);
-        await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, videoType, [PermissionType.Read, PermissionType.Delete]);
+        await _permissionService.GrantContentTypePermissionAsync(
+            userId,
+            tenantId,
+            articleType,
+            new[]
+            {
+                PermissionType.Read, PermissionType.Edit
+            }
+        );
+        await _permissionService.GrantContentTypePermissionAsync(
+            userId,
+            tenantId,
+            videoType,
+            new[]
+            {
+                PermissionType.Read, PermissionType.Delete
+            }
+        );
 
         // Act & Assert
-        var hasArticleEdit = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, articleType, PermissionType.Edit);
-        var hasArticleDelete = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, articleType, PermissionType.Delete);
-        var hasVideoEdit = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, videoType, PermissionType.Edit);
-        var hasVideoDelete = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, videoType, PermissionType.Delete);
-        
-        Assert.True(hasArticleEdit);   // Article has Edit
+        bool hasArticleEdit = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, articleType, PermissionType.Edit);
+        bool hasArticleDelete = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, articleType, PermissionType.Delete);
+        bool hasVideoEdit = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, videoType, PermissionType.Edit);
+        bool hasVideoDelete = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, videoType, PermissionType.Delete);
+
+        Assert.True(hasArticleEdit); // Article has Edit
         Assert.False(hasArticleDelete); // Article doesn't have Delete
-        Assert.False(hasVideoEdit);     // Video doesn't have Edit
-        Assert.True(hasVideoDelete);   // Video has Delete
+        Assert.False(hasVideoEdit); // Video doesn't have Edit
+        Assert.True(hasVideoDelete); // Video has Delete
     }
 
     [Fact]
@@ -499,14 +603,22 @@ public class PermissionServiceContentTypeTests : IDisposable
         var tenantId = Guid.NewGuid();
         var articleType = "Article";
         var articleTypeLower = "article";
-        
+
         // Grant permissions to one case
-        await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, articleType, [PermissionType.Read]);
+        await _permissionService.GrantContentTypePermissionAsync(
+            userId,
+            tenantId,
+            articleType,
+            new[]
+            {
+                PermissionType.Read
+            }
+        );
 
         // Act & Assert
-        var hasUpperCase = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, articleType, PermissionType.Read);
-        var hasLowerCase = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, articleTypeLower, PermissionType.Read);
-        
+        bool hasUpperCase = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, articleType, PermissionType.Read);
+        bool hasLowerCase = await _permissionService.HasContentTypePermissionAsync(userId, tenantId, articleTypeLower, PermissionType.Read);
+
         Assert.True(hasUpperCase);
         Assert.False(hasLowerCase); // Should be case-sensitive
     }

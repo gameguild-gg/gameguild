@@ -14,29 +14,58 @@ namespace GameGuild.Modules.Tag.Models;
 [Index(nameof(Type))]
 public class TagRelationship : BaseEntity
 {
-    public Guid SourceId { get; set; }
-    public Guid TargetId { get; set; }
-    
-    public TagRelationshipType Type { get; set; }
-    
+    public Guid SourceId
+    {
+        get;
+        set;
+    }
+
+    public Guid TargetId
+    {
+        get;
+        set;
+    }
+
+    public TagRelationshipType Type
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Weight or strength of the relationship (optional)
     /// </summary>
     [Column(TypeName = "decimal(3,2)")]
-    public decimal? Weight { get; set; }
-    
+    public decimal? Weight
+    {
+        get;
+        set;
+    }
+
     /// <summary>
     /// Additional metadata about the relationship
     /// </summary>
     [MaxLength(500)]
-    public string? Metadata { get; set; }
-    
+    public string? Metadata
+    {
+        get;
+        set;
+    }
+
     // Navigation properties
     [ForeignKey(nameof(SourceId))]
-    public virtual Tag Source { get; set; } = null!;
-    
+    public virtual Tag Source
+    {
+        get;
+        set;
+    } = null!;
+
     [ForeignKey(nameof(TargetId))]
-    public virtual Tag Target { get; set; } = null!;
+    public virtual Tag Target
+    {
+        get;
+        set;
+    } = null!;
 }
 
 public class TagRelationshipConfiguration : IEntityTypeConfiguration<TagRelationship>
@@ -57,8 +86,9 @@ public class TagRelationshipConfiguration : IEntityTypeConfiguration<TagRelation
 
         // Check constraint to prevent self-referencing (can't be done with annotations)
         builder.ToTable(t => t.HasCheckConstraint(
-            "CK_TagRelationships_NoSelfReference",
-            "\"SourceId\" != \"TargetId\""
-        ));
+                "CK_TagRelationships_NoSelfReference",
+                "\"SourceId\" != \"TargetId\""
+            )
+        );
     }
 }

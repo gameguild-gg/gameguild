@@ -16,75 +16,276 @@ public class ApplicationDbContext : DbContext
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
     // DbSets
-    public DbSet<User> Users { get; set; }
-    public DbSet<Credential> Credentials { get; set; }
-    public DbSet<RefreshToken> RefreshTokens { get; set; }
-    public DbSet<Tenant> Tenants { get; set; }
-    public DbSet<TenantPermission> TenantPermissions { get; set; }
+    public DbSet<User> Users
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Credential> Credentials
+    {
+        get;
+        set;
+    }
+
+    public DbSet<RefreshToken> RefreshTokens
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Tenant> Tenants
+    {
+        get;
+        set;
+    }
+
+    public DbSet<TenantPermission> TenantPermissions
+    {
+        get;
+        set;
+    }
 
     // Resource hierarchy DbSet - Required for proper inheritance configuration
-    public DbSet<ResourceBase> Resources { get; set; }
+    public DbSet<ResourceBase> Resources
+    {
+        get;
+        set;
+    }
 
     // Resource and Localization DbSets
-    public DbSet<Language> Languages { get; set; }
+    public DbSet<Language> Languages
+    {
+        get;
+        set;
+    }
 
     // Content hierarchy DbSets - Required for TPC inheritance configuration
-    public DbSet<ContentLicense> ContentLicenses { get; set; }
-    public DbSet<ResourceMetadata> ResourceMetadata { get; set; }
-    public DbSet<ContentTypePermission> ContentTypePermissions { get; set; }
-    public DbSet<ResourceLocalization> ResourceLocalizations { get; set; }
+    public DbSet<ContentLicense> ContentLicenses
+    {
+        get;
+        set;
+    }
+
+    public DbSet<ResourceMetadata> ResourceMetadata
+    {
+        get;
+        set;
+    }
+
+    public DbSet<ContentTypePermission> ContentTypePermissions
+    {
+        get;
+        set;
+    }
+
+    public DbSet<ResourceLocalization> ResourceLocalizations
+    {
+        get;
+        set;
+    }
 
     // Resource Permission DbSets (Layer 3 of DAC system)
-    public DbSet<Modules.Comment.Models.CommentPermission> CommentPermissions { get; set; }
-    public DbSet<Modules.Product.Models.ProductPermission> ProductPermissions { get; set; }
+    public DbSet<Modules.Comment.Models.CommentPermission> CommentPermissions
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Product.Models.ProductPermission> ProductPermissions
+    {
+        get;
+        set;
+    }
 
     // Reputation Management DbSets
-    public DbSet<Modules.Reputation.Models.UserReputation> UserReputations { get; set; }
-    public DbSet<Modules.Reputation.Models.UserTenantReputation> UserTenantReputations { get; set; }
-    public DbSet<Modules.Reputation.Models.ReputationTier> ReputationTiers { get; set; }
-    public DbSet<Modules.Reputation.Models.ReputationAction> ReputationActions { get; set; }
-    public DbSet<Modules.Reputation.Models.UserReputationHistory> UserReputationHistory { get; set; }
+    public DbSet<Modules.Reputation.Models.UserReputation> UserReputations
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Reputation.Models.UserTenantReputation> UserTenantReputations
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Reputation.Models.ReputationTier> ReputationTiers
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Reputation.Models.ReputationAction> ReputationActions
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Reputation.Models.UserReputationHistory> UserReputationHistory
+    {
+        get;
+        set;
+    }
 
     // Product Management DbSets
-    public DbSet<Modules.Product.Models.Product> Products { get; set; }
-    public DbSet<Modules.Product.Models.ProductPricing> ProductPricings { get; set; }
-    public DbSet<Modules.Product.Models.ProductProgram> ProductPrograms { get; set; }
-    public DbSet<Modules.Product.Models.ProductSubscriptionPlan> ProductSubscriptionPlans { get; set; }
-    public DbSet<Modules.Product.Models.UserProduct> UserProducts { get; set; }
-    public DbSet<Modules.Product.Models.PromoCode> PromoCodes { get; set; }
-    public DbSet<Modules.Product.Models.PromoCodeUse> PromoCodeUses { get; set; }
+    public DbSet<Modules.Product.Models.Product> Products
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Product.Models.ProductPricing> ProductPricings
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Product.Models.ProductProgram> ProductPrograms
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Product.Models.ProductSubscriptionPlan> ProductSubscriptionPlans
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Product.Models.UserProduct> UserProducts
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Product.Models.PromoCode> PromoCodes
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Product.Models.PromoCodeUse> PromoCodeUses
+    {
+        get;
+        set;
+    }
 
     // Program Management DbSets
-    public DbSet<Modules.Program.Models.Program> Programs { get; set; }
-    public DbSet<Modules.Program.Models.ProgramContent> ProgramContents { get; set; }
-    public DbSet<Modules.Program.Models.ProgramUser> ProgramUsers { get; set; }
-    public DbSet<Modules.Program.Models.ContentInteraction> ContentInteractions { get; set; }
-    public DbSet<Modules.Program.Models.ActivityGrade> ActivityGrades { get; set; }
+    public DbSet<Modules.Program.Models.Program> Programs
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Program.Models.ProgramContent> ProgramContents
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Program.Models.ProgramUser> ProgramUsers
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Program.Models.ContentInteraction> ContentInteractions
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Program.Models.ActivityGrade> ActivityGrades
+    {
+        get;
+        set;
+    }
 
     // Certificate Management DbSets
-    public DbSet<Modules.Certificate.Models.Certificate> Certificates { get; set; }
-    public DbSet<Modules.Certificate.Models.UserCertificate> UserCertificates { get; set; }
-    public DbSet<Modules.Certificate.Models.CertificateTag> CertificateTags { get; set; }
-    public DbSet<Modules.Certificate.Models.CertificateBlockchainAnchor> CertificateBlockchainAnchors { get; set; }
+    public DbSet<Modules.Certificate.Models.Certificate> Certificates
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Certificate.Models.UserCertificate> UserCertificates
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Certificate.Models.CertificateTag> CertificateTags
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Certificate.Models.CertificateBlockchainAnchor> CertificateBlockchainAnchors
+    {
+        get;
+        set;
+    }
 
     // Tag Management DbSets
-    public DbSet<Modules.Tag.Models.Tag> Tags { get; set; }
-    public DbSet<Modules.Tag.Models.TagRelationship> TagRelationships { get; set; }
-    public DbSet<Modules.Tag.Models.TagProficiency> TagProficiencies { get; set; }
+    public DbSet<Modules.Tag.Models.Tag> Tags
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Tag.Models.TagRelationship> TagRelationships
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Tag.Models.TagProficiency> TagProficiencies
+    {
+        get;
+        set;
+    }
 
     // Subscription Management DbSets
-    public DbSet<Modules.Subscription.Models.UserSubscription> UserSubscriptions { get; set; }
+    public DbSet<Modules.Subscription.Models.UserSubscription> UserSubscriptions
+    {
+        get;
+        set;
+    }
 
     // Payment Management DbSets
-    public DbSet<Modules.Payment.Models.UserFinancialMethod> UserFinancialMethods { get; set; }
-    public DbSet<Modules.Payment.Models.FinancialTransaction> FinancialTransactions { get; set; }
+    public DbSet<Modules.Payment.Models.UserFinancialMethod> UserFinancialMethods
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Payment.Models.FinancialTransaction> FinancialTransactions
+    {
+        get;
+        set;
+    }
 
     // KYC Management DbSets
-    public DbSet<Modules.Kyc.Models.UserKycVerification> UserKycVerifications { get; set; }
+    public DbSet<Modules.Kyc.Models.UserKycVerification> UserKycVerifications
+    {
+        get;
+        set;
+    }
 
     // Feedback Management DbSets
-    public DbSet<Modules.Feedback.Models.ProgramFeedbackSubmission> ProgramFeedbackSubmissions { get; set; }
-    public DbSet<Modules.Feedback.Models.ProgramRating> ProgramRatings { get; set; }
+    public DbSet<Modules.Feedback.Models.ProgramFeedbackSubmission> ProgramFeedbackSubmissions
+    {
+        get;
+        set;
+    }
+
+    public DbSet<Modules.Feedback.Models.ProgramRating> ProgramRatings
+    {
+        get;
+        set;
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -137,6 +338,7 @@ public class ApplicationDbContext : DbContext
     public override int SaveChanges()
     {
         UpdateTimestamps();
+
         return base.SaveChanges();
     }
 
@@ -146,6 +348,7 @@ public class ApplicationDbContext : DbContext
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         UpdateTimestamps();
+
         return await base.SaveChangesAsync(cancellationToken);
     }
 
@@ -156,7 +359,7 @@ public class ApplicationDbContext : DbContext
     private void UpdateTimestamps()
     {
         var entries = ChangeTracker.Entries()
-            .Where(e => e.Entity is IEntity && (e.State == EntityState.Added || e.State == EntityState.Modified));
+            .Where(e => e.Entity is IEntity && e.State is EntityState.Added or EntityState.Modified);
 
         foreach (EntityEntry entry in entries)
         {
@@ -185,6 +388,7 @@ public class ApplicationDbContext : DbContext
     public ApplicationDbContext IncludeDeleted()
     {
         ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+
         return this;
     }
 
