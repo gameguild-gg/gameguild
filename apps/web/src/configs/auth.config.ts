@@ -1,6 +1,8 @@
 import Google from 'next-auth/providers/google';
 import { environment } from '@/configs/environment';
 import { NextAuthConfig } from 'next-auth';
+import { apiClient } from '@/lib/api-client';
+import { SignInResponse } from '@/types/auth';
 
 export const authConfig: NextAuthConfig = {
   providers: [
@@ -14,86 +16,180 @@ export const authConfig: NextAuthConfig = {
       },
     }),
   ],
-  session: { strategy: 'jwt' },
-  callbacks: {
-    async signIn({ user, account, profile, email, credentials }) {
-      if (account?.provider !== 'google') {
-      } else {
-        // TODO:
-        //  After signing in with Google, check if the user is in the database.
-        //  If the user is not in the database, reject the sign-in.
-        //  If the user is in the database, return true to allow user to sign in.
-        if (!account?.id_token) return false;
-        // Example of sending the token to your backend:
-        // const response = await fetch(`${environment.apiBaseUrl}/auth/google`, {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ id_token: account.id_token }),
-        // });
-        //
-        // if (!response.ok) return false;
-        // const data = await response.json();
-        // user.accessToken = data.accessToken;
-        // user.refreshToken = data.refreshToken;
+  session: { strategy: 'jwt' },  callbacks: {    async signIn({ user, account, profile }) {
+      console.log('SignIn callback triggered:', { 
+        provider: account?.provider, 
+        hasIdToken: !!account?.id_token,
+        userEmail: user?.email 
+      });
 
-        // For testing:
-        (user as any).accessToken = 'TESTE';
-        (user as any).refreshToken = 'TESTE';
+      if (account?.provider === 'google') {
+        if (!account?.id_token) {
+          console.error('No id_token received from Google');
+          return false;
+        }        try {
+          console.log('Attempting Google ID token validation with CMS backend:', environment.apiBaseUrl);
+          
+          // Try the new Google ID token endpoint
+          const response = await apiClient.googleIdTokenSignIn({
+            idToken: account.id_token,
+            tenantId: undefined, // Can be set later via tenant switching
+          });
+
+          console.log('CMS backend authentication successful:', { 
+            userId: response.user?.id, 
+            tenantId: response.tenantId,
+            availableTenants: response.availableTenants?.length 
+          });
+
+          // Store the backend response in the user object
+          (user as any).cmsData = response;
+          (user as any).accessToken = response.accessToken;
+          (user as any).refreshToken = response.refreshToken;
+          (user as any).tenantId = response.tenantId;
+          (user as any).availableTenants = response.availableTenants;
+
+          return true;        } catch (error) {
+          console.error('❌ CMS backend authentication failed:', {
+            error: error instanceof Error ? error.message : error,
+            apiBaseUrl: environment.apiBaseUrl,
+            endpoint: '/auth/google/id-token',
+            cause: (error as any)?.cause?.code || 'Unknown',
+            fullError: error
+          });
+          
+          // Check if it's a connection error
+          if ((error as any)?.cause?.code === 'ECONNREFUSED') {
+            console.error('🚨 CMS Backend is not running on:', environment.apiBaseUrl);
+            console.error('💡 Please start the CMS backend with: cd apps/cms && dotnet run');
+          } else {
+            console.error('🔍 CMS Backend is running but authentication failed. Check CMS logs for details.');
+            console.error('🐛 This might be a Google ID token validation issue in the CMS backend.');
+          }
+          
+          return false;
+        }
       }
-      return true;
+      
+      console.log('SignIn: Provider not supported or not Google:', account?.provider);
+      // For other providers, return false or implement accordingly
+      return false;
     },
-    async jwt({ token, user, account, profile, trigger, session }) {
-      if (user) {
-        token.id = user.id;
-
-        token.accessToken = (user as any).accessToken;
-        token.refreshToken = (user as any).refreshToken;
+    async jwt({ token, user, account, trigger, session }) {
+      // If this is a new sign-in, store the CMS data
+      if (user && (user as any).cmsData) {
+        const cmsData = (user as any).cmsData as SignInResponse;
+        
+        token.id = cmsData.user.id;
+        token.accessToken = cmsData.accessToken;
+        token.refreshToken = cmsData.refreshToken;
+        token.expires = new Date(cmsData.expires);
+        token.user = cmsData.user;
+        token.tenantId = cmsData.tenantId;
+        token.availableTenants = cmsData.availableTenants;
       }
-      console.log('jwt', token);
 
-      // check if the token is expired.
+      // Handle session updates (like tenant switching)
+      if (trigger === 'update' && session) {
+        if (session.currentTenant) {
+          token.currentTenant = session.currentTenant;
+        }
+      }      // Check if token is expired and refresh if needed
+      if (token.expires && new Date() > new Date(token.expires as unknown as string)) {
+        try {
+          const refreshResponse = await apiClient.refreshToken({
+            refreshToken: token.refreshToken as string,
+          });
 
-      // try {
-      // const response = await fetch(`${environment.apiBaseUrl}/auth/refresh`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     Authorization: `Bearer ${token.refreshToken}`,
-      //   },
-      //   body: JSON.stringify({ refreshToken: token.refreshToken }),
-      // });
+          token.accessToken = refreshResponse.accessToken;
+          token.refreshToken = refreshResponse.refreshToken;
+          token.expires = new Date(refreshResponse.expires);
+        } catch (error) {
+          console.error('Failed to refresh token:', error);
+          // Token refresh failed, user needs to sign in again
+          token.error = 'RefreshTokenError';
+        }
+      }
 
-      // if (!response.ok) throw new Error('Failed to refresh token');
-
-      // const data = await response.json();
-
-      // token.accessToken = data.accessToken;
-      // token.refreshToken = data.refreshToken;
-      // } catch (error) {
-      //   // console.error('Error refreshing token:', error);
-      //   // Handle token refresh error (e.g., redirect to sign-in page)
-      //   // token.error = 'RefreshTokenError';
-      // }
       return token;
     },
     async session({ session, token }) {
-      session.accessToken = token.accessToken as string | undefined;
+      // Pass token data to the session
+      session.accessToken = token.accessToken as string;
+      session.user.id = token.id as string;
+      
+      if (token.user) {
+        session.user = {
+          ...session.user,
+          ...(token.user as any),
+        };
+      }
+
+      if (token.tenantId) {
+        (session as any).tenantId = token.tenantId;
+      }
+
+      if (token.availableTenants) {
+        (session as any).availableTenants = token.availableTenants;
+      }
+
+      if (token.currentTenant) {
+        (session as any).currentTenant = token.currentTenant;
+      }
+
+      // If there's a token error, include it in the session
+      if (token.error) {
+        (session as any).error = token.error;
+      }
+
       return session;
     },
   },
 };
 
 declare module 'next-auth' {
-  interface JWT {
-    id: string;
-
-    accessToken?: string;
-    refreshToken?: string;
-  }
-}
-
-declare module 'next-auth' {
   interface Session {
     accessToken?: string;
+    tenantId?: string;
+    availableTenants?: Array<{
+      id: string;
+      name: string;
+      isActive: boolean;
+    }>;
+    currentTenant?: {
+      id: string;
+      name: string;
+      isActive: boolean;
+    };
+    error?: string;
+  }
+
+  interface User {
+    id: string;
+    username?: string;
+  }
+
+  interface JWT {
+    id: string;
+    accessToken?: string;
+    refreshToken?: string;
+    expires?: Date;
+    user?: {
+      id: string;
+      username: string;
+      email: string;
+    };
+    tenantId?: string;
+    availableTenants?: Array<{
+      id: string;
+      name: string;
+      isActive: boolean;
+    }>;
+    currentTenant?: {
+      id: string;
+      name: string;
+      isActive: boolean;
+    };
+    error?: string;
   }
 }

@@ -150,44 +150,20 @@ namespace GameGuild.Modules.Auth.Services
 
         public async Task<GoogleUserDto> ValidateGoogleIdTokenAsync(string idToken)
         {
-            try
-            {
-                // Call Google's tokeninfo API to validate the ID token
-                HttpResponseMessage response = await _httpClient.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}");
-                
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new UnauthorizedAccessException($"Google tokeninfo API returned {response.StatusCode}");
-                }
+            // Implementation for validating Google ID token
+            // This typically involves calling Google’s tokeninfo endpoint
+            // and returning the user information contained in the token.
 
-                string content = await response.Content.ReadAsStringAsync();
-                
-                // Parse the JSON response manually since Google's tokeninfo API uses different field names
-                var tokenInfo = JsonSerializer.Deserialize<JsonElement>(content);
-                
-                // Validate that the token is valid
-                if (!tokenInfo.TryGetProperty("aud", out _))
-                {
-                    throw new UnauthorizedAccessException("Invalid Google ID token: missing audience");
-                }
-                
-                // Extract user information and map to GoogleUserDto
-                var googleUser = new GoogleUserDto
-                {
-                    Id = tokenInfo.GetProperty("sub").GetString() ?? throw new InvalidOperationException("Missing sub claim"),
-                    Email = tokenInfo.GetProperty("email").GetString() ?? throw new InvalidOperationException("Missing email claim"),
-                    Name = tokenInfo.TryGetProperty("name", out JsonElement nameElement) ? nameElement.GetString() ?? "" : "",
-                    Picture = tokenInfo.TryGetProperty("picture", out JsonElement pictureElement) ? pictureElement.GetString() ?? "" : "",
-                    EmailVerified = tokenInfo.TryGetProperty("email_verified", out JsonElement verifiedElement) && 
-                                  (verifiedElement.GetString() == "true" || verifiedElement.ValueKind == JsonValueKind.True)
-                };
+            HttpResponseMessage response = await _httpClient.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}");
+            string content = await response.Content.ReadAsStringAsync();
 
-                return googleUser;
-            }
-            catch (Exception ex) when (!(ex is UnauthorizedAccessException))
-            {
-                throw new UnauthorizedAccessException($"Failed to validate Google ID token: {ex.Message}", ex);
-            }
+            return JsonSerializer.Deserialize<GoogleUserDto>(
+                content,
+                new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                }
+            ) ?? throw new InvalidOperationException("Failed to validate Google ID token");
         }
     }
 }

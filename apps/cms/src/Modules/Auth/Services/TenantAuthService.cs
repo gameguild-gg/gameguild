@@ -29,31 +29,19 @@ public interface ITenantAuthService
 /// <summary>
 /// Implementation of tenant auth service
 /// </summary>
-public class TenantAuthService : ITenantAuthService
+public class TenantAuthService(
+    ITenantService tenantService,
+    ITenantContextService tenantContextService,
+    IJwtTokenService jwtTokenService)
+    : ITenantAuthService
 {
-    private readonly ITenantService _tenantService;
-
-    private readonly ITenantContextService _tenantContextService;
-
-    private readonly IJwtTokenService _jwtTokenService;
-
-    public TenantAuthService(
-        ITenantService tenantService,
-        ITenantContextService tenantContextService,
-        IJwtTokenService jwtTokenService)
-    {
-        _tenantService = tenantService;
-        _tenantContextService = tenantContextService;
-        _jwtTokenService = jwtTokenService;
-    }
-
     /// <summary>
     /// Enhance authentication result with tenant data
     /// </summary>
     public async Task<SignInResponseDto> EnhanceWithTenantDataAsync(SignInResponseDto authResult, GameGuild.Modules.User.Models.User user, Guid? tenantId = null)
     {
         // Get available tenants for the user
-        var tenantPermissions = await _tenantService.GetTenantsForUserAsync(user.Id);
+        var tenantPermissions = await tenantService.GetTenantsForUserAsync(user.Id);
         var availableTenants = tenantPermissions.Where(tp => tp.IsValid).ToList();
 
         // If no tenants available, return original result
@@ -108,7 +96,7 @@ public class TenantAuthService : ITenantAuthService
         {
             "User"
         }; // TODO: fetch actual tenant-specific roles
-        string accessToken = _jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
+        string accessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
 
         // Update response with new token and tenant info
         authResult.AccessToken = accessToken;
@@ -135,7 +123,7 @@ public class TenantAuthService : ITenantAuthService
         };
 
         // Get tenant permission for additional claims
-        TenantPermission? tenantPermission = await _tenantContextService.GetTenantPermissionAsync(user.Id, tenantId);
+        TenantPermission? tenantPermission = await tenantContextService.GetTenantPermissionAsync(user.Id, tenantId);
 
         // Add permission flags if available
         if (tenantPermission != null)
@@ -152,6 +140,6 @@ public class TenantAuthService : ITenantAuthService
     /// </summary>
     public async Task<IEnumerable<TenantPermission>> GetUserTenantsAsync(GameGuild.Modules.User.Models.User user)
     {
-        return await _tenantService.GetTenantsForUserAsync(user.Id);
+        return await tenantService.GetTenantsForUserAsync(user.Id);
     }
 }

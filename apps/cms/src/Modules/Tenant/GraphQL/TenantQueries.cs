@@ -20,7 +20,7 @@ public class TenantQueries
         [Service] IHttpContextAccessor httpContextAccessor)
     {
         // Require authentication for tenant queries
-        var httpContext = httpContextAccessor.HttpContext;
+        HttpContext? httpContext = httpContextAccessor.HttpContext;
         if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true)
         {
             throw new UnauthorizedAccessException("Authentication required");
@@ -38,7 +38,7 @@ public class TenantQueries
         Guid id)
     {
         // Require authentication for tenant queries
-        var httpContext = httpContextAccessor.HttpContext;
+        HttpContext? httpContext = httpContextAccessor.HttpContext;
         if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true)
         {
             throw new UnauthorizedAccessException("Authentication required");        }
@@ -54,7 +54,7 @@ public class TenantQueries
         [Service] IHttpContextAccessor httpContextAccessor)
     {
         // Require authentication for tenant queries
-        var httpContext = httpContextAccessor.HttpContext;
+        HttpContext? httpContext = httpContextAccessor.HttpContext;
         if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true)
         {
             throw new UnauthorizedAccessException("Authentication required");
@@ -70,7 +70,7 @@ public class TenantQueries
         Guid tenantId)
     {
         // Require authentication for tenant queries
-        var httpContext = httpContextAccessor.HttpContext;
+        HttpContext? httpContext = httpContextAccessor.HttpContext;
         if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true)
         {
             throw new UnauthorizedAccessException("Authentication required");

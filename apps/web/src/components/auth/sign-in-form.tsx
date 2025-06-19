@@ -1,15 +1,35 @@
 'use client';
 
-import React, { ComponentPropsWithoutRef } from 'react';
+import React, { ComponentPropsWithoutRef, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { signInWithGoogle } from '@/lib/auth';
+import { useAuthError } from '@/hooks/useAuthError';
 import { Link } from '@/i18n/navigation';
 
 export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'div'>) => {
+  const { hasError, error } = useAuthError();
+  const searchParams = useSearchParams();
+  const [loading, setLoading] = useState(false);
+  
+  // Check for authentication errors from URL params
+  const authError = searchParams.get('error');
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Sign-in error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className={cn('flex flex-col w-full max-w-sm gap-6', className)} {...props}>
       <Card>
@@ -19,6 +39,17 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
         </CardHeader>
         <CardContent>
           <div className="grid gap-6">
+            {/* Show authentication errors */}
+            {(hasError || authError) && (
+              <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
+                {error === 'RefreshTokenError' && 'Your session has expired. Please sign in again.'}
+                {authError === 'OAuthAccountNotLinked' && 'Email already in use with different provider.'}
+                {authError === 'AccessDenied' && 'Access denied. You may not have permission to sign in.'}
+                {authError && !['OAuthAccountNotLinked', 'AccessDenied'].includes(authError) && 'An authentication error occurred.'}
+                {hasError && !authError && 'An authentication error occurred. Please try again.'}
+              </div>
+            )}
+
             <form>
               <div className="grid gap-6">
                 <div className="grid gap-2">
@@ -34,8 +65,9 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                   </div>
                   <Input id="password" type="password" required />
                 </div>
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full" disabled>
                   Sign in
+                  <span className="ml-2 text-xs text-muted-foreground">(Coming Soon)</span>
                 </Button>
               </div>
             </form>
@@ -43,26 +75,35 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
               <span className="relative z-10 bg-card rounded-full px-2 text-muted-foreground">Or continue with</span>
             </div>
             <div className="flex flex-col gap-4">
-              <Button variant="outline" className="w-full" onClick={() => signInWithGoogle()}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="size-5 mr-2" aria-hidden="true">
-                  <path
-                    d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z"
-                    fill="#EA4335"
-                  />
-                  <path
-                    d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M5.26498 14.2949C5.02498 13.5699 4.88495 12.7999 4.88495 11.9999C4.88495 11.1999 5.01998 10.4299 5.26498 9.7049L1.27496 6.60986C0.45996 8.22986 0 10.0599 0 11.9999C0 13.9399 0.45996 15.7699 1.27996 17.3899L5.26498 14.2949Z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M12.0001 24C15.2401 24 17.9651 22.935 19.9451 21.095L16.0801 18.095C15.0051 18.82 13.6201 19.245 12.0001 19.245C8.8701 19.245 6.21506 17.135 5.26506 14.29L1.27502 17.385C3.25502 21.31 7.3101 24 12.0001 24Z"
-                    fill="#34A853"
-                  />
-                </svg>
-                Sign in with Google
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="size-5 mr-2" aria-hidden="true">
+                    <path
+                      d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z"
+                      fill="#EA4335"
+                    />
+                    <path
+                      d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z"
+                      fill="#4285F4"
+                    />
+                    <path
+                      d="M5.26498 14.2949C5.02498 13.5699 4.88495 12.7999 4.88495 11.9999C4.88495 11.1999 5.01998 10.4299 5.26498 9.7049L1.27496 6.60986C0.45996 8.22986 0 10.0599 0 11.9999C0 13.9399 0.45996 15.7699 1.27996 17.3899L5.26498 14.2949Z"
+                      fill="#FBBC05"
+                    />
+                    <path
+                      d="M12.0001 24C15.2401 24 17.9651 22.935 19.9451 21.095L16.0801 18.095C15.0051 18.82 13.6201 19.245 12.0001 19.245C8.8701 19.245 6.21506 17.135 5.26506 14.29L1.27502 17.385C3.25502 21.31 7.3101 24 12.0001 24Z"
+                      fill="#34A853"
+                    />
+                  </svg>
+                )}
+                {loading ? 'Signing in...' : 'Sign in with Google'}
               </Button>
             </div>
             <div className="text-center text-sm">
