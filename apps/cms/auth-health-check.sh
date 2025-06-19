@@ -14,15 +14,15 @@ if [ $? -eq 0 ]; then
     echo ""
     echo "=== Running Basic Auth Tests ==="
     echo "Running Web3 Service Tests..."
-    dotnet test --filter "FullyQualifiedName~cms.Tests.Modules.Auth.Services.Web3ServiceTests" --logger "console;verbosity=minimal" --no-build
+    dotnet test --filter "FullyQualifiedName~GameGuild.Tests.Modules.Auth.Services.Web3ServiceTests" --logger "console;verbosity=minimal" --no-build
     
     echo ""
     echo "Running Auth Service Tests..."
-    dotnet test --filter "FullyQualifiedName~cms.Tests.Modules.Auth.Services.AuthServiceTests" --logger "console;verbosity=minimal" --no-build
+    dotnet test --filter "FullyQualifiedName~GameGuild.Tests.Modules.Auth.Services.AuthServiceTests" --logger "console;verbosity=minimal" --no-build
     
     echo ""
     echo "Running Auth Controller Tests..."
-    dotnet test --filter "FullyQualifiedName~cms.Tests.Modules.Auth.Controllers.AuthControllerTests" --logger "console;verbosity=minimal" --no-build
+    dotnet test --filter "FullyQualifiedName~GameGuild.Tests.Modules.Auth.Controllers.AuthControllerTests" --logger "console;verbosity=minimal" --no-build
     
     echo ""
     echo "=== Testing Auth Endpoints (Simple Integration) ==="

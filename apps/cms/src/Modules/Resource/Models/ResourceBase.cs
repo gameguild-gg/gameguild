@@ -31,14 +31,14 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable
     }
 
     /// <summary>
-    /// Visibility status of the resource (Public, Private, Restricted, etc.)
+    /// Access level of the resource (Public, Private, Restricted, etc.)
     /// </summary>
     [Required]
-    public Visibility Visibility
+    public AccessLevel Visibility
     {
         get;
         set;
-    } = Visibility.Private;
+    } = AccessLevel.Private;
 
     /// <summary>
     /// Navigation property to resource metadata

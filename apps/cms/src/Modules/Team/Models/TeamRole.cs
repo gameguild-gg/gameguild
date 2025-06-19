@@ -1,4 +1,4 @@
-namespace Cms.Models
+namespace GameGuild.Models
 {
     public enum TeamRole
     {
