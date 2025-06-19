@@ -8,15 +8,13 @@ namespace GameGuild.Tests.Helpers
     /// <summary>
     /// Authentication handler that always authenticates requests for testing purposes
     /// </summary>
-    public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+    public class TestAuthHandler(
+        IOptionsMonitor<AuthenticationSchemeOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder,
+        ISystemClock clock)
+        : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder, clock)
     {
-        public TestAuthHandler(
-            IOptionsMonitor<AuthenticationSchemeOptions> options,
-            ILoggerFactory logger,
-            UrlEncoder encoder,
-            ISystemClock clock)
-            : base(options, logger, encoder, clock) { }
-
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             // Create test identity with admin claims for testing

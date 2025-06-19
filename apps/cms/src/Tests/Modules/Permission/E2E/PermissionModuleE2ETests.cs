@@ -75,7 +75,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
 
         // Act - Get schema information
         HttpResponseMessage introspectionResponse = await PostGraphQlAsync(introspectionRequest);
-        var introspectionContent = await introspectionResponse.Content.ReadAsStringAsync();
+        string introspectionContent = await introspectionResponse.Content.ReadAsStringAsync();
         
         // Now try the actual query
         var query = @"
@@ -107,10 +107,10 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
         var errorMessages = errors.EnumerateArray()
             .SelectMany(e => {
                 var messages = new List<string>();
-                if (e.TryGetProperty("message", out var message) && message.ValueKind == JsonValueKind.String)
+                if (e.TryGetProperty("message", out JsonElement message) && message.ValueKind == JsonValueKind.String)
                     messages.Add(message.GetString()!);
-                if (e.TryGetProperty("extensions", out var extensions) && 
-                    extensions.TryGetProperty("message", out var extMessage) && 
+                if (e.TryGetProperty("extensions", out JsonElement extensions) && 
+                    extensions.TryGetProperty("message", out JsonElement extMessage) && 
                     extMessage.ValueKind == JsonValueKind.String)
                     messages.Add(extMessage.GetString()!);
                 return messages;
@@ -173,10 +173,10 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
                 var errorMessages = errors.EnumerateArray()
                     .SelectMany(e => {
                         var messages = new List<string>();
-                        if (e.TryGetProperty("message", out var message) && message.ValueKind == JsonValueKind.String)
+                        if (e.TryGetProperty("message", out JsonElement message) && message.ValueKind == JsonValueKind.String)
                             messages.Add(message.GetString()!);
-                        if (e.TryGetProperty("extensions", out var extensions) && 
-                            extensions.TryGetProperty("message", out var extMessage) && 
+                        if (e.TryGetProperty("extensions", out JsonElement extensions) && 
+                            extensions.TryGetProperty("message", out JsonElement extMessage) && 
                             extMessage.ValueKind == JsonValueKind.String)
                             messages.Add(extMessage.GetString()!);
                         return messages;

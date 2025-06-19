@@ -98,7 +98,7 @@ namespace GameGuild.Tests.Helpers
                                 services.AddDbContext<ApplicationDbContext>(options =>
                                     {
                                         // Use the provided database name or a default one
-                                        var dbName = databaseName ?? "TestDatabase";
+                                        string dbName = databaseName ?? "TestDatabase";
                                         options.UseInMemoryDatabase(dbName);
                                         // Enable sensitive data logging for tests
                                         options.EnableSensitiveDataLogging();

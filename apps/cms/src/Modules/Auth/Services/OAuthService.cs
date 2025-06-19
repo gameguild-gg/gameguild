@@ -9,6 +9,8 @@ namespace GameGuild.Modules.Auth.Services
 
         Task<GoogleUserDto> GetGoogleUserAsync(string accessToken);
 
+        Task<GoogleUserDto> ValidateGoogleIdTokenAsync(string idToken);
+
         Task<string> ExchangeGitHubCodeAsync(string code, string redirectUri);
 
         Task<string> ExchangeGoogleCodeAsync(string code, string redirectUri);
@@ -75,18 +77,19 @@ namespace GameGuild.Modules.Auth.Services
 
             // Get email if not public
             if (string.IsNullOrEmpty(user.Email))
-            {
-                HttpResponseMessage emailResponse = await _httpClient.GetAsync("https://api.github.com/user/emails");
+            {                HttpResponseMessage emailResponse = await _httpClient.GetAsync("https://api.github.com/user/emails");
                 string emailContent = await emailResponse.Content.ReadAsStringAsync();
                 var emails = JsonSerializer.Deserialize<JsonElement[]>(emailContent);
 
-                foreach (JsonElement email in emails)
+                if (emails != null)
                 {
-                    if (email.GetProperty("primary").GetBoolean())
+                    foreach (JsonElement email in emails)
                     {
-                        user.Email = email.GetProperty("email").GetString() ?? "";
-
-                        break;
+                        if (email.GetProperty("primary").GetBoolean())
+                        {
+                            user.Email = email.GetProperty("email").GetString() ?? "";
+                            break;
+                        }
                     }
                 }
             }
@@ -143,6 +146,48 @@ namespace GameGuild.Modules.Auth.Services
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 }
             ) ?? throw new InvalidOperationException("Failed to parse Google user");
+        }
+
+        public async Task<GoogleUserDto> ValidateGoogleIdTokenAsync(string idToken)
+        {
+            try
+            {
+                // Call Google's tokeninfo API to validate the ID token
+                HttpResponseMessage response = await _httpClient.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new UnauthorizedAccessException($"Google tokeninfo API returned {response.StatusCode}");
+                }
+
+                string content = await response.Content.ReadAsStringAsync();
+                
+                // Parse the JSON response manually since Google's tokeninfo API uses different field names
+                var tokenInfo = JsonSerializer.Deserialize<JsonElement>(content);
+                
+                // Validate that the token is valid
+                if (!tokenInfo.TryGetProperty("aud", out _))
+                {
+                    throw new UnauthorizedAccessException("Invalid Google ID token: missing audience");
+                }
+                
+                // Extract user information and map to GoogleUserDto
+                var googleUser = new GoogleUserDto
+                {
+                    Id = tokenInfo.GetProperty("sub").GetString() ?? throw new InvalidOperationException("Missing sub claim"),
+                    Email = tokenInfo.GetProperty("email").GetString() ?? throw new InvalidOperationException("Missing email claim"),
+                    Name = tokenInfo.TryGetProperty("name", out JsonElement nameElement) ? nameElement.GetString() ?? "" : "",
+                    Picture = tokenInfo.TryGetProperty("picture", out JsonElement pictureElement) ? pictureElement.GetString() ?? "" : "",
+                    EmailVerified = tokenInfo.TryGetProperty("email_verified", out JsonElement verifiedElement) && 
+                                  (verifiedElement.GetString() == "true" || verifiedElement.ValueKind == JsonValueKind.True)
+                };
+
+                return googleUser;
+            }
+            catch (Exception ex) when (!(ex is UnauthorizedAccessException))
+            {
+                throw new UnauthorizedAccessException($"Failed to validate Google ID token: {ex.Message}", ex);
+            }
         }
     }
 }
