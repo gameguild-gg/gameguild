@@ -1,9 +1,9 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Xunit;
 using GameGuild.Modules.Project.Models;
 using GameGuild.Common.Entities;
-using Moq;
 
-namespace GameGuild.Tests.Unit.Project.Models;
+namespace GameGuild.Tests.Modules.Project.Unit.Services;
 
 /// <summary>
 /// Unit tests for ProjectPermission model
@@ -16,10 +16,7 @@ public class ProjectPermissionTests
     {
         // Arrange
         var permission = new ProjectPermission();
-        
-        // Use reflection to set protected/internal properties for testing
-        SetPermissionType(permission, PermissionType.Edit);
-        SetIsValid(permission, true);
+        permission.AddPermission(PermissionType.Edit);
 
         // Act & Assert
         Assert.True(permission.CanEdit);
@@ -30,9 +27,8 @@ public class ProjectPermissionTests
     {
         // Arrange
         var permission = new ProjectPermission();
-        
-        SetPermissionType(permission, PermissionType.Edit);
-        SetIsValid(permission, false);
+        permission.AddPermission(PermissionType.Edit);
+        permission.SoftDelete(); // This makes IsValid false
 
         // Act & Assert
         Assert.False(permission.CanEdit);
@@ -43,9 +39,7 @@ public class ProjectPermissionTests
     {
         // Arrange
         var permission = new ProjectPermission();
-        
-        SetPermissionType(permission, PermissionType.Delete);
-        SetIsValid(permission, true);
+        permission.AddPermission(PermissionType.Delete);
 
         // Act & Assert
         Assert.True(permission.CanDelete);
@@ -56,9 +50,7 @@ public class ProjectPermissionTests
     {
         // Arrange
         var permission = new ProjectPermission();
-        
-        SetPermissionType(permission, PermissionType.Publish);
-        SetIsValid(permission, true);
+        permission.AddPermission(PermissionType.Publish);
 
         // Act & Assert
         Assert.True(permission.CanPublish);
@@ -69,9 +61,7 @@ public class ProjectPermissionTests
     {
         // Arrange
         var permission = new ProjectPermission();
-        
-        SetPermissionType(permission, PermissionType.Share);
-        SetIsValid(permission, true);
+        permission.AddPermission(PermissionType.Share);
 
         // Act & Assert
         Assert.True(permission.CanManageCollaborators);
@@ -82,9 +72,7 @@ public class ProjectPermissionTests
     {
         // Arrange
         var permission = new ProjectPermission();
-        
-        SetPermissionType(permission, PermissionType.Create);
-        SetIsValid(permission, true);
+        permission.AddPermission(PermissionType.Create);
 
         // Act & Assert
         Assert.True(permission.CanCreateReleases);
@@ -95,9 +83,7 @@ public class ProjectPermissionTests
     {
         // Arrange
         var permission = new ProjectPermission();
-        
-        SetPermissionType(permission, PermissionType.Analytics);
-        SetIsValid(permission, true);
+        permission.AddPermission(PermissionType.Analytics);
 
         // Act & Assert
         Assert.True(permission.CanViewAnalytics);
@@ -108,9 +94,7 @@ public class ProjectPermissionTests
     {
         // Arrange
         var permission = new ProjectPermission();
-        
-        SetPermissionType(permission, PermissionType.Review);
-        SetIsValid(permission, true);
+        permission.AddPermission(PermissionType.Review);
 
         // Act & Assert
         Assert.True(permission.CanModerate);
@@ -121,9 +105,7 @@ public class ProjectPermissionTests
     {
         // Arrange
         var permission = new ProjectPermission();
-        
-        SetPermissionType(permission, PermissionType.Archive);
-        SetIsValid(permission, true);
+        permission.AddPermission(PermissionType.Archive);
 
         // Act & Assert
         Assert.True(permission.CanArchive);
@@ -134,9 +116,7 @@ public class ProjectPermissionTests
     {
         // Arrange
         var permission = new ProjectPermission();
-        
-        SetPermissionType(permission, PermissionType.License);
-        SetIsValid(permission, true);
+        permission.AddPermission(PermissionType.License);
 
         // Act & Assert
         Assert.True(permission.CanTransferOwnership);
@@ -147,9 +127,7 @@ public class ProjectPermissionTests
     {
         // Arrange
         var permission = new ProjectPermission();
-        
-        SetPermissionType(permission, PermissionType.Read);
-        SetIsValid(permission, true);
+        permission.AddPermission(PermissionType.Read);
 
         // Act & Assert
         Assert.True(permission.CanDownload);
@@ -160,9 +138,7 @@ public class ProjectPermissionTests
     {
         // Arrange
         var permission = new ProjectPermission();
-        
-        SetPermissionType(permission, PermissionType.Clone);
-        SetIsValid(permission, true);
+        permission.AddPermission(PermissionType.Clone);
 
         // Act & Assert
         Assert.True(permission.CanFork);
@@ -177,9 +153,8 @@ public class ProjectPermissionTests
     {
         // Arrange
         var permission = new ProjectPermission();
-        
-        SetPermissionType(permission, permissionType);
-        SetIsValid(permission, false);
+        permission.AddPermission(permissionType);
+        permission.SoftDelete(); // This makes IsValid false
 
         // Act & Assert
         switch (permissionType)
@@ -216,7 +191,7 @@ public class ProjectPermissionTests
         var permission = new ProjectPermission();
 
         // Act & Assert
-        var tableAttribute = typeof(ProjectPermission)
+        TableAttribute? tableAttribute = typeof(ProjectPermission)
             .GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.Schema.TableAttribute), false)
             .Cast<System.ComponentModel.DataAnnotations.Schema.TableAttribute>()
             .FirstOrDefault();
@@ -225,35 +200,54 @@ public class ProjectPermissionTests
         Assert.Equal("ProjectPermissions", tableAttribute.Name);
     }
 
-    #region Helper Methods
-
-    private static void SetPermissionType(ProjectPermission permission, PermissionType permissionType)
+    [Fact]
+    public void ProjectPermission_WhenNoPermissions_ShouldReturnFalseForAllProperties()
     {
-        // Mock the HasPermission method behavior
-        var mock = new Mock<ProjectPermission>();
-        mock.Setup(p => p.HasPermission(permissionType)).Returns(true);
-        mock.Setup(p => p.HasPermission(It.Is<PermissionType>(pt => pt != permissionType))).Returns(false);
-        
-        // For real testing, we would need to set up the permission properly
-        // This is a simplified approach for unit testing
-        var property = typeof(ResourcePermission<GameGuild.Modules.Project.Models.Project>).GetProperty("PermissionType");
-        property?.SetValue(permission, permissionType);
+        // Arrange
+        var permission = new ProjectPermission();
+
+        // Act & Assert
+        Assert.False(permission.CanEdit);
+        Assert.False(permission.CanDelete);
+        Assert.False(permission.CanPublish);
+        Assert.False(permission.CanManageCollaborators);
+        Assert.False(permission.CanCreateReleases);
+        Assert.False(permission.CanViewAnalytics);
+        Assert.False(permission.CanModerate);
+        Assert.False(permission.CanArchive);
+        Assert.False(permission.CanTransferOwnership);
+        Assert.False(permission.CanDownload);
+        Assert.False(permission.CanFork);
     }
 
-    private static void SetIsValid(ProjectPermission permission, bool isValid)
+    [Fact]
+    public void ProjectPermission_WithMultiplePermissions_ShouldReturnTrueForAll()
     {
-        // Mock the IsValid property behavior
-        var property = typeof(ResourcePermission<GameGuild.Modules.Project.Models.Project>).GetProperty("IsValid");
-        if (property != null && property.CanWrite)
-        {
-            property.SetValue(permission, isValid);
-        }
-        else
-        {
-            // For computed properties that can't be set directly, we would mock the underlying conditions
-            // This is a simplified approach for unit testing
-        }
-    }
+        // Arrange
+        var permission = new ProjectPermission();
+        permission.AddPermission(PermissionType.Edit);
+        permission.AddPermission(PermissionType.Delete);
+        permission.AddPermission(PermissionType.Publish);
+        permission.AddPermission(PermissionType.Share);
+        permission.AddPermission(PermissionType.Create);
+        permission.AddPermission(PermissionType.Analytics);
+        permission.AddPermission(PermissionType.Review);
+        permission.AddPermission(PermissionType.Archive);
+        permission.AddPermission(PermissionType.License);
+        permission.AddPermission(PermissionType.Read);
+        permission.AddPermission(PermissionType.Clone);
 
-    #endregion
+        // Act & Assert
+        Assert.True(permission.CanEdit);
+        Assert.True(permission.CanDelete);
+        Assert.True(permission.CanPublish);
+        Assert.True(permission.CanManageCollaborators);
+        Assert.True(permission.CanCreateReleases);
+        Assert.True(permission.CanViewAnalytics);
+        Assert.True(permission.CanModerate);
+        Assert.True(permission.CanArchive);
+        Assert.True(permission.CanTransferOwnership);
+        Assert.True(permission.CanDownload);
+        Assert.True(permission.CanFork);
+    }
 }

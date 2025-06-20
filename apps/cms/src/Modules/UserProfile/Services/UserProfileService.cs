@@ -37,7 +37,7 @@ public class UserProfileService : IUserProfileService
     {
         return await _context.Resources
             .OfType<Models.UserProfile>()
-            .Where(up => !up.IsDeleted)
+            .Where(up => up.DeletedAt == null)
             .Include(up => up.Metadata)
             .ToListAsync();
     }
@@ -47,7 +47,7 @@ public class UserProfileService : IUserProfileService
         return await _context.Resources
             .OfType<Models.UserProfile>()
             .Include(up => up.Metadata)
-            .FirstOrDefaultAsync(up => up.Id == id && !up.IsDeleted);
+            .FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt == null);
     }
 
     public async Task<Models.UserProfile?> GetUserProfileByUserIdAsync(Guid userId)
@@ -55,7 +55,7 @@ public class UserProfileService : IUserProfileService
         return await _context.Resources
             .OfType<Models.UserProfile>()
             .Include(up => up.Metadata)
-            .FirstOrDefaultAsync(up => up.Id == userId && !up.IsDeleted);
+            .FirstOrDefaultAsync(up => up.Id == userId && up.DeletedAt == null);
     }
 
     public async Task<Models.UserProfile> CreateUserProfileAsync(Models.UserProfile userProfile)
@@ -72,7 +72,7 @@ public class UserProfileService : IUserProfileService
             .OfType<Models.UserProfile>()
             .FirstOrDefaultAsync(up => up.Id == id);
 
-        if (existingProfile == null || existingProfile.IsDeleted)
+        if (existingProfile == null || existingProfile.DeletedAt != null)
             return null;
 
         existingProfile.GivenName = userProfile.GivenName;
@@ -107,7 +107,7 @@ public class UserProfileService : IUserProfileService
             .OfType<Models.UserProfile>()
             .FirstOrDefaultAsync(up => up.Id == id);
 
-        if (userProfile == null || userProfile.IsDeleted)
+        if (userProfile == null || userProfile.DeletedAt != null)
             return false;
 
         userProfile.SoftDelete();
@@ -123,7 +123,7 @@ public class UserProfileService : IUserProfileService
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(up => up.Id == id);
 
-        if (userProfile == null || !userProfile.IsDeleted)
+        if (userProfile == null || userProfile.DeletedAt == null)
             return false;
 
         userProfile.Restore();
@@ -137,7 +137,7 @@ public class UserProfileService : IUserProfileService
         return await _context.Resources
             .OfType<Models.UserProfile>()
             .IgnoreQueryFilters()
-            .Where(up => up.IsDeleted)
+            .Where(up => up.DeletedAt != null)
             .Include(up => up.Metadata)
             .ToListAsync();
     }

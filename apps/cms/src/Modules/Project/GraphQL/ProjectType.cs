@@ -123,13 +123,13 @@ public class ProjectType : ObjectType<Models.Project>
             {
                 var permissionService = context.Service<IPermissionService>();
                 var project = context.Parent<Models.Project>();
-                var user = context.GetUser();
+                ClaimsPrincipal? user = context.GetUser();
 
                 if (user?.Identity?.IsAuthenticated != true)
                     return false;
 
-                var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                var tenantIdClaim = user.FindFirst("tenant_id")?.Value;
+                Guid userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                string? tenantIdClaim = user.FindFirst("tenant_id")?.Value;
                 var tenantId = tenantIdClaim != null ? Guid.Parse(tenantIdClaim) : (Guid?)null;
 
                 return await permissionService.HasResourcePermissionAsync<ProjectPermission, Models.Project>(
@@ -144,13 +144,13 @@ public class ProjectType : ObjectType<Models.Project>
             {
                 var permissionService = context.Service<IPermissionService>();
                 var project = context.Parent<Models.Project>();
-                var user = context.GetUser();
+                ClaimsPrincipal? user = context.GetUser();
 
                 if (user?.Identity?.IsAuthenticated != true)
                     return false;
 
-                var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                var tenantIdClaim = user.FindFirst("tenant_id")?.Value;
+                Guid userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                string? tenantIdClaim = user.FindFirst("tenant_id")?.Value;
                 var tenantId = tenantIdClaim != null ? Guid.Parse(tenantIdClaim) : (Guid?)null;
 
                 return await permissionService.HasResourcePermissionAsync<ProjectPermission, Models.Project>(

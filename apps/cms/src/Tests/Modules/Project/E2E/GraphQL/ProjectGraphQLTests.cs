@@ -26,7 +26,7 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
             builder.ConfigureServices(services =>
             {
                 // Remove the existing DbContext registration
-                var descriptor = services.SingleOrDefault(
+                ServiceDescriptor? descriptor = services.SingleOrDefault(
                     d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
                 if (descriptor != null)
                 {
@@ -47,7 +47,7 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
         _client = _factory.CreateClient();
 
         // Get database context for test setup
-        var scope = _factory.Services.CreateScope();
+        IServiceScope scope = _factory.Services.CreateScope();
         _context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     }
 
@@ -96,16 +96,16 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
             query = query
         };
 
-        var json = JsonSerializer.Serialize(request);
+        string json = JsonSerializer.Serialize(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/graphql", content);
+        HttpResponseMessage response = await _client.PostAsync("/graphql", content);
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var responseContent = await response.Content.ReadAsStringAsync();
+        string responseContent = await response.Content.ReadAsStringAsync();
         Assert.Contains("GraphQL Test Project 1", responseContent);
         Assert.Contains("GraphQL Test Project 2", responseContent);
         Assert.Contains("\"status\":\"Published\"", responseContent);
@@ -146,16 +146,16 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
             query = query
         };
 
-        var json = JsonSerializer.Serialize(request);
+        string json = JsonSerializer.Serialize(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/graphql", content);
+        HttpResponseMessage response = await _client.PostAsync("/graphql", content);
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var responseContent = await response.Content.ReadAsStringAsync();
+        string responseContent = await response.Content.ReadAsStringAsync();
         Assert.Contains("Specific GraphQL Project", responseContent);
         Assert.Contains("https://example.com", responseContent);
         Assert.Contains("https://github.com/test/repo", responseContent);
@@ -199,16 +199,16 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
             query = query
         };
 
-        var json = JsonSerializer.Serialize(request);
+        string json = JsonSerializer.Serialize(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/graphql", content);
+        HttpResponseMessage response = await _client.PostAsync("/graphql", content);
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var responseContent = await response.Content.ReadAsStringAsync();
+        string responseContent = await response.Content.ReadAsStringAsync();
         Assert.Contains("Game Project", responseContent);
         Assert.DoesNotContain("Tool Project", responseContent);
         Assert.Contains("\"type\":\"Game\"", responseContent);
@@ -245,23 +245,23 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
             query = mutation
         };
 
-        var json = JsonSerializer.Serialize(request);
+        string json = JsonSerializer.Serialize(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/graphql", content);
+        HttpResponseMessage response = await _client.PostAsync("/graphql", content);
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var responseContent = await response.Content.ReadAsStringAsync();
+        string responseContent = await response.Content.ReadAsStringAsync();
         Assert.Contains("New GraphQL Project", responseContent);
         Assert.Contains("Created via GraphQL mutation", responseContent);
         Assert.Contains("https://newproject.com", responseContent);
         Assert.Contains("new-graphql-project", responseContent);
 
         // Verify in database
-        var createdProject = await _context.Projects
+        GameGuild.Modules.Project.Models.Project? createdProject = await _context.Projects
             .FirstOrDefaultAsync(p => p.Title == "New GraphQL Project");
         
         Assert.NotNull(createdProject);
@@ -307,23 +307,23 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
             query = mutation
         };
 
-        var json = JsonSerializer.Serialize(request);
+        string json = JsonSerializer.Serialize(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/graphql", content);
+        HttpResponseMessage response = await _client.PostAsync("/graphql", content);
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var responseContent = await response.Content.ReadAsStringAsync();
+        string responseContent = await response.Content.ReadAsStringAsync();
         Assert.Contains("Updated Project Title", responseContent);
         Assert.Contains("Updated description", responseContent);
         Assert.Contains("\"status\":\"Published\"", responseContent);
         Assert.Contains("\"type\":\"Tool\"", responseContent);
 
         // Verify in database
-        var updatedProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == project.Id);
+        GameGuild.Modules.Project.Models.Project? updatedProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == project.Id);
         Assert.NotNull(updatedProject);
         Assert.Equal("Updated Project Title", updatedProject.Title);
         Assert.Equal("Updated description", updatedProject.Description);
@@ -358,20 +358,20 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
             query = mutation
         };
 
-        var json = JsonSerializer.Serialize(request);
+        string json = JsonSerializer.Serialize(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/graphql", content);
+        HttpResponseMessage response = await _client.PostAsync("/graphql", content);
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var responseContent = await response.Content.ReadAsStringAsync();
+        string responseContent = await response.Content.ReadAsStringAsync();
         Assert.Contains("\"success\":true", responseContent);
 
         // Verify soft delete in database
-        var deletedProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == project.Id);
+        GameGuild.Modules.Project.Models.Project? deletedProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == project.Id);
         Assert.NotNull(deletedProject);
         Assert.True(deletedProject.IsDeleted);
         Assert.NotNull(deletedProject.DeletedAt);
@@ -423,16 +423,16 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
             query = query
         };
 
-        var json = JsonSerializer.Serialize(request);
+        string json = JsonSerializer.Serialize(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/graphql", content);
+        HttpResponseMessage response = await _client.PostAsync("/graphql", content);
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var responseContent = await response.Content.ReadAsStringAsync();
+        string responseContent = await response.Content.ReadAsStringAsync();
         Assert.Contains("Amazing RPG Game", responseContent);
         Assert.Contains("Another Amazing Project", responseContent);
         Assert.DoesNotContain("Simple Calculator Tool", responseContent);
@@ -462,16 +462,16 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
             query = introspectionQuery
         };
 
-        var json = JsonSerializer.Serialize(request);
+        string json = JsonSerializer.Serialize(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/graphql", content);
+        HttpResponseMessage response = await _client.PostAsync("/graphql", content);
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var responseContent = await response.Content.ReadAsStringAsync();
+        string responseContent = await response.Content.ReadAsStringAsync();
         Assert.Contains("Project", responseContent); // Project type should be in schema
         Assert.Contains("ProjectType", responseContent); // Enum should be in schema
         Assert.Contains("DevelopmentStatus", responseContent); // Enum should be in schema

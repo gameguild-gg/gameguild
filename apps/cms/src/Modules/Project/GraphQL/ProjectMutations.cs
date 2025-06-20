@@ -43,7 +43,7 @@ public class ProjectMutations
         UpdateProjectInput input,
         [Service] IProjectService projectService)
     {
-        var existingProject = await projectService.GetProjectByIdAsync(id);
+        Models.Project? existingProject = await projectService.GetProjectByIdAsync(id);
         if (existingProject == null)
         {
             throw new InvalidOperationException("Project not found");
