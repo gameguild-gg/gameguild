@@ -29,7 +29,10 @@ public class TenantPermission : WithPermissions
     /// <summary>
     /// Whether this represents an active membership
     /// </summary>
-    public bool IsActiveMembership => IsValid && UserId != null && TenantId != null;
+    public bool IsActiveMembership
+    {
+        get => IsValid && UserId != null && TenantId != null;
+    }
 }
 
 /// <summary>

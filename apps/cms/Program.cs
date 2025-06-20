@@ -102,6 +102,7 @@ builder.Services.AddCommonServices();
 builder.Services.AddUserModule();
 builder.Services.AddTenantModule();
 builder.Services.AddUserProfileModule(); // Register the UserProfile module
+builder.Services.AddProjectModule(); // Register the Project module
 builder.Services.AddAuthModule(builder.Configuration); // Register the Auth module
 
 // Add HTTP context accessor for GraphQL authorization
@@ -152,11 +153,14 @@ builder.Services
     .AddTypeExtension<GameGuild.Modules.UserProfile.GraphQL.UserProfileMutations>()
     .AddTypeExtension<GameGuild.Modules.Auth.GraphQL.AuthQueries>()
     .AddTypeExtension<GameGuild.Modules.Auth.GraphQL.AuthMutations>()
+    .AddTypeExtension<GameGuild.Modules.Project.GraphQL.ProjectQueries>()
+    .AddTypeExtension<GameGuild.Modules.Project.GraphQL.ProjectMutations>()
     .AddType<UserType>()
     .AddType<CredentialType>()
     .AddType<GameGuild.Modules.Tenant.GraphQL.TenantType>()
     .AddType<GameGuild.Modules.Tenant.GraphQL.TenantPermissionType>()
     .AddType<GameGuild.Modules.UserProfile.GraphQL.UserProfileType>()
+    .AddType<GameGuild.Modules.Project.GraphQL.ProjectType>()
     .ModifyOptions(opt => { opt.RemoveUnreachableTypes = true; })
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment());
 

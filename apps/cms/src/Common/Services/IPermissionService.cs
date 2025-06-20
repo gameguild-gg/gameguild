@@ -217,7 +217,20 @@ public interface IPermissionService
         where TPermission : ResourcePermission<TResource>, new()
         where TResource : BaseEntity;
 
-    // ===== HELPER METHODS =====
+    // === BULK RESOURCE OPERATIONS ===
+
+    /// <summary>
+    /// Grant permissions to multiple resources efficiently in a single transaction
+    /// </summary>
+    /// <typeparam name="TPermission">The permission type</typeparam>
+    /// <typeparam name="TResource">The resource type</typeparam>
+    /// <param name="userId">User ID</param>
+    /// <param name="tenantId">Tenant ID</param>
+    /// <param name="resourceIds">Resource IDs to grant permissions for</param>
+    /// <param name="permissions">Permissions to grant</param>
+    Task BulkGrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[] resourceIds, PermissionType[] permissions)
+        where TPermission : ResourcePermission<TResource>, new()
+        where TResource : BaseEntity;    // ===== HELPER METHODS =====
 
     /// <summary>
     /// Get the tenant context for a specific resource

@@ -56,7 +56,10 @@ public class Credential : BaseEntity, ITenantable
     /// Indicates whether this credential is accessible across all tenants
     /// </summary>
     [NotMapped]
-    public override bool IsGlobal => TenantId == null;
+    public override bool IsGlobal
+    {
+        get => TenantId == null;
+    }
 
     /// <summary>
     /// Type of credential (e.g., "password", "api_key", "oauth_token", "2fa_secret")

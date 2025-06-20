@@ -65,7 +65,10 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable
     /// Indicates whether this resource is accessible across all tenants (when Tenant is null)
     /// or only within a specific tenant (implements ITenantable)
     /// </summary>
-    public override bool IsGlobal => Tenant == null;
+    public override bool IsGlobal
+    {
+        get => Tenant == null;
+    }
 
 
     // todo: this could be better implemented if it was an enum

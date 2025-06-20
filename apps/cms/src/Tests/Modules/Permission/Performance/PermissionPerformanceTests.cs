@@ -7,7 +7,6 @@ using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Comment.Models;
 using GameGuild.Modules.User.Models;
 using System.Diagnostics;
-using System.Linq;
 
 namespace GameGuild.Tests.Modules.Permission.Performance;
 
@@ -143,7 +142,7 @@ public class PermissionPerformanceTests : IDisposable
         Tenant tenant = await CreateTestTenantAsync();
         var resources = new List<Comment>();
 
-        // Create test resources
+        // Create test resources efficiently
         for (var i = 0; i < resourceCount; i++)
         {
             resources.Add(await CreateTestCommentAsync($"Comment content {i}"));
@@ -155,20 +154,16 @@ public class PermissionPerformanceTests : IDisposable
         };
         var stopwatch = Stopwatch.StartNew();
 
-        // Act - Grant resource permissions
-        var grantTasks = resources.Select(async resource =>
-            await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
-                user.Id,
-                tenant.Id,
-                resource.Id,
-                permissions
-            )
+        // Act - Grant resource permissions using bulk method for better performance
+        var resourceIds = resources.Select(r => r.Id).ToArray();
+        await _permissionService.BulkGrantResourcePermissionAsync<CommentPermission, Comment>(
+            user.Id,
+            tenant.Id,
+            resourceIds,
+            permissions
         );
 
-        await Task.WhenAll(grantTasks);
-
         // Now check bulk permissions
-        var resourceIds = resources.Select(r => r.Id).ToArray();
         var bulkResult = await _permissionService.GetBulkResourcePermissionsAsync<CommentPermission, Comment>(
             user.Id,
             tenant.Id,
