@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using System.Reflection;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Auth.Models;
+using GameGuild.Modules.Project.Models;
 using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.User.Models;
+
 
 namespace GameGuild.Data;
 
@@ -98,6 +100,12 @@ public class ApplicationDbContext : DbContext
         set;
     }
 
+    public DbSet<ProjectPermission> ProjectPermissions
+    {
+        get;
+        set;
+    }
+
     // Reputation Management DbSets
     public DbSet<Modules.Reputation.Models.UserReputation> UserReputations
     {
@@ -167,6 +175,45 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<Modules.Product.Models.PromoCodeUse> PromoCodeUses
+    {
+        get;
+        set;
+    }    // Project Management DbSets
+    public DbSet<Project> Projects
+    {
+        get;
+        set;
+    }    public DbSet<ProjectCollaborator> ProjectCollaborators
+    {
+        get;
+        set;
+    }
+
+    public DbSet<ProjectRelease> ProjectReleases
+    {
+        get;
+        set;
+    }
+
+    public DbSet<ProjectTeam> ProjectTeams
+    {
+        get;
+        set;
+    }
+
+    public DbSet<ProjectFollower> ProjectFollowers
+    {
+        get;
+        set;
+    }
+
+    public DbSet<ProjectFeedback> ProjectFeedbacks
+    {
+        get;
+        set;
+    }
+
+    public DbSet<ProjectJamSubmission> ProjectJamSubmissions
     {
         get;
         set;

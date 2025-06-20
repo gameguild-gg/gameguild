@@ -601,22 +601,26 @@ public class PermissionService : IPermissionService
             existingPermission.Touch();
             await _context.SaveChangesAsync();
         }
-    }
-
-    public async Task<Dictionary<Guid, IEnumerable<PermissionType>>> GetBulkResourcePermissionsAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[] resourceIds)
+    }    public async Task<Dictionary<Guid, IEnumerable<PermissionType>>> GetBulkResourcePermissionsAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[] resourceIds)
         where TPermission : ResourcePermission<TResource>
         where TResource : BaseEntity
     {
+        if (resourceIds == null || resourceIds.Length == 0)
+            return new Dictionary<Guid, IEnumerable<PermissionType>>();
+
         var permissions = await _context.Set<TPermission>()
             .Where(p => p.UserId == userId && p.TenantId == tenantId && resourceIds.Contains(p.ResourceId) && p.ExpiresAt == null && p.DeletedAt == null)
             .ToListAsync();
 
         var result = new Dictionary<Guid, IEnumerable<PermissionType>>();
 
+        // Pre-cache enum values to avoid repeated Enum.GetValues calls
+        var allPermissionTypes = Enum.GetValues<PermissionType>();
+
         foreach (TPermission permission in permissions)
         {
             var permissionTypes = new List<PermissionType>();
-            foreach (PermissionType permType in Enum.GetValues<PermissionType>())
+            foreach (PermissionType permType in allPermissionTypes)
             {
                 if (permission.HasPermission(permType))
                 {
@@ -714,5 +718,58 @@ public class PermissionService : IPermissionService
         await _context.SaveChangesAsync();
 
         return result;
+    }
+
+    public async Task BulkGrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[] resourceIds, PermissionType[] permissions)
+        where TPermission : ResourcePermission<TResource>, new()
+        where TResource : BaseEntity
+    {
+        if (resourceIds == null || resourceIds.Length == 0)
+            return;
+        if (permissions == null || permissions.Length == 0)
+            return;
+
+        var existingPermissions = await _context.Set<TPermission>()
+            .Where(p => p.UserId == userId && p.TenantId == tenantId && resourceIds.Contains(p.ResourceId) && p.DeletedAt == null)
+            .ToListAsync();
+
+        var existingResourceIds = existingPermissions.Select(p => p.ResourceId).ToHashSet();
+        var newResourceIds = resourceIds.Except(existingResourceIds).ToArray();
+
+        // Update existing permissions
+        foreach (var existingPermission in existingPermissions)
+        {
+            foreach (var permission in permissions)
+            {
+                existingPermission.AddPermission(permission);
+            }
+            existingPermission.Touch();
+        }
+
+        // Create new permissions for resources that don't have any
+        var newPermissions = new List<TPermission>();
+        foreach (var resourceId in newResourceIds)
+        {
+            var resourcePermission = new TPermission
+            {
+                UserId = userId,
+                TenantId = tenantId,
+                ResourceId = resourceId
+            };
+
+            foreach (var permission in permissions)
+            {
+                resourcePermission.AddPermission(permission);
+            }
+
+            newPermissions.Add(resourcePermission);
+        }
+
+        if (newPermissions.Count > 0)
+        {
+            _context.Set<TPermission>().AddRange(newPermissions);
+        }
+
+        await _context.SaveChangesAsync();
     }
 }

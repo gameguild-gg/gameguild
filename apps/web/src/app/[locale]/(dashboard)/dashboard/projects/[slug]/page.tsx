@@ -1,16 +1,13 @@
-'use client';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { PropsWithLocaleSlugParams } from '@/types';
-import { getSession } from 'next-auth/react';
-import { Session } from 'next-auth';
-import { Api, ProjectApi } from '@game-guild/apiclient';
+import { getProjectBySlug } from '@/components/projects/actions';
+import { notFound } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CalendarIcon, Download, Edit, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 // import type { Metadata, ResolvingMetadata } from 'next';
 //

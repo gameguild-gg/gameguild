@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { ArrowDownAZ, ArrowUpAZ, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Inbox, PlusIcon, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Project } from './actions';
+import { Project, ProjectListItem } from './actions';
 import { CreateProjectForm } from '@/components/projects/create-project-form';
 import { ProjectCard } from '@/components/projects/project-card';
 
@@ -13,7 +13,7 @@ type SortField = 'name';
 type SortDirection = 'asc' | 'desc';
 
 interface ProjectListProps {
-  initialProjects: Project[];
+  initialProjects: ProjectListItem[];
 }
 
 export function ProjectList({ initialProjects }: ProjectListProps) {
@@ -45,10 +45,32 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
       setSortDirection('asc');
     }
   };
-
   const handleProjectCreated = (newProject: Project) => {
-    setProjects((prev) => [...prev, newProject]);
+    const projectListItem: ProjectListItem = {
+      id: newProject.id,
+      name: newProject.title,
+      status: mapStatusToDisplay(newProject.status),
+      createdAt: newProject.createdAt,
+      updatedAt: newProject.updatedAt,
+    };
+    setProjects((prev) => [...prev, projectListItem]);
   };
+
+  // Map CMS status to display status for UI
+  function mapStatusToDisplay(cmsStatus: string): 'not-started' | 'in-progress' | 'active' | 'on-hold' {
+    switch (cmsStatus) {
+      case 'Draft':
+        return 'not-started';
+      case 'UnderReview':
+        return 'in-progress';
+      case 'Published':
+        return 'active';
+      case 'Archived':
+        return 'on-hold';
+      default:
+        return 'not-started';
+    }
+  }
 
   return (
     <div className="flex flex-col flex-1 py-8">

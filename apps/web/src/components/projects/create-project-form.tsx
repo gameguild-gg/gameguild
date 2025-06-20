@@ -46,13 +46,18 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
     community: 'disabled',
     visibility: 'draft',
   });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newProject = await createProject(formData.title, 'not-started');
+    const newProject = await createProject({
+      title: formData.title,
+      description: formData.description,
+      shortDescription: formData.tagline,
+      websiteUrl: formData.projectUrl,
+      status: 'not-started',
+      visibility: formData.visibility === 'public' ? 'Public' : 'Private',    });
     onProjectCreated(newProject);
     setIsOpen(false);
-    router.push(`/projects/${encodeURIComponent(newProject.id)}`);
+    router.push(`/dashboard/projects/${encodeURIComponent(newProject.id)}`);
   };
 
   return (

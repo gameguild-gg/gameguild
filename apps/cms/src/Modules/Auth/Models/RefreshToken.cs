@@ -55,8 +55,14 @@ namespace GameGuild.Modules.Auth.Models
             set;
         } = string.Empty;
 
-        public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
+        public bool IsExpired
+        {
+            get => DateTime.UtcNow >= ExpiresAt;
+        }
 
-        public bool IsActive => !IsRevoked && !IsExpired;
+        public bool IsActive
+        {
+            get => !IsRevoked && !IsExpired;
+        }
     }
 }

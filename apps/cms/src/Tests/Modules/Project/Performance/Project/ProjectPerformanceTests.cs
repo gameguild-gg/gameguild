@@ -1,0 +1,368 @@
+using Xunit;
+using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
+using GameGuild.Data;
+using GameGuild.Modules.Project.Services;
+using GameGuild.Common.Entities;
+using GameGuild.Common.Enums;
+using GameGuild.Modules.Project.Models;
+
+namespace GameGuild.Tests.Performance.Project;
+
+/// <summary>
+/// Performance tests for Project operations
+/// Tests response times and scalability under load
+/// </summary>
+public class ProjectPerformanceTests : IDisposable
+{
+    private readonly ApplicationDbContext _context;
+    private readonly ProjectService _projectService;
+
+    public ProjectPerformanceTests()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: $"PerformanceTestDb_{Guid.NewGuid()}")
+            .Options;
+
+        _context = new ApplicationDbContext(options);
+        _projectService = new ProjectService(_context);
+    }
+
+    [Fact]
+    public async Task CreateProject_Performance_ShouldCompleteUnder100ms()
+    {
+        // Arrange
+        var project = new GameGuild.Modules.Project.Models.Project
+        {
+            Title = "Performance Test Project",
+            Description = "Testing project creation performance",
+            Type = ProjectType.Game,
+            DevelopmentStatus = DevelopmentStatus.Planning
+        };
+
+        var stopwatch = new Stopwatch();
+
+        // Act
+        stopwatch.Start();
+        var result = await _projectService.CreateProjectAsync(project);
+        stopwatch.Stop();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(stopwatch.ElapsedMilliseconds < 100); // "Project creation should complete under 100ms"
+    }
+
+    [Fact]
+    public async Task GetAllProjects_Performance_ShouldCompleteUnder500msFor1000Projects()
+    {
+        // Arrange - Create 1000 test projects
+        var projects = new List<GameGuild.Modules.Project.Models.Project>();
+        for (int i = 0; i < 1000; i++)
+        {
+            projects.Add(new GameGuild.Modules.Project.Models.Project
+            {
+                Title = $"Performance Test Project {i}",
+                Description = $"Description for project {i}",
+                Type = ProjectType.Game,
+                Status = ContentStatus.Published,
+                Visibility = AccessLevel.Public
+            });
+        }
+
+        _context.Projects.AddRange(projects);
+        await _context.SaveChangesAsync();
+
+        var stopwatch = new Stopwatch();
+
+        // Act
+        stopwatch.Start();
+        var result = await _projectService.GetAllProjectsAsync();
+        stopwatch.Stop();
+
+        // Assert
+        Assert.Equal(1000, result.Count());
+        Assert.True(stopwatch.ElapsedMilliseconds < 500); // "Getting 1000 projects should complete under 500ms"
+    }
+
+    [Fact]
+    public async Task SearchProjects_Performance_ShouldCompleteUnder200msFor1000Projects()
+    {
+        // Arrange - Create 1000 test projects with searchable content
+        var projects = new List<GameGuild.Modules.Project.Models.Project>();
+        for (int i = 0; i < 1000; i++)
+        {
+            projects.Add(new GameGuild.Modules.Project.Models.Project
+            {
+                Title = $"Searchable Project {i} {(i % 2 == 0 ? "Game" : "Tool")}",
+                Description = $"This is a {(i % 3 == 0 ? "fantastic" : "good")} project number {i}",
+                ShortDescription = $"Project {i} summary",
+                Type = i % 2 == 0 ? ProjectType.Game : ProjectType.Tool,
+                Status = ContentStatus.Published,
+                Visibility = AccessLevel.Public
+            });
+        }
+
+        _context.Projects.AddRange(projects);
+        await _context.SaveChangesAsync();
+
+        var stopwatch = new Stopwatch();
+
+        // Act - Search for "Game" which should match ~500 projects
+        stopwatch.Start();
+        var result = await _projectService.SearchProjectsAsync("Game");
+        stopwatch.Stop();
+
+        // Assert
+        Assert.NotEmpty(result);
+        Assert.True(result.Count() > 400); // Should find many matches
+        Assert.True(stopwatch.ElapsedMilliseconds < 200); // "Searching 1000 projects should complete under 200ms"
+    }
+
+    [Fact]
+    public async Task UpdateProject_Performance_ShouldCompleteUnder100ms()
+    {
+        // Arrange
+        var project = new GameGuild.Modules.Project.Models.Project
+        {
+            Title = "Original Title",
+            Description = "Original Description",
+            Type = ProjectType.Game
+        };
+
+        var created = await _projectService.CreateProjectAsync(project);
+        
+        // Modify for update
+        created.Title = "Updated Title";
+        created.Description = "Updated Description";
+        created.Type = ProjectType.Tool;
+
+        var stopwatch = new Stopwatch();
+
+        // Act
+        stopwatch.Start();
+        var result = await _projectService.UpdateProjectAsync(created);
+        stopwatch.Stop();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("Updated Title", result.Title);
+        Assert.True(stopwatch.ElapsedMilliseconds < 100); // "Project update should complete under 100ms"
+    }
+
+    [Fact]
+    public async Task GetProjectsByStatus_Performance_ShouldCompleteUnder150msFor1000Projects()
+    {
+        // Arrange - Create projects with different statuses
+        var projects = new List<GameGuild.Modules.Project.Models.Project>();
+        var statuses = new[] { ContentStatus.Draft, ContentStatus.Published, ContentStatus.Archived };
+        
+        for (int i = 0; i < 1000; i++)
+        {
+            projects.Add(new GameGuild.Modules.Project.Models.Project
+            {
+                Title = $"Status Test Project {i}",
+                Description = $"Project {i} for status testing",
+                Status = statuses[i % statuses.Length],
+                Type = ProjectType.Game,
+                Visibility = AccessLevel.Public
+            });
+        }
+
+        _context.Projects.AddRange(projects);
+        await _context.SaveChangesAsync();
+
+        var stopwatch = new Stopwatch();
+
+        // Act - Get published projects (should be ~333 projects)
+        stopwatch.Start();
+        var result = await _projectService.GetProjectsByStatusAsync(ContentStatus.Published);
+        stopwatch.Stop();
+
+        // Assert
+        Assert.NotEmpty(result);
+        Assert.True(result.Count() > 300);
+        Assert.True(stopwatch.ElapsedMilliseconds < 150); // "Getting projects by status should complete under 150ms"
+    }
+
+    [Fact]
+    public async Task GetProjectsByType_Performance_ShouldCompleteUnder150msFor1000Projects()
+    {
+        // Arrange - Create projects with different types
+        var projects = new List<GameGuild.Modules.Project.Models.Project>();
+        var types = new[] { ProjectType.Game, ProjectType.Tool, ProjectType.Art, ProjectType.Music };
+        
+        for (int i = 0; i < 1000; i++)
+        {
+            projects.Add(new GameGuild.Modules.Project.Models.Project
+            {
+                Title = $"Type Test Project {i}",
+                Description = $"Project {i} for type testing",
+                Type = types[i % types.Length],
+                Status = ContentStatus.Published,
+                Visibility = AccessLevel.Public
+            });
+        }
+
+        _context.Projects.AddRange(projects);
+        await _context.SaveChangesAsync();
+
+        var stopwatch = new Stopwatch();
+
+        // Act - Get game projects (should be ~250 projects)
+        stopwatch.Start();
+        var result = await _projectService.GetProjectsByTypeAsync(ProjectType.Game);
+        stopwatch.Stop();
+
+        // Assert
+        Assert.NotEmpty(result);
+        Assert.True(result.Count() > 200);
+        Assert.True(stopwatch.ElapsedMilliseconds < 150); // "Getting projects by type should complete under 150ms"
+    }
+
+    [Fact]
+    public async Task DeleteProject_Performance_ShouldCompleteUnder100ms()
+    {
+        // Arrange
+        var project = new GameGuild.Modules.Project.Models.Project
+        {
+            Title = "Project to Delete",
+            Description = "This project will be deleted for performance testing",
+            Type = ProjectType.Game
+        };
+
+        var created = await _projectService.CreateProjectAsync(project);
+        var stopwatch = new Stopwatch();
+
+        // Act
+        stopwatch.Start();
+        var result = await _projectService.DeleteProjectAsync(created.Id);
+        stopwatch.Stop();
+
+        // Assert
+        Assert.True(result);
+        Assert.True(stopwatch.ElapsedMilliseconds < 100); // "Project deletion should complete under 100ms"
+    }
+
+    [Fact]
+    public async Task GetProjectsWithPagination_Performance_ShouldCompleteUnder100msFor50Projects()
+    {
+        // Arrange - Create 1000 projects but only request 50
+        var projects = new List<GameGuild.Modules.Project.Models.Project>();
+        for (int i = 0; i < 1000; i++)
+        {
+            projects.Add(new GameGuild.Modules.Project.Models.Project
+            {
+                Title = $"Pagination Test Project {i}",
+                Description = $"Project {i} for pagination testing",
+                Type = ProjectType.Game,
+                Status = ContentStatus.Published,
+                Visibility = AccessLevel.Public
+            });
+        }
+
+        _context.Projects.AddRange(projects);
+        await _context.SaveChangesAsync();
+
+        var stopwatch = new Stopwatch();
+
+        // Act - Get first 50 projects
+        stopwatch.Start();
+        var result = await _projectService.GetProjectsAsync(skip: 0, take: 50);
+        stopwatch.Stop();
+
+        // Assert
+        Assert.Equal(50, result.Count());
+        Assert.True(stopwatch.ElapsedMilliseconds < 100); // "Getting 50 projects with pagination should complete under 100ms"
+    }
+
+    [Theory]
+    [InlineData(100)]
+    [InlineData(500)]
+    [InlineData(1000)]
+    public async Task BulkOperations_Performance_ShouldScaleLinearly(int projectCount)
+    {
+        // Arrange
+        var projects = new List<GameGuild.Modules.Project.Models.Project>();
+        for (int i = 0; i < projectCount; i++)
+        {
+            projects.Add(new GameGuild.Modules.Project.Models.Project
+            {
+                Title = $"Bulk Test Project {i}",
+                Description = $"Project {i} for bulk testing",
+                Type = ProjectType.Game,
+                Status = ContentStatus.Published,
+                Visibility = AccessLevel.Public
+            });
+        }
+
+        var stopwatch = new Stopwatch();
+
+        // Act - Bulk insert
+        stopwatch.Start();
+        _context.Projects.AddRange(projects);
+        await _context.SaveChangesAsync();
+        stopwatch.Stop();
+
+        var insertTime = stopwatch.ElapsedMilliseconds;
+
+        // Act - Bulk read
+        stopwatch.Restart();
+        var result = await _projectService.GetAllProjectsAsync();
+        stopwatch.Stop();
+
+        var readTime = stopwatch.ElapsedMilliseconds;
+
+        // Assert
+        Assert.Equal(projectCount, result.Count());
+        
+        // Performance expectations based on project count
+        var expectedInsertTime = projectCount * 0.1; // ~0.1ms per project for insert
+        var expectedReadTime = projectCount * 0.05; // ~0.05ms per project for read
+        
+        Assert.True(insertTime < expectedInsertTime); // $"Bulk insert of {projectCount} projects should scale linearly"
+        Assert.True(readTime < expectedReadTime); // $"Bulk read of {projectCount} projects should scale linearly"
+    }
+
+    [Fact]
+    public async Task ConcurrentOperations_Performance_ShouldHandleConcurrentReads()
+    {
+        // Arrange - Create some test data
+        var projects = new List<GameGuild.Modules.Project.Models.Project>();
+        for (int i = 0; i < 100; i++)
+        {
+            projects.Add(new GameGuild.Modules.Project.Models.Project
+            {
+                Title = $"Concurrent Test Project {i}",
+                Description = $"Project {i} for concurrent testing",
+                Type = ProjectType.Game,
+                Status = ContentStatus.Published,
+                Visibility = AccessLevel.Public
+            });
+        }
+
+        _context.Projects.AddRange(projects);
+        await _context.SaveChangesAsync();
+
+        var stopwatch = new Stopwatch();
+
+        // Act - 10 concurrent read operations
+        var tasks = new List<Task>();
+        stopwatch.Start();
+        
+        for (int i = 0; i < 10; i++)
+        {
+            tasks.Add(_projectService.GetAllProjectsAsync());
+        }
+
+        await Task.WhenAll(tasks);
+        stopwatch.Stop();
+
+        // Assert
+        Assert.True(stopwatch.ElapsedMilliseconds < 1000); // "10 concurrent read operations should complete under 1 second"
+    }
+
+    public void Dispose()
+    {
+        _context.Dispose();
+    }
+}

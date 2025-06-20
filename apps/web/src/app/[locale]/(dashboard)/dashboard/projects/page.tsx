@@ -7,7 +7,7 @@ export default async function ProjectsPage() {
   return (
     <div className="flex flex-col flex-1 items-center justify-center">
       <div className="flex flex-col flex-1 container">
-        <ProjectList initialProjects={[]} />
+        <ProjectList initialProjects={projects} />
       </div>
     </div>
   );

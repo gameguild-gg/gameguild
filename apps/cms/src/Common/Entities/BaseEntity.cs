@@ -69,7 +69,10 @@ public class BaseEntity : BaseEntity<Guid>
     /// </summary>
     [GraphQLType(typeof(NonNullType<BooleanType>))]
     [GraphQLDescription("Indicates whether the entity has been soft deleted.")]
-    public override bool IsDeleted => DeletedAt.HasValue;
+    public override bool IsDeleted
+    {
+        get => DeletedAt.HasValue;
+    }
 
     /// <summary>
     /// The tenant this entity belongs to (null if global)

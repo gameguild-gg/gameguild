@@ -312,35 +312,50 @@ public class WithPermissions : BaseEntity
     /// </summary>
     [GraphQLType(typeof(NonNullType<BooleanType>))]
     [GraphQLDescription("Whether this permission has expired")]
-    public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.UtcNow;
+    public bool IsExpired
+    {
+        get => ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.UtcNow;
+    }
 
     /// <summary>
     /// Check if the permission is valid (not deleted and not expired)
     /// </summary>
     [GraphQLType(typeof(NonNullType<BooleanType>))]
     [GraphQLDescription("Whether this permission is valid (not deleted and not expired)")]
-    public bool IsValid => !IsDeleted && !IsExpired;
+    public bool IsValid
+    {
+        get => !IsDeleted && !IsExpired;
+    }
 
     /// <summary>
     /// Check if this is a default permission for a specific tenant
     /// </summary>
     [GraphQLType(typeof(NonNullType<BooleanType>))]
     [GraphQLDescription("Whether this is a default permission for a specific tenant")]
-    public bool IsDefaultPermission => UserId == null && TenantId != null;
+    public bool IsDefaultPermission
+    {
+        get => UserId == null && TenantId != null;
+    }
 
     /// <summary>
     /// Check if this is a global default permission
     /// </summary>
     [GraphQLType(typeof(NonNullType<BooleanType>))]
     [GraphQLDescription("Whether this is a global default permission")]
-    public bool IsGlobalDefaultPermission => UserId == null && TenantId == null;
+    public bool IsGlobalDefaultPermission
+    {
+        get => UserId == null && TenantId == null;
+    }
 
     /// <summary>
     /// Check if this is a user-specific permission
     /// </summary>
     [GraphQLType(typeof(NonNullType<BooleanType>))]
     [GraphQLDescription("Whether this is a user-specific permission")]
-    public bool IsUserPermission => UserId != null;
+    public bool IsUserPermission
+    {
+        get => UserId != null;
+    }
 
     public bool HasPermission(PermissionType permission)
     {
