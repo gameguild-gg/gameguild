@@ -22,11 +22,10 @@ public class ProductService : IProductService
 
     // Basic CRUD operations
     public async Task<ProductEntity?> GetProductByIdAsync(Guid id)
-    {
-        return await _context.Products
+    {        return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
-            .Where(p => !p.IsDeleted)
+            .Where(p => p.DeletedAt == null)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
@@ -36,19 +35,17 @@ public class ProductService : IProductService
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
             .Include(p => p.SubscriptionPlans)
-            .Include(p => p.UserProducts)
-            .Include(p => p.PromoCodes)
+            .Include(p => p.UserProducts)            .Include(p => p.PromoCodes)
             .Include(p => p.ProductPrograms)
-            .Where(p => !p.IsDeleted)
+            .Where(p => p.DeletedAt == null)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<IEnumerable<ProductEntity>> GetProductsAsync(int skip = 0, int take = 50)
-    {
-        return await _context.Products
+    {        return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
-            .Where(p => !p.IsDeleted)
+            .Where(p => p.DeletedAt == null)
             .OrderBy(p => p.Name)
             .Skip(skip)
             .Take(take)
@@ -60,7 +57,7 @@ public class ProductService : IProductService
         return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
-            .Where(p => !p.IsDeleted && p.Type == type)
+            .Where(p => p.DeletedAt == null && p.Type == type)
             .OrderBy(p => p.Name)
             .Skip(skip)
             .Take(take)
@@ -72,7 +69,7 @@ public class ProductService : IProductService
         return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
-            .Where(p => !p.IsDeleted && p.Status == ContentStatus.Published && p.Visibility == Common.Entities.AccessLevel.Public)
+            .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == Common.Entities.AccessLevel.Public)
             .OrderBy(p => p.Name)
             .Skip(skip)
             .Take(take)
@@ -112,7 +109,7 @@ public class ProductService : IProductService
     public async Task<bool> ProductExistsAsync(Guid id)
     {
         return await _context.Products
-            .Where(p => !p.IsDeleted)
+            .Where(p => p.DeletedAt == null)
             .AnyAsync(p => p.Id == id);
     }
 
@@ -189,7 +186,7 @@ public class ProductService : IProductService
         return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
-            .Where(p => !p.IsDeleted && bundleItemIds.Contains(p.Id))
+            .Where(p => p.DeletedAt == null && bundleItemIds.Contains(p.Id))
             .OrderBy(p => p.Name)
             .ToListAsync();
     }
@@ -258,7 +255,7 @@ public class ProductService : IProductService
     public async Task<ProductPricing?> GetCurrentPricingAsync(Guid productId)
     {
         return await _context.ProductPricings
-            .Where(pp => !pp.IsDeleted && pp.ProductId == productId && pp.IsDefault)
+            .Where(pp => pp.DeletedAt == null && pp.ProductId == productId && pp.IsDefault)
             .OrderByDescending(pp => pp.CreatedAt)
             .FirstOrDefaultAsync();
     }
@@ -266,7 +263,7 @@ public class ProductService : IProductService
     public async Task<IEnumerable<ProductPricing>> GetPricingHistoryAsync(Guid productId)
     {
         return await _context.ProductPricings
-            .Where(pp => !pp.IsDeleted && pp.ProductId == productId)
+            .Where(pp => pp.DeletedAt == null && pp.ProductId == productId)
             .OrderByDescending(pp => pp.CreatedAt)
             .ToListAsync();
     }
@@ -305,7 +302,7 @@ public class ProductService : IProductService
     public async Task<ProductPricing> UpdatePricingAsync(Guid pricingId, decimal basePrice)
     {
         ProductPricing? pricing = await _context.ProductPricings
-            .Where(pp => !pp.IsDeleted)
+            .Where(pp => pp.DeletedAt == null)
             .FirstOrDefaultAsync(pp => pp.Id == pricingId);
 
         if (pricing == null)
@@ -531,7 +528,7 @@ public class ProductService : IProductService
     // Analytics and statistics
     public async Task<int> GetProductCountAsync(ProductType? type = null, Common.Entities.AccessLevel? visibility = null)
     {
-        var query = _context.Products.Where(p => !p.IsDeleted);
+        var query = _context.Products.Where(p => p.DeletedAt == null);
 
         if (type.HasValue)
             query = query.Where(p => p.Type == type.Value);
@@ -567,7 +564,7 @@ public class ProductService : IProductService
         return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
-            .Where(p => !p.IsDeleted && p.Status == ContentStatus.Published)
+            .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published)
             .OrderByDescending(p => p.UserProducts.Count(up => !up.IsDeleted && up.AccessStatus == ProductAccessStatus.Active))
             .Take(count)
             .ToListAsync();
@@ -578,7 +575,7 @@ public class ProductService : IProductService
         return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
-            .Where(p => !p.IsDeleted && p.Status == ContentStatus.Published)
+            .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published)
             .OrderByDescending(p => p.CreatedAt)
             .Take(count)
             .ToListAsync();
@@ -593,7 +590,7 @@ public class ProductService : IProductService
         return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
-            .Where(p => !p.IsDeleted &&
+            .Where(p => p.DeletedAt == null &&
                         (p.Name.Contains(searchTerm) ||
                          (p.ShortDescription != null && p.ShortDescription.Contains(searchTerm)))
             )
@@ -608,7 +605,7 @@ public class ProductService : IProductService
         return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
-            .Where(p => !p.IsDeleted && p.CreatorId == creatorId)
+            .Where(p => p.DeletedAt == null && p.CreatorId == creatorId)
             .OrderByDescending(p => p.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -619,7 +616,7 @@ public class ProductService : IProductService
         string currency = "USD", int skip = 0, int take = 50)
     {
         var productIds = await _context.ProductPricings
-            .Where(pp => !pp.IsDeleted &&
+            .Where(pp => pp.DeletedAt == null &&
                          pp.IsDefault &&
                          pp.Currency == currency &&
                          pp.BasePrice >= minPrice &&
@@ -631,7 +628,7 @@ public class ProductService : IProductService
         return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
-            .Where(p => !p.IsDeleted && productIds.Contains(p.Id))
+            .Where(p => p.DeletedAt == null && productIds.Contains(p.Id))
             .OrderBy(p => p.Name)
             .Skip(skip)
             .Take(take)

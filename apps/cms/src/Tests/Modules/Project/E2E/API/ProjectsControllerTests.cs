@@ -7,6 +7,7 @@ using GameGuild.Data;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 using GameGuild.Modules.Project.Models;
+using GameGuild.Tests.Fixtures;
 
 namespace GameGuild.Tests.Integration.Project.Controllers;
 
@@ -14,41 +15,19 @@ namespace GameGuild.Tests.Integration.Project.Controllers;
 /// Integration tests for ProjectsController
 /// Tests HTTP endpoints with real database and full application stack
 /// </summary>
-public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
+public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>, IDisposable
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly TestWebApplicationFactory _factory;
     private readonly HttpClient _client;
     private readonly ApplicationDbContext _context;
 
-    public ProjectsControllerTests(WebApplicationFactory<Program> factory)
+    public ProjectsControllerTests(TestWebApplicationFactory factory)
     {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                // Remove the existing DbContext registration
-                var descriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                if (descriptor != null)
-                {
-                    services.Remove(descriptor);
-                }
-
-                // Add in-memory database for testing
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase($"TestDatabase_{Guid.NewGuid()}");
-                });
-
-                // Set environment variable for in-memory database
-                Environment.SetEnvironmentVariable("USE_IN_MEMORY_DB", "true");
-            });
-        });
-
-        _client = _factory.CreateClient();
+        _factory = factory;
+        _client = factory.CreateClient();
 
         // Get database context for test setup
-        var scope = _factory.Services.CreateScope();
+        using IServiceScope scope = _factory.Services.CreateScope();
         _context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     }
 
@@ -56,11 +35,13 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     public async Task GetProjects_ShouldReturnEmptyArray_WhenNoProjects()
     {
         // Act
-        var response = await _client.GetAsync("/projects");
+        HttpResponseMessage response = await _client.GetAsync("/projects");
 
+        // Debug: Check what we actually got
+        string content = await response.Content.ReadAsStringAsync();
+        
         // Assert
-        Assert.True(response.IsSuccessStatusCode);
-        var content = await response.Content.ReadAsStringAsync();
+        Assert.True(response.IsSuccessStatusCode, $"Expected success but got {response.StatusCode}. Content: {content}");
         var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -98,11 +79,11 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
         await _context.SaveChangesAsync();
 
         // Act
-        var response = await _client.GetAsync("/projects");
+        HttpResponseMessage response = await _client.GetAsync("/projects");
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
-        var content = await response.Content.ReadAsStringAsync();
+        string content = await response.Content.ReadAsStringAsync();
         var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -131,16 +112,16 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
             RepositoryUrl = "https://github.com/test/repo"
         };
 
-        var json = JsonSerializer.Serialize(projectData);
+        string json = JsonSerializer.Serialize(projectData);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/projects", content);
+        HttpResponseMessage response = await _client.PostAsync("/projects", content);
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var responseContent = await response.Content.ReadAsStringAsync();
+        string responseContent = await response.Content.ReadAsStringAsync();
         var createdProject = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project>(responseContent, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -152,7 +133,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
         Assert.NotEqual(Guid.Empty, createdProject.Id);
 
         // Verify in database
-        var dbProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == createdProject.Id);
+        GameGuild.Modules.Project.Models.Project? dbProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == createdProject.Id);
         Assert.NotNull(dbProject);
         Assert.Equal("New Test Project", dbProject.Title);
     }
@@ -166,11 +147,11 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
             Description = "This is a test project without title"
         };
 
-        var json = JsonSerializer.Serialize(projectData);
+        string json = JsonSerializer.Serialize(projectData);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/projects", content);
+        HttpResponseMessage response = await _client.PostAsync("/projects", content);
 
         // Assert
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
@@ -192,12 +173,12 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
         await _context.SaveChangesAsync();
 
         // Act
-        var response = await _client.GetAsync($"/projects/{project.Id}");
+        HttpResponseMessage response = await _client.GetAsync($"/projects/{project.Id}");
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var content = await response.Content.ReadAsStringAsync();
+        string content = await response.Content.ReadAsStringAsync();
         var returnedProject = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -215,7 +196,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
         var nonExistentId = Guid.NewGuid();
 
         // Act
-        var response = await _client.GetAsync($"/projects/{nonExistentId}");
+        HttpResponseMessage response = await _client.GetAsync($"/projects/{nonExistentId}");
 
         // Assert
         Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
@@ -236,15 +217,15 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
         _context.Projects.Add(project);
         await _context.SaveChangesAsync();
 
-        var expectedSlug = project.Slug; // This should be "slug-test-project"
+        string expectedSlug = project.Slug; // This should be "slug-test-project"
 
         // Act
-        var response = await _client.GetAsync($"/projects/slug/{expectedSlug}");
+        HttpResponseMessage response = await _client.GetAsync($"/projects/slug/{expectedSlug}");
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var content = await response.Content.ReadAsStringAsync();
+        string content = await response.Content.ReadAsStringAsync();
         var returnedProject = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -259,7 +240,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     public async Task GetProjectBySlug_ShouldReturnNotFound_WhenNotExists()
     {
         // Act
-        var response = await _client.GetAsync("/projects/slug/non-existent-slug");
+        HttpResponseMessage response = await _client.GetAsync("/projects/slug/non-existent-slug");
 
         // Assert
         Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
@@ -299,12 +280,12 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
         await _context.SaveChangesAsync();
 
         // Act
-        var response = await _client.GetAsync($"/projects/category/{categoryId}");
+        HttpResponseMessage response = await _client.GetAsync($"/projects/category/{categoryId}");
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var content = await response.Content.ReadAsStringAsync();
+        string content = await response.Content.ReadAsStringAsync();
         var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -339,12 +320,12 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
         await _context.SaveChangesAsync();
 
         // Act
-        var response = await _client.GetAsync($"/projects/status/{ContentStatus.Published}");
+        HttpResponseMessage response = await _client.GetAsync($"/projects/status/{ContentStatus.Published}");
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var content = await response.Content.ReadAsStringAsync();
+        string content = await response.Content.ReadAsStringAsync();
         var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -384,12 +365,12 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
         await _context.SaveChangesAsync();
 
         // Act
-        var response = await _client.GetAsync("/projects/public");
+        HttpResponseMessage response = await _client.GetAsync("/projects/public");
 
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        var content = await response.Content.ReadAsStringAsync();
+        string content = await response.Content.ReadAsStringAsync();
         var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true

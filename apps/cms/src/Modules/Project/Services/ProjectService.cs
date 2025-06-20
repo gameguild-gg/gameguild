@@ -19,7 +19,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
         return await context.Projects
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
-            .Where(p => !p.IsDeleted)
+            .Where(p => p.DeletedAt == null)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
@@ -43,7 +43,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
                 .ThenInclude(f => f.User)
             .Include(p => p.JamSubmissions)
                 .ThenInclude(js => js.Jam)
-            .Where(p => !p.IsDeleted)
+            .Where(p => p.DeletedAt == null)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
@@ -52,7 +52,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
         return await context.Projects
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
-            .Where(p => !p.IsDeleted)
+            .Where(p => p.DeletedAt == null)
             .FirstOrDefaultAsync(p => p.Slug == slug);
     }
 
@@ -61,7 +61,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
         return await context.Projects
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
-            .Where(p => !p.IsDeleted)
+            .Where(p => p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -73,7 +73,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
         return await context.Projects
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
-            .Where(p => !p.IsDeleted)
+            .Where(p => p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
@@ -87,7 +87,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
         return await context.Projects
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
-            .Where(p => p.CategoryId == categoryId && !p.IsDeleted)
+            .Where(p => p.CategoryId == categoryId && p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
@@ -97,7 +97,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
         return await context.Projects
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
-            .Where(p => p.CreatedById == creatorId && !p.IsDeleted)
+            .Where(p => p.CreatedById == creatorId && p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
@@ -107,7 +107,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
         return await context.Projects
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
-            .Where(p => p.Status == status && !p.IsDeleted)
+            .Where(p => p.Status == status && p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
@@ -117,7 +117,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
         return await context.Projects
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
-            .Where(p => p.Type == type && !p.IsDeleted)
+            .Where(p => p.Type == type && p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
@@ -127,7 +127,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
         return await context.Projects
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
-            .Where(p => p.DevelopmentStatus == status && !p.IsDeleted)
+            .Where(p => p.DevelopmentStatus == status && p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
@@ -139,7 +139,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
             .Include(p => p.Category)
             .Where(p => p.Status == ContentStatus.Published &&
                        p.Visibility == AccessLevel.Public &&
-                       !p.IsDeleted)
+                       p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -148,12 +148,12 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     public async Task<IEnumerable<Models.Project>> SearchProjectsAsync(string searchTerm, int skip = 0, int take = 50)
     {
-        var lowerSearchTerm = searchTerm.ToLower();
+        string lowerSearchTerm = searchTerm.ToLower();
 
         return await context.Projects
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
-            .Where(p => !p.IsDeleted &&
+            .Where(p => p.DeletedAt == null &&
                        (p.Title.ToLower().Contains(lowerSearchTerm) ||
                         (p.Description != null && p.Description.ToLower().Contains(lowerSearchTerm)) ||
                         (p.ShortDescription != null && p.ShortDescription.ToLower().Contains(lowerSearchTerm))))
@@ -193,7 +193,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     public async Task<Models.Project> UpdateProjectAsync(Models.Project project)
     {
-        var existingProject = await GetProjectByIdAsync(project.Id);
+        Models.Project? existingProject = await GetProjectByIdAsync(project.Id);
         if (existingProject == null)
             throw new InvalidOperationException($"Project with ID {project.Id} not found");
 
@@ -226,7 +226,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     public async Task<bool> DeleteProjectAsync(Guid id)
     {
-        var project = await GetProjectByIdAsync(id);
+        Models.Project? project = await GetProjectByIdAsync(id);
         if (project == null)
             return false;
 
@@ -241,8 +241,8 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     public async Task<bool> RestoreProjectAsync(Guid id)
     {
-        var project = await context.Projects
-            .FirstOrDefaultAsync(p => p.Id == id && p.IsDeleted);
+        Models.Project? project = await context.Projects
+            .FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt != null);
 
         if (project == null)
             return false;
@@ -264,7 +264,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
         return await context.Projects
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
-            .Where(p => p.IsDeleted)
+            .Where(p => p.DeletedAt != null)
             .OrderByDescending(p => p.DeletedAt)
             .ToListAsync();
     }
@@ -354,7 +354,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     public async Task<bool> RemoveTeamFromProjectAsync(Guid projectId, Guid teamId)
     {
-        var projectTeam = await context.ProjectTeams
+        ProjectTeam? projectTeam = await context.ProjectTeams
             .FirstOrDefaultAsync(pt => pt.ProjectId == projectId && pt.TeamId == teamId);
 
         if (projectTeam == null)
@@ -382,7 +382,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
                 .ThenInclude(p => p.CreatedBy)
             .Include(pt => pt.Project)
                 .ThenInclude(p => p.Category)
-            .Where(pt => pt.TeamId == teamId && pt.IsActive && !pt.Project.IsDeleted)
+            .Where(pt => pt.TeamId == teamId && pt.IsActive && pt.Project.DeletedAt == null)
             .Select(pt => pt.Project)
             .ToListAsync();
     }
@@ -394,7 +394,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
     public async Task<ProjectFollower> FollowProjectAsync(Guid projectId, Guid userId, bool emailNotifications = true, bool pushNotifications = true)
     {
         // Check if already following
-        var existing = await context.ProjectFollowers
+        ProjectFollower? existing = await context.ProjectFollowers
             .FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
 
         if (existing != null)
@@ -416,7 +416,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     public async Task<bool> UnfollowProjectAsync(Guid projectId, Guid userId)
     {
-        var follower = await context.ProjectFollowers
+        ProjectFollower? follower = await context.ProjectFollowers
             .FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
 
         if (follower == null)
@@ -449,7 +449,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
                 .ThenInclude(p => p.CreatedBy)
             .Include(pf => pf.Project)
                 .ThenInclude(p => p.Category)
-            .Where(pf => pf.UserId == userId && !pf.Project.IsDeleted)
+            .Where(pf => pf.UserId == userId && pf.Project.DeletedAt == null)
             .Select(pf => pf.Project)
             .ToListAsync();
     }
@@ -461,7 +461,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
     public async Task<ProjectFeedback> AddProjectFeedbackAsync(Guid projectId, Guid userId, int rating, string title, string? content = null)
     {
         // Check if the user already has feedback for this project
-        var existing = await context.ProjectFeedbacks
+        ProjectFeedback? existing = await context.ProjectFeedbacks
             .FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
 
         if (existing != null)
@@ -492,7 +492,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     public async Task<ProjectFeedback> UpdateProjectFeedbackAsync(Guid feedbackId, int rating, string title, string? content = null)
     {
-        var feedback = await context.ProjectFeedbacks.FindAsync(feedbackId);
+        ProjectFeedback? feedback = await context.ProjectFeedbacks.FindAsync(feedbackId);
         if (feedback == null)
             throw new ArgumentException("Feedback not found", nameof(feedbackId));
 
@@ -507,7 +507,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     public async Task<bool> DeleteProjectFeedbackAsync(Guid feedbackId)
     {
-        var feedback = await context.ProjectFeedbacks.FindAsync(feedbackId);
+        ProjectFeedback? feedback = await context.ProjectFeedbacks.FindAsync(feedbackId);
         if (feedback == null)
             return false;
 
@@ -541,7 +541,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
     public async Task<ProjectJamSubmission> SubmitProjectToJamAsync(Guid projectId, Guid jamId, string? submissionNotes = null)
     {
         // Check if already submitted
-        var existing = await context.ProjectJamSubmissions
+        ProjectJamSubmission? existing = await context.ProjectJamSubmissions
             .FirstOrDefaultAsync(pjs => pjs.ProjectId == projectId && pjs.JamId == jamId);
 
         if (existing != null)
@@ -563,7 +563,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     public async Task<bool> RemoveProjectFromJamAsync(Guid projectId, Guid jamId)
     {
-        var submission = await context.ProjectJamSubmissions
+        ProjectJamSubmission? submission = await context.ProjectJamSubmissions
             .FirstOrDefaultAsync(pjs => pjs.ProjectId == projectId && pjs.JamId == jamId);
 
         if (submission == null)
@@ -590,7 +590,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
                 .ThenInclude(p => p.CreatedBy)
             .Include(pjs => pjs.Project)
                 .ThenInclude(p => p.Category)
-            .Where(pjs => pjs.JamId == jamId && !pjs.Project.IsDeleted)
+            .Where(pjs => pjs.JamId == jamId && pjs.Project.DeletedAt == null)
             .Select(pjs => pjs.Project)
             .ToListAsync();
     }
@@ -604,7 +604,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
         return await context.Projects
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
-            .Where(p => p.TenantId == tenantId && !p.IsDeleted)
+            .Where(p => p.TenantId == tenantId && p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -613,7 +613,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     public async Task<bool> MoveProjectToTenantAsync(Guid projectId, Guid? tenantId)
     {
-        var project = await context.Projects.FindAsync(projectId);
+        Models.Project? project = await context.Projects.FindAsync(projectId);
         if (project == null)
             return false;
 
@@ -629,7 +629,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     public async Task<ProjectStatistics> GetProjectStatisticsAsync(Guid projectId)
     {
-        var project = await context.Projects
+        Models.Project? project = await context.Projects
             .Include(p => p.Followers)
             .Include(p => p.Feedbacks)
             .Include(p => p.Teams)
@@ -641,7 +641,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
         if (project == null)
             throw new ArgumentException("Project not found", nameof(projectId));
 
-        var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+        DateTime thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
 
         return new ProjectStatistics
         {
@@ -665,7 +665,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     public async Task<IEnumerable<Models.Project>> GetTrendingProjectsAsync(int take = 10, TimeSpan? timeWindow = null)
     {
-        var cutoffDate = DateTime.UtcNow.Subtract(timeWindow ?? TimeSpan.FromDays(7));
+        DateTime cutoffDate = DateTime.UtcNow.Subtract(timeWindow ?? TimeSpan.FromDays(7));
 
         var projects = await context.Projects
             .Include(p => p.CreatedBy)
@@ -673,7 +673,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
             .Include(p => p.Followers)
             .Include(p => p.Feedbacks)
             .Include(p => p.Releases)
-            .Where(p => !p.IsDeleted && p.Status == ContentStatus.Published)
+            .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published)
             .ToListAsync();
 
         return projects
@@ -688,7 +688,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
             .Include(p => p.Releases)
-            .Where(p => !p.IsDeleted && p.Status == ContentStatus.Published)
+            .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published)
             .OrderByDescending(p => p.Releases.Sum(r => r.DownloadCount))
             .ThenByDescending(p => p.Followers.Count)
             .Take(take)
@@ -697,10 +697,10 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     private static decimal CalculateTrendingScore(Models.Project project, DateTime cutoffDate)
     {
-        var recentFollowers = project.Followers.Count(f => f.FollowedAt >= cutoffDate);
-        var recentFeedback = project.Feedbacks.Count(f => f.CreatedAt >= cutoffDate);
-        var totalDownloads = project.Releases.Sum(r => r.DownloadCount);
-        var averageRating = project.Feedbacks.Any() 
+        int recentFollowers = project.Followers.Count(f => f.FollowedAt >= cutoffDate);
+        int recentFeedback = project.Feedbacks.Count(f => f.CreatedAt >= cutoffDate);
+        int totalDownloads = project.Releases.Sum(r => r.DownloadCount);
+        double averageRating = project.Feedbacks.Any()
             ? project.Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating) 
             : 0;
 

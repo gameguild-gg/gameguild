@@ -19,7 +19,7 @@ public class ProjectsController : ControllerBase
 
     // GET: projects
     [HttpGet]
-    [Public]
+    [RequireResourcePermission<Models.Project>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetProjects()
     {
         var projects = await _projectService.GetAllProjectsAsync();
@@ -31,7 +31,7 @@ public class ProjectsController : ControllerBase
     [RequireResourcePermission<Models.Project>(PermissionType.Read)]
     public async Task<ActionResult<Models.Project>> GetProject(Guid id)
     {
-        var project = await _projectService.GetProjectByIdAsync(id);
+        Models.Project? project = await _projectService.GetProjectByIdAsync(id);
         if (project == null)
         {
             return NotFound();
@@ -44,7 +44,7 @@ public class ProjectsController : ControllerBase
     [Public]
     public async Task<ActionResult<Models.Project>> GetProjectBySlug(string slug)
     {
-        var project = await _projectService.GetProjectBySlugAsync(slug);
+        Models.Project? project = await _projectService.GetProjectBySlugAsync(slug);
         if (project == null)
         {
             return NotFound();
@@ -54,6 +54,7 @@ public class ProjectsController : ControllerBase
 
     // GET: projects/category/{categoryId}
     [HttpGet("category/{categoryId}")]
+    [RequireResourcePermission<Models.Project>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetProjectsByCategory(Guid categoryId)
     {
         var projects = await _projectService.GetProjectsByCategoryAsync(categoryId);
@@ -62,6 +63,7 @@ public class ProjectsController : ControllerBase
 
     // GET: projects/creator/{creatorId}
     [HttpGet("creator/{creatorId}")]
+    [RequireResourcePermission<Models.Project>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetProjectsByCreator(Guid creatorId)
     {
         var projects = await _projectService.GetProjectsByCreatorAsync(creatorId);
@@ -70,6 +72,7 @@ public class ProjectsController : ControllerBase
 
     // GET: projects/status/{status}
     [HttpGet("status/{status}")]
+    [RequireResourcePermission<Models.Project>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetProjectsByStatus(ContentStatus status)
     {
         var projects = await _projectService.GetProjectsByStatusAsync(status);
@@ -78,7 +81,7 @@ public class ProjectsController : ControllerBase
 
     // POST: projects
     [HttpPost]
-    [Public]
+    [RequireResourcePermission<Models.Project>(PermissionType.Create)]
     public async Task<ActionResult<Models.Project>> CreateProject([FromBody] Models.Project project)
     {
         if (!ModelState.IsValid)
@@ -86,7 +89,7 @@ public class ProjectsController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var createdProject = await _projectService.CreateProjectAsync(project);
+        Models.Project createdProject = await _projectService.CreateProjectAsync(project);
         return CreatedAtAction(nameof(GetProject), new { id = createdProject.Id }, createdProject);
     }
 
@@ -107,7 +110,7 @@ public class ProjectsController : ControllerBase
 
         try
         {
-            var updatedProject = await _projectService.UpdateProjectAsync(project);
+            Models.Project updatedProject = await _projectService.UpdateProjectAsync(project);
             return Ok(updatedProject);
         }
         catch (InvalidOperationException ex)
@@ -121,7 +124,7 @@ public class ProjectsController : ControllerBase
     [RequireResourcePermission<Models.Project>(PermissionType.Delete)]
     public async Task<ActionResult> DeleteProject(Guid id)
     {
-        var success = await _projectService.DeleteProjectAsync(id);
+        bool success = await _projectService.DeleteProjectAsync(id);
         if (!success)
         {
             return NotFound();
@@ -134,7 +137,7 @@ public class ProjectsController : ControllerBase
     [RequireResourcePermission<Models.Project>(PermissionType.Restore)]
     public async Task<ActionResult> RestoreProject(Guid id)
     {
-        var success = await _projectService.RestoreProjectAsync(id);
+        bool success = await _projectService.RestoreProjectAsync(id);
         if (!success)
         {
             return NotFound();
@@ -144,6 +147,7 @@ public class ProjectsController : ControllerBase
 
     // GET: projects/deleted
     [HttpGet("deleted")]
+    [RequireResourcePermission<Models.Project>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetDeletedProjects()
     {
         var projects = await _projectService.GetDeletedProjectsAsync();
@@ -152,6 +156,7 @@ public class ProjectsController : ControllerBase
 
     // GET: projects/public (public access for web app integration)
     [HttpGet("public")]
+    [Public]
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetPublicProjects()
     {
         // Only return published projects for public access
