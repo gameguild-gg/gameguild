@@ -29,6 +29,14 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddProjectModule(this IServiceCollection services)
+    {
+        // Register Project module services
+        services.AddScoped<Modules.Project.Services.IProjectService, Modules.Project.Services.ProjectService>();
+
+        return services;
+    }
+
     public static IServiceCollection AddCommonServices(this IServiceCollection services)
     {
         // Add logging

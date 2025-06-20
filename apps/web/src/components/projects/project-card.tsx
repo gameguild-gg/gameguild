@@ -1,9 +1,9 @@
 import { Clock, PauseCircle, Rocket } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import Link from 'next/link';
-import { Project } from '@/components/projects/actions';
+import { ProjectListItem } from '@/components/projects/actions';
 
-function getStatusColor(status: Project['status']): string {
+function getStatusColor(status: ProjectListItem['status']): string {
   switch (status) {
     case 'active':
       return 'bg-green-500';
@@ -18,7 +18,7 @@ function getStatusColor(status: Project['status']): string {
   }
 }
 
-type ProjectCardProps = Project;
+type ProjectCardProps = ProjectListItem;
 
 function getStatusIcon(status: 'not-started' | 'in-progress' | 'active' | 'on-hold') {
   switch (status) {
@@ -40,9 +40,8 @@ export function ProjectCard({ id, name, status, createdAt, updatedAt }: ProjectC
       e.preventDefault();
     }
   };
-
   return (
-    <Link href={`/projects/${id}`} className="block" onClick={handleClick}>
+    <Link href={`/dashboard/projects/${id}`} className="block" onClick={handleClick}>
       <HoverCard>
         <HoverCardTrigger asChild>
           <div className="h-full p-4 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer">

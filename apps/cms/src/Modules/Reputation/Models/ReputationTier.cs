@@ -120,5 +120,8 @@ public class ReputationTier : ResourceBase, ITenantable
     /// <summary>
     /// Indicates whether this reputation tier is accessible across all tenants
     /// </summary>
-    public new bool IsGlobal => TenantId == null;
+    public new bool IsGlobal
+    {
+        get => TenantId == null;
+    }
 }
