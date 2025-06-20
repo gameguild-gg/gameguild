@@ -24,7 +24,7 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
     {
         Models.UserProfile? userProfile = await _context.Resources
             .OfType<Models.UserProfile>()
-            .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && !up.IsDeleted, cancellationToken);
+            .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 
         if (userProfile == null)
         {

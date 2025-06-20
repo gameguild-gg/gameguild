@@ -66,7 +66,7 @@ public class ProjectDACIntegrationTests : IDisposable
             .ReturnsAsync(true);
 
         // Act
-        var hasPermission = await CheckProjectPermissionHierarchy(
+        bool hasPermission = await CheckProjectPermissionHierarchy(
             _mockPermissionService.Object,
             userId,
             tenantId,
@@ -78,7 +78,7 @@ public class ProjectDACIntegrationTests : IDisposable
         Assert.True(hasPermission); // "User should have edit permission at resource level"
 
         // Verify the permission exists in database
-        var dbPermission = await _context.ProjectPermissions
+        ProjectPermission? dbPermission = await _context.ProjectPermissions
             .FirstOrDefaultAsync(p => p.UserId == userId && p.ResourceId == projectId);
 
         Assert.NotNull(dbPermission);
@@ -115,7 +115,7 @@ public class ProjectDACIntegrationTests : IDisposable
             .ReturnsAsync(true); // Has content-type permission
 
         // Act
-        var hasPermission = await CheckProjectPermissionHierarchy(
+        bool hasPermission = await CheckProjectPermissionHierarchy(
             _mockPermissionService.Object,
             userId,
             tenantId,
@@ -166,7 +166,7 @@ public class ProjectDACIntegrationTests : IDisposable
             .ReturnsAsync(true); // Has tenant-level permission
 
         // Act
-        var hasPermission = await CheckProjectPermissionHierarchy(
+        bool hasPermission = await CheckProjectPermissionHierarchy(
             _mockPermissionService.Object,
             userId,
             tenantId,
@@ -217,7 +217,7 @@ public class ProjectDACIntegrationTests : IDisposable
             .ReturnsAsync(false);
 
         // Act
-        var hasPermission = await CheckProjectPermissionHierarchy(
+        bool hasPermission = await CheckProjectPermissionHierarchy(
             _mockPermissionService.Object,
             userId,
             tenantId,
@@ -271,7 +271,7 @@ public class ProjectDACIntegrationTests : IDisposable
             .ReturnsAsync(true); // Valid content-type permission
 
         // Act
-        var hasPermission = await CheckProjectPermissionHierarchy(
+        bool hasPermission = await CheckProjectPermissionHierarchy(
             _mockPermissionService.Object,
             userId,
             tenantId,
@@ -283,7 +283,7 @@ public class ProjectDACIntegrationTests : IDisposable
         Assert.True(hasPermission); // "Should fallback to content-type permission when resource permission is expired"
 
         // Verify the expired permission is not valid
-        var dbPermission = await _context.ProjectPermissions
+        ProjectPermission? dbPermission = await _context.ProjectPermissions
             .FirstOrDefaultAsync(p => p.UserId == userId && p.ResourceId == projectId);
 
         Assert.NotNull(dbPermission);
@@ -326,7 +326,7 @@ public class ProjectDACIntegrationTests : IDisposable
             .ReturnsAsync(true);
 
         // Act
-        var hasPermission = await CheckProjectPermissionHierarchy(
+        bool hasPermission = await CheckProjectPermissionHierarchy(
             _mockPermissionService.Object,
             userId,
             tenantId,
@@ -338,7 +338,7 @@ public class ProjectDACIntegrationTests : IDisposable
         Assert.True(hasPermission); // $"User should have {permissionType} permission"
 
         // Verify specific permission properties
-        var dbPermission = await _context.ProjectPermissions
+        ProjectPermission? dbPermission = await _context.ProjectPermissions
             .FirstOrDefaultAsync(p => p.UserId == userId && p.ResourceId == projectId);
 
         Assert.NotNull(dbPermission);
@@ -443,7 +443,7 @@ public class ProjectDACIntegrationTests : IDisposable
             .ReturnsAsync(false);
 
         // Act & Assert
-        var user1CanEditProject1 = await CheckProjectPermissionHierarchy(
+        bool user1CanEditProject1 = await CheckProjectPermissionHierarchy(
             _mockPermissionService.Object,
             user1Id,
             tenantId,
@@ -452,7 +452,7 @@ public class ProjectDACIntegrationTests : IDisposable
         );
         Assert.True(user1CanEditProject1); // "User1 should be able to edit Project1"
 
-        var user1CanEditProject2 = await CheckProjectPermissionHierarchy(
+        bool user1CanEditProject2 = await CheckProjectPermissionHierarchy(
             _mockPermissionService.Object,
             user1Id,
             tenantId,
@@ -461,7 +461,7 @@ public class ProjectDACIntegrationTests : IDisposable
         );
         Assert.False(user1CanEditProject2); // "User1 should not be able to edit Project2"
 
-        var user2CanReadProject2 = await CheckProjectPermissionHierarchy(
+        bool user2CanReadProject2 = await CheckProjectPermissionHierarchy(
             _mockPermissionService.Object,
             user2Id,
             tenantId,
@@ -470,7 +470,7 @@ public class ProjectDACIntegrationTests : IDisposable
         );
         Assert.True(user2CanReadProject2); // "User2 should be able to read Project2"
 
-        var user2CanReadProject1 = await CheckProjectPermissionHierarchy(
+        bool user2CanReadProject1 = await CheckProjectPermissionHierarchy(
             _mockPermissionService.Object,
             user2Id,
             tenantId,

@@ -737,9 +737,9 @@ public class PermissionService : IPermissionService
         var newResourceIds = resourceIds.Except(existingResourceIds).ToArray();
 
         // Update existing permissions
-        foreach (var existingPermission in existingPermissions)
+        foreach (TPermission existingPermission in existingPermissions)
         {
-            foreach (var permission in permissions)
+            foreach (PermissionType permission in permissions)
             {
                 existingPermission.AddPermission(permission);
             }
@@ -748,7 +748,7 @@ public class PermissionService : IPermissionService
 
         // Create new permissions for resources that don't have any
         var newPermissions = new List<TPermission>();
-        foreach (var resourceId in newResourceIds)
+        foreach (Guid resourceId in newResourceIds)
         {
             var resourcePermission = new TPermission
             {
@@ -757,7 +757,7 @@ public class PermissionService : IPermissionService
                 ResourceId = resourceId
             };
 
-            foreach (var permission in permissions)
+            foreach (PermissionType permission in permissions)
             {
                 resourcePermission.AddPermission(permission);
             }
