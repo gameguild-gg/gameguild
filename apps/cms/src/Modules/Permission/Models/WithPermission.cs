@@ -261,7 +261,9 @@ public class WithPermissions : BaseEntity
     {
         get;
         set;
-    }    /// <summary>
+    }
+
+    /// <summary>
     /// Navigation property to the User entity
     /// </summary>
     [GraphQLIgnore]
@@ -281,7 +283,9 @@ public class WithPermissions : BaseEntity
     {
         get;
         set;
-    }    /// <summary>
+    }
+
+    /// <summary>
     /// Navigation property to the Tenant entity
     /// </summary>
     [GraphQLIgnore]

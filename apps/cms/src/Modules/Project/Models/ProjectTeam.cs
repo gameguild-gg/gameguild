@@ -17,60 +17,104 @@ public class ProjectTeam : ResourceBase
     /// <summary>
     /// Project the team is working on
     /// </summary>
-    public Guid ProjectId { get; set; }
+    public Guid ProjectId
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Navigation property to project
     /// </summary>
-    public virtual Project Project { get; set; } = null!;
+    public virtual Project Project
+    {
+        get;
+        set;
+    } = null!;
 
     /// <summary>
     /// Team working on the project
     /// </summary>
-    public Guid TeamId { get; set; }
+    public Guid TeamId
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Navigation property to team
     /// </summary>
-    public virtual GameGuild.Models.Team Team { get; set; } = null!;
+    public virtual GameGuild.Models.Team Team
+    {
+        get;
+        set;
+    } = null!;
 
     /// <summary>
     /// Role of the team in the project
     /// </summary>
     [Required]
     [MaxLength(100)]
-    public string Role { get; set; } = "Development";
+    public string Role
+    {
+        get;
+        set;
+    } = "Development";
 
     /// <summary>
     /// Date when the team was assigned to the project
     /// </summary>
-    public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
+    public DateTime AssignedAt
+    {
+        get;
+        set;
+    } = DateTime.UtcNow;
 
     /// <summary>
     /// Date when the team's involvement ended (if applicable)
     /// </summary>
-    public DateTime? EndedAt { get; set; }
+    public DateTime? EndedAt
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Whether the team is currently active on this project
     /// </summary>
-    public bool IsActive { get; set; } = true;
+    public bool IsActive
+    {
+        get;
+        set;
+    } = true;
 
     /// <summary>
     /// Permissions granted to this team for the project
     /// </summary>
     [MaxLength(1000)]
-    public string? Permissions { get; set; }
+    public string? Permissions
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Notes about the team's involvement
     /// </summary>
     [MaxLength(1000)]
-    public string? Notes { get; set; }
+    public string? Notes
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Team's contribution percentage (0-100)
     /// </summary>
     [Range(0, 100)]
-    public decimal ContributionPercentage { get; set; } = 0;
+    public decimal ContributionPercentage
+    {
+        get;
+        set;
+    } = 0;
 }

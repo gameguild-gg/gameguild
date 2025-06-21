@@ -18,7 +18,11 @@ public class ProjectRelease : ResourceBase
     /// <summary>
     /// Project this release belongs to
     /// </summary>
-    public Guid ProjectId { get; set; }
+    public Guid ProjectId
+    {
+        get;
+        set;
+    }
 
     // Navigation property commented out temporarily to resolve circular compilation
     // /// <summary>
@@ -31,7 +35,11 @@ public class ProjectRelease : ResourceBase
     /// </summary>
     [Required]
     [MaxLength(50)]
-    public string ReleaseVersion { get; set; } = string.Empty;
+    public string ReleaseVersion
+    {
+        get;
+        set;
+    } = string.Empty;
 
     // Title and Description are inherited from ResourceBase
     // We can override them if needed with different attributes
@@ -39,77 +47,133 @@ public class ProjectRelease : ResourceBase
     /// <summary>
     /// Date when this version was released
     /// </summary>
-    public DateTime ReleasedAt { get; set; } = DateTime.UtcNow;
+    public DateTime ReleasedAt
+    {
+        get;
+        set;
+    } = DateTime.UtcNow;
 
     /// <summary>
     /// Whether this is the latest release
     /// </summary>
-    public bool IsLatest { get; set; } = false;
+    public bool IsLatest
+    {
+        get;
+        set;
+    } = false;
 
     /// <summary>
     /// Whether this is a pre-release (alpha, beta, etc.)
     /// </summary>
-    public bool IsPrerelease { get; set; } = false;
+    public bool IsPrerelease
+    {
+        get;
+        set;
+    } = false;
 
     /// <summary>
     /// Download URL for this release
     /// </summary>
     [MaxLength(500)]
-    public string? DownloadUrl { get; set; }
+    public string? DownloadUrl
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// File size in bytes
     /// </summary>
-    public long? FileSize { get; set; }
+    public long? FileSize
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Number of downloads for this release
     /// </summary>
-    public int DownloadCount { get; set; } = 0;
+    public int DownloadCount
+    {
+        get;
+        set;
+    } = 0;
 
     /// <summary>
     /// Release notes in markdown format
     /// </summary>
-    public string? ReleaseNotes { get; set; }
+    public string? ReleaseNotes
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Checksum/hash of the release file
     /// </summary>
     [MaxLength(128)]
-    public string? Checksum { get; set; }
+    public string? Checksum
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Minimum system requirements
     /// </summary>
     [MaxLength(1000)]
-    public string? SystemRequirements { get; set; }
+    public string? SystemRequirements
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Supported platforms (JSON array)
     /// </summary>
     [MaxLength(500)]
-    public string? SupportedPlatforms { get; set; }
+    public string? SupportedPlatforms
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Release type (stable, beta, alpha, etc.)
     /// </summary>
     [MaxLength(50)]
-    public string ReleaseType { get; set; } = "stable";
+    public string ReleaseType
+    {
+        get;
+        set;
+    } = "stable";
 
     /// <summary>
     /// Release status
     /// </summary>
-    public ContentStatus Status { get; set; } = ContentStatus.Draft;
+    public ContentStatus Status
+    {
+        get;
+        set;
+    } = ContentStatus.Draft;
 
     /// <summary>
     /// Build number or commit hash
     /// </summary>
     [MaxLength(100)]
-    public string? BuildNumber { get; set; }
+    public string? BuildNumber
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Additional release metadata (JSON)
     /// </summary>
     [MaxLength(2000)]
-    public string? ReleaseMetadata { get; set; }
+    public string? ReleaseMetadata
+    {
+        get;
+        set;
+    }
 }

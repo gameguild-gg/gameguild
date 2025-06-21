@@ -196,7 +196,9 @@ namespace GameGuild.Modules.Auth.Controllers
                     }
                 );
             }
-        }        /// <summary>
+        }
+
+        /// <summary>
         /// Google ID Token validation endpoint for NextAuth.js integration
         /// </summary>
         [HttpPost("google/id-token")]
@@ -204,13 +206,14 @@ namespace GameGuild.Modules.Auth.Controllers
         public async Task<IActionResult> GoogleIdTokenValidation([FromBody] GoogleIdTokenRequestDto request)
         {
             Console.WriteLine($"🔍 GoogleIdTokenValidation called with IdToken length: {request.IdToken?.Length ?? 0}");
-            
+
             try
             {
                 Console.WriteLine("🚀 Calling authService.GoogleIdTokenSignInAsync...");
                 SignInResponseDto result = await authService.GoogleIdTokenSignInAsync(request);
-                
+
                 Console.WriteLine($"✅ GoogleIdTokenSignInAsync successful for user: {result.User?.Email}");
+
                 return Ok(result);
             }
             catch (Exception ex)
@@ -218,13 +221,11 @@ namespace GameGuild.Modules.Auth.Controllers
                 Console.WriteLine($"❌ GoogleIdTokenValidation failed: {ex.Message}");
                 Console.WriteLine($"❌ Exception type: {ex.GetType().Name}");
                 Console.WriteLine($"❌ Stack trace: {ex.StackTrace}");
-                
+
                 return BadRequest(
                     new
                     {
-                        message = "Google ID token validation failed", 
-                        error = ex.Message,
-                        type = ex.GetType().Name
+                        message = "Google ID token validation failed", error = ex.Message, type = ex.GetType().Name
                     }
                 );
             }

@@ -22,7 +22,8 @@ public class ProductService : IProductService
 
     // Basic CRUD operations
     public async Task<ProductEntity?> GetProductByIdAsync(Guid id)
-    {        return await _context.Products
+    {
+        return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
             .Where(p => p.DeletedAt == null)
@@ -35,14 +36,15 @@ public class ProductService : IProductService
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
             .Include(p => p.SubscriptionPlans)
-            .Include(p => p.UserProducts)            .Include(p => p.PromoCodes)
+            .Include(p => p.UserProducts).Include(p => p.PromoCodes)
             .Include(p => p.ProductPrograms)
             .Where(p => p.DeletedAt == null)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<IEnumerable<ProductEntity>> GetProductsAsync(int skip = 0, int take = 50)
-    {        return await _context.Products
+    {
+        return await _context.Products
             .Include(p => p.Creator)
             .Include(p => p.ProductPricings)
             .Where(p => p.DeletedAt == null)

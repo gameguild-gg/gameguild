@@ -16,6 +16,7 @@ namespace GameGuild.Tests.Performance.Project;
 public class ProjectPerformanceTests : IDisposable
 {
     private readonly ApplicationDbContext _context;
+
     private readonly ProjectService _projectService;
 
     public ProjectPerformanceTests()
@@ -34,10 +35,7 @@ public class ProjectPerformanceTests : IDisposable
         // Arrange
         var project = new GameGuild.Modules.Project.Models.Project
         {
-            Title = "Performance Test Project",
-            Description = "Testing project creation performance",
-            Type = ProjectType.Game,
-            DevelopmentStatus = DevelopmentStatus.Planning
+            Title = "Performance Test Project", Description = "Testing project creation performance", Type = ProjectType.Game, DevelopmentStatus = DevelopmentStatus.Planning
         };
 
         var stopwatch = new Stopwatch();
@@ -59,14 +57,16 @@ public class ProjectPerformanceTests : IDisposable
         var projects = new List<GameGuild.Modules.Project.Models.Project>();
         for (int i = 0; i < 1000; i++)
         {
-            projects.Add(new GameGuild.Modules.Project.Models.Project
-            {
-                Title = $"Performance Test Project {i}",
-                Description = $"Description for project {i}",
-                Type = ProjectType.Game,
-                Status = ContentStatus.Published,
-                Visibility = AccessLevel.Public
-            });
+            projects.Add(
+                new GameGuild.Modules.Project.Models.Project
+                {
+                    Title = $"Performance Test Project {i}",
+                    Description = $"Description for project {i}",
+                    Type = ProjectType.Game,
+                    Status = ContentStatus.Published,
+                    Visibility = AccessLevel.Public
+                }
+            );
         }
 
         _context.Projects.AddRange(projects);
@@ -91,15 +91,17 @@ public class ProjectPerformanceTests : IDisposable
         var projects = new List<GameGuild.Modules.Project.Models.Project>();
         for (int i = 0; i < 1000; i++)
         {
-            projects.Add(new GameGuild.Modules.Project.Models.Project
-            {
-                Title = $"Searchable Project {i} {(i % 2 == 0 ? "Game" : "Tool")}",
-                Description = $"This is a {(i % 3 == 0 ? "fantastic" : "good")} project number {i}",
-                ShortDescription = $"Project {i} summary",
-                Type = i % 2 == 0 ? ProjectType.Game : ProjectType.Tool,
-                Status = ContentStatus.Published,
-                Visibility = AccessLevel.Public
-            });
+            projects.Add(
+                new GameGuild.Modules.Project.Models.Project
+                {
+                    Title = $"Searchable Project {i} {(i % 2 == 0 ? "Game" : "Tool")}",
+                    Description = $"This is a {(i % 3 == 0 ? "fantastic" : "good")} project number {i}",
+                    ShortDescription = $"Project {i} summary",
+                    Type = i % 2 == 0 ? ProjectType.Game : ProjectType.Tool,
+                    Status = ContentStatus.Published,
+                    Visibility = AccessLevel.Public
+                }
+            );
         }
 
         _context.Projects.AddRange(projects);
@@ -132,13 +134,11 @@ public class ProjectPerformanceTests : IDisposable
         // Arrange
         var project = new GameGuild.Modules.Project.Models.Project
         {
-            Title = "Original Title",
-            Description = "Original Description",
-            Type = ProjectType.Game
+            Title = "Original Title", Description = "Original Description", Type = ProjectType.Game
         };
 
         GameGuild.Modules.Project.Models.Project created = await _projectService.CreateProjectAsync(project);
-        
+
         // Modify for update
         created.Title = "Updated Title";
         created.Description = "Updated Description";
@@ -162,18 +162,23 @@ public class ProjectPerformanceTests : IDisposable
     {
         // Arrange - Create projects with different statuses
         var projects = new List<GameGuild.Modules.Project.Models.Project>();
-        var statuses = new[] { ContentStatus.Draft, ContentStatus.Published, ContentStatus.Archived };
-        
+        var statuses = new[]
+        {
+            ContentStatus.Draft, ContentStatus.Published, ContentStatus.Archived
+        };
+
         for (int i = 0; i < 1000; i++)
         {
-            projects.Add(new GameGuild.Modules.Project.Models.Project
-            {
-                Title = $"Status Test Project {i}",
-                Description = $"Project {i} for status testing",
-                Status = statuses[i % statuses.Length],
-                Type = ProjectType.Game,
-                Visibility = AccessLevel.Public
-            });
+            projects.Add(
+                new GameGuild.Modules.Project.Models.Project
+                {
+                    Title = $"Status Test Project {i}",
+                    Description = $"Project {i} for status testing",
+                    Status = statuses[i % statuses.Length],
+                    Type = ProjectType.Game,
+                    Visibility = AccessLevel.Public
+                }
+            );
         }
 
         _context.Projects.AddRange(projects);
@@ -197,18 +202,23 @@ public class ProjectPerformanceTests : IDisposable
     {
         // Arrange - Create projects with different types
         var projects = new List<GameGuild.Modules.Project.Models.Project>();
-        var types = new[] { ProjectType.Game, ProjectType.Tool, ProjectType.Art, ProjectType.Music };
-        
+        var types = new[]
+        {
+            ProjectType.Game, ProjectType.Tool, ProjectType.Art, ProjectType.Music
+        };
+
         for (int i = 0; i < 1000; i++)
         {
-            projects.Add(new GameGuild.Modules.Project.Models.Project
-            {
-                Title = $"Type Test Project {i}",
-                Description = $"Project {i} for type testing",
-                Type = types[i % types.Length],
-                Status = ContentStatus.Published,
-                Visibility = AccessLevel.Public
-            });
+            projects.Add(
+                new GameGuild.Modules.Project.Models.Project
+                {
+                    Title = $"Type Test Project {i}",
+                    Description = $"Project {i} for type testing",
+                    Type = types[i % types.Length],
+                    Status = ContentStatus.Published,
+                    Visibility = AccessLevel.Public
+                }
+            );
         }
 
         _context.Projects.AddRange(projects);
@@ -233,9 +243,7 @@ public class ProjectPerformanceTests : IDisposable
         // Arrange
         var project = new GameGuild.Modules.Project.Models.Project
         {
-            Title = "Project to Delete",
-            Description = "This project will be deleted for performance testing",
-            Type = ProjectType.Game
+            Title = "Project to Delete", Description = "This project will be deleted for performance testing", Type = ProjectType.Game
         };
 
         GameGuild.Modules.Project.Models.Project created = await _projectService.CreateProjectAsync(project);
@@ -258,14 +266,16 @@ public class ProjectPerformanceTests : IDisposable
         var projects = new List<GameGuild.Modules.Project.Models.Project>();
         for (int i = 0; i < 1000; i++)
         {
-            projects.Add(new GameGuild.Modules.Project.Models.Project
-            {
-                Title = $"Pagination Test Project {i}",
-                Description = $"Project {i} for pagination testing",
-                Type = ProjectType.Game,
-                Status = ContentStatus.Published,
-                Visibility = AccessLevel.Public
-            });
+            projects.Add(
+                new GameGuild.Modules.Project.Models.Project
+                {
+                    Title = $"Pagination Test Project {i}",
+                    Description = $"Project {i} for pagination testing",
+                    Type = ProjectType.Game,
+                    Status = ContentStatus.Published,
+                    Visibility = AccessLevel.Public
+                }
+            );
         }
 
         _context.Projects.AddRange(projects);
@@ -293,14 +303,16 @@ public class ProjectPerformanceTests : IDisposable
         var projects = new List<GameGuild.Modules.Project.Models.Project>();
         for (int i = 0; i < projectCount; i++)
         {
-            projects.Add(new GameGuild.Modules.Project.Models.Project
-            {
-                Title = $"Bulk Test Project {i}",
-                Description = $"Project {i} for bulk testing",
-                Type = ProjectType.Game,
-                Status = ContentStatus.Published,
-                Visibility = AccessLevel.Public
-            });
+            projects.Add(
+                new GameGuild.Modules.Project.Models.Project
+                {
+                    Title = $"Bulk Test Project {i}",
+                    Description = $"Project {i} for bulk testing",
+                    Type = ProjectType.Game,
+                    Status = ContentStatus.Published,
+                    Visibility = AccessLevel.Public
+                }
+            );
         }
 
         var stopwatch = new Stopwatch();
@@ -322,11 +334,11 @@ public class ProjectPerformanceTests : IDisposable
 
         // Assert
         Assert.Equal(projectCount, result.Count());
-        
+
         // Performance expectations based on project count (much more realistic for EF + in-memory DB)
         double expectedInsertTime = Math.Max(projectCount * 5.0, 5000); // ~5ms per project or minimum 5 seconds
         double expectedReadTime = Math.Max(projectCount * 2.0, 2000); // ~2ms per project or minimum 2 seconds
-        
+
         Assert.True(insertTime < expectedInsertTime, $"Bulk insert of {projectCount} projects took {insertTime}ms, expected under {expectedInsertTime}ms");
         Assert.True(readTime < expectedReadTime, $"Bulk read of {projectCount} projects took {readTime}ms, expected under {expectedReadTime}ms");
     }
@@ -338,14 +350,16 @@ public class ProjectPerformanceTests : IDisposable
         var projects = new List<GameGuild.Modules.Project.Models.Project>();
         for (int i = 0; i < 100; i++)
         {
-            projects.Add(new GameGuild.Modules.Project.Models.Project
-            {
-                Title = $"Concurrent Test Project {i}",
-                Description = $"Project {i} for concurrent testing",
-                Type = ProjectType.Game,
-                Status = ContentStatus.Published,
-                Visibility = AccessLevel.Public
-            });
+            projects.Add(
+                new GameGuild.Modules.Project.Models.Project
+                {
+                    Title = $"Concurrent Test Project {i}",
+                    Description = $"Project {i} for concurrent testing",
+                    Type = ProjectType.Game,
+                    Status = ContentStatus.Published,
+                    Visibility = AccessLevel.Public
+                }
+            );
         }
 
         _context.Projects.AddRange(projects);
@@ -356,7 +370,7 @@ public class ProjectPerformanceTests : IDisposable
         // Act - 10 concurrent read operations
         var tasks = new List<Task>();
         stopwatch.Start();
-        
+
         for (int i = 0; i < 10; i++)
         {
             tasks.Add(_projectService.GetAllProjectsAsync());

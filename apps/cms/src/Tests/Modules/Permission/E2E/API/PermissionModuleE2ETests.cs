@@ -55,7 +55,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange - Ensure no authorization header is set
         ClearAuthorizationHeader();
-        
+
         // Try introspection first to see what's available
         var introspectionQuery = @"
             query IntrospectionQuery {
@@ -76,7 +76,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
         // Act - Get schema information
         HttpResponseMessage introspectionResponse = await PostGraphQlAsync(introspectionRequest);
         string introspectionContent = await introspectionResponse.Content.ReadAsStringAsync();
-        
+
         // Now try the actual query
         var query = @"
             query {
@@ -97,24 +97,27 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
 
         // Assert - GraphQL returns HTTP 200 with errors in response body
         Assert.True(response.IsSuccessStatusCode, "GraphQL should return HTTP 200 even with authentication errors");
-        
+
         string content = await response.Content.ReadAsStringAsync();
         var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
 
         // Check that there are authentication-related errors
         Assert.True(jsonResponse.TryGetProperty("errors", out JsonElement errors), "Expected GraphQL errors in response");
-        
+
         var errorMessages = errors.EnumerateArray()
-            .SelectMany(e => {
-                var messages = new List<string>();
-                if (e.TryGetProperty("message", out JsonElement message) && message.ValueKind == JsonValueKind.String)
-                    messages.Add(message.GetString()!);
-                if (e.TryGetProperty("extensions", out JsonElement extensions) && 
-                    extensions.TryGetProperty("message", out JsonElement extMessage) && 
-                    extMessage.ValueKind == JsonValueKind.String)
-                    messages.Add(extMessage.GetString()!);
-                return messages;
-            })
+            .SelectMany(e =>
+                {
+                    var messages = new List<string>();
+                    if (e.TryGetProperty("message", out JsonElement message) && message.ValueKind == JsonValueKind.String)
+                        messages.Add(message.GetString()!);
+                    if (e.TryGetProperty("extensions", out JsonElement extensions) &&
+                        extensions.TryGetProperty("message", out JsonElement extMessage) &&
+                        extMessage.ValueKind == JsonValueKind.String)
+                        messages.Add(extMessage.GetString()!);
+
+                    return messages;
+                }
+            )
             .ToList();
 
         Assert.Contains(
@@ -171,16 +174,19 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
             if (jsonResponse.TryGetProperty("errors", out JsonElement errors))
             {
                 var errorMessages = errors.EnumerateArray()
-                    .SelectMany(e => {
-                        var messages = new List<string>();
-                        if (e.TryGetProperty("message", out JsonElement message) && message.ValueKind == JsonValueKind.String)
-                            messages.Add(message.GetString()!);
-                        if (e.TryGetProperty("extensions", out JsonElement extensions) && 
-                            extensions.TryGetProperty("message", out JsonElement extMessage) && 
-                            extMessage.ValueKind == JsonValueKind.String)
-                            messages.Add(extMessage.GetString()!);
-                        return messages;
-                    })
+                    .SelectMany(e =>
+                        {
+                            var messages = new List<string>();
+                            if (e.TryGetProperty("message", out JsonElement message) && message.ValueKind == JsonValueKind.String)
+                                messages.Add(message.GetString()!);
+                            if (e.TryGetProperty("extensions", out JsonElement extensions) &&
+                                extensions.TryGetProperty("message", out JsonElement extMessage) &&
+                                extMessage.ValueKind == JsonValueKind.String)
+                                messages.Add(extMessage.GetString()!);
+
+                            return messages;
+                        }
+                    )
                     .ToList();
 
                 Assert.Contains(
