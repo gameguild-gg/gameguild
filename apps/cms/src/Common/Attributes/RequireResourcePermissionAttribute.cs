@@ -5,6 +5,7 @@ using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Comment.Models;
 using GameGuild.Modules.Product.Models;
+using GameGuild.Modules.Project.Models;
 
 namespace GameGuild.Common.Attributes;
 
@@ -149,23 +150,33 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
             context.Result = new UnauthorizedResult();
 
             return;
-        }
-
-        // Extract resource ID from route parameters
+        }        // Extract resource ID from route parameters
         var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
-        if (!Guid.TryParse(resourceIdValue, out Guid resourceId))
+        Guid resourceId = Guid.Empty;
+        bool hasResourceId = Guid.TryParse(resourceIdValue, out resourceId);
+        
+        // For CREATE operations or READ operations on collections, we typically don't have a resource ID yet
+        // So we skip resource-level permission checks and go to content-type/tenant checks
+        if (!hasResourceId && (_requiredPermission == PermissionType.Create || _requiredPermission == PermissionType.Read))
         {
+            // Skip resource-level check for CREATE operations or READ collection operations
+        }
+        else if (!hasResourceId)
+        {
+            // For other operations (UPDATE, DELETE), we need a valid resource ID
             context.Result = new BadRequestResult();
-
             return;
         }
 
         // Hierarchical permission checking: Resource → Content-Type → Tenant
 
         // Step 1 - Check resource-level permission for known resource types
-        try
+        // Skip this step for CREATE operations without a resource ID
+        if (hasResourceId)
         {
-            string resourceTypeName = typeof(TResource).Name;
+            try
+            {
+                string resourceTypeName = typeof(TResource).Name;
 
             switch (resourceTypeName)
             {
@@ -181,9 +192,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
                         return; // Permission granted at resource level
                     }
 
-                    break;
-
-                case "Product":
+                    break;                case "Product":
                     bool hasProductPermission = await permissionService.HasResourcePermissionAsync<ProductPermission, Product>(
                         userId,
                         tenantId,
@@ -197,7 +206,19 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
 
                     break;
 
-                // Add more resource types here as they are implemented
+                case "Project":
+                    bool hasProjectPermission = await permissionService.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+                        userId,
+                        tenantId,
+                        resourceId,
+                        _requiredPermission
+                    );
+                    if (hasProjectPermission)
+                    {
+                        return; // Permission granted at resource level
+                    }
+
+                    break;                // Add more resource types here as they are implemented
                 default:
                     // For unknown resource types, skip resource-level check and go to content-type fallback
                     break;
@@ -207,6 +228,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
         {
             // If resource-level checking fails, continue to content-type fallback
         }
+        } // End of hasResourceId check
 
         // Step 2 - Check content-type level permission (fallback)
         string contentTypeName = typeof(TResource).Name;
