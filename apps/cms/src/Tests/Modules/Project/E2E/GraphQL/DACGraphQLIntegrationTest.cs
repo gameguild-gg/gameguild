@@ -3,13 +3,13 @@ using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using Moq;
 
-namespace GameGuild.Tests.Integration.GraphQL;
+namespace GameGuild.Tests.Modules.Project.E2E.GraphQL;
 
 /// <summary>
 /// Integration tests for DAC permission system with GraphQL
 /// Tests the 3-layer hierarchical permission checking in HotChocolate resolvers
 /// </summary>
-public class DacGraphQlIntegrationTest
+public class DACGraphQLIntegrationTests
 {
     [Fact]
     public async Task GraphQL_Schema_Contains_Comment_Operations()
@@ -29,7 +29,7 @@ public class DacGraphQlIntegrationTest
 /// Unit tests for DAC permission checking logic in GraphQL resolvers
 /// Tests the permission service integration without HTTP layer
 /// </summary>
-public class DacPermissionLogicTest
+public class DACPermissionLogicTests
 {
     [Fact]
     public async Task CheckCommentPermissionHierarchy_WithResourcePermission_ReturnsTrue()

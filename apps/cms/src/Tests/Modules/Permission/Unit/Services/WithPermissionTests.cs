@@ -2,7 +2,7 @@ using Xunit;
 using GameGuild.Common.Entities;
 using System.Collections.ObjectModel;
 
-namespace GameGuild.Tests.Modules.Permission.Models;
+namespace GameGuild.Tests.Modules.Permission.Unit.Models;
 
 /// <summary>
 /// Unit tests for WithPermissions base class and PermissionType enum

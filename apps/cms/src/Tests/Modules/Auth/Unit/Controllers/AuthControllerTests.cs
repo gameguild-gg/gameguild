@@ -8,9 +8,9 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
 using MediatR;
 
-namespace GameGuild.Tests.Modules.Auth.Controllers
-{
-    public class AuthControllerTests
+namespace GameGuild.Tests.Modules.Auth.Unit.Controllers;
+
+public class AuthControllerTests
     {
         private readonly Mock<IAuthService> _mockAuthService;
 
@@ -406,4 +406,3 @@ namespace GameGuild.Tests.Modules.Auth.Controllers
             Assert.True(response.Success);
         }
     }
-}

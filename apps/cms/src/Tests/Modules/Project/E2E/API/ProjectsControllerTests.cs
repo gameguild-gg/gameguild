@@ -16,7 +16,7 @@ using GameGuild.Modules.Tenant.Models;
 using System.Net.Http.Headers;
 using Xunit.Abstractions;
 
-namespace GameGuild.Tests.Integration.Project.Controllers;
+namespace GameGuild.Tests.Modules.Project.E2E;
 
 /// <summary>
 /// Integration tests for ProjectsController
@@ -46,11 +46,12 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
         // Clear any existing data to ensure clean test state
         ClearDatabase();
-    }
-
-    [Fact] public async Task GetProjects_ShouldReturnEmptyArray_WhenNoProjects()
+    }    [Fact] public async Task GetProjects_ShouldReturnEmptyArray_WhenNoProjects()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
 
@@ -80,11 +81,12 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
         Assert.NotNull(projects);
         Assert.Empty(projects);
-    }
-
-    [Fact] public async Task GetProjects_ShouldReturnProjects_WhenProjectsExist()
+    }    [Fact] public async Task GetProjects_ShouldReturnProjects_WhenProjectsExist()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
         await GrantContentTypePermissions(
@@ -140,11 +142,12 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
         Assert.Equal(2, projects.Length);
         Assert.Contains(projects, p => p.Title == "Test Project 1");
         Assert.Contains(projects, p => p.Title == "Test Project 2");
-    }
-
-    [Fact] public async Task CreateProject_ShouldCreateProject_WithValidData()
+    }    [Fact] public async Task CreateProject_ShouldCreateProject_WithValidData()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
         var token = await CreateJwtTokenForUserAsync(user, tenant);
@@ -207,11 +210,12 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
         GameGuild.Modules.Project.Models.Project? dbProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == createdProject.Id);
         Assert.NotNull(dbProject);
         Assert.Equal("New Test Project", dbProject.Title);
-    }
-
-    [Fact] public async Task CreateProject_ShouldReturnBadRequest_WithInvalidData()
+    }    [Fact] public async Task CreateProject_ShouldReturnBadRequest_WithInvalidData()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
         await GrantContentTypePermissions(
@@ -240,11 +244,12 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
         // Assert
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact] public async Task GetProject_ShouldReturnProject_WhenExists()
+    }    [Fact] public async Task GetProject_ShouldReturnProject_WhenExists()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
         await GrantContentTypePermissions(
@@ -285,11 +290,12 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
         Assert.NotNull(returnedProject);
         Assert.Equal("Specific Test Project", returnedProject.Title);
         Assert.Equal(project.Id, returnedProject.Id);
-    }
-
-    [Fact] public async Task GetProject_ShouldReturnNotFound_WhenNotExists()
+    }    [Fact] public async Task GetProject_ShouldReturnNotFound_WhenNotExists()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
         await GrantContentTypePermissions(
@@ -311,12 +317,13 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
         // Assert
         Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
-    }
-
-    [Fact]
+    }    [Fact]
     public async Task GetProjectBySlug_ShouldReturnProject_WhenExists()
     {
-        // Arrange - No authentication needed since endpoint is [Public]
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // No authentication needed since endpoint is [Public]
         var project = new GameGuild.Modules.Project.Models.Project
         {
             Title = "Slug Test Project", Description = "This project tests slug functionality", Status = ContentStatus.Published, Visibility = AccessLevel.Public
@@ -360,21 +367,23 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
         Assert.NotNull(returnedProject);
         Assert.Equal("Slug Test Project", returnedProject.Title);
         Assert.Equal(project.Id, returnedProject.Id);
-    }
-
-    [Fact]
+    }    [Fact]
     public async Task GetProjectBySlug_ShouldReturnNotFound_WhenNotExists()
     {
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
         // Act
         HttpResponseMessage response = await _client.GetAsync("/projects/slug/non-existent-slug");
 
         // Assert
         Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
-    }
-
-    [Fact] public async Task GetProjectsByCategory_ShouldReturnProjectsInCategory()
+    }    [Fact] public async Task GetProjectsByCategory_ShouldReturnProjectsInCategory()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
         await GrantContentTypePermissions(
@@ -432,11 +441,12 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
         Assert.Contains(projects, p => p.Title == "Category Project 1");
         Assert.Contains(projects, p => p.Title == "Category Project 2");
         Assert.DoesNotContain(projects, p => p.Title == "Other Category Project");
-    }
-
-    [Fact] public async Task GetProjectsByStatus_ShouldReturnProjectsWithStatus()
+    }    [Fact] public async Task GetProjectsByStatus_ShouldReturnProjectsWithStatus()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
         await GrantContentTypePermissions(
@@ -482,12 +492,13 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
         Assert.NotNull(projects);
         Assert.Single(projects);
         Assert.Equal("Published Project", projects.First().Title);
-    }
-
-    [Fact]
+    }    [Fact]
     public async Task GetPublicProjects_ShouldReturnOnlyPublicPublishedProjects()
     {
-        // Arrange - Use the default test tenant that MockTenantContextService provides
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Use the default test tenant that MockTenantContextService provides
         var testTenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         var tenant = new Tenant
         {

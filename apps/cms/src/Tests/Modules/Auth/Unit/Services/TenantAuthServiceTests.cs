@@ -9,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
 
-namespace GameGuild.Tests.Modules.Auth.Services
-{
-    public class TenantAuthServiceTests : IDisposable
+namespace GameGuild.Tests.Modules.Auth.Unit.Services;
+
+public class TenantAuthServiceTests : IDisposable
     {
         private readonly ApplicationDbContext _context;
 
@@ -201,4 +201,3 @@ namespace GameGuild.Tests.Modules.Auth.Services
             _context.Dispose();
         }
     }
-}

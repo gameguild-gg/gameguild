@@ -241,7 +241,6 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
         // Softly delete
         project.DeletedAt = DateTime.UtcNow;
-        project.DeletedAt = DateTime.UtcNow;
         project.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync();

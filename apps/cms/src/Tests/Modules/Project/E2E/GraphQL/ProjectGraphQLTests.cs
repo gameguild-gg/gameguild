@@ -16,7 +16,7 @@ using GameGuild.Modules.Tenant.Models;
 using System.Net.Http.Headers;
 using Xunit.Abstractions;
 
-namespace GameGuild.Tests.Integration.Project.GraphQL;
+namespace GameGuild.Tests.Modules.Project.E2E;
 
 /// <summary>
 /// Integration tests for Project GraphQL operations
@@ -51,7 +51,10 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     [Fact]
     public async Task GraphQL_GetProjects_ShouldReturnProjects()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
 
@@ -132,7 +135,10 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     [Fact]
     public async Task GraphQL_GetProjectById_ShouldReturnProject()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
 
@@ -204,7 +210,10 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     [Fact]
     public async Task GraphQL_GetProjectsByType_ShouldFilterCorrectly()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
 
@@ -274,7 +283,10 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     [Fact]
     public async Task GraphQL_CreateProject_ShouldCreateProject()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
 
@@ -350,7 +362,10 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     [Fact]
     public async Task GraphQL_UpdateProject_ShouldUpdateProject()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
 
@@ -414,7 +429,8 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
         Assert.Contains("Updated description", responseContent);
         Assert.Contains("\"status\":\"PUBLISHED\"", responseContent);
 
-        // Verify in database
+        // Verify in database - refresh the context to get latest changes
+        _context.ChangeTracker.Clear();
         GameGuild.Modules.Project.Models.Project? updatedProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == project.Id);
         Assert.NotNull(updatedProject);
         Assert.Equal("Updated Project Title", updatedProject.Title);
@@ -425,7 +441,10 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     [Fact]
     public async Task GraphQL_DeleteProject_ShouldDeleteProject()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
 
@@ -478,6 +497,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
         Assert.Contains("true", responseContent);
 
         // Verify soft delete in database (need to ignore query filters to find soft-deleted items)
+        _context.ChangeTracker.Clear(); // Clear change tracker to ensure fresh data
         GameGuild.Modules.Project.Models.Project? deletedProject = await _context.Projects
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(p => p.Id == project.Id);
@@ -489,7 +509,10 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     [Fact]
     public async Task GraphQL_SearchProjects_ShouldReturnMatchingProjects()
     {
-        // Arrange - Create test user and tenant for authentication
+        // Arrange - Clear database to ensure clean state
+        ClearDatabase();
+        
+        // Create test user and tenant for authentication
         var user = await CreateTestUserAsync();
         var tenant = await CreateTestTenantAsync();
 
@@ -563,6 +586,8 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     [Fact]
     public async Task GraphQL_Schema_ShouldIncludeProjectTypes()
     {
+        ClearDatabase();
+        
         // Arrange
         var introspectionQuery = @"
         {

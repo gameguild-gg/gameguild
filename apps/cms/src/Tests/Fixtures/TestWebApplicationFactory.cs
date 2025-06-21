@@ -136,9 +136,10 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 }
                 services.AddSingleton<GameGuild.Modules.Tenant.Services.ITenantContextService, GameGuild.Tests.Helpers.MockTenantContextService>();
 
-                // Add in-memory database for testing
+                // Add in-memory database for testing with unique database name
+                var databaseName = $"TestDatabase_{Guid.NewGuid()}";
                 services.AddDbContext<ApplicationDbContext>(options =>
-                    options.UseInMemoryDatabase(databaseName: "TestDatabase")
+                    options.UseInMemoryDatabase(databaseName: databaseName)
                 );
 
                 // Configure JWT for testing - ensure consistent configuration

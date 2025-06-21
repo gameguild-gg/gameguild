@@ -7,7 +7,7 @@ using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 using GameGuild.Modules.Project.Models;
 
-namespace GameGuild.Tests.Performance.Project;
+namespace GameGuild.Tests.Modules.Project.Performance;
 
 /// <summary>
 /// Performance tests for Project operations

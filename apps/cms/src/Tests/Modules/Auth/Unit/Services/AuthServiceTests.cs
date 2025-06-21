@@ -10,9 +10,9 @@ using GameGuild.Modules.Tenant.Models;
 using System.Security.Claims;
 using GameGuild.Modules.Auth.Models;
 
-namespace GameGuild.Tests.Modules.Auth.Services
-{
-    public class AuthServiceTests : IDisposable
+namespace GameGuild.Tests.Modules.Auth.Unit.Services;
+
+public class AuthServiceTests : IDisposable
     {
         private readonly ApplicationDbContext _context;
 
@@ -517,4 +517,3 @@ namespace GameGuild.Tests.Modules.Auth.Services
             _context.Dispose();
         }
     }
-}

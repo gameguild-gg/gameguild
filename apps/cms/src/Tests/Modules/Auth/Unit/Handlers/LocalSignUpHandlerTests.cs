@@ -7,7 +7,7 @@ using GameGuild.Modules.Auth.Handlers;
 using GameGuild.Modules.Auth.Notifications;
 using GameGuild.Modules.Auth.Services;
 
-namespace GameGuild.Tests.Modules.Auth.Handlers;
+namespace GameGuild.Tests.Modules.Auth.Unit.Handlers;
 
 public class LocalSignUpHandlerTests
 {

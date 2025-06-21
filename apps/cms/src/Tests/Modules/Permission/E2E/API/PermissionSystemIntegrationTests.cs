@@ -7,7 +7,7 @@ using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Comment.Models;
 using GameGuild.Tests.Fixtures;
 
-namespace GameGuild.Tests.Modules.Permission.Integration;
+namespace GameGuild.Tests.Modules.Permission.E2E.API;
 
 /// <summary>
 /// Integration tests for the complete Permission System

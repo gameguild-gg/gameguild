@@ -4,9 +4,9 @@ using System.Security.Claims;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
 
-namespace GameGuild.Tests.Modules.Auth.Services
-{
-    public class JwtTokenServiceTests
+namespace GameGuild.Tests.Modules.Auth.Unit.Services;
+
+public class JwtTokenServiceTests
     {
         private readonly JwtTokenService _jwtTokenService;
 
@@ -403,4 +403,3 @@ namespace GameGuild.Tests.Modules.Auth.Services
             Assert.Equal("24", permissionFlags2Claim.Value);
         }
     }
-}
