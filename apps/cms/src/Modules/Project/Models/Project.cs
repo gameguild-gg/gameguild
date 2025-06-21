@@ -21,13 +21,7 @@ namespace GameGuild.Modules.Project.Models;
 [Index(nameof(CreatedAt))]
 [Index(nameof(UpdatedAt))]
 public class Project : Content
-{    /// <summary>
-    /// Project title (required, indexed)
-    /// </summary>
-    [Required]
-    [MaxLength(200)]
-    public new string Title { get; set; } = string.Empty;
-
+{
     /// <summary>
     /// Short description (max 500 chars)
     /// </summary>
@@ -133,14 +127,7 @@ public class Project : Content
     /// </summary>
     public override Tenant.Models.Tenant? Tenant { get; set; }
 
-    public Guid? TenantId { get; set; }/// <summary>
-    /// Computed property: Project URL slug
-    /// </summary>
-    [NotMapped]
-    public new string Slug
-    {
-        get => GenerateSlug(Title);
-    }
+    public Guid? TenantId { get; set; }
 
     /// <summary>
     /// Computed property: Is project active
@@ -214,12 +201,10 @@ public class Project : Content
     // public int TotalDownloads
     // {
     //     get => Releases?.Sum(r => r.DownloadCount) ?? 0;
-    // }
-
-    /// <summary>
+    // }    /// <summary>
     /// Generate URL-friendly slug from title
     /// </summary>
-    private static string GenerateSlug(string title)
+    public static string GenerateSlug(string title)
     {
         if (string.IsNullOrWhiteSpace(title))
             return string.Empty;
@@ -255,8 +240,7 @@ public class Project : Content
             .Replace("/", "")
             .Replace("<", "")
             .Replace(">", "");
-    }
-}
+    }}
 
 /// <summary>
 /// Entity configuration for Project

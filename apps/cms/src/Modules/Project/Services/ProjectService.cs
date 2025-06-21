@@ -134,7 +134,10 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
 
     public async Task<IEnumerable<Models.Project>> GetPublicProjectsAsync(int skip = 0, int take = 50)
     {
+        // Explicitly ignore global query filters for public projects
+        // This is necessary because we need to show public projects regardless of tenant context
         return await context.Projects
+            .IgnoreQueryFilters()  // Bypass global tenant and other filters
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
             .Where(p => p.Status == ContentStatus.Published &&
@@ -176,7 +179,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService
         // Generate slug if not provided
         if (string.IsNullOrEmpty(project.Slug))
         {
-            // Slug is computed from Title automatically
+            project.Slug = Models.Project.GenerateSlug(project.Title);
         }
 
         // Set default values

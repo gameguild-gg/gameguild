@@ -105,6 +105,10 @@ public class ProjectPerformanceTests : IDisposable
         _context.Projects.AddRange(projects);
         await _context.SaveChangesAsync();
 
+        // Debug: Check how many projects are in the DB
+        int dbCount = _context.Projects.Count();
+        Assert.Equal(1000, dbCount); // Ensure all projects are saved
+
         var stopwatch = new Stopwatch();
 
         // Act - Search for "game" (lowercase to match the method's ToLower)
@@ -112,9 +116,13 @@ public class ProjectPerformanceTests : IDisposable
         var result = await _projectService.SearchProjectsAsync("game", skip: 0, take: 1000);
         stopwatch.Stop();
 
+        // Debug: Output the count and some sample titles
+        var resultList = result.ToList();
+        var sampleTitles = string.Join(", ", resultList.Take(5).Select(p => p.Title));
+        Assert.True(resultList.Count > 0, $"Search returned 0 results. DB count: {dbCount}. Sample titles: {sampleTitles}");
+
         // Assert
-        Assert.NotEmpty(result);
-        Assert.True(result.Count() > 200, $"Expected more than 200 results, got {result.Count()}"); // Should find many matches
+        Assert.True(resultList.Count > 200, $"Expected more than 200 results, got {resultList.Count}"); // Should find many matches
         Assert.True(stopwatch.ElapsedMilliseconds < 500, $"Search took {stopwatch.ElapsedMilliseconds}ms, expected under 500ms"); // More realistic time expectation
     }
 

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using GameGuild.Modules.Project.Services;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Attributes;
@@ -77,13 +78,17 @@ public class ProjectsController : ControllerBase
     {
         var projects = await _projectService.GetProjectsByStatusAsync(status);
         return Ok(projects);
-    }
-
-    // POST: projects
+    }    // POST: projects
     [HttpPost]
     [RequireResourcePermission<Models.Project>(PermissionType.Create)]
     public async Task<ActionResult<Models.Project>> CreateProject([FromBody] Models.Project project)
     {
+        // Auto-generate slug if not provided
+        if (string.IsNullOrEmpty(project.Slug))
+        {
+            project.Slug = Models.Project.GenerateSlug(project.Title);
+        }
+
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
@@ -152,15 +157,13 @@ public class ProjectsController : ControllerBase
     {
         var projects = await _projectService.GetDeletedProjectsAsync();
         return Ok(projects);
-    }
-
-    // GET: projects/public (public access for web app integration)
+    }    // GET: projects/public (public access for web app integration)
     [HttpGet("public")]
     [Public]
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetPublicProjects()
     {
-        // Only return published projects for public access
-        var projects = await _projectService.GetProjectsByStatusAsync(ContentStatus.Published);
+        // Only return published AND public visibility projects for public access
+        var projects = await _projectService.GetPublicProjectsAsync(0, 50);
         return Ok(projects);
     }
 }
