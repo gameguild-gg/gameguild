@@ -40,54 +40,54 @@ namespace GameGuild.Modules.Auth.Configuration
             string audience = jwtSettings["Audience"] ?? throw new InvalidOperationException("JWT Audience is required");
 
             services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                }
+            ).AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                    }
-                )                .AddJwtBearer(options =>
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = issuer,
+                        ValidAudience = audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+                        ClockSkew = TimeSpan.Zero, // Remove default 5-minute clock skew
+                        RequireSignedTokens = true,
+                        // Don't require kid when using symmetric keys
+                        TryAllIssuerSigningKeys = true
+                    };
+
+                    options.Events = new JwtBearerEvents
                     {
-                        options.TokenValidationParameters = new TokenValidationParameters
+                        OnMessageReceived = context =>
                         {
-                            ValidateIssuer = true,
-                            ValidateAudience = true,
-                            ValidateLifetime = true,
-                            ValidateIssuerSigningKey = true,
-                            ValidIssuer = issuer,
-                            ValidAudience = audience,
-                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-                            ClockSkew = TimeSpan.Zero, // Remove default 5-minute clock skew
-                            RequireSignedTokens = true,
-                            // Don't require kid when using symmetric keys
-                            TryAllIssuerSigningKeys = true
-                        };
+                            // Allow token in query string for SignalR connections
+                            StringValues accessToken = context.Request.Query["access_token"];
+                            PathString path = context.HttpContext.Request.Path;
 
-                        options.Events = new JwtBearerEvents
-                        {
-                            OnMessageReceived = context =>
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
                             {
-                                // Allow token in query string for SignalR connections
-                                StringValues accessToken = context.Request.Query["access_token"];
-                                PathString path = context.HttpContext.Request.Path;
-
-                                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
-                                {
-                                    context.Token = accessToken;
-                                }
-
-                                return Task.CompletedTask;
-                            },
-                            OnAuthenticationFailed = context =>
-                            {
-                                // Log authentication failures
-                                var loggerFactory = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>();
-                                ILogger logger = loggerFactory.CreateLogger("AuthConfiguration");
-                                logger.LogWarning("JWT authentication failed: {Exception}", context.Exception.Message);
-
-                                return Task.CompletedTask;
+                                context.Token = accessToken;
                             }
-                        };
-                    }
-                );
+
+                            return Task.CompletedTask;
+                        },
+                        OnAuthenticationFailed = context =>
+                        {
+                            // Log authentication failures
+                            var loggerFactory = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>();
+                            ILogger logger = loggerFactory.CreateLogger("AuthConfiguration");
+                            logger.LogWarning("JWT authentication failed: {Exception}", context.Exception.Message);
+
+                            return Task.CompletedTask;
+                        }
+                    };
+                }
+            );
 
             // Add authorization
             services.AddAuthorization();

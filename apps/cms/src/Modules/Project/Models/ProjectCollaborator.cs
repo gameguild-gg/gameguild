@@ -16,49 +16,85 @@ public class ProjectCollaborator : ResourceBase
     /// <summary>
     /// Project ID
     /// </summary>
-    public Guid ProjectId { get; set; }
+    public Guid ProjectId
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Navigation property to project
     /// </summary>
-    public virtual Project Project { get; set; } = null!;
+    public virtual Project Project
+    {
+        get;
+        set;
+    } = null!;
 
     /// <summary>
     /// User ID
     /// </summary>
-    public Guid UserId { get; set; }
+    public Guid UserId
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Navigation property to user
     /// </summary>
-    public virtual User.Models.User User { get; set; } = null!;
+    public virtual User.Models.User User
+    {
+        get;
+        set;
+    } = null!;
 
     /// <summary>
     /// Role of the collaborator in the project
     /// </summary>
     [Required]
     [MaxLength(100)]
-    public string Role { get; set; } = string.Empty;
+    public string Role
+    {
+        get;
+        set;
+    } = string.Empty;
 
     /// <summary>
     /// Permissions granted to this collaborator
     /// </summary>
     [Required]
     [MaxLength(500)]
-    public string Permissions { get; set; } = string.Empty;
+    public string Permissions
+    {
+        get;
+        set;
+    } = string.Empty;
 
     /// <summary>
     /// Whether the collaborator is active
     /// </summary>
-    public bool IsActive { get; set; } = true;
+    public bool IsActive
+    {
+        get;
+        set;
+    } = true;
 
     /// <summary>
     /// Date when the collaboration started
     /// </summary>
-    public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+    public DateTime JoinedAt
+    {
+        get;
+        set;
+    } = DateTime.UtcNow;
 
     /// <summary>
     /// Date when the collaboration ended (if applicable)
     /// </summary>
-    public DateTime? LeftAt { get; set; }
+    public DateTime? LeftAt
+    {
+        get;
+        set;
+    }
 }

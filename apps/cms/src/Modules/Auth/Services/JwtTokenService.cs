@@ -81,7 +81,9 @@ namespace GameGuild.Modules.Auth.Services
         public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
         {
             var tokenValidationParameters = new TokenValidationParameters
-            {                ValidateAudience = false,                ValidateIssuer = false,
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? "development-fallback-key-that-is-at-least-32-characters-long-for-testing")),
                 ValidateLifetime = false // We don't care about the token's expiration date
@@ -94,7 +96,8 @@ namespace GameGuild.Modules.Auth.Services
                 if (securityToken is not JwtSecurityToken jwtSecurityToken ||
                     !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    throw new SecurityTokenException("Invalid token");                }
+                    throw new SecurityTokenException("Invalid token");
+                }
 
                 return principal;
             }
@@ -103,6 +106,7 @@ namespace GameGuild.Modules.Auth.Services
                 // Log the exception for debugging
                 Console.WriteLine($"GetPrincipalFromExpiredToken failed: {ex.Message}");
                 Console.WriteLine($"Exception type: {ex.GetType().Name}");
+
                 return null;
             }
         }
@@ -112,8 +116,10 @@ namespace GameGuild.Modules.Auth.Services
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateAudience = true,
-                ValidateIssuer = true,                ValidateIssuerSigningKey = true,
-                ValidIssuer = _configuration["Jwt:Issuer"],                ValidAudience = _configuration["Jwt:Audience"],
+                ValidateIssuer = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = _configuration["Jwt:Issuer"],
+                ValidAudience = _configuration["Jwt:Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? "development-fallback-key-that-is-at-least-32-characters-long-for-testing")),
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero

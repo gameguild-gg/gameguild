@@ -178,12 +178,15 @@ public class ApplicationDbContext : DbContext
     {
         get;
         set;
-    }    // Project Management DbSets
+    } // Project Management DbSets
+
     public DbSet<Project> Projects
     {
         get;
         set;
-    }    public DbSet<ProjectCollaborator> ProjectCollaborators
+    }
+
+    public DbSet<ProjectCollaborator> ProjectCollaborators
     {
         get;
         set;

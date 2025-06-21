@@ -161,15 +161,19 @@ public class ProjectPermissionTests
         {
             case PermissionType.Edit:
                 Assert.False(permission.CanEdit);
+
                 break;
             case PermissionType.Delete:
                 Assert.False(permission.CanDelete);
+
                 break;
             case PermissionType.Publish:
                 Assert.False(permission.CanPublish);
+
                 break;
             case PermissionType.Read:
                 Assert.False(permission.CanDownload);
+
                 break;
         }
     }

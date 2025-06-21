@@ -150,11 +150,11 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
             context.Result = new UnauthorizedResult();
 
             return;
-        }        // Extract resource ID from route parameters
+        } // Extract resource ID from route parameters
         var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
         Guid resourceId = Guid.Empty;
         bool hasResourceId = Guid.TryParse(resourceIdValue, out resourceId);
-        
+
         // For CREATE operations or READ operations on collections, we typically don't have a resource ID yet
         // So we skip resource-level permission checks and go to content-type/tenant checks
         if (!hasResourceId && (_requiredPermission == PermissionType.Create || _requiredPermission == PermissionType.Read))
@@ -165,6 +165,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
         {
             // For other operations (UPDATE, DELETE), we need a valid resource ID
             context.Result = new BadRequestResult();
+
             return;
         }
 
@@ -178,56 +179,57 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
             {
                 string resourceTypeName = typeof(TResource).Name;
 
-            switch (resourceTypeName)
-            {
-                case "Comment":
-                    bool hasCommentPermission = await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
-                        userId,
-                        tenantId,
-                        resourceId,
-                        _requiredPermission
-                    );
-                    if (hasCommentPermission)
-                    {
-                        return; // Permission granted at resource level
-                    }
+                switch (resourceTypeName)
+                {
+                    case "Comment":
+                        bool hasCommentPermission = await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
+                            userId,
+                            tenantId,
+                            resourceId,
+                            _requiredPermission
+                        );
+                        if (hasCommentPermission)
+                        {
+                            return; // Permission granted at resource level
+                        }
 
-                    break;                case "Product":
-                    bool hasProductPermission = await permissionService.HasResourcePermissionAsync<ProductPermission, Product>(
-                        userId,
-                        tenantId,
-                        resourceId,
-                        _requiredPermission
-                    );
-                    if (hasProductPermission)
-                    {
-                        return; // Permission granted at resource level
-                    }
+                        break;
+                    case "Product":
+                        bool hasProductPermission = await permissionService.HasResourcePermissionAsync<ProductPermission, Product>(
+                            userId,
+                            tenantId,
+                            resourceId,
+                            _requiredPermission
+                        );
+                        if (hasProductPermission)
+                        {
+                            return; // Permission granted at resource level
+                        }
 
-                    break;
+                        break;
 
-                case "Project":
-                    bool hasProjectPermission = await permissionService.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
-                        userId,
-                        tenantId,
-                        resourceId,
-                        _requiredPermission
-                    );
-                    if (hasProjectPermission)
-                    {
-                        return; // Permission granted at resource level
-                    }
+                    case "Project":
+                        bool hasProjectPermission = await permissionService.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+                            userId,
+                            tenantId,
+                            resourceId,
+                            _requiredPermission
+                        );
+                        if (hasProjectPermission)
+                        {
+                            return; // Permission granted at resource level
+                        }
 
-                    break;                // Add more resource types here as they are implemented
-                default:
-                    // For unknown resource types, skip resource-level check and go to content-type fallback
-                    break;
+                        break; // Add more resource types here as they are implemented
+                    default:
+                        // For unknown resource types, skip resource-level check and go to content-type fallback
+                        break;
+                }
             }
-        }
-        catch
-        {
-            // If resource-level checking fails, continue to content-type fallback
-        }
+            catch
+            {
+                // If resource-level checking fails, continue to content-type fallback
+            }
         } // End of hasResourceId check
 
         // Step 2 - Check content-type level permission (fallback)

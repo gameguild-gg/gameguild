@@ -77,7 +77,7 @@ public class PermissionService : IPermissionService
         if (!userId.HasValue)
         {
             return await CheckDefaultPermissionAsync(tenantId, permission);
-        }        // 1. Check user-specific permissions first
+        } // 1. Check user-specific permissions first
         TenantPermission? userPermission = await _context.TenantPermissions
             .AsNoTracking()
             .FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId &&
@@ -112,7 +112,9 @@ public class PermissionService : IPermissionService
             );
 
         return globalDefault?.IsValid == true && globalDefault.HasPermission(permission);
-    }    public async Task<IEnumerable<PermissionType>> GetTenantPermissionsAsync(Guid? userId, Guid? tenantId)
+    }
+
+    public async Task<IEnumerable<PermissionType>> GetTenantPermissionsAsync(Guid? userId, Guid? tenantId)
     {
         TenantPermission? permission = await _context.TenantPermissions
             .AsNoTracking()
@@ -191,7 +193,9 @@ public class PermissionService : IPermissionService
         foreach (PermissionType permission in userPermissions)
         {
             effectivePermissions.Add(permission);
-        }        return effectivePermissions;
+        }
+
+        return effectivePermissions;
     }
 
     // === USER-TENANT MEMBERSHIP FUNCTIONALITY ===
@@ -458,7 +462,8 @@ public class PermissionService : IPermissionService
     // === PRIVATE HELPER METHODS ===
 
     private async Task<bool> CheckDefaultPermissionAsync(Guid? tenantId, PermissionType permission)
-    {        // Check tenant default
+    {
+        // Check tenant default
         if (tenantId.HasValue)
         {
             TenantPermission? tenantDefault = await _context.TenantPermissions
@@ -601,7 +606,9 @@ public class PermissionService : IPermissionService
             existingPermission.Touch();
             await _context.SaveChangesAsync();
         }
-    }    public async Task<Dictionary<Guid, IEnumerable<PermissionType>>> GetBulkResourcePermissionsAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[] resourceIds)
+    }
+
+    public async Task<Dictionary<Guid, IEnumerable<PermissionType>>> GetBulkResourcePermissionsAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[] resourceIds)
         where TPermission : ResourcePermission<TResource>
         where TResource : BaseEntity
     {
@@ -752,9 +759,7 @@ public class PermissionService : IPermissionService
         {
             var resourcePermission = new TPermission
             {
-                UserId = userId,
-                TenantId = tenantId,
-                ResourceId = resourceId
+                UserId = userId, TenantId = tenantId, ResourceId = resourceId
             };
 
             foreach (PermissionType permission in permissions)

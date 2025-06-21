@@ -16,7 +16,9 @@ public abstract class Content : ResourceBase
     {
         get;
         set;
-    } = new List<ContentLicense>();    /// <summary>
+    } = new List<ContentLicense>();
+
+    /// <summary>
     /// Slug for the content (URL-friendly unique identifier)
     /// </summary>
     [MaxLength(255)]

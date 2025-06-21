@@ -24,6 +24,7 @@ public class ProjectsController : ControllerBase
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetProjects()
     {
         var projects = await _projectService.GetAllProjectsAsync();
+
         return Ok(projects);
     }
 
@@ -37,6 +38,7 @@ public class ProjectsController : ControllerBase
         {
             return NotFound();
         }
+
         return Ok(project);
     }
 
@@ -50,6 +52,7 @@ public class ProjectsController : ControllerBase
         {
             return NotFound();
         }
+
         return Ok(project);
     }
 
@@ -59,6 +62,7 @@ public class ProjectsController : ControllerBase
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetProjectsByCategory(Guid categoryId)
     {
         var projects = await _projectService.GetProjectsByCategoryAsync(categoryId);
+
         return Ok(projects);
     }
 
@@ -68,6 +72,7 @@ public class ProjectsController : ControllerBase
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetProjectsByCreator(Guid creatorId)
     {
         var projects = await _projectService.GetProjectsByCreatorAsync(creatorId);
+
         return Ok(projects);
     }
 
@@ -77,8 +82,10 @@ public class ProjectsController : ControllerBase
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetProjectsByStatus(ContentStatus status)
     {
         var projects = await _projectService.GetProjectsByStatusAsync(status);
+
         return Ok(projects);
-    }    // POST: projects
+    } // POST: projects
+
     [HttpPost]
     [RequireResourcePermission<Models.Project>(PermissionType.Create)]
     public async Task<ActionResult<Models.Project>> CreateProject([FromBody] Models.Project project)
@@ -95,7 +102,15 @@ public class ProjectsController : ControllerBase
         }
 
         Models.Project createdProject = await _projectService.CreateProjectAsync(project);
-        return CreatedAtAction(nameof(GetProject), new { id = createdProject.Id }, createdProject);
+
+        return CreatedAtAction(
+            nameof(GetProject),
+            new
+            {
+                id = createdProject.Id
+            },
+            createdProject
+        );
     }
 
     // PUT: projects/{id}
@@ -116,6 +131,7 @@ public class ProjectsController : ControllerBase
         try
         {
             Models.Project updatedProject = await _projectService.UpdateProjectAsync(project);
+
             return Ok(updatedProject);
         }
         catch (InvalidOperationException ex)
@@ -134,6 +150,7 @@ public class ProjectsController : ControllerBase
         {
             return NotFound();
         }
+
         return NoContent();
     }
 
@@ -147,6 +164,7 @@ public class ProjectsController : ControllerBase
         {
             return NotFound();
         }
+
         return NoContent();
     }
 
@@ -156,14 +174,17 @@ public class ProjectsController : ControllerBase
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetDeletedProjects()
     {
         var projects = await _projectService.GetDeletedProjectsAsync();
+
         return Ok(projects);
-    }    // GET: projects/public (public access for web app integration)
+    } // GET: projects/public (public access for web app integration)
+
     [HttpGet("public")]
     [Public]
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetPublicProjects()
     {
         // Only return published AND public visibility projects for public access
         var projects = await _projectService.GetPublicProjectsAsync(0, 50);
+
         return Ok(projects);
     }
 }
