@@ -6,7 +6,7 @@ using GameGuild.Modules.Project.Models;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 
-namespace GameGuild.Tests.Integration.Project.DAC;
+namespace GameGuild.Tests.Modules.Project.E2E.API;
 
 /// <summary>
 /// Integration tests for Project DAC (Data Access Control) permission system

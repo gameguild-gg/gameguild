@@ -6,9 +6,9 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.User.Models;
 
-namespace GameGuild.Tests.Modules.Auth.Services
-{
-    public class Web3ServiceTests : IDisposable
+namespace GameGuild.Tests.Modules.Auth.Unit.Services;
+
+public class Web3ServiceTests : IDisposable
     {
         private readonly ApplicationDbContext _context;
 
@@ -216,4 +216,3 @@ namespace GameGuild.Tests.Modules.Auth.Services
             _context.Dispose();
         }
     }
-}

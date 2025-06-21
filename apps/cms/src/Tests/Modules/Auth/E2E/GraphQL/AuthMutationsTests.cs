@@ -5,9 +5,9 @@ using MediatR;
 using Moq;
 using Xunit;
 
-namespace GameGuild.Tests.Modules.Auth.GraphQL
-{
-    public class AuthMutationsTests
+namespace GameGuild.Tests.Modules.Auth.E2E.GraphQL;
+
+public class AuthMutationsTests
     {
         private readonly Mock<IMediator> _mockMediator;
 
@@ -134,4 +134,3 @@ namespace GameGuild.Tests.Modules.Auth.GraphQL
             );
         }
     }
-}

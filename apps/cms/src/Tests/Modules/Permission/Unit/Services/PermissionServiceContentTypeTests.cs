@@ -4,7 +4,7 @@ using GameGuild.Data;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 
-namespace GameGuild.Tests.Modules.Permission.Services;
+namespace GameGuild.Tests.Modules.Permission.Unit.Services;
 
 /// <summary>
 /// Unit tests for PermissionService - Layer 2 (Content-Type permissions)
