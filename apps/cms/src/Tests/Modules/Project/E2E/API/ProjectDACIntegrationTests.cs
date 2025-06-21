@@ -43,10 +43,7 @@ public class ProjectDACIntegrationTests : IDisposable
 
         var projectPermission = new ProjectPermission
         {
-            UserId = userId,
-            TenantId = tenantId,
-            ResourceId = projectId,
-            ExpiresAt = DateTime.UtcNow.AddDays(30)
+            UserId = userId, TenantId = tenantId, ResourceId = projectId, ExpiresAt = DateTime.UtcNow.AddDays(30)
         };
         projectPermission.AddPermission(PermissionType.Edit);
 
@@ -239,10 +236,7 @@ public class ProjectDACIntegrationTests : IDisposable
 
         var expiredPermission = new ProjectPermission
         {
-            UserId = userId,
-            TenantId = tenantId,
-            ResourceId = projectId,
-            ExpiresAt = DateTime.UtcNow.AddDays(-1) // Expired
+            UserId = userId, TenantId = tenantId, ResourceId = projectId, ExpiresAt = DateTime.UtcNow.AddDays(-1) // Expired
         };
         expiredPermission.AddPermission(PermissionType.Edit);
 
@@ -305,10 +299,7 @@ public class ProjectDACIntegrationTests : IDisposable
 
         var projectPermission = new ProjectPermission
         {
-            UserId = userId,
-            TenantId = tenantId,
-            ResourceId = projectId,
-            ExpiresAt = DateTime.UtcNow.AddDays(30)
+            UserId = userId, TenantId = tenantId, ResourceId = projectId, ExpiresAt = DateTime.UtcNow.AddDays(30)
         };
         projectPermission.AddPermission(permissionType);
 
@@ -381,20 +372,14 @@ public class ProjectDACIntegrationTests : IDisposable
         // User1 has edit permission on Project1
         var permission1 = new ProjectPermission
         {
-            UserId = user1Id,
-            TenantId = tenantId,
-            ResourceId = project1Id,
-            ExpiresAt = DateTime.UtcNow.AddDays(30)
+            UserId = user1Id, TenantId = tenantId, ResourceId = project1Id, ExpiresAt = DateTime.UtcNow.AddDays(30)
         };
         permission1.AddPermission(PermissionType.Edit);
 
         // User2 has read permission on Project2
         var permission2 = new ProjectPermission
         {
-            UserId = user2Id,
-            TenantId = tenantId,
-            ResourceId = project2Id,
-            ExpiresAt = DateTime.UtcNow.AddDays(30)
+            UserId = user2Id, TenantId = tenantId, ResourceId = project2Id, ExpiresAt = DateTime.UtcNow.AddDays(30)
         };
         permission2.AddPermission(PermissionType.Read);
 

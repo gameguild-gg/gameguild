@@ -52,28 +52,28 @@ public class ProjectMutations
         // Update only provided fields
         if (!string.IsNullOrEmpty(input.Title))
             existingProject.Title = input.Title;
-        
+
         if (input.Description != null)
             existingProject.Description = input.Description;
-        
+
         if (input.ShortDescription != null)
             existingProject.ShortDescription = input.ShortDescription;
-        
+
         if (input.WebsiteUrl != null)
             existingProject.WebsiteUrl = input.WebsiteUrl;
-        
+
         if (input.RepositoryUrl != null)
             existingProject.RepositoryUrl = input.RepositoryUrl;
-        
+
         if (input.SocialLinks != null)
             existingProject.SocialLinks = input.SocialLinks;
-        
+
         if (input.CategoryId.HasValue)
             existingProject.CategoryId = input.CategoryId.Value;
-        
+
         if (input.Status.HasValue)
             existingProject.Status = input.Status.Value;
-        
+
         if (input.Visibility.HasValue)
             existingProject.Visibility = input.Visibility.Value;
 

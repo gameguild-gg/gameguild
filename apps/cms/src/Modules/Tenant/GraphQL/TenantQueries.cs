@@ -39,7 +39,8 @@ public class TenantQueries
         HttpContext? httpContext = httpContextAccessor.HttpContext;
         if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true)
         {
-            throw new UnauthorizedAccessException("Authentication required");        }
+            throw new UnauthorizedAccessException("Authentication required");
+        }
 
         return await tenantService.GetTenantByIdAsync(id);
     }
@@ -56,7 +57,9 @@ public class TenantQueries
         if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true)
         {
             throw new UnauthorizedAccessException("Authentication required");
-        }        return await tenantService.GetDeletedTenantsAsync();
+        }
+
+        return await tenantService.GetDeletedTenantsAsync();
     }
 
     /// <summary>

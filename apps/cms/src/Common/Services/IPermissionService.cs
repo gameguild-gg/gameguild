@@ -230,7 +230,7 @@ public interface IPermissionService
     /// <param name="permissions">Permissions to grant</param>
     Task BulkGrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[] resourceIds, PermissionType[] permissions)
         where TPermission : ResourcePermission<TResource>, new()
-        where TResource : BaseEntity;    // ===== HELPER METHODS =====
+        where TResource : BaseEntity; // ===== HELPER METHODS =====
 
     /// <summary>
     /// Get the tenant context for a specific resource

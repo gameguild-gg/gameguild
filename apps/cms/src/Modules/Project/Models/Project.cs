@@ -26,108 +26,204 @@ public class Project : Content
     /// Short description (max 500 chars)
     /// </summary>
     [MaxLength(500)]
-    public string? ShortDescription { get; set; }
+    public string? ShortDescription
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Project image/logo URL
     /// </summary>
     [MaxLength(500)]
-    public string? ImageUrl { get; set; }
+    public string? ImageUrl
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Project type (Game, Tool, Art, etc.)
     /// </summary>
-    public ProjectType Type { get; set; } = ProjectType.Game;
+    public ProjectType Type
+    {
+        get;
+        set;
+    } = ProjectType.Game;
 
     /// <summary>
     /// Development status
     /// </summary>
-    public DevelopmentStatus DevelopmentStatus { get; set; } = DevelopmentStatus.Planning;
+    public DevelopmentStatus DevelopmentStatus
+    {
+        get;
+        set;
+    } = DevelopmentStatus.Planning;
 
     /// <summary>
     /// Project category (entity)
     /// </summary>
-    public virtual ProjectCategory? Category { get; set; }
+    public virtual ProjectCategory? Category
+    {
+        get;
+        set;
+    }
 
-    public Guid? CategoryId { get; set; }
+    public Guid? CategoryId
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Website URL
     /// </summary>
     [MaxLength(500)]
-    public string? WebsiteUrl { get; set; }
+    public string? WebsiteUrl
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Repository URL
     /// </summary>
     [MaxLength(500)]
-    public string? RepositoryUrl { get; set; }
+    public string? RepositoryUrl
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Social links (JSON string)
     /// </summary>
-    public string? SocialLinks { get; set; }
+    public string? SocialLinks
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Download URL or platform links
     /// </summary>
     [MaxLength(500)]
-    public string? DownloadUrl { get; set; }
+    public string? DownloadUrl
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Project tags (JSON array)
     /// </summary>
-    public string? Tags { get; set; }
+    public string? Tags
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Project metadata and statistics
     /// </summary>
-    public virtual ProjectMetadata? ProjectMetadata { get; set; }
+    public virtual ProjectMetadata? ProjectMetadata
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Navigation property to project versions
     /// </summary>
-    public virtual ICollection<ProjectVersion> Versions { get; set; } = new List<ProjectVersion>();    /// <summary>
+    public virtual ICollection<ProjectVersion> Versions
+    {
+        get;
+        set;
+    } = new List<ProjectVersion>();
+
+    /// <summary>
     /// Navigation property to project collaborators
     /// </summary>
-    public virtual ICollection<ProjectCollaborator> Collaborators { get; set; } = new List<ProjectCollaborator>();
+    public virtual ICollection<ProjectCollaborator> Collaborators
+    {
+        get;
+        set;
+    } = new List<ProjectCollaborator>();
 
     /// <summary>
     /// Navigation property to project releases
     /// </summary>
-    public virtual ICollection<ProjectRelease> Releases { get; set; } = new List<ProjectRelease>();
+    public virtual ICollection<ProjectRelease> Releases
+    {
+        get;
+        set;
+    } = new List<ProjectRelease>();
 
     /// <summary>
     /// Navigation property to project teams
     /// </summary>
-    public virtual ICollection<ProjectTeam> Teams { get; set; } = new List<ProjectTeam>();
+    public virtual ICollection<ProjectTeam> Teams
+    {
+        get;
+        set;
+    } = new List<ProjectTeam>();
 
     /// <summary>
     /// Navigation property to project followers
     /// </summary>
-    public virtual ICollection<ProjectFollower> Followers { get; set; } = new List<ProjectFollower>();
+    public virtual ICollection<ProjectFollower> Followers
+    {
+        get;
+        set;
+    } = new List<ProjectFollower>();
 
     /// <summary>
     /// Navigation property to project feedback/reviews
     /// </summary>
-    public virtual ICollection<ProjectFeedback> Feedbacks { get; set; } = new List<ProjectFeedback>();
+    public virtual ICollection<ProjectFeedback> Feedbacks
+    {
+        get;
+        set;
+    } = new List<ProjectFeedback>();
 
     /// <summary>
     /// Navigation property to jam submissions
     /// </summary>
-    public virtual ICollection<ProjectJamSubmission> JamSubmissions { get; set; } = new List<ProjectJamSubmission>();
+    public virtual ICollection<ProjectJamSubmission> JamSubmissions
+    {
+        get;
+        set;
+    } = new List<ProjectJamSubmission>();
 
     /// <summary>
     /// User who created the project
     /// </summary>
-    public virtual User.Models.User? CreatedBy { get; set; }    public Guid? CreatedById { get; set; }
+    public virtual User.Models.User? CreatedBy
+    {
+        get;
+        set;
+    }
+
+    public Guid? CreatedById
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Tenant this project belongs to (for multi-tenancy)
     /// </summary>
-    public override Tenant.Models.Tenant? Tenant { get; set; }
+    public override Tenant.Models.Tenant? Tenant
+    {
+        get;
+        set;
+    }
 
-    public Guid? TenantId { get; set; }
+    public Guid? TenantId
+    {
+        get;
+        set;
+    }
 
     /// <summary>
     /// Computed property: Is project active
@@ -188,7 +284,7 @@ public class Project : Content
     /// <summary>
     /// Computed property: Number of teams working on this project
     /// </summary>
-    [NotMapped]    public int TeamCount
+    [NotMapped] public int TeamCount
     {
         get => Teams?.Count(t => t.IsActive) ?? 0;
     }
@@ -240,7 +336,8 @@ public class Project : Content
             .Replace("/", "")
             .Replace("<", "")
             .Replace(">", "");
-    }}
+    }
+}
 
 /// <summary>
 /// Entity configuration for Project
@@ -248,7 +345,8 @@ public class Project : Content
 public class ProjectConfiguration : IEntityTypeConfiguration<Project>
 {
     public void Configure(EntityTypeBuilder<Project> builder)
-    {        // Table configuration
+    {
+        // Table configuration
         builder.ToTable("Projects");
 
         // Properties
@@ -296,10 +394,12 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.HasOne(p => p.CreatedBy)
             .WithMany()
             .HasForeignKey(p => p.CreatedById)
-            .OnDelete(DeleteBehavior.SetNull);        builder.HasMany(p => p.Versions)
+            .OnDelete(DeleteBehavior.SetNull);
+        builder.HasMany(p => p.Versions)
             .WithOne(v => v.Project)
             .HasForeignKey(v => v.ProjectId)
-            .OnDelete(DeleteBehavior.Cascade);        builder.HasMany(p => p.Collaborators)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(p => p.Collaborators)
             .WithOne(c => c.Project)
             .HasForeignKey(c => c.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
@@ -338,8 +438,20 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.HasIndex(p => p.TenantId);
         builder.HasIndex(p => p.CreatedAt);
         builder.HasIndex(p => p.UpdatedAt);
-        builder.HasIndex(p => new { p.Status, p.Visibility });
-        builder.HasIndex(p => new { p.CategoryId, p.Status });
-        builder.HasIndex(p => new { p.TenantId, p.Status });
+        builder.HasIndex(p => new
+            {
+                p.Status, p.Visibility
+            }
+        );
+        builder.HasIndex(p => new
+            {
+                p.CategoryId, p.Status
+            }
+        );
+        builder.HasIndex(p => new
+            {
+                p.TenantId, p.Status
+            }
+        );
     }
 }
