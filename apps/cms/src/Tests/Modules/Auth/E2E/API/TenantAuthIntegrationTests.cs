@@ -10,9 +10,9 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-namespace GameGuild.Tests.Modules.Auth.Integration
-{
-    public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+namespace GameGuild.Tests.Modules.Auth.E2E.API;
+
+public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
     {
         private readonly WebApplicationFactory<Program> _factory;
 
@@ -227,4 +227,3 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             Assert.Equal(refreshRequest.TenantId, responseData.TenantId);
         }
     }
-}

@@ -4,7 +4,7 @@ using GameGuild.Modules.User.Models;
 using GameGuild.Modules.User.Services;
 using Xunit;
 
-namespace GameGuild.Tests.Integration;
+namespace GameGuild.Tests.Common.Integration;
 
 public class BaseEntityIntegrationTests
 {

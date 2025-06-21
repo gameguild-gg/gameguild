@@ -8,9 +8,9 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Tests.Helpers;
 using Xunit.Abstractions;
 
-namespace GameGuild.Tests.Modules.Auth.Integration
-{
-    public class AuthIntegrationTests
+namespace GameGuild.Tests.Modules.Auth.E2E.API;
+
+public class AuthIntegrationTests
     {
         private readonly ITestOutputHelper _testOutputHelper;
 
@@ -337,4 +337,3 @@ namespace GameGuild.Tests.Modules.Auth.Integration
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
     }
-}
