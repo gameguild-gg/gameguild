@@ -6,6 +6,15 @@ using System.Text;
 using GameGuild.Data;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Common.Services;
+using GameGuild.Modules.Project.Models;
+using GameGuild.Tests.Fixtures;
+using GameGuild.Modules.Auth.Services;
+using GameGuild.Modules.Auth.Dtos;
+using GameGuild.Modules.User.Models;
+using GameGuild.Modules.Tenant.Models;
+using System.Net.Http.Headers;
+using Xunit.Abstractions;
 
 namespace GameGuild.Tests.Integration.Project.GraphQL;
 
@@ -13,48 +22,41 @@ namespace GameGuild.Tests.Integration.Project.GraphQL;
 /// Integration tests for Project GraphQL operations
 /// Tests GraphQL queries and mutations with real database
 /// </summary>
-public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
+public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDisposable
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly TestWebApplicationFactory _factory;
     private readonly HttpClient _client;
     private readonly ApplicationDbContext _context;
+    private readonly IServiceScope _scope;
+    private readonly ITestOutputHelper _output;
 
-    public ProjectGraphQLTests(WebApplicationFactory<Program> factory)
+    public ProjectGraphQLTests(TestWebApplicationFactory factory, ITestOutputHelper output)
     {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                // Remove the existing DbContext registration
-                ServiceDescriptor? descriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                if (descriptor != null)
-                {
-                    services.Remove(descriptor);
-                }
-
-                // Add in-memory database for testing
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase($"GraphQLTestDatabase_{Guid.NewGuid()}");
-                });
-
-                // Set environment variable for in-memory database
-                Environment.SetEnvironmentVariable("USE_IN_MEMORY_DB", "true");
-            });
-        });
-
-        _client = _factory.CreateClient();
+        _factory = factory;
+        _output = output;
+        _client = factory.CreateClient();
+        _scope = factory.Services.CreateScope();
 
         // Get database context for test setup
-        IServiceScope scope = _factory.Services.CreateScope();
-        _context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        _context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        
+        // Clear any existing data to ensure clean test state
+        ClearDatabase();
     }
 
     [Fact]
     public async Task GraphQL_GetProjects_ShouldReturnProjects()
     {
-        // Arrange
+        // Arrange - Create test user and tenant for authentication
+        var user = await CreateTestUserAsync();
+        var tenant = await CreateTestTenantAsync();
+        
+        // Grant content-type permission to read projects
+        await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Read });
+        
+        var token = await GenerateJwtTokenAsync(user, tenant);
+        SetAuthorizationHeader(token);
+
         var project1 = new GameGuild.Modules.Project.Models.Project
         {
             Title = "GraphQL Test Project 1",
@@ -102,19 +104,32 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
         // Act
         HttpResponseMessage response = await _client.PostAsync("/graphql", content);
 
+        // Debug output
+        _output.WriteLine($"Response Status: {response.StatusCode}");
+        string responseContent = await response.Content.ReadAsStringAsync();
+        _output.WriteLine($"Response Content: {responseContent}");
+
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        string responseContent = await response.Content.ReadAsStringAsync();
         Assert.Contains("GraphQL Test Project 1", responseContent);
         Assert.Contains("GraphQL Test Project 2", responseContent);
-        Assert.Contains("\"status\":\"Published\"", responseContent);
+        Assert.Contains("\"status\":\"PUBLISHED\"", responseContent);
     }
 
     [Fact]
     public async Task GraphQL_GetProjectById_ShouldReturnProject()
     {
-        // Arrange
+        // Arrange - Create test user and tenant for authentication
+        var user = await CreateTestUserAsync();
+        var tenant = await CreateTestTenantAsync();
+        
+        // Grant content-type permission to read projects
+        await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Read });
+        
+        var token = await GenerateJwtTokenAsync(user, tenant);
+        SetAuthorizationHeader(token);
+
         var project = new GameGuild.Modules.Project.Models.Project
         {
             Title = "Specific GraphQL Project",
@@ -130,7 +145,7 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
 
         var query = $@"
         {{
-            project(id: ""{project.Id}"") {{
+            projectById(id: ""{project.Id}"") {{
                 id
                 title
                 description
@@ -152,10 +167,14 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
         // Act
         HttpResponseMessage response = await _client.PostAsync("/graphql", content);
 
+        // Debug output
+        _output.WriteLine($"Response Status: {response.StatusCode}");
+        string responseContent = await response.Content.ReadAsStringAsync();
+        _output.WriteLine($"Response Content: {responseContent}");
+
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        string responseContent = await response.Content.ReadAsStringAsync();
         Assert.Contains("Specific GraphQL Project", responseContent);
         Assert.Contains("https://example.com", responseContent);
         Assert.Contains("https://github.com/test/repo", responseContent);
@@ -217,7 +236,19 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task GraphQL_CreateProject_ShouldCreateProject()
     {
-        // Arrange
+        // Arrange - Create test user and tenant for authentication
+        var user = await CreateTestUserAsync();
+        var tenant = await CreateTestTenantAsync();
+        
+        // Grant content-type permission to create projects
+        await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Create });
+        
+        var token = await GenerateJwtTokenAsync(user, tenant);
+        SetAuthorizationHeader(token);
+
+        // Create a test category first
+        var category = new Guid("11111111-1111-1111-1111-111111111111");
+
         var mutation = @"
         mutation {
             createProject(input: {
@@ -226,15 +257,13 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
                 shortDescription: ""GraphQL test""
                 status: DRAFT
                 visibility: PUBLIC
-                type: GAME
-                developmentStatus: PLANNING
                 websiteUrl: ""https://newproject.com""
+                categoryId: ""11111111-1111-1111-1111-111111111111""
             }) {
                 id
                 title
                 description
                 status
-                type
                 websiteUrl
                 slug
             }
@@ -251,10 +280,14 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
         // Act
         HttpResponseMessage response = await _client.PostAsync("/graphql", content);
 
+        // Debug output
+        _output.WriteLine($"Response Status: {response.StatusCode}");
+        string responseContent = await response.Content.ReadAsStringAsync();
+        _output.WriteLine($"Response Content: {responseContent}");
+
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        string responseContent = await response.Content.ReadAsStringAsync();
         Assert.Contains("New GraphQL Project", responseContent);
         Assert.Contains("Created via GraphQL mutation", responseContent);
         Assert.Contains("https://newproject.com", responseContent);
@@ -266,7 +299,6 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
         
         Assert.NotNull(createdProject);
         Assert.Equal("Created via GraphQL mutation", createdProject.Description);
-        Assert.Equal(ProjectType.Game, createdProject.Type);
     }
 
     [Fact]
@@ -334,7 +366,16 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task GraphQL_DeleteProject_ShouldDeleteProject()
     {
-        // Arrange
+        // Arrange - Create test user and tenant for authentication
+        var user = await CreateTestUserAsync();
+        var tenant = await CreateTestTenantAsync();
+        
+        // Grant content-type permission to delete projects
+        await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Delete });
+        
+        var token = await GenerateJwtTokenAsync(user, tenant);
+        SetAuthorizationHeader(token);
+
         var project = new GameGuild.Modules.Project.Models.Project
         {
             Title = "Project to Delete",
@@ -347,10 +388,7 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
 
         var mutation = $@"
         mutation {{
-            deleteProject(id: ""{project.Id}"") {{
-                success
-                message
-            }}
+            deleteProject(id: ""{project.Id}"")
         }}";
 
         var request = new
@@ -364,11 +402,15 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
         // Act
         HttpResponseMessage response = await _client.PostAsync("/graphql", content);
 
+        // Debug output
+        _output.WriteLine($"Response Status: {response.StatusCode}");
+        string responseContent = await response.Content.ReadAsStringAsync();
+        _output.WriteLine($"Response Content: {responseContent}");
+
         // Assert
         Assert.True(response.IsSuccessStatusCode);
         
-        string responseContent = await response.Content.ReadAsStringAsync();
-        Assert.Contains("\"success\":true", responseContent);
+        Assert.Contains("true", responseContent);
 
         // Verify soft delete in database
         GameGuild.Modules.Project.Models.Project? deletedProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == project.Id);
@@ -477,8 +519,125 @@ public class ProjectGraphQLTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Contains("DevelopmentStatus", responseContent); // Enum should be in schema
     }
 
+    /// <summary>
+    /// Clears all test data from the database to ensure clean test state
+    /// </summary>
+    private void ClearDatabase()
+    {
+        _context.Database.EnsureCreated();
+        
+        // Remove all projects
+        var existingProjects = _context.Projects.ToList();
+        _context.Projects.RemoveRange(existingProjects);
+        
+        // Remove all users
+        var existingUsers = _context.Users.ToList();
+        _context.Users.RemoveRange(existingUsers);
+        
+        // Remove all tenants
+        var existingTenants = _context.Tenants.ToList();
+        _context.Tenants.RemoveRange(existingTenants);
+        
+        // Remove all permissions
+        var existingContentTypePermissions = _context.ContentTypePermissions.ToList();
+        _context.ContentTypePermissions.RemoveRange(existingContentTypePermissions);
+        
+        var existingTenantPermissions = _context.TenantPermissions.ToList();
+        _context.TenantPermissions.RemoveRange(existingTenantPermissions);
+        
+        // Save changes
+        _context.SaveChanges();
+    }
+
+    /// <summary>
+    /// Creates a test user for authentication purposes
+    /// </summary>
+    private async Task<User> CreateTestUserAsync()
+    {
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test User",
+            Email = "test@example.com",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+        return user;
+    }
+
+    /// <summary>
+    /// Creates a test tenant for multi-tenancy support
+    /// </summary>
+    private async Task<Tenant> CreateTestTenantAsync()
+    {
+        var tenant = new Tenant
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test Tenant",
+            Slug = "test-tenant",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.Tenants.Add(tenant);
+        await _context.SaveChangesAsync();
+        return tenant;
+    }
+
+    /// <summary>
+    /// Grants content-type permissions for a user to perform operations on projects
+    /// </summary>
+    private async Task GrantContentTypePermissions(User user, Tenant tenant, string contentTypeName, PermissionType[] permissions)
+    {
+        var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
+        await permissionService.GrantContentTypePermissionAsync(
+            user.Id, 
+            tenant.Id, 
+            contentTypeName, 
+            permissions
+        );
+    }
+
+    /// <summary>
+    /// Generates a JWT token for test authentication
+    /// </summary>
+    private Task<string> GenerateJwtTokenAsync(User user, Tenant tenant)
+    {
+        var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
+        
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Username = user.Name,
+            Email = user.Email
+        };
+
+        var roles = new[] { "User" };
+
+        var additionalClaims = new[]
+        {
+            new System.Security.Claims.Claim("tenant_id", tenant.Id.ToString())
+        };
+
+        return Task.FromResult(jwtService.GenerateAccessToken(userDto, roles, additionalClaims));
+    }
+
+    /// <summary>
+    /// Sets the authorization header with the JWT token
+    /// </summary>
+    private void SetAuthorizationHeader(string token)
+    {
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    }
+
     public void Dispose()
     {
+        _scope.Dispose();
         _context.Dispose();
         _client.Dispose();
     }

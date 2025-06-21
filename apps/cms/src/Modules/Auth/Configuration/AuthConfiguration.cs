@@ -44,8 +44,7 @@ namespace GameGuild.Modules.Auth.Configuration
                         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                     }
-                )
-                .AddJwtBearer(options =>
+                )                .AddJwtBearer(options =>
                     {
                         options.TokenValidationParameters = new TokenValidationParameters
                         {
@@ -56,7 +55,10 @@ namespace GameGuild.Modules.Auth.Configuration
                             ValidIssuer = issuer,
                             ValidAudience = audience,
                             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-                            ClockSkew = TimeSpan.Zero // Remove default 5-minute clock skew
+                            ClockSkew = TimeSpan.Zero, // Remove default 5-minute clock skew
+                            RequireSignedTokens = true,
+                            // Don't require kid when using symmetric keys
+                            TryAllIssuerSigningKeys = true
                         };
 
                         options.Events = new JwtBearerEvents
