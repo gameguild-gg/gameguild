@@ -44,11 +44,11 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
       setSortField(field);
       setSortDirection('asc');
     }
-  };
-  const handleProjectCreated = (newProject: Project) => {
+  };  const handleProjectCreated = (newProject: Project) => {
     const projectListItem: ProjectListItem = {
       id: newProject.id,
       name: newProject.title,
+      slug: newProject.slug || newProject.id, // Add slug with fallback to ID
       status: mapStatusToDisplay(newProject.status),
       createdAt: newProject.createdAt,
       updatedAt: newProject.updatedAt,
@@ -91,18 +91,18 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
           </div>
           <CreateProjectForm onProjectCreated={handleProjectCreated} />
         </div>
-      </header>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 h-full gap-4">
+      </header>      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 auto-rows-fr gap-4">
         {paginatedProjects.map((project) => (
-          <ProjectCard
-            key={project.id}
-            id={project.id}
-            name={project.name}
-            status={project.status}
-            createdAt={project.createdAt}
-            updatedAt={project.updatedAt}
-          />
+          <div key={project.id} className="h-full">
+            <ProjectCard
+              id={project.id}
+              name={project.name}
+              slug={project.slug}
+              status={project.status}
+              createdAt={project.createdAt}
+              updatedAt={project.updatedAt}
+            />
+          </div>
         ))}
         {paginatedProjects.length === 0 && (
           <div className="flex flex-col flex-1 col-span-full items-center justify-center h-full text-center gap-4">

@@ -57,7 +57,7 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
       visibility: formData.visibility === 'public' ? 'Public' : 'Private',    });
     onProjectCreated(newProject);
     setIsOpen(false);
-    router.push(`/dashboard/projects/${encodeURIComponent(newProject.id)}`);
+    router.push(`/dashboard/projects/${encodeURIComponent(newProject.slug || newProject.id)}`);
   };
 
   return (

@@ -34,26 +34,24 @@ function getStatusIcon(status: 'not-started' | 'in-progress' | 'active' | 'on-ho
   }
 }
 
-export function ProjectCard({ id, name, status, createdAt, updatedAt }: ProjectCardProps) {
+export function ProjectCard({ id, name, status, createdAt, updatedAt, slug }: ProjectCardProps) {
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     if (e.target instanceof Element && e.target.closest('.hover-card-content')) {
       e.preventDefault();
     }
-  };
-  return (
-    <Link href={`/dashboard/projects/${id}`} className="block" onClick={handleClick}>
+  };  return (    <Link href={`/dashboard/projects/${slug || id}`} className="block h-full" onClick={handleClick}>
       <HoverCard>
         <HoverCardTrigger asChild>
-          <div className="h-full p-4 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer">
-            <div className="mb-2">
+          <div className="h-full p-4 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer flex flex-col min-h-[120px]">
+            <div className="mb-3">
               <div className={`h-1 w-6 rounded ${getStatusColor(status)}`} />
             </div>
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <p className="text-zinc-400 text-sm uppercase tracking-wider">{status.replace('-', ' ')}</p>
+            <div className="flex flex-col justify-between flex-grow space-y-2">
+              <div className="flex justify-between items-start">
+                <p className="text-zinc-400 text-xs uppercase tracking-wider font-medium">{status.replace('-', ' ')}</p>
                 {getStatusIcon(status)}
               </div>
-              <h3 className="text-zinc-100 font-medium">{name}</h3>
+              <h3 className="text-zinc-100 font-medium text-sm leading-tight line-clamp-2 mt-auto">{name}</h3>
             </div>
           </div>
         </HoverCardTrigger>

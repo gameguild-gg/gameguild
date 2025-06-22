@@ -145,9 +145,7 @@
     html, body {
         @apply w-full h-full;
         @apply antialiased;
-    }
-
-    html body[data-scroll-locked] {
+    }    html body[data-scroll-locked] {
         overflow: visible !important;
         margin-right: 0 !important;
     }

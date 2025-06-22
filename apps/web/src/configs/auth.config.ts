@@ -3,6 +3,7 @@ import { environment } from '@/configs/environment';
 import { NextAuthConfig } from 'next-auth';
 import { apiClient } from '@/lib/api-client';
 import { SignInResponse } from '@/types/auth';
+import { getJwtExpiryDate, isJwtExpired } from '@/lib/jwt-utils';
 
 export const authConfig: NextAuthConfig = {
   providers: [
@@ -74,8 +75,7 @@ export const authConfig: NextAuthConfig = {
       console.log('SignIn: Provider not supported or not Google:', account?.provider);
       // For other providers, return false or implement accordingly
       return false;
-    },
-    async jwt({ token, user, account, trigger, session }) {
+    },    async jwt({ token, user, account, trigger, session }) {
       // If this is a new sign-in, store the CMS data
       if (user && (user as any).cmsData) {
         const cmsData = (user as any).cmsData as SignInResponse;
@@ -94,15 +94,28 @@ export const authConfig: NextAuthConfig = {
         if (session.currentTenant) {
           token.currentTenant = session.currentTenant;
         }
-      }      // Check if token is expired and refresh if needed
+      }
+
+      // Check if token is expired and refresh if needed
       const now = new Date();
-      const expiresAt = token.expires ? new Date(token.expires as unknown as string) : null;
+      let expiresAt: Date | null = null;
+      
+      // Try to get expiry from JWT token itself (most reliable)
+      if (token.accessToken) {
+        expiresAt = getJwtExpiryDate(token.accessToken as string);
+      }
+      
+      // Fallback to stored expires value if JWT decode fails
+      if (!expiresAt && token.expires) {
+        expiresAt = new Date(token.expires as unknown as string);
+      }
       
       console.log('Token expiry check:', {
         now: now.toISOString(),
         expiresAt: expiresAt?.toISOString(),
         isExpired: expiresAt ? now > expiresAt : false,
-        hasRefreshToken: !!token.refreshToken
+        hasRefreshToken: !!token.refreshToken,
+        tokenSource: expiresAt ? (token.accessToken ? 'JWT_DECODE' : 'STORED_VALUE') : 'NONE'
       });
       
       if (expiresAt && now > expiresAt && token.refreshToken) {
@@ -118,6 +131,7 @@ export const authConfig: NextAuthConfig = {
           token.expires = new Date(refreshResponse.expires);
           
           // Clear any previous errors
+          delete token.error;
           delete token.error;
         } catch (error) {
           console.error('❌ Failed to refresh token:', error);

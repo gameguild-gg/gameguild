@@ -109,9 +109,7 @@ namespace GameGuild.Modules.Auth.Services
 
                 return null;
             }
-        }
-
-        public ClaimsPrincipal? ValidateToken(string token)
+        }        public ClaimsPrincipal? ValidateToken(string token)
         {
             var tokenValidationParameters = new TokenValidationParameters
             {
@@ -122,7 +120,7 @@ namespace GameGuild.Modules.Auth.Services
                 ValidAudience = _configuration["Jwt:Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? "development-fallback-key-that-is-at-least-32-characters-long-for-testing")),
                 ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
+                ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes clock skew tolerance
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();
