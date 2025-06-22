@@ -11,7 +11,7 @@ export type PropsWithLocaleParams<P = unknown> = P & {
 };
 
 export type PropsWithLocaleSlugParams<P = unknown> = P & {
-  params: P & { locale: string; slug: string };
+  params: Promise<{ locale: string; slug: string }>;
 };
 
 export type OGImageDescriptor = {

@@ -4,6 +4,7 @@ using GameGuild.Modules.Project.Services;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Attributes;
 using GameGuild.Modules.Auth.Attributes;
+using System.Security.Claims;
 
 namespace GameGuild.Modules.Project.Controllers;
 
@@ -16,14 +17,21 @@ public class ProjectsController : ControllerBase
     public ProjectsController(IProjectService projectService)
     {
         _projectService = projectService;
-    }
-
-    // GET: projects
+    }    // GET: projects
     [HttpGet]
     [RequireResourcePermission<Models.Project>(PermissionType.Read)]
     public async Task<ActionResult<IEnumerable<Models.Project>>> GetProjects()
     {
-        var projects = await _projectService.GetAllProjectsAsync();
+        // Get the current authenticated user's ID
+        string? userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
+        {
+            return Unauthorized("User ID not found in token");
+        }
+
+        // Return only projects created by the authenticated user
+        var projects = await _projectService.GetProjectsByCreatorAsync(userId);
 
         return Ok(projects);
     }
@@ -84,12 +92,22 @@ public class ProjectsController : ControllerBase
         var projects = await _projectService.GetProjectsByStatusAsync(status);
 
         return Ok(projects);
-    } // POST: projects
-
+    }    // POST: projects
     [HttpPost]
     [RequireResourcePermission<Models.Project>(PermissionType.Create)]
     public async Task<ActionResult<Models.Project>> CreateProject([FromBody] Models.Project project)
     {
+        // Get the current authenticated user's ID
+        string? userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
+        {
+            return Unauthorized("User ID not found in token");
+        }
+
+        // Set the creator ID from the authenticated user
+        project.CreatedById = userId;
+
         // Auto-generate slug if not provided
         if (string.IsNullOrEmpty(project.Slug))
         {
