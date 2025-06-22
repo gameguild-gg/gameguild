@@ -43,12 +43,12 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
             return;
         }
 
+        // Extract tenant ID - this is optional for global users
         string? tenantIdClaim = context.HttpContext.User.FindFirst("tenant_id")?.Value;
-        if (!Guid.TryParse(tenantIdClaim, out Guid tenantId))
+        Guid? tenantId = null;
+        if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out Guid parsedTenantId))
         {
-            context.Result = new UnauthorizedResult();
-
-            return;
+            tenantId = parsedTenantId;
         }
 
         // Extract resource ID from route parameters
@@ -58,9 +58,7 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
             context.Result = new BadRequestResult();
 
             return;
-        }
-
-        // Hierarchical permission checking: Resource → Content-Type → Tenant
+        }        // Hierarchical permission checking: Resource → Content-Type → Tenant
 
         // Step 1 - Check resource-level permission using generic types
         try
@@ -129,9 +127,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
     {
         _requiredPermission = requiredPermission;
         _resourceIdParameterName = resourceIdParameterName;
-    }
-
-    public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
+    }    public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
         var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
 
@@ -144,13 +140,13 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
             return;
         }
 
+        // Extract tenant ID - this is optional for global users
         string? tenantIdClaim = context.HttpContext.User.FindFirst("tenant_id")?.Value;
-        if (!Guid.TryParse(tenantIdClaim, out Guid tenantId))
+        Guid? tenantId = null;
+        if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out Guid parsedTenantId))
         {
-            context.Result = new UnauthorizedResult();
-
-            return;
-        } // Extract resource ID from route parameters
+            tenantId = parsedTenantId;
+        }// Extract resource ID from route parameters
         var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
         Guid resourceId = Guid.Empty;
         bool hasResourceId = Guid.TryParse(resourceIdValue, out resourceId);

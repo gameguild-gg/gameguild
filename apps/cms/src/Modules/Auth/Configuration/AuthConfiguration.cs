@@ -47,15 +47,14 @@ namespace GameGuild.Modules.Auth.Configuration
             ).AddJwtBearer(options =>
                 {
                     options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
+                    {                        ValidateIssuer = true,
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
                         ValidIssuer = issuer,
                         ValidAudience = audience,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-                        ClockSkew = TimeSpan.Zero, // Remove default 5-minute clock skew
+                        ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
                         RequireSignedTokens = true,
                         // Don't require kid when using symmetric keys
                         TryAllIssuerSigningKeys = true

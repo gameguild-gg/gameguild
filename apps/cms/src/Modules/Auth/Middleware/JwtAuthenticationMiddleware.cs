@@ -65,7 +65,7 @@ namespace GameGuild.Modules.Auth.Middleware
                 ValidateAudience = true,
                 ValidAudience = _configuration["Jwt:Audience"],
                 ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
+                ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes clock skew tolerance
             };
 
             ClaimsPrincipal? principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);

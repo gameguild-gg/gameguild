@@ -188,7 +188,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                             ValidIssuer = "TestIssuer",
                             ValidAudience = "TestAudience",
                             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters")),
-                            ClockSkew = TimeSpan.Zero,
+                            ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
                             RequireSignedTokens = true,
                             TryAllIssuerSigningKeys = true
                         };
