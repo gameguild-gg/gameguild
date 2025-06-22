@@ -103,21 +103,16 @@ export default function Page(paramsProps: PropsWithLocaleSlugParams) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Banner */}
-      <div className="relative h-64 md:h-96">
-        <Image
-          src="https://placehold.co/1200x400/1f2937/ffffff?text=Project+Banner"
-          alt={`${project.title} Banner`}
-          fill
-          className="object-cover brightness-50"
-        />
+    <div className="min-h-screen bg-background">      {/* Banner */}
+      <div className="relative h-64 md:h-96 bg-gradient-to-br from-zinc-800 to-zinc-900">
+        {/* CSS-based placeholder banner */}
+        <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 via-zinc-700 to-zinc-900 opacity-90" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white text-center px-4">
+          <h1 className="text-4xl md:text-6xl font-bold text-white text-center px-4 drop-shadow-lg">
             {project.title}
           </h1>
         </div>
-      </div>      {/* Content */}
+      </div>{/* Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Debug and Refresh Panel */}
         <div className="mb-6 p-4 bg-muted rounded-lg">
