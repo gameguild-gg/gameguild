@@ -135,8 +135,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         else
         {
             // Use SQLite for regular development
-            options.UseSqlite(connectionString);
-        }
+            options.UseSqlite(connectionString);        }
+
+        // Suppress SQLite pragma warnings
+        options.ConfigureWarnings(warnings =>
+            warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
         // Enable sensitive data logging in development
         if (!builder.Environment.IsDevelopment()) return;

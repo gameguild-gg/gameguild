@@ -128,7 +128,7 @@ public class JwtTokenServiceTests
         [Fact]
         public void ValidateToken_ExpiredToken_ReturnsNull()
         {
-            // Arrange - Create a token that expires immediately
+            // Arrange - Create a token that expires well beyond the clock skew tolerance
             var expiredConfigData = new Dictionary<string, string>
             {
                 {
@@ -141,8 +141,8 @@ public class JwtTokenServiceTests
                     "Jwt:Audience", "test-audience"
                 },
                 {
-                    "Jwt:ExpiryInMinutes", "-1"
-                }, // Expired
+                    "Jwt:ExpiryInMinutes", "-10"
+                }, // Expired by 10 minutes (beyond 5-minute clock skew)
                 {
                     "Jwt:RefreshTokenExpiryInDays", "7"
                 }
@@ -164,9 +164,6 @@ public class JwtTokenServiceTests
             };
             string expiredToken = expiredTokenService.GenerateAccessToken(user, roles);
 
-            // Wait a moment to ensure the token is truly expired
-            Thread.Sleep(100);
-
             // Act
             ClaimsPrincipal? principal = _jwtTokenService.ValidateToken(expiredToken);
 
@@ -177,7 +174,7 @@ public class JwtTokenServiceTests
         [Fact]
         public void GetPrincipalFromExpiredToken_ExpiredToken_ReturnsClaimsPrincipal()
         {
-            // Arrange - Create a token that expires immediately
+            // Arrange - Create a token that expires immediately (OK for this test since ValidateLifetime = false)
             var expiredConfigData = new Dictionary<string, string>
             {
                 {
@@ -339,7 +336,7 @@ public class JwtTokenServiceTests
         [Fact]
         public void GetPrincipalFromExpiredToken_WithTenantClaims_PreservesTenantClaims()
         {
-            // Arrange - Create a token that expires immediately but has tenant claims
+            // Arrange - Create a token that expires immediately but has tenant claims (OK for this test since ValidateLifetime = false)
             var expiredConfigData = new Dictionary<string, string>
             {
                 {
