@@ -99,16 +99,16 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
             }
         );
         var token = await CreateJwtTokenForUserAsync(user, tenant);
-        SetAuthorizationHeader(token);
-
-        var project1 = new GameGuild.Modules.Project.Models.Project
+        SetAuthorizationHeader(token);        var project1 = new GameGuild.Modules.Project.Models.Project
         {
             Title = "Test Project 1",
             Description = "Description 1",
             Status = ContentStatus.Published,
             Visibility = AccessLevel.Public,
             Type = ProjectType.Game,
-            DevelopmentStatus = DevelopmentStatus.InDevelopment
+            DevelopmentStatus = DevelopmentStatus.InDevelopment,
+            CreatedById = user.Id, // Associate with the test user
+            TenantId = tenant.Id
         };
 
         var project2 = new GameGuild.Modules.Project.Models.Project
@@ -118,7 +118,9 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
             Status = ContentStatus.Published,
             Visibility = AccessLevel.Public,
             Type = ProjectType.Tool,
-            DevelopmentStatus = DevelopmentStatus.Released
+            DevelopmentStatus = DevelopmentStatus.Released,
+            CreatedById = user.Id, // Associate with the test user
+            TenantId = tenant.Id
         };
 
         _context.Projects.AddRange(project1, project2);
@@ -262,11 +264,14 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
             }
         );
         var token = await CreateJwtTokenForUserAsync(user, tenant);
-        SetAuthorizationHeader(token);
-
-        var project = new GameGuild.Modules.Project.Models.Project
+        SetAuthorizationHeader(token);        var project = new GameGuild.Modules.Project.Models.Project
         {
-            Title = "Specific Test Project", Description = "This is a specific test project", Status = ContentStatus.Published, Visibility = AccessLevel.Public
+            Title = "Specific Test Project", 
+            Description = "This is a specific test project", 
+            Status = ContentStatus.Published, 
+            Visibility = AccessLevel.Public,
+            CreatedById = user.Id,
+            TenantId = tenant.Id
         };
 
         _context.Projects.Add(project);
@@ -322,11 +327,17 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     {
         // Arrange - Clear database to ensure clean state
         ClearDatabase();
+          // No authentication needed since endpoint is [Public]
+        // Create test user for project ownership
+        var user = await CreateTestUserAsync();
         
-        // No authentication needed since endpoint is [Public]
         var project = new GameGuild.Modules.Project.Models.Project
         {
-            Title = "Slug Test Project", Description = "This project tests slug functionality", Status = ContentStatus.Published, Visibility = AccessLevel.Public
+            Title = "Slug Test Project", 
+            Description = "This project tests slug functionality", 
+            Status = ContentStatus.Published, 
+            Visibility = AccessLevel.Public,
+            CreatedById = user.Id
         };
 
         // Manually set the slug using the Project's GenerateSlug method
@@ -398,16 +409,24 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
         var token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
 
-        var categoryId = Guid.NewGuid();
-
-        var project1 = new GameGuild.Modules.Project.Models.Project
+        var categoryId = Guid.NewGuid();        var project1 = new GameGuild.Modules.Project.Models.Project
         {
-            Title = "Category Project 1", CategoryId = categoryId, Status = ContentStatus.Published, Visibility = AccessLevel.Public
+            Title = "Category Project 1", 
+            CategoryId = categoryId, 
+            Status = ContentStatus.Published, 
+            Visibility = AccessLevel.Public,
+            CreatedById = user.Id,
+            TenantId = tenant.Id
         };
 
         var project2 = new GameGuild.Modules.Project.Models.Project
         {
-            Title = "Category Project 2", CategoryId = categoryId, Status = ContentStatus.Published, Visibility = AccessLevel.Public
+            Title = "Category Project 2", 
+            CategoryId = categoryId, 
+            Status = ContentStatus.Published, 
+            Visibility = AccessLevel.Public,
+            CreatedById = user.Id,
+            TenantId = tenant.Id
         };
 
         var project3 = new GameGuild.Modules.Project.Models.Project
@@ -415,7 +434,9 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
             Title = "Other Category Project",
             CategoryId = Guid.NewGuid(), // Different category
             Status = ContentStatus.Published,
-            Visibility = AccessLevel.Public
+            Visibility = AccessLevel.Public,
+            CreatedById = user.Id,
+            TenantId = tenant.Id
         };
 
         _context.Projects.AddRange(project1, project2, project3);
@@ -459,16 +480,22 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
             }
         );
         var token = await CreateJwtTokenForUserAsync(user, tenant);
-        SetAuthorizationHeader(token);
-
-        var publishedProject = new GameGuild.Modules.Project.Models.Project
+        SetAuthorizationHeader(token);        var publishedProject = new GameGuild.Modules.Project.Models.Project
         {
-            Title = "Published Project", Status = ContentStatus.Published, Visibility = AccessLevel.Public
+            Title = "Published Project", 
+            Status = ContentStatus.Published, 
+            Visibility = AccessLevel.Public,
+            CreatedById = user.Id,
+            TenantId = tenant.Id
         };
 
         var draftProject = new GameGuild.Modules.Project.Models.Project
         {
-            Title = "Draft Project", Status = ContentStatus.Draft, Visibility = AccessLevel.Public
+            Title = "Draft Project", 
+            Status = ContentStatus.Draft, 
+            Visibility = AccessLevel.Public,
+            CreatedById = user.Id,
+            TenantId = tenant.Id
         };
 
         _context.Projects.AddRange(publishedProject, draftProject);
@@ -492,11 +519,13 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
         Assert.NotNull(projects);
         Assert.Single(projects);
         Assert.Equal("Published Project", projects.First().Title);
-    }    [Fact]
-    public async Task GetPublicProjects_ShouldReturnOnlyPublicPublishedProjects()
+    }    [Fact]    public async Task GetPublicProjects_ShouldReturnOnlyPublicPublishedProjects()
     {
         // Arrange - Clear database to ensure clean state
         ClearDatabase();
+        
+        // Create test user for project ownership
+        var user = await CreateTestUserAsync();
         
         // Use the default test tenant that MockTenantContextService provides
         var testTenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -513,7 +542,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
             Description = "A public project",
             Status = ContentStatus.Published,
             Visibility = AccessLevel.Public,
-            Tenant = null // Make it global - accessible across all tenants
+            Tenant = null, // Make it global - accessible across all tenants
+            CreatedById = user.Id
         };
 
         var privateProject = new GameGuild.Modules.Project.Models.Project
@@ -522,7 +552,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
             Description = "A private project",
             Status = ContentStatus.Published,
             Visibility = AccessLevel.Private,
-            Tenant = null // Make it global - accessible across all tenants
+            Tenant = null, // Make it global - accessible across all tenants
+            CreatedById = user.Id
         };
 
         var draftProject = new GameGuild.Modules.Project.Models.Project
@@ -531,7 +562,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
             Description = "A draft project",
             Status = ContentStatus.Draft,
             Visibility = AccessLevel.Public,
-            Tenant = null // Make it global - accessible across all tenants
+            Tenant = null, // Make it global - accessible across all tenants
+            CreatedById = user.Id
         };
         _context.Projects.AddRange(publicProject, privateProject, draftProject);
         await _context.SaveChangesAsync();

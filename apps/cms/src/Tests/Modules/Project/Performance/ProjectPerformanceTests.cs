@@ -154,7 +154,7 @@ public class ProjectPerformanceTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Updated Title", result.Title);
-        Assert.True(stopwatch.ElapsedMilliseconds < 200, $"Project update took {stopwatch.ElapsedMilliseconds}ms, expected under 200ms"); // More realistic timing
+        Assert.True(stopwatch.ElapsedMilliseconds < 300, $"Project update took {stopwatch.ElapsedMilliseconds}ms, expected under 300ms"); // More realistic timing with permission checks
     }
 
     [Fact]

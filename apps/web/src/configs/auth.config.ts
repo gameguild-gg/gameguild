@@ -95,19 +95,36 @@ export const authConfig: NextAuthConfig = {
           token.currentTenant = session.currentTenant;
         }
       }      // Check if token is expired and refresh if needed
-      if (token.expires && new Date() > new Date(token.expires as unknown as string)) {
+      const now = new Date();
+      const expiresAt = token.expires ? new Date(token.expires as unknown as string) : null;
+      
+      console.log('Token expiry check:', {
+        now: now.toISOString(),
+        expiresAt: expiresAt?.toISOString(),
+        isExpired: expiresAt ? now > expiresAt : false,
+        hasRefreshToken: !!token.refreshToken
+      });
+      
+      if (expiresAt && now > expiresAt && token.refreshToken) {
+        console.log('🔄 Token expired, attempting refresh...');
         try {
           const refreshResponse = await apiClient.refreshToken({
             refreshToken: token.refreshToken as string,
           });
 
+          console.log('✅ Token refresh successful');
           token.accessToken = refreshResponse.accessToken;
           token.refreshToken = refreshResponse.refreshToken;
           token.expires = new Date(refreshResponse.expires);
+          
+          // Clear any previous errors
+          delete token.error;
         } catch (error) {
-          console.error('Failed to refresh token:', error);
+          console.error('❌ Failed to refresh token:', error);
           // Token refresh failed, user needs to sign in again
           token.error = 'RefreshTokenError';
+          token.accessToken = undefined;
+          token.refreshToken = undefined;
         }
       }
 

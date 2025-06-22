@@ -105,6 +105,9 @@ builder.Services.AddUserProfileModule(); // Register the UserProfile module
 builder.Services.AddProjectModule(); // Register the Project module
 builder.Services.AddAuthModule(builder.Configuration); // Register the Auth module
 
+// Add database seeder
+builder.Services.AddScoped<GameGuild.Common.Services.IDatabaseSeeder, GameGuild.Common.Services.DatabaseSeeder>();
+
 // Add HTTP context accessor for GraphQL authorization
 builder.Services.AddHttpContextAccessor();
 
@@ -182,18 +185,21 @@ using (IServiceScope scope = app.Services.CreateScope())
         {
             logger.LogInformation("Applying database migrations...");
             context.Database.Migrate();
-            logger.LogInformation("Database migrations applied successfully");
-        }
+            logger.LogInformation("Database migrations applied successfully");        }
         else
         {
             logger.LogInformation("Using in-memory database, skipping migrations");
             // Create database schema for InMemory database
             context.Database.EnsureCreated();
         }
+
+        // Seed initial data
+        var seeder = scope.ServiceProvider.GetRequiredService<GameGuild.Common.Services.IDatabaseSeeder>();
+        await seeder.SeedAsync();
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "An error occurred while applying database migrations");
+        logger.LogError(ex, "An error occurred while applying database migrations or seeding data");
 
         throw; // Rethrow to fail startup if migrations fail
     }

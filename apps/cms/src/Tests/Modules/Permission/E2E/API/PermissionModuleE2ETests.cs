@@ -311,9 +311,14 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
         // Act - Request without CREATE permission
         HttpResponseMessage response = await _client.PostAsync("/tenants", content);
 
+        // Debug: Log the actual response
+        string responseContent = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"DEBUG: Expected 403/401 but got {response.StatusCode}. Content: {responseContent}");
+
         // Assert
         Assert.True(
-            response.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized
+            response.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized,
+            $"Expected 403 Forbidden or 401 Unauthorized but got {response.StatusCode}. Response: {responseContent}"
         );
     }
 
