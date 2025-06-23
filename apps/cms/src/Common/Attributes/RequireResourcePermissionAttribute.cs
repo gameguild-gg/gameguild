@@ -217,6 +217,16 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
                         }
 
                         break; // Add more resource types here as they are implemented
+                    
+                case "Program":
+                    var hasProgramPermission = await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Program.Models.ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+                        userId, tenantId, resourceId, _requiredPermission);
+                    if (hasProgramPermission)
+                    {
+                        return; // Permission granted at resource level
+                    }
+                    break;
+                    
                     default:
                         // For unknown resource types, skip resource-level check and go to content-type fallback
                         break;

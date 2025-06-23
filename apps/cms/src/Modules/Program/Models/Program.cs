@@ -6,6 +6,7 @@ using System.Text.Json;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Feedback.Models;
 using GameGuild.Modules.Product.Models;
+using GameGuild.Common.Enums;
 
 namespace GameGuild.Modules.Program.Models;
 
@@ -13,7 +14,9 @@ namespace GameGuild.Modules.Program.Models;
 [Index(nameof(Visibility))]
 [Index(nameof(Status))]
 [Index(nameof(Slug))]
-public class Program : Content, ITenantable
+[Index(nameof(Category))]
+[Index(nameof(Difficulty))]
+public class Program : Content
 {
     private string? _thumbnail;
 
@@ -35,6 +38,24 @@ public class Program : Content, ITenantable
         get => _thumbnail;
         set => _thumbnail = value;
     }
+
+    /// <summary>
+    /// Category of the program (Programming, DataScience, etc.)
+    /// </summary>
+    public ProgramCategory Category
+    {
+        get;
+        set;
+    } = ProgramCategory.Other;
+
+    /// <summary>
+    /// Difficulty level of the program
+    /// </summary>
+    public ProgramDifficulty Difficulty
+    {
+        get;
+        set;
+    } = ProgramDifficulty.Beginner;
 
     // Navigation properties
     public virtual ICollection<ProgramContent> ProgramContents
