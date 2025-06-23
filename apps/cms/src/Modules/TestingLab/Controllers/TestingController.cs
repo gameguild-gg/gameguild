@@ -5,6 +5,7 @@ using GameGuild.Modules.Auth.Attributes;
 using System.Security.Claims;
 using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Modules.TestingLab.Services;
+using GameGuild.Modules.TestingLab.Dtos;
 
 namespace GameGuild.Modules.TestingLab.Controllers;
 
@@ -56,12 +57,10 @@ public class TestingController : ControllerBase
         }
 
         return Ok(request);
-    }
-
-    // POST: testing/requests
+    }    // POST: testing/requests
     [HttpPost("requests")]
     [RequireResourcePermission<TestingRequest>(PermissionType.Create)]
-    public async Task<ActionResult<TestingRequest>> CreateTestingRequest(TestingRequest request)
+    public async Task<ActionResult<TestingRequest>> CreateTestingRequest(CreateTestingRequestDto requestDto)
     {
         try
         {
@@ -71,9 +70,7 @@ public class TestingController : ControllerBase
             if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
             {
                 return Unauthorized("User ID not found in token");
-            }
-
-            request.CreatedById = userId;
+            }            var request = requestDto.ToTestingRequest(userId);
             var createdRequest = await _testService.CreateTestingRequestAsync(request);
 
             return CreatedAtAction(nameof(GetTestingRequest), new { id = createdRequest.Id }, createdRequest);
