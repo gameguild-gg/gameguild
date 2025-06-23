@@ -150,6 +150,8 @@ public class TestingController : ControllerBase
         return Ok(sessions);
     }
 
+
+
     // GET: testing/sessions/{id}
     [HttpGet("sessions/{id}")]
     [RequireResourcePermission<TestingSession>(PermissionType.Read)]
