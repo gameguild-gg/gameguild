@@ -41,6 +41,14 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddProgramModule(this IServiceCollection services)
+    {
+        // Register Program module services
+        services.AddScoped<Modules.Program.Services.IProgramService, Modules.Program.Services.ProgramService>();
+
+        return services;
+    }
+
     public static IServiceCollection AddCommonServices(this IServiceCollection services)
     {
         // Add logging

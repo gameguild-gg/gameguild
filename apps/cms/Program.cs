@@ -102,6 +102,7 @@ builder.Services.AddCommonServices();
 builder.Services.AddUserModule();
 builder.Services.AddTenantModule();
 builder.Services.AddUserProfileModule(); // Register the UserProfile module
+builder.Services.AddProgramModule(); // Register the Program module
 builder.Services.AddProjectModule(); // Register the Project module
 builder.Services.AddTestModule(); // Register the Test module
 builder.Services.AddAuthModule(builder.Configuration); // Register the Auth module
