@@ -140,8 +140,6 @@ public class TestService : ITestService
             .Where(ts => ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
-            .Include(ts => ts.Manager)
-            .Include(ts => ts.CreatedBy)
             .OrderByDescending(ts => ts.SessionDate)
             .ToListAsync();
     }
@@ -152,8 +150,6 @@ public class TestService : ITestService
             .Where(ts => ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
-            .Include(ts => ts.Manager)
-            .Include(ts => ts.CreatedBy)
             .OrderByDescending(ts => ts.SessionDate)
             .Skip(skip)
             .Take(take)
@@ -166,8 +162,6 @@ public class TestService : ITestService
             .Where(ts => ts.Id == id && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
-            .Include(ts => ts.Manager)
-            .Include(ts => ts.CreatedBy)
             .FirstOrDefaultAsync();
     }
 
@@ -177,8 +171,6 @@ public class TestService : ITestService
             .Where(ts => ts.Id == id && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
-            .Include(ts => ts.Manager)
-            .Include(ts => ts.CreatedBy)
             .FirstOrDefaultAsync();
     }
 
@@ -289,8 +281,6 @@ public class TestService : ITestService
             .Where(ts => ts.TestingRequestId == testingRequestId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
-            .Include(ts => ts.Manager)
-            .Include(ts => ts.CreatedBy)
             .OrderByDescending(ts => ts.SessionDate)
             .ToListAsync();
     }
@@ -301,8 +291,6 @@ public class TestService : ITestService
             .Where(ts => ts.LocationId == locationId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
-            .Include(ts => ts.Manager)
-            .Include(ts => ts.CreatedBy)
             .OrderByDescending(ts => ts.SessionDate)
             .ToListAsync();
     }
@@ -313,8 +301,6 @@ public class TestService : ITestService
             .Where(ts => ts.Status == status && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
-            .Include(ts => ts.Manager)
-            .Include(ts => ts.CreatedBy)
             .OrderByDescending(ts => ts.SessionDate)
             .ToListAsync();
     }
@@ -325,8 +311,6 @@ public class TestService : ITestService
             .Where(ts => ts.ManagerUserId == managerId && ts.DeletedAt == null)
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
-            .Include(ts => ts.Manager)
-            .Include(ts => ts.CreatedBy)
             .OrderByDescending(ts => ts.SessionDate)
             .ToListAsync();
     }
@@ -354,8 +338,6 @@ public class TestService : ITestService
                         ts.SessionName.ToLower().Contains(lowerSearchTerm))
             .Include(ts => ts.TestingRequest)
             .Include(ts => ts.Location)
-            .Include(ts => ts.Manager)
-            .Include(ts => ts.CreatedBy)
             .OrderByDescending(ts => ts.SessionDate)
             .ToListAsync();
     }
