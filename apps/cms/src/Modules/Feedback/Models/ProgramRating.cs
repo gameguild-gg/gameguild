@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Program.Models;
 
 namespace GameGuild.Modules.Feedback.Models;
 
@@ -17,28 +18,68 @@ namespace GameGuild.Modules.Feedback.Models;
 [Index(nameof(SubmittedAt))]
 public class ProgramRating : BaseEntity
 {
+    private Guid _userId;
+
+    private Guid _programId;
+
+    private Guid? _productId;
+
+    private Guid _programUserId;
+
+    private decimal _rating;
+
+    private string? _review;
+
+    private decimal? _contentQualityRating;
+
+    private decimal? _instructorRating;
+
+    private decimal? _difficultyRating;
+
+    private decimal? _valueRating;
+
+    private bool? _wouldRecommend;
+
+    private ModerationStatus _moderationStatus = ModerationStatus.Pending;
+
+    private Guid? _moderatedBy;
+
+    private DateTime? _moderatedAt;
+
+    private DateTime _submittedAt;
+
+    private User.Models.User _user = null!;
+
+    private Program.Models.Program _program = null!;
+
+    private Product.Models.Product? _product;
+
+    private ProgramUser _programUser = null!;
+
+    private User.Models.User? _moderator;
+
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     public Guid ProgramId
     {
-        get;
-        set;
+        get => _programId;
+        set => _programId = value;
     }
 
     public Guid? ProductId
     {
-        get;
-        set;
+        get => _productId;
+        set => _productId = value;
     }
 
     public Guid ProgramUserId
     {
-        get;
-        set;
+        get => _programUserId;
+        set => _programUserId = value;
     }
 
     /// <summary>
@@ -47,8 +88,8 @@ public class ProgramRating : BaseEntity
     [Column(TypeName = "decimal(2,1)")]
     public decimal Rating
     {
-        get;
-        set;
+        get => _rating;
+        set => _rating = value;
     }
 
     /// <summary>
@@ -56,8 +97,8 @@ public class ProgramRating : BaseEntity
     /// </summary>
     public string? Review
     {
-        get;
-        set;
+        get => _review;
+        set => _review = value;
     }
 
     /// <summary>
@@ -66,8 +107,8 @@ public class ProgramRating : BaseEntity
     [Column(TypeName = "decimal(2,1)")]
     public decimal? ContentQualityRating
     {
-        get;
-        set;
+        get => _contentQualityRating;
+        set => _contentQualityRating = value;
     }
 
     /// <summary>
@@ -76,8 +117,8 @@ public class ProgramRating : BaseEntity
     [Column(TypeName = "decimal(2,1)")]
     public decimal? InstructorRating
     {
-        get;
-        set;
+        get => _instructorRating;
+        set => _instructorRating = value;
     }
 
     /// <summary>
@@ -86,8 +127,8 @@ public class ProgramRating : BaseEntity
     [Column(TypeName = "decimal(2,1)")]
     public decimal? DifficultyRating
     {
-        get;
-        set;
+        get => _difficultyRating;
+        set => _difficultyRating = value;
     }
 
     /// <summary>
@@ -96,8 +137,8 @@ public class ProgramRating : BaseEntity
     [Column(TypeName = "decimal(2,1)")]
     public decimal? ValueRating
     {
-        get;
-        set;
+        get => _valueRating;
+        set => _valueRating = value;
     }
 
     /// <summary>
@@ -105,23 +146,23 @@ public class ProgramRating : BaseEntity
     /// </summary>
     public bool? WouldRecommend
     {
-        get;
-        set;
+        get => _wouldRecommend;
+        set => _wouldRecommend = value;
     }
 
     public ModerationStatus ModerationStatus
     {
-        get;
-        set;
-    } = ModerationStatus.Pending;
+        get => _moderationStatus;
+        set => _moderationStatus = value;
+    }
 
     /// <summary>
     /// User who moderated this rating (approved/rejected)
     /// </summary>
     public Guid? ModeratedBy
     {
-        get;
-        set;
+        get => _moderatedBy;
+        set => _moderatedBy = value;
     }
 
     /// <summary>
@@ -129,8 +170,8 @@ public class ProgramRating : BaseEntity
     /// </summary>
     public DateTime? ModeratedAt
     {
-        get;
-        set;
+        get => _moderatedAt;
+        set => _moderatedAt = value;
     }
 
     /// <summary>
@@ -138,44 +179,44 @@ public class ProgramRating : BaseEntity
     /// </summary>
     public DateTime SubmittedAt
     {
-        get;
-        set;
+        get => _submittedAt;
+        set => _submittedAt = value;
     }
 
     // Navigation properties
     [ForeignKey(nameof(UserId))]
     public virtual User.Models.User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 
     [ForeignKey(nameof(ProgramId))]
     public virtual Program.Models.Program Program
     {
-        get;
-        set;
-    } = null!;
+        get => _program;
+        set => _program = value;
+    }
 
     [ForeignKey(nameof(ProductId))]
     public virtual Product.Models.Product? Product
     {
-        get;
-        set;
+        get => _product;
+        set => _product = value;
     }
 
     [ForeignKey(nameof(ProgramUserId))]
     public virtual Program.Models.ProgramUser ProgramUser
     {
-        get;
-        set;
-    } = null!;
+        get => _programUser;
+        set => _programUser = value;
+    }
 
     [ForeignKey(nameof(ModeratedBy))]
     public virtual User.Models.User? Moderator
     {
-        get;
-        set;
+        get => _moderator;
+        set => _moderator = value;
     }
 }
 

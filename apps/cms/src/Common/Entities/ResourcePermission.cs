@@ -9,6 +9,10 @@ namespace GameGuild.Common.Entities;
 /// </summary>
 public abstract class ResourcePermission<T> : WithPermissions where T : BaseEntity
 {
+    private Guid _resourceId;
+
+    private T _resource = null!;
+
     /// <summary>
     /// Resource reference - strongly typed to the content entity
     /// </summary>
@@ -17,8 +21,8 @@ public abstract class ResourcePermission<T> : WithPermissions where T : BaseEnti
     [Required]
     public Guid ResourceId
     {
-        get;
-        set;
+        get => _resourceId;
+        set => _resourceId = value;
     }
 
     /// <summary>
@@ -29,9 +33,9 @@ public abstract class ResourcePermission<T> : WithPermissions where T : BaseEnti
     [ForeignKey(nameof(ResourceId))]
     public virtual T Resource
     {
-        get;
-        set;
-    } = null!;
+        get => _resource;
+        set => _resource = value;
+    }
 
     // Computed properties specific to resource permissions
 

@@ -9,6 +9,20 @@ namespace GameGuild.Common.Entities;
 /// todo: field should be the one coming from the resource as a generic origin, and not a plain string. revist the others entries too, such as resource type.
 public class ResourceLocalization : BaseEntity
 {
+    private string _resourceType = string.Empty;
+
+    private Language _language = null!;
+
+    private string _fieldName = string.Empty;
+
+    private Guid _resourceId;
+
+    private string _content = string.Empty;
+
+    private bool _isDefault = false;
+
+    private LocalizationStatus _status = LocalizationStatus.Draft;
+
     // todo: apply polymorphism
     /// <summary>
     /// Type of the resource being localized
@@ -17,9 +31,9 @@ public class ResourceLocalization : BaseEntity
     [MaxLength(100)]
     public string ResourceType
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _resourceType;
+        set => _resourceType = value;
+    }
 
     /// <summary>
     /// Navigation property to the language
@@ -28,9 +42,9 @@ public class ResourceLocalization : BaseEntity
     [Required]
     public virtual Language Language
     {
-        get;
-        set;
-    } = null!;
+        get => _language;
+        set => _language = value;
+    }
 
     /// <summary>
     /// The field name being localized (e.g., 'Title', 'Description', 'Content')
@@ -39,9 +53,9 @@ public class ResourceLocalization : BaseEntity
     [MaxLength(100)]
     public string FieldName
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _fieldName;
+        set => _fieldName = value;
+    }
 
     /// <summary>
     /// Foreign key to the Resource entity
@@ -49,8 +63,8 @@ public class ResourceLocalization : BaseEntity
     [Required]
     public Guid ResourceId
     {
-        get;
-        set;
+        get => _resourceId;
+        set => _resourceId = value;
     }
 
     /// <summary>
@@ -59,25 +73,25 @@ public class ResourceLocalization : BaseEntity
     [Required]
     public string Content
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _content;
+        set => _content = value;
+    }
 
     /// <summary>
     /// Whether this localization is the default for the language
     /// </summary>
     public bool IsDefault
     {
-        get;
-        set;
-    } = false;
+        get => _isDefault;
+        set => _isDefault = value;
+    }
 
     /// <summary>
     /// Status of the localization (Draft, Published, NeedsReview, etc.)
     /// </summary>
     public LocalizationStatus Status
     {
-        get;
-        set;
-    } = LocalizationStatus.Draft;
+        get => _status;
+        set => _status = value;
+    }
 }

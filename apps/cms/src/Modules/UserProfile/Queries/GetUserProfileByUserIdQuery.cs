@@ -7,9 +7,11 @@ namespace GameGuild.Modules.UserProfile.Queries;
 /// </summary>
 public class GetUserProfileByUserIdQuery : IRequest<Models.UserProfile?>
 {
+    private Guid _userId;
+
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 }

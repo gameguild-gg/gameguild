@@ -7,6 +7,12 @@ namespace GameGuild.Modules.Tenant.GraphQL;
 /// </summary>
 public class CreateTenantInput
 {
+    private string _name = string.Empty;
+
+    private string? _description;
+
+    private bool _isActive = true;
+
     /// <summary>
     /// Name of the tenant
     /// </summary>
@@ -14,9 +20,9 @@ public class CreateTenantInput
     [StringLength(100)]
     public string Name
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _name;
+        set => _name = value;
+    }
 
     /// <summary>
     /// Description of the tenant
@@ -24,8 +30,8 @@ public class CreateTenantInput
     [StringLength(500)]
     public string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     /// <summary>
@@ -33,9 +39,9 @@ public class CreateTenantInput
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 }
 
 /// <summary>
@@ -43,14 +49,22 @@ public class CreateTenantInput
 /// </summary>
 public class UpdateTenantInput
 {
+    private Guid _id;
+
+    private string? _name;
+
+    private string? _description;
+
+    private bool? _isActive;
+
     /// <summary>
     /// ID of the tenant to update
     /// </summary>
     [Required]
     public Guid Id
     {
-        get;
-        set;
+        get => _id;
+        set => _id = value;
     }
 
     /// <summary>
@@ -59,8 +73,8 @@ public class UpdateTenantInput
     [StringLength(100)]
     public string? Name
     {
-        get;
-        set;
+        get => _name;
+        set => _name = value;
     }
 
     /// <summary>
@@ -69,8 +83,8 @@ public class UpdateTenantInput
     [StringLength(500)]
     public string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     /// <summary>
@@ -78,8 +92,8 @@ public class UpdateTenantInput
     /// </summary>
     public bool? IsActive
     {
-        get;
-        set;
+        get => _isActive;
+        set => _isActive = value;
     }
 }
 
@@ -88,14 +102,18 @@ public class UpdateTenantInput
 /// </summary>
 public class AddUserToTenantInput
 {
+    private Guid _tenantId;
+
+    private Guid _userId;
+
     /// <summary>
     /// ID of the tenant
     /// </summary>
     [Required]
     public Guid TenantId
     {
-        get;
-        set;
+        get => _tenantId;
+        set => _tenantId = value;
     }
 
     /// <summary>
@@ -104,8 +122,8 @@ public class AddUserToTenantInput
     [Required]
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 }
 
@@ -114,14 +132,18 @@ public class AddUserToTenantInput
 /// </summary>
 public class RemoveUserFromTenantInput
 {
+    private Guid _tenantId;
+
+    private Guid _userId;
+
     /// <summary>
     /// ID of the tenant
     /// </summary>
     [Required]
     public Guid TenantId
     {
-        get;
-        set;
+        get => _tenantId;
+        set => _tenantId = value;
     }
 
     /// <summary>
@@ -130,7 +152,7 @@ public class RemoveUserFromTenantInput
     [Required]
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 }

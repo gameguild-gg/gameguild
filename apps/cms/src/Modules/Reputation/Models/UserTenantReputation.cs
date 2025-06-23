@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Tenant.Models;
 
 namespace GameGuild.Modules.Reputation.Models;
 
@@ -16,6 +18,26 @@ namespace GameGuild.Modules.Reputation.Models;
 [Index(nameof(CurrentLevelId))]
 public class UserTenantReputation : ResourceBase, IReputation
 {
+    private TenantPermission _tenantPermission;
+
+    private Guid _tenantPermissionId;
+
+    private int _score = 0;
+
+    private ReputationTier? _currentLevel;
+
+    private Guid? _currentLevelId;
+
+    private DateTime _lastUpdated = DateTime.UtcNow;
+
+    private DateTime? _lastLevelCalculation;
+
+    private int _positiveChanges = 0;
+
+    private int _negativeChanges = 0;
+
+    private ICollection<UserReputationHistory> _history = new List<UserReputationHistory>();
+
     /// <summary>
     /// The user-tenant relationship this reputation belongs to
     /// </summary>
@@ -23,15 +45,17 @@ public class UserTenantReputation : ResourceBase, IReputation
     [ForeignKey(nameof(TenantPermissionId))]
     public required Modules.Tenant.Models.TenantPermission TenantPermission
     {
-        get;
-        set;
+        get => _tenantPermission;
+
+        [MemberNotNull(nameof(_tenantPermission))]
+        set => _tenantPermission = value;
     }
 
     [Required]
     public Guid TenantPermissionId
     {
-        get;
-        set;
+        get => _tenantPermissionId;
+        set => _tenantPermissionId = value;
     }
 
     /// <summary>
@@ -39,9 +63,9 @@ public class UserTenantReputation : ResourceBase, IReputation
     /// </summary>
     public int Score
     {
-        get;
-        set;
-    } = 0;
+        get => _score;
+        set => _score = value;
+    }
 
     /// <summary>
     /// Current reputation tier (linked to configurable tier)
@@ -49,14 +73,14 @@ public class UserTenantReputation : ResourceBase, IReputation
     [ForeignKey(nameof(CurrentLevelId))]
     public ReputationTier? CurrentLevel
     {
-        get;
-        set;
+        get => _currentLevel;
+        set => _currentLevel = value;
     }
 
     public Guid? CurrentLevelId
     {
-        get;
-        set;
+        get => _currentLevelId;
+        set => _currentLevelId = value;
     }
 
     /// <summary>
@@ -64,17 +88,17 @@ public class UserTenantReputation : ResourceBase, IReputation
     /// </summary>
     public DateTime LastUpdated
     {
-        get;
-        set;
-    } = DateTime.UtcNow;
+        get => _lastUpdated;
+        set => _lastUpdated = value;
+    }
 
     /// <summary>
     /// When the user's reputation tier was last recalculated
     /// </summary>
     public DateTime? LastLevelCalculation
     {
-        get;
-        set;
+        get => _lastLevelCalculation;
+        set => _lastLevelCalculation = value;
     }
 
     /// <summary>
@@ -82,27 +106,27 @@ public class UserTenantReputation : ResourceBase, IReputation
     /// </summary>
     public int PositiveChanges
     {
-        get;
-        set;
-    } = 0;
+        get => _positiveChanges;
+        set => _positiveChanges = value;
+    }
 
     /// <summary>
     /// Number of negative reputation changes
     /// </summary>
     public int NegativeChanges
     {
-        get;
-        set;
-    } = 0;
+        get => _negativeChanges;
+        set => _negativeChanges = value;
+    }
 
     /// <summary>
     /// History of reputation changes for this user-tenant
     /// </summary>
     public ICollection<UserReputationHistory> History
     {
-        get;
-        set;
-    } = new List<UserReputationHistory>();
+        get => _history;
+        set => _history = value;
+    }
 }
 
 public class UserTenantReputationConfiguration : IEntityTypeConfiguration<UserTenantReputation>

@@ -14,13 +14,29 @@ namespace GameGuild.Modules.Project.Models;
 [Index(nameof(FollowedAt), Name = "IX_ProjectFollowers_Date")]
 public class ProjectFollower : ResourceBase
 {
+    private Guid _projectId;
+
+    private Project _project = null!;
+
+    private Guid _userId;
+
+    private User.Models.User _user = null!;
+
+    private DateTime _followedAt = DateTime.UtcNow;
+
+    private string? _notificationSettings;
+
+    private bool _emailNotifications = true;
+
+    private bool _pushNotifications = true;
+
     /// <summary>
     /// Project being followed
     /// </summary>
     public Guid ProjectId
     {
-        get;
-        set;
+        get => _projectId;
+        set => _projectId = value;
     }
 
     /// <summary>
@@ -28,17 +44,17 @@ public class ProjectFollower : ResourceBase
     /// </summary>
     public virtual Project Project
     {
-        get;
-        set;
-    } = null!;
+        get => _project;
+        set => _project = value;
+    }
 
     /// <summary>
     /// User following the project
     /// </summary>
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -46,18 +62,18 @@ public class ProjectFollower : ResourceBase
     /// </summary>
     public virtual User.Models.User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 
     /// <summary>
     /// Date when the user started following
     /// </summary>
     public DateTime FollowedAt
     {
-        get;
-        set;
-    } = DateTime.UtcNow;
+        get => _followedAt;
+        set => _followedAt = value;
+    }
 
     /// <summary>
     /// Notification preferences for this follow
@@ -65,8 +81,8 @@ public class ProjectFollower : ResourceBase
     [MaxLength(1000)]
     public string? NotificationSettings
     {
-        get;
-        set;
+        get => _notificationSettings;
+        set => _notificationSettings = value;
     }
 
     /// <summary>
@@ -74,16 +90,16 @@ public class ProjectFollower : ResourceBase
     /// </summary>
     public bool EmailNotifications
     {
-        get;
-        set;
-    } = true;
+        get => _emailNotifications;
+        set => _emailNotifications = value;
+    }
 
     /// <summary>
     /// Whether the follower wants push notifications
     /// </summary>
     public bool PushNotifications
     {
-        get;
-        set;
-    } = true;
+        get => _pushNotifications;
+        set => _pushNotifications = value;
+    }
 }

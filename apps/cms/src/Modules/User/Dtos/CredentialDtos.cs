@@ -7,14 +7,26 @@ namespace GameGuild.Modules.User.Dtos;
 /// </summary>
 public class CreateCredentialDto
 {
+    private Guid _userId;
+
+    private string _type = string.Empty;
+
+    private string _value = string.Empty;
+
+    private string? _metadata;
+
+    private DateTime? _expiresAt;
+
+    private bool _isActive = true;
+
     /// <summary>
     /// Foreign key to the User entity
     /// </summary>
     [Required]
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -24,9 +36,9 @@ public class CreateCredentialDto
     [MaxLength(50)]
     public string Type
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _type;
+        set => _type = value;
+    }
 
     /// <summary>
     /// The credential value (hashed password, encrypted token, etc.)
@@ -35,9 +47,9 @@ public class CreateCredentialDto
     [MaxLength(1000)]
     public string Value
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _value;
+        set => _value = value;
+    }
 
     /// <summary>
     /// Additional metadata for the credential (JSON format)
@@ -45,8 +57,8 @@ public class CreateCredentialDto
     [MaxLength(2000)]
     public string? Metadata
     {
-        get;
-        set;
+        get => _metadata;
+        set => _metadata = value;
     }
 
     /// <summary>
@@ -54,8 +66,8 @@ public class CreateCredentialDto
     /// </summary>
     public DateTime? ExpiresAt
     {
-        get;
-        set;
+        get => _expiresAt;
+        set => _expiresAt = value;
     }
 
     /// <summary>
@@ -63,9 +75,9 @@ public class CreateCredentialDto
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 }
 
 /// <summary>
@@ -73,6 +85,16 @@ public class CreateCredentialDto
 /// </summary>
 public class UpdateCredentialDto
 {
+    private string _type = string.Empty;
+
+    private string _value = string.Empty;
+
+    private string? _metadata;
+
+    private DateTime? _expiresAt;
+
+    private bool _isActive = true;
+
     /// <summary>
     /// Type of credential (e.g., "password", "api_key", "oauth_token", "2fa_secret")
     /// </summary>
@@ -80,9 +102,9 @@ public class UpdateCredentialDto
     [MaxLength(50)]
     public string Type
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _type;
+        set => _type = value;
+    }
 
     /// <summary>
     /// The credential value (hashed password, encrypted token, etc.)
@@ -91,9 +113,9 @@ public class UpdateCredentialDto
     [MaxLength(1000)]
     public string Value
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _value;
+        set => _value = value;
+    }
 
     /// <summary>
     /// Additional metadata for the credential (JSON format)
@@ -101,8 +123,8 @@ public class UpdateCredentialDto
     [MaxLength(2000)]
     public string? Metadata
     {
-        get;
-        set;
+        get => _metadata;
+        set => _metadata = value;
     }
 
     /// <summary>
@@ -110,8 +132,8 @@ public class UpdateCredentialDto
     /// </summary>
     public DateTime? ExpiresAt
     {
-        get;
-        set;
+        get => _expiresAt;
+        set => _expiresAt = value;
     }
 
     /// <summary>
@@ -119,9 +141,9 @@ public class UpdateCredentialDto
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 }
 
 /// <summary>
@@ -129,13 +151,39 @@ public class UpdateCredentialDto
 /// </summary>
 public class CredentialResponseDto
 {
+    private Guid _id;
+
+    private Guid _userId;
+
+    private string _type = string.Empty;
+
+    private string _value = string.Empty;
+
+    private string? _metadata;
+
+    private DateTime? _expiresAt;
+
+    private bool _isActive;
+
+    private DateTime? _lastUsedAt;
+
+    private int _version;
+
+    private DateTime _createdAt;
+
+    private DateTime _updatedAt;
+
+    private DateTime? _deletedAt;
+
+    private UserResponseDto? _user;
+
     /// <summary>
     /// Unique identifier for the credential
     /// </summary>
     public Guid Id
     {
-        get;
-        set;
+        get => _id;
+        set => _id = value;
     }
 
     /// <summary>
@@ -143,8 +191,8 @@ public class CredentialResponseDto
     /// </summary>
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -152,26 +200,26 @@ public class CredentialResponseDto
     /// </summary>
     public string Type
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _type;
+        set => _type = value;
+    }
 
     /// <summary>
     /// The credential value (should be masked/redacted in responses)
     /// </summary>
     public string Value
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _value;
+        set => _value = value;
+    }
 
     /// <summary>
     /// Additional metadata for the credential
     /// </summary>
     public string? Metadata
     {
-        get;
-        set;
+        get => _metadata;
+        set => _metadata = value;
     }
 
     /// <summary>
@@ -179,8 +227,8 @@ public class CredentialResponseDto
     /// </summary>
     public DateTime? ExpiresAt
     {
-        get;
-        set;
+        get => _expiresAt;
+        set => _expiresAt = value;
     }
 
     /// <summary>
@@ -188,8 +236,8 @@ public class CredentialResponseDto
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
+        get => _isActive;
+        set => _isActive = value;
     }
 
     /// <summary>
@@ -197,8 +245,8 @@ public class CredentialResponseDto
     /// </summary>
     public DateTime? LastUsedAt
     {
-        get;
-        set;
+        get => _lastUsedAt;
+        set => _lastUsedAt = value;
     }
 
     /// <summary>
@@ -222,8 +270,8 @@ public class CredentialResponseDto
     /// </summary>
     public int Version
     {
-        get;
-        set;
+        get => _version;
+        set => _version = value;
     }
 
     /// <summary>
@@ -231,8 +279,8 @@ public class CredentialResponseDto
     /// </summary>
     public DateTime CreatedAt
     {
-        get;
-        set;
+        get => _createdAt;
+        set => _createdAt = value;
     }
 
     /// <summary>
@@ -240,8 +288,8 @@ public class CredentialResponseDto
     /// </summary>
     public DateTime UpdatedAt
     {
-        get;
-        set;
+        get => _updatedAt;
+        set => _updatedAt = value;
     }
 
     /// <summary>
@@ -249,8 +297,8 @@ public class CredentialResponseDto
     /// </summary>
     public DateTime? DeletedAt
     {
-        get;
-        set;
+        get => _deletedAt;
+        set => _deletedAt = value;
     }
 
     /// <summary>
@@ -266,7 +314,7 @@ public class CredentialResponseDto
     /// </summary>
     public UserResponseDto? User
     {
-        get;
-        set;
+        get => _user;
+        set => _user = value;
     }
 }

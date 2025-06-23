@@ -5,38 +5,48 @@ namespace GameGuild.Modules.Jam.Models
 {
     public class JamScore : BaseEntity
     {
+        private Guid _submissionId;
+
+        private Guid _criteriaId;
+
+        private Guid _judgeUserId;
+
+        private int _score;
+
+        private string? _feedback;
+
         [Required]
         public Guid SubmissionId
         {
-            get;
-            set;
+            get => _submissionId;
+            set => _submissionId = value;
         }
 
         [Required]
         public Guid CriteriaId
         {
-            get;
-            set;
+            get => _criteriaId;
+            set => _criteriaId = value;
         }
 
         [Required]
         public Guid JudgeUserId
         {
-            get;
-            set;
+            get => _judgeUserId;
+            set => _judgeUserId = value;
         }
 
         [Required]
         public int Score
         {
-            get;
-            set;
+            get => _score;
+            set => _score = value;
         }
 
         public string? Feedback
         {
-            get;
-            set;
+            get => _feedback;
+            set => _feedback = value;
         }
     }
 }

@@ -7,14 +7,26 @@ namespace GameGuild.Modules.User.GraphQL;
 /// </summary>
 public class CreateCredentialInput
 {
+    private Guid _userId;
+
+    private string _type = string.Empty;
+
+    private string _value = string.Empty;
+
+    private string? _metadata;
+
+    private DateTime? _expiresAt;
+
+    private bool _isActive = true;
+
     /// <summary>
     /// Foreign key to the User entity
     /// </summary>
     [Required]
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -24,9 +36,9 @@ public class CreateCredentialInput
     [MaxLength(50)]
     public string Type
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _type;
+        set => _type = value;
+    }
 
     /// <summary>
     /// The credential value (hashed password, encrypted token, etc.)
@@ -35,9 +47,9 @@ public class CreateCredentialInput
     [MaxLength(1000)]
     public string Value
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _value;
+        set => _value = value;
+    }
 
     /// <summary>
     /// Additional metadata for the credential (JSON format)
@@ -45,8 +57,8 @@ public class CreateCredentialInput
     [MaxLength(2000)]
     public string? Metadata
     {
-        get;
-        set;
+        get => _metadata;
+        set => _metadata = value;
     }
 
     /// <summary>
@@ -54,8 +66,8 @@ public class CreateCredentialInput
     /// </summary>
     public DateTime? ExpiresAt
     {
-        get;
-        set;
+        get => _expiresAt;
+        set => _expiresAt = value;
     }
 
     /// <summary>
@@ -63,9 +75,9 @@ public class CreateCredentialInput
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 }
 
 /// <summary>
@@ -73,14 +85,26 @@ public class CreateCredentialInput
 /// </summary>
 public class UpdateCredentialInput
 {
+    private Guid _id;
+
+    private string _type = string.Empty;
+
+    private string _value = string.Empty;
+
+    private string? _metadata;
+
+    private DateTime? _expiresAt;
+
+    private bool _isActive = true;
+
     /// <summary>
     /// Credential ID to update
     /// </summary>
     [Required]
     public Guid Id
     {
-        get;
-        set;
+        get => _id;
+        set => _id = value;
     }
 
     /// <summary>
@@ -90,9 +114,9 @@ public class UpdateCredentialInput
     [MaxLength(50)]
     public string Type
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _type;
+        set => _type = value;
+    }
 
     /// <summary>
     /// The credential value (hashed password, encrypted token, etc.)
@@ -101,9 +125,9 @@ public class UpdateCredentialInput
     [MaxLength(1000)]
     public string Value
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _value;
+        set => _value = value;
+    }
 
     /// <summary>
     /// Additional metadata for the credential (JSON format)
@@ -111,8 +135,8 @@ public class UpdateCredentialInput
     [MaxLength(2000)]
     public string? Metadata
     {
-        get;
-        set;
+        get => _metadata;
+        set => _metadata = value;
     }
 
     /// <summary>
@@ -120,8 +144,8 @@ public class UpdateCredentialInput
     /// </summary>
     public DateTime? ExpiresAt
     {
-        get;
-        set;
+        get => _expiresAt;
+        set => _expiresAt = value;
     }
 
     /// <summary>
@@ -129,7 +153,7 @@ public class UpdateCredentialInput
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 }

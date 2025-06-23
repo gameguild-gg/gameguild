@@ -19,12 +19,44 @@ namespace GameGuild.Modules.Program.Models;
 [Index(nameof(IsRequired))]
 public class ProgramContent : BaseEntity
 {
+    private Guid _programId;
+
+    private Guid? _parentId;
+
+    private string _title = string.Empty;
+
+    private string _description = string.Empty;
+
+    private ProgramContentType _type;
+
+    private string _body = "{}";
+
+    private int _sortOrder = 0;
+
+    private bool _isRequired = true;
+
+    private GradingMethod? _gradingMethod;
+
+    private decimal? _maxPoints;
+
+    private int? _estimatedMinutes;
+
+    private Visibility _visibility = GameGuild.Common.Enums.Visibility.Published;
+
+    private Program _program = null!;
+
+    private ProgramContent? _parent;
+
+    private ICollection<ProgramContent> _children = new List<ProgramContent>();
+
+    private ICollection<ContentInteraction> _contentInteractions = new List<ContentInteraction>();
+
     [Required]
     [ForeignKey(nameof(Program))]
     public Guid ProgramId
     {
-        get;
-        set;
+        get => _programId;
+        set => _programId = value;
     }
 
     /// <summary>
@@ -33,28 +65,28 @@ public class ProgramContent : BaseEntity
     [ForeignKey(nameof(Parent))]
     public Guid? ParentId
     {
-        get;
-        set;
+        get => _parentId;
+        set => _parentId = value;
     }
 
     [Required]
     [MaxLength(255)]
     public string Title
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _title;
+        set => _title = value;
+    }
 
     public string Description
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _description;
+        set => _description = value;
+    }
 
     public ProgramContentType Type
     {
-        get;
-        set;
+        get => _type;
+        set => _type = value;
     }
 
     /// <summary>
@@ -67,35 +99,35 @@ public class ProgramContent : BaseEntity
     [Column(TypeName = "jsonb")]
     public string Body
     {
-        get;
-        set;
-    } = "{}";
+        get => _body;
+        set => _body = value;
+    }
 
     /// <summary>
     /// Display order within the program or parent content
     /// </summary>
     public int SortOrder
     {
-        get;
-        set;
-    } = 0;
+        get => _sortOrder;
+        set => _sortOrder = value;
+    }
 
     /// <summary>
     /// Whether this content is required for program completion
     /// </summary>
     public bool IsRequired
     {
-        get;
-        set;
-    } = true;
+        get => _isRequired;
+        set => _isRequired = value;
+    }
 
     /// <summary>
     /// How this content should be graded (if applicable)
     /// </summary>
     public GradingMethod? GradingMethod
     {
-        get;
-        set;
+        get => _gradingMethod;
+        set => _gradingMethod = value;
     }
 
     /// <summary>
@@ -104,8 +136,8 @@ public class ProgramContent : BaseEntity
     [Column(TypeName = "decimal(5,2)")]
     public decimal? MaxPoints
     {
-        get;
-        set;
+        get => _maxPoints;
+        set => _maxPoints = value;
     }
 
     /// <summary>
@@ -113,40 +145,40 @@ public class ProgramContent : BaseEntity
     /// </summary>
     public int? EstimatedMinutes
     {
-        get;
-        set;
+        get => _estimatedMinutes;
+        set => _estimatedMinutes = value;
     }
 
     public Common.Enums.Visibility Visibility
     {
-        get;
-        set;
-    } = GameGuild.Common.Enums.Visibility.Published;
+        get => _visibility;
+        set => _visibility = value;
+    }
 
     // Navigation properties
     public virtual Program Program
     {
-        get;
-        set;
-    } = null!;
+        get => _program;
+        set => _program = value;
+    }
 
     public virtual ProgramContent? Parent
     {
-        get;
-        set;
+        get => _parent;
+        set => _parent = value;
     }
 
     public virtual ICollection<ProgramContent> Children
     {
-        get;
-        set;
-    } = new List<ProgramContent>();
+        get => _children;
+        set => _children = value;
+    }
 
     public virtual ICollection<ContentInteraction> ContentInteractions
     {
-        get;
-        set;
-    } = new List<ContentInteraction>();
+        get => _contentInteractions;
+        set => _contentInteractions = value;
+    }
 
     // Helper methods for JSON body
     public T? GetBodyContent<T>(string key) where T : class

@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Test.Models
+namespace GameGuild.Modules.TestingLab.Models
 {
     public enum AttendanceStatus
     {

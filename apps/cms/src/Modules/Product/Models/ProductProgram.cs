@@ -16,14 +16,24 @@ namespace GameGuild.Modules.Product.Models;
 [Index(nameof(ProgramId))]
 public class ProductProgram : BaseEntity
 {
+    private Guid _productId;
+
+    private Product _product = null!;
+
+    private Guid _programId;
+
+    private Program.Models.Program _program = null!;
+
+    private int _sortOrder = 0;
+
     /// <summary>
     /// Foreign key to the Product entity
     /// </summary>
     [Required]
     public Guid ProductId
     {
-        get;
-        set;
+        get => _productId;
+        set => _productId = value;
     }
 
     /// <summary>
@@ -32,9 +42,9 @@ public class ProductProgram : BaseEntity
     [ForeignKey(nameof(ProductId))]
     public virtual Product Product
     {
-        get;
-        set;
-    } = null!;
+        get => _product;
+        set => _product = value;
+    }
 
     /// <summary>
     /// Foreign key to the Program entity
@@ -42,8 +52,8 @@ public class ProductProgram : BaseEntity
     [Required]
     public Guid ProgramId
     {
-        get;
-        set;
+        get => _programId;
+        set => _programId = value;
     }
 
     /// <summary>
@@ -52,18 +62,18 @@ public class ProductProgram : BaseEntity
     [ForeignKey(nameof(ProgramId))]
     public virtual Program.Models.Program Program
     {
-        get;
-        set;
-    } = null!;
+        get => _program;
+        set => _program = value;
+    }
 
     /// <summary>
     /// Display order of programs within the product
     /// </summary>
     public int SortOrder
     {
-        get;
-        set;
-    } = 0;
+        get => _sortOrder;
+        set => _sortOrder = value;
+    }
 
     /// <summary>
     /// Default constructor

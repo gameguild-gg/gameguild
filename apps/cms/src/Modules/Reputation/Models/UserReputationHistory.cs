@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Tenant.Models;
 
 namespace GameGuild.Modules.Reputation.Models;
 
@@ -19,20 +20,58 @@ namespace GameGuild.Modules.Reputation.Models;
 [Index(nameof(PointsChange))]
 public class UserReputationHistory : ResourceBase
 {
+    private User.Models.User? _user;
+
+    private Guid? _userId;
+
+    private TenantPermission? _tenantPermission;
+
+    private Guid? _tenantPermissionId;
+
+    private IReputation? _reputation;
+
+    private ReputationAction? _reputationAction;
+
+    private Guid? _reputationActionId;
+
+    private int _pointsChange;
+
+    private int _previousScore;
+
+    private int _newScore;
+
+    private ReputationTier? _previousLevel;
+
+    private Guid? _previousLevelId;
+
+    private ReputationTier? _newLevel;
+
+    private Guid? _newLevelId;
+
+    private string? _reason;
+
+    private User.Models.User? _triggeredByUser;
+
+    private Guid? _triggeredByUserId;
+
+    private ResourceBase? _relatedResource;
+
+    private DateTime _occurredAt = DateTime.UtcNow;
+
     /// <summary>
     /// The user whose reputation changed (for direct user reputation tracking)
     /// </summary>
     [ForeignKey(nameof(UserId))]
     public Modules.User.Models.User? User
     {
-        get;
-        set;
+        get => _user;
+        set => _user = value;
     }
 
     public Guid? UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -41,14 +80,14 @@ public class UserReputationHistory : ResourceBase
     [ForeignKey(nameof(TenantPermissionId))]
     public Modules.Tenant.Models.TenantPermission? TenantPermission
     {
-        get;
-        set;
+        get => _tenantPermission;
+        set => _tenantPermission = value;
     }
 
     public Guid? TenantPermissionId
     {
-        get;
-        set;
+        get => _tenantPermissionId;
+        set => _tenantPermissionId = value;
     }
 
     /// <summary>
@@ -60,8 +99,8 @@ public class UserReputationHistory : ResourceBase
     [NotMapped]
     public IReputation? Reputation
     {
-        get;
-        set;
+        get => _reputation;
+        set => _reputation = value;
     }
 
     /// <summary>
@@ -70,14 +109,14 @@ public class UserReputationHistory : ResourceBase
     [ForeignKey(nameof(ReputationActionId))]
     public ReputationAction? ReputationAction
     {
-        get;
-        set;
+        get => _reputationAction;
+        set => _reputationAction = value;
     }
 
     public Guid? ReputationActionId
     {
-        get;
-        set;
+        get => _reputationActionId;
+        set => _reputationActionId = value;
     }
 
     /// <summary>
@@ -85,8 +124,8 @@ public class UserReputationHistory : ResourceBase
     /// </summary>
     public int PointsChange
     {
-        get;
-        set;
+        get => _pointsChange;
+        set => _pointsChange = value;
     }
 
     /// <summary>
@@ -94,8 +133,8 @@ public class UserReputationHistory : ResourceBase
     /// </summary>
     public int PreviousScore
     {
-        get;
-        set;
+        get => _previousScore;
+        set => _previousScore = value;
     }
 
     /// <summary>
@@ -103,8 +142,8 @@ public class UserReputationHistory : ResourceBase
     /// </summary>
     public int NewScore
     {
-        get;
-        set;
+        get => _newScore;
+        set => _newScore = value;
     }
 
     /// <summary>
@@ -113,14 +152,14 @@ public class UserReputationHistory : ResourceBase
     [ForeignKey(nameof(PreviousLevelId))]
     public ReputationTier? PreviousLevel
     {
-        get;
-        set;
+        get => _previousLevel;
+        set => _previousLevel = value;
     }
 
     public Guid? PreviousLevelId
     {
-        get;
-        set;
+        get => _previousLevelId;
+        set => _previousLevelId = value;
     }
 
     /// <summary>
@@ -129,14 +168,14 @@ public class UserReputationHistory : ResourceBase
     [ForeignKey(nameof(NewLevelId))]
     public ReputationTier? NewLevel
     {
-        get;
-        set;
+        get => _newLevel;
+        set => _newLevel = value;
     }
 
     public Guid? NewLevelId
     {
-        get;
-        set;
+        get => _newLevelId;
+        set => _newLevelId = value;
     }
 
     /// <summary>
@@ -145,8 +184,8 @@ public class UserReputationHistory : ResourceBase
     [MaxLength(500)]
     public string? Reason
     {
-        get;
-        set;
+        get => _reason;
+        set => _reason = value;
     }
 
     /// <summary>
@@ -155,14 +194,14 @@ public class UserReputationHistory : ResourceBase
     [ForeignKey(nameof(TriggeredByUserId))]
     public Modules.User.Models.User? TriggeredByUser
     {
-        get;
-        set;
+        get => _triggeredByUser;
+        set => _triggeredByUser = value;
     }
 
     public Guid? TriggeredByUserId
     {
-        get;
-        set;
+        get => _triggeredByUserId;
+        set => _triggeredByUserId = value;
     }
 
     /// <summary>
@@ -171,8 +210,8 @@ public class UserReputationHistory : ResourceBase
     /// </summary>
     public ResourceBase? RelatedResource
     {
-        get;
-        set;
+        get => _relatedResource;
+        set => _relatedResource = value;
     }
 
     /// <summary>
@@ -180,9 +219,9 @@ public class UserReputationHistory : ResourceBase
     /// </summary>
     public DateTime OccurredAt
     {
-        get;
-        set;
-    } = DateTime.UtcNow;
+        get => _occurredAt;
+        set => _occurredAt = value;
+    }
 }
 
 public class UserReputationHistoryConfiguration : IEntityTypeConfiguration<UserReputationHistory>

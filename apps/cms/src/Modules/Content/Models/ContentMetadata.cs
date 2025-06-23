@@ -7,11 +7,35 @@ namespace GameGuild.Common.Entities;
 /// </summary>
 public class ContentMetadata
 {
+    private Guid _id;
+
+    private Content _content = null!;
+
+    private Guid _contentId;
+
+    private int _viewCount = 0;
+
+    private int _downloadCount = 0;
+
+    private int _likeCount = 0;
+
+    private int _shareCount = 0;
+
+    private int _commentCount = 0;
+
+    private string? _metaDescription;
+
+    private string? _metaKeywords;
+
+    private DateTime? _lastViewedAt;
+
+    private DateTime? _lastInteractionAt;
+
     [Key]
     public Guid Id
     {
-        get;
-        set;
+        get => _id;
+        set => _id = value;
     }
 
     /// <summary>
@@ -20,14 +44,14 @@ public class ContentMetadata
     [Required]
     public virtual Content Content
     {
-        get;
-        set;
-    } = null!;
+        get => _content;
+        set => _content = value;
+    }
 
     public Guid ContentId
     {
-        get;
-        set;
+        get => _contentId;
+        set => _contentId = value;
     }
 
     /// <summary>
@@ -35,33 +59,33 @@ public class ContentMetadata
     /// </summary>
     public int ViewCount
     {
-        get;
-        set;
-    } = 0;
+        get => _viewCount;
+        set => _viewCount = value;
+    }
 
     public int DownloadCount
     {
-        get;
-        set;
-    } = 0;
+        get => _downloadCount;
+        set => _downloadCount = value;
+    }
 
     public int LikeCount
     {
-        get;
-        set;
-    } = 0;
+        get => _likeCount;
+        set => _likeCount = value;
+    }
 
     public int ShareCount
     {
-        get;
-        set;
-    } = 0;
+        get => _shareCount;
+        set => _shareCount = value;
+    }
 
     public int CommentCount
     {
-        get;
-        set;
-    } = 0;
+        get => _commentCount;
+        set => _commentCount = value;
+    }
 
     /// <summary>
     /// SEO metadata
@@ -69,15 +93,15 @@ public class ContentMetadata
     [MaxLength(160)]
     public string? MetaDescription
     {
-        get;
-        set;
+        get => _metaDescription;
+        set => _metaDescription = value;
     }
 
     [MaxLength(255)]
     public string? MetaKeywords
     {
-        get;
-        set;
+        get => _metaKeywords;
+        set => _metaKeywords = value;
     }
 
     /// <summary>
@@ -85,13 +109,13 @@ public class ContentMetadata
     /// </summary>
     public DateTime? LastViewedAt
     {
-        get;
-        set;
+        get => _lastViewedAt;
+        set => _lastViewedAt = value;
     }
 
     public DateTime? LastInteractionAt
     {
-        get;
-        set;
+        get => _lastInteractionAt;
+        set => _lastInteractionAt = value;
     }
 }

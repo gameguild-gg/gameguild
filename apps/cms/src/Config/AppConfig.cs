@@ -2,39 +2,51 @@ namespace GameGuild.Config;
 
 public class AppConfig
 {
+    private string _host = "localhost";
+
+    private int _port = 5000;
+
+    private bool _isDevelopmentEnvironment;
+
+    private bool _isProductionEnvironment;
+
+    private bool _isDocumentationEnabled;
+
+    private string _environment = "Development";
+
     public string Host
     {
-        get;
-        set;
-    } = "localhost";
+        get => _host;
+        set => _host = value;
+    }
 
     public int Port
     {
-        get;
-        set;
-    } = 5000;
+        get => _port;
+        set => _port = value;
+    }
 
     public bool IsDevelopmentEnvironment
     {
-        get;
-        set;
+        get => _isDevelopmentEnvironment;
+        set => _isDevelopmentEnvironment = value;
     }
 
     public bool IsProductionEnvironment
     {
-        get;
-        set;
+        get => _isProductionEnvironment;
+        set => _isProductionEnvironment = value;
     }
 
     public bool IsDocumentationEnabled
     {
-        get;
-        set;
+        get => _isDocumentationEnabled;
+        set => _isDocumentationEnabled = value;
     }
 
     public string Environment
     {
-        get;
-        set;
-    } = "Development";
+        get => _environment;
+        set => _environment = value;
+    }
 }

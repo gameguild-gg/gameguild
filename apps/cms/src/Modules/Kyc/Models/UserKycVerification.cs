@@ -15,26 +15,52 @@ namespace GameGuild.Modules.Kyc.Models;
 [Index(nameof(ExternalVerificationId))]
 public class UserKycVerification : BaseEntity
 {
+    private Guid _userId;
+
+    private KycProvider _provider;
+
+    private KycVerificationStatus _status = KycVerificationStatus.Pending;
+
+    private string? _externalVerificationId;
+
+    private string? _verificationLevel;
+
+    private string? _documentTypes;
+
+    private string? _documentCountry;
+
+    private DateTime _submittedAt;
+
+    private DateTime? _completedAt;
+
+    private DateTime? _expiresAt;
+
+    private string? _notes;
+
+    private string? _providerData;
+
+    private User.Models.User _user = null!;
+
     [Required]
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     [Required]
     public KycProvider Provider
     {
-        get;
-        set;
+        get => _provider;
+        set => _provider = value;
     }
 
     [Required]
     public KycVerificationStatus Status
     {
-        get;
-        set;
-    } = KycVerificationStatus.Pending;
+        get => _status;
+        set => _status = value;
+    }
 
     /// <summary>
     /// External verification ID from the KYC provider
@@ -42,8 +68,8 @@ public class UserKycVerification : BaseEntity
     [MaxLength(255)]
     public string? ExternalVerificationId
     {
-        get;
-        set;
+        get => _externalVerificationId;
+        set => _externalVerificationId = value;
     }
 
     /// <summary>
@@ -52,8 +78,8 @@ public class UserKycVerification : BaseEntity
     [MaxLength(50)]
     public string? VerificationLevel
     {
-        get;
-        set;
+        get => _verificationLevel;
+        set => _verificationLevel = value;
     }
 
     /// <summary>
@@ -62,8 +88,8 @@ public class UserKycVerification : BaseEntity
     [MaxLength(500)]
     public string? DocumentTypes
     {
-        get;
-        set;
+        get => _documentTypes;
+        set => _documentTypes = value;
     }
 
     /// <summary>
@@ -72,8 +98,8 @@ public class UserKycVerification : BaseEntity
     [MaxLength(2)]
     public string? DocumentCountry
     {
-        get;
-        set;
+        get => _documentCountry;
+        set => _documentCountry = value;
     }
 
     /// <summary>
@@ -81,8 +107,8 @@ public class UserKycVerification : BaseEntity
     /// </summary>
     public DateTime SubmittedAt
     {
-        get;
-        set;
+        get => _submittedAt;
+        set => _submittedAt = value;
     }
 
     /// <summary>
@@ -90,8 +116,8 @@ public class UserKycVerification : BaseEntity
     /// </summary>
     public DateTime? CompletedAt
     {
-        get;
-        set;
+        get => _completedAt;
+        set => _completedAt = value;
     }
 
     /// <summary>
@@ -99,8 +125,8 @@ public class UserKycVerification : BaseEntity
     /// </summary>
     public DateTime? ExpiresAt
     {
-        get;
-        set;
+        get => _expiresAt;
+        set => _expiresAt = value;
     }
 
     /// <summary>
@@ -109,8 +135,8 @@ public class UserKycVerification : BaseEntity
     [MaxLength(1000)]
     public string? Notes
     {
-        get;
-        set;
+        get => _notes;
+        set => _notes = value;
     }
 
     /// <summary>
@@ -119,17 +145,17 @@ public class UserKycVerification : BaseEntity
     [Column(TypeName = "jsonb")]
     public string? ProviderData
     {
-        get;
-        set;
+        get => _providerData;
+        set => _providerData = value;
     }
 
     // Navigation properties
     [ForeignKey(nameof(UserId))]
     public virtual User.Models.User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 }
 
 public class UserKycVerificationConfiguration : IEntityTypeConfiguration<UserKycVerification>

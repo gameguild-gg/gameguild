@@ -7,6 +7,11 @@ namespace GameGuild.Common.Entities;
 /// </summary>
 public abstract class Content : ResourceBase
 {
+    private ICollection<ContentLicense> _licenses = new List<ContentLicense>();
+
+    private string _slug = string.Empty;
+
+    private ContentStatus _status = ContentStatus.Draft;
     // Content-specific properties can be added here if needed
 
     /// <summary>
@@ -14,9 +19,9 @@ public abstract class Content : ResourceBase
     /// </summary>
     public virtual ICollection<ContentLicense> Licenses
     {
-        get;
-        set;
-    } = new List<ContentLicense>();
+        get => _licenses;
+        set => _licenses = value;
+    }
 
     /// <summary>
     /// Slug for the content (URL-friendly unique identifier)
@@ -24,16 +29,16 @@ public abstract class Content : ResourceBase
     [MaxLength(255)]
     public string Slug
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _slug;
+        set => _slug = value;
+    }
 
     /// <summary>
     /// Status of the content (draft, published, etc.)
     /// </summary>
     public ContentStatus Status
     {
-        get;
-        set;
-    } = ContentStatus.Draft;
+        get => _status;
+        set => _status = value;
+    }
 }

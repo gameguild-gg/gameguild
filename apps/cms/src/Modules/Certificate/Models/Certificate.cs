@@ -15,24 +15,62 @@ namespace GameGuild.Modules.Certificate.Models;
 [Index(nameof(TenantId))]
 public class Certificate : BaseEntity, ITenantable
 {
+    private string _name = string.Empty;
+
+    private string _description = string.Empty;
+
+    private CertificateType _type;
+
+    private Guid? _programId;
+
+    private Guid? _productId;
+
+    private decimal _completionPercentage = 100;
+
+    private decimal? _minimumGrade;
+
+    private bool _requiresFeedback = false;
+
+    private bool _requiresRating = false;
+
+    private decimal? _minimumRating;
+
+    private int? _validityDays;
+
+    private VerificationMethod _verificationMethod = VerificationMethod.Code;
+
+    private string? _certificateTemplate;
+
+    private bool _isActive = true;
+
+    private Guid? _tenantId;
+
+    private Program.Models.Program? _program;
+
+    private Product.Models.Product? _product;
+
+    private ICollection<UserCertificate> _userCertificates = new List<UserCertificate>();
+
+    private ICollection<CertificateTag> _certificateTags = new List<CertificateTag>();
+
     [Required]
     [MaxLength(255)]
     public string Name
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _name;
+        set => _name = value;
+    }
 
     public string Description
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _description;
+        set => _description = value;
+    }
 
     public CertificateType Type
     {
-        get;
-        set;
+        get => _type;
+        set => _type = value;
     }
 
     /// <summary>
@@ -40,8 +78,8 @@ public class Certificate : BaseEntity, ITenantable
     /// </summary>
     public Guid? ProgramId
     {
-        get;
-        set;
+        get => _programId;
+        set => _programId = value;
     }
 
     /// <summary>
@@ -49,8 +87,8 @@ public class Certificate : BaseEntity, ITenantable
     /// </summary>
     public Guid? ProductId
     {
-        get;
-        set;
+        get => _productId;
+        set => _productId = value;
     }
 
     /// <summary>
@@ -59,9 +97,9 @@ public class Certificate : BaseEntity, ITenantable
     [Column(TypeName = "decimal(5,2)")]
     public decimal CompletionPercentage
     {
-        get;
-        set;
-    } = 100;
+        get => _completionPercentage;
+        set => _completionPercentage = value;
+    }
 
     /// <summary>
     /// Minimum grade required for certificate issuance (0-100, null = no minimum)
@@ -69,8 +107,8 @@ public class Certificate : BaseEntity, ITenantable
     [Column(TypeName = "decimal(5,2)")]
     public decimal? MinimumGrade
     {
-        get;
-        set;
+        get => _minimumGrade;
+        set => _minimumGrade = value;
     }
 
     /// <summary>
@@ -78,18 +116,18 @@ public class Certificate : BaseEntity, ITenantable
     /// </summary>
     public bool RequiresFeedback
     {
-        get;
-        set;
-    } = false;
+        get => _requiresFeedback;
+        set => _requiresFeedback = value;
+    }
 
     /// <summary>
     /// Whether rating submission is required for certificate issuance
     /// </summary>
     public bool RequiresRating
     {
-        get;
-        set;
-    } = false;
+        get => _requiresRating;
+        set => _requiresRating = value;
+    }
 
     /// <summary>
     /// Minimum rating required if rating is required (1-5, null = any rating accepted)
@@ -97,8 +135,8 @@ public class Certificate : BaseEntity, ITenantable
     [Column(TypeName = "decimal(2,1)")]
     public decimal? MinimumRating
     {
-        get;
-        set;
+        get => _minimumRating;
+        set => _minimumRating = value;
     }
 
     /// <summary>
@@ -106,15 +144,15 @@ public class Certificate : BaseEntity, ITenantable
     /// </summary>
     public int? ValidityDays
     {
-        get;
-        set;
+        get => _validityDays;
+        set => _validityDays = value;
     }
 
     public VerificationMethod VerificationMethod
     {
-        get;
-        set;
-    } = VerificationMethod.Code;
+        get => _verificationMethod;
+        set => _verificationMethod = value;
+    }
 
     /// <summary>
     /// Template for certificate design/layout
@@ -122,46 +160,46 @@ public class Certificate : BaseEntity, ITenantable
     [MaxLength(500)]
     public string? CertificateTemplate
     {
-        get;
-        set;
+        get => _certificateTemplate;
+        set => _certificateTemplate = value;
     }
 
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 
     public Guid? TenantId
     {
-        get;
-        set;
+        get => _tenantId;
+        set => _tenantId = value;
     }
 
     // Navigation properties
     public virtual Program.Models.Program? Program
     {
-        get;
-        set;
+        get => _program;
+        set => _program = value;
     }
 
     public virtual Product.Models.Product? Product
     {
-        get;
-        set;
+        get => _product;
+        set => _product = value;
     }
 
     public virtual ICollection<UserCertificate> UserCertificates
     {
-        get;
-        set;
-    } = new List<UserCertificate>();
+        get => _userCertificates;
+        set => _userCertificates = value;
+    }
 
     public virtual ICollection<CertificateTag> CertificateTags
     {
-        get;
-        set;
-    } = new List<CertificateTag>();
+        get => _certificateTags;
+        set => _certificateTags = value;
+    }
 }
 
 public class CertificateConfiguration : IEntityTypeConfiguration<Certificate>

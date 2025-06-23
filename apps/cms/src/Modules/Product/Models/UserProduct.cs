@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Subscription.Models;
 
 namespace GameGuild.Modules.Product.Models;
 
@@ -21,14 +22,42 @@ namespace GameGuild.Modules.Product.Models;
 [Index(nameof(SubscriptionId))]
 public class UserProduct : BaseEntity
 {
+    private Guid _userId;
+
+    private User.Models.User _user = null!;
+
+    private Guid _productId;
+
+    private Product _product = null!;
+
+    private Guid? _subscriptionId;
+
+    private UserSubscription? _subscription;
+
+    private ProductAcquisitionType _acquisitionType;
+
+    private ProductAccessStatus _accessStatus = ProductAccessStatus.Active;
+
+    private decimal _pricePaid;
+
+    private string _currency = "USD";
+
+    private DateTime? _accessStartDate;
+
+    private DateTime? _accessEndDate;
+
+    private Guid? _giftedByUserId;
+
+    private User.Models.User? _giftedByUser;
+
     /// <summary>
     /// Foreign key to the User entity
     /// </summary>
     [Required]
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -37,9 +66,9 @@ public class UserProduct : BaseEntity
     [ForeignKey(nameof(UserId))]
     public virtual User.Models.User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 
     /// <summary>
     /// Foreign key to the Product entity
@@ -47,8 +76,8 @@ public class UserProduct : BaseEntity
     [Required]
     public Guid ProductId
     {
-        get;
-        set;
+        get => _productId;
+        set => _productId = value;
     }
 
     /// <summary>
@@ -57,17 +86,17 @@ public class UserProduct : BaseEntity
     [ForeignKey(nameof(ProductId))]
     public virtual Product Product
     {
-        get;
-        set;
-    } = null!;
+        get => _product;
+        set => _product = value;
+    }
 
     /// <summary>
     /// Foreign key to the Subscription entity (optional)
     /// </summary>
     public Guid? SubscriptionId
     {
-        get;
-        set;
+        get => _subscriptionId;
+        set => _subscriptionId = value;
     }
 
     /// <summary>
@@ -76,8 +105,8 @@ public class UserProduct : BaseEntity
     [ForeignKey(nameof(SubscriptionId))]
     public virtual Subscription.Models.UserSubscription? Subscription
     {
-        get;
-        set;
+        get => _subscription;
+        set => _subscription = value;
     }
 
     /// <summary>
@@ -85,8 +114,8 @@ public class UserProduct : BaseEntity
     /// </summary>
     public ProductAcquisitionType AcquisitionType
     {
-        get;
-        set;
+        get => _acquisitionType;
+        set => _acquisitionType = value;
     }
 
     /// <summary>
@@ -94,9 +123,9 @@ public class UserProduct : BaseEntity
     /// </summary>
     public ProductAccessStatus AccessStatus
     {
-        get;
-        set;
-    } = ProductAccessStatus.Active;
+        get => _accessStatus;
+        set => _accessStatus = value;
+    }
 
     /// <summary>
     /// Amount the user paid for this product
@@ -104,8 +133,8 @@ public class UserProduct : BaseEntity
     [Column(TypeName = "decimal(10,2)")]
     public decimal PricePaid
     {
-        get;
-        set;
+        get => _pricePaid;
+        set => _pricePaid = value;
     }
 
     /// <summary>
@@ -114,17 +143,17 @@ public class UserProduct : BaseEntity
     [MaxLength(3)]
     public string Currency
     {
-        get;
-        set;
-    } = "USD";
+        get => _currency;
+        set => _currency = value;
+    }
 
     /// <summary>
     /// When the user's access to this product starts
     /// </summary>
     public DateTime? AccessStartDate
     {
-        get;
-        set;
+        get => _accessStartDate;
+        set => _accessStartDate = value;
     }
 
     /// <summary>
@@ -132,8 +161,8 @@ public class UserProduct : BaseEntity
     /// </summary>
     public DateTime? AccessEndDate
     {
-        get;
-        set;
+        get => _accessEndDate;
+        set => _accessEndDate = value;
     }
 
     /// <summary>
@@ -141,8 +170,8 @@ public class UserProduct : BaseEntity
     /// </summary>
     public Guid? GiftedByUserId
     {
-        get;
-        set;
+        get => _giftedByUserId;
+        set => _giftedByUserId = value;
     }
 
     /// <summary>
@@ -151,8 +180,8 @@ public class UserProduct : BaseEntity
     [ForeignKey(nameof(GiftedByUserId))]
     public virtual User.Models.User? GiftedByUser
     {
-        get;
-        set;
+        get => _giftedByUser;
+        set => _giftedByUser = value;
     }
 
     /// <summary>

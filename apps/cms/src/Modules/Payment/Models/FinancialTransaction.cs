@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Product.Models;
 
 namespace GameGuild.Modules.Payment.Models;
 
@@ -18,13 +19,57 @@ namespace GameGuild.Modules.Payment.Models;
 [Index(nameof(Amount))]
 public class FinancialTransaction : BaseEntity
 {
+    private Guid? _fromUserId;
+
+    private Guid? _toUserId;
+
+    private TransactionType _type;
+
+    private decimal _amount;
+
+    private string _currency = "USD";
+
+    private TransactionStatus _status = TransactionStatus.Pending;
+
+    private string? _externalTransactionId;
+
+    private Guid? _paymentMethodId;
+
+    private Guid? _promoCodeId;
+
+    private decimal? _platformFee;
+
+    private decimal? _processorFee;
+
+    private decimal? _netAmount;
+
+    private string? _description;
+
+    private string? _metadata;
+
+    private DateTime? _processedAt;
+
+    private DateTime? _failedAt;
+
+    private string? _errorMessage;
+
+    private User.Models.User? _fromUser;
+
+    private User.Models.User? _toUser;
+
+    private UserFinancialMethod? _paymentMethod;
+
+    private PromoCode? _promoCode;
+
+    private ICollection<PromoCodeUse> _promoCodeUses = new List<Product.Models.PromoCodeUse>();
+
     /// <summary>
     /// User who initiated the transaction (payer)
     /// </summary>
     public Guid? FromUserId
     {
-        get;
-        set;
+        get => _fromUserId;
+        set => _fromUserId = value;
     }
 
     /// <summary>
@@ -32,35 +77,35 @@ public class FinancialTransaction : BaseEntity
     /// </summary>
     public Guid? ToUserId
     {
-        get;
-        set;
+        get => _toUserId;
+        set => _toUserId = value;
     }
 
     public TransactionType Type
     {
-        get;
-        set;
+        get => _type;
+        set => _type = value;
     }
 
     [Column(TypeName = "decimal(10,2)")]
     public decimal Amount
     {
-        get;
-        set;
+        get => _amount;
+        set => _amount = value;
     }
 
     [MaxLength(3)]
     public string Currency
     {
-        get;
-        set;
-    } = "USD";
+        get => _currency;
+        set => _currency = value;
+    }
 
     public TransactionStatus Status
     {
-        get;
-        set;
-    } = TransactionStatus.Pending;
+        get => _status;
+        set => _status = value;
+    }
 
     /// <summary>
     /// External transaction ID from payment provider
@@ -68,8 +113,8 @@ public class FinancialTransaction : BaseEntity
     [MaxLength(255)]
     public string? ExternalTransactionId
     {
-        get;
-        set;
+        get => _externalTransactionId;
+        set => _externalTransactionId = value;
     }
 
     /// <summary>
@@ -77,8 +122,8 @@ public class FinancialTransaction : BaseEntity
     /// </summary>
     public Guid? PaymentMethodId
     {
-        get;
-        set;
+        get => _paymentMethodId;
+        set => _paymentMethodId = value;
     }
 
     /// <summary>
@@ -86,8 +131,8 @@ public class FinancialTransaction : BaseEntity
     /// </summary>
     public Guid? PromoCodeId
     {
-        get;
-        set;
+        get => _promoCodeId;
+        set => _promoCodeId = value;
     }
 
     /// <summary>
@@ -96,8 +141,8 @@ public class FinancialTransaction : BaseEntity
     [Column(TypeName = "decimal(10,2)")]
     public decimal? PlatformFee
     {
-        get;
-        set;
+        get => _platformFee;
+        set => _platformFee = value;
     }
 
     /// <summary>
@@ -106,8 +151,8 @@ public class FinancialTransaction : BaseEntity
     [Column(TypeName = "decimal(10,2)")]
     public decimal? ProcessorFee
     {
-        get;
-        set;
+        get => _processorFee;
+        set => _processorFee = value;
     }
 
     /// <summary>
@@ -116,8 +161,8 @@ public class FinancialTransaction : BaseEntity
     [Column(TypeName = "decimal(10,2)")]
     public decimal? NetAmount
     {
-        get;
-        set;
+        get => _netAmount;
+        set => _netAmount = value;
     }
 
     /// <summary>
@@ -126,8 +171,8 @@ public class FinancialTransaction : BaseEntity
     [MaxLength(500)]
     public string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     /// <summary>
@@ -136,8 +181,8 @@ public class FinancialTransaction : BaseEntity
     [MaxLength(1000)]
     public string? Metadata
     {
-        get;
-        set;
+        get => _metadata;
+        set => _metadata = value;
     }
 
     /// <summary>
@@ -145,8 +190,8 @@ public class FinancialTransaction : BaseEntity
     /// </summary>
     public DateTime? ProcessedAt
     {
-        get;
-        set;
+        get => _processedAt;
+        set => _processedAt = value;
     }
 
     /// <summary>
@@ -154,8 +199,8 @@ public class FinancialTransaction : BaseEntity
     /// </summary>
     public DateTime? FailedAt
     {
-        get;
-        set;
+        get => _failedAt;
+        set => _failedAt = value;
     }
 
     /// <summary>
@@ -164,44 +209,44 @@ public class FinancialTransaction : BaseEntity
     [MaxLength(500)]
     public string? ErrorMessage
     {
-        get;
-        set;
+        get => _errorMessage;
+        set => _errorMessage = value;
     }
 
     // Navigation properties
     [ForeignKey(nameof(FromUserId))]
     public virtual User.Models.User? FromUser
     {
-        get;
-        set;
+        get => _fromUser;
+        set => _fromUser = value;
     }
 
     [ForeignKey(nameof(ToUserId))]
     public virtual User.Models.User? ToUser
     {
-        get;
-        set;
+        get => _toUser;
+        set => _toUser = value;
     }
 
     [ForeignKey(nameof(PaymentMethodId))]
     public virtual UserFinancialMethod? PaymentMethod
     {
-        get;
-        set;
+        get => _paymentMethod;
+        set => _paymentMethod = value;
     }
 
     [ForeignKey(nameof(PromoCodeId))]
     public virtual Product.Models.PromoCode? PromoCode
     {
-        get;
-        set;
+        get => _promoCode;
+        set => _promoCode = value;
     }
 
     public virtual ICollection<Product.Models.PromoCodeUse> PromoCodeUses
     {
-        get;
-        set;
-    } = new List<Product.Models.PromoCodeUse>();
+        get => _promoCodeUses;
+        set => _promoCodeUses = value;
+    }
 }
 
 public class FinancialTransactionConfiguration : IEntityTypeConfiguration<FinancialTransaction>

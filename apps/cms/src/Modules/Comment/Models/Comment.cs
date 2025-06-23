@@ -7,18 +7,22 @@ namespace GameGuild.Common.Entities;
 /// </summary>
 public class Comment : ResourceBase
 {
+    private string _content = string.Empty;
+
+    private ICollection<CommentPermission> _permissions = new List<CommentPermission>();
+
     public string Content
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _content;
+        set => _content = value;
+    }
 
     /// <summary>
     /// Navigation to comment permissions
     /// </summary>
     public virtual ICollection<CommentPermission> Permissions
     {
-        get;
-        set;
-    } = new List<CommentPermission>();
+        get => _permissions;
+        set => _permissions = value;
+    }
 }

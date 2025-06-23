@@ -14,53 +14,75 @@ namespace GameGuild.Modules.Certificate.Models;
 [Index(nameof(AnchoredAt))]
 public class CertificateBlockchainAnchor : BaseEntity
 {
+    private Guid _certificateId;
+
+    private string _blockchainNetwork = string.Empty;
+
+    private string _transactionHash = string.Empty;
+
+    private string? _blockHash;
+
+    private long? _blockNumber;
+
+    private string? _contractAddress;
+
+    private string? _tokenId;
+
+    private string _status = "pending";
+
+    private DateTime _anchoredAt;
+
+    private DateTime? _confirmedAt;
+
+    private UserCertificate _certificate = null!;
+
     public Guid CertificateId
     {
-        get;
-        set;
+        get => _certificateId;
+        set => _certificateId = value;
     }
 
     [Required]
     [MaxLength(100)]
     public string BlockchainNetwork
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _blockchainNetwork;
+        set => _blockchainNetwork = value;
+    }
 
     [Required]
     [MaxLength(200)]
     public string TransactionHash
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _transactionHash;
+        set => _transactionHash = value;
+    }
 
     [MaxLength(200)]
     public string? BlockHash
     {
-        get;
-        set;
+        get => _blockHash;
+        set => _blockHash = value;
     }
 
     public long? BlockNumber
     {
-        get;
-        set;
+        get => _blockNumber;
+        set => _blockNumber = value;
     }
 
     [MaxLength(500)]
     public string? ContractAddress
     {
-        get;
-        set;
+        get => _contractAddress;
+        set => _contractAddress = value;
     }
 
     [MaxLength(100)]
     public string? TokenId
     {
-        get;
-        set;
+        get => _tokenId;
+        set => _tokenId = value;
     }
 
     /// <summary>
@@ -69,17 +91,17 @@ public class CertificateBlockchainAnchor : BaseEntity
     [MaxLength(50)]
     public string Status
     {
-        get;
-        set;
-    } = "pending";
+        get => _status;
+        set => _status = value;
+    }
 
     /// <summary>
     /// Date when the anchoring was initiated
     /// </summary>
     public DateTime AnchoredAt
     {
-        get;
-        set;
+        get => _anchoredAt;
+        set => _anchoredAt = value;
     }
 
     /// <summary>
@@ -87,17 +109,17 @@ public class CertificateBlockchainAnchor : BaseEntity
     /// </summary>
     public DateTime? ConfirmedAt
     {
-        get;
-        set;
+        get => _confirmedAt;
+        set => _confirmedAt = value;
     }
 
     // Navigation properties
     [ForeignKey(nameof(CertificateId))]
     public virtual UserCertificate Certificate
     {
-        get;
-        set;
-    } = null!;
+        get => _certificate;
+        set => _certificate = value;
+    }
 }
 
 public class CertificateBlockchainAnchorConfiguration : IEntityTypeConfiguration<CertificateBlockchainAnchor>

@@ -538,42 +538,54 @@ public class ProductController : ControllerBase
 
 public class SetPricingRequest
 {
+    private decimal _basePrice;
+
+    private string _currency = "USD";
+
     public decimal BasePrice
     {
-        get;
-        set;
+        get => _basePrice;
+        set => _basePrice = value;
     }
 
     public string Currency
     {
-        get;
-        set;
-    } = "USD";
+        get => _currency;
+        set => _currency = value;
+    }
 }
 
 public class GrantAccessRequest
 {
+    private ProductAcquisitionType _acquisitionType;
+
+    private decimal _purchasePrice = 0;
+
+    private string _currency = "USD";
+
+    private DateTime? _expiresAt;
+
     public ProductAcquisitionType AcquisitionType
     {
-        get;
-        set;
+        get => _acquisitionType;
+        set => _acquisitionType = value;
     }
 
     public decimal PurchasePrice
     {
-        get;
-        set;
-    } = 0;
+        get => _purchasePrice;
+        set => _purchasePrice = value;
+    }
 
     public string Currency
     {
-        get;
-        set;
-    } = "USD";
+        get => _currency;
+        set => _currency = value;
+    }
 
     public DateTime? ExpiresAt
     {
-        get;
-        set;
+        get => _expiresAt;
+        set => _expiresAt = value;
     }
 }

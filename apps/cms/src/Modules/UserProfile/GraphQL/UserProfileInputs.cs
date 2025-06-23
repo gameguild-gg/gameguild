@@ -5,46 +5,60 @@ namespace GameGuild.Modules.UserProfile.GraphQL;
 /// </summary>
 public class CreateUserProfileInput
 {
+    private string? _givenName;
+
+    private string? _familyName;
+
+    private string? _displayName;
+
+    private string? _title;
+
+    private string? _description;
+
+    private string? _slug;
+
+    private Guid? _tenantId;
+
     public string? GivenName
     {
-        get;
-        set;
+        get => _givenName;
+        set => _givenName = value;
     }
 
     public string? FamilyName
     {
-        get;
-        set;
+        get => _familyName;
+        set => _familyName = value;
     }
 
     public string? DisplayName
     {
-        get;
-        set;
+        get => _displayName;
+        set => _displayName = value;
     }
 
     public string? Title
     {
-        get;
-        set;
+        get => _title;
+        set => _title = value;
     }
 
     public string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     public string? Slug
     {
-        get;
-        set;
+        get => _slug;
+        set => _slug = value;
     }
 
     public Guid? TenantId
     {
-        get;
-        set;
+        get => _tenantId;
+        set => _tenantId = value;
     }
 }
 
@@ -53,51 +67,67 @@ public class CreateUserProfileInput
 /// </summary>
 public class UpdateUserProfileInput
 {
+    private Guid _id;
+
+    private string? _givenName;
+
+    private string? _familyName;
+
+    private string? _displayName;
+
+    private string? _title;
+
+    private string? _description;
+
+    private string? _slug;
+
+    private Guid? _tenantId;
+
     public Guid Id
     {
-        get;
-        set;
+        get => _id;
+        set => _id = value;
     }
 
     public string? GivenName
     {
-        get;
-        set;
+        get => _givenName;
+        set => _givenName = value;
     }
 
     public string? FamilyName
     {
-        get;
-        set;
+        get => _familyName;
+        set => _familyName = value;
     }
 
     public string? DisplayName
     {
-        get;
-        set;
+        get => _displayName;
+        set => _displayName = value;
     }
 
     public string? Title
     {
-        get;
-        set;
+        get => _title;
+        set => _title = value;
     }
 
     public string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     public string? Slug
     {
-        get;
-        set;
+        get => _slug;
+        set => _slug = value;
     }
 
     public Guid? TenantId
     {
-        get;
-        set;
+        get => _tenantId;
+        set => _tenantId = value;
     }
 }

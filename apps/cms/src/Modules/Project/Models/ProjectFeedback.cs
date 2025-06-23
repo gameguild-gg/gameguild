@@ -15,13 +15,43 @@ namespace GameGuild.Modules.Project.Models;
 [Index(nameof(CreatedAt), Name = "IX_ProjectFeedbacks_Date")]
 public class ProjectFeedback : ResourceBase
 {
+    private Guid _projectId;
+
+    private Project _project = null!;
+
+    private Guid _userId;
+
+    private User.Models.User _user = null!;
+
+    private int _rating = 5;
+
+    private string _title = string.Empty;
+
+    private string? _content;
+
+    private string? _categories;
+
+    private bool _isFeatured = false;
+
+    private bool _isVerified = false;
+
+    private ContentStatus _status = ContentStatus.Published;
+
+    private int _helpfulVotes = 0;
+
+    private int _totalVotes = 0;
+
+    private string? _platform;
+
+    private string? _projectVersion;
+
     /// <summary>
     /// Project being reviewed
     /// </summary>
     public Guid ProjectId
     {
-        get;
-        set;
+        get => _projectId;
+        set => _projectId = value;
     }
 
     /// <summary>
@@ -29,17 +59,17 @@ public class ProjectFeedback : ResourceBase
     /// </summary>
     public virtual Project Project
     {
-        get;
-        set;
-    } = null!;
+        get => _project;
+        set => _project = value;
+    }
 
     /// <summary>
     /// User providing feedback
     /// </summary>
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -47,9 +77,9 @@ public class ProjectFeedback : ResourceBase
     /// </summary>
     public virtual User.Models.User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 
     /// <summary>
     /// Rating (1-5 stars)
@@ -57,9 +87,9 @@ public class ProjectFeedback : ResourceBase
     [Range(1, 5)]
     public int Rating
     {
-        get;
-        set;
-    } = 5;
+        get => _rating;
+        set => _rating = value;
+    }
 
     /// <summary>
     /// Review title
@@ -68,9 +98,9 @@ public class ProjectFeedback : ResourceBase
     [MaxLength(200)]
     public new string Title
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _title;
+        set => _title = value;
+    }
 
     /// <summary>
     /// Review content
@@ -78,8 +108,8 @@ public class ProjectFeedback : ResourceBase
     [MaxLength(2000)]
     public string? Content
     {
-        get;
-        set;
+        get => _content;
+        set => _content = value;
     }
 
     /// <summary>
@@ -88,8 +118,8 @@ public class ProjectFeedback : ResourceBase
     [MaxLength(500)]
     public string? Categories
     {
-        get;
-        set;
+        get => _categories;
+        set => _categories = value;
     }
 
     /// <summary>
@@ -97,45 +127,45 @@ public class ProjectFeedback : ResourceBase
     /// </summary>
     public bool IsFeatured
     {
-        get;
-        set;
-    } = false;
+        get => _isFeatured;
+        set => _isFeatured = value;
+    }
 
     /// <summary>
     /// Whether this feedback has been verified (e.g., from actual user)
     /// </summary>
     public bool IsVerified
     {
-        get;
-        set;
-    } = false;
+        get => _isVerified;
+        set => _isVerified = value;
+    }
 
     /// <summary>
     /// Feedback status
     /// </summary>
     public ContentStatus Status
     {
-        get;
-        set;
-    } = ContentStatus.Published;
+        get => _status;
+        set => _status = value;
+    }
 
     /// <summary>
     /// Number of helpful votes
     /// </summary>
     public int HelpfulVotes
     {
-        get;
-        set;
-    } = 0;
+        get => _helpfulVotes;
+        set => _helpfulVotes = value;
+    }
 
     /// <summary>
     /// Number of total votes
     /// </summary>
     public int TotalVotes
     {
-        get;
-        set;
-    } = 0;
+        get => _totalVotes;
+        set => _totalVotes = value;
+    }
 
     /// <summary>
     /// Platform where the project was experienced (if applicable)
@@ -143,8 +173,8 @@ public class ProjectFeedback : ResourceBase
     [MaxLength(100)]
     public string? Platform
     {
-        get;
-        set;
+        get => _platform;
+        set => _platform = value;
     }
 
     /// <summary>
@@ -153,7 +183,7 @@ public class ProjectFeedback : ResourceBase
     [MaxLength(50)]
     public string? ProjectVersion
     {
-        get;
-        set;
+        get => _projectVersion;
+        set => _projectVersion = value;
     }
 }

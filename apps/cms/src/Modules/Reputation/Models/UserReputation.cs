@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
@@ -15,6 +16,26 @@ namespace GameGuild.Modules.Reputation.Models;
 [Index(nameof(CurrentLevelId))]
 public class UserReputation : ResourceBase, IReputation
 {
+    private User.Models.User _user;
+
+    private Guid _userId;
+
+    private int _score = 0;
+
+    private ReputationTier? _currentLevel;
+
+    private Guid? _currentLevelId;
+
+    private DateTime _lastUpdated = DateTime.UtcNow;
+
+    private DateTime? _lastLevelCalculation;
+
+    private int _positiveChanges = 0;
+
+    private int _negativeChanges = 0;
+
+    private ICollection<UserReputationHistory> _history = new List<UserReputationHistory>();
+
     /// <summary>
     /// The user this reputation belongs to
     /// </summary>
@@ -22,15 +43,15 @@ public class UserReputation : ResourceBase, IReputation
     [ForeignKey(nameof(UserId))]
     public required Modules.User.Models.User User
     {
-        get;
-        set;
+        get => _user;
+        [MemberNotNull(nameof(_user))] set => _user = value;
     }
 
     [Required]
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -38,9 +59,9 @@ public class UserReputation : ResourceBase, IReputation
     /// </summary>
     public int Score
     {
-        get;
-        set;
-    } = 0;
+        get => _score;
+        set => _score = value;
+    }
 
     /// <summary>
     /// Current reputation tier (linked to configurable tier)
@@ -48,14 +69,14 @@ public class UserReputation : ResourceBase, IReputation
     [ForeignKey(nameof(CurrentLevelId))]
     public ReputationTier? CurrentLevel
     {
-        get;
-        set;
+        get => _currentLevel;
+        set => _currentLevel = value;
     }
 
     public Guid? CurrentLevelId
     {
-        get;
-        set;
+        get => _currentLevelId;
+        set => _currentLevelId = value;
     }
 
     /// <summary>
@@ -63,17 +84,17 @@ public class UserReputation : ResourceBase, IReputation
     /// </summary>
     public DateTime LastUpdated
     {
-        get;
-        set;
-    } = DateTime.UtcNow;
+        get => _lastUpdated;
+        set => _lastUpdated = value;
+    }
 
     /// <summary>
     /// When the user's reputation tier was last recalculated
     /// </summary>
     public DateTime? LastLevelCalculation
     {
-        get;
-        set;
+        get => _lastLevelCalculation;
+        set => _lastLevelCalculation = value;
     }
 
     /// <summary>
@@ -81,27 +102,27 @@ public class UserReputation : ResourceBase, IReputation
     /// </summary>
     public int PositiveChanges
     {
-        get;
-        set;
-    } = 0;
+        get => _positiveChanges;
+        set => _positiveChanges = value;
+    }
 
     /// <summary>
     /// Number of negative reputation changes
     /// </summary>
     public int NegativeChanges
     {
-        get;
-        set;
-    } = 0;
+        get => _negativeChanges;
+        set => _negativeChanges = value;
+    }
 
     /// <summary>
     /// History of reputation changes for this user
     /// </summary>
     public ICollection<UserReputationHistory> History
     {
-        get;
-        set;
-    } = new List<UserReputationHistory>();
+        get => _history;
+        set => _history = value;
+    }
 }
 
 public class UserReputationConfiguration : IEntityTypeConfiguration<UserReputation>

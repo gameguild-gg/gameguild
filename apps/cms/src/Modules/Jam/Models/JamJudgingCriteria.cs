@@ -5,37 +5,47 @@ namespace GameGuild.Modules.Jam.Models
 {
     public class JamJudgingCriteria : BaseEntity
     {
+        private Guid _jamId;
+
+        private string _name = string.Empty;
+
+        private string? _description;
+
+        private decimal _weight = 1.0m;
+
+        private int _maxScore = 5;
+
         [Required]
         public Guid JamId
         {
-            get;
-            set;
+            get => _jamId;
+            set => _jamId = value;
         }
 
         [Required, MaxLength(100)]
         public string Name
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _name;
+            set => _name = value;
+        }
 
         public string? Description
         {
-            get;
-            set;
+            get => _description;
+            set => _description = value;
         }
 
         public decimal Weight
         {
-            get;
-            set;
-        } = 1.0m;
+            get => _weight;
+            set => _weight = value;
+        }
 
         [Required]
         public int MaxScore
         {
-            get;
-            set;
-        } = 5;
+            get => _maxScore;
+            set => _maxScore = value;
+        }
     }
 }

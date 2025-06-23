@@ -5,32 +5,40 @@ namespace GameGuild.Modules.Auth.Dtos
     /// </summary>
     public class OAuthSignInRequestDto
     {
+        private string _code = string.Empty;
+
+        private string _state = string.Empty;
+
+        private string _redirectUri = string.Empty;
+
+        private Guid? _tenantId;
+
         /// <summary>
         /// OAuth authorization code
         /// </summary>
         public string Code
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _code;
+            set => _code = value;
+        }
 
         /// <summary>
         /// State parameter for CSRF protection
         /// </summary>
         public string State
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _state;
+            set => _state = value;
+        }
 
         /// <summary>
         /// Redirect URI used in the OAuth flow
         /// </summary>
         public string RedirectUri
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _redirectUri;
+            set => _redirectUri = value;
+        }
 
         /// <summary>
         /// Optional tenant ID to use for the sign-in
@@ -38,74 +46,94 @@ namespace GameGuild.Modules.Auth.Dtos
         /// </summary>
         public Guid? TenantId
         {
-            get;
-            set;
+            get => _tenantId;
+            set => _tenantId = value;
         }
     }
 
     public class GitHubUserDto
     {
+        private long _id;
+
+        private string _login = string.Empty;
+
+        private string _name = string.Empty;
+
+        private string _email = string.Empty;
+
+        private string _avatarUrl = string.Empty;
+
         public long Id
         {
-            get;
-            set;
+            get => _id;
+            set => _id = value;
         }
 
         public string Login
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _login;
+            set => _login = value;
+        }
 
         public string Name
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _name;
+            set => _name = value;
+        }
 
         public string Email
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _email;
+            set => _email = value;
+        }
 
         public string AvatarUrl
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _avatarUrl;
+            set => _avatarUrl = value;
+        }
     }
 
     public class GoogleUserDto
     {
+        private string _id = string.Empty;
+
+        private string _email = string.Empty;
+
+        private string _name = string.Empty;
+
+        private string _picture = string.Empty;
+
+        private bool _emailVerified;
+
         public string Id
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _id;
+            set => _id = value;
+        }
 
         public string Email
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _email;
+            set => _email = value;
+        }
 
         public string Name
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _name;
+            set => _name = value;
+        }
 
         public string Picture
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _picture;
+            set => _picture = value;
+        }
 
         public bool EmailVerified
         {
-            get;
-            set;
+            get => _emailVerified;
+            set => _emailVerified = value;
         }
     }
 
@@ -114,14 +142,18 @@ namespace GameGuild.Modules.Auth.Dtos
     /// </summary>
     public class GoogleIdTokenRequestDto
     {
+        private string _idToken = string.Empty;
+
+        private Guid? _tenantId;
+
         /// <summary>
         /// Google ID Token from NextAuth.js
         /// </summary>
         public string IdToken
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _idToken;
+            set => _idToken = value;
+        }
 
         /// <summary>
         /// Optional tenant ID to use for the sign-in
@@ -129,8 +161,8 @@ namespace GameGuild.Modules.Auth.Dtos
         /// </summary>
         public Guid? TenantId
         {
-            get;
-            set;
+            get => _tenantId;
+            set => _tenantId = value;
         }
     }
 }

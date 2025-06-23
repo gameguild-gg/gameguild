@@ -8,15 +8,19 @@ namespace GameGuild.Modules.Auth.Commands;
 /// </summary>
 public class GenerateWeb3ChallengeCommand : IRequest<Web3ChallengeResponseDto>
 {
+    private string _walletAddress = string.Empty;
+
+    private string _chainId = string.Empty;
+
     public string WalletAddress
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _walletAddress;
+        set => _walletAddress = value;
+    }
 
     public string ChainId
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _chainId;
+        set => _chainId = value;
+    }
 }

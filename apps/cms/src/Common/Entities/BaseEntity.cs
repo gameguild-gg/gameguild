@@ -1,4 +1,5 @@
 using System.Reflection;
+using GameGuild.Modules.Tenant.Models;
 
 namespace GameGuild.Common.Entities;
 
@@ -9,6 +10,18 @@ namespace GameGuild.Common.Entities;
 /// </summary>
 public class BaseEntity : BaseEntity<Guid>
 {
+    private Guid _id;
+
+    private int _version;
+
+    private DateTime _createdAt;
+
+    private DateTime _updatedAt;
+
+    private DateTime? _deletedAt;
+
+    private Tenant? _tenant;
+
     /// <summary>
     /// Unique identifier for the entity
     /// </summary>
@@ -16,8 +29,8 @@ public class BaseEntity : BaseEntity<Guid>
     [GraphQLDescription("The unique identifier for the entity (UUID).")]
     public override Guid Id
     {
-        get;
-        set;
+        get => _id;
+        set => _id = value;
     }
 
     /// <summary>
@@ -27,8 +40,8 @@ public class BaseEntity : BaseEntity<Guid>
     [GraphQLDescription("Version number for optimistic concurrency control.")]
     public override int Version
     {
-        get;
-        set;
+        get => _version;
+        set => _version = value;
     }
 
     /// <summary>
@@ -38,8 +51,8 @@ public class BaseEntity : BaseEntity<Guid>
     [GraphQLDescription("The date and time when the entity was created.")]
     public override DateTime CreatedAt
     {
-        get;
-        set;
+        get => _createdAt;
+        set => _createdAt = value;
     }
 
     /// <summary>
@@ -49,8 +62,8 @@ public class BaseEntity : BaseEntity<Guid>
     [GraphQLDescription("The date and time when the entity was last updated.")]
     public override DateTime UpdatedAt
     {
-        get;
-        set;
+        get => _updatedAt;
+        set => _updatedAt = value;
     }
 
     /// <summary>
@@ -60,8 +73,8 @@ public class BaseEntity : BaseEntity<Guid>
     [GraphQLDescription("The date and time when the entity was soft deleted (null if not deleted).")]
     public override DateTime? DeletedAt
     {
-        get;
-        set;
+        get => _deletedAt;
+        set => _deletedAt = value;
     }
 
     /// <summary>
@@ -79,8 +92,8 @@ public class BaseEntity : BaseEntity<Guid>
     /// </summary>
     public override Modules.Tenant.Models.Tenant? Tenant
     {
-        get;
-        set;
+        get => _tenant;
+        set => _tenant = value;
     }
 
     /// <summary>

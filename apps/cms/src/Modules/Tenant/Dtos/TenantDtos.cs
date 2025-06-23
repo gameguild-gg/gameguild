@@ -8,6 +8,12 @@ namespace GameGuild.Modules.Tenant.Dtos;
 /// </summary>
 public class CreateTenantDto
 {
+    private string _name = string.Empty;
+
+    private string? _description;
+
+    private bool _isActive = true;
+
     /// <summary>
     /// Name of the tenant
     /// </summary>
@@ -15,9 +21,9 @@ public class CreateTenantDto
     [MaxLength(100)]
     public string Name
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _name;
+        set => _name = value;
+    }
 
     /// <summary>
     /// Description of the tenant
@@ -25,8 +31,8 @@ public class CreateTenantDto
     [MaxLength(500)]
     public string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     /// <summary>
@@ -34,9 +40,9 @@ public class CreateTenantDto
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 }
 
 /// <summary>
@@ -44,6 +50,12 @@ public class CreateTenantDto
 /// </summary>
 public class UpdateTenantDto
 {
+    private string _name = string.Empty;
+
+    private string? _description;
+
+    private bool _isActive = true;
+
     /// <summary>
     /// Name of the tenant
     /// </summary>
@@ -51,9 +63,9 @@ public class UpdateTenantDto
     [MaxLength(100)]
     public string Name
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _name;
+        set => _name = value;
+    }
 
     /// <summary>
     /// Description of the tenant
@@ -61,8 +73,8 @@ public class UpdateTenantDto
     [MaxLength(500)]
     public string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     /// <summary>
@@ -70,9 +82,9 @@ public class UpdateTenantDto
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 }
 
 /// <summary>
@@ -80,13 +92,31 @@ public class UpdateTenantDto
 /// </summary>
 public class TenantResponseDto
 {
+    private Guid _id;
+
+    private string _name = string.Empty;
+
+    private string? _description;
+
+    private bool _isActive;
+
+    private int _version;
+
+    private DateTime _createdAt;
+
+    private DateTime _updatedAt;
+
+    private DateTime? _deletedAt;
+
+    private ICollection<TenantPermissionResponseDto> _tenantPermissions = new List<TenantPermissionResponseDto>();
+
     /// <summary>
     /// Unique identifier for the tenant
     /// </summary>
     public Guid Id
     {
-        get;
-        set;
+        get => _id;
+        set => _id = value;
     }
 
     /// <summary>
@@ -94,17 +124,17 @@ public class TenantResponseDto
     /// </summary>
     public string Name
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _name;
+        set => _name = value;
+    }
 
     /// <summary>
     /// Description of the tenant
     /// </summary>
     public string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     /// <summary>
@@ -112,8 +142,8 @@ public class TenantResponseDto
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
+        get => _isActive;
+        set => _isActive = value;
     }
 
     /// <summary>
@@ -121,8 +151,8 @@ public class TenantResponseDto
     /// </summary>
     public int Version
     {
-        get;
-        set;
+        get => _version;
+        set => _version = value;
     }
 
     /// <summary>
@@ -130,8 +160,8 @@ public class TenantResponseDto
     /// </summary>
     public DateTime CreatedAt
     {
-        get;
-        set;
+        get => _createdAt;
+        set => _createdAt = value;
     }
 
     /// <summary>
@@ -139,8 +169,8 @@ public class TenantResponseDto
     /// </summary>
     public DateTime UpdatedAt
     {
-        get;
-        set;
+        get => _updatedAt;
+        set => _updatedAt = value;
     }
 
     /// <summary>
@@ -148,8 +178,8 @@ public class TenantResponseDto
     /// </summary>
     public DateTime? DeletedAt
     {
-        get;
-        set;
+        get => _deletedAt;
+        set => _deletedAt = value;
     }
 
     /// <summary>
@@ -165,9 +195,9 @@ public class TenantResponseDto
     /// </summary>
     public ICollection<TenantPermissionResponseDto> TenantPermissions
     {
-        get;
-        set;
-    } = new List<TenantPermissionResponseDto>();
+        get => _tenantPermissions;
+        set => _tenantPermissions = value;
+    }
 }
 
 /// <summary>
@@ -175,13 +205,39 @@ public class TenantResponseDto
 /// </summary>
 public class TenantPermissionResponseDto
 {
+    private Guid _id;
+
+    private Guid? _userId;
+
+    private Guid? _tenantId;
+
+    private bool _isValid;
+
+    private DateTime? _expiresAt;
+
+    private ulong _permissionFlags1;
+
+    private ulong _permissionFlags2;
+
+    private int _version;
+
+    private DateTime _createdAt;
+
+    private DateTime _updatedAt;
+
+    private DateTime? _deletedAt;
+
+    private UserResponseDto? _user;
+
+    private TenantResponseDto? _tenant;
+
     /// <summary>
     /// Unique identifier for the tenant permission
     /// </summary>
     public Guid Id
     {
-        get;
-        set;
+        get => _id;
+        set => _id = value;
     }
 
     /// <summary>
@@ -189,8 +245,8 @@ public class TenantPermissionResponseDto
     /// </summary>
     public Guid? UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -198,8 +254,8 @@ public class TenantPermissionResponseDto
     /// </summary>
     public Guid? TenantId
     {
-        get;
-        set;
+        get => _tenantId;
+        set => _tenantId = value;
     }
 
     /// <summary>
@@ -207,8 +263,8 @@ public class TenantPermissionResponseDto
     /// </summary>
     public bool IsValid
     {
-        get;
-        set;
+        get => _isValid;
+        set => _isValid = value;
     }
 
     /// <summary>
@@ -216,8 +272,8 @@ public class TenantPermissionResponseDto
     /// </summary>
     public DateTime? ExpiresAt
     {
-        get;
-        set;
+        get => _expiresAt;
+        set => _expiresAt = value;
     }
 
     /// <summary>
@@ -225,8 +281,8 @@ public class TenantPermissionResponseDto
     /// </summary>
     public ulong PermissionFlags1
     {
-        get;
-        set;
+        get => _permissionFlags1;
+        set => _permissionFlags1 = value;
     }
 
     /// <summary>
@@ -234,8 +290,8 @@ public class TenantPermissionResponseDto
     /// </summary>
     public ulong PermissionFlags2
     {
-        get;
-        set;
+        get => _permissionFlags2;
+        set => _permissionFlags2 = value;
     }
 
     /// <summary>
@@ -243,8 +299,8 @@ public class TenantPermissionResponseDto
     /// </summary>
     public int Version
     {
-        get;
-        set;
+        get => _version;
+        set => _version = value;
     }
 
     /// <summary>
@@ -252,8 +308,8 @@ public class TenantPermissionResponseDto
     /// </summary>
     public DateTime CreatedAt
     {
-        get;
-        set;
+        get => _createdAt;
+        set => _createdAt = value;
     }
 
     /// <summary>
@@ -261,8 +317,8 @@ public class TenantPermissionResponseDto
     /// </summary>
     public DateTime UpdatedAt
     {
-        get;
-        set;
+        get => _updatedAt;
+        set => _updatedAt = value;
     }
 
     /// <summary>
@@ -270,8 +326,8 @@ public class TenantPermissionResponseDto
     /// </summary>
     public DateTime? DeletedAt
     {
-        get;
-        set;
+        get => _deletedAt;
+        set => _deletedAt = value;
     }
 
     /// <summary>
@@ -287,8 +343,8 @@ public class TenantPermissionResponseDto
     /// </summary>
     public UserResponseDto? User
     {
-        get;
-        set;
+        get => _user;
+        set => _user = value;
     }
 
     /// <summary>
@@ -296,7 +352,7 @@ public class TenantPermissionResponseDto
     /// </summary>
     public TenantResponseDto? Tenant
     {
-        get;
-        set;
+        get => _tenant;
+        set => _tenant = value;
     }
 }

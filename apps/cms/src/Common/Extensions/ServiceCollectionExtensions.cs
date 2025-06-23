@@ -27,12 +27,16 @@ public static class ServiceCollectionExtensions
         services.AddScoped<Modules.UserProfile.Services.IUserProfileService, Modules.UserProfile.Services.UserProfileService>();
 
         return services;
-    }
-
-    public static IServiceCollection AddProjectModule(this IServiceCollection services)
+    }    public static IServiceCollection AddProjectModule(this IServiceCollection services)
     {
         // Register Project module services
         services.AddScoped<Modules.Project.Services.IProjectService, Modules.Project.Services.ProjectService>();
+
+        return services;
+    }    public static IServiceCollection AddTestModule(this IServiceCollection services)
+    {
+        // Register Test module services
+        services.AddScoped<Modules.TestingLab.Services.ITestService, Modules.TestingLab.Services.TestService>();
 
         return services;
     }
