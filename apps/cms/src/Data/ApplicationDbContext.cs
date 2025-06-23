@@ -223,6 +223,7 @@ public class ApplicationDbContext : DbContext
         get => _commentPermissions;
         set => _commentPermissions = value;
     }
+    public DbSet<Modules.Program.Models.ProgramPermission> ProgramPermissions { get; set; }
 
     public DbSet<Modules.Product.Models.ProductPermission> ProductPermissions
     {

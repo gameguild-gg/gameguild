@@ -139,54 +139,75 @@ public enum ProgressStatus
     [Description("User has opted to skip this optional content")]
     Skipped
 }
-//
-// public enum ProductAcquisitionType
-// {
-//     [Description("Product purchased directly by the user")]
-//     Purchase,
-//
-//     [Description("Product received as a gift from another user")]
-//     Gift,
-//
-//     [Description("Product granted as part of a subscription")]
-//     Subscription,
-//
-//     [Description("Product provided for free (promotional or educational)")]
-//     Free,
-//
-//     [Description("Product granted by admin or system")]
-//     Granted
-// }
-//
-// public enum ProductAccessStatus
-// {
-//     [Description("User has active access to the product")]
-//     Active,
-//
-//     [Description("User's access has been temporarily suspended")]
-//     Suspended,
-//
-//     [Description("User's access has been permanently revoked")]
-//     Revoked,
-//
-//     [Description("User's access has expired")]
-//     Expired,
-//
-//     [Description("User's access is pending activation")]
-//     Pending
-// }
-//
-// public enum PromoCodeType
-// {
-//     [Description("Discount by percentage off the total")]
-//     PercentageOff,
-//
-//     [Description("Discount by fixed amount off the total")]
-//     FixedAmountOff,
-//
-//     [Description("Free shipping or delivery")]
-//     FreeShipping,
-//
-//     [Description("Buy one get one free")]
-//     BuyOneGetOne
-// }
+
+public enum ProgramCategory
+{
+    [Description("Programming and software development")]
+    Programming,
+
+    [Description("Data science and analytics")]
+    DataScience,
+
+    [Description("Web development and design")]
+    WebDevelopment,
+
+    [Description("Mobile app development")]
+    MobileDevelopment,
+
+    [Description("Game development")]
+    GameDevelopment,
+
+    [Description("Artificial intelligence and machine learning")]
+    AI,
+
+    [Description("Cybersecurity and information security")]
+    Cybersecurity,
+
+    [Description("DevOps and system administration")]
+    DevOps,
+
+    [Description("Database design and management")]
+    Database,
+
+    [Description("Business and entrepreneurship")]
+    Business,
+
+    [Description("Design and user experience")]
+    Design,
+
+    [Description("Marketing and digital marketing")]
+    Marketing,
+
+    [Description("Project management")]
+    ProjectManagement,
+
+    [Description("Personal development and soft skills")]
+    PersonalDevelopment,
+
+    [Description("Creative arts and media")]
+    CreativeArts,
+
+    [Description("Science and mathematics")]
+    Science,
+
+    [Description("Language learning")]
+    Language,
+
+    [Description("Other categories")]
+    Other
+}
+
+public enum ProgramDifficulty
+{
+    [Description("Suitable for complete beginners")]
+    Beginner,
+
+    [Description("Requires basic understanding of the subject")]
+    Intermediate,
+
+    [Description("Requires significant prior knowledge and experience")]
+    Advanced,
+
+    [Description("Requires expert-level knowledge")]
+    Expert
+}
