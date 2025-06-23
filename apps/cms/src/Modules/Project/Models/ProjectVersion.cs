@@ -8,20 +8,36 @@ namespace GameGuild.Modules.Project.Models;
 /// </summary>
 public class ProjectVersion : BaseEntity
 {
+    private Project _project = null!;
+
+    private Guid _projectId;
+
+    private string _versionNumber = string.Empty;
+
+    private string? _releaseNotes;
+
+    private string _status = "draft";
+
+    private int _downloadCount = 0;
+
+    private User.Models.User _createdBy = null!;
+
+    private Guid _createdById;
+
     /// <summary>
     /// The project this version belongs to
     /// </summary>
     [Required]
     public virtual Project Project
     {
-        get;
-        set;
-    } = null!;
+        get => _project;
+        set => _project = value;
+    }
 
     public Guid ProjectId
     {
-        get;
-        set;
+        get => _projectId;
+        set => _projectId = value;
     }
 
     /// <summary>
@@ -31,17 +47,17 @@ public class ProjectVersion : BaseEntity
     [MaxLength(50)]
     public string VersionNumber
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _versionNumber;
+        set => _versionNumber = value;
+    }
 
     /// <summary>
     /// Release notes
     /// </summary>
     public string? ReleaseNotes
     {
-        get;
-        set;
+        get => _releaseNotes;
+        set => _releaseNotes = value;
     }
 
     /// <summary>
@@ -51,18 +67,18 @@ public class ProjectVersion : BaseEntity
     [MaxLength(50)]
     public string Status
     {
-        get;
-        set;
-    } = "draft";
+        get => _status;
+        set => _status = value;
+    }
 
     /// <summary>
     /// Download count
     /// </summary>
     public int DownloadCount
     {
-        get;
-        set;
-    } = 0;
+        get => _downloadCount;
+        set => _downloadCount = value;
+    }
 
     /// <summary>
     /// User who created this version
@@ -70,13 +86,13 @@ public class ProjectVersion : BaseEntity
     [Required]
     public virtual User.Models.User CreatedBy
     {
-        get;
-        set;
-    } = null!;
+        get => _createdBy;
+        set => _createdBy = value;
+    }
 
     public Guid CreatedById
     {
-        get;
-        set;
+        get => _createdById;
+        set => _createdById = value;
     }
 }

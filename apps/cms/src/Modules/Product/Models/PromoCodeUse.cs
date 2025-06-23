@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Payment.Models;
 
 namespace GameGuild.Modules.Product.Models;
 
@@ -13,14 +14,28 @@ namespace GameGuild.Modules.Product.Models;
 [Table("promo_code_uses")]
 public class PromoCodeUse : BaseEntity
 {
+    private Guid _promoCodeId;
+
+    private PromoCode _promoCode = null!;
+
+    private Guid _userId;
+
+    private User.Models.User _user = null!;
+
+    private Guid _financialTransactionId;
+
+    private FinancialTransaction _financialTransaction = null!;
+
+    private decimal _discountApplied;
+
     /// <summary>
     /// Foreign key to the PromoCode entity
     /// </summary>
     [Required]
     public Guid PromoCodeId
     {
-        get;
-        set;
+        get => _promoCodeId;
+        set => _promoCodeId = value;
     }
 
     /// <summary>
@@ -29,9 +44,9 @@ public class PromoCodeUse : BaseEntity
     [ForeignKey(nameof(PromoCodeId))]
     public virtual PromoCode PromoCode
     {
-        get;
-        set;
-    } = null!;
+        get => _promoCode;
+        set => _promoCode = value;
+    }
 
     /// <summary>
     /// Foreign key to the User entity
@@ -39,8 +54,8 @@ public class PromoCodeUse : BaseEntity
     [Required]
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -49,9 +64,9 @@ public class PromoCodeUse : BaseEntity
     [ForeignKey(nameof(UserId))]
     public virtual User.Models.User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 
     /// <summary>
     /// Foreign key to the FinancialTransaction entity
@@ -59,8 +74,8 @@ public class PromoCodeUse : BaseEntity
     [Required]
     public Guid FinancialTransactionId
     {
-        get;
-        set;
+        get => _financialTransactionId;
+        set => _financialTransactionId = value;
     }
 
     /// <summary>
@@ -69,9 +84,9 @@ public class PromoCodeUse : BaseEntity
     [ForeignKey(nameof(FinancialTransactionId))]
     public virtual Payment.Models.FinancialTransaction FinancialTransaction
     {
-        get;
-        set;
-    } = null!;
+        get => _financialTransaction;
+        set => _financialTransaction = value;
+    }
 
     /// <summary>
     /// The actual discount amount that was applied
@@ -79,8 +94,8 @@ public class PromoCodeUse : BaseEntity
     [Column(TypeName = "decimal(10,2)")]
     public decimal DiscountApplied
     {
-        get;
-        set;
+        get => _discountApplied;
+        set => _discountApplied = value;
     }
 
     /// <summary>

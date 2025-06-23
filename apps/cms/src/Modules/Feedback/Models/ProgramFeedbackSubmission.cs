@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Text.Json;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Program.Models;
 
 namespace GameGuild.Modules.Feedback.Models;
 
@@ -16,28 +17,54 @@ namespace GameGuild.Modules.Feedback.Models;
 [Index(nameof(SubmittedAt))]
 public class ProgramFeedbackSubmission : BaseEntity
 {
+    private Guid _userId;
+
+    private Guid _programId;
+
+    private Guid? _productId;
+
+    private Guid _programUserId;
+
+    private string _feedbackData = "{}";
+
+    private decimal? _overallRating;
+
+    private string? _comments;
+
+    private bool? _wouldRecommend;
+
+    private DateTime _submittedAt;
+
+    private User.Models.User _user = null!;
+
+    private Program.Models.Program _program = null!;
+
+    private Product.Models.Product? _product;
+
+    private ProgramUser _programUser = null!;
+
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     public Guid ProgramId
     {
-        get;
-        set;
+        get => _programId;
+        set => _programId = value;
     }
 
     public Guid? ProductId
     {
-        get;
-        set;
+        get => _productId;
+        set => _productId = value;
     }
 
     public Guid ProgramUserId
     {
-        get;
-        set;
+        get => _programUserId;
+        set => _programUserId = value;
     }
 
     /// <summary>
@@ -47,9 +74,9 @@ public class ProgramFeedbackSubmission : BaseEntity
     [Column(TypeName = "jsonb")]
     public string FeedbackData
     {
-        get;
-        set;
-    } = "{}";
+        get => _feedbackData;
+        set => _feedbackData = value;
+    }
 
     /// <summary>
     /// Overall satisfaction rating (1-5)
@@ -57,8 +84,8 @@ public class ProgramFeedbackSubmission : BaseEntity
     [Column(TypeName = "decimal(2,1)")]
     public decimal? OverallRating
     {
-        get;
-        set;
+        get => _overallRating;
+        set => _overallRating = value;
     }
 
     /// <summary>
@@ -66,8 +93,8 @@ public class ProgramFeedbackSubmission : BaseEntity
     /// </summary>
     public string? Comments
     {
-        get;
-        set;
+        get => _comments;
+        set => _comments = value;
     }
 
     /// <summary>
@@ -75,8 +102,8 @@ public class ProgramFeedbackSubmission : BaseEntity
     /// </summary>
     public bool? WouldRecommend
     {
-        get;
-        set;
+        get => _wouldRecommend;
+        set => _wouldRecommend = value;
     }
 
     /// <summary>
@@ -84,38 +111,38 @@ public class ProgramFeedbackSubmission : BaseEntity
     /// </summary>
     public DateTime SubmittedAt
     {
-        get;
-        set;
+        get => _submittedAt;
+        set => _submittedAt = value;
     }
 
     // Navigation properties
     [ForeignKey(nameof(UserId))]
     public virtual User.Models.User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 
     [ForeignKey(nameof(ProgramId))]
     public virtual Program.Models.Program Program
     {
-        get;
-        set;
-    } = null!;
+        get => _program;
+        set => _program = value;
+    }
 
     [ForeignKey(nameof(ProductId))]
     public virtual Product.Models.Product? Product
     {
-        get;
-        set;
+        get => _product;
+        set => _product = value;
     }
 
     [ForeignKey(nameof(ProgramUserId))]
     public virtual Program.Models.ProgramUser ProgramUser
     {
-        get;
-        set;
-    } = null!;
+        get => _programUser;
+        set => _programUser = value;
+    }
 
     // Helper methods for JSON feedback data
     public T? GetFeedbackResponse<T>(string questionId) where T : class

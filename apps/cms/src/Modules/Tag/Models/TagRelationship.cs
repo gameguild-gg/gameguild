@@ -14,22 +14,36 @@ namespace GameGuild.Modules.Tag.Models;
 [Index(nameof(Type))]
 public class TagRelationship : BaseEntity
 {
+    private Guid _sourceId;
+
+    private Guid _targetId;
+
+    private TagRelationshipType _type;
+
+    private decimal? _weight;
+
+    private string? _metadata;
+
+    private Tag _source = null!;
+
+    private Tag _target = null!;
+
     public Guid SourceId
     {
-        get;
-        set;
+        get => _sourceId;
+        set => _sourceId = value;
     }
 
     public Guid TargetId
     {
-        get;
-        set;
+        get => _targetId;
+        set => _targetId = value;
     }
 
     public TagRelationshipType Type
     {
-        get;
-        set;
+        get => _type;
+        set => _type = value;
     }
 
     /// <summary>
@@ -38,8 +52,8 @@ public class TagRelationship : BaseEntity
     [Column(TypeName = "decimal(3,2)")]
     public decimal? Weight
     {
-        get;
-        set;
+        get => _weight;
+        set => _weight = value;
     }
 
     /// <summary>
@@ -48,24 +62,24 @@ public class TagRelationship : BaseEntity
     [MaxLength(500)]
     public string? Metadata
     {
-        get;
-        set;
+        get => _metadata;
+        set => _metadata = value;
     }
 
     // Navigation properties
     [ForeignKey(nameof(SourceId))]
     public virtual Tag Source
     {
-        get;
-        set;
-    } = null!;
+        get => _source;
+        set => _source = value;
+    }
 
     [ForeignKey(nameof(TargetId))]
     public virtual Tag Target
     {
-        get;
-        set;
-    } = null!;
+        get => _target;
+        set => _target = value;
+    }
 }
 
 public class TagRelationshipConfiguration : IEntityTypeConfiguration<TagRelationship>

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Program.Models;
 
 namespace GameGuild.Modules.Certificate.Models;
 
@@ -18,20 +19,58 @@ namespace GameGuild.Modules.Certificate.Models;
 [Index(nameof(IssuedAt))]
 public class UserCertificate : BaseEntity
 {
+    private Guid _userId;
+
+    private Guid _certificateId;
+
+    private Guid? _programId;
+
+    private Guid? _productId;
+
+    private Guid? _programUserId;
+
+    private string _verificationCode = string.Empty;
+
+    private decimal? _finalGrade;
+
+    private string? _metadata;
+
+    private CertificateStatus _status = CertificateStatus.Active;
+
+    private DateTime _issuedAt;
+
+    private DateTime? _expiresAt;
+
+    private DateTime? _revokedAt;
+
+    private string? _revocationReason;
+
+    private User.Models.User _user = null!;
+
+    private Certificate _certificate = null!;
+
+    private Program.Models.Program? _program;
+
+    private Product.Models.Product? _product;
+
+    private ProgramUser? _programUser;
+
+    private ICollection<CertificateBlockchainAnchor> _blockchainAnchors = new List<CertificateBlockchainAnchor>();
+
     [Required]
     [ForeignKey(nameof(User))]
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     [Required]
     [ForeignKey(nameof(Certificate))]
     public Guid CertificateId
     {
-        get;
-        set;
+        get => _certificateId;
+        set => _certificateId = value;
     }
 
     /// <summary>
@@ -39,8 +78,8 @@ public class UserCertificate : BaseEntity
     /// </summary>
     public Guid? ProgramId
     {
-        get;
-        set;
+        get => _programId;
+        set => _programId = value;
     }
 
     /// <summary>
@@ -48,8 +87,8 @@ public class UserCertificate : BaseEntity
     /// </summary>
     public Guid? ProductId
     {
-        get;
-        set;
+        get => _productId;
+        set => _productId = value;
     }
 
     /// <summary>
@@ -57,8 +96,8 @@ public class UserCertificate : BaseEntity
     /// </summary>
     public Guid? ProgramUserId
     {
-        get;
-        set;
+        get => _programUserId;
+        set => _programUserId = value;
     }
 
     /// <summary>
@@ -68,9 +107,9 @@ public class UserCertificate : BaseEntity
     [MaxLength(100)]
     public string VerificationCode
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _verificationCode;
+        set => _verificationCode = value;
+    }
 
     /// <summary>
     /// Final grade or score achieved for this certificate
@@ -78,8 +117,8 @@ public class UserCertificate : BaseEntity
     [Column(TypeName = "decimal(5,2)")]
     public decimal? FinalGrade
     {
-        get;
-        set;
+        get => _finalGrade;
+        set => _finalGrade = value;
     }
 
     /// <summary>
@@ -88,23 +127,23 @@ public class UserCertificate : BaseEntity
     [MaxLength(1000)]
     public string? Metadata
     {
-        get;
-        set;
+        get => _metadata;
+        set => _metadata = value;
     }
 
     public CertificateStatus Status
     {
-        get;
-        set;
-    } = CertificateStatus.Active;
+        get => _status;
+        set => _status = value;
+    }
 
     /// <summary>
     /// Date when the certificate was issued
     /// </summary>
     public DateTime IssuedAt
     {
-        get;
-        set;
+        get => _issuedAt;
+        set => _issuedAt = value;
     }
 
     /// <summary>
@@ -112,8 +151,8 @@ public class UserCertificate : BaseEntity
     /// </summary>
     public DateTime? ExpiresAt
     {
-        get;
-        set;
+        get => _expiresAt;
+        set => _expiresAt = value;
     }
 
     /// <summary>
@@ -121,8 +160,8 @@ public class UserCertificate : BaseEntity
     /// </summary>
     public DateTime? RevokedAt
     {
-        get;
-        set;
+        get => _revokedAt;
+        set => _revokedAt = value;
     }
 
     /// <summary>
@@ -131,46 +170,46 @@ public class UserCertificate : BaseEntity
     [MaxLength(500)]
     public string? RevocationReason
     {
-        get;
-        set;
+        get => _revocationReason;
+        set => _revocationReason = value;
     }
 
     // Navigation properties
     public virtual User.Models.User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 
     public virtual Certificate Certificate
     {
-        get;
-        set;
-    } = null!;
+        get => _certificate;
+        set => _certificate = value;
+    }
 
     public virtual Program.Models.Program? Program
     {
-        get;
-        set;
+        get => _program;
+        set => _program = value;
     }
 
     public virtual Product.Models.Product? Product
     {
-        get;
-        set;
+        get => _product;
+        set => _product = value;
     }
 
     public virtual Program.Models.ProgramUser? ProgramUser
     {
-        get;
-        set;
+        get => _programUser;
+        set => _programUser = value;
     }
 
     public virtual ICollection<CertificateBlockchainAnchor> BlockchainAnchors
     {
-        get;
-        set;
-    } = new List<CertificateBlockchainAnchor>();
+        get => _blockchainAnchors;
+        set => _blockchainAnchors = value;
+    }
 }
 
 public class UserCertificateConfiguration : IEntityTypeConfiguration<UserCertificate>

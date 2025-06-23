@@ -9,16 +9,32 @@ namespace GameGuild.Modules.Program.Models;
 [Table("activity_grades")]
 public class ActivityGrade : BaseEntity
 {
+    private Guid _contentInteractionId;
+
+    private Guid _graderProgramUserId;
+
+    private decimal _grade;
+
+    private string? _feedback;
+
+    private string? _gradingDetails;
+
+    private DateTime _gradedAt;
+
+    private ContentInteraction _contentInteraction = null!;
+
+    private ProgramUser _graderProgramUser = null!;
+
     public Guid ContentInteractionId
     {
-        get;
-        set;
+        get => _contentInteractionId;
+        set => _contentInteractionId = value;
     }
 
     public Guid GraderProgramUserId
     {
-        get;
-        set;
+        get => _graderProgramUserId;
+        set => _graderProgramUserId = value;
     }
 
     /// <summary>
@@ -27,8 +43,8 @@ public class ActivityGrade : BaseEntity
     [Column(TypeName = "decimal(5,2)")]
     public decimal Grade
     {
-        get;
-        set;
+        get => _grade;
+        set => _grade = value;
     }
 
     /// <summary>
@@ -36,8 +52,8 @@ public class ActivityGrade : BaseEntity
     /// </summary>
     public string? Feedback
     {
-        get;
-        set;
+        get => _feedback;
+        set => _feedback = value;
     }
 
     /// <summary>
@@ -47,8 +63,8 @@ public class ActivityGrade : BaseEntity
     [Column(TypeName = "jsonb")]
     public string? GradingDetails
     {
-        get;
-        set;
+        get => _gradingDetails;
+        set => _gradingDetails = value;
     }
 
     /// <summary>
@@ -56,22 +72,22 @@ public class ActivityGrade : BaseEntity
     /// </summary>
     public DateTime GradedAt
     {
-        get;
-        set;
+        get => _gradedAt;
+        set => _gradedAt = value;
     }
 
     // Navigation properties
     public virtual ContentInteraction ContentInteraction
     {
-        get;
-        set;
-    } = null!;
+        get => _contentInteraction;
+        set => _contentInteraction = value;
+    }
 
     public virtual ProgramUser GraderProgramUser
     {
-        get;
-        set;
-    } = null!;
+        get => _graderProgramUser;
+        set => _graderProgramUser = value;
+    }
 
     // Helper methods for JSON grading details
     public T? GetGradingDetail<T>(string key) where T : class

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Product.Models;
 
 namespace GameGuild.Modules.Subscription.Models;
 
@@ -17,23 +18,51 @@ namespace GameGuild.Modules.Subscription.Models;
 [Index(nameof(ExternalSubscriptionId))]
 public class UserSubscription : BaseEntity
 {
+    private Guid _userId;
+
+    private Guid _subscriptionPlanId;
+
+    private SubscriptionStatus _status = SubscriptionStatus.Active;
+
+    private string? _externalSubscriptionId;
+
+    private DateTime _currentPeriodStart;
+
+    private DateTime _currentPeriodEnd;
+
+    private DateTime? _canceledAt;
+
+    private DateTime? _endsAt;
+
+    private DateTime? _trialEndsAt;
+
+    private DateTime? _lastPaymentAt;
+
+    private DateTime? _nextBillingAt;
+
+    private User.Models.User _user = null!;
+
+    private ProductSubscriptionPlan _subscriptionPlan = null!;
+
+    private ICollection<UserProduct> _userProducts = new List<Product.Models.UserProduct>();
+
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     public Guid SubscriptionPlanId
     {
-        get;
-        set;
+        get => _subscriptionPlanId;
+        set => _subscriptionPlanId = value;
     }
 
     public SubscriptionStatus Status
     {
-        get;
-        set;
-    } = SubscriptionStatus.Active;
+        get => _status;
+        set => _status = value;
+    }
 
     /// <summary>
     /// External subscription ID from payment provider (Stripe, PayPal, etc.)
@@ -41,8 +70,8 @@ public class UserSubscription : BaseEntity
     [MaxLength(255)]
     public string? ExternalSubscriptionId
     {
-        get;
-        set;
+        get => _externalSubscriptionId;
+        set => _externalSubscriptionId = value;
     }
 
     /// <summary>
@@ -50,8 +79,8 @@ public class UserSubscription : BaseEntity
     /// </summary>
     public DateTime CurrentPeriodStart
     {
-        get;
-        set;
+        get => _currentPeriodStart;
+        set => _currentPeriodStart = value;
     }
 
     /// <summary>
@@ -59,8 +88,8 @@ public class UserSubscription : BaseEntity
     /// </summary>
     public DateTime CurrentPeriodEnd
     {
-        get;
-        set;
+        get => _currentPeriodEnd;
+        set => _currentPeriodEnd = value;
     }
 
     /// <summary>
@@ -68,8 +97,8 @@ public class UserSubscription : BaseEntity
     /// </summary>
     public DateTime? CanceledAt
     {
-        get;
-        set;
+        get => _canceledAt;
+        set => _canceledAt = value;
     }
 
     /// <summary>
@@ -77,8 +106,8 @@ public class UserSubscription : BaseEntity
     /// </summary>
     public DateTime? EndsAt
     {
-        get;
-        set;
+        get => _endsAt;
+        set => _endsAt = value;
     }
 
     /// <summary>
@@ -86,8 +115,8 @@ public class UserSubscription : BaseEntity
     /// </summary>
     public DateTime? TrialEndsAt
     {
-        get;
-        set;
+        get => _trialEndsAt;
+        set => _trialEndsAt = value;
     }
 
     /// <summary>
@@ -95,8 +124,8 @@ public class UserSubscription : BaseEntity
     /// </summary>
     public DateTime? LastPaymentAt
     {
-        get;
-        set;
+        get => _lastPaymentAt;
+        set => _lastPaymentAt = value;
     }
 
     /// <summary>
@@ -104,30 +133,30 @@ public class UserSubscription : BaseEntity
     /// </summary>
     public DateTime? NextBillingAt
     {
-        get;
-        set;
+        get => _nextBillingAt;
+        set => _nextBillingAt = value;
     }
 
     // Navigation properties
     [ForeignKey(nameof(UserId))]
     public virtual User.Models.User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 
     [ForeignKey(nameof(SubscriptionPlanId))]
     public virtual Product.Models.ProductSubscriptionPlan SubscriptionPlan
     {
-        get;
-        set;
-    } = null!;
+        get => _subscriptionPlan;
+        set => _subscriptionPlan = value;
+    }
 
     public virtual ICollection<Product.Models.UserProduct> UserProducts
     {
-        get;
-        set;
-    } = new List<Product.Models.UserProduct>();
+        get => _userProducts;
+        set => _userProducts = value;
+    }
 }
 
 public class UserSubscriptionConfiguration : IEntityTypeConfiguration<UserSubscription>

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Payment.Models;
 
 namespace GameGuild.Modules.Product.Models;
 
@@ -19,6 +20,44 @@ namespace GameGuild.Modules.Product.Models;
 [Index(nameof(ValidUntil))]
 public class PromoCode : BaseEntity
 {
+    private string _code = string.Empty;
+
+    private string _name = string.Empty;
+
+    private string? _description;
+
+    private PromoCodeType _type;
+
+    private decimal? _discountPercentage;
+
+    private decimal? _discountAmount;
+
+    private string _currency = "USD";
+
+    private decimal? _minimumOrderAmount;
+
+    private int? _maxUses;
+
+    private int? _maxUsesPerUser;
+
+    private DateTime? _validFrom;
+
+    private DateTime? _validUntil;
+
+    private bool _isActive = true;
+
+    private Guid? _productId;
+
+    private Product? _product;
+
+    private Guid _createdBy;
+
+    private User.Models.User _createdByUser = null!;
+
+    private ICollection<PromoCodeUse> _promoCodeUses = new List<PromoCodeUse>();
+
+    private ICollection<FinancialTransaction> _financialTransactions = new List<Payment.Models.FinancialTransaction>();
+
     /// <summary>
     /// The promotional code that users enter
     /// </summary>
@@ -26,9 +65,9 @@ public class PromoCode : BaseEntity
     [MaxLength(50)]
     public string Code
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _code;
+        set => _code = value;
+    }
 
     /// <summary>
     /// Display name for the promotional code
@@ -37,17 +76,17 @@ public class PromoCode : BaseEntity
     [MaxLength(255)]
     public string Name
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _name;
+        set => _name = value;
+    }
 
     /// <summary>
     /// Description of what the promo code does
     /// </summary>
     public string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     /// <summary>
@@ -55,8 +94,8 @@ public class PromoCode : BaseEntity
     /// </summary>
     public PromoCodeType Type
     {
-        get;
-        set;
+        get => _type;
+        set => _type = value;
     }
 
     /// <summary>
@@ -65,8 +104,8 @@ public class PromoCode : BaseEntity
     [Column(TypeName = "decimal(5,2)")]
     public decimal? DiscountPercentage
     {
-        get;
-        set;
+        get => _discountPercentage;
+        set => _discountPercentage = value;
     }
 
     /// <summary>
@@ -75,8 +114,8 @@ public class PromoCode : BaseEntity
     [Column(TypeName = "decimal(10,2)")]
     public decimal? DiscountAmount
     {
-        get;
-        set;
+        get => _discountAmount;
+        set => _discountAmount = value;
     }
 
     /// <summary>
@@ -85,9 +124,9 @@ public class PromoCode : BaseEntity
     [MaxLength(3)]
     public string Currency
     {
-        get;
-        set;
-    } = "USD";
+        get => _currency;
+        set => _currency = value;
+    }
 
     /// <summary>
     /// Minimum order amount required to use this promo code
@@ -95,8 +134,8 @@ public class PromoCode : BaseEntity
     [Column(TypeName = "decimal(10,2)")]
     public decimal? MinimumOrderAmount
     {
-        get;
-        set;
+        get => _minimumOrderAmount;
+        set => _minimumOrderAmount = value;
     }
 
     /// <summary>
@@ -104,8 +143,8 @@ public class PromoCode : BaseEntity
     /// </summary>
     public int? MaxUses
     {
-        get;
-        set;
+        get => _maxUses;
+        set => _maxUses = value;
     }
 
     /// <summary>
@@ -113,8 +152,8 @@ public class PromoCode : BaseEntity
     /// </summary>
     public int? MaxUsesPerUser
     {
-        get;
-        set;
+        get => _maxUsesPerUser;
+        set => _maxUsesPerUser = value;
     }
 
     /// <summary>
@@ -122,8 +161,8 @@ public class PromoCode : BaseEntity
     /// </summary>
     public DateTime? ValidFrom
     {
-        get;
-        set;
+        get => _validFrom;
+        set => _validFrom = value;
     }
 
     /// <summary>
@@ -131,8 +170,8 @@ public class PromoCode : BaseEntity
     /// </summary>
     public DateTime? ValidUntil
     {
-        get;
-        set;
+        get => _validUntil;
+        set => _validUntil = value;
     }
 
     /// <summary>
@@ -140,17 +179,17 @@ public class PromoCode : BaseEntity
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 
     /// <summary>
     /// Specific product this code applies to (null = applies to all products)
     /// </summary>
     public Guid? ProductId
     {
-        get;
-        set;
+        get => _productId;
+        set => _productId = value;
     }
 
     /// <summary>
@@ -159,8 +198,8 @@ public class PromoCode : BaseEntity
     [ForeignKey(nameof(ProductId))]
     public virtual Product? Product
     {
-        get;
-        set;
+        get => _product;
+        set => _product = value;
     }
 
     /// <summary>
@@ -169,8 +208,8 @@ public class PromoCode : BaseEntity
     [Required]
     public Guid CreatedBy
     {
-        get;
-        set;
+        get => _createdBy;
+        set => _createdBy = value;
     }
 
     /// <summary>
@@ -179,27 +218,27 @@ public class PromoCode : BaseEntity
     [ForeignKey(nameof(CreatedBy))]
     public virtual User.Models.User CreatedByUser
     {
-        get;
-        set;
-    } = null!;
+        get => _createdByUser;
+        set => _createdByUser = value;
+    }
 
     /// <summary>
     /// Navigation property to promo code usage records
     /// </summary>
     public virtual ICollection<PromoCodeUse> PromoCodeUses
     {
-        get;
-        set;
-    } = new List<PromoCodeUse>();
+        get => _promoCodeUses;
+        set => _promoCodeUses = value;
+    }
 
     /// <summary>
     /// Navigation property to financial transactions that used this promo code
     /// </summary>
     public virtual ICollection<Payment.Models.FinancialTransaction> FinancialTransactions
     {
-        get;
-        set;
-    } = new List<Payment.Models.FinancialTransaction>();
+        get => _financialTransactions;
+        set => _financialTransactions = value;
+    }
 
     /// <summary>
     /// Default constructor

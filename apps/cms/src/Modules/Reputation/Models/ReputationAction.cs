@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
@@ -16,6 +17,26 @@ namespace GameGuild.Modules.Reputation.Models;
 [Index(nameof(IsActive))]
 public class ReputationAction : ResourceBase
 {
+    private string _actionType;
+
+    private string _displayName;
+
+    private string? _description;
+
+    private int _points;
+
+    private int? _dailyLimit;
+
+    private int? _totalLimit;
+
+    private bool _isActive = true;
+
+    private ReputationTier? _requiredLevel;
+
+    private Guid? _requiredLevelId;
+
+    private ICollection<UserReputationHistory> _reputationHistory = new List<UserReputationHistory>();
+
     /// <summary>
     /// Unique identifier for this action type
     /// </summary>
@@ -23,8 +44,8 @@ public class ReputationAction : ResourceBase
     [MaxLength(100)]
     public required string ActionType
     {
-        get;
-        set;
+        get => _actionType;
+        [MemberNotNull(nameof(_actionType))] set => _actionType = value;
     }
 
     /// <summary>
@@ -34,8 +55,8 @@ public class ReputationAction : ResourceBase
     [MaxLength(200)]
     public required string DisplayName
     {
-        get;
-        set;
+        get => _displayName;
+        [MemberNotNull(nameof(_displayName))] set => _displayName = value;
     }
 
     /// <summary>
@@ -43,8 +64,8 @@ public class ReputationAction : ResourceBase
     /// </summary>
     public new string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     /// <summary>
@@ -52,8 +73,8 @@ public class ReputationAction : ResourceBase
     /// </summary>
     public int Points
     {
-        get;
-        set;
+        get => _points;
+        set => _points = value;
     }
 
     /// <summary>
@@ -62,8 +83,8 @@ public class ReputationAction : ResourceBase
     /// </summary>
     public int? DailyLimit
     {
-        get;
-        set;
+        get => _dailyLimit;
+        set => _dailyLimit = value;
     }
 
     /// <summary>
@@ -72,8 +93,8 @@ public class ReputationAction : ResourceBase
     /// </summary>
     public int? TotalLimit
     {
-        get;
-        set;
+        get => _totalLimit;
+        set => _totalLimit = value;
     }
 
     /// <summary>
@@ -81,9 +102,9 @@ public class ReputationAction : ResourceBase
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 
     /// <summary>
     /// Minimum reputation tier required to perform this action
@@ -92,14 +113,14 @@ public class ReputationAction : ResourceBase
     [ForeignKey(nameof(RequiredLevelId))]
     public ReputationTier? RequiredLevel
     {
-        get;
-        set;
+        get => _requiredLevel;
+        set => _requiredLevel = value;
     }
 
     public Guid? RequiredLevelId
     {
-        get;
-        set;
+        get => _requiredLevelId;
+        set => _requiredLevelId = value;
     }
 
     /// <summary>
@@ -107,9 +128,9 @@ public class ReputationAction : ResourceBase
     /// </summary>
     public ICollection<UserReputationHistory> ReputationHistory
     {
-        get;
-        set;
-    } = new List<UserReputationHistory>();
+        get => _reputationHistory;
+        set => _reputationHistory = value;
+    }
 }
 
 public class ReputationActionConfiguration : IEntityTypeConfiguration<ReputationAction>

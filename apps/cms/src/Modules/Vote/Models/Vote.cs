@@ -8,6 +8,16 @@ namespace GameGuild.Modules.Voting.Models;
 /// </summary>
 public class Vote : BaseEntity
 {
+    private User.Models.User _user = null!;
+
+    private VoteType _type;
+
+    private int _weight = 1;
+
+    private Guid _entityId;
+
+    private string _entityType = string.Empty;
+
     /// <summary>
     /// Navigation property to the user who cast this vote
     /// Entity Framework will automatically create the UserId foreign key
@@ -15,9 +25,9 @@ public class Vote : BaseEntity
     [Required]
     public virtual User.Models.User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 
     /// <summary>
     /// Type of the vote (Upvote or Downvote)
@@ -25,8 +35,8 @@ public class Vote : BaseEntity
     [Required]
     public VoteType Type
     {
-        get;
-        set;
+        get => _type;
+        set => _type = value;
     }
 
     /// <summary>
@@ -36,9 +46,9 @@ public class Vote : BaseEntity
     [Required]
     public int Weight
     {
-        get;
-        set;
-    } = 1;
+        get => _weight;
+        set => _weight = value;
+    }
 
     /// <summary>
     /// Calculated value of the vote based on type and weight
@@ -54,8 +64,8 @@ public class Vote : BaseEntity
     /// </summary>
     public Guid EntityId
     {
-        get;
-        set;
+        get => _entityId;
+        set => _entityId = value;
     }
 
     /// <summary>
@@ -64,7 +74,7 @@ public class Vote : BaseEntity
     [MaxLength(255)]
     public string EntityType
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _entityType;
+        set => _entityType = value;
+    }
 }

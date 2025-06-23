@@ -8,21 +8,27 @@ namespace GameGuild.Modules.Auth.Commands;
 /// </summary>
 public class LocalSignInCommand : IRequest<SignInResponseDto>
 {
+    private string _email = string.Empty;
+
+    private string _password = string.Empty;
+
+    private Guid? _tenantId;
+
     public string Email
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _email;
+        set => _email = value;
+    }
 
     public string Password
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _password;
+        set => _password = value;
+    }
 
     public Guid? TenantId
     {
-        get;
-        set;
+        get => _tenantId;
+        set => _tenantId = value;
     }
 }

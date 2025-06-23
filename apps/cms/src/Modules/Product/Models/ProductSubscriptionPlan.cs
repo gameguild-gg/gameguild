@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Subscription.Models;
 
 namespace GameGuild.Modules.Product.Models;
 
@@ -20,14 +21,38 @@ namespace GameGuild.Modules.Product.Models;
 [Index(nameof(BillingInterval))]
 public class ProductSubscriptionPlan : BaseEntity
 {
+    private Guid _productId;
+
+    private Product _product = null!;
+
+    private string _name = string.Empty;
+
+    private string? _description;
+
+    private decimal _price;
+
+    private string _currency = "USD";
+
+    private SubscriptionBillingInterval _billingInterval;
+
+    private int _intervalCount = 1;
+
+    private int? _trialPeriodDays;
+
+    private bool _isActive = true;
+
+    private bool _isDefault = false;
+
+    private ICollection<UserSubscription> _userSubscriptions = new List<Subscription.Models.UserSubscription>();
+
     /// <summary>
     /// Foreign key to the Product entity
     /// </summary>
     [Required]
     public Guid ProductId
     {
-        get;
-        set;
+        get => _productId;
+        set => _productId = value;
     }
 
     /// <summary>
@@ -36,9 +61,9 @@ public class ProductSubscriptionPlan : BaseEntity
     [ForeignKey(nameof(ProductId))]
     public virtual Product Product
     {
-        get;
-        set;
-    } = null!;
+        get => _product;
+        set => _product = value;
+    }
 
     /// <summary>
     /// Name of the subscription plan
@@ -47,9 +72,9 @@ public class ProductSubscriptionPlan : BaseEntity
     [MaxLength(255)]
     public string Name
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _name;
+        set => _name = value;
+    }
 
     /// <summary>
     /// Description of what's included in this plan
@@ -57,8 +82,8 @@ public class ProductSubscriptionPlan : BaseEntity
     [MaxLength(1000)]
     public string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     /// <summary>
@@ -67,8 +92,8 @@ public class ProductSubscriptionPlan : BaseEntity
     [Column(TypeName = "decimal(10,2)")]
     public decimal Price
     {
-        get;
-        set;
+        get => _price;
+        set => _price = value;
     }
 
     /// <summary>
@@ -77,17 +102,17 @@ public class ProductSubscriptionPlan : BaseEntity
     [MaxLength(3)]
     public string Currency
     {
-        get;
-        set;
-    } = "USD";
+        get => _currency;
+        set => _currency = value;
+    }
 
     /// <summary>
     /// How often the subscription is billed
     /// </summary>
     public SubscriptionBillingInterval BillingInterval
     {
-        get;
-        set;
+        get => _billingInterval;
+        set => _billingInterval = value;
     }
 
     /// <summary>
@@ -95,17 +120,17 @@ public class ProductSubscriptionPlan : BaseEntity
     /// </summary>
     public int IntervalCount
     {
-        get;
-        set;
-    } = 1;
+        get => _intervalCount;
+        set => _intervalCount = value;
+    }
 
     /// <summary>
     /// Free trial period in days
     /// </summary>
     public int? TrialPeriodDays
     {
-        get;
-        set;
+        get => _trialPeriodDays;
+        set => _trialPeriodDays = value;
     }
 
     /// <summary>
@@ -113,18 +138,18 @@ public class ProductSubscriptionPlan : BaseEntity
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 
     /// <summary>
     /// Whether this is the default plan for the product
     /// </summary>
     public bool IsDefault
     {
-        get;
-        set;
-    } = false;
+        get => _isDefault;
+        set => _isDefault = value;
+    }
 
     /// <summary>
     /// Default constructor
@@ -139,9 +164,9 @@ public class ProductSubscriptionPlan : BaseEntity
 
     public virtual ICollection<Subscription.Models.UserSubscription> UserSubscriptions
     {
-        get;
-        set;
-    } = new List<Subscription.Models.UserSubscription>();
+        get => _userSubscriptions;
+        set => _userSubscriptions = value;
+    }
 }
 
 /// <summary>

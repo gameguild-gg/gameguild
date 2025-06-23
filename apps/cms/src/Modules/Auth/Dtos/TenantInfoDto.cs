@@ -5,13 +5,19 @@ namespace GameGuild.Modules.Auth.Dtos;
 /// </summary>
 public class TenantInfoDto
 {
+    private Guid _id;
+
+    private string _name = string.Empty;
+
+    private bool _isActive;
+
     /// <summary>
     /// Tenant ID
     /// </summary>
     public Guid Id
     {
-        get;
-        set;
+        get => _id;
+        set => _id = value;
     }
 
     /// <summary>
@@ -19,16 +25,16 @@ public class TenantInfoDto
     /// </summary>
     public string Name
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _name;
+        set => _name = value;
+    }
 
     /// <summary>
     /// Whether tenant is active
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
+        get => _isActive;
+        set => _isActive = value;
     }
 }

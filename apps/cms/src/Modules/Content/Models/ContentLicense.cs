@@ -7,14 +7,18 @@ namespace GameGuild.Common.Entities;
 /// </summary>
 public class ContentLicense : ResourceBase
 {
+    private string? _url;
+
+    private ICollection<Content> _contents = new List<Content>();
+
     /// <summary>
     /// Optional URL to the license text
     /// </summary>
     [MaxLength(500)]
     public string? Url
     {
-        get;
-        set;
+        get => _url;
+        set => _url = value;
     }
 
     /// <summary>
@@ -22,7 +26,7 @@ public class ContentLicense : ResourceBase
     /// </summary>
     public virtual ICollection<Content> Contents
     {
-        get;
-        set;
-    } = new List<Content>();
+        get => _contents;
+        set => _contents = value;
+    }
 }

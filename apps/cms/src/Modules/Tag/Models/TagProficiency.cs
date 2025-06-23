@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Certificate.Models;
 
 namespace GameGuild.Modules.Tag.Models;
 
@@ -13,31 +14,47 @@ namespace GameGuild.Modules.Tag.Models;
 [Index(nameof(IsActive))]
 public class TagProficiency : BaseEntity
 {
+    private string _name = string.Empty;
+
+    private string? _description;
+
+    private TagType _type;
+
+    private SkillProficiencyLevel _proficiencyLevel;
+
+    private string? _color;
+
+    private string? _icon;
+
+    private bool _isActive = true;
+
+    private ICollection<CertificateTag> _certificateTags = new List<Certificate.Models.CertificateTag>();
+
     [Required]
     [MaxLength(100)]
     public string Name
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _name;
+        set => _name = value;
+    }
 
     [MaxLength(500)]
     public string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     public TagType Type
     {
-        get;
-        set;
+        get => _type;
+        set => _type = value;
     }
 
     public SkillProficiencyLevel ProficiencyLevel
     {
-        get;
-        set;
+        get => _proficiencyLevel;
+        set => _proficiencyLevel = value;
     }
 
     /// <summary>
@@ -46,8 +63,8 @@ public class TagProficiency : BaseEntity
     [MaxLength(7)]
     public string? Color
     {
-        get;
-        set;
+        get => _color;
+        set => _color = value;
     }
 
     /// <summary>
@@ -56,8 +73,8 @@ public class TagProficiency : BaseEntity
     [MaxLength(100)]
     public string? Icon
     {
-        get;
-        set;
+        get => _icon;
+        set => _icon = value;
     }
 
     /// <summary>
@@ -65,14 +82,14 @@ public class TagProficiency : BaseEntity
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 
     // Navigation properties
     public virtual ICollection<Certificate.Models.CertificateTag> CertificateTags
     {
-        get;
-        set;
-    } = new List<Certificate.Models.CertificateTag>();
+        get => _certificateTags;
+        set => _certificateTags = value;
+    }
 }

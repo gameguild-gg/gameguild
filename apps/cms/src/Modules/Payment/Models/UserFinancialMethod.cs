@@ -15,25 +15,47 @@ namespace GameGuild.Modules.Payment.Models;
 [Index(nameof(ExternalId))]
 public class UserFinancialMethod : BaseEntity
 {
+    private Guid _userId;
+
+    private PaymentMethodType _type;
+
+    private string _name = string.Empty;
+
+    private string? _externalId;
+
+    private string? _lastFour;
+
+    private string? _expiryMonth;
+
+    private string? _expiryYear;
+
+    private string? _brand;
+
+    private PaymentMethodStatus _status = PaymentMethodStatus.Active;
+
+    private bool _isDefault = false;
+
+    private User.Models.User _user = null!;
+
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     public PaymentMethodType Type
     {
-        get;
-        set;
+        get => _type;
+        set => _type = value;
     }
 
     [Required]
     [MaxLength(255)]
     public string Name
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _name;
+        set => _name = value;
+    }
 
     /// <summary>
     /// External ID from payment provider (Stripe, PayPal, etc.)
@@ -41,8 +63,8 @@ public class UserFinancialMethod : BaseEntity
     [MaxLength(255)]
     public string? ExternalId
     {
-        get;
-        set;
+        get => _externalId;
+        set => _externalId = value;
     }
 
     /// <summary>
@@ -51,8 +73,8 @@ public class UserFinancialMethod : BaseEntity
     [MaxLength(10)]
     public string? LastFour
     {
-        get;
-        set;
+        get => _lastFour;
+        set => _lastFour = value;
     }
 
     /// <summary>
@@ -61,8 +83,8 @@ public class UserFinancialMethod : BaseEntity
     [MaxLength(2)]
     public string? ExpiryMonth
     {
-        get;
-        set;
+        get => _expiryMonth;
+        set => _expiryMonth = value;
     }
 
     /// <summary>
@@ -71,8 +93,8 @@ public class UserFinancialMethod : BaseEntity
     [MaxLength(4)]
     public string? ExpiryYear
     {
-        get;
-        set;
+        get => _expiryYear;
+        set => _expiryYear = value;
     }
 
     /// <summary>
@@ -81,32 +103,32 @@ public class UserFinancialMethod : BaseEntity
     [MaxLength(50)]
     public string? Brand
     {
-        get;
-        set;
+        get => _brand;
+        set => _brand = value;
     }
 
     public PaymentMethodStatus Status
     {
-        get;
-        set;
-    } = PaymentMethodStatus.Active;
+        get => _status;
+        set => _status = value;
+    }
 
     /// <summary>
     /// Whether this is the default payment method for the user
     /// </summary>
     public bool IsDefault
     {
-        get;
-        set;
-    } = false;
+        get => _isDefault;
+        set => _isDefault = value;
+    }
 
     // Navigation properties
     [ForeignKey(nameof(UserId))]
     public virtual User.Models.User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 }
 
 public class UserFinancialMethodConfiguration : IEntityTypeConfiguration<UserFinancialMethod>

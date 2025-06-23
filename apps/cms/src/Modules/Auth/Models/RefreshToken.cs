@@ -7,53 +7,69 @@ namespace GameGuild.Modules.Auth.Models
     /// </summary>
     public class RefreshToken : BaseEntity
     {
+        private Guid _userId;
+
+        private string _token = string.Empty;
+
+        private DateTime _expiresAt;
+
+        private bool _isRevoked;
+
+        private string? _revokedByIp;
+
+        private DateTime? _revokedAt;
+
+        private string? _replacedByToken;
+
+        private string _createdByIp = string.Empty;
+
         public Guid UserId
         {
-            get;
-            set;
+            get => _userId;
+            set => _userId = value;
         }
 
         public string Token
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _token;
+            set => _token = value;
+        }
 
         public DateTime ExpiresAt
         {
-            get;
-            set;
+            get => _expiresAt;
+            set => _expiresAt = value;
         }
 
         public bool IsRevoked
         {
-            get;
-            set;
+            get => _isRevoked;
+            set => _isRevoked = value;
         }
 
         public string? RevokedByIp
         {
-            get;
-            set;
+            get => _revokedByIp;
+            set => _revokedByIp = value;
         }
 
         public DateTime? RevokedAt
         {
-            get;
-            set;
+            get => _revokedAt;
+            set => _revokedAt = value;
         }
 
         public string? ReplacedByToken
         {
-            get;
-            set;
+            get => _replacedByToken;
+            set => _replacedByToken = value;
         }
 
         public string CreatedByIp
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _createdByIp;
+            set => _createdByIp = value;
+        }
 
         public bool IsExpired
         {

@@ -7,11 +7,23 @@ namespace GameGuild.Modules.Project.Models;
 /// </summary>
 public class ProjectMetadata
 {
+    private Guid _id;
+
+    private Project _project = null!;
+
+    private Guid _projectId;
+
+    private int _viewCount = 0;
+
+    private int _downloadCount = 0;
+
+    private int _followerCount = 0;
+
     [Key]
     public Guid Id
     {
-        get;
-        set;
+        get => _id;
+        set => _id = value;
     }
 
     /// <summary>
@@ -20,14 +32,14 @@ public class ProjectMetadata
     [Required]
     public virtual Project Project
     {
-        get;
-        set;
-    } = null!;
+        get => _project;
+        set => _project = value;
+    }
 
     public Guid ProjectId
     {
-        get;
-        set;
+        get => _projectId;
+        set => _projectId = value;
     }
 
     /// <summary>
@@ -35,19 +47,19 @@ public class ProjectMetadata
     /// </summary>
     public int ViewCount
     {
-        get;
-        set;
-    } = 0;
+        get => _viewCount;
+        set => _viewCount = value;
+    }
 
     public int DownloadCount
     {
-        get;
-        set;
-    } = 0;
+        get => _downloadCount;
+        set => _downloadCount = value;
+    }
 
     public int FollowerCount
     {
-        get;
-        set;
-    } = 0;
+        get => _followerCount;
+        set => _followerCount = value;
+    }
 }

@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
+using GameGuild.Modules.Tenant.Models;
 
 namespace GameGuild.Common.Entities;
 
@@ -12,6 +13,18 @@ namespace GameGuild.Common.Entities;
 /// <typeparam name="TKey">The type of the entity's identifier</typeparam>
 public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<TKey>
 {
+    private TKey _id = default!;
+
+    private int _version;
+
+    private DateTime _createdAt;
+
+    private DateTime _updatedAt;
+
+    private DateTime? _deletedAt;
+
+    private Tenant? _tenant;
+
     /// <summary>
     /// Unique identifier for the entity
     /// </summary>
@@ -19,9 +32,9 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public virtual TKey Id
     {
-        get;
-        set;
-    } = default!;
+        get => _id;
+        set => _id = value;
+    }
 
     /// <summary>
     /// Unique identifier for the entity (IEntity implementation)
@@ -39,8 +52,8 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
     [ConcurrencyCheck]
     public virtual int Version
     {
-        get;
-        set;
+        get => _version;
+        set => _version = value;
     }
 
     /// <summary>
@@ -50,8 +63,8 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public virtual DateTime CreatedAt
     {
-        get;
-        set;
+        get => _createdAt;
+        set => _createdAt = value;
     }
 
     /// <summary>
@@ -61,8 +74,8 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public virtual DateTime UpdatedAt
     {
-        get;
-        set;
+        get => _updatedAt;
+        set => _updatedAt = value;
     }
 
     /// <summary>
@@ -70,8 +83,8 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
     /// </summary>
     public virtual DateTime? DeletedAt
     {
-        get;
-        set;
+        get => _deletedAt;
+        set => _deletedAt = value;
     }
 
     /// <summary>
@@ -246,8 +259,8 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
     // Tenant logic for ITenantable
     public virtual Modules.Tenant.Models.Tenant? Tenant
     {
-        get;
-        set;
+        get => _tenant;
+        set => _tenant = value;
     }
 
     public virtual bool IsGlobal

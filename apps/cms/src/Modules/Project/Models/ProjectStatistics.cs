@@ -5,13 +5,45 @@ namespace GameGuild.Modules.Project.Models;
 /// </summary>
 public class ProjectStatistics
 {
+    private Guid _projectId;
+
+    private int _followerCount;
+
+    private int _feedbackCount;
+
+    private decimal? _averageRating;
+
+    private int _totalDownloads;
+
+    private int _activeTeamCount;
+
+    private int _collaboratorCount;
+
+    private int _releaseCount;
+
+    private int _jamSubmissionCount;
+
+    private int _awardCount;
+
+    private int _viewsLast30Days;
+
+    private int _downloadsLast30Days;
+
+    private int _newFollowersLast30Days;
+
+    private DateTime _calculatedAt = DateTime.UtcNow;
+
+    private decimal _trendingScore;
+
+    private int? _popularityRank;
+
     /// <summary>
     /// Project ID
     /// </summary>
     public Guid ProjectId
     {
-        get;
-        set;
+        get => _projectId;
+        set => _projectId = value;
     }
 
     /// <summary>
@@ -19,8 +51,8 @@ public class ProjectStatistics
     /// </summary>
     public int FollowerCount
     {
-        get;
-        set;
+        get => _followerCount;
+        set => _followerCount = value;
     }
 
     /// <summary>
@@ -28,8 +60,8 @@ public class ProjectStatistics
     /// </summary>
     public int FeedbackCount
     {
-        get;
-        set;
+        get => _feedbackCount;
+        set => _feedbackCount = value;
     }
 
     /// <summary>
@@ -37,8 +69,8 @@ public class ProjectStatistics
     /// </summary>
     public decimal? AverageRating
     {
-        get;
-        set;
+        get => _averageRating;
+        set => _averageRating = value;
     }
 
     /// <summary>
@@ -46,8 +78,8 @@ public class ProjectStatistics
     /// </summary>
     public int TotalDownloads
     {
-        get;
-        set;
+        get => _totalDownloads;
+        set => _totalDownloads = value;
     }
 
     /// <summary>
@@ -55,8 +87,8 @@ public class ProjectStatistics
     /// </summary>
     public int ActiveTeamCount
     {
-        get;
-        set;
+        get => _activeTeamCount;
+        set => _activeTeamCount = value;
     }
 
     /// <summary>
@@ -64,8 +96,8 @@ public class ProjectStatistics
     /// </summary>
     public int CollaboratorCount
     {
-        get;
-        set;
+        get => _collaboratorCount;
+        set => _collaboratorCount = value;
     }
 
     /// <summary>
@@ -73,8 +105,8 @@ public class ProjectStatistics
     /// </summary>
     public int ReleaseCount
     {
-        get;
-        set;
+        get => _releaseCount;
+        set => _releaseCount = value;
     }
 
     /// <summary>
@@ -82,8 +114,8 @@ public class ProjectStatistics
     /// </summary>
     public int JamSubmissionCount
     {
-        get;
-        set;
+        get => _jamSubmissionCount;
+        set => _jamSubmissionCount = value;
     }
 
     /// <summary>
@@ -91,8 +123,8 @@ public class ProjectStatistics
     /// </summary>
     public int AwardCount
     {
-        get;
-        set;
+        get => _awardCount;
+        set => _awardCount = value;
     }
 
     /// <summary>
@@ -100,8 +132,8 @@ public class ProjectStatistics
     /// </summary>
     public int ViewsLast30Days
     {
-        get;
-        set;
+        get => _viewsLast30Days;
+        set => _viewsLast30Days = value;
     }
 
     /// <summary>
@@ -109,8 +141,8 @@ public class ProjectStatistics
     /// </summary>
     public int DownloadsLast30Days
     {
-        get;
-        set;
+        get => _downloadsLast30Days;
+        set => _downloadsLast30Days = value;
     }
 
     /// <summary>
@@ -118,8 +150,8 @@ public class ProjectStatistics
     /// </summary>
     public int NewFollowersLast30Days
     {
-        get;
-        set;
+        get => _newFollowersLast30Days;
+        set => _newFollowersLast30Days = value;
     }
 
     /// <summary>
@@ -127,17 +159,17 @@ public class ProjectStatistics
     /// </summary>
     public DateTime CalculatedAt
     {
-        get;
-        set;
-    } = DateTime.UtcNow;
+        get => _calculatedAt;
+        set => _calculatedAt = value;
+    }
 
     /// <summary>
     /// Trending score (calculated based on recent activity)
     /// </summary>
     public decimal TrendingScore
     {
-        get;
-        set;
+        get => _trendingScore;
+        set => _trendingScore = value;
     }
 
     /// <summary>
@@ -145,7 +177,7 @@ public class ProjectStatistics
     /// </summary>
     public int? PopularityRank
     {
-        get;
-        set;
+        get => _popularityRank;
+        set => _popularityRank = value;
     }
 }
