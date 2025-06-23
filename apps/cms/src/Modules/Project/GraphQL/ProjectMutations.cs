@@ -117,7 +117,88 @@ public record CreateProjectInput(
     string? Slug,
     ContentStatus? Status,
     AccessLevel? Visibility
-);
+)
+{
+    private readonly string _title = Title;
+
+    private readonly string? _description = Description;
+
+    private readonly string? _shortDescription = ShortDescription;
+
+    private readonly string? _websiteUrl = WebsiteUrl;
+
+    private readonly string? _repositoryUrl = RepositoryUrl;
+
+    private readonly string? _socialLinks = SocialLinks;
+
+    private readonly Guid _categoryId = CategoryId;
+
+    private readonly string? _slug = Slug;
+
+    private readonly ContentStatus? _status = Status;
+
+    private readonly AccessLevel? _visibility = Visibility;
+
+    public string Title
+    {
+        get => _title;
+        init => _title = value;
+    }
+
+    public string? Description
+    {
+        get => _description;
+        init => _description = value;
+    }
+
+    public string? ShortDescription
+    {
+        get => _shortDescription;
+        init => _shortDescription = value;
+    }
+
+    public string? WebsiteUrl
+    {
+        get => _websiteUrl;
+        init => _websiteUrl = value;
+    }
+
+    public string? RepositoryUrl
+    {
+        get => _repositoryUrl;
+        init => _repositoryUrl = value;
+    }
+
+    public string? SocialLinks
+    {
+        get => _socialLinks;
+        init => _socialLinks = value;
+    }
+
+    public Guid CategoryId
+    {
+        get => _categoryId;
+        init => _categoryId = value;
+    }
+
+    public string? Slug
+    {
+        get => _slug;
+        init => _slug = value;
+    }
+
+    public ContentStatus? Status
+    {
+        get => _status;
+        init => _status = value;
+    }
+
+    public AccessLevel? Visibility
+    {
+        get => _visibility;
+        init => _visibility = value;
+    }
+}
 
 /// <summary>
 /// Input type for updating an existing project
@@ -132,4 +213,77 @@ public record UpdateProjectInput(
     Guid? CategoryId,
     ContentStatus? Status,
     AccessLevel? Visibility
-);
+)
+{
+    private readonly string? _title = Title;
+
+    private readonly string? _description = Description;
+
+    private readonly string? _shortDescription = ShortDescription;
+
+    private readonly string? _websiteUrl = WebsiteUrl;
+
+    private readonly string? _repositoryUrl = RepositoryUrl;
+
+    private readonly string? _socialLinks = SocialLinks;
+
+    private readonly Guid? _categoryId = CategoryId;
+
+    private readonly ContentStatus? _status = Status;
+
+    private readonly AccessLevel? _visibility = Visibility;
+
+    public string? Title
+    {
+        get => _title;
+        init => _title = value;
+    }
+
+    public string? Description
+    {
+        get => _description;
+        init => _description = value;
+    }
+
+    public string? ShortDescription
+    {
+        get => _shortDescription;
+        init => _shortDescription = value;
+    }
+
+    public string? WebsiteUrl
+    {
+        get => _websiteUrl;
+        init => _websiteUrl = value;
+    }
+
+    public string? RepositoryUrl
+    {
+        get => _repositoryUrl;
+        init => _repositoryUrl = value;
+    }
+
+    public string? SocialLinks
+    {
+        get => _socialLinks;
+        init => _socialLinks = value;
+    }
+
+    public Guid? CategoryId
+    {
+        get => _categoryId;
+        init => _categoryId = value;
+    }
+
+    public ContentStatus? Status
+    {
+        get => _status;
+        init => _status = value;
+    }
+
+    public AccessLevel? Visibility
+    {
+        get => _visibility;
+        init => _visibility = value;
+    }
+}

@@ -22,14 +22,60 @@ namespace GameGuild.Modules.Project.Models;
 [Index(nameof(UpdatedAt))]
 public class Project : Content
 {
+    private string? _shortDescription;
+
+    private string? _imageUrl;
+
+    private ProjectType _type = ProjectType.Game;
+
+    private DevelopmentStatus _developmentStatus = DevelopmentStatus.Planning;
+
+    private ProjectCategory? _category;
+
+    private Guid? _categoryId;
+
+    private string? _websiteUrl;
+
+    private string? _repositoryUrl;
+
+    private string? _socialLinks;
+
+    private string? _downloadUrl;
+
+    private string? _tags;
+
+    private ProjectMetadata? _projectMetadata;
+
+    private ICollection<ProjectVersion> _versions = new List<ProjectVersion>();
+
+    private ICollection<ProjectCollaborator> _collaborators = new List<ProjectCollaborator>();
+
+    private ICollection<ProjectRelease> _releases = new List<ProjectRelease>();
+
+    private ICollection<ProjectTeam> _teams = new List<ProjectTeam>();
+
+    private ICollection<ProjectFollower> _followers = new List<ProjectFollower>();
+
+    private ICollection<ProjectFeedback> _feedbacks = new List<ProjectFeedback>();
+
+    private ICollection<ProjectJamSubmission> _jamSubmissions = new List<ProjectJamSubmission>();
+
+    private User.Models.User? _createdBy;
+
+    private Guid? _createdById;
+
+    private Tenant.Models.Tenant? _tenant1;
+
+    private Guid? _tenantId;
+
     /// <summary>
     /// Short description (max 500 chars)
     /// </summary>
     [MaxLength(500)]
     public string? ShortDescription
     {
-        get;
-        set;
+        get => _shortDescription;
+        set => _shortDescription = value;
     }
 
     /// <summary>
@@ -38,8 +84,8 @@ public class Project : Content
     [MaxLength(500)]
     public string? ImageUrl
     {
-        get;
-        set;
+        get => _imageUrl;
+        set => _imageUrl = value;
     }
 
     /// <summary>
@@ -47,32 +93,32 @@ public class Project : Content
     /// </summary>
     public ProjectType Type
     {
-        get;
-        set;
-    } = ProjectType.Game;
+        get => _type;
+        set => _type = value;
+    }
 
     /// <summary>
     /// Development status
     /// </summary>
     public DevelopmentStatus DevelopmentStatus
     {
-        get;
-        set;
-    } = DevelopmentStatus.Planning;
+        get => _developmentStatus;
+        set => _developmentStatus = value;
+    }
 
     /// <summary>
     /// Project category (entity)
     /// </summary>
     public virtual ProjectCategory? Category
     {
-        get;
-        set;
+        get => _category;
+        set => _category = value;
     }
 
     public Guid? CategoryId
     {
-        get;
-        set;
+        get => _categoryId;
+        set => _categoryId = value;
     }
 
     /// <summary>
@@ -81,8 +127,8 @@ public class Project : Content
     [MaxLength(500)]
     public string? WebsiteUrl
     {
-        get;
-        set;
+        get => _websiteUrl;
+        set => _websiteUrl = value;
     }
 
     /// <summary>
@@ -91,8 +137,8 @@ public class Project : Content
     [MaxLength(500)]
     public string? RepositoryUrl
     {
-        get;
-        set;
+        get => _repositoryUrl;
+        set => _repositoryUrl = value;
     }
 
     /// <summary>
@@ -100,8 +146,8 @@ public class Project : Content
     /// </summary>
     public string? SocialLinks
     {
-        get;
-        set;
+        get => _socialLinks;
+        set => _socialLinks = value;
     }
 
     /// <summary>
@@ -110,8 +156,8 @@ public class Project : Content
     [MaxLength(500)]
     public string? DownloadUrl
     {
-        get;
-        set;
+        get => _downloadUrl;
+        set => _downloadUrl = value;
     }
 
     /// <summary>
@@ -119,8 +165,8 @@ public class Project : Content
     /// </summary>
     public string? Tags
     {
-        get;
-        set;
+        get => _tags;
+        set => _tags = value;
     }
 
     /// <summary>
@@ -128,8 +174,8 @@ public class Project : Content
     /// </summary>
     public virtual ProjectMetadata? ProjectMetadata
     {
-        get;
-        set;
+        get => _projectMetadata;
+        set => _projectMetadata = value;
     }
 
     /// <summary>
@@ -137,77 +183,77 @@ public class Project : Content
     /// </summary>
     public virtual ICollection<ProjectVersion> Versions
     {
-        get;
-        set;
-    } = new List<ProjectVersion>();
+        get => _versions;
+        set => _versions = value;
+    }
 
     /// <summary>
     /// Navigation property to project collaborators
     /// </summary>
     public virtual ICollection<ProjectCollaborator> Collaborators
     {
-        get;
-        set;
-    } = new List<ProjectCollaborator>();
+        get => _collaborators;
+        set => _collaborators = value;
+    }
 
     /// <summary>
     /// Navigation property to project releases
     /// </summary>
     public virtual ICollection<ProjectRelease> Releases
     {
-        get;
-        set;
-    } = new List<ProjectRelease>();
+        get => _releases;
+        set => _releases = value;
+    }
 
     /// <summary>
     /// Navigation property to project teams
     /// </summary>
     public virtual ICollection<ProjectTeam> Teams
     {
-        get;
-        set;
-    } = new List<ProjectTeam>();
+        get => _teams;
+        set => _teams = value;
+    }
 
     /// <summary>
     /// Navigation property to project followers
     /// </summary>
     public virtual ICollection<ProjectFollower> Followers
     {
-        get;
-        set;
-    } = new List<ProjectFollower>();
+        get => _followers;
+        set => _followers = value;
+    }
 
     /// <summary>
     /// Navigation property to project feedback/reviews
     /// </summary>
     public virtual ICollection<ProjectFeedback> Feedbacks
     {
-        get;
-        set;
-    } = new List<ProjectFeedback>();
+        get => _feedbacks;
+        set => _feedbacks = value;
+    }
 
     /// <summary>
     /// Navigation property to jam submissions
     /// </summary>
     public virtual ICollection<ProjectJamSubmission> JamSubmissions
     {
-        get;
-        set;
-    } = new List<ProjectJamSubmission>();
+        get => _jamSubmissions;
+        set => _jamSubmissions = value;
+    }
 
     /// <summary>
     /// User who created the project
     /// </summary>
     public virtual User.Models.User? CreatedBy
     {
-        get;
-        set;
+        get => _createdBy;
+        set => _createdBy = value;
     }
 
     public Guid? CreatedById
     {
-        get;
-        set;
+        get => _createdById;
+        set => _createdById = value;
     }
 
     /// <summary>
@@ -215,14 +261,14 @@ public class Project : Content
     /// </summary>
     public override Tenant.Models.Tenant? Tenant
     {
-        get;
-        set;
+        get => _tenant1;
+        set => _tenant1 = value;
     }
 
     public Guid? TenantId
     {
-        get;
-        set;
+        get => _tenantId;
+        set => _tenantId = value;
     }
 
     /// <summary>

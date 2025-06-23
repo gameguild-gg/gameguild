@@ -5,13 +5,19 @@ namespace GameGuild.Modules.Auth.Dtos
     /// </summary>
     public class UserDto
     {
+        private Guid _id;
+
+        private string _username = string.Empty;
+
+        private string _email = string.Empty;
+
         /// <summary>
         /// User ID
         /// </summary>
         public Guid Id
         {
-            get;
-            set;
+            get => _id;
+            set => _id = value;
         }
 
         /// <summary>
@@ -19,17 +25,17 @@ namespace GameGuild.Modules.Auth.Dtos
         /// </summary>
         public string Username
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _username;
+            set => _username = value;
+        }
 
         /// <summary>
         /// Email address
         /// </summary>
         public string Email
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _email;
+            set => _email = value;
+        }
     }
 }

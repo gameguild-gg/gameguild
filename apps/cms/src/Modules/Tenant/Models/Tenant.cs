@@ -13,6 +13,16 @@ namespace GameGuild.Modules.Tenant.Models;
 [Index(nameof(Name), IsUnique = true)]
 public class Tenant : BaseEntity
 {
+    private string _name = string.Empty;
+
+    private string? _description;
+
+    private bool _isActive = true;
+
+    private string _slug = string.Empty;
+
+    private ICollection<TenantPermission> _tenantPermissions = new List<TenantPermission>();
+
     /// <summary>
     /// Name of the tenant
     /// </summary>
@@ -20,9 +30,9 @@ public class Tenant : BaseEntity
     [MaxLength(100)]
     public string Name
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _name;
+        set => _name = value;
+    }
 
     /// <summary>
     /// Description of the tenant
@@ -30,8 +40,8 @@ public class Tenant : BaseEntity
     [MaxLength(500)]
     public string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     /// <summary>
@@ -39,9 +49,9 @@ public class Tenant : BaseEntity
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 
     /// <summary>
     /// Slug for the tenant (URL-friendly unique identifier)
@@ -50,18 +60,18 @@ public class Tenant : BaseEntity
     [MaxLength(255)]
     public string Slug
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _slug;
+        set => _slug = value;
+    }
 
     /// <summary>
     /// Navigation property to tenant permissions and user memberships
     /// </summary>
     public virtual ICollection<TenantPermission> TenantPermissions
     {
-        get;
-        set;
-    } = new List<TenantPermission>();
+        get => _tenantPermissions;
+        set => _tenantPermissions = value;
+    }
 
 
     /// <summary>

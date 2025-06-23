@@ -7,31 +7,43 @@ namespace GameGuild.Modules.Auth.Dtos
     /// </summary>
     public class SignInResponseDto
     {
+        private string _accessToken = string.Empty;
+
+        private string _refreshToken = string.Empty;
+
+        private DateTime _expires;
+
+        private UserDto _user = new UserDto();
+
+        private Guid? _tenantId;
+
+        private IEnumerable<TenantInfoDto>? _availableTenants;
+
         /// <summary>
         /// JWT access token
         /// </summary>
         public string AccessToken
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _accessToken;
+            set => _accessToken = value;
+        }
 
         /// <summary>
         /// Refresh token
         /// </summary>
         public string RefreshToken
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _refreshToken;
+            set => _refreshToken = value;
+        }
 
         /// <summary>
         /// When the access token expires
         /// </summary>
         public DateTime Expires
         {
-            get;
-            set;
+            get => _expires;
+            set => _expires = value;
         }
 
         /// <summary>
@@ -39,17 +51,17 @@ namespace GameGuild.Modules.Auth.Dtos
         /// </summary>
         public UserDto User
         {
-            get;
-            set;
-        } = new UserDto();
+            get => _user;
+            set => _user = value;
+        }
 
         /// <summary>
         /// Current tenant ID
         /// </summary>
         public Guid? TenantId
         {
-            get;
-            set;
+            get => _tenantId;
+            set => _tenantId = value;
         }
 
         /// <summary>
@@ -58,8 +70,8 @@ namespace GameGuild.Modules.Auth.Dtos
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IEnumerable<TenantInfoDto>? AvailableTenants
         {
-            get;
-            set;
+            get => _availableTenants;
+            set => _availableTenants = value;
         }
     }
 }

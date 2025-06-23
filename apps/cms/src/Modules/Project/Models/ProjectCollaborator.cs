@@ -13,13 +13,31 @@ namespace GameGuild.Modules.Project.Models;
 [Index(nameof(UserId), Name = "IX_ProjectCollaborators_User")]
 public class ProjectCollaborator : ResourceBase
 {
+    private Guid _projectId;
+
+    private Project _project = null!;
+
+    private Guid _userId;
+
+    private User.Models.User _user = null!;
+
+    private string _role = string.Empty;
+
+    private string _permissions = string.Empty;
+
+    private bool _isActive = true;
+
+    private DateTime _joinedAt = DateTime.UtcNow;
+
+    private DateTime? _leftAt;
+
     /// <summary>
     /// Project ID
     /// </summary>
     public Guid ProjectId
     {
-        get;
-        set;
+        get => _projectId;
+        set => _projectId = value;
     }
 
     /// <summary>
@@ -27,17 +45,17 @@ public class ProjectCollaborator : ResourceBase
     /// </summary>
     public virtual Project Project
     {
-        get;
-        set;
-    } = null!;
+        get => _project;
+        set => _project = value;
+    }
 
     /// <summary>
     /// User ID
     /// </summary>
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -45,9 +63,9 @@ public class ProjectCollaborator : ResourceBase
     /// </summary>
     public virtual User.Models.User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 
     /// <summary>
     /// Role of the collaborator in the project
@@ -56,9 +74,9 @@ public class ProjectCollaborator : ResourceBase
     [MaxLength(100)]
     public string Role
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _role;
+        set => _role = value;
+    }
 
     /// <summary>
     /// Permissions granted to this collaborator
@@ -67,34 +85,34 @@ public class ProjectCollaborator : ResourceBase
     [MaxLength(500)]
     public string Permissions
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _permissions;
+        set => _permissions = value;
+    }
 
     /// <summary>
     /// Whether the collaborator is active
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 
     /// <summary>
     /// Date when the collaboration started
     /// </summary>
     public DateTime JoinedAt
     {
-        get;
-        set;
-    } = DateTime.UtcNow;
+        get => _joinedAt;
+        set => _joinedAt = value;
+    }
 
     /// <summary>
     /// Date when the collaboration ended (if applicable)
     /// </summary>
     public DateTime? LeftAt
     {
-        get;
-        set;
+        get => _leftAt;
+        set => _leftAt = value;
     }
 }

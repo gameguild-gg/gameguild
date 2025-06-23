@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using GameGuild.Modules.Tenant.Models;
 
 namespace GameGuild.Common.Entities;
 
@@ -9,6 +10,18 @@ namespace GameGuild.Common.Entities;
 /// </summary>
 public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable
 {
+    private string _title = string.Empty;
+
+    private string? _description;
+
+    private AccessLevel _visibility = AccessLevel.Private;
+
+    private ResourceMetadata? _metadata;
+
+    private Tenant? _tenant;
+
+    private ICollection<ResourceLocalization> _localizations = new List<ResourceLocalization>();
+
     /// <summary>
     /// The title/name of this resource
     /// </summary>
@@ -16,9 +29,9 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable
     [MaxLength(255)]
     public string Title
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _title;
+        set => _title = value;
+    }
 
     /// <summary>
     /// Optional description of this resource
@@ -26,8 +39,8 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable
     [MaxLength(2000)]
     public string? Description
     {
-        get;
-        set;
+        get => _description;
+        set => _description = value;
     }
 
     /// <summary>
@@ -36,9 +49,9 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable
     [Required]
     public AccessLevel Visibility
     {
-        get;
-        set;
-    } = AccessLevel.Private;
+        get => _visibility;
+        set => _visibility = value;
+    }
 
     /// <summary>
     /// Navigation property to resource metadata
@@ -46,8 +59,8 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable
     /// </summary>
     public virtual ResourceMetadata? Metadata
     {
-        get;
-        set;
+        get => _metadata;
+        set => _metadata = value;
     }
 
     /// <summary>
@@ -57,8 +70,8 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable
     /// </summary>
     public override Modules.Tenant.Models.Tenant? Tenant
     {
-        get;
-        set;
+        get => _tenant;
+        set => _tenant = value;
     }
 
     /// <summary>
@@ -78,9 +91,9 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable
     /// </summary>
     public virtual ICollection<ResourceLocalization> Localizations
     {
-        get;
-        set;
-    } = new List<ResourceLocalization>();
+        get => _localizations;
+        set => _localizations = value;
+    }
 
 
     /// <summary>

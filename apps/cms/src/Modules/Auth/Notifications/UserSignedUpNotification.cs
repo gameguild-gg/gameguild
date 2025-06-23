@@ -7,33 +7,43 @@ namespace GameGuild.Modules.Auth.Notifications;
 /// </summary>
 public class UserSignedUpNotification : INotification
 {
+    private Guid _userId;
+
+    private string _email = string.Empty;
+
+    private string _username = string.Empty;
+
+    private DateTime _signUpTime = DateTime.UtcNow;
+
+    private Guid? _tenantId;
+
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     public string Email
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _email;
+        set => _email = value;
+    }
 
     public string Username
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _username;
+        set => _username = value;
+    }
 
     public DateTime SignUpTime
     {
-        get;
-        set;
-    } = DateTime.UtcNow;
+        get => _signUpTime;
+        set => _signUpTime = value;
+    }
 
     public Guid? TenantId
     {
-        get;
-        set;
+        get => _tenantId;
+        set => _tenantId = value;
     }
 }

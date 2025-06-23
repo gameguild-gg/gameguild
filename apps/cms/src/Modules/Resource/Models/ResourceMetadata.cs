@@ -12,6 +12,14 @@ namespace GameGuild.Common.Entities;
 [Index(nameof(ResourceType))]
 public class ResourceMetadata : BaseEntity
 {
+    private string _resourceType = string.Empty;
+
+    private string? _additionalData;
+
+    private string? _tags;
+
+    private string? _seoMetadata;
+
     /// <summary>
     /// The type of resource this metadata belongs to
     /// </summary>
@@ -19,9 +27,9 @@ public class ResourceMetadata : BaseEntity
     [MaxLength(100)]
     public string ResourceType
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _resourceType;
+        set => _resourceType = value;
+    }
 
     /// <summary>
     /// Additional metadata stored as JSON
@@ -29,8 +37,8 @@ public class ResourceMetadata : BaseEntity
     [Column(TypeName = "jsonb")]
     public string? AdditionalData
     {
-        get;
-        set;
+        get => _additionalData;
+        set => _additionalData = value;
     }
 
     /// <summary>
@@ -39,8 +47,8 @@ public class ResourceMetadata : BaseEntity
     [MaxLength(500)]
     public string? Tags
     {
-        get;
-        set;
+        get => _tags;
+        set => _tags = value;
     }
 
     /// <summary>
@@ -49,7 +57,7 @@ public class ResourceMetadata : BaseEntity
     [Column(TypeName = "jsonb")]
     public string? SeoMetadata
     {
-        get;
-        set;
+        get => _seoMetadata;
+        set => _seoMetadata = value;
     }
 }

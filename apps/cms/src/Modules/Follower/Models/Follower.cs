@@ -8,26 +8,32 @@ namespace GameGuild.Common.Entities;
 /// </summary>
 public class Follower : BaseEntity, ITenantable
 {
+    private User _user = null!;
+
+    private Guid _userId;
+
+    private Tenant? _tenant;
+
     /// <summary>
     /// The user who is following
     /// </summary>
     public virtual User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     // Optional: Tenant property for ITenantable (hide base implementation)
     public new virtual Tenant? Tenant
     {
-        get;
-        set;
+        get => _tenant;
+        set => _tenant = value;
     }
 
     public new bool IsGlobal

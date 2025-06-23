@@ -15,13 +15,45 @@ namespace GameGuild.Modules.Project.Models;
 [Index(nameof(IsLatest), Name = "IX_ProjectReleases_Latest")]
 public class ProjectRelease : ResourceBase
 {
+    private Guid _projectId;
+
+    private string _releaseVersion = string.Empty;
+
+    private DateTime _releasedAt = DateTime.UtcNow;
+
+    private bool _isLatest = false;
+
+    private bool _isPrerelease = false;
+
+    private string? _downloadUrl;
+
+    private long? _fileSize;
+
+    private int _downloadCount = 0;
+
+    private string? _releaseNotes;
+
+    private string? _checksum;
+
+    private string? _systemRequirements;
+
+    private string? _supportedPlatforms;
+
+    private string _releaseType = "stable";
+
+    private ContentStatus _status = ContentStatus.Draft;
+
+    private string? _buildNumber;
+
+    private string? _releaseMetadata;
+
     /// <summary>
     /// Project this release belongs to
     /// </summary>
     public Guid ProjectId
     {
-        get;
-        set;
+        get => _projectId;
+        set => _projectId = value;
     }
 
     // Navigation property commented out temporarily to resolve circular compilation
@@ -37,9 +69,9 @@ public class ProjectRelease : ResourceBase
     [MaxLength(50)]
     public string ReleaseVersion
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _releaseVersion;
+        set => _releaseVersion = value;
+    }
 
     // Title and Description are inherited from ResourceBase
     // We can override them if needed with different attributes
@@ -49,27 +81,27 @@ public class ProjectRelease : ResourceBase
     /// </summary>
     public DateTime ReleasedAt
     {
-        get;
-        set;
-    } = DateTime.UtcNow;
+        get => _releasedAt;
+        set => _releasedAt = value;
+    }
 
     /// <summary>
     /// Whether this is the latest release
     /// </summary>
     public bool IsLatest
     {
-        get;
-        set;
-    } = false;
+        get => _isLatest;
+        set => _isLatest = value;
+    }
 
     /// <summary>
     /// Whether this is a pre-release (alpha, beta, etc.)
     /// </summary>
     public bool IsPrerelease
     {
-        get;
-        set;
-    } = false;
+        get => _isPrerelease;
+        set => _isPrerelease = value;
+    }
 
     /// <summary>
     /// Download URL for this release
@@ -77,8 +109,8 @@ public class ProjectRelease : ResourceBase
     [MaxLength(500)]
     public string? DownloadUrl
     {
-        get;
-        set;
+        get => _downloadUrl;
+        set => _downloadUrl = value;
     }
 
     /// <summary>
@@ -86,8 +118,8 @@ public class ProjectRelease : ResourceBase
     /// </summary>
     public long? FileSize
     {
-        get;
-        set;
+        get => _fileSize;
+        set => _fileSize = value;
     }
 
     /// <summary>
@@ -95,17 +127,17 @@ public class ProjectRelease : ResourceBase
     /// </summary>
     public int DownloadCount
     {
-        get;
-        set;
-    } = 0;
+        get => _downloadCount;
+        set => _downloadCount = value;
+    }
 
     /// <summary>
     /// Release notes in markdown format
     /// </summary>
     public string? ReleaseNotes
     {
-        get;
-        set;
+        get => _releaseNotes;
+        set => _releaseNotes = value;
     }
 
     /// <summary>
@@ -114,8 +146,8 @@ public class ProjectRelease : ResourceBase
     [MaxLength(128)]
     public string? Checksum
     {
-        get;
-        set;
+        get => _checksum;
+        set => _checksum = value;
     }
 
     /// <summary>
@@ -124,8 +156,8 @@ public class ProjectRelease : ResourceBase
     [MaxLength(1000)]
     public string? SystemRequirements
     {
-        get;
-        set;
+        get => _systemRequirements;
+        set => _systemRequirements = value;
     }
 
     /// <summary>
@@ -134,8 +166,8 @@ public class ProjectRelease : ResourceBase
     [MaxLength(500)]
     public string? SupportedPlatforms
     {
-        get;
-        set;
+        get => _supportedPlatforms;
+        set => _supportedPlatforms = value;
     }
 
     /// <summary>
@@ -144,18 +176,18 @@ public class ProjectRelease : ResourceBase
     [MaxLength(50)]
     public string ReleaseType
     {
-        get;
-        set;
-    } = "stable";
+        get => _releaseType;
+        set => _releaseType = value;
+    }
 
     /// <summary>
     /// Release status
     /// </summary>
     public ContentStatus Status
     {
-        get;
-        set;
-    } = ContentStatus.Draft;
+        get => _status;
+        set => _status = value;
+    }
 
     /// <summary>
     /// Build number or commit hash
@@ -163,8 +195,8 @@ public class ProjectRelease : ResourceBase
     [MaxLength(100)]
     public string? BuildNumber
     {
-        get;
-        set;
+        get => _buildNumber;
+        set => _buildNumber = value;
     }
 
     /// <summary>
@@ -173,7 +205,7 @@ public class ProjectRelease : ResourceBase
     [MaxLength(2000)]
     public string? ReleaseMetadata
     {
-        get;
-        set;
+        get => _releaseMetadata;
+        set => _releaseMetadata = value;
     }
 }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 
@@ -14,6 +15,28 @@ namespace GameGuild.Modules.Reputation.Models;
 [Index(nameof(SortOrder))]
 public class ReputationTier : ResourceBase, ITenantable
 {
+    private string _name;
+
+    private string _displayName;
+
+    private int _minimumScore;
+
+    private int? _maximumScore;
+
+    private string? _color;
+
+    private string? _icon;
+
+    private int _sortOrder;
+
+    private bool _isActive = true;
+
+    private ICollection<UserReputation> _userReputations = new List<UserReputation>();
+
+    private Tenant.Models.Tenant? _tenant;
+
+    private Guid? _tenantId;
+
     /// <summary>
     /// Unique name/identifier for this reputation tier
     /// </summary>
@@ -21,8 +44,8 @@ public class ReputationTier : ResourceBase, ITenantable
     [MaxLength(100)]
     public required string Name
     {
-        get;
-        set;
+        get => _name;
+        [MemberNotNull(nameof(_name))] set => _name = value;
     }
 
     /// <summary>
@@ -32,8 +55,8 @@ public class ReputationTier : ResourceBase, ITenantable
     [MaxLength(200)]
     public required string DisplayName
     {
-        get;
-        set;
+        get => _displayName;
+        [MemberNotNull(nameof(_displayName))] set => _displayName = value;
     }
 
     /// <summary>
@@ -41,8 +64,8 @@ public class ReputationTier : ResourceBase, ITenantable
     /// </summary>
     public int MinimumScore
     {
-        get;
-        set;
+        get => _minimumScore;
+        set => _minimumScore = value;
     }
 
     /// <summary>
@@ -50,8 +73,8 @@ public class ReputationTier : ResourceBase, ITenantable
     /// </summary>
     public int? MaximumScore
     {
-        get;
-        set;
+        get => _maximumScore;
+        set => _maximumScore = value;
     }
 
     /// <summary>
@@ -60,8 +83,8 @@ public class ReputationTier : ResourceBase, ITenantable
     [MaxLength(50)]
     public string? Color
     {
-        get;
-        set;
+        get => _color;
+        set => _color = value;
     }
 
     /// <summary>
@@ -70,8 +93,8 @@ public class ReputationTier : ResourceBase, ITenantable
     [MaxLength(100)]
     public string? Icon
     {
-        get;
-        set;
+        get => _icon;
+        set => _icon = value;
     }
 
     /// <summary>
@@ -79,8 +102,8 @@ public class ReputationTier : ResourceBase, ITenantable
     /// </summary>
     public int SortOrder
     {
-        get;
-        set;
+        get => _sortOrder;
+        set => _sortOrder = value;
     }
 
     /// <summary>
@@ -88,18 +111,18 @@ public class ReputationTier : ResourceBase, ITenantable
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 
     /// <summary>
     /// Users who have achieved this reputation tier
     /// </summary>
     public ICollection<UserReputation> UserReputations
     {
-        get;
-        set;
-    } = new List<UserReputation>();
+        get => _userReputations;
+        set => _userReputations = value;
+    }
 
     /// <summary>
     /// Tenant this reputation tier belongs to (null for global tiers)
@@ -107,14 +130,14 @@ public class ReputationTier : ResourceBase, ITenantable
     [ForeignKey(nameof(TenantId))]
     public new Modules.Tenant.Models.Tenant? Tenant
     {
-        get;
-        set;
+        get => _tenant;
+        set => _tenant = value;
     }
 
     public Guid? TenantId
     {
-        get;
-        set;
+        get => _tenantId;
+        set => _tenantId = value;
     }
 
     /// <summary>

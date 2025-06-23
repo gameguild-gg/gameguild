@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Tag.Models;
 
 namespace GameGuild.Modules.Certificate.Models;
 
@@ -13,38 +14,48 @@ namespace GameGuild.Modules.Certificate.Models;
 [Index(nameof(RelationshipType))]
 public class CertificateTag : BaseEntity
 {
+    private Guid _certificateId;
+
+    private Guid _tagId;
+
+    private CertificateTagRelationshipType _relationshipType;
+
+    private Certificate _certificate = null!;
+
+    private TagProficiency _tag = null!;
+
     public Guid CertificateId
     {
-        get;
-        set;
+        get => _certificateId;
+        set => _certificateId = value;
     }
 
     public Guid TagId
     {
-        get;
-        set;
+        get => _tagId;
+        set => _tagId = value;
     }
 
     public CertificateTagRelationshipType RelationshipType
     {
-        get;
-        set;
+        get => _relationshipType;
+        set => _relationshipType = value;
     }
 
     // Navigation properties
     [ForeignKey(nameof(CertificateId))]
     public virtual Certificate Certificate
     {
-        get;
-        set;
-    } = null!;
+        get => _certificate;
+        set => _certificate = value;
+    }
 
     [ForeignKey(nameof(TagId))]
     public virtual Tag.Models.TagProficiency Tag
     {
-        get;
-        set;
-    } = null!;
+        get => _tag;
+        set => _tag = value;
+    }
 }
 
 public class CertificateTagConfiguration : IEntityTypeConfiguration<CertificateTag>

@@ -8,27 +8,35 @@ namespace GameGuild.Modules.Auth.Commands;
 /// </summary>
 public class VerifyWeb3SignatureCommand : IRequest<SignInResponseDto>
 {
+    private string _walletAddress = string.Empty;
+
+    private string _signature = string.Empty;
+
+    private string _nonce = string.Empty;
+
+    private string _chainId = string.Empty;
+
     public string WalletAddress
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _walletAddress;
+        set => _walletAddress = value;
+    }
 
     public string Signature
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _signature;
+        set => _signature = value;
+    }
 
     public string Nonce
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _nonce;
+        set => _nonce = value;
+    }
 
     public string ChainId
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _chainId;
+        set => _chainId = value;
+    }
 }

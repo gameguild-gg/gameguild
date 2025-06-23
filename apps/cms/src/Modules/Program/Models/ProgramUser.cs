@@ -3,6 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Certificate.Models;
+using GameGuild.Modules.Feedback.Models;
 
 namespace GameGuild.Modules.Program.Models;
 
@@ -19,14 +21,48 @@ namespace GameGuild.Modules.Program.Models;
 [Index(nameof(CompletionPercentage))]
 public class ProgramUser : BaseEntity
 {
+    private Guid _userId;
+
+    private User.Models.User _user = null!;
+
+    private Guid _programId;
+
+    private Program _program = null!;
+
+    private bool _isActive = true;
+
+    private DateTime _joinedAt = DateTime.UtcNow;
+
+    private decimal _completionPercentage = 0;
+
+    private decimal? _finalGrade;
+
+    private DateTime? _startedAt;
+
+    private DateTime? _completedAt;
+
+    private DateTime? _lastAccessedAt;
+
+    private ICollection<ContentInteraction> _contentInteractions = new List<ContentInteraction>();
+
+    private ICollection<ActivityGrade> _receivedGrades = new List<ActivityGrade>();
+
+    private ICollection<ActivityGrade> _givenGrades = new List<ActivityGrade>();
+
+    private ICollection<UserCertificate> _userCertificates = new List<Certificate.Models.UserCertificate>();
+
+    private ICollection<ProgramFeedbackSubmission> _feedbackSubmissions = new List<Feedback.Models.ProgramFeedbackSubmission>();
+
+    private ICollection<ProgramRating> _programRatings = new List<Feedback.Models.ProgramRating>();
+
     /// <summary>
     /// Foreign key to the User entity
     /// </summary>
     [Required]
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -35,9 +71,9 @@ public class ProgramUser : BaseEntity
     [ForeignKey(nameof(UserId))]
     public virtual User.Models.User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 
     /// <summary>
     /// Foreign key to the Program entity
@@ -45,8 +81,8 @@ public class ProgramUser : BaseEntity
     [Required]
     public Guid ProgramId
     {
-        get;
-        set;
+        get => _programId;
+        set => _programId = value;
     }
 
     /// <summary>
@@ -55,27 +91,27 @@ public class ProgramUser : BaseEntity
     [ForeignKey(nameof(ProgramId))]
     public virtual Program Program
     {
-        get;
-        set;
-    } = null!;
+        get => _program;
+        set => _program = value;
+    }
 
     /// <summary>
     /// Whether this user-program relationship is currently active
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 
     /// <summary>
     /// When the user joined this program
     /// </summary>
     public DateTime JoinedAt
     {
-        get;
-        set;
-    } = DateTime.UtcNow;
+        get => _joinedAt;
+        set => _joinedAt = value;
+    }
 
     /// <summary>
     /// Overall completion percentage for the program (0-100)
@@ -83,9 +119,9 @@ public class ProgramUser : BaseEntity
     [Column(TypeName = "decimal(5,2)")]
     public decimal CompletionPercentage
     {
-        get;
-        set;
-    } = 0;
+        get => _completionPercentage;
+        set => _completionPercentage = value;
+    }
 
     /// <summary>
     /// Overall grade for the program (0-100)
@@ -93,8 +129,8 @@ public class ProgramUser : BaseEntity
     [Column(TypeName = "decimal(5,2)")]
     public decimal? FinalGrade
     {
-        get;
-        set;
+        get => _finalGrade;
+        set => _finalGrade = value;
     }
 
     /// <summary>
@@ -102,8 +138,8 @@ public class ProgramUser : BaseEntity
     /// </summary>
     public DateTime? StartedAt
     {
-        get;
-        set;
+        get => _startedAt;
+        set => _startedAt = value;
     }
 
     /// <summary>
@@ -111,8 +147,8 @@ public class ProgramUser : BaseEntity
     /// </summary>
     public DateTime? CompletedAt
     {
-        get;
-        set;
+        get => _completedAt;
+        set => _completedAt = value;
     }
 
     /// <summary>
@@ -120,46 +156,46 @@ public class ProgramUser : BaseEntity
     /// </summary>
     public DateTime? LastAccessedAt
     {
-        get;
-        set;
+        get => _lastAccessedAt;
+        set => _lastAccessedAt = value;
     }
 
 
     public virtual ICollection<ContentInteraction> ContentInteractions
     {
-        get;
-        set;
-    } = new List<ContentInteraction>();
+        get => _contentInteractions;
+        set => _contentInteractions = value;
+    }
 
     public virtual ICollection<ActivityGrade> ReceivedGrades
     {
-        get;
-        set;
-    } = new List<ActivityGrade>();
+        get => _receivedGrades;
+        set => _receivedGrades = value;
+    }
 
     public virtual ICollection<ActivityGrade> GivenGrades
     {
-        get;
-        set;
-    } = new List<ActivityGrade>();
+        get => _givenGrades;
+        set => _givenGrades = value;
+    }
 
     public virtual ICollection<Certificate.Models.UserCertificate> UserCertificates
     {
-        get;
-        set;
-    } = new List<Certificate.Models.UserCertificate>();
+        get => _userCertificates;
+        set => _userCertificates = value;
+    }
 
     public virtual ICollection<Feedback.Models.ProgramFeedbackSubmission> FeedbackSubmissions
     {
-        get;
-        set;
-    } = new List<Feedback.Models.ProgramFeedbackSubmission>();
+        get => _feedbackSubmissions;
+        set => _feedbackSubmissions = value;
+    }
 
     public virtual ICollection<Feedback.Models.ProgramRating> ProgramRatings
     {
-        get;
-        set;
-    } = new List<Feedback.Models.ProgramRating>();
+        get => _programRatings;
+        set => _programRatings = value;
+    }
 
     /// <summary>
     /// Default constructor

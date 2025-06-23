@@ -7,17 +7,21 @@ namespace GameGuild.Modules.Auth.Dtos
     /// </summary>
     public class Web3ChallengeRequestDto
     {
+        private string _walletAddress = string.Empty;
+
+        private string? _chainId;
+
         [Required]
         public string WalletAddress
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _walletAddress;
+            set => _walletAddress = value;
+        }
 
         public string? ChainId
         {
-            get;
-            set;
+            get => _chainId;
+            set => _chainId = value;
         }
     }
 
@@ -26,22 +30,28 @@ namespace GameGuild.Modules.Auth.Dtos
     /// </summary>
     public class Web3ChallengeResponseDto
     {
+        private string _challenge = string.Empty;
+
+        private string _nonce = string.Empty;
+
+        private DateTime _expiresAt;
+
         public string Challenge
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _challenge;
+            set => _challenge = value;
+        }
 
         public string Nonce
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _nonce;
+            set => _nonce = value;
+        }
 
         public DateTime ExpiresAt
         {
-            get;
-            set;
+            get => _expiresAt;
+            set => _expiresAt = value;
         }
     }
 
@@ -50,31 +60,41 @@ namespace GameGuild.Modules.Auth.Dtos
     /// </summary>
     public class Web3VerifyRequestDto
     {
+        private string _walletAddress = string.Empty;
+
+        private string _signature = string.Empty;
+
+        private string _nonce = string.Empty;
+
+        private string? _chainId;
+
+        private Guid? _tenantId;
+
         [Required]
         public string WalletAddress
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _walletAddress;
+            set => _walletAddress = value;
+        }
 
         [Required]
         public string Signature
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _signature;
+            set => _signature = value;
+        }
 
         [Required]
         public string Nonce
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _nonce;
+            set => _nonce = value;
+        }
 
         public string? ChainId
         {
-            get;
-            set;
+            get => _chainId;
+            set => _chainId = value;
         }
 
         /// <summary>
@@ -83,8 +103,8 @@ namespace GameGuild.Modules.Auth.Dtos
         /// </summary>
         public Guid? TenantId
         {
-            get;
-            set;
+            get => _tenantId;
+            set => _tenantId = value;
         }
     }
 }

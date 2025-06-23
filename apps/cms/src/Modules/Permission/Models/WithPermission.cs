@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Modules.Tenant.Models;
+using GameGuild.Modules.User.Models;
 
 // do not remove this, it's needed for IQueryable extensions
 
@@ -234,23 +236,37 @@ public enum PermissionType
 [ObjectType]
 public class WithPermissions : BaseEntity
 {
+    private ulong _permissionFlags1 = 0;
+
+    private ulong _permissionFlags2 = 0;
+
+    private Guid? _userId;
+
+    private User? _user;
+
+    private Guid? _tenantId;
+
+    private Tenant? _tenant;
+
+    private DateTime? _expiresAt;
+
     [GraphQLType(typeof(NonNullType<LongType>))]
     [GraphQLDescription("Permission flags for bits 0-63")]
     [Column(TypeName = "bigint")]
     public ulong PermissionFlags1
     {
-        get;
-        set;
-    } = 0;
+        get => _permissionFlags1;
+        set => _permissionFlags1 = value;
+    }
 
     [GraphQLType(typeof(NonNullType<LongType>))]
     [GraphQLDescription("Permission flags for bits 64-127")]
     [Column(TypeName = "bigint")]
     public ulong PermissionFlags2
     {
-        get;
-        set;
-    } = 0;
+        get => _permissionFlags2;
+        set => _permissionFlags2 = value;
+    }
 
     /// <summary>
     /// User relationship - NULL means default permissions
@@ -259,8 +275,8 @@ public class WithPermissions : BaseEntity
     [GraphQLDescription("The user ID this permission applies to (null for default permissions)")]
     public Guid? UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -270,8 +286,8 @@ public class WithPermissions : BaseEntity
     [ForeignKey(nameof(UserId))]
     public virtual Modules.User.Models.User? User
     {
-        get;
-        set;
+        get => _user;
+        set => _user = value;
     }
 
     /// <summary>
@@ -281,8 +297,8 @@ public class WithPermissions : BaseEntity
     [GraphQLDescription("The tenant ID this permission applies to (null for global defaults)")]
     public Guid? TenantId
     {
-        get;
-        set;
+        get => _tenantId;
+        set => _tenantId = value;
     }
 
     /// <summary>
@@ -292,8 +308,8 @@ public class WithPermissions : BaseEntity
     [ForeignKey(nameof(TenantId))]
     public virtual new Modules.Tenant.Models.Tenant? Tenant
     {
-        get;
-        set;
+        get => _tenant;
+        set => _tenant = value;
     }
 
     /// <summary>
@@ -305,8 +321,8 @@ public class WithPermissions : BaseEntity
     [GraphQLDescription("When this permission expires (null if it never expires)")]
     public DateTime? ExpiresAt
     {
-        get;
-        set;
+        get => _expiresAt;
+        set => _expiresAt = value;
     }
 
     // Computed properties

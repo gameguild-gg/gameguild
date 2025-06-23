@@ -13,14 +13,34 @@ namespace GameGuild.Modules.User.Models;
 [Index(nameof(UserId), nameof(Type))]
 public class Credential : BaseEntity, ITenantable
 {
+    private Guid _userId;
+
+    private User _user = null!;
+
+    private Guid? _tenantId;
+
+    private Tenant.Models.Tenant? _tenant;
+
+    private string _type = string.Empty;
+
+    private string _value = string.Empty;
+
+    private string? _metadata;
+
+    private DateTime? _expiresAt;
+
+    private bool _isActive = true;
+
+    private DateTime? _lastUsedAt;
+
     /// <summary>
     /// Foreign key to the User entity
     /// </summary>
     [Required]
     public Guid UserId
     {
-        get;
-        set;
+        get => _userId;
+        set => _userId = value;
     }
 
     /// <summary>
@@ -29,17 +49,17 @@ public class Credential : BaseEntity, ITenantable
     [ForeignKey(nameof(UserId))]
     public virtual User User
     {
-        get;
-        set;
-    } = null!;
+        get => _user;
+        set => _user = value;
+    }
 
     /// <summary>
     /// Foreign key to the Tenant entity (optional - for tenant-specific credentials)
     /// </summary>
     public Guid? TenantId
     {
-        get;
-        set;
+        get => _tenantId;
+        set => _tenantId = value;
     }
 
     /// <summary>
@@ -48,8 +68,8 @@ public class Credential : BaseEntity, ITenantable
     [ForeignKey(nameof(TenantId))]
     public new virtual Tenant.Models.Tenant? Tenant
     {
-        get;
-        set;
+        get => _tenant;
+        set => _tenant = value;
     }
 
     /// <summary>
@@ -68,9 +88,9 @@ public class Credential : BaseEntity, ITenantable
     [MaxLength(50)]
     public string Type
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _type;
+        set => _type = value;
+    }
 
     /// <summary>
     /// The credential value (hashed password, encrypted token, etc.)
@@ -79,9 +99,9 @@ public class Credential : BaseEntity, ITenantable
     [MaxLength(1000)]
     public string Value
     {
-        get;
-        set;
-    } = string.Empty;
+        get => _value;
+        set => _value = value;
+    }
 
     /// <summary>
     /// Additional metadata for the credential (JSON format)
@@ -90,8 +110,8 @@ public class Credential : BaseEntity, ITenantable
     [MaxLength(2000)]
     public string? Metadata
     {
-        get;
-        set;
+        get => _metadata;
+        set => _metadata = value;
     }
 
     /// <summary>
@@ -99,8 +119,8 @@ public class Credential : BaseEntity, ITenantable
     /// </summary>
     public DateTime? ExpiresAt
     {
-        get;
-        set;
+        get => _expiresAt;
+        set => _expiresAt = value;
     }
 
     /// <summary>
@@ -108,17 +128,17 @@ public class Credential : BaseEntity, ITenantable
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 
     /// <summary>
     /// When this credential was last used
     /// </summary>
     public DateTime? LastUsedAt
     {
-        get;
-        set;
+        get => _lastUsedAt;
+        set => _lastUsedAt = value;
     }
 
     /// <summary>

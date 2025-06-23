@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
+using GameGuild.Models;
 
 namespace GameGuild.Modules.Project.Models;
 
@@ -14,13 +15,35 @@ namespace GameGuild.Modules.Project.Models;
 [Index(nameof(AssignedAt), Name = "IX_ProjectTeams_Date")]
 public class ProjectTeam : ResourceBase
 {
+    private Guid _projectId;
+
+    private Project _project = null!;
+
+    private Guid _teamId;
+
+    private Team _team = null!;
+
+    private string _role = "Development";
+
+    private DateTime _assignedAt = DateTime.UtcNow;
+
+    private DateTime? _endedAt;
+
+    private bool _isActive = true;
+
+    private string? _permissions;
+
+    private string? _notes;
+
+    private decimal _contributionPercentage = 0;
+
     /// <summary>
     /// Project the team is working on
     /// </summary>
     public Guid ProjectId
     {
-        get;
-        set;
+        get => _projectId;
+        set => _projectId = value;
     }
 
     /// <summary>
@@ -28,17 +51,17 @@ public class ProjectTeam : ResourceBase
     /// </summary>
     public virtual Project Project
     {
-        get;
-        set;
-    } = null!;
+        get => _project;
+        set => _project = value;
+    }
 
     /// <summary>
     /// Team working on the project
     /// </summary>
     public Guid TeamId
     {
-        get;
-        set;
+        get => _teamId;
+        set => _teamId = value;
     }
 
     /// <summary>
@@ -46,9 +69,9 @@ public class ProjectTeam : ResourceBase
     /// </summary>
     public virtual GameGuild.Models.Team Team
     {
-        get;
-        set;
-    } = null!;
+        get => _team;
+        set => _team = value;
+    }
 
     /// <summary>
     /// Role of the team in the project
@@ -57,26 +80,26 @@ public class ProjectTeam : ResourceBase
     [MaxLength(100)]
     public string Role
     {
-        get;
-        set;
-    } = "Development";
+        get => _role;
+        set => _role = value;
+    }
 
     /// <summary>
     /// Date when the team was assigned to the project
     /// </summary>
     public DateTime AssignedAt
     {
-        get;
-        set;
-    } = DateTime.UtcNow;
+        get => _assignedAt;
+        set => _assignedAt = value;
+    }
 
     /// <summary>
     /// Date when the team's involvement ended (if applicable)
     /// </summary>
     public DateTime? EndedAt
     {
-        get;
-        set;
+        get => _endedAt;
+        set => _endedAt = value;
     }
 
     /// <summary>
@@ -84,9 +107,9 @@ public class ProjectTeam : ResourceBase
     /// </summary>
     public bool IsActive
     {
-        get;
-        set;
-    } = true;
+        get => _isActive;
+        set => _isActive = value;
+    }
 
     /// <summary>
     /// Permissions granted to this team for the project
@@ -94,8 +117,8 @@ public class ProjectTeam : ResourceBase
     [MaxLength(1000)]
     public string? Permissions
     {
-        get;
-        set;
+        get => _permissions;
+        set => _permissions = value;
     }
 
     /// <summary>
@@ -104,8 +127,8 @@ public class ProjectTeam : ResourceBase
     [MaxLength(1000)]
     public string? Notes
     {
-        get;
-        set;
+        get => _notes;
+        set => _notes = value;
     }
 
     /// <summary>
@@ -114,7 +137,7 @@ public class ProjectTeam : ResourceBase
     [Range(0, 100)]
     public decimal ContributionPercentage
     {
-        get;
-        set;
-    } = 0;
+        get => _contributionPercentage;
+        set => _contributionPercentage = value;
+    }
 }

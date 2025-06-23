@@ -6,9 +6,11 @@ namespace GameGuild.Modules.Auth.Attributes
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
     public class PublicAttribute(bool isPublic = true) : Attribute
     {
+        private readonly bool _isPublic = isPublic;
+
         public bool IsPublic
         {
-            get;
-        } = isPublic;
+            get => _isPublic;
+        }
     }
 }

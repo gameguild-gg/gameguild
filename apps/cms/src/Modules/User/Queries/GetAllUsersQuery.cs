@@ -7,9 +7,11 @@ namespace GameGuild.Modules.User.Queries;
 /// </summary>
 public class GetAllUsersQuery : IRequest<IEnumerable<Models.User>>
 {
+    private bool _includeDeleted = false;
+
     public bool IncludeDeleted
     {
-        get;
-        set;
-    } = false;
+        get => _includeDeleted;
+        set => _includeDeleted = value;
+    }
 }

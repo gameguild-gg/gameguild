@@ -5,14 +5,18 @@ namespace GameGuild.Modules.Auth.Dtos
     /// </summary>
     public class RefreshTokenRequestDto
     {
+        private string _refreshToken = string.Empty;
+
+        private Guid? _tenantId;
+
         /// <summary>
         /// The refresh token to use
         /// </summary>
         public string RefreshToken
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _refreshToken;
+            set => _refreshToken = value;
+        }
 
         /// <summary>
         /// Optional tenant ID to generate tenant-specific claims
@@ -20,8 +24,8 @@ namespace GameGuild.Modules.Auth.Dtos
         /// </summary>
         public Guid? TenantId
         {
-            get;
-            set;
+            get => _tenantId;
+            set => _tenantId = value;
         }
     }
 
@@ -30,31 +34,39 @@ namespace GameGuild.Modules.Auth.Dtos
     /// </summary>
     public class RefreshTokenResponseDto
     {
+        private string _accessToken = string.Empty;
+
+        private string _refreshToken = string.Empty;
+
+        private DateTime _expiresAt;
+
+        private Guid? _tenantId;
+
         /// <summary>
         /// New JWT access token
         /// </summary>
         public string AccessToken
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _accessToken;
+            set => _accessToken = value;
+        }
 
         /// <summary>
         /// New refresh token
         /// </summary>
         public string RefreshToken
         {
-            get;
-            set;
-        } = string.Empty;
+            get => _refreshToken;
+            set => _refreshToken = value;
+        }
 
         /// <summary>
         /// When the refresh token expires
         /// </summary>
         public DateTime ExpiresAt
         {
-            get;
-            set;
+            get => _expiresAt;
+            set => _expiresAt = value;
         }
 
         /// <summary>
@@ -62,8 +74,8 @@ namespace GameGuild.Modules.Auth.Dtos
         /// </summary>
         public Guid? TenantId
         {
-            get;
-            set;
+            get => _tenantId;
+            set => _tenantId = value;
         }
     }
 }
