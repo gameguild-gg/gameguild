@@ -158,7 +158,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await SetupTestData(db);
+        await SetupTestData();
 
         var domain1 = new TenantDomain
         {
@@ -208,7 +208,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await SetupTestData(db);
+        await SetupTestData();
 
         var domain = new TenantDomain
         {
@@ -259,7 +259,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await SetupTestData(db);
+        await SetupTestData();
 
         var domain = new TenantDomain
         {
@@ -296,7 +296,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await SetupTestData(db);
+        await SetupTestData();
 
         var createDto = new CreateTenantUserGroupDto
         {
@@ -336,7 +336,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await SetupTestData(db);
+        await SetupTestData();
 
         var group1 = new TenantUserGroup
         {
@@ -390,7 +390,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await SetupTestData(db);
+        await SetupTestData();
 
         var group = new TenantUserGroup
         {
@@ -406,10 +406,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
         db.TenantUserGroups.Add(group);
         await db.SaveChangesAsync();
 
-        var assignDto = new AssignUserToGroupDto
+        var assignDto = new AddUserToGroupDto
         {
             UserId = _userId,
-            GroupId = group.Id,
+            UserGroupId = group.Id,
             IsAutoAssigned = false
         };
 
@@ -427,7 +427,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
 
         Assert.NotNull(result);
         Assert.Equal(assignDto.UserId, result.UserId);
-        Assert.Equal(assignDto.GroupId, result.GroupId);
+        Assert.Equal(assignDto.UserGroupId, result.GroupId);
         Assert.Equal(assignDto.IsAutoAssigned, result.IsAutoAssigned);
 
         // Verify it was saved to database
@@ -442,7 +442,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await SetupTestData(db);
+        await SetupTestData();
 
         var group1 = new TenantUserGroup
         {
@@ -518,7 +518,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await SetupTestData(db);
+        await SetupTestData();
 
         var domain = new TenantDomain
         {
@@ -590,7 +590,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await SetupTestData(db);
+        await SetupTestData();
 
         var autoAssignDto = new AutoAssignUserDto
         {
@@ -623,7 +623,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await SetupTestData(db);
+        await SetupTestData();
 
         var user2 = new User
         {
@@ -692,7 +692,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await SetupTestData(db);
+        await SetupTestData();
 
         var group1 = new TenantUserGroup
         {

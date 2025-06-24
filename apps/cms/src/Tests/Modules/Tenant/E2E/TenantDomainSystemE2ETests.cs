@@ -347,10 +347,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
         Assert.Contains(csStudentGroups, g => g.Id == csGroup.Id);
 
         // Step 12: Test manual assignment (adding professor to both faculty and students groups)
-        var manualAssignDto = new AssignUserToGroupDto
+        var manualAssignDto = new AddUserToGroupDto
         {
             UserId = professorUser.Id,
-            GroupId = studentsGroup.Id,
+            UserGroupId = studentsGroup.Id,
             IsAutoAssigned = false
         };
 
