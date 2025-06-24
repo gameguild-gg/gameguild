@@ -18,6 +18,7 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Tests.Fixtures;
 using ProjectModel = GameGuild.Modules.Project.Models.Project;
 using ProjectVersionModel = GameGuild.Modules.Project.Models.ProjectVersion;
+using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
 namespace GameGuild.Tests.Modules.TestingLab.E2E;
 
@@ -38,7 +39,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
         // Arrange
         TestingRequest testingRequest;
         User user;
-        Tenant tenant;
+        TenantModel tenant;
         
         using (var scope = _factory.Services.CreateScope())
         {
@@ -72,7 +73,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
         // Arrange
         TestingRequest testingRequest;
         User user;
-        Tenant tenant;
+        TenantModel tenant;
         
         using (var scope = _factory.Services.CreateScope())
         {
@@ -106,7 +107,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
         // Arrange
         TestingRequest testingRequest;
         User user;
-        Tenant tenant;
+        TenantModel tenant;
         
         using (var scope = _factory.Services.CreateScope())
         {
@@ -133,7 +134,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
         // Arrange
         TestingSession testingSession;
         User user;
-        Tenant tenant;
+        TenantModel tenant;
         
         using (var scope = _factory.Services.CreateScope())
         {
@@ -167,7 +168,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
         // Arrange
         TestingSession testingSession;
         User user;
-        Tenant tenant;
+        TenantModel tenant;
         
         using (var scope = _factory.Services.CreateScope())
         {
@@ -195,10 +196,10 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
         Assert.Equal(testingSession.Id, session.Id);
     }
 
-    private async Task<(TestingRequest, User, Tenant)> SeedTestDataAsync(ApplicationDbContext context)
+    private async Task<(TestingRequest, User, TenantModel)> SeedTestDataAsync(ApplicationDbContext context)
     {
         // Create test tenant
-        var tenant = new Tenant
+        var tenant = new TenantModel
         {
             Id = Guid.NewGuid(),
             Name = "Test Tenant",
@@ -265,7 +266,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
         return (testingRequest, user, tenant);
     }
 
-    private async Task<(TestingSession, User, Tenant)> SeedTestSessionDataAsync(ApplicationDbContext context)
+    private async Task<(TestingSession, User, GameGuild.Modules.Tenant.Models.Tenant)> SeedTestSessionDataAsync(ApplicationDbContext context)
     {
         var (testingRequest, user, tenant) = await SeedTestDataAsync(context);
 
@@ -303,7 +304,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
         return (testingSession, user, tenant);
     }
 
-    private Task<string> CreateJwtTokenForUserAsync(User user, Tenant tenant)
+    private Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant)
     {
         // Get JWT service from the factory's services, not our custom scope
         var jwtService = _factory.Services.GetRequiredService<IJwtTokenService>();

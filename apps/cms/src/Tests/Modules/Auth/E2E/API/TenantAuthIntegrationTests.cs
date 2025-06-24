@@ -9,6 +9,7 @@ using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
 namespace GameGuild.Tests.Modules.Auth.E2E.API;
 
@@ -67,7 +68,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
             db.Credentials.Add(credential);
 
             // Create tenants
-            var tenant1 = new Tenant
+            var tenant1 = new TenantModel
             {
                 Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
                 Name = "Test Tenant 1",
@@ -77,7 +78,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
                 UpdatedAt = DateTime.UtcNow
             };
 
-            var tenant2 = new Tenant
+            var tenant2 = new TenantModel
             {
                 Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
                 Name = "Test Tenant 2",

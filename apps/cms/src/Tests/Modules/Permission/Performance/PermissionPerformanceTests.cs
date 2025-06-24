@@ -7,6 +7,7 @@ using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Comment.Models;
 using GameGuild.Modules.User.Models;
 using System.Diagnostics;
+using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
 namespace GameGuild.Tests.Modules.Permission.Performance;
 
@@ -47,7 +48,7 @@ public class PermissionPerformanceTests : IDisposable
         const int userCount = 1000;
         const int maxAcceptableTimeMs = 5000; // 5 seconds
 
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
         var users = new List<User>();
 
         // Create test users in bulk (more efficient)
@@ -96,7 +97,7 @@ public class PermissionPerformanceTests : IDisposable
         const int userCount = 500;
         const int maxAcceptableTimeMs = 3000; // 3 seconds
 
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
         var users = new List<User>();
 
         // Create and grant permissions to test users
@@ -139,7 +140,7 @@ public class PermissionPerformanceTests : IDisposable
         const int maxAcceptableTimeMs = 8000; // 8 seconds
 
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
         var resources = new List<Comment>();
 
         // Create test resources efficiently
@@ -197,7 +198,7 @@ public class PermissionPerformanceTests : IDisposable
         // Arrange
         const int iterationCount = 100;
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
 
         // Set up complex permission hierarchy
         await _permissionService.SetGlobalDefaultPermissionsAsync([PermissionType.Read]);
@@ -244,7 +245,7 @@ public class PermissionPerformanceTests : IDisposable
         const int maxAcceptableTimeMs = 1000; // 1 second
 
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
         Comment comment = await CreateTestCommentAsync();
 
         // Create complex permission scenario
@@ -301,7 +302,7 @@ public class PermissionPerformanceTests : IDisposable
         const int tenantCount = 10;
         const int maxAcceptableTimeMs = 3000; // 3 seconds
 
-        var tenants = new List<Tenant>();
+        var tenants = new List<TenantModel>();
         var users = new List<User>();
 
         // Create tenants
@@ -321,7 +322,7 @@ public class PermissionPerformanceTests : IDisposable
             int tenantAssignments = random.Next(2, 4);
             var selectedTenants = tenants.OrderBy(_ => random.Next()).Take(tenantAssignments);
 
-            foreach (Tenant tenant in selectedTenants)
+            foreach (TenantModel tenant in selectedTenants)
             {
                 await _permissionService.JoinTenantAsync(user.Id, tenant.Id);
             }
@@ -359,7 +360,7 @@ public class PermissionPerformanceTests : IDisposable
     public async Task ConcurrentPermissionOperations_HandleMultipleUsers()
     {
         // Arrange
-        var tenant = new Tenant
+        var tenant = new TenantModel
         {
             Id = Guid.NewGuid(), Name = "Test Tenant", Slug = "test-tenant", IsActive = true
         };
@@ -455,9 +456,9 @@ public class PermissionPerformanceTests : IDisposable
         return user;
     }
 
-    private async Task<Tenant> CreateTestTenantAsync(string name = "Test Tenant")
+    private async Task<TenantModel> CreateTestTenantAsync(string name = "Test Tenant")
     {
-        var tenant = new Tenant
+        var tenant = new TenantModel
         {
             Id = Guid.NewGuid(), Name = name, Description = $"Test tenant: {name}", IsActive = true
         };
