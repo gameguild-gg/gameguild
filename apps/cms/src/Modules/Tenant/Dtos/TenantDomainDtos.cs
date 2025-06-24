@@ -437,29 +437,6 @@ public class TenantUserGroupMembershipDto
 }
 
 /// <summary>
-/// DTO for assigning a user to a group
-/// </summary>
-public class AssignUserToGroupDto
-{
-    /// <summary>
-    /// ID of the user to assign
-    /// </summary>
-    [Required]
-    public Guid UserId { get; set; }
-
-    /// <summary>
-    /// ID of the group to assign the user to
-    /// </summary>
-    [Required]
-    public Guid GroupId { get; set; }
-
-    /// <summary>
-    /// Whether this assignment should be marked as auto-assigned
-    /// </summary>
-    public bool IsAutoAssigned { get; set; } = false;
-}
-
-/// <summary>
 /// DTO for auto-assignment of a user
 /// </summary>
 public class AutoAssignUserDto
