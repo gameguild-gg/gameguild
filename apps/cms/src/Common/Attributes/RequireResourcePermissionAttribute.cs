@@ -126,27 +126,28 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
     public RequireResourcePermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id")
     {
         _requiredPermission = requiredPermission;
-        _resourceIdParameterName = resourceIdParameterName;
-    }    public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
+        _resourceIdParameterName = resourceIdParameterName;    }    public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
-        var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
-
-        // Extract user ID and tenant ID from JWT token
-        string? userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userIdClaim, out Guid userId))
+        try
         {
-            context.Result = new UnauthorizedResult();
+            var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
 
-            return;
-        }
+            // Extract user ID and tenant ID from JWT token
+            string? userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out Guid userId))
+            {
+                context.Result = new UnauthorizedResult();
 
-        // Extract tenant ID - this is optional for global users
-        string? tenantIdClaim = context.HttpContext.User.FindFirst("tenant_id")?.Value;
-        Guid? tenantId = null;
-        if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out Guid parsedTenantId))
-        {
-            tenantId = parsedTenantId;
-        }// Extract resource ID from route parameters
+                return;
+            }
+
+            // Extract tenant ID - this is optional for global users
+            string? tenantIdClaim = context.HttpContext.User.FindFirst("tenant_id")?.Value;
+            Guid? tenantId = null;
+            if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out Guid parsedTenantId))
+            {
+                tenantId = parsedTenantId;
+            }// Extract resource ID from route parameters
         var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
         Guid resourceId = Guid.Empty;
         bool hasResourceId = Guid.TryParse(resourceIdValue, out resourceId);
@@ -257,13 +258,19 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
             userId,
             tenantId,
             _requiredPermission
-        );
-
-        if (!hasTenantPermission)
+        );        if (!hasTenantPermission)
         {
             context.Result = new ForbidResult();
         }
 
         // If we reach here with tenant permission, access is granted
+        }
+        catch (Exception ex)
+        {
+            // Log the exception and return 500 error
+            var logger = context.HttpContext.RequestServices.GetService<ILogger<RequireResourcePermissionAttribute<TResource>>>();
+            logger?.LogError(ex, "Authorization error in RequireResourcePermissionAttribute");
+            context.Result = new Microsoft.AspNetCore.Mvc.ObjectResult("Authorization error occurred") { StatusCode = 500 };
+        }
     }
 }

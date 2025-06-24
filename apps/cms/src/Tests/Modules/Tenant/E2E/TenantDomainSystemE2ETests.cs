@@ -1,8 +1,13 @@
 using System.Net;
+using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
+using GameGuild.Modules.Auth.Services;
+using GameGuild.Common.Services;
+using GameGuild.Common.Entities;
 using GameGuild.Modules.Tenant.Dtos;
 using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.User.Models;
@@ -29,6 +34,9 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     [Fact]
     public async Task CompleteUniversityScenario_CreateDomainGroupsAndAutoAssign_WorksEndToEnd()
     {
+        // Clear any previous authorization state
+        ClearAuthorizationHeader();
+        
         // Arrange - Setup University tenant and users
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -92,6 +100,14 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
         db.Users.AddRange(studentUser, csStudentUser, professorUser, outsideUser);
         await db.SaveChangesAsync();
 
+        // Debug: Verify that data was saved properly
+        var savedTenant = await db.Tenants.FindAsync(tenantId);
+        var savedUser = await db.Users.FindAsync(studentUser.Id);
+        Console.WriteLine($"Saved tenant: {savedTenant?.Name}, Saved user: {savedUser?.Name}");
+
+        // Setup authentication for the test
+        await SetupAuthentication(tenantId, studentUser.Id, db);
+
         // Step 1: Create main university domain
         var createMainDomainDto = new CreateTenantDomainDto
         {
@@ -105,6 +121,15 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
         var json = JsonSerializer.Serialize(createMainDomainDto);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _client.PostAsync("/api/tenant-domains", content);
+
+        // Debug: Log response details
+        var responseContent = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"Create domain response: Status={response.StatusCode}, Content={responseContent}");
+        
+        if (response.StatusCode != HttpStatusCode.Created)
+        {
+            throw new Exception($"Domain creation failed. Status: {response.StatusCode}, Content: {responseContent}");
+        }
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var mainDomainResult = JsonSerializer.Deserialize<TenantDomainDto>(
@@ -406,6 +431,9 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     [Fact]
     public async Task CorporateScenario_MultiDomainWithDepartments_WorksEndToEnd()
     {
+        // Clear any previous authorization state
+        ClearAuthorizationHeader();
+        
         // Arrange - Setup Corporate tenant
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -459,6 +487,9 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
 
         db.Users.AddRange(devUser, hrUser, contractorUser);
         await db.SaveChangesAsync();
+
+        // Setup authentication for the test
+        await SetupAuthentication(tenantId, devUser.Id, db);
 
         // Step 1: Create main corporate domain
         var createMainDomainDto = new CreateTenantDomainDto
@@ -604,5 +635,77 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
         Assert.NotNull(contractorsGroupUsers);
         Assert.Single(contractorsGroupUsers);
         Assert.Contains(contractorsGroupUsers, u => u.Id == contractorUser.Id);
+    }
+
+    private async Task SetupAuthentication(Guid tenantId, Guid userId, ApplicationDbContext db)
+    {
+        using var scope = _factory.Services.CreateScope();
+
+        // Get the user and tenant entities
+        var user = await db.Users.FirstAsync(u => u.Id == userId);
+        var tenant = await db.Tenants.FirstAsync(t => t.Id == tenantId);
+
+        // Grant permissions for TenantDomain operations
+        var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
+        await permissionService.GrantContentTypePermissionAsync(
+            user.Id,
+            tenant.Id,
+            "TenantDomain",
+            new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete }
+        );
+
+        // Grant permissions for TenantUserGroup operations
+        await permissionService.GrantContentTypePermissionAsync(
+            user.Id,
+            tenant.Id,
+            "TenantUserGroup",
+            new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete }
+        );
+
+        // Grant permissions for TenantUserGroupMembership operations
+        await permissionService.GrantContentTypePermissionAsync(
+            user.Id,
+            tenant.Id,
+            "TenantUserGroupMembership",
+            new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete }
+        );
+
+        // Generate JWT token
+        var token = CreateJwtTokenForUser(user, tenant, scope);
+        
+        // Set authorization header
+        SetAuthorizationHeader(token);
+    }
+
+    private string CreateJwtTokenForUser(User user, GameGuild.Modules.Tenant.Models.Tenant tenant, IServiceScope scope)
+    {
+        var jwtService = scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Username = user.Name,
+            Email = user.Email
+        };
+
+        var roles = new[] { "User" };
+        var additionalClaims = new[]
+        {
+            new Claim("tenant_id", tenant.Id.ToString())
+        };
+
+        return jwtService.GenerateAccessToken(userDto, roles, additionalClaims);
+    }
+
+    private void ClearAuthorizationHeader()
+    {
+        _client.DefaultRequestHeaders.Authorization = null;
+    }
+
+    private void SetAuthorizationHeader(string token)
+    {
+        // Clear any existing authorization header first
+        _client.DefaultRequestHeaders.Authorization = null;
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 }
