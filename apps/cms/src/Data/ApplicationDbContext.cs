@@ -33,9 +33,13 @@ public class ApplicationDbContext : DbContext
 
     private DbSet<RefreshToken> _refreshTokens;
 
-    private DbSet<Tenant> _tenants;
+    private DbSet<Tenant> _tenants;    private DbSet<TenantPermission> _tenantPermissions = null!;
 
-    private DbSet<TenantPermission> _tenantPermissions;
+    private DbSet<TenantDomain> _tenantDomains = null!;
+
+    private DbSet<TenantUserGroup> _tenantUserGroups = null!;
+
+    private DbSet<TenantUserGroupMembership> _tenantUserGroupMemberships = null!;
 
     private DbSet<ResourceBase> _resources;
 
@@ -176,6 +180,24 @@ public class ApplicationDbContext : DbContext
     {
         get => _tenantPermissions;
         set => _tenantPermissions = value;
+    }
+
+    public DbSet<TenantDomain> TenantDomains
+    {
+        get => _tenantDomains;
+        set => _tenantDomains = value;
+    }
+
+    public DbSet<TenantUserGroup> TenantUserGroups
+    {
+        get => _tenantUserGroups;
+        set => _tenantUserGroups = value;
+    }
+
+    public DbSet<TenantUserGroupMembership> TenantUserGroupMemberships
+    {
+        get => _tenantUserGroupMemberships;
+        set => _tenantUserGroupMemberships = value;
     }
 
     // Resource hierarchy DbSet - Required for proper inheritance configuration

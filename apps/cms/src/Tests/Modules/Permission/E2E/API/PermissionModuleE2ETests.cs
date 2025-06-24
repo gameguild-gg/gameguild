@@ -11,6 +11,7 @@ using System.Net.Http.Headers;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Tests.Fixtures;
+using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
 namespace GameGuild.Tests.Modules.Permission.E2E;
 
@@ -134,7 +135,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange - Create test data
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
 
         // Create JWT token for user
         string token = await CreateJwtTokenForUserAsync(user, tenant);
@@ -212,7 +213,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange - Create test data with proper permissions
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
 
         // Grant tenant permissions to user
         await GrantTenantPermissionsAsync(
@@ -295,7 +296,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
 
         string token = await CreateJwtTokenForUserAsync(user, tenant);
         SetAuthorizationHeader(token);
@@ -327,7 +328,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
 
         // Grant necessary permissions
         await GrantTenantPermissionsAsync(
@@ -363,7 +364,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange - Create a complex permission hierarchy
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
         Comment comment = await CreateTestCommentAsync();
 
         // Grant different permissions at different layers
@@ -425,7 +426,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange - Create a test scenario where resource permissions override content-type permissions
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
         Comment comment = await CreateTestCommentAsync();
 
         // Grant different permissions that demonstrate hierarchy
@@ -476,8 +477,8 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
         // Arrange - Create users in different tenants
         User user1 = await CreateTestUserAsync("user1@test.com");
         User user2 = await CreateTestUserAsync("user2@test.com");
-        Tenant tenant1 = await CreateTestTenantAsync("Tenant 1");
-        Tenant tenant2 = await CreateTestTenantAsync("Tenant 2");
+        TenantModel tenant1 = await CreateTestTenantAsync("Tenant 1");
+        TenantModel tenant2 = await CreateTestTenantAsync("Tenant 2");
 
         // Grant permissions to users in their respective tenants
         await GrantTenantPermissionsAsync(user1.Id, tenant1.Id, [PermissionType.Read, PermissionType.Edit]);
@@ -512,9 +513,9 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
         return user;
     }
 
-    private async Task<Tenant> CreateTestTenantAsync(string name = "Test Tenant")
+    private async Task<TenantModel> CreateTestTenantAsync(string name = "Test Tenant")
     {
-        var tenant = new Tenant
+        var tenant = new TenantModel
         {
             Id = Guid.NewGuid(), Name = name, Description = "Test tenant for E2E tests", IsActive = true
         };
@@ -588,7 +589,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
         await _context.SaveChangesAsync();
     }
 
-    private Task<string> CreateJwtTokenForUserAsync(User user, Tenant tenant)
+    private Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant)
     {
         // In a real implementation, you would use the actual JWT service
         // For E2E tests, we'll create a mock token or use the real service

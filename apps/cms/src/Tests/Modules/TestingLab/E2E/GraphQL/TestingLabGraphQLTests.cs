@@ -17,6 +17,7 @@ using System.Net.Http.Headers;
 using Xunit.Abstractions;
 using ProjectModel = GameGuild.Modules.Project.Models.Project;
 using ProjectVersionModel = GameGuild.Modules.Project.Models.ProjectVersion;
+using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
 namespace GameGuild.Tests.Modules.TestingLab.E2E;
 
@@ -380,7 +381,7 @@ public class TestingLabGraphQLTests : IClassFixture<TestWebApplicationFactory>, 
     }
 
     // Helper Methods
-    private async Task<(TestingRequest, User, Tenant)> SeedTestDataAsync()
+    private async Task<(TestingRequest, User, TenantModel)> SeedTestDataAsync()
     {
         var (user, tenant) = await SeedUserAndTenantAsync();
         await SetupPermissionsAsync(user.Id, tenant.Id);
@@ -410,7 +411,7 @@ public class TestingLabGraphQLTests : IClassFixture<TestWebApplicationFactory>, 
         return (testingRequest, user, tenant);
     }
 
-    private async Task<(TestingSession, User, Tenant)> SeedTestSessionDataAsync()
+    private async Task<(TestingSession, User, TenantModel)> SeedTestSessionDataAsync()
     {
         var (testingRequest, user, tenant) = await SeedTestDataAsync();
         var location = await CreateTestLocationAsync();
@@ -437,9 +438,9 @@ public class TestingLabGraphQLTests : IClassFixture<TestWebApplicationFactory>, 
         return (testingSession, user, tenant);
     }
 
-    private async Task<(User, Tenant)> SeedUserAndTenantAsync()
+    private async Task<(User, TenantModel)> SeedUserAndTenantAsync()
     {
-        var tenant = new Tenant
+        var tenant = new TenantModel
         {
             Id = Guid.NewGuid(),
             Name = "GraphQL Test Tenant",
@@ -529,7 +530,7 @@ public class TestingLabGraphQLTests : IClassFixture<TestWebApplicationFactory>, 
         );
     }
 
-    private Task<string> CreateJwtTokenForUserAsync(User user, Tenant tenant)
+    private Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant)
     {
         var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 

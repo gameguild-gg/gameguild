@@ -12,6 +12,7 @@ using System.Net.Http.Headers;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Tests.Fixtures;
+using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
 namespace GameGuild.Tests.Modules.Permission.E2E;
 
@@ -64,7 +65,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         // Arrange
         User admin = await CreateTestAdminUserAsync();
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
 
         string token = await CreateJwtTokenForUserAsync(admin, tenant);
         SetAuthorizationHeader(token);
@@ -129,7 +130,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     {
         // Arrange
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
 
         // Grant specific permissions
         await _permissionService.GrantTenantPermissionAsync(
@@ -204,7 +205,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     {
         // Arrange
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
 
         var grantedPermissions = new[]
         {
@@ -265,7 +266,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         // Arrange
         User admin = await CreateTestAdminUserAsync();
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
 
         string token = await CreateJwtTokenForUserAsync(admin, tenant);
         SetAuthorizationHeader(token);
@@ -312,7 +313,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         // Arrange
         User admin = await CreateTestAdminUserAsync();
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
 
         // First, grant permissions
         await _permissionService.GrantTenantPermissionAsync(
@@ -363,7 +364,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     {
         // Arrange
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
 
         await _permissionService.GrantTenantPermissionAsync(
             user.Id,
@@ -407,7 +408,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     {
         // Arrange
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
         Comment comment = await CreateTestCommentAsync();
 
         string token = await CreateJwtTokenForUserAsync(user, tenant);
@@ -483,7 +484,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         // Arrange
         User owner = await CreateTestUserAsync("owner@test.com");
         User targetUser = await CreateTestUserAsync("target@test.com");
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
         Comment comment = await CreateTestCommentAsync();
 
         // Grant owner permission to share
@@ -546,7 +547,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     {
         // Arrange
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
 
         // Set up permission hierarchy
         await _permissionService.SetTenantDefaultPermissionsAsync(tenant.Id, [PermissionType.Read]);
@@ -601,7 +602,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     {
         // Arrange
         User user = await CreateTestUserAsync();
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
         Comment comment1 = await CreateTestCommentAsync();
         Comment comment2 = await CreateTestCommentAsync();
         Comment comment3 = await CreateTestCommentAsync();
@@ -697,7 +698,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         await _context.SaveChangesAsync();
 
         // Grant admin permissions (in real app, this would be done differently)
-        Tenant tenant = await CreateTestTenantAsync();
+        TenantModel tenant = await CreateTestTenantAsync();
         await _permissionService.GrantTenantPermissionAsync(
             admin.Id,
             tenant.Id,
@@ -712,9 +713,9 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         return admin;
     }
 
-    private async Task<Tenant> CreateTestTenantAsync(string name = "Test Tenant")
+    private async Task<TenantModel> CreateTestTenantAsync(string name = "Test Tenant")
     {
-        var tenant = new Tenant
+        var tenant = new TenantModel
         {
             Id = Guid.NewGuid(), Name = name, Description = "Test tenant for E2E tests", IsActive = true
         };
@@ -740,7 +741,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
         return comment;
     }
 
-    private async Task<string> CreateJwtTokenForUserAsync(User user, Tenant tenant)
+    private async Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant)
     {
         var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
