@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Attributes;
 using GameGuild.Modules.Auth.Attributes;
+using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Tenant.Services;
 using GameGuild.Modules.Tenant.Dtos;
@@ -129,24 +130,21 @@ public class TenantDomainController : ControllerBase
 
     #endregion
 
-    #region User Group Management
-
-    // GET: api/tenant-domains/user-groups
+    #region User Group Management    // GET: api/tenant-domains/user-groups
     [HttpGet("user-groups")]
     [RequireResourcePermission<TenantUserGroup>(PermissionType.Read)]
-    public async Task<ActionResult<IEnumerable<TenantUserGroup>>> GetUserGroups([FromQuery] Guid tenantId, [FromQuery] bool rootOnly = false)
+    public async Task<ActionResult<IEnumerable<TenantUserGroupDto>>> GetUserGroups([FromQuery] Guid tenantId, [FromQuery] bool rootOnly = false)
     {
         var userGroups = rootOnly 
             ? await _tenantDomainService.GetRootUserGroupsByTenantAsync(tenantId)
             : await _tenantDomainService.GetUserGroupsByTenantAsync(tenantId);
         
-        return Ok(userGroups);
-    }
-
-    // GET: api/tenant-domains/user-groups/{id}
+        var dtos = userGroups.Select(TenantUserGroupDto.FromTenantUserGroup);
+        return Ok(dtos);
+    }// GET: api/tenant-domains/user-groups/{id}
     [HttpGet("user-groups/{id}")]
     [RequireResourcePermission<TenantUserGroup>(PermissionType.Read)]
-    public async Task<ActionResult<TenantUserGroup>> GetUserGroup(Guid id)
+    public async Task<ActionResult<TenantUserGroupDto>> GetUserGroup(Guid id)
     {
         var userGroup = await _tenantDomainService.GetUserGroupByIdAsync(id);
         if (userGroup == null)
@@ -154,31 +152,29 @@ public class TenantDomainController : ControllerBase
             return NotFound();
         }
 
-        return Ok(userGroup);
-    }
-
-    // POST: api/tenant-domains/user-groups
+        var dto = TenantUserGroupDto.FromTenantUserGroup(userGroup);
+        return Ok(dto);
+    }// POST: api/tenant-domains/user-groups
     [HttpPost("user-groups")]
     [RequireResourcePermission<TenantUserGroup>(PermissionType.Create)]
-    public async Task<ActionResult<TenantUserGroup>> CreateUserGroup([FromBody] CreateTenantUserGroupDto request)
+    public async Task<ActionResult<TenantUserGroupDto>> CreateUserGroup([FromBody] CreateTenantUserGroupDto request)
     {
         try
         {
             var userGroup = request.ToTenantUserGroup();
             var createdUserGroup = await _tenantDomainService.CreateUserGroupAsync(userGroup);
+            var dto = TenantUserGroupDto.FromTenantUserGroup(createdUserGroup);
             
-            return CreatedAtAction(nameof(GetUserGroup), new { id = createdUserGroup.Id }, createdUserGroup);
+            return CreatedAtAction(nameof(GetUserGroup), new { id = createdUserGroup.Id }, dto);
         }
         catch (Exception ex)
         {
             return BadRequest($"Error creating user group: {ex.Message}");
         }
-    }
-
-    // PUT: api/tenant-domains/user-groups/{id}
+    }    // PUT: api/tenant-domains/user-groups/{id}
     [HttpPut("user-groups/{id}")]
     [RequireResourcePermission<TenantUserGroup>(PermissionType.Edit)]
-    public async Task<ActionResult<TenantUserGroup>> UpdateUserGroup(Guid id, [FromBody] UpdateTenantUserGroupDto request)
+    public async Task<ActionResult<TenantUserGroupDto>> UpdateUserGroup(Guid id, [FromBody] UpdateTenantUserGroupDto request)
     {
         try
         {
@@ -190,8 +186,9 @@ public class TenantDomainController : ControllerBase
 
             request.UpdateTenantUserGroup(existingUserGroup);
             var updatedUserGroup = await _tenantDomainService.UpdateUserGroupAsync(existingUserGroup);
+            var dto = TenantUserGroupDto.FromTenantUserGroup(updatedUserGroup);
             
-            return Ok(updatedUserGroup);
+            return Ok(dto);
         }
         catch (Exception ex)
         {
@@ -258,15 +255,29 @@ public class TenantDomainController : ControllerBase
     {
         var members = await _tenantDomainService.GetGroupMembersAsync(groupId);
         return Ok(members);
-    }
-
-    // GET: api/tenant-domains/users/{userId}/groups
+    }    // GET: api/tenant-domains/users/{userId}/groups
     [HttpGet("users/{userId}/groups")]
     [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Read)]
-    public async Task<ActionResult<IEnumerable<TenantUserGroup>>> GetUserGroups(Guid userId)
+    public async Task<ActionResult<IEnumerable<TenantUserGroupDto>>> GetUserGroups(Guid userId)
     {
         var userGroups = await _tenantDomainService.GetUserGroupsForUserAsync(userId);
-        return Ok(userGroups);
+        var dtos = userGroups.Select(TenantUserGroupDto.FromTenantUserGroup);
+        return Ok(dtos);
+    }
+
+    // GET: api/tenant-domains/groups/{groupId}/users  
+    [HttpGet("groups/{groupId}/users")]
+    [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Read)]
+    public async Task<ActionResult<IEnumerable<UserDto>>> GetGroupUsers(Guid groupId)
+    {
+        var users = await _tenantDomainService.GetUsersInGroupAsync(groupId);
+        var userDtos = users.Select(u => new UserDto
+        {
+            Id = u.Id,
+            Username = u.Name,
+            Email = u.Email
+        });
+        return Ok(userDtos);
     }
 
     #endregion
@@ -275,6 +286,37 @@ public class TenantDomainController : ControllerBase
 
     // POST: api/tenant-domains/auto-assign
     [HttpPost("auto-assign")]
+    [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Create)]
+    public async Task<ActionResult<TenantUserGroupMembershipDto>> AutoAssignUser([FromBody] AutoAssignUserDto request)
+    {
+        try
+        {
+            var membership = await _tenantDomainService.AutoAssignUserToGroupsAsync(request.Email);
+            if (membership != null && membership.Any())
+            {
+                // Return the first membership created (there should typically be only one for single user)
+                var firstMembership = membership.First();                var membershipDto = new TenantUserGroupMembershipDto
+                {
+                    Id = firstMembership.Id,
+                    UserId = firstMembership.UserId,
+                    GroupId = firstMembership.UserGroupId,
+                    IsAutoAssigned = firstMembership.IsAutoAssigned,
+                    CreatedAt = firstMembership.CreatedAt
+                };
+                
+                return CreatedAtAction(nameof(GetUserGroups), new { userId = firstMembership.UserId }, membershipDto);
+            }
+            
+            return NotFound("No matching domain found for user's email");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"Error during auto-assignment: {ex.Message}");
+        }
+    }
+
+    // POST: api/tenant-domains/auto-assign-bulk
+    [HttpPost("auto-assign-bulk")]
     [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Create)]
     public async Task<ActionResult<object>> AutoAssignUsers([FromBody] AutoAssignUsersDto request)
     {
