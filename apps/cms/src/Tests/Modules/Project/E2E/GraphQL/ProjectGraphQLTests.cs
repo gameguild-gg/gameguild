@@ -14,6 +14,7 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.User.Models;
 using GameGuild.Modules.Tenant.Models;
 using System.Net.Http.Headers;
+using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 using Xunit.Abstractions;
 
 namespace GameGuild.Tests.Modules.Project.E2E;
@@ -678,9 +679,9 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     /// <summary>
     /// Creates a test tenant for multi-tenancy support
     /// </summary>
-    private async Task<Tenant> CreateTestTenantAsync()
+    private async Task<GameGuild.Modules.Tenant.Models.Tenant> CreateTestTenantAsync()
     {
-        var tenant = new Tenant
+        var tenant = new GameGuild.Modules.Tenant.Models.Tenant
         {
             Id = Guid.NewGuid(),
             Name = "Test Tenant",
@@ -699,7 +700,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     /// <summary>
     /// Grants content-type permissions for a user to perform operations on projects
     /// </summary>
-    private async Task GrantContentTypePermissions(User user, Tenant tenant, string contentTypeName, PermissionType[] permissions)
+    private async Task GrantContentTypePermissions(User user, TenantModel tenant, string contentTypeName, PermissionType[] permissions)
     {
         var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
         await permissionService.GrantContentTypePermissionAsync(
@@ -713,7 +714,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     /// <summary>
     /// Generates a JWT token for test authentication
     /// </summary>
-    private Task<string> GenerateJwtTokenAsync(User user, Tenant tenant)
+    private Task<string> GenerateJwtTokenAsync(User user, GameGuild.Modules.Tenant.Models.Tenant tenant)
     {
         var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 

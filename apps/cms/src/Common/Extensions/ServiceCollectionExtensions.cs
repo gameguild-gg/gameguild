@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
         // Register Tenant module services
         services.AddScoped<Modules.Tenant.Services.ITenantService, Modules.Tenant.Services.TenantService>();
         services.AddScoped<Modules.Tenant.Services.ITenantContextService, Modules.Tenant.Services.TenantContextService>();
+        services.AddScoped<Modules.Tenant.Services.ITenantDomainService, Modules.Tenant.Services.TenantDomainService>();
 
         return services;
     }

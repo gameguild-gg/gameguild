@@ -15,6 +15,7 @@ using GameGuild.Modules.User.Models;
 using GameGuild.Modules.Tenant.Models;
 using System.Net.Http.Headers;
 using Xunit.Abstractions;
+using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
 namespace GameGuild.Tests.Modules.Project.E2E;
 
@@ -529,7 +530,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
         
         // Use the default test tenant that MockTenantContextService provides
         var testTenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-        var tenant = new Tenant
+        var tenant = new TenantModel
         {
             Id = testTenantId, Name = "Test Tenant", Slug = "test-tenant", IsActive = true
         };
@@ -615,9 +616,9 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
         return user;
     }
 
-    private async Task<Tenant> CreateTestTenantAsync()
+    private async Task<TenantModel> CreateTestTenantAsync()
     {
-        var tenant = new Tenant
+        var tenant = new TenantModel
         {
             Id = Guid.NewGuid(), Name = "Test Tenant", Description = "Test tenant for integration tests", IsActive = true
         };
@@ -628,7 +629,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
         return tenant;
     }
 
-    private Task<string> CreateJwtTokenForUserAsync(User user, Tenant tenant)
+    private Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant)
     {
         var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
@@ -650,7 +651,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
         return Task.FromResult(jwtService.GenerateAccessToken(userDto, roles, additionalClaims));
     }
 
-    private async Task GrantProjectPermissions(User user, Tenant tenant, GameGuild.Modules.Project.Models.Project project, PermissionType[] permissions)
+    private async Task GrantProjectPermissions(User user, TenantModel tenant, GameGuild.Modules.Project.Models.Project project, PermissionType[] permissions)
     {
         var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
         await permissionService.GrantResourcePermissionAsync<GameGuild.Modules.Project.Models.ProjectPermission, GameGuild.Modules.Project.Models.Project>(
@@ -661,7 +662,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
         );
     }
 
-    private async Task GrantContentTypePermissions(User user, Tenant tenant, string contentTypeName, PermissionType[] permissions)
+    private async Task GrantContentTypePermissions(User user, TenantModel tenant, string contentTypeName, PermissionType[] permissions)
     {
         var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
         await permissionService.GrantContentTypePermissionAsync(
