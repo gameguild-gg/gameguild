@@ -6,6 +6,7 @@ using GameGuild.Common.Entities;
 using GameGuild.Modules.Comment.Models;
 using GameGuild.Modules.Product.Models;
 using GameGuild.Modules.Project.Models;
+using GameGuild.Modules.Auth.Constants;
 
 namespace GameGuild.Common.Attributes;
 
@@ -44,7 +45,7 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
         }
 
         // Extract tenant ID - this is optional for global users
-        string? tenantIdClaim = context.HttpContext.User.FindFirst("tenant_id")?.Value;
+        string? tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
         Guid? tenantId = null;
         if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out Guid parsedTenantId))
         {
@@ -126,7 +127,10 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
     public RequireResourcePermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id")
     {
         _requiredPermission = requiredPermission;
-        _resourceIdParameterName = resourceIdParameterName;    }    public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
+        _resourceIdParameterName = resourceIdParameterName;
+    }
+
+    public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
         try
         {
@@ -138,16 +142,13 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
             {
                 context.Result = new UnauthorizedResult();
 
-                return;
-            }
-
-            // Extract tenant ID - this is optional for global users
-            string? tenantIdClaim = context.HttpContext.User.FindFirst("tenant_id")?.Value;
-            Guid? tenantId = null;
-            if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out Guid parsedTenantId))
-            {
-                tenantId = parsedTenantId;
-            }// Extract resource ID from route parameters
+        // Extract tenant ID - this is optional for global users
+        string? tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
+        Guid? tenantId = null;
+        if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out Guid parsedTenantId))
+        {
+            tenantId = parsedTenantId;
+        }// Extract resource ID from route parameters
         var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
         Guid resourceId = Guid.Empty;
         bool hasResourceId = Guid.TryParse(resourceIdValue, out resourceId);
@@ -218,16 +219,16 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
                         }
 
                         break; // Add more resource types here as they are implemented
-                    
-                case "Program":
-                    var hasProgramPermission = await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Program.Models.ProgramPermission, GameGuild.Modules.Program.Models.Program>(
-                        userId, tenantId, resourceId, _requiredPermission);
-                    if (hasProgramPermission)
-                    {
-                        return; // Permission granted at resource level
-                    }
-                    break;
-                    
+
+                    case "Program":
+                        var hasProgramPermission = await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Program.Models.ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+                            userId, tenantId, resourceId, _requiredPermission);
+                        if (hasProgramPermission)
+                        {
+                            return; // Permission granted at resource level
+                        }
+                        break;
+
                     default:
                         // For unknown resource types, skip resource-level check and go to content-type fallback
                         break;

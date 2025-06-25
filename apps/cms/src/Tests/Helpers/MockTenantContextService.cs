@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Tenant.Services;
+using GameGuild.Modules.Auth.Constants;
 
 namespace GameGuild.Tests.Helpers
 {
@@ -64,7 +65,7 @@ namespace GameGuild.Tests.Helpers
             // Check user claims
             if (user?.Identity?.IsAuthenticated == true)
             {
-                Claim? tenantClaim = user.FindFirst("tenant_id");
+                Claim? tenantClaim = user.FindFirst(JwtClaimTypes.TenantId);
                 if (tenantClaim != null && Guid.TryParse(tenantClaim.Value, out Guid tenantClaimId))
                 {
                     // Verify tenant exists

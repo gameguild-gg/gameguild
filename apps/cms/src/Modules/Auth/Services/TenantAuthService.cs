@@ -2,6 +2,7 @@ using System.Security.Claims;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Tenant.Services;
+using GameGuild.Modules.Auth.Constants;
 
 namespace GameGuild.Modules.Auth.Services;
 
@@ -119,7 +120,7 @@ public class TenantAuthService(
     {
         var claims = new List<Claim>
         {
-            new Claim("tenant_id", tenantId.ToString()),
+            new Claim(JwtClaimTypes.TenantId, tenantId.ToString()),
         };
 
         // Get tenant permission for additional claims
@@ -128,8 +129,8 @@ public class TenantAuthService(
         // Add permission flags if available
         if (tenantPermission != null)
         {
-            claims.Add(new Claim("tenant_permission_flags1", tenantPermission.PermissionFlags1.ToString()));
-            claims.Add(new Claim("tenant_permission_flags2", tenantPermission.PermissionFlags2.ToString()));
+            claims.Add(new Claim(JwtClaimTypes.TenantPermissionFlags1, tenantPermission.PermissionFlags1.ToString()));
+            claims.Add(new Claim(JwtClaimTypes.TenantPermissionFlags2, tenantPermission.PermissionFlags2.ToString()));
         }
 
         return claims;

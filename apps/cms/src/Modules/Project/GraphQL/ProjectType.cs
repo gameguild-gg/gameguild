@@ -2,6 +2,7 @@ using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using System.Security.Claims;
 using GameGuild.Modules.Project.Models;
+using GameGuild.Modules.Auth.Constants;
 
 namespace GameGuild.Modules.Project.GraphQL;
 
@@ -129,7 +130,7 @@ public class ProjectType : ObjectType<Models.Project>
                         return false;
 
                     Guid userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                    string? tenantIdClaim = user.FindFirst("tenant_id")?.Value;
+                    string? tenantIdClaim = user.FindFirst(JwtClaimTypes.TenantId)?.Value;
                     var tenantId = tenantIdClaim != null ? Guid.Parse(tenantIdClaim) : (Guid?)null;
 
                     return await permissionService.HasResourcePermissionAsync<ProjectPermission, Models.Project>(
@@ -155,7 +156,7 @@ public class ProjectType : ObjectType<Models.Project>
                         return false;
 
                     Guid userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                    string? tenantIdClaim = user.FindFirst("tenant_id")?.Value;
+                    string? tenantIdClaim = user.FindFirst(JwtClaimTypes.TenantId)?.Value;
                     var tenantId = tenantIdClaim != null ? Guid.Parse(tenantIdClaim) : (Guid?)null;
 
                     return await permissionService.HasResourcePermissionAsync<ProjectPermission, Models.Project>(

@@ -4,6 +4,7 @@ using GameGuild.Modules.User.GraphQL;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using System.Security.Claims;
+using GameGuild.Modules.Auth.Constants;
 
 namespace GameGuild.Modules.Tenant.GraphQL;
 
@@ -35,7 +36,7 @@ public class TenantMutations
             throw new UnauthorizedAccessException("Invalid or missing user ID in token");
         }
 
-        string? tenantIdClaim = httpContext.User.FindFirst("tenant_id")?.Value;
+        string? tenantIdClaim = httpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
         if (!Guid.TryParse(tenantIdClaim, out Guid tenantId))
         {
             throw new UnauthorizedAccessException("Invalid or missing tenant ID in token");
