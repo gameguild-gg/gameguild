@@ -8,6 +8,7 @@ using GameGuild.Modules.User.Models;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
+using GameGuild.Modules.Auth.Constants;
 
 namespace GameGuild.Tests.Modules.Auth.Unit.Services;
 
@@ -78,7 +79,9 @@ public class TenantAuthServiceTests : IDisposable
 
             var claims = new List<Claim>
             {
-                new Claim("tenant_id", tenantId.ToString()), new Claim("tenant_permission_flags1", "1"), new Claim("tenant_permission_flags2", "2")
+                new Claim(JwtClaimTypes.TenantId, tenantId.ToString()), 
+                new Claim(JwtClaimTypes.TenantPermissionFlags1, "1"), 
+                new Claim(JwtClaimTypes.TenantPermissionFlags2, "2")
             };
 
             _mockTenantContextService.Setup(x => x.GetTenantPermissionAsync(user.Id, tenantId))
@@ -188,11 +191,11 @@ public class TenantAuthServiceTests : IDisposable
             Assert.NotNull(claims);
             var claimsList = claims.ToList();
             Assert.Equal(3, claimsList.Count);
-            Assert.Equal("tenant_id", claimsList[0].Type);
+            Assert.Equal(JwtClaimTypes.TenantId, claimsList[0].Type);
             Assert.Equal(tenantId.ToString(), claimsList[0].Value);
-            Assert.Equal("tenant_permission_flags1", claimsList[1].Type);
+            Assert.Equal(JwtClaimTypes.TenantPermissionFlags1, claimsList[1].Type);
             Assert.Equal("42", claimsList[1].Value);
-            Assert.Equal("tenant_permission_flags2", claimsList[2].Type);
+            Assert.Equal(JwtClaimTypes.TenantPermissionFlags2, claimsList[2].Type);
             Assert.Equal("24", claimsList[2].Value);
         }
 
