@@ -4,6 +4,7 @@ using System.Security.Claims;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Comment.Models;
+using GameGuild.Modules.Auth.Constants;
 
 namespace GameGuild.Common.Attributes;
 
@@ -37,7 +38,7 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
             return;
         }
 
-        string? tenantIdClaim = context.HttpContext.User.FindFirst("tenant_id")?.Value;
+        string? tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
         if (!Guid.TryParse(tenantIdClaim, out Guid tenantId))
         {
             context.Result = new UnauthorizedResult();
