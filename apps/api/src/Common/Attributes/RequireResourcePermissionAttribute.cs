@@ -141,130 +141,132 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
             if (!Guid.TryParse(userIdClaim, out Guid userId))
             {
                 context.Result = new UnauthorizedResult();
+                return;
+            }
 
-        // Extract tenant ID - this is optional for global users
-        string? tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
-        Guid? tenantId = null;
-        if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out Guid parsedTenantId))
-        {
-            tenantId = parsedTenantId;
-        }// Extract resource ID from route parameters
-        var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
-        Guid resourceId = Guid.Empty;
-        bool hasResourceId = Guid.TryParse(resourceIdValue, out resourceId);
-
-        // For CREATE operations or READ operations on collections, we typically don't have a resource ID yet
-        // So we skip resource-level permission checks and go to content-type/tenant checks
-        if (!hasResourceId && (_requiredPermission == PermissionType.Create || _requiredPermission == PermissionType.Read))
-        {
-            // Skip resource-level check for CREATE operations or READ collection operations
-        }
-        else if (!hasResourceId)
-        {
-            // For other operations (UPDATE, DELETE), we need a valid resource ID
-            context.Result = new BadRequestResult();
-
-            return;
-        }
-
-        // Hierarchical permission checking: Resource → Content-Type → Tenant
-
-        // Step 1 - Check resource-level permission for known resource types
-        // Skip this step for CREATE operations without a resource ID
-        if (hasResourceId)
-        {
-            try
+            // Extract tenant ID - this is optional for global users
+            string? tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
+            Guid? tenantId = null;
+            if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out Guid parsedTenantId))
             {
-                string resourceTypeName = typeof(TResource).Name;
+                tenantId = parsedTenantId;
+            }// Extract resource ID from route parameters
+            var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
+            Guid resourceId = Guid.Empty;
+            bool hasResourceId = Guid.TryParse(resourceIdValue, out resourceId);
 
-                switch (resourceTypeName)
+            // For CREATE operations or READ operations on collections, we typically don't have a resource ID yet
+            // So we skip resource-level permission checks and go to content-type/tenant checks
+            if (!hasResourceId && (_requiredPermission == PermissionType.Create || _requiredPermission == PermissionType.Read))
+            {
+                // Skip resource-level check for CREATE operations or READ collection operations
+            }
+            else if (!hasResourceId)
+            {
+                // For other operations (UPDATE, DELETE), we need a valid resource ID
+                context.Result = new BadRequestResult();
+
+                return;
+            }
+
+            // Hierarchical permission checking: Resource → Content-Type → Tenant
+
+            // Step 1 - Check resource-level permission for known resource types
+            // Skip this step for CREATE operations without a resource ID
+            if (hasResourceId)
+            {
+                try
                 {
-                    case "Comment":
-                        bool hasCommentPermission = await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
-                            userId,
-                            tenantId,
-                            resourceId,
-                            _requiredPermission
-                        );
-                        if (hasCommentPermission)
-                        {
-                            return; // Permission granted at resource level
-                        }
+                    string resourceTypeName = typeof(TResource).Name;
 
-                        break;
-                    case "Product":
-                        bool hasProductPermission = await permissionService.HasResourcePermissionAsync<ProductPermission, Product>(
-                            userId,
-                            tenantId,
-                            resourceId,
-                            _requiredPermission
-                        );
-                        if (hasProductPermission)
-                        {
-                            return; // Permission granted at resource level
-                        }
+                    switch (resourceTypeName)
+                    {
+                        case "Comment":
+                            bool hasCommentPermission = await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
+                                userId,
+                                tenantId,
+                                resourceId,
+                                _requiredPermission
+                            );
+                            if (hasCommentPermission)
+                            {
+                                return; // Permission granted at resource level
+                            }
 
-                        break;
+                            break;
+                        case "Product":
+                            bool hasProductPermission = await permissionService.HasResourcePermissionAsync<ProductPermission, Product>(
+                                userId,
+                                tenantId,
+                                resourceId,
+                                _requiredPermission
+                            );
+                            if (hasProductPermission)
+                            {
+                                return; // Permission granted at resource level
+                            }
 
-                    case "Project":
-                        bool hasProjectPermission = await permissionService.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
-                            userId,
-                            tenantId,
-                            resourceId,
-                            _requiredPermission
-                        );
-                        if (hasProjectPermission)
-                        {
-                            return; // Permission granted at resource level
-                        }
+                            break;
 
-                        break; // Add more resource types here as they are implemented
+                        case "Project":
+                            bool hasProjectPermission = await permissionService.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+                                userId,
+                                tenantId,
+                                resourceId,
+                                _requiredPermission
+                            );
+                            if (hasProjectPermission)
+                            {
+                                return; // Permission granted at resource level
+                            }
 
-                    case "Program":
-                        var hasProgramPermission = await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Program.Models.ProgramPermission, GameGuild.Modules.Program.Models.Program>(
-                            userId, tenantId, resourceId, _requiredPermission);
-                        if (hasProgramPermission)
-                        {
-                            return; // Permission granted at resource level
-                        }
-                        break;
+                            break; // Add more resource types here as they are implemented
 
-                    default:
-                        // For unknown resource types, skip resource-level check and go to content-type fallback
-                        break;
+                        case "Program":
+                            var hasProgramPermission = await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Program.Models.ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+                                userId, tenantId, resourceId, _requiredPermission);
+                            if (hasProgramPermission)
+                            {
+                                return; // Permission granted at resource level
+                            }
+                            break;
+
+                        default:
+                            // For unknown resource types, skip resource-level check and go to content-type fallback
+                            break;
+                    }
                 }
-            }
-            catch
+                catch
+                {
+                    // If resource-level checking fails, continue to content-type fallback
+                }
+            } // End of hasResourceId check
+
+            // Step 2 - Check content-type level permission (fallback)
+            string contentTypeName = typeof(TResource).Name;
+            bool hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(
+                userId,
+                tenantId,
+                contentTypeName,
+                _requiredPermission
+            );
+
+            if (hasContentTypePermission)
             {
-                // If resource-level checking fails, continue to content-type fallback
+                return; // Permission granted at content-type level
             }
-        } // End of hasResourceId check
 
-        // Step 2 - Check content-type level permission (fallback)
-        string contentTypeName = typeof(TResource).Name;
-        bool hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(
-            userId,
-            tenantId,
-            contentTypeName,
-            _requiredPermission
-        );
-
-        if (hasContentTypePermission)
-        {
-            return; // Permission granted at content-type level
-        }
-
-        // Step 3 - Check tenant-level permission (final fallback)
-        bool hasTenantPermission = await permissionService.HasTenantPermissionAsync(
-            userId,
-            tenantId,
-            _requiredPermission
-        );        if (!hasTenantPermission)
-        {
-            context.Result = new ForbidResult();
-        }
-
-        // If we reach here with tenant permission, access is granted
+            // Step 3 - Check tenant-level permission (final fallback)
+            bool hasTenantPermission = await permissionService.HasTenantPermissionAsync(
+                userId,
+                tenantId,
+                _requiredPermission
+            );
+            if (!hasTenantPermission)
+            {
+                context.Result = new ForbidResult();
+            }
+            // If we reach here with tenant permission, access is granted
         }
         catch (Exception ex)
         {
