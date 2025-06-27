@@ -26,9 +26,10 @@ public class DatabaseSeeder(
       }
 
       await SeedGlobalDefaultPermissionsAsync();
-      await SeedContentTypeDefaultPermissionsAsync();
+      await SeedGlobalProjectDefaultPermissionsAsync();
 
       await context.SaveChangesAsync();
+
       logger.LogInformation("Database seeding completed successfully");
     }
     catch (Exception ex) {
@@ -54,11 +55,12 @@ public class DatabaseSeeder(
 
     await permissionService.SetGlobalDefaultPermissionsAsync(defaultPermissions);
     logger.LogInformation(
-      $"Global default permissions seeded successfully with {defaultPermissions.Length} permissions"
+      "Global default permissions seeded successfully with {DefaultPermissionsLength} permissions",
+      defaultPermissions.Length
     );
   }
 
-  public async Task SeedContentTypeDefaultPermissionsAsync() {
+  public async Task SeedGlobalProjectDefaultPermissionsAsync() {
     logger.LogInformation("Seeding content-type default permissions...");
 
     // Grant default permissions for Projects so users can create and manage their own projects
@@ -72,7 +74,8 @@ public class DatabaseSeeder(
 
     await permissionService.GrantContentTypePermissionAsync(null, null, "Project", projectPermissions);
     logger.LogInformation(
-      $"Content-type default permissions seeded for Project with {projectPermissions.Length} permissions"
+      "Content-type default permissions seeded for Project with {ProjectPermissionsLength} permissions",
+      projectPermissions.Length
     );
   }
 }
