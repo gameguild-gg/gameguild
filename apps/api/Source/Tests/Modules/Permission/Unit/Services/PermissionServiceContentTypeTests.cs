@@ -17,7 +17,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
 
   public PermissionServiceContentTypeTests() {
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .UseInMemoryDatabase(Guid.NewGuid().ToString())
                   .Options;
 
     _context = new ApplicationDbContext(options);
@@ -97,7 +97,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
     var permissions = new[] { PermissionType.Read, PermissionType.Comment };
 
     // Act
-    await _permissionService.GrantContentTypePermissionAsync(userId: null, tenantId, contentType, permissions);
+    await _permissionService.GrantContentTypePermissionAsync(null, tenantId, contentType, permissions);
 
     // Assert
     var permission = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
@@ -119,7 +119,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
     var permissions = new[] { PermissionType.Read };
 
     // Act
-    await _permissionService.GrantContentTypePermissionAsync(userId: null, tenantId: null, contentType, permissions);
+    await _permissionService.GrantContentTypePermissionAsync(null, null, contentType, permissions);
 
     // Assert
     var permission = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
@@ -215,7 +215,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
 
     // Set tenant default permission
     await _permissionService.GrantContentTypePermissionAsync(
-      userId: null,
+      null,
       tenantId,
       contentType,
       new[] { PermissionType.Read }
@@ -238,8 +238,8 @@ public class PermissionServiceContentTypeTests : IDisposable {
 
     // Set global default permission
     await _permissionService.GrantContentTypePermissionAsync(
-      userId: null,
-      tenantId: null,
+      null,
+      null,
       contentType,
       new[] { PermissionType.Read }
     );
@@ -261,7 +261,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
 
     // Set tenant default with Read permission
     await _permissionService.GrantContentTypePermissionAsync(
-      userId: null,
+      null,
       tenantId,
       contentType,
       new[] { PermissionType.Read }

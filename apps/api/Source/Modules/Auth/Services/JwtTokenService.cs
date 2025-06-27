@@ -42,9 +42,9 @@ namespace GameGuild.Modules.Auth.Services {
       var expires = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
       var token = new JwtSecurityToken(
-        issuer: configuration["Jwt:Issuer"],
-        audience: configuration["Jwt:Audience"],
-        claims: claims,
+        configuration["Jwt:Issuer"],
+        configuration["Jwt:Audience"],
+        claims,
         expires: expires,
         signingCredentials: creds
       );

@@ -27,7 +27,7 @@ public class TenantAuthServiceTests : IDisposable {
   public TenantAuthServiceTests() {
     // Set up in-memory database
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .UseInMemoryDatabase(Guid.NewGuid().ToString())
                   .Options;
 
     _context = new ApplicationDbContext(options);

@@ -118,7 +118,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
 
         // Add in-memory database for testing with unique database name
         var databaseName = $"TestDatabase_{Guid.NewGuid()}";
-        services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName: databaseName));
+        services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName));
 
         // Configure JWT for testing - ensure consistent configuration
         // This should match the configuration expected by AuthConfiguration

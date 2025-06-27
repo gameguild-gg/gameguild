@@ -570,10 +570,10 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
   )
     where TPermission : ResourcePermission<TResource>, new() where TResource : BaseEntity {
     await GrantResourcePermissionAsync<TPermission, TResource>(
-      userId: targetUserId,
-      tenantId: tenantId,
-      resourceId: resourceId,
-      permissions: permissions
+      targetUserId,
+      tenantId,
+      resourceId,
+      permissions
     );
 
     // Set expiration if provided
