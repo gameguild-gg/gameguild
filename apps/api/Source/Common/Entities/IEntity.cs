@@ -37,7 +37,7 @@ public interface IEntity {
   void Touch();
 
   /// <summary>
-  /// Checks if this entity is newly created (not persisted to database)
+  /// Checks if this entity is newly created (not persisted to the database)
   /// </summary>
   bool IsNew { get; }
 
@@ -63,7 +63,7 @@ public interface IEntity {
 /// <typeparam name="TKey">The type of the entity's identifier</typeparam>
 public interface IEntity<TKey> : IEntity where TKey : IEquatable<TKey> {
   /// <summary>
-  /// Unique identifier for the entity with specific type
+  /// Unique identifier for the entity with a specific type
   /// </summary>
   new TKey Id { get; set; }
 }

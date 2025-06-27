@@ -15,8 +15,6 @@ namespace GameGuild.Common.Entities;
 [Index(nameof(TenantId), Name = "IX_ContentTypePermissions_TenantId")]
 [Index(nameof(ExpiresAt), Name = "IX_ContentTypePermissions_ExpiresAt")]
 public class ContentTypePermission : WithPermissions {
-  private string _contentType = string.Empty;
-
   /// <summary>
   /// The content type this permission applies to (e.g., "Article", "Video", "Discussion")
   /// </summary>
@@ -24,8 +22,5 @@ public class ContentTypePermission : WithPermissions {
   [GraphQLDescription("The content type this permission applies to (e.g., 'Article', 'Video', 'Discussion')")]
   [Required]
   [MaxLength(100)]
-  public string ContentType {
-    get => _contentType;
-    set => _contentType = value;
-  }
+  public string ContentType { get; set; } = string.Empty;
 }

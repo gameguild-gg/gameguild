@@ -9,73 +9,40 @@ namespace GameGuild.Common.Entities;
 /// Uses Guid as the default ID type to match the NestJS implementation.
 /// </summary>
 public class BaseEntity : BaseEntity<Guid> {
-  private Guid _id;
-
-  private int _version;
-
-  private DateTime _createdAt;
-
-  private DateTime _updatedAt;
-
-  private DateTime? _deletedAt;
-
-  private Tenant? _tenant;
-
   /// <summary>
   /// Unique identifier for the entity
   /// </summary>
-  [GraphQLType(typeof(NonNullType<UuidType>))]
-  [GraphQLDescription("The unique identifier for the entity (UUID).")]
-  public override Guid Id {
-    get => _id;
-    set => _id = value;
-  }
+  [GraphQLType(typeof(NonNullType<UuidType>)), GraphQLDescription("The unique identifier for the entity (UUID).")]
+  public override sealed Guid Id { get; set; }
 
   /// <summary>
   /// Version number for optimistic concurrency control
   /// </summary>
-  [GraphQLType(typeof(NonNullType<IntType>))]
-  [GraphQLDescription("Version number for optimistic concurrency control.")]
-  public override int Version {
-    get => _version;
-    set => _version = value;
-  }
+  [GraphQLType(typeof(NonNullType<IntType>)), GraphQLDescription("Version number for optimistic concurrency control.")]
+  public override int Version { get; set; }
 
   /// <summary>
   /// Timestamp when the entity was created
   /// </summary>
-  [GraphQLType(typeof(NonNullType<DateTimeType>))]
-  [GraphQLDescription("The date and time when the entity was created.")]
-  public override DateTime CreatedAt {
-    get => _createdAt;
-    set => _createdAt = value;
-  }
+  [GraphQLType(typeof(NonNullType<DateTimeType>)), GraphQLDescription("The date and time when the entity was created.")]
+  public override sealed DateTime CreatedAt { get; set; }
 
   /// <summary>
   /// Timestamp when the entity was last updated
   /// </summary>
-  [GraphQLType(typeof(NonNullType<DateTimeType>))]
-  [GraphQLDescription("The date and time when the entity was last updated.")]
-  public override DateTime UpdatedAt {
-    get => _updatedAt;
-    set => _updatedAt = value;
-  }
+  [GraphQLType(typeof(NonNullType<DateTimeType>)), GraphQLDescription("The date and time when the entity was last updated.")]
+  public override sealed DateTime UpdatedAt { get; set; }
 
   /// <summary>
   /// Timestamp when the entity was soft-deleted (null if not deleted)
   /// </summary>
-  [GraphQLType(typeof(DateTimeType))]
-  [GraphQLDescription("The date and time when the entity was soft deleted (null if not deleted).")]
-  public override DateTime? DeletedAt {
-    get => _deletedAt;
-    set => _deletedAt = value;
-  }
+  [GraphQLType(typeof(DateTimeType)), GraphQLDescription("The date and time when the entity was soft deleted (null if not deleted).")]
+  public override sealed DateTime? DeletedAt { get; set; }
 
   /// <summary>
   /// Whether the entity is soft-deleted
   /// </summary>
-  [GraphQLType(typeof(NonNullType<BooleanType>))]
-  [GraphQLDescription("Indicates whether the entity has been soft deleted.")]
+  [GraphQLType(typeof(NonNullType<BooleanType>)), GraphQLDescription("Indicates whether the entity has been soft deleted.")]
   public override bool IsDeleted {
     get => DeletedAt.HasValue;
   }
@@ -83,10 +50,7 @@ public class BaseEntity : BaseEntity<Guid> {
   /// <summary>
   /// The tenant this entity belongs to (null if global)
   /// </summary>
-  public override Modules.Tenant.Models.Tenant? Tenant {
-    get => _tenant;
-    set => _tenant = value;
-  }
+  public override Tenant? Tenant { get; set; }
 
   /// <summary>
   /// Default constructor
@@ -98,7 +62,6 @@ public class BaseEntity : BaseEntity<Guid> {
 
   /// <summary>
   /// Constructor for partial initialization (useful for updates)
-  /// Mirrors the NestJS EntityDto constructor: constructor(partial: Partial<typeof this>)
   /// </summary>
   /// <param name="partial">Partial entity data to initialize with</param>
   protected BaseEntity(object partial) : base(partial) {
@@ -108,26 +71,29 @@ public class BaseEntity : BaseEntity<Guid> {
 
   /// <summary>
   /// Static factory method to create an entity with initial properties
-  /// Mirrors the NestJS EntityDto.create() method
   /// </summary>
   /// <typeparam name="T">The entity type</typeparam>
   /// <param name="partial">Initial properties</param>
   /// <returns>New instance of the entity</returns>
   public static T Create<T>(object partial) where T : BaseEntity, new() {
-    // Create instance and set properties
+    // Create an instance and set properties
     var instance = new T();
 
-    if (partial != null) {
+    switch (partial) {
+      case null: break;
       // Handle Dictionary<string, object?> case
-      if (partial is Dictionary<string, object?> dict) { instance.SetProperties(dict); }
-      else {
-        // Handle anonymous object case
+      case Dictionary<string, object?> dict: instance.SetProperties(dict); break;
+
+      default: {
+        // Handle an anonymous object case
         var properties = partial.GetType().GetProperties();
         var propDict = new Dictionary<string, object?>();
 
         foreach (PropertyInfo prop in properties) { propDict[prop.Name] = prop.GetValue(partial); }
 
         instance.SetProperties(propDict);
+
+        break;
       }
     }
 
