@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Jam.Models {
   public class JamJudgingCriteria : BaseEntity {
     private Guid _jamId;

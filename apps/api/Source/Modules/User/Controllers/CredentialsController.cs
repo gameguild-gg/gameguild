@@ -3,6 +3,7 @@ using GameGuild.Modules.User.Dtos;
 using GameGuild.Modules.User.Models;
 using GameGuild.Modules.User.Services;
 
+
 namespace GameGuild.Modules.User.Controllers;
 
 /// <summary>
@@ -112,7 +113,10 @@ public class CredentialsController : ControllerBase {
   /// <param name="updateDto">Updated credential data</param>
   /// <returns>Updated credential</returns>
   [HttpPut("{id}")]
-  public async Task<ActionResult<CredentialResponseDto>> UpdateCredential(Guid id, [FromBody] UpdateCredentialDto updateDto) {
+  public async Task<ActionResult<CredentialResponseDto>> UpdateCredential(
+    Guid id,
+    [FromBody] UpdateCredentialDto updateDto
+  ) {
     if (!ModelState.IsValid) { return BadRequest(ModelState); }
 
     Credential? existingCredential = await _credentialService.GetCredentialByIdAsync(id);
@@ -251,17 +255,17 @@ public class CredentialsController : ControllerBase {
       UpdatedAt = credential.UpdatedAt,
       DeletedAt = credential.DeletedAt,
       User = credential.User != null
-        ? new UserResponseDto {
-          Id = credential.User.Id,
-          Name = credential.User.Name,
-          Email = credential.User.Email,
-          IsActive = credential.User.IsActive,
-          Version = credential.User.Version,
-          CreatedAt = credential.User.CreatedAt,
-          UpdatedAt = credential.User.UpdatedAt,
-          DeletedAt = credential.User.DeletedAt
-        }
-        : null
+               ? new UserResponseDto {
+                 Id = credential.User.Id,
+                 Name = credential.User.Name,
+                 Email = credential.User.Email,
+                 IsActive = credential.User.IsActive,
+                 Version = credential.User.Version,
+                 CreatedAt = credential.User.CreatedAt,
+                 UpdatedAt = credential.User.UpdatedAt,
+                 DeletedAt = credential.User.DeletedAt
+               }
+               : null
     };
   }
 }

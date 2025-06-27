@@ -4,6 +4,7 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.User.Models;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace GameGuild.Modules.Auth.Services {
   public interface IWeb3Service {
     Task<Web3ChallengeResponseDto> GenerateChallengeAsync(Web3ChallengeRequestDto request);
@@ -62,7 +63,10 @@ namespace GameGuild.Modules.Auth.Services {
       }
 
       // Verify wallet address matches
-      if (!request.WalletAddress.Equals(ExtractWalletFromChallenge(challenge.Challenge), StringComparison.OrdinalIgnoreCase)) {
+      if (!request.WalletAddress.Equals(
+            ExtractWalletFromChallenge(challenge.Challenge),
+            StringComparison.OrdinalIgnoreCase
+          )) {
         _logger.LogWarning("Wallet address mismatch for nonce: {Nonce}", request.Nonce);
 
         return false;
@@ -70,7 +74,8 @@ namespace GameGuild.Modules.Auth.Services {
 
       // In a real implementation, you would verify the signature using a library like Nethereum
       // For now, we'll do a basic validation
-      bool isValidSignature = await VerifyEthereumSignature(challenge.Challenge, request.Signature, request.WalletAddress);
+      bool isValidSignature =
+        await VerifyEthereumSignature(challenge.Challenge, request.Signature, request.WalletAddress);
 
       if (isValidSignature) {
         // Remove used challenge
@@ -82,7 +87,8 @@ namespace GameGuild.Modules.Auth.Services {
 
     public async Task<User.Models.User> FindOrCreateWeb3UserAsync(string walletAddress, string chainId = "1") {
       // Try to find user by wallet address in credentials
-      Credential? credential = await _context.Credentials.Include(c => c.User).FirstOrDefaultAsync(c => c.Type == "web3_wallet" && c.Value == walletAddress.ToLower());
+      Credential? credential = await _context.Credentials.Include(c => c.User)
+                                             .FirstOrDefaultAsync(c => c.Type == "web3_wallet" && c.Value == walletAddress.ToLower());
 
       if (credential?.User != null) { return credential.User; }
 
@@ -125,7 +131,8 @@ namespace GameGuild.Modules.Auth.Services {
     private string GenerateChallenge(string walletAddress, string nonce) {
       long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-      return $"Sign this message to authenticate with GameGuild CMS.\n\nWallet: {walletAddress}\nNonce: {nonce}\nTimestamp: {timestamp}";
+      return
+        $"Sign this message to authenticate with GameGuild CMS.\n\nWallet: {walletAddress}\nNonce: {nonce}\nTimestamp: {timestamp}";
     }
 
     private string ExtractWalletFromChallenge(string challenge) {
@@ -153,7 +160,10 @@ namespace GameGuild.Modules.Auth.Services {
 
         // For now, return true if basic validation passes
         // TODO: Implement actual signature verification using Nethereum
-        _logger.LogInformation("Web3 signature verification for wallet {WalletAddress} - basic validation passed", walletAddress);
+        _logger.LogInformation(
+          "Web3 signature verification for wallet {WalletAddress} - basic validation passed",
+          walletAddress
+        );
 
         return Task.FromResult(true);
       }

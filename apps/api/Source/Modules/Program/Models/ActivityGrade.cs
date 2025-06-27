@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Text.Json;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Program.Models;
 
 [Table("activity_grades")]
@@ -97,7 +98,9 @@ public class ActivityGrade : BaseEntity {
   }
 
   public void SetGradingDetail<T>(string key, T value) {
-    var details = string.IsNullOrEmpty(GradingDetails) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(GradingDetails) ?? new Dictionary<string, object>();
+    var details = string.IsNullOrEmpty(GradingDetails)
+                    ? new Dictionary<string, object>()
+                    : JsonSerializer.Deserialize<Dictionary<string, object>>(GradingDetails) ?? new Dictionary<string, object>();
 
     details[key] = value!;
     GradingDetails = JsonSerializer.Serialize(details);
@@ -110,9 +113,15 @@ public class ActivityGrade : BaseEntity {
 public class ActivityGradeConfiguration : IEntityTypeConfiguration<ActivityGrade> {
   public void Configure(EntityTypeBuilder<ActivityGrade> builder) {
     // Configure relationship with ContentInteraction (can't be done with annotations)
-    builder.HasOne(ag => ag.ContentInteraction).WithMany(ci => ci.ActivityGrades).HasForeignKey(ag => ag.ContentInteractionId).OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(ag => ag.ContentInteraction)
+           .WithMany(ci => ci.ActivityGrades)
+           .HasForeignKey(ag => ag.ContentInteractionId)
+           .OnDelete(DeleteBehavior.Cascade);
 
     // Configure relationship with GraderProgramUser (can't be done with annotations)
-    builder.HasOne(ag => ag.GraderProgramUser).WithMany().HasForeignKey(ag => ag.GraderProgramUserId).OnDelete(DeleteBehavior.Restrict);
+    builder.HasOne(ag => ag.GraderProgramUser)
+           .WithMany()
+           .HasForeignKey(ag => ag.GraderProgramUserId)
+           .OnDelete(DeleteBehavior.Restrict);
   }
 }

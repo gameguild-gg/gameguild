@@ -1,5 +1,6 @@
 using MediatR;
 
+
 namespace GameGuild.Modules.UserProfile.Notifications;
 
 /// <summary>

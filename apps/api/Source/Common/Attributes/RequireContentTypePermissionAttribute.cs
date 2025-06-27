@@ -5,6 +5,7 @@ using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Auth.Constants;
 
+
 namespace GameGuild.Common.Attributes;
 
 /// <summary>
@@ -42,7 +43,8 @@ public class RequireContentTypePermissionAttribute<T> : Attribute, IAsyncAuthori
     string contentTypeName = typeof(T).Name;
 
     // Check content-type level permission with hierarchical fallback
-    bool hasPermission = await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
+    bool hasPermission =
+      await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
 
     if (!hasPermission) { context.Result = new ForbidResult(); }
   }

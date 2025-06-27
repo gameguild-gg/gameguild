@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Jam.Models;
 
+
 namespace GameGuild.Modules.Project.Models;
 
 /// <summary>
@@ -15,136 +16,71 @@ namespace GameGuild.Modules.Project.Models;
 [Index(nameof(SubmittedAt), Name = "IX_ProjectJamSubmissions_Date")]
 [Index(nameof(FinalScore), Name = "IX_ProjectJamSubmissions_Score")]
 public class ProjectJamSubmission : ResourceBase {
-  private Guid _projectId;
-
-  private Project _project = null!;
-
-  private Guid _jamId;
-
-  private Jam.Models.Jam _jam = null!;
-
-  private DateTime _submittedAt = DateTime.UtcNow;
-
-  private bool _isEligible = true;
-
-  private string? _submissionNotes;
-
-  private decimal? _finalScore;
-
-  private int? _ranking;
-
-  private bool _hasAward = false;
-
-  private string? _awardDetails;
-
-  private string? _metadata;
-
-  private ICollection<JamScore> _scores = new List<Jam.Models.JamScore>();
-
   /// <summary>
   /// Project being submitted
   /// </summary>
-  public Guid ProjectId {
-    get => _projectId;
-    set => _projectId = value;
-  }
+  public Guid ProjectId { get; set; }
 
   /// <summary>
   /// Navigation property to project
   /// </summary>
-  public virtual Project Project {
-    get => _project;
-    set => _project = value;
-  }
+  public virtual Project Project { get; set; } = null!;
 
   /// <summary>
   /// Jam the project is submitted to
   /// </summary>
-  public Guid JamId {
-    get => _jamId;
-    set => _jamId = value;
-  }
+  public Guid JamId { get; set; }
 
   /// <summary>
   /// Navigation property to jam
   /// </summary>
-  public virtual Jam.Models.Jam Jam {
-    get => _jam;
-    set => _jam = value;
-  }
+  public virtual Jam.Models.Jam Jam { get; set; } = null!;
 
   /// <summary>
   /// Date when the project was submitted to the jam
   /// </summary>
-  public DateTime SubmittedAt {
-    get => _submittedAt;
-    set => _submittedAt = value;
-  }
+  public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
 
   /// <summary>
   /// Whether the submission is eligible for judging
   /// </summary>
-  public bool IsEligible {
-    get => _isEligible;
-    set => _isEligible = value;
-  }
+  public bool IsEligible { get; set; } = true;
 
   /// <summary>
   /// Submission notes or description
   /// </summary>
   [MaxLength(2000)]
-  public string? SubmissionNotes {
-    get => _submissionNotes;
-    set => _submissionNotes = value;
-  }
+  public string? SubmissionNotes { get; set; }
 
   /// <summary>
   /// Final score calculated from all ratings
   /// </summary>
-  public decimal? FinalScore {
-    get => _finalScore;
-    set => _finalScore = value;
-  }
+  public decimal? FinalScore { get; set; }
 
   /// <summary>
   /// Ranking in the jam (if calculated)
   /// </summary>
-  public int? Ranking {
-    get => _ranking;
-    set => _ranking = value;
-  }
+  public int? Ranking { get; set; }
 
   /// <summary>
   /// Whether this submission won an award
   /// </summary>
-  public bool HasAward {
-    get => _hasAward;
-    set => _hasAward = value;
-  }
+  public bool HasAward { get; set; } = false;
 
   /// <summary>
   /// Award details (JSON)
   /// </summary>
   [MaxLength(1000)]
-  public string? AwardDetails {
-    get => _awardDetails;
-    set => _awardDetails = value;
-  }
+  public string? AwardDetails { get; set; }
 
   /// <summary>
   /// Additional submission metadata
   /// </summary>
   [MaxLength(2000)]
-  public new string? Metadata {
-    get => _metadata;
-    set => _metadata = value;
-  }
+  public new string? Metadata { get; set; }
 
   /// <summary>
   /// Navigation property to jam scores
   /// </summary>
-  public virtual ICollection<Jam.Models.JamScore> Scores {
-    get => _scores;
-    set => _scores = value;
-  }
+  public virtual ICollection<Jam.Models.JamScore> Scores { get; set; } = new List<Jam.Models.JamScore>();
 }

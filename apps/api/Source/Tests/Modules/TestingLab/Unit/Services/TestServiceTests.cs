@@ -7,6 +7,7 @@ using GameGuild.Modules.User.Models;
 using ProjectModel = GameGuild.Modules.Project.Models.Project;
 using ProjectVersionModel = GameGuild.Modules.Project.Models.ProjectVersion;
 
+
 namespace GameGuild.Tests.Modules.TestingLab.Unit.Services;
 
 public class TestServiceTests : IDisposable {
@@ -14,7 +15,9 @@ public class TestServiceTests : IDisposable {
   private readonly TestService _testService;
 
   public TestServiceTests() {
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .Options;
 
     _context = new ApplicationDbContext(options);
     _testService = new TestService(_context);
@@ -106,7 +109,8 @@ public class TestServiceTests : IDisposable {
 
     // Reload the entity from the database to see the updated DeletedAt value
     _context.ChangeTracker.Clear();
-    var deletedRequest = await _context.TestingRequests.IgnoreQueryFilters().FirstOrDefaultAsync(tr => tr.Id == testingRequest.Id);
+    var deletedRequest = await _context.TestingRequests.IgnoreQueryFilters()
+                                       .FirstOrDefaultAsync(tr => tr.Id == testingRequest.Id);
     Assert.NotNull(deletedRequest);
     Assert.NotNull(deletedRequest.DeletedAt);
   }
@@ -163,7 +167,8 @@ public class TestServiceTests : IDisposable {
     var user = await CreateTestUserAsync("registrant@example.com");
 
     // Act
-    var result = await _testService.RegisterForSessionAsync(testingSession.Id, user.Id, RegistrationType.Tester, "Test notes");
+    var result =
+      await _testService.RegisterForSessionAsync(testingSession.Id, user.Id, RegistrationType.Tester, "Test notes");
 
     // Assert
     Assert.NotNull(result);
@@ -180,7 +185,15 @@ public class TestServiceTests : IDisposable {
     var feedbackForm = await CreateTestFeedbackFormAsync();
 
     // Act
-    var result = await _testService.AddFeedbackAsync(testingRequest.Id, user.Id, feedbackForm.Id, "Test feedback data", TestingContext.Online, null, "Additional notes");
+    var result = await _testService.AddFeedbackAsync(
+                   testingRequest.Id,
+                   user.Id,
+                   feedbackForm.Id,
+                   "Test feedback data",
+                   TestingContext.Online,
+                   null,
+                   "Additional notes"
+                 );
 
     // Assert
     Assert.NotNull(result);

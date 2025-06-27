@@ -6,6 +6,7 @@ using GameGuild.Modules.Auth.Middleware;
 using GameGuild.Modules.Auth.Services;
 using Microsoft.Extensions.Primitives;
 
+
 namespace GameGuild.Modules.Auth.Configuration {
   /// <summary>
   /// Extension methods for configuring authentication services

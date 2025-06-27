@@ -2,6 +2,7 @@ using MediatR;
 using GameGuild.Modules.Auth.Queries;
 using GameGuild.Modules.User.GraphQL;
 
+
 namespace GameGuild.Modules.Auth.GraphQL;
 
 /// <summary>

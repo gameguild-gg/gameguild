@@ -5,6 +5,7 @@ using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 using GameGuild.Modules.Certificate.Models;
 
+
 namespace GameGuild.Modules.Tag.Models;
 
 [Table("tag_proficiencies")]

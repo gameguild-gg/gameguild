@@ -5,6 +5,7 @@ using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 using GameGuild.Modules.Program.Models;
 
+
 namespace GameGuild.Modules.Feedback.Models;
 
 [Table("program_ratings")]

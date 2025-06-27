@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
+
 namespace GameGuild.Modules.Auth.Dtos {
   public class LocalSignInRequestDto {
     private string? _username;

@@ -4,163 +4,83 @@ namespace GameGuild.Modules.Project.Models;
 /// Statistics and analytics data for a project
 /// </summary>
 public class ProjectStatistics {
-  private Guid _projectId;
-
-  private int _followerCount;
-
-  private int _feedbackCount;
-
-  private decimal? _averageRating;
-
-  private int _totalDownloads;
-
-  private int _activeTeamCount;
-
-  private int _collaboratorCount;
-
-  private int _releaseCount;
-
-  private int _jamSubmissionCount;
-
-  private int _awardCount;
-
-  private int _viewsLast30Days;
-
-  private int _downloadsLast30Days;
-
-  private int _newFollowersLast30Days;
-
-  private DateTime _calculatedAt = DateTime.UtcNow;
-
-  private decimal _trendingScore;
-
-  private int? _popularityRank;
-
   /// <summary>
   /// Project ID
   /// </summary>
-  public Guid ProjectId {
-    get => _projectId;
-    set => _projectId = value;
-  }
+  public Guid ProjectId { get; set; }
 
   /// <summary>
   /// Total number of followers
   /// </summary>
-  public int FollowerCount {
-    get => _followerCount;
-    set => _followerCount = value;
-  }
+  public int FollowerCount { get; set; }
 
   /// <summary>
   /// Total number of feedback/reviews
   /// </summary>
-  public int FeedbackCount {
-    get => _feedbackCount;
-    set => _feedbackCount = value;
-  }
+  public int FeedbackCount { get; set; }
 
   /// <summary>
   /// Average rating (1-5 stars)
   /// </summary>
-  public decimal? AverageRating {
-    get => _averageRating;
-    set => _averageRating = value;
-  }
+  public decimal? AverageRating { get; set; }
 
   /// <summary>
   /// Total number of downloads across all releases
   /// </summary>
-  public int TotalDownloads {
-    get => _totalDownloads;
-    set => _totalDownloads = value;
-  }
+  public int TotalDownloads { get; set; }
 
   /// <summary>
   /// Number of active teams working on the project
   /// </summary>
-  public int ActiveTeamCount {
-    get => _activeTeamCount;
-    set => _activeTeamCount = value;
-  }
+  public int ActiveTeamCount { get; set; }
 
   /// <summary>
   /// Number of collaborators
   /// </summary>
-  public int CollaboratorCount {
-    get => _collaboratorCount;
-    set => _collaboratorCount = value;
-  }
+  public int CollaboratorCount { get; set; }
 
   /// <summary>
   /// Number of releases
   /// </summary>
-  public int ReleaseCount {
-    get => _releaseCount;
-    set => _releaseCount = value;
-  }
+  public int ReleaseCount { get; set; }
 
   /// <summary>
   /// Number of jam submissions
   /// </summary>
-  public int JamSubmissionCount {
-    get => _jamSubmissionCount;
-    set => _jamSubmissionCount = value;
-  }
+  public int JamSubmissionCount { get; set; }
 
   /// <summary>
   /// Number of awards won in jams
   /// </summary>
-  public int AwardCount {
-    get => _awardCount;
-    set => _awardCount = value;
-  }
+  public int AwardCount { get; set; }
 
   /// <summary>
   /// Views/visits in the last 30 days
   /// </summary>
-  public int ViewsLast30Days {
-    get => _viewsLast30Days;
-    set => _viewsLast30Days = value;
-  }
+  public int ViewsLast30Days { get; set; }
 
   /// <summary>
   /// Downloads in the last 30 days
   /// </summary>
-  public int DownloadsLast30Days {
-    get => _downloadsLast30Days;
-    set => _downloadsLast30Days = value;
-  }
+  public int DownloadsLast30Days { get; set; }
 
   /// <summary>
   /// New followers in the last 30 days
   /// </summary>
-  public int NewFollowersLast30Days {
-    get => _newFollowersLast30Days;
-    set => _newFollowersLast30Days = value;
-  }
+  public int NewFollowersLast30Days { get; set; }
 
   /// <summary>
   /// Date when statistics were calculated
   /// </summary>
-  public DateTime CalculatedAt {
-    get => _calculatedAt;
-    set => _calculatedAt = value;
-  }
+  public DateTime CalculatedAt { get; set; } = DateTime.UtcNow;
 
   /// <summary>
   /// Trending score (calculated based on recent activity)
   /// </summary>
-  public decimal TrendingScore {
-    get => _trendingScore;
-    set => _trendingScore = value;
-  }
+  public decimal TrendingScore { get; set; }
 
   /// <summary>
   /// Popularity rank among all projects
   /// </summary>
-  public int? PopularityRank {
-    get => _popularityRank;
-    set => _popularityRank = value;
-  }
+  public int? PopularityRank { get; set; }
 }

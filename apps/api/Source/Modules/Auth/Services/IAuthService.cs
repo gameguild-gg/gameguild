@@ -1,5 +1,6 @@
 using GameGuild.Modules.Auth.Dtos;
 
+
 namespace GameGuild.Modules.Auth.Services {
   public interface IAuthService {
     Task<SignInResponseDto> LocalSignInAsync(LocalSignInRequestDto request);

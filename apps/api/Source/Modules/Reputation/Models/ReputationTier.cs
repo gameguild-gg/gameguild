@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Reputation.Models;
 
 /// <summary>

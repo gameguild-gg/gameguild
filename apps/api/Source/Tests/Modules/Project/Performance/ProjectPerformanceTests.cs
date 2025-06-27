@@ -7,6 +7,7 @@ using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 using GameGuild.Modules.Project.Models;
 
+
 namespace GameGuild.Tests.Modules.Project.Performance;
 
 /// <summary>
@@ -19,7 +20,9 @@ public class ProjectPerformanceTests : IDisposable {
   private readonly ProjectService _projectService;
 
   public ProjectPerformanceTests() {
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: $"PerformanceTestDb_{Guid.NewGuid()}").Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                  .UseInMemoryDatabase(databaseName: $"PerformanceTestDb_{Guid.NewGuid()}")
+                  .Options;
 
     _context = new ApplicationDbContext(options);
     _projectService = new ProjectService(_context);
@@ -39,7 +42,10 @@ public class ProjectPerformanceTests : IDisposable {
 
     // Assert
     Assert.NotNull(result);
-    Assert.True(stopwatch.ElapsedMilliseconds < 200, $"Project creation took {stopwatch.ElapsedMilliseconds}ms, expected under 200ms"); // More realistic timing
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 200,
+      $"Project creation took {stopwatch.ElapsedMilliseconds}ms, expected under 200ms"
+    ); // More realistic timing
   }
 
   [Fact]
@@ -71,7 +77,10 @@ public class ProjectPerformanceTests : IDisposable {
 
     // Assert
     Assert.Equal(1000, result.Count());
-    Assert.True(stopwatch.ElapsedMilliseconds < 1000, $"Getting 1000 projects took {stopwatch.ElapsedMilliseconds}ms, expected under 1000ms"); // More realistic timing
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 1000,
+      $"Getting 1000 projects took {stopwatch.ElapsedMilliseconds}ms, expected under 1000ms"
+    ); // More realistic timing
   }
 
   [Fact]
@@ -112,8 +121,14 @@ public class ProjectPerformanceTests : IDisposable {
     Assert.True(resultList.Count > 0, $"Search returned 0 results. DB count: {dbCount}. Sample titles: {sampleTitles}");
 
     // Assert
-    Assert.True(resultList.Count > 200, $"Expected more than 200 results, got {resultList.Count}"); // Should find many matches
-    Assert.True(stopwatch.ElapsedMilliseconds < 500, $"Search took {stopwatch.ElapsedMilliseconds}ms, expected under 500ms"); // More realistic time expectation
+    Assert.True(
+      resultList.Count > 200,
+      $"Expected more than 200 results, got {resultList.Count}"
+    ); // Should find many matches
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 500,
+      $"Search took {stopwatch.ElapsedMilliseconds}ms, expected under 500ms"
+    ); // More realistic time expectation
   }
 
   [Fact]
@@ -138,7 +153,10 @@ public class ProjectPerformanceTests : IDisposable {
     // Assert
     Assert.NotNull(result);
     Assert.Equal("Updated Title", result.Title);
-    Assert.True(stopwatch.ElapsedMilliseconds < 300, $"Project update took {stopwatch.ElapsedMilliseconds}ms, expected under 300ms"); // More realistic timing with permission checks
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 300,
+      $"Project update took {stopwatch.ElapsedMilliseconds}ms, expected under 300ms"
+    ); // More realistic timing with permission checks
   }
 
   [Fact]
@@ -172,7 +190,10 @@ public class ProjectPerformanceTests : IDisposable {
     // Assert
     Assert.NotEmpty(result);
     Assert.True(result.Count() > 300);
-    Assert.True(stopwatch.ElapsedMilliseconds < 300, $"Getting projects by status took {stopwatch.ElapsedMilliseconds}ms, expected under 300ms"); // More realistic timing
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 300,
+      $"Getting projects by status took {stopwatch.ElapsedMilliseconds}ms, expected under 300ms"
+    ); // More realistic timing
   }
 
   [Fact]
@@ -206,7 +227,10 @@ public class ProjectPerformanceTests : IDisposable {
     // Assert
     Assert.NotEmpty(result);
     Assert.True(result.Count() > 200);
-    Assert.True(stopwatch.ElapsedMilliseconds < 300, $"Getting projects by type took {stopwatch.ElapsedMilliseconds}ms, expected under 300ms"); // More realistic timing
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 300,
+      $"Getting projects by type took {stopwatch.ElapsedMilliseconds}ms, expected under 300ms"
+    ); // More realistic timing
   }
 
   [Fact]
@@ -224,7 +248,10 @@ public class ProjectPerformanceTests : IDisposable {
 
     // Assert
     Assert.True(result);
-    Assert.True(stopwatch.ElapsedMilliseconds < 200, $"Project deletion took {stopwatch.ElapsedMilliseconds}ms, expected under 200ms"); // More realistic timing
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 200,
+      $"Project deletion took {stopwatch.ElapsedMilliseconds}ms, expected under 200ms"
+    ); // More realistic timing
   }
 
   [Fact]
@@ -256,7 +283,10 @@ public class ProjectPerformanceTests : IDisposable {
 
     // Assert
     Assert.Equal(50, result.Count());
-    Assert.True(stopwatch.ElapsedMilliseconds < 200, $"Getting 50 projects with pagination took {stopwatch.ElapsedMilliseconds}ms, expected under 200ms"); // More realistic timing
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 200,
+      $"Getting 50 projects with pagination took {stopwatch.ElapsedMilliseconds}ms, expected under 200ms"
+    ); // More realistic timing
   }
 
   [Theory]
@@ -303,8 +333,14 @@ public class ProjectPerformanceTests : IDisposable {
     double expectedInsertTime = Math.Max(projectCount * 5.0, 5000); // ~5ms per project or minimum 5 seconds
     double expectedReadTime = Math.Max(projectCount * 2.0, 2000); // ~2ms per project or minimum 2 seconds
 
-    Assert.True(insertTime < expectedInsertTime, $"Bulk insert of {projectCount} projects took {insertTime}ms, expected under {expectedInsertTime}ms");
-    Assert.True(readTime < expectedReadTime, $"Bulk read of {projectCount} projects took {readTime}ms, expected under {expectedReadTime}ms");
+    Assert.True(
+      insertTime < expectedInsertTime,
+      $"Bulk insert of {projectCount} projects took {insertTime}ms, expected under {expectedInsertTime}ms"
+    );
+    Assert.True(
+      readTime < expectedReadTime,
+      $"Bulk read of {projectCount} projects took {readTime}ms, expected under {expectedReadTime}ms"
+    );
   }
 
   [Fact]
@@ -339,7 +375,10 @@ public class ProjectPerformanceTests : IDisposable {
     stopwatch.Stop();
 
     // Assert
-    Assert.True(stopwatch.ElapsedMilliseconds < 2000, $"10 concurrent read operations took {stopwatch.ElapsedMilliseconds}ms, expected under 2000ms"); // More realistic timing
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 2000,
+      $"10 concurrent read operations took {stopwatch.ElapsedMilliseconds}ms, expected under 2000ms"
+    ); // More realistic timing
   }
 
   public void Dispose() { _context.Dispose(); }

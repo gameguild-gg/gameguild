@@ -3,6 +3,7 @@ using GameGuild.Modules.Auth.Commands;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
 
+
 namespace GameGuild.Modules.Auth.Handlers;
 
 /// <summary>
@@ -13,7 +14,10 @@ public class GenerateWeb3ChallengeHandler : IRequestHandler<GenerateWeb3Challeng
 
   public GenerateWeb3ChallengeHandler(IAuthService authService) { _authService = authService; }
 
-  public async Task<Web3ChallengeResponseDto> Handle(GenerateWeb3ChallengeCommand request, CancellationToken cancellationToken) {
+  public async Task<Web3ChallengeResponseDto> Handle(
+    GenerateWeb3ChallengeCommand request,
+    CancellationToken cancellationToken
+  ) {
     var challengeRequest = new Web3ChallengeRequestDto { WalletAddress = request.WalletAddress, ChainId = request.ChainId };
 
     return await _authService.GenerateWeb3ChallengeAsync(challengeRequest);

@@ -4,6 +4,7 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Notifications;
 using GameGuild.Modules.Auth.Services;
 
+
 namespace GameGuild.Modules.Auth.Handlers;
 
 /// <summary>

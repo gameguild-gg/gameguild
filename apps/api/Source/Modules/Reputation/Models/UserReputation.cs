@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Reputation.Models;
 
 /// <summary>
@@ -120,7 +121,10 @@ public class UserReputationConfiguration : IEntityTypeConfiguration<UserReputati
     builder.HasOne(ur => ur.User).WithMany().HasForeignKey(ur => ur.UserId).OnDelete(DeleteBehavior.Cascade);
 
     // Configure relationship with CurrentLevel (can't be done with annotations)
-    builder.HasOne(ur => ur.CurrentLevel).WithMany().HasForeignKey(ur => ur.CurrentLevelId).OnDelete(DeleteBehavior.SetNull);
+    builder.HasOne(ur => ur.CurrentLevel)
+           .WithMany()
+           .HasForeignKey(ur => ur.CurrentLevelId)
+           .OnDelete(DeleteBehavior.SetNull);
 
     // Filtered unique constraint (can't be done with annotations)
     builder.HasIndex(ur => ur.UserId).IsUnique().HasFilter("\"DeletedAt\" IS NULL");

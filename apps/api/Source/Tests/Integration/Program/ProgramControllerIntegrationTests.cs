@@ -10,11 +10,14 @@ using GameGuild.Common.Enums;
 using GameGuild.Common.Entities;
 using Xunit;
 
+
 namespace GameGuild.Tests.Integration.Program;
 
 public class ProgramControllerIntegrationTests {
   private ApplicationDbContext GetInMemoryContext() {
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .Options;
 
     return new ApplicationDbContext(options);
   }
@@ -72,7 +75,11 @@ public class ProgramControllerIntegrationTests {
     using var context = GetInMemoryContext();
     var programService = new ProgramService(context);
 
-    var createDto = new CreateProgramDto("Integration Test Program", "A program created for integration testing", "integration-test-program");
+    var createDto = new CreateProgramDto(
+      "Integration Test Program",
+      "A program created for integration testing",
+      "integration-test-program"
+    );
 
     // Act
     var createdProgram = await programService.CreateProgramAsync(createDto);

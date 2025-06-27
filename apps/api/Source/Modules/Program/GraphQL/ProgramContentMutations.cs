@@ -8,6 +8,7 @@ using ProgramContentTypeEnum = GameGuild.Common.Enums.ProgramContentType;
 using VisibilityEnum = GameGuild.Common.Enums.Visibility;
 using GradingMethodEnum = GameGuild.Common.Enums.GradingMethod;
 
+
 namespace GameGuild.Modules.Program.GraphQL;
 
 [ExtendObjectType<GameGuild.Modules.User.GraphQL.Mutation>]
@@ -103,14 +104,22 @@ public class ProgramContentMutations {
   /// Note: The programId will be resolved from the content's ProgramId property
   /// </summary>
   [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
-  public async Task<bool> MoveContentAsync([Service] IProgramContentService contentService, Guid contentId, Guid? newParentId, int newSortOrder = 0) { return await contentService.MoveContentAsync(contentId, newParentId, newSortOrder); }
+  public async Task<bool> MoveContentAsync(
+    [Service] IProgramContentService contentService, Guid contentId,
+    Guid? newParentId, int newSortOrder = 0
+  ) {
+    return await contentService.MoveContentAsync(contentId, newParentId, newSortOrder);
+  }
 
   /// <summary>
   /// Reorder program content (Resource Level: Edit permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Edit permission on the specific Program
   /// </summary>
   [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
-  public async Task<bool> ReorderContentAsync([Service] IProgramContentService contentService, Guid programId, List<Guid> contentIds, List<int> sortOrders) {
+  public async Task<bool> ReorderContentAsync(
+    [Service] IProgramContentService contentService, Guid programId,
+    List<Guid> contentIds, List<int> sortOrders
+  ) {
     if (contentIds.Count != sortOrders.Count) { throw new ArgumentException("ContentIds and SortOrders must have the same length"); }
 
     var reorderList = contentIds.Zip(sortOrders, (id, order) => (id, order)).ToList();

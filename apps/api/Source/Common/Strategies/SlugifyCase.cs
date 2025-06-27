@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Caching.Memory;
 using Slugify;
 
+
 /// <summary>
 /// Provides utilities for converting strings to URL-friendly slug format.
 /// Wrapper around Slugify.Core for consistent API.
@@ -116,7 +117,9 @@ public static class SlugCase {
 
       if (availableLength <= 0) { uniqueSlug = counter.ToString(); }
       else {
-        string truncatedBase = baseSlug.Length > availableLength ? baseSlug.Substring(0, availableLength).TrimEnd('-') : baseSlug;
+        string truncatedBase = baseSlug.Length > availableLength
+                                 ? baseSlug.Substring(0, availableLength).TrimEnd('-')
+                                 : baseSlug;
         uniqueSlug = truncatedBase + suffix;
       }
 

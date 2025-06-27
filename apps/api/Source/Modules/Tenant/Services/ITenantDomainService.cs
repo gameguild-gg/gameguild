@@ -3,6 +3,7 @@ using GameGuild.Data;
 using GameGuild.Modules.Tenant.Models;
 using UserModel = GameGuild.Modules.User.Models.User;
 
+
 namespace GameGuild.Modules.Tenant.Services;
 
 /// <summary>

@@ -5,6 +5,7 @@ using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Tenant.Models;
 
+
 namespace GameGuild.Tests.Modules.Permission.Unit.Services;
 
 /// <summary>
@@ -16,7 +17,9 @@ public class PermissionServiceTenantTests : IDisposable {
   private readonly PermissionService _permissionService;
 
   public PermissionServiceTenantTests() {
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .Options;
 
     _context = new ApplicationDbContext(options);
     _permissionService = new PermissionService(_context);
@@ -55,7 +58,8 @@ public class PermissionServiceTenantTests : IDisposable {
     await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Read]);
 
     // Act - Grant additional permissions
-    TenantPermission result = await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Comment]);
+    TenantPermission result =
+      await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Comment]);
 
     // Assert
     Assert.True(result.HasPermission(PermissionType.Read));
@@ -72,7 +76,8 @@ public class PermissionServiceTenantTests : IDisposable {
     var permissions = new[] { PermissionType.Read, PermissionType.Comment };
 
     // Act
-    TenantPermission result = await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, permissions);
+    TenantPermission result =
+      await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, permissions);
 
     // Assert
     Assert.NotNull(result);
@@ -108,7 +113,9 @@ public class PermissionServiceTenantTests : IDisposable {
     var permissions = Array.Empty<PermissionType>();
 
     // Act & Assert
-    await Assert.ThrowsAsync<ArgumentException>(() => _permissionService.GrantTenantPermissionAsync(userId, tenantId, permissions));
+    await Assert.ThrowsAsync<ArgumentException>(() =>
+                                                  _permissionService.GrantTenantPermissionAsync(userId, tenantId, permissions)
+    );
   }
 
   [Fact]
@@ -118,7 +125,9 @@ public class PermissionServiceTenantTests : IDisposable {
     var tenantId = Guid.NewGuid();
 
     // Act & Assert
-    await Assert.ThrowsAsync<ArgumentNullException>(() => _permissionService.GrantTenantPermissionAsync(userId, tenantId, null!));
+    await Assert.ThrowsAsync<ArgumentNullException>(() =>
+                                                      _permissionService.GrantTenantPermissionAsync(userId, tenantId, null!)
+    );
   }
 
   #endregion
@@ -375,7 +384,8 @@ public class PermissionServiceTenantTests : IDisposable {
     await _permissionService.LeaveTenantAsync(userId, tenantId);
 
     // Assert
-    TenantPermission? membership = await _context.TenantPermissions.FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId);
+    TenantPermission? membership =
+      await _context.TenantPermissions.FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId);
 
     Assert.NotNull(membership);
     Assert.True(membership.ExpiresAt <= DateTime.UtcNow);

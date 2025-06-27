@@ -1,6 +1,7 @@
 using GameGuild.Data;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace GameGuild.Modules.UserProfile.Services;
 
 public interface IUserProfileService {
@@ -28,12 +29,23 @@ public class UserProfileService : IUserProfileService {
 
   public UserProfileService(ApplicationDbContext context) { _context = context; }
 
-  public async Task<IEnumerable<Models.UserProfile>> GetAllUserProfilesAsync() { return await _context.Resources.OfType<Models.UserProfile>().Where(up => up.DeletedAt == null).Include(up => up.Metadata).ToListAsync(); }
+  public async Task<IEnumerable<Models.UserProfile>> GetAllUserProfilesAsync() {
+    return await _context.Resources.OfType<Models.UserProfile>()
+                         .Where(up => up.DeletedAt == null)
+                         .Include(up => up.Metadata)
+                         .ToListAsync();
+  }
 
-  public async Task<Models.UserProfile?> GetUserProfileByIdAsync(Guid id) { return await _context.Resources.OfType<Models.UserProfile>().Include(up => up.Metadata).FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt == null); }
+  public async Task<Models.UserProfile?> GetUserProfileByIdAsync(Guid id) {
+    return await _context.Resources.OfType<Models.UserProfile>()
+                         .Include(up => up.Metadata)
+                         .FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt == null);
+  }
 
   public async Task<Models.UserProfile?> GetUserProfileByUserIdAsync(Guid userId) {
-    return await _context.Resources.OfType<Models.UserProfile>().Include(up => up.Metadata).FirstOrDefaultAsync(up => up.Id == userId && up.DeletedAt == null);
+    return await _context.Resources.OfType<Models.UserProfile>()
+                         .Include(up => up.Metadata)
+                         .FirstOrDefaultAsync(up => up.Id == userId && up.DeletedAt == null);
   }
 
   public async Task<Models.UserProfile> CreateUserProfileAsync(Models.UserProfile userProfile) {
@@ -44,7 +56,8 @@ public class UserProfileService : IUserProfileService {
   }
 
   public async Task<Models.UserProfile?> UpdateUserProfileAsync(Guid id, Models.UserProfile userProfile) {
-    Models.UserProfile? existingProfile = await _context.Resources.OfType<Models.UserProfile>().FirstOrDefaultAsync(up => up.Id == id);
+    Models.UserProfile? existingProfile =
+      await _context.Resources.OfType<Models.UserProfile>().FirstOrDefaultAsync(up => up.Id == id);
 
     if (existingProfile == null || existingProfile.DeletedAt != null) return null;
 
@@ -60,7 +73,8 @@ public class UserProfileService : IUserProfileService {
   }
 
   public async Task<bool> DeleteUserProfileAsync(Guid id) {
-    Models.UserProfile? userProfile = await _context.Resources.OfType<Models.UserProfile>().FirstOrDefaultAsync(up => up.Id == id);
+    Models.UserProfile? userProfile =
+      await _context.Resources.OfType<Models.UserProfile>().FirstOrDefaultAsync(up => up.Id == id);
 
     if (userProfile == null) return false;
 
@@ -71,7 +85,8 @@ public class UserProfileService : IUserProfileService {
   }
 
   public async Task<bool> SoftDeleteUserProfileAsync(Guid id) {
-    Models.UserProfile? userProfile = await _context.Resources.OfType<Models.UserProfile>().FirstOrDefaultAsync(up => up.Id == id);
+    Models.UserProfile? userProfile =
+      await _context.Resources.OfType<Models.UserProfile>().FirstOrDefaultAsync(up => up.Id == id);
 
     if (userProfile == null || userProfile.DeletedAt != null) return false;
 
@@ -82,7 +97,9 @@ public class UserProfileService : IUserProfileService {
   }
 
   public async Task<bool> RestoreUserProfileAsync(Guid id) {
-    Models.UserProfile? userProfile = await _context.Resources.OfType<Models.UserProfile>().IgnoreQueryFilters().FirstOrDefaultAsync(up => up.Id == id);
+    Models.UserProfile? userProfile = await _context.Resources.OfType<Models.UserProfile>()
+                                                    .IgnoreQueryFilters()
+                                                    .FirstOrDefaultAsync(up => up.Id == id);
 
     if (userProfile == null || userProfile.DeletedAt == null) return false;
 
@@ -93,6 +110,10 @@ public class UserProfileService : IUserProfileService {
   }
 
   public async Task<IEnumerable<Models.UserProfile>> GetDeletedUserProfilesAsync() {
-    return await _context.Resources.OfType<Models.UserProfile>().IgnoreQueryFilters().Where(up => up.DeletedAt != null).Include(up => up.Metadata).ToListAsync();
+    return await _context.Resources.OfType<Models.UserProfile>()
+                         .IgnoreQueryFilters()
+                         .Where(up => up.DeletedAt != null)
+                         .Include(up => up.Metadata)
+                         .ToListAsync();
   }
 }

@@ -3,12 +3,16 @@ using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 
+
 namespace GameGuild.Tests.Helpers {
   /// <summary>
   /// Authentication handler that always authenticates requests for testing purposes
   /// </summary>
   public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions> {
-    public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder) : base(options, logger, encoder) { }
+    public TestAuthHandler(
+      IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger,
+      UrlEncoder encoder
+    ) : base(options, logger, encoder) { }
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync() {
       // Create test identity with admin claims for testing

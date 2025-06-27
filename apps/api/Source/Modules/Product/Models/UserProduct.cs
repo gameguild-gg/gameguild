@@ -6,6 +6,7 @@ using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 using GameGuild.Modules.Subscription.Models;
 
+
 namespace GameGuild.Modules.Product.Models;
 
 /// <summary>
@@ -223,9 +224,15 @@ public class UserProductConfiguration : IEntityTypeConfiguration<UserProduct> {
     builder.HasOne(up => up.Product).WithMany().HasForeignKey(up => up.ProductId).OnDelete(DeleteBehavior.Restrict);
 
     // Configure relationship with Subscription (can't be done with annotations)
-    builder.HasOne(up => up.Subscription).WithMany().HasForeignKey(up => up.SubscriptionId).OnDelete(DeleteBehavior.SetNull);
+    builder.HasOne(up => up.Subscription)
+           .WithMany()
+           .HasForeignKey(up => up.SubscriptionId)
+           .OnDelete(DeleteBehavior.SetNull);
 
     // Configure relationship with GiftedByUser (can't be done with annotations)
-    builder.HasOne(up => up.GiftedByUser).WithMany().HasForeignKey(up => up.GiftedByUserId).OnDelete(DeleteBehavior.SetNull);
+    builder.HasOne(up => up.GiftedByUser)
+           .WithMany()
+           .HasForeignKey(up => up.GiftedByUserId)
+           .OnDelete(DeleteBehavior.SetNull);
   }
 }

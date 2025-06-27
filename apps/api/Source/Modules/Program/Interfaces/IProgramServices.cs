@@ -1,5 +1,6 @@
 using GameGuild.Common.Enums;
 
+
 namespace GameGuild.Modules.Program.Interfaces;
 
 /// <summary>
@@ -45,9 +46,15 @@ public interface IProgramContentService {
 
   Task<IEnumerable<Models.ProgramContent>> GetRequiredContentAsync(Guid programId);
 
-  Task<IEnumerable<Models.ProgramContent>> GetContentByTypeAsync(Guid programId, GameGuild.Common.Enums.ProgramContentType type);
+  Task<IEnumerable<Models.ProgramContent>> GetContentByTypeAsync(
+    Guid programId,
+    GameGuild.Common.Enums.ProgramContentType type
+  );
 
-  Task<IEnumerable<Models.ProgramContent>> GetContentByVisibilityAsync(Guid programId, GameGuild.Common.Enums.Visibility visibility);
+  Task<IEnumerable<Models.ProgramContent>> GetContentByVisibilityAsync(
+    Guid programId,
+    GameGuild.Common.Enums.Visibility visibility
+  );
 
   Task<bool> MoveContentAsync(Guid contentId, Guid? newParentId, int newSortOrder);
 
@@ -104,7 +111,10 @@ public interface IContentInteractionService {
 /// Interface for activity grading services
 /// </summary>
 public interface IActivityGradeService {
-  Task<Models.ActivityGrade> GradeActivityAsync(int contentInteractionId, int graderProgramUserId, decimal grade, string? feedback = null);
+  Task<Models.ActivityGrade> GradeActivityAsync(
+    int contentInteractionId, int graderProgramUserId, decimal grade,
+    string? feedback = null
+  );
 
   Task<Models.ActivityGrade?> GetGradeAsync(int contentInteractionId);
 

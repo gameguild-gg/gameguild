@@ -2,6 +2,7 @@ using GameGuild.Modules.Project.Models;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 
+
 namespace GameGuild.Modules.Project.Services;
 
 /// <summary>
@@ -51,7 +52,7 @@ public interface IProjectService {
   Task<IEnumerable<Models.Project>> GetProjectsByCreatorAsync(Guid creatorId);
 
   /// <summary>
-  /// Get projects with specific status
+  /// Get projects with a specific status
   /// </summary>
   Task<IEnumerable<Models.Project>> GetProjectsByStatusAsync(ContentStatus status);
 
@@ -139,7 +140,10 @@ public interface IProjectService {
   /// <summary>
   /// Follow a project
   /// </summary>
-  Task<ProjectFollower> FollowProjectAsync(Guid projectId, Guid userId, bool emailNotifications = true, bool pushNotifications = true);
+  Task<ProjectFollower> FollowProjectAsync(
+    Guid projectId, Guid userId, bool emailNotifications = true,
+    bool pushNotifications = true
+  );
 
   /// <summary>
   /// Unfollow a project
@@ -147,7 +151,7 @@ public interface IProjectService {
   Task<bool> UnfollowProjectAsync(Guid projectId, Guid userId);
 
   /// <summary>
-  /// Check if user is following a project
+  /// Check if a user is following a project
   /// </summary>
   Task<bool> IsUserFollowingProjectAsync(Guid projectId, Guid userId);
 
@@ -168,7 +172,10 @@ public interface IProjectService {
   /// <summary>
   /// Add feedback to a project
   /// </summary>
-  Task<ProjectFeedback> AddProjectFeedbackAsync(Guid projectId, Guid userId, int rating, string title, string? content = null);
+  Task<ProjectFeedback> AddProjectFeedbackAsync(
+    Guid projectId, Guid userId, int rating, string title,
+    string? content = null
+  );
 
   /// <summary>
   /// Update project feedback
@@ -200,7 +207,7 @@ public interface IProjectService {
   Task<ProjectJamSubmission> SubmitProjectToJamAsync(Guid projectId, Guid jamId, string? submissionNotes = null);
 
   /// <summary>
-  /// Remove project from jam
+  /// Remove a project from a game jam
   /// </summary>
   Task<bool> RemoveProjectFromJamAsync(Guid projectId, Guid jamId);
 
@@ -210,7 +217,7 @@ public interface IProjectService {
   Task<IEnumerable<ProjectJamSubmission>> GetProjectJamSubmissionsAsync(Guid projectId);
 
   /// <summary>
-  /// Get all projects submitted to a jam
+  /// Get all projects submitted to a game jam
   /// </summary>
   Task<IEnumerable<Models.Project>> GetProjectsByJamAsync(Guid jamId);
 

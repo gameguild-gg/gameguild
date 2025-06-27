@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.User.Models;
 
+
 // do not remove this, it's needed for IQueryable extensions
 
 // do not remove this, it's needed for IQueryable extensions
@@ -49,7 +50,8 @@ public enum PermissionType {
   Restore = 25,
   Delete = 26, // Delete is an alias for SoftDelete, so they share the same value
 
-  SoftDelete = 26, // Only the owners of a resource can soft delete it at resource level, it still can be deleted by admins at tenant or content type level
+  SoftDelete =
+    26, // Only the owners of a resource can soft delete it at resource level, it still can be deleted by admins at tenant or content type level
 
   HardDelete = 27,
   Backup = 28,
@@ -322,7 +324,8 @@ public class WithPermissions : BaseEntity {
 /// Helper methods for permission queries without fluent API
 /// </summary>
 public static class PermissionQueryHelper {
-  public static IQueryable<T> GetWithPermission<T>(IQueryable<T> query, PermissionType permission) where T : WithPermissions {
+  public static IQueryable<T> GetWithPermission<T>(IQueryable<T> query, PermissionType permission)
+    where T : WithPermissions {
     var bitPos = (int)permission;
 
     if (bitPos < 64) {
@@ -339,7 +342,8 @@ public static class PermissionQueryHelper {
     return query.Where(x => false);
   }
 
-  public static IQueryable<T> GetWithAllPermissions<T>(IQueryable<T> query, params PermissionType[] permissions) where T : WithPermissions {
+  public static IQueryable<T> GetWithAllPermissions<T>(IQueryable<T> query, params PermissionType[] permissions)
+    where T : WithPermissions {
     var mask1 = 0UL;
     var mask2 = 0UL;
 
@@ -360,7 +364,8 @@ public static class PermissionQueryHelper {
     return result;
   }
 
-  public static IQueryable<T> GetWithAnyPermission<T>(IQueryable<T> query, params PermissionType[] permissions) where T : WithPermissions {
+  public static IQueryable<T> GetWithAnyPermission<T>(IQueryable<T> query, params PermissionType[] permissions)
+    where T : WithPermissions {
     var mask1 = 0UL;
     var mask2 = 0UL;
 

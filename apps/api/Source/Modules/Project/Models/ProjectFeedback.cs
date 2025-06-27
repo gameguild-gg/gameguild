@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Project.Models;
 
 /// <summary>
@@ -14,160 +15,85 @@ namespace GameGuild.Modules.Project.Models;
 [Index(nameof(UserId), Name = "IX_ProjectFeedbacks_User")]
 [Index(nameof(CreatedAt), Name = "IX_ProjectFeedbacks_Date")]
 public class ProjectFeedback : ResourceBase {
-  private Guid _projectId;
-
-  private Project _project = null!;
-
-  private Guid _userId;
-
-  private User.Models.User _user = null!;
-
-  private int _rating = 5;
-
-  private string _title = string.Empty;
-
-  private string? _content;
-
-  private string? _categories;
-
-  private bool _isFeatured = false;
-
-  private bool _isVerified = false;
-
-  private ContentStatus _status = ContentStatus.Published;
-
-  private int _helpfulVotes = 0;
-
-  private int _totalVotes = 0;
-
-  private string? _platform;
-
-  private string? _projectVersion;
-
   /// <summary>
   /// Project being reviewed
   /// </summary>
-  public Guid ProjectId {
-    get => _projectId;
-    set => _projectId = value;
-  }
+  public Guid ProjectId { get; set; }
 
   /// <summary>
   /// Navigation property to project
   /// </summary>
-  public virtual Project Project {
-    get => _project;
-    set => _project = value;
-  }
+  public virtual Project Project { get; set; } = null!;
 
   /// <summary>
   /// User providing feedback
   /// </summary>
-  public Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
+  public Guid UserId { get; set; }
 
   /// <summary>
   /// Navigation property to user
   /// </summary>
-  public virtual User.Models.User User {
-    get => _user;
-    set => _user = value;
-  }
+  public virtual User.Models.User User { get; set; } = null!;
 
   /// <summary>
   /// Rating (1-5 stars)
   /// </summary>
   [Range(1, 5)]
-  public int Rating {
-    get => _rating;
-    set => _rating = value;
-  }
+  public int Rating { get; set; } = 5;
 
   /// <summary>
   /// Review title
   /// </summary>
   [Required]
   [MaxLength(200)]
-  public new string Title {
-    get => _title;
-    set => _title = value;
-  }
+  public new string Title { get; set; } = string.Empty;
 
   /// <summary>
   /// Review content
   /// </summary>
   [MaxLength(2000)]
-  public string? Content {
-    get => _content;
-    set => _content = value;
-  }
+  public string? Content { get; set; }
 
   /// <summary>
   /// Feedback categories (JSON array)
   /// </summary>
   [MaxLength(500)]
-  public string? Categories {
-    get => _categories;
-    set => _categories = value;
-  }
+  public string? Categories { get; set; }
 
   /// <summary>
   /// Whether this feedback is featured
   /// </summary>
-  public bool IsFeatured {
-    get => _isFeatured;
-    set => _isFeatured = value;
-  }
+  public bool IsFeatured { get; set; } = false;
 
   /// <summary>
   /// Whether this feedback has been verified (e.g., from actual user)
   /// </summary>
-  public bool IsVerified {
-    get => _isVerified;
-    set => _isVerified = value;
-  }
+  public bool IsVerified { get; set; } = false;
 
   /// <summary>
   /// Feedback status
   /// </summary>
-  public ContentStatus Status {
-    get => _status;
-    set => _status = value;
-  }
+  public ContentStatus Status { get; set; } = ContentStatus.Published;
 
   /// <summary>
   /// Number of helpful votes
   /// </summary>
-  public int HelpfulVotes {
-    get => _helpfulVotes;
-    set => _helpfulVotes = value;
-  }
+  public int HelpfulVotes { get; set; } = 0;
 
   /// <summary>
   /// Number of total votes
   /// </summary>
-  public int TotalVotes {
-    get => _totalVotes;
-    set => _totalVotes = value;
-  }
+  public int TotalVotes { get; set; } = 0;
 
   /// <summary>
   /// Platform where the project was experienced (if applicable)
   /// </summary>
   [MaxLength(100)]
-  public string? Platform {
-    get => _platform;
-    set => _platform = value;
-  }
+  public string? Platform { get; set; }
 
   /// <summary>
   /// Version of the project this feedback is for
   /// </summary>
   [MaxLength(50)]
-  public string? ProjectVersion {
-    get => _projectVersion;
-    set => _projectVersion = value;
-  }
+  public string? ProjectVersion { get; set; }
 }

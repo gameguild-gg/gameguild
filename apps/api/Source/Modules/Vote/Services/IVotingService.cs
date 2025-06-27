@@ -1,5 +1,6 @@
 using GameGuild.Modules.Voting.Models;
 
+
 namespace GameGuild.Modules.Voting.Services;
 
 /// <summary>

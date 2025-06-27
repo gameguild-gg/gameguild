@@ -3,6 +3,7 @@ using GameGuild.Modules.TestingLab.Services;
 using GameGuild.Modules.TestingLab.Dtos;
 using System.Security.Claims;
 
+
 namespace GameGuild.Modules.TestingLab.GraphQL;
 
 /// <summary>
@@ -13,7 +14,10 @@ public class TestingLabMutations {
   /// <summary>
   /// Create a new testing request
   /// </summary>
-  public async Task<TestingRequest> CreateTestingRequest([Service] ITestService testService, ClaimsPrincipal claimsPrincipal, CreateTestingRequestDto input) {
+  public async Task<TestingRequest> CreateTestingRequest(
+    [Service] ITestService testService,
+    ClaimsPrincipal claimsPrincipal, CreateTestingRequestDto input
+  ) {
     // Get the current authenticated user's ID
     string? userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -27,7 +31,10 @@ public class TestingLabMutations {
   /// <summary>
   /// Update an existing testing request
   /// </summary>
-  public async Task<TestingRequest> UpdateTestingRequest([Service] ITestService testService, Guid id, UpdateTestingRequestDto input) {
+  public async Task<TestingRequest> UpdateTestingRequest(
+    [Service] ITestService testService, Guid id,
+    UpdateTestingRequestDto input
+  ) {
     var existingRequest = await testService.GetTestingRequestByIdAsync(id);
 
     if (existingRequest == null) { throw new ArgumentException($"Testing request with ID {id} not found"); }
@@ -46,7 +53,10 @@ public class TestingLabMutations {
   /// <summary>
   /// Create a new testing session
   /// </summary>
-  public async Task<TestingSession> CreateTestingSession([Service] ITestService testService, ClaimsPrincipal claimsPrincipal, CreateTestingSessionDto input) {
+  public async Task<TestingSession> CreateTestingSession(
+    [Service] ITestService testService,
+    ClaimsPrincipal claimsPrincipal, CreateTestingSessionDto input
+  ) {
     // Get the current authenticated user's ID
     string? userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -60,7 +70,10 @@ public class TestingLabMutations {
   /// <summary>
   /// Update an existing testing session
   /// </summary>
-  public async Task<TestingSession> UpdateTestingSession([Service] ITestService testService, Guid id, CreateTestingSessionDto input) {
+  public async Task<TestingSession> UpdateTestingSession(
+    [Service] ITestService testService, Guid id,
+    CreateTestingSessionDto input
+  ) {
     var existingSession = await testService.GetTestingSessionByIdAsync(id);
 
     if (existingSession == null) { throw new ArgumentException($"Testing session with ID {id} not found"); }

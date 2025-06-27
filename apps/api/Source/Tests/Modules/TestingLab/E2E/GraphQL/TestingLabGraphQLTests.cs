@@ -19,6 +19,7 @@ using ProjectModel = GameGuild.Modules.Project.Models.Project;
 using ProjectVersionModel = GameGuild.Modules.Project.Models.ProjectVersion;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
+
 namespace GameGuild.Tests.Modules.TestingLab.E2E;
 
 /// <summary>
@@ -498,9 +499,19 @@ public class TestingLabGraphQLTests : IClassFixture<TestWebApplicationFactory>, 
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
 
     // Grant content type permissions
-    await permissionService.GrantContentTypePermissionAsync(userId, tenantId, "TestingRequest", [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]);
+    await permissionService.GrantContentTypePermissionAsync(
+      userId,
+      tenantId,
+      "TestingRequest",
+      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
+    );
 
-    await permissionService.GrantContentTypePermissionAsync(userId, tenantId, "TestingSession", [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]);
+    await permissionService.GrantContentTypePermissionAsync(
+      userId,
+      tenantId,
+      "TestingSession",
+      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
+    );
   }
 
   private Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant) {

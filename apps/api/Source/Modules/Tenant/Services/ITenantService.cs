@@ -1,5 +1,6 @@
 using GameGuild.Modules.Tenant.Models;
 
+
 namespace GameGuild.Modules.Tenant.Services;
 
 /// <summary>

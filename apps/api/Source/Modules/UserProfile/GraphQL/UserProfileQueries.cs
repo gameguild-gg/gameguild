@@ -1,6 +1,7 @@
 using GameGuild.Modules.User.GraphQL;
 using GameGuild.Modules.UserProfile.Services;
 
+
 namespace GameGuild.Modules.UserProfile.GraphQL;
 
 /// <summary>
@@ -21,10 +22,19 @@ public class UserProfileQueries {
   /// <summary>
   /// Get a user profile by user ID
   /// </summary>
-  public async Task<Models.UserProfile?> GetUserProfileByUserId([Service] IUserProfileService userProfileService, Guid userId) { return await userProfileService.GetUserProfileByUserIdAsync(userId); }
+  public async Task<Models.UserProfile?> GetUserProfileByUserId(
+    [Service] IUserProfileService userProfileService,
+    Guid userId
+  ) {
+    return await userProfileService.GetUserProfileByUserIdAsync(userId);
+  }
 
   /// <summary>
   /// Get soft-deleted user profiles
   /// </summary>
-  public async Task<IEnumerable<Models.UserProfile>> GetDeletedUserProfiles([Service] IUserProfileService userProfileService) { return await userProfileService.GetDeletedUserProfilesAsync(); }
+  public async Task<IEnumerable<Models.UserProfile>> GetDeletedUserProfiles(
+    [Service] IUserProfileService userProfileService
+  ) {
+    return await userProfileService.GetDeletedUserProfilesAsync();
+  }
 }

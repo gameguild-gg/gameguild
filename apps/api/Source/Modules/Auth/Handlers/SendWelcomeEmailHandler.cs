@@ -1,6 +1,7 @@
 using MediatR;
 using GameGuild.Modules.Auth.Notifications;
 
+
 namespace GameGuild.Modules.Auth.Handlers;
 
 /// <summary>
@@ -13,7 +14,11 @@ public class SendWelcomeEmailHandler : INotificationHandler<UserSignedUpNotifica
 
   public async Task Handle(UserSignedUpNotification notification, CancellationToken cancellationToken) {
     // In a real application, you would send an actual email
-    _logger.LogInformation("Sending welcome email to user {Email} (ID: {UserId})", notification.Email, notification.UserId);
+    _logger.LogInformation(
+      "Sending welcome email to user {Email} (ID: {UserId})",
+      notification.Email,
+      notification.UserId
+    );
 
     // Simulate email sending delay
     await Task.Delay(100, cancellationToken);
