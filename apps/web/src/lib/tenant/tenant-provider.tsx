@@ -113,7 +113,7 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
   const setCurrentTenant: SetCurrentTenant = useCallback(
     async (tenant: unknown): Promise<unknown | null> => {
       setLoading(true);
-      dispatch({ type: 'SET_CURRENT_TENANT', payload: null });
+      dispatch({ type: 'SET_CURRENT_TENANT', payload: tenant });
       setLoading(false);
     },
     [dispatch],
@@ -121,11 +121,11 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
 
   const switchCurrentTenant: SwitchCurrentTenant = useCallback(
     async (tenantId: string): Promise<unknown | null> => {
-      // If the session data is not available, we can return early.
-      if (!session?.accessToken) {
-        setError('No access token available');
-        return null;
-      }
+      // sIf the session data is not available, we can return early.
+      // If (!session?.accessToken) {
+      //   setError('No access token available');
+      //   return null;
+      // }
 
       setIsLoading(true);
       setError(null);
