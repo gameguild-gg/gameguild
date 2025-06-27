@@ -8,11 +8,7 @@ namespace GameGuild.Common.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class HealthController : ControllerBase {
-  private readonly ApplicationDbContext _context;
-
-  public HealthController(ApplicationDbContext context) { _context = context; }
-
+public class HealthController(ApplicationDbContext context) : ControllerBase {
   /// <summary>
   /// Health check endpoint - publicly accessible for connectivity testing
   /// </summary>
@@ -21,7 +17,7 @@ public class HealthController : ControllerBase {
   public async Task<IActionResult> GetHealth() {
     try {
       // Check database connectivity
-      await _context.Database.CanConnectAsync();
+      await context.Database.CanConnectAsync();
 
       return Ok(new { status = "healthy", timestamp = DateTime.UtcNow, environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), database = "connected" });
     }
@@ -45,8 +41,8 @@ public class HealthController : ControllerBase {
   [HttpGet("database")]
   public async Task<IActionResult> GetDatabaseHealth() {
     try {
-      var canConnect = await _context.Database.CanConnectAsync();
-      var userCount = await _context.Users.CountAsync();
+      var canConnect = await context.Database.CanConnectAsync();
+      var userCount = await context.Users.CountAsync();
 
       return Ok(new { status = "healthy", connected = canConnect, userCount, timestamp = DateTime.UtcNow });
     }

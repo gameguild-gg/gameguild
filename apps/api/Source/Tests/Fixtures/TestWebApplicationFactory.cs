@@ -205,19 +205,10 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
 /// <summary>
 /// Middleware to capture and log detailed error information during tests
 /// </summary>
-public class TestErrorLoggingMiddleware {
-  private readonly RequestDelegate _next;
-
-  private readonly ILogger<TestErrorLoggingMiddleware> _logger;
-
-  public TestErrorLoggingMiddleware(RequestDelegate next, ILogger<TestErrorLoggingMiddleware> logger) {
-    _next = next;
-    _logger = logger;
-  }
-
+public class TestErrorLoggingMiddleware(RequestDelegate next, ILogger<TestErrorLoggingMiddleware> logger) {
   public async Task InvokeAsync(HttpContext context) {
     try {
-      await _next(context);
+      await next(context);
 
       // Log details for non-success responses
       if (context.Response.StatusCode >= 400) {
@@ -227,7 +218,7 @@ public class TestErrorLoggingMiddleware {
                            ? string.Join(", ", context.User.Claims.Select(c => $"{c.Type}={c.Value}"))
                            : "Not authenticated";
 
-        _logger.LogWarning(
+        logger.LogWarning(
           "Request failed with status {StatusCode} for {Method} {Path}. Query: {Query}. HasAuth: {HasAuth}. User: {UserClaims}",
           context.Response.StatusCode,
           context.Request.Method,
@@ -239,7 +230,7 @@ public class TestErrorLoggingMiddleware {
       }
     }
     catch (Exception ex) {
-      _logger.LogError(
+      logger.LogError(
         ex,
         "Unhandled exception in request {Method} {Path}. Query: {Query}",
         context.Request.Method,

@@ -34,14 +34,10 @@ public interface ITenantContextService {
 /// <summary>
 /// Service implementation for tenant context management
 /// </summary>
-public class TenantContextService : ITenantContextService {
-  private readonly ApplicationDbContext _context;
-
+public class TenantContextService(ApplicationDbContext context) : ITenantContextService {
   private const string TenantClaim = "tenant_id";
 
   private const string TenantHeader = "X-Tenant-ID";
-
-  public TenantContextService(ApplicationDbContext context) { _context = context; }
 
   /// <summary>
   /// Get the current tenant ID from the request or claims
@@ -50,7 +46,7 @@ public class TenantContextService : ITenantContextService {
     // Check header first (highest priority)
     if (!string.IsNullOrEmpty(tenantHeader) && Guid.TryParse(tenantHeader, out var tenantHeaderId))
       // Verify tenant exists
-      if (await _context.Tenants.AnyAsync(t => t.Id == tenantHeaderId && t.IsActive))
+      if (await context.Tenants.AnyAsync(t => t.Id == tenantHeaderId && t.IsActive))
         return tenantHeaderId;
 
     // Check user claims
@@ -59,7 +55,7 @@ public class TenantContextService : ITenantContextService {
 
       if (tenantClaim != null && Guid.TryParse(tenantClaim.Value, out var tenantClaimId))
         // Verify tenant exists
-        if (await _context.Tenants.AnyAsync(t => t.Id == tenantClaimId && t.IsActive))
+        if (await context.Tenants.AnyAsync(t => t.Id == tenantClaimId && t.IsActive))
           return tenantClaimId;
     }
 
@@ -74,14 +70,14 @@ public class TenantContextService : ITenantContextService {
 
     if (!tenantId.HasValue) return null;
 
-    return await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId && t.IsActive);
+    return await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId && t.IsActive);
   }
 
   /// <summary>
   /// Get permission data for user in the specified tenant
   /// </summary>
   public async Task<TenantPermission?> GetTenantPermissionAsync(Guid userId, Guid tenantId) {
-    return await _context.TenantPermissions.FirstOrDefaultAsync(tp =>
+    return await context.TenantPermissions.FirstOrDefaultAsync(tp =>
                                                                   tp.UserId == userId && tp.TenantId == tenantId && tp.IsValid
            );
   }

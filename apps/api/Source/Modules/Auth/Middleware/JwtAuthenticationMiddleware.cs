@@ -8,16 +8,7 @@ namespace GameGuild.Modules.Auth.Middleware {
   /// <summary>
   /// JWT Authentication middleware
   /// </summary>
-  public class JwtAuthenticationMiddleware {
-    private readonly RequestDelegate _next;
-
-    private readonly IConfiguration _configuration;
-
-    public JwtAuthenticationMiddleware(RequestDelegate next, IConfiguration configuration) {
-      _next = next;
-      _configuration = configuration;
-    }
-
+  public class JwtAuthenticationMiddleware(RequestDelegate next, IConfiguration configuration) {
     public async Task InvokeAsync(HttpContext context) {
       var token = ExtractTokenFromHeader(context.Request);
 
@@ -31,7 +22,7 @@ namespace GameGuild.Modules.Auth.Middleware {
         }
       }
 
-      await _next(context);
+      await next(context);
     }
 
     private string? ExtractTokenFromHeader(HttpRequest request) {
@@ -44,15 +35,15 @@ namespace GameGuild.Modules.Auth.Middleware {
 
     private ClaimsPrincipal ValidateToken(string token) {
       var tokenHandler = new JwtSecurityTokenHandler();
-      var key = Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? "dev-key");
+      var key = Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"] ?? "dev-key");
 
       var validationParameters = new TokenValidationParameters {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
-        ValidIssuer = _configuration["Jwt:Issuer"],
+        ValidIssuer = configuration["Jwt:Issuer"],
         ValidateAudience = true,
-        ValidAudience = _configuration["Jwt:Audience"],
+        ValidAudience = configuration["Jwt:Audience"],
         ValidateLifetime = true,
         ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
       };

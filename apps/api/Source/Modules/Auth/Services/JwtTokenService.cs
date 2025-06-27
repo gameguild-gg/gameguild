@@ -19,11 +19,7 @@ namespace GameGuild.Modules.Auth.Services {
     ClaimsPrincipal? ValidateToken(string token);
   }
 
-  public class JwtTokenService : IJwtTokenService {
-    private readonly IConfiguration _configuration;
-
-    public JwtTokenService(IConfiguration configuration) { _configuration = configuration; }
-
+  public class JwtTokenService(IConfiguration configuration) : IJwtTokenService {
     public string GenerateAccessToken(UserDto user, string[] roles) { return GenerateAccessToken(user, roles, null); }
 
     public string GenerateAccessToken(UserDto user, string[] roles, IEnumerable<Claim>? additionalClaims = null) {
@@ -36,18 +32,18 @@ namespace GameGuild.Modules.Auth.Services {
 
       var key = new SymmetricSecurityKey(
         Encoding.UTF8.GetBytes(
-          _configuration["Jwt:SecretKey"] ??
+          configuration["Jwt:SecretKey"] ??
           "development-fallback-key-that-is-at-least-32-characters-long-for-testing"
         )
       );
       var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-      var expiryMinutes = int.Parse(_configuration["Jwt:ExpiryInMinutes"] ?? "60");
+      var expiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
       var expires = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
       var token = new JwtSecurityToken(
-        issuer: _configuration["Jwt:Issuer"],
-        audience: _configuration["Jwt:Audience"],
+        issuer: configuration["Jwt:Issuer"],
+        audience: configuration["Jwt:Audience"],
         claims: claims,
         expires: expires,
         signingCredentials: creds
@@ -71,7 +67,7 @@ namespace GameGuild.Modules.Auth.Services {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(
           Encoding.UTF8.GetBytes(
-            _configuration["Jwt:SecretKey"] ??
+            configuration["Jwt:SecretKey"] ??
             "development-fallback-key-that-is-at-least-32-characters-long-for-testing"
           )
         ),
@@ -107,11 +103,11 @@ namespace GameGuild.Modules.Auth.Services {
         ValidateAudience = true,
         ValidateIssuer = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = _configuration["Jwt:Issuer"],
-        ValidAudience = _configuration["Jwt:Audience"],
+        ValidIssuer = configuration["Jwt:Issuer"],
+        ValidAudience = configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(
           Encoding.UTF8.GetBytes(
-            _configuration["Jwt:SecretKey"] ??
+            configuration["Jwt:SecretKey"] ??
             "development-fallback-key-that-is-at-least-32-characters-long-for-testing"
           )
         ),

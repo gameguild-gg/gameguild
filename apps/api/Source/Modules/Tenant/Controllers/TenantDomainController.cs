@@ -11,11 +11,7 @@ namespace GameGuild.Modules.Tenant.Controllers;
 
 [ApiController]
 [Route("api/tenant-domains")]
-public class TenantDomainController : ControllerBase {
-  private readonly ITenantDomainService _tenantDomainService;
-
-  public TenantDomainController(ITenantDomainService tenantDomainService) { _tenantDomainService = tenantDomainService; }
-
+public class TenantDomainController(ITenantDomainService tenantDomainService) : ControllerBase {
   #region Domain Management
 
   // GET: api/tenant-domains
@@ -23,7 +19,7 @@ public class TenantDomainController : ControllerBase {
   [RequireResourcePermission<TenantDomain>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TenantDomain>>> GetDomains([FromQuery] Guid? tenantId) {
     if (tenantId.HasValue) {
-      var domains = await _tenantDomainService.GetDomainsByTenantAsync(tenantId.Value);
+      var domains = await tenantDomainService.GetDomainsByTenantAsync(tenantId.Value);
 
       return Ok(domains);
     }
@@ -36,7 +32,7 @@ public class TenantDomainController : ControllerBase {
   [HttpGet("{id}")]
   [RequireResourcePermission<TenantDomain>(PermissionType.Read)]
   public async Task<ActionResult<TenantDomain>> GetDomain(Guid id) {
-    var domain = await _tenantDomainService.GetDomainByIdAsync(id);
+    var domain = await tenantDomainService.GetDomainByIdAsync(id);
 
     if (domain == null) return NotFound();
 
@@ -49,12 +45,12 @@ public class TenantDomainController : ControllerBase {
   public async Task<ActionResult<TenantDomain>> CreateDomain([FromBody] CreateTenantDomainDto request) {
     try {
       // Validate domain ownership (in a real implementation)
-      var isValid = await _tenantDomainService.ValidateDomainOwnershipAsync(request.TenantId, request.TopLevelDomain);
+      var isValid = await tenantDomainService.ValidateDomainOwnershipAsync(request.TenantId, request.TopLevelDomain);
 
       if (!isValid) return BadRequest("Domain ownership could not be validated");
 
       var domain = request.ToTenantDomain();
-      var createdDomain = await _tenantDomainService.CreateDomainAsync(domain);
+      var createdDomain = await tenantDomainService.CreateDomainAsync(domain);
 
       return CreatedAtAction(nameof(GetDomain), new { id = createdDomain.Id }, createdDomain);
     }
@@ -66,12 +62,12 @@ public class TenantDomainController : ControllerBase {
   [RequireResourcePermission<TenantDomain>(PermissionType.Edit)]
   public async Task<ActionResult<TenantDomain>> UpdateDomain(Guid id, [FromBody] UpdateTenantDomainDto request) {
     try {
-      var existingDomain = await _tenantDomainService.GetDomainByIdAsync(id);
+      var existingDomain = await tenantDomainService.GetDomainByIdAsync(id);
 
       if (existingDomain == null) return NotFound();
 
       request.UpdateTenantDomain(existingDomain);
-      var updatedDomain = await _tenantDomainService.UpdateDomainAsync(existingDomain);
+      var updatedDomain = await tenantDomainService.UpdateDomainAsync(existingDomain);
 
       return Ok(updatedDomain);
     }
@@ -82,7 +78,7 @@ public class TenantDomainController : ControllerBase {
   [HttpDelete("{id}")]
   [RequireResourcePermission<TenantDomain>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteDomain(Guid id) {
-    var result = await _tenantDomainService.DeleteDomainAsync(id);
+    var result = await tenantDomainService.DeleteDomainAsync(id);
 
     if (!result) return NotFound();
 
@@ -93,7 +89,7 @@ public class TenantDomainController : ControllerBase {
   [HttpPost("{tenantId}/set-main/{domainId}")]
   [RequireResourcePermission<TenantDomain>(PermissionType.Edit)]
   public async Task<ActionResult> SetMainDomain(Guid tenantId, Guid domainId) {
-    var result = await _tenantDomainService.SetMainDomainAsync(tenantId, domainId);
+    var result = await tenantDomainService.SetMainDomainAsync(tenantId, domainId);
 
     if (!result) return NotFound();
 
@@ -111,8 +107,8 @@ public class TenantDomainController : ControllerBase {
     [FromQuery] bool rootOnly = false
   ) {
     var userGroups = rootOnly
-                       ? await _tenantDomainService.GetRootUserGroupsByTenantAsync(tenantId)
-                       : await _tenantDomainService.GetUserGroupsByTenantAsync(tenantId);
+                       ? await tenantDomainService.GetRootUserGroupsByTenantAsync(tenantId)
+                       : await tenantDomainService.GetUserGroupsByTenantAsync(tenantId);
 
     var dtos = userGroups.Select(TenantUserGroupDto.FromTenantUserGroup);
 
@@ -122,7 +118,7 @@ public class TenantDomainController : ControllerBase {
   [HttpGet("user-groups/{id}")]
   [RequireResourcePermission<TenantUserGroup>(PermissionType.Read)]
   public async Task<ActionResult<TenantUserGroupDto>> GetUserGroup(Guid id) {
-    var userGroup = await _tenantDomainService.GetUserGroupByIdAsync(id);
+    var userGroup = await tenantDomainService.GetUserGroupByIdAsync(id);
 
     if (userGroup == null) return NotFound();
 
@@ -136,7 +132,7 @@ public class TenantDomainController : ControllerBase {
   public async Task<ActionResult<TenantUserGroupDto>> CreateUserGroup([FromBody] CreateTenantUserGroupDto request) {
     try {
       var userGroup = request.ToTenantUserGroup();
-      var createdUserGroup = await _tenantDomainService.CreateUserGroupAsync(userGroup);
+      var createdUserGroup = await tenantDomainService.CreateUserGroupAsync(userGroup);
       var dto = TenantUserGroupDto.FromTenantUserGroup(createdUserGroup);
 
       return CreatedAtAction(nameof(GetUserGroup), new { id = createdUserGroup.Id }, dto);
@@ -151,12 +147,12 @@ public class TenantDomainController : ControllerBase {
     [FromBody] UpdateTenantUserGroupDto request
   ) {
     try {
-      var existingUserGroup = await _tenantDomainService.GetUserGroupByIdAsync(id);
+      var existingUserGroup = await tenantDomainService.GetUserGroupByIdAsync(id);
 
       if (existingUserGroup == null) return NotFound();
 
       request.UpdateTenantUserGroup(existingUserGroup);
-      var updatedUserGroup = await _tenantDomainService.UpdateUserGroupAsync(existingUserGroup);
+      var updatedUserGroup = await tenantDomainService.UpdateUserGroupAsync(existingUserGroup);
       var dto = TenantUserGroupDto.FromTenantUserGroup(updatedUserGroup);
 
       return Ok(dto);
@@ -168,7 +164,7 @@ public class TenantDomainController : ControllerBase {
   [HttpDelete("user-groups/{id}")]
   [RequireResourcePermission<TenantUserGroup>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteUserGroup(Guid id) {
-    var result = await _tenantDomainService.DeleteUserGroupAsync(id);
+    var result = await tenantDomainService.DeleteUserGroupAsync(id);
 
     if (!result) return NotFound();
 
@@ -185,7 +181,7 @@ public class TenantDomainController : ControllerBase {
   public async Task<ActionResult<TenantUserGroupMembership>> AddUserToGroup([FromBody] AddUserToGroupDto request) {
     try {
       var membership =
-        await _tenantDomainService.AddUserToGroupAsync(request.UserId, request.UserGroupId, request.IsAutoAssigned);
+        await tenantDomainService.AddUserToGroupAsync(request.UserId, request.UserGroupId, request.IsAutoAssigned);
 
       return Ok(membership);
     }
@@ -196,7 +192,7 @@ public class TenantDomainController : ControllerBase {
   [HttpDelete("user-groups/memberships")]
   [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Delete)]
   public async Task<ActionResult> RemoveUserFromGroup([FromQuery] Guid userId, [FromQuery] Guid userGroupId) {
-    var result = await _tenantDomainService.RemoveUserFromGroupAsync(userId, userGroupId);
+    var result = await tenantDomainService.RemoveUserFromGroupAsync(userId, userGroupId);
 
     if (!result) return NotFound();
 
@@ -207,7 +203,7 @@ public class TenantDomainController : ControllerBase {
   [HttpGet("user-groups/{groupId}/members")]
   [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TenantUserGroupMembership>>> GetGroupMembers(Guid groupId) {
-    var members = await _tenantDomainService.GetGroupMembersAsync(groupId);
+    var members = await tenantDomainService.GetGroupMembersAsync(groupId);
 
     return Ok(members);
   } // GET: api/tenant-domains/users/{userId}/groups
@@ -215,7 +211,7 @@ public class TenantDomainController : ControllerBase {
   [HttpGet("users/{userId}/groups")]
   [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TenantUserGroupDto>>> GetUserGroups(Guid userId) {
-    var userGroups = await _tenantDomainService.GetUserGroupsForUserAsync(userId);
+    var userGroups = await tenantDomainService.GetUserGroupsForUserAsync(userId);
     var dtos = userGroups.Select(TenantUserGroupDto.FromTenantUserGroup);
 
     return Ok(dtos);
@@ -225,7 +221,7 @@ public class TenantDomainController : ControllerBase {
   [HttpGet("groups/{groupId}/users")]
   [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<UserDto>>> GetGroupUsers(Guid groupId) {
-    var users = await _tenantDomainService.GetUsersInGroupAsync(groupId);
+    var users = await tenantDomainService.GetUsersInGroupAsync(groupId);
     var userDtos = users.Select(u => new UserDto { Id = u.Id, Username = u.Name, Email = u.Email });
 
     return Ok(userDtos);
@@ -240,7 +236,7 @@ public class TenantDomainController : ControllerBase {
   [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Create)]
   public async Task<ActionResult<TenantUserGroupMembershipDto>> AutoAssignUser([FromBody] AutoAssignUserDto request) {
     try {
-      var membership = await _tenantDomainService.AutoAssignUserToGroupsAsync(request.Email);
+      var membership = await tenantDomainService.AutoAssignUserToGroupsAsync(request.Email);
 
       if (membership != null && membership.Any()) {
         // Return the first membership created (there should typically be only one for single user)
@@ -274,7 +270,7 @@ public class TenantDomainController : ControllerBase {
         var memberships = new List<TenantUserGroupMembership>();
 
         foreach (var email in request.UserEmails) {
-          var userMemberships = await _tenantDomainService.AutoAssignUserToGroupsAsync(email);
+          var userMemberships = await tenantDomainService.AutoAssignUserToGroupsAsync(email);
           memberships.AddRange(userMemberships);
         }
 
@@ -282,11 +278,11 @@ public class TenantDomainController : ControllerBase {
       }
       else if (request.TenantId.HasValue) {
         // Auto-assign all users for a specific tenant
-        assignedCount = await _tenantDomainService.AutoAssignTenantUsersAsync(request.TenantId.Value);
+        assignedCount = await tenantDomainService.AutoAssignTenantUsersAsync(request.TenantId.Value);
       }
       else {
         // Auto-assign all users (admin operation)
-        assignedCount = await _tenantDomainService.AutoAssignAllUsersAsync();
+        assignedCount = await tenantDomainService.AutoAssignAllUsersAsync();
       }
 
       return Ok(new { AssignedCount = assignedCount });
@@ -298,7 +294,7 @@ public class TenantDomainController : ControllerBase {
   [HttpGet("domain-match")]
   [RequireResourcePermission<TenantDomain>(PermissionType.Read)]
   public async Task<ActionResult<TenantDomain>> FindMatchingDomain([FromQuery] string email) {
-    var domain = await _tenantDomainService.FindMatchingDomainAsync(email);
+    var domain = await tenantDomainService.FindMatchingDomainAsync(email);
 
     if (domain == null) return NotFound("No matching domain found for the provided email");
 

@@ -9,18 +9,9 @@ namespace GameGuild.Modules.UserProfile.Handlers;
 /// <summary>
 /// Handler for updating user profile with business logic
 /// </summary>
-public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand, Models.UserProfile> {
-  private readonly ApplicationDbContext _context;
-
-  private readonly ILogger<UpdateUserProfileHandler> _logger;
-
-  public UpdateUserProfileHandler(ApplicationDbContext context, ILogger<UpdateUserProfileHandler> logger) {
-    _context = context;
-    _logger = logger;
-  }
-
+public class UpdateUserProfileHandler(ApplicationDbContext context, ILogger<UpdateUserProfileHandler> logger) : IRequestHandler<UpdateUserProfileCommand, Models.UserProfile> {
   public async Task<Models.UserProfile> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken) {
-    var userProfile = await _context.Resources.OfType<Models.UserProfile>()
+    var userProfile = await context.Resources.OfType<Models.UserProfile>()
                                     .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 
     if (userProfile == null) throw new InvalidOperationException($"User profile with ID {request.UserProfileId} not found");
@@ -33,9 +24,9 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
     // Update timestamps
     userProfile.Touch();
 
-    await _context.SaveChangesAsync(cancellationToken);
+    await context.SaveChangesAsync(cancellationToken);
 
-    _logger.LogInformation("User profile {UserProfileId} updated successfully", request.UserProfileId);
+    logger.LogInformation("User profile {UserProfileId} updated successfully", request.UserProfileId);
 
     return userProfile;
   }

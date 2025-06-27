@@ -11,11 +11,7 @@ namespace GameGuild.Modules.TestingLab.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class TestingController : ControllerBase {
-  private readonly ITestService _testService;
-
-  public TestingController(ITestService testService) { _testService = testService; }
-
+public class TestingController(ITestService testService) : ControllerBase {
   #region Testing Request Endpoints
 
   // GET: testing/requests
@@ -25,7 +21,7 @@ public class TestingController : ControllerBase {
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50
   ) {
-    var requests = await _testService.GetTestingRequestsAsync(skip, take);
+    var requests = await testService.GetTestingRequestsAsync(skip, take);
 
     return Ok(requests);
   }
@@ -34,7 +30,7 @@ public class TestingController : ControllerBase {
   [HttpGet("requests/{id}")]
   [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<TestingRequest>> GetTestingRequest(Guid id) {
-    var request = await _testService.GetTestingRequestByIdAsync(id);
+    var request = await testService.GetTestingRequestByIdAsync(id);
 
     if (request == null) return NotFound();
 
@@ -45,7 +41,7 @@ public class TestingController : ControllerBase {
   [HttpGet("requests/{id}/details")]
   [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<TestingRequest>> GetTestingRequestWithDetails(Guid id) {
-    var request = await _testService.GetTestingRequestByIdWithDetailsAsync(id);
+    var request = await testService.GetTestingRequestByIdWithDetailsAsync(id);
 
     if (request == null) return NotFound();
 
@@ -62,7 +58,7 @@ public class TestingController : ControllerBase {
       if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
       var request = requestDto.ToTestingRequest(userId);
-      var createdRequest = await _testService.CreateTestingRequestAsync(request);
+      var createdRequest = await testService.CreateTestingRequestAsync(request);
 
       return CreatedAtAction(nameof(GetTestingRequest), new { id = createdRequest.Id }, createdRequest);
     }
@@ -76,7 +72,7 @@ public class TestingController : ControllerBase {
     if (id != request.Id) return BadRequest("ID mismatch");
 
     try {
-      var updatedRequest = await _testService.UpdateTestingRequestAsync(request);
+      var updatedRequest = await testService.UpdateTestingRequestAsync(request);
 
       return Ok(updatedRequest);
     }
@@ -88,7 +84,7 @@ public class TestingController : ControllerBase {
   [HttpDelete("requests/{id}")]
   [RequireResourcePermission<TestingRequest>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteTestingRequest(Guid id) {
-    var result = await _testService.DeleteTestingRequestAsync(id);
+    var result = await testService.DeleteTestingRequestAsync(id);
 
     if (!result) return NotFound();
 
@@ -99,7 +95,7 @@ public class TestingController : ControllerBase {
   [HttpPost("requests/{id}/restore")]
   [RequireResourcePermission<TestingRequest>(PermissionType.Edit)]
   public async Task<ActionResult> RestoreTestingRequest(Guid id) {
-    var result = await _testService.RestoreTestingRequestAsync(id);
+    var result = await testService.RestoreTestingRequestAsync(id);
 
     if (!result) return NotFound();
 
@@ -117,7 +113,7 @@ public class TestingController : ControllerBase {
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50
   ) {
-    var sessions = await _testService.GetTestingSessionsAsync(skip, take);
+    var sessions = await testService.GetTestingSessionsAsync(skip, take);
 
     return Ok(sessions);
   }
@@ -126,7 +122,7 @@ public class TestingController : ControllerBase {
   [HttpGet("sessions/{id}")]
   [RequireResourcePermission<TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<TestingSession>> GetTestingSession(Guid id) {
-    var session = await _testService.GetTestingSessionByIdAsync(id);
+    var session = await testService.GetTestingSessionByIdAsync(id);
 
     if (session == null) return NotFound();
 
@@ -137,7 +133,7 @@ public class TestingController : ControllerBase {
   [HttpGet("sessions/{id}/details")]
   [RequireResourcePermission<TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<TestingSession>> GetTestingSessionWithDetails(Guid id) {
-    var session = await _testService.GetTestingSessionByIdWithDetailsAsync(id);
+    var session = await testService.GetTestingSessionByIdWithDetailsAsync(id);
 
     if (session == null) return NotFound();
 
@@ -155,7 +151,7 @@ public class TestingController : ControllerBase {
       if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
       session.CreatedById = userId;
-      var createdSession = await _testService.CreateTestingSessionAsync(session);
+      var createdSession = await testService.CreateTestingSessionAsync(session);
 
       return CreatedAtAction(nameof(GetTestingSession), new { id = createdSession.Id }, createdSession);
     }
@@ -169,7 +165,7 @@ public class TestingController : ControllerBase {
     if (id != session.Id) return BadRequest("ID mismatch");
 
     try {
-      var updatedSession = await _testService.UpdateTestingSessionAsync(session);
+      var updatedSession = await testService.UpdateTestingSessionAsync(session);
 
       return Ok(updatedSession);
     }
@@ -181,7 +177,7 @@ public class TestingController : ControllerBase {
   [HttpDelete("sessions/{id}")]
   [RequireResourcePermission<TestingSession>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteTestingSession(Guid id) {
-    var result = await _testService.DeleteTestingSessionAsync(id);
+    var result = await testService.DeleteTestingSessionAsync(id);
 
     if (!result) return NotFound();
 
@@ -192,7 +188,7 @@ public class TestingController : ControllerBase {
   [HttpPost("sessions/{id}/restore")]
   [RequireResourcePermission<TestingSession>(PermissionType.Edit)]
   public async Task<ActionResult> RestoreTestingSession(Guid id) {
-    var result = await _testService.RestoreTestingSessionAsync(id);
+    var result = await testService.RestoreTestingSessionAsync(id);
 
     if (!result) return NotFound();
 
@@ -207,7 +203,7 @@ public class TestingController : ControllerBase {
   [HttpGet("requests/by-project-version/{projectVersionId}")]
   [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequestsByProjectVersion(Guid projectVersionId) {
-    var requests = await _testService.GetTestingRequestsByProjectVersionAsync(projectVersionId);
+    var requests = await testService.GetTestingRequestsByProjectVersionAsync(projectVersionId);
 
     return Ok(requests);
   }
@@ -216,7 +212,7 @@ public class TestingController : ControllerBase {
   [HttpGet("requests/by-creator/{creatorId}")]
   [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequestsByCreator(Guid creatorId) {
-    var requests = await _testService.GetTestingRequestsByCreatorAsync(creatorId);
+    var requests = await testService.GetTestingRequestsByCreatorAsync(creatorId);
 
     return Ok(requests);
   }
@@ -225,7 +221,7 @@ public class TestingController : ControllerBase {
   [HttpGet("requests/by-status/{status}")]
   [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequestsByStatus(TestingRequestStatus status) {
-    var requests = await _testService.GetTestingRequestsByStatusAsync(status);
+    var requests = await testService.GetTestingRequestsByStatusAsync(status);
 
     return Ok(requests);
   }
@@ -234,7 +230,7 @@ public class TestingController : ControllerBase {
   [HttpGet("sessions/by-request/{testingRequestId}")]
   [RequireResourcePermission<TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByRequest(Guid testingRequestId) {
-    var sessions = await _testService.GetTestingSessionsByRequestAsync(testingRequestId);
+    var sessions = await testService.GetTestingSessionsByRequestAsync(testingRequestId);
 
     return Ok(sessions);
   }
@@ -243,7 +239,7 @@ public class TestingController : ControllerBase {
   [HttpGet("sessions/by-location/{locationId}")]
   [RequireResourcePermission<TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByLocation(Guid locationId) {
-    var sessions = await _testService.GetTestingSessionsByLocationAsync(locationId);
+    var sessions = await testService.GetTestingSessionsByLocationAsync(locationId);
 
     return Ok(sessions);
   }
@@ -252,7 +248,7 @@ public class TestingController : ControllerBase {
   [HttpGet("sessions/by-status/{status}")]
   [RequireResourcePermission<TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByStatus(SessionStatus status) {
-    var sessions = await _testService.GetTestingSessionsByStatusAsync(status);
+    var sessions = await testService.GetTestingSessionsByStatusAsync(status);
 
     return Ok(sessions);
   }
@@ -261,7 +257,7 @@ public class TestingController : ControllerBase {
   [HttpGet("sessions/by-manager/{managerId}")]
   [RequireResourcePermission<TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByManager(Guid managerId) {
-    var sessions = await _testService.GetTestingSessionsByManagerAsync(managerId);
+    var sessions = await testService.GetTestingSessionsByManagerAsync(managerId);
 
     return Ok(sessions);
   }
@@ -272,7 +268,7 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult<IEnumerable<TestingRequest>>> SearchTestingRequests([FromQuery] string searchTerm) {
     if (string.IsNullOrWhiteSpace(searchTerm)) return BadRequest("Search term is required");
 
-    var requests = await _testService.SearchTestingRequestsAsync(searchTerm);
+    var requests = await testService.SearchTestingRequestsAsync(searchTerm);
 
     return Ok(requests);
   }
@@ -283,7 +279,7 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult<IEnumerable<TestingSession>>> SearchTestingSessions([FromQuery] string searchTerm) {
     if (string.IsNullOrWhiteSpace(searchTerm)) return BadRequest("Search term is required");
 
-    var sessions = await _testService.SearchTestingSessionsAsync(searchTerm);
+    var sessions = await testService.SearchTestingSessionsAsync(searchTerm);
 
     return Ok(sessions);
   }
@@ -297,7 +293,7 @@ public class TestingController : ControllerBase {
   [RequireResourcePermission<TestingParticipant>(PermissionType.Create)]
   public async Task<ActionResult<TestingParticipant>> AddParticipant(Guid requestId, Guid userId) {
     try {
-      var participant = await _testService.AddParticipantAsync(requestId, userId);
+      var participant = await testService.AddParticipantAsync(requestId, userId);
 
       return Ok(participant);
     }
@@ -308,7 +304,7 @@ public class TestingController : ControllerBase {
   [HttpDelete("requests/{requestId}/participants/{userId}")]
   [RequireResourcePermission<TestingParticipant>(PermissionType.Delete)]
   public async Task<ActionResult> RemoveParticipant(Guid requestId, Guid userId) {
-    var result = await _testService.RemoveParticipantAsync(requestId, userId);
+    var result = await testService.RemoveParticipantAsync(requestId, userId);
 
     if (!result) return NotFound();
 
@@ -319,7 +315,7 @@ public class TestingController : ControllerBase {
   [HttpGet("requests/{requestId}/participants")]
   [RequireResourcePermission<TestingParticipant>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingParticipant>>> GetTestingRequestParticipants(Guid requestId) {
-    var participants = await _testService.GetTestingRequestParticipantsAsync(requestId);
+    var participants = await testService.GetTestingRequestParticipantsAsync(requestId);
 
     return Ok(participants);
   }
@@ -328,7 +324,7 @@ public class TestingController : ControllerBase {
   [HttpGet("requests/{requestId}/participants/{userId}/check")]
   [RequireResourcePermission<TestingParticipant>(PermissionType.Read)]
   public async Task<ActionResult<bool>> CheckUserParticipation(Guid requestId, Guid userId) {
-    var isParticipant = await _testService.IsUserParticipantAsync(requestId, userId);
+    var isParticipant = await testService.IsUserParticipantAsync(requestId, userId);
 
     return Ok(isParticipant);
   }
@@ -351,7 +347,7 @@ public class TestingController : ControllerBase {
       if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
       var registration =
-        await _testService.RegisterForSessionAsync(sessionId, userId, request.RegistrationType, request.Notes);
+        await testService.RegisterForSessionAsync(sessionId, userId, request.RegistrationType, request.Notes);
 
       return Ok(registration);
     }
@@ -367,7 +363,7 @@ public class TestingController : ControllerBase {
 
     if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
-    var result = await _testService.UnregisterFromSessionAsync(sessionId, userId);
+    var result = await testService.UnregisterFromSessionAsync(sessionId, userId);
 
     if (!result) return NotFound();
 
@@ -378,7 +374,7 @@ public class TestingController : ControllerBase {
   [HttpGet("sessions/{sessionId}/registrations")]
   [RequireResourcePermission<SessionRegistration>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<SessionRegistration>>> GetSessionRegistrations(Guid sessionId) {
-    var registrations = await _testService.GetSessionRegistrationsAsync(sessionId);
+    var registrations = await testService.GetSessionRegistrationsAsync(sessionId);
 
     return Ok(registrations);
   }
@@ -397,7 +393,7 @@ public class TestingController : ControllerBase {
       if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
       var waitlistEntry =
-        await _testService.AddToWaitlistAsync(sessionId, userId, request.RegistrationType, request.Notes);
+        await testService.AddToWaitlistAsync(sessionId, userId, request.RegistrationType, request.Notes);
 
       return Ok(waitlistEntry);
     }
@@ -413,7 +409,7 @@ public class TestingController : ControllerBase {
 
     if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
-    var result = await _testService.RemoveFromWaitlistAsync(sessionId, userId);
+    var result = await testService.RemoveFromWaitlistAsync(sessionId, userId);
 
     if (!result) return NotFound();
 
@@ -424,7 +420,7 @@ public class TestingController : ControllerBase {
   [HttpGet("sessions/{sessionId}/waitlist")]
   [RequireResourcePermission<SessionWaitlist>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<SessionWaitlist>>> GetSessionWaitlist(Guid sessionId) {
-    var waitlist = await _testService.GetSessionWaitlistAsync(sessionId);
+    var waitlist = await testService.GetSessionWaitlistAsync(sessionId);
 
     return Ok(waitlist);
   }
@@ -443,7 +439,7 @@ public class TestingController : ControllerBase {
 
       if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
-      var feedback = await _testService.AddFeedbackAsync(
+      var feedback = await testService.AddFeedbackAsync(
                        requestId,
                        userId,
                        request.FeedbackFormId,
@@ -462,7 +458,7 @@ public class TestingController : ControllerBase {
   [HttpGet("requests/{requestId}/feedback")]
   [RequireResourcePermission<TestingFeedback>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingFeedback>>> GetTestingRequestFeedback(Guid requestId) {
-    var feedback = await _testService.GetTestingRequestFeedbackAsync(requestId);
+    var feedback = await testService.GetTestingRequestFeedbackAsync(requestId);
 
     return Ok(feedback);
   }
@@ -471,7 +467,7 @@ public class TestingController : ControllerBase {
   [HttpGet("feedback/by-user/{userId}")]
   [RequireResourcePermission<TestingFeedback>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingFeedback>>> GetFeedbackByUser(Guid userId) {
-    var feedback = await _testService.GetFeedbackByUserAsync(userId);
+    var feedback = await testService.GetFeedbackByUserAsync(userId);
 
     return Ok(feedback);
   }
@@ -484,7 +480,7 @@ public class TestingController : ControllerBase {
   [HttpGet("requests/{requestId}/statistics")]
   [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<object>> GetTestingRequestStatistics(Guid requestId) {
-    var statistics = await _testService.GetTestingRequestStatisticsAsync(requestId);
+    var statistics = await testService.GetTestingRequestStatisticsAsync(requestId);
 
     return Ok(statistics);
   }
@@ -493,7 +489,7 @@ public class TestingController : ControllerBase {
   [HttpGet("sessions/{sessionId}/statistics")]
   [RequireResourcePermission<TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<object>> GetTestingSessionStatistics(Guid sessionId) {
-    var statistics = await _testService.GetTestingSessionStatisticsAsync(sessionId);
+    var statistics = await testService.GetTestingSessionStatisticsAsync(sessionId);
 
     return Ok(statistics);
   }
@@ -502,7 +498,7 @@ public class TestingController : ControllerBase {
   [HttpGet("users/{userId}/activity")]
   [RequireResourcePermission<TestingParticipant>(PermissionType.Read)]
   public async Task<ActionResult<object>> GetUserTestingActivity(Guid userId) {
-    var activity = await _testService.GetUserTestingActivityAsync(userId);
+    var activity = await testService.GetUserTestingActivityAsync(userId);
 
     return Ok(activity);
   }

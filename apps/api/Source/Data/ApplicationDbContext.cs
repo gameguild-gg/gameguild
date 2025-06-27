@@ -23,7 +23,7 @@ using Tag = GameGuild.Modules.Tag.Models.Tag;
 namespace GameGuild.Data;
 
 // NOTE: do not add fluent api configurations here, they should be in the same file of the entity. On the entity, use notations for simple configurations, and fluent API for complex ones.
-public class ApplicationDbContext : DbContext {
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options) {
   private DbSet<User> _users;
 
   private DbSet<Credential> _credentials;
@@ -146,8 +146,6 @@ public class ApplicationDbContext : DbContext {
   private DbSet<ProgramFeedbackSubmission> _programFeedbackSubmissions;
 
   private DbSet<ProgramRating> _programRatings;
-
-  public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
   // DbSets
   public DbSet<User> Users {

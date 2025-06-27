@@ -6,12 +6,8 @@ namespace GameGuild.Modules.Tenant.Middleware;
 /// <summary>
 /// Middleware to handle tenant context in requests
 /// </summary>
-public class TenantContextMiddleware {
-  private readonly RequestDelegate _next;
-
+public class TenantContextMiddleware(RequestDelegate next) {
   private const string TenantHeader = "X-Tenant-ID";
-
-  public TenantContextMiddleware(RequestDelegate next) { _next = next; }
 
   public async Task InvokeAsync(HttpContext context, ITenantContextService tenantContextService) {
     // Extract tenant ID from header
@@ -43,6 +39,6 @@ public class TenantContextMiddleware {
       context.Items["TenantId"] = tenantId;
     }
 
-    await _next(context);
+    await next(context);
   }
 }

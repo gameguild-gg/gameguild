@@ -13,23 +13,19 @@ namespace GameGuild.Modules.Program.Services;
 /// Service implementation for Program business logic
 /// Provides operations for managing programs, content, user participation, and analytics
 /// </summary>
-public class ProgramService : IProgramService {
-  private readonly ApplicationDbContext _context;
-
-  public ProgramService(ApplicationDbContext context) { _context = context; }
-
+public class ProgramService(ApplicationDbContext context) : IProgramService {
   // Basic CRUD Operations
-  public async Task<ProgramEntity?> GetProgramByIdAsync(Guid id) { return await _context.Programs.Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id); }
+  public async Task<ProgramEntity?> GetProgramByIdAsync(Guid id) { return await context.Programs.Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id); }
 
   public async Task<ProgramEntity?> GetProgramWithContentAsync(Guid id) {
-    return await _context.Programs.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted))
+    return await context.Programs.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted))
                          .Include(p => p.ProgramUsers.Where(pu => !pu.IsDeleted))
                          .Where(p => !p.IsDeleted)
                          .FirstOrDefaultAsync(p => p.Id == id);
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetProgramsAsync(int skip = 0, int take = 50) {
-    return await _context.Programs.Where(p => p.DeletedAt == null)
+    return await context.Programs.Where(p => p.DeletedAt == null)
                          .OrderByDescending(p => p.CreatedAt)
                          .Skip(skip)
                          .Take(take)
@@ -40,26 +36,26 @@ public class ProgramService : IProgramService {
     program.Status = ContentStatus.Draft;
     program.Visibility = AccessLevel.Private;
 
-    _context.Programs.Add(program);
-    await _context.SaveChangesAsync();
+    context.Programs.Add(program);
+    await context.SaveChangesAsync();
 
     return program;
   }
 
   public async Task<ProgramEntity> UpdateProgramAsync(ProgramEntity program) {
     program.Touch();
-    _context.Programs.Update(program);
-    await _context.SaveChangesAsync();
+    context.Programs.Update(program);
+    await context.SaveChangesAsync();
 
     return program;
   }
 
   public async Task DeleteProgramAsync(Guid id) {
-    var program = await _context.Programs.FindAsync(id);
+    var program = await context.Programs.FindAsync(id);
 
     if (program != null) {
       program.SoftDelete();
-      await _context.SaveChangesAsync();
+      await context.SaveChangesAsync();
     }
   }
 
@@ -77,8 +73,8 @@ public class ProgramService : IProgramService {
       Visibility = AccessLevel.Private,
     };
 
-    _context.Programs.Add(clonedProgram);
-    await _context.SaveChangesAsync();
+    context.Programs.Add(clonedProgram);
+    await context.SaveChangesAsync();
 
     // Clone content
     foreach (var content in originalProgram.ProgramContents.OrderBy(pc => pc.SortOrder)) {
@@ -96,15 +92,15 @@ public class ProgramService : IProgramService {
         Visibility = content.Visibility,
       };
 
-      _context.ProgramContents.Add(clonedContent);
+      context.ProgramContents.Add(clonedContent);
     }
 
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return clonedProgram;
   }
 
-  public async Task<bool> ProgramExistsAsync(Guid id) { return await _context.Programs.Where(p => !p.IsDeleted).AnyAsync(p => p.Id == id); }
+  public async Task<bool> ProgramExistsAsync(Guid id) { return await context.Programs.Where(p => !p.IsDeleted).AnyAsync(p => p.Id == id); }
 
   // Content Management Operations
   public async Task<ProgramContent> AddContentAsync(Guid programId, ProgramContent content) {
@@ -116,32 +112,32 @@ public class ProgramService : IProgramService {
 
     // Auto-assign sort order if not provided
     if (content.SortOrder == 0) {
-      var maxOrder = await _context.ProgramContents.Where(pc => !pc.IsDeleted && pc.ProgramId == programId)
+      var maxOrder = await context.ProgramContents.Where(pc => !pc.IsDeleted && pc.ProgramId == programId)
                                    .MaxAsync(pc => (int?)pc.SortOrder) ??
                      0;
       content.SortOrder = maxOrder + 1;
     }
 
-    _context.ProgramContents.Add(content);
-    await _context.SaveChangesAsync();
+    context.ProgramContents.Add(content);
+    await context.SaveChangesAsync();
 
     return content;
   }
 
   public async Task<ProgramContent> UpdateContentAsync(ProgramContent content) {
     content.Touch();
-    _context.ProgramContents.Update(content);
-    await _context.SaveChangesAsync();
+    context.ProgramContents.Update(content);
+    await context.SaveChangesAsync();
 
     return content;
   }
 
   public async Task DeleteContentAsync(Guid contentId) {
-    var content = await _context.ProgramContents.FindAsync(contentId);
+    var content = await context.ProgramContents.FindAsync(contentId);
 
     if (content != null) {
       content.SoftDelete();
-      await _context.SaveChangesAsync();
+      await context.SaveChangesAsync();
     }
   }
 
@@ -150,7 +146,7 @@ public class ProgramService : IProgramService {
 
     if (program == null) throw new ArgumentException("Program not found", nameof(programId));
 
-    var contents = await _context.ProgramContents
+    var contents = await context.ProgramContents
                                  .Where(pc => !pc.IsDeleted && pc.ProgramId == programId && contentIds.Contains(pc.Id))
                                  .ToListAsync();
 
@@ -163,20 +159,20 @@ public class ProgramService : IProgramService {
       }
     }
 
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
 
   public async Task<IEnumerable<ProgramContent>> GetProgramContentAsync(Guid programId) {
-    return await _context.ProgramContents.Where(pc => !pc.IsDeleted && pc.ProgramId == programId)
+    return await context.ProgramContents.Where(pc => !pc.IsDeleted && pc.ProgramId == programId)
                          .OrderBy(pc => pc.SortOrder)
                          .ToListAsync();
   }
 
   // User Participation Management
   public async Task<ProgramUser> AddUserAsync(Guid programId, Guid userId) {
-    var existingUser = await _context.ProgramUsers
+    var existingUser = await context.ProgramUsers
                                      .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
                                      .FirstOrDefaultAsync();
 
@@ -185,7 +181,7 @@ public class ProgramService : IProgramService {
         existingUser.IsActive = true;
         existingUser.JoinedAt = DateTime.UtcNow;
         existingUser.Touch();
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
       }
 
       return existingUser;
@@ -193,35 +189,35 @@ public class ProgramService : IProgramService {
 
     var programUser = new ProgramUser { ProgramId = programId, UserId = userId, IsActive = true, JoinedAt = DateTime.UtcNow };
 
-    _context.ProgramUsers.Add(programUser);
-    await _context.SaveChangesAsync();
+    context.ProgramUsers.Add(programUser);
+    await context.SaveChangesAsync();
 
     return programUser;
   }
 
   public async Task<ProgramUser> RemoveUserAsync(Guid programId, Guid userId) {
-    var programUser = await _context.ProgramUsers
+    var programUser = await context.ProgramUsers
                                     .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
                                     .FirstOrDefaultAsync();
 
     if (programUser != null) {
       programUser.IsActive = false;
       programUser.Touch();
-      await _context.SaveChangesAsync();
+      await context.SaveChangesAsync();
     }
 
     return programUser!;
   }
 
   public async Task<IEnumerable<ProgramUser>> GetProgramUsersAsync(Guid programId) {
-    return await _context.ProgramUsers.Include(pu => pu.User)
+    return await context.ProgramUsers.Include(pu => pu.User)
                          .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive)
                          .OrderBy(pu => pu.JoinedAt)
                          .ToListAsync();
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetUserProgramsAsync(Guid userId) {
-    return await _context.ProgramUsers.Include(pu => pu.Program)
+    return await context.ProgramUsers.Include(pu => pu.Program)
                          .Where(pu => !pu.IsDeleted && pu.UserId == userId && pu.IsActive)
                          .Select(pu => pu.Program)
                          .Where(p => !p.IsDeleted)
@@ -230,14 +226,14 @@ public class ProgramService : IProgramService {
   }
 
   public async Task<bool> IsUserInProgramAsync(Guid programId, Guid userId) {
-    return await _context.ProgramUsers
+    return await context.ProgramUsers
                          .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId && pu.IsActive)
                          .AnyAsync();
   }
 
   // Progress & Analytics
   public async Task<decimal> GetUserProgressAsync(Guid programId, Guid userId) {
-    var programUser = await _context.ProgramUsers
+    var programUser = await context.ProgramUsers
                                     .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
                                     .FirstOrDefaultAsync();
 
@@ -245,13 +241,13 @@ public class ProgramService : IProgramService {
   }
 
   public async Task<IEnumerable<ContentInteraction>> GetUserInteractionsAsync(Guid programId, Guid userId) {
-    var programUser = await _context.ProgramUsers
+    var programUser = await context.ProgramUsers
                                     .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
                                     .FirstOrDefaultAsync();
 
     if (programUser == null) return Enumerable.Empty<ContentInteraction>();
 
-    return await _context.ContentInteractions.Include(ci => ci.Content)
+    return await context.ContentInteractions.Include(ci => ci.Content)
                          .Where(ci => !ci.IsDeleted && ci.ProgramUserId == programUser.Id)
                          .OrderBy(ci => ci.Content.SortOrder)
                          .ToListAsync();
@@ -265,13 +261,13 @@ public class ProgramService : IProgramService {
 
     if (program == null) throw new ArgumentException("Program not found", nameof(programId));
 
-    var programUser = await _context.ProgramUsers
+    var programUser = await context.ProgramUsers
                                     .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
                                     .FirstOrDefaultAsync();
 
     if (programUser == null) throw new ArgumentException("User not enrolled in program");
 
-    var interaction = await _context.ContentInteractions
+    var interaction = await context.ContentInteractions
                                     .Where(ci => !ci.IsDeleted && ci.ProgramUserId == programUser.Id && ci.ContentId == contentId)
                                     .FirstOrDefaultAsync();
 
@@ -284,7 +280,7 @@ public class ProgramService : IProgramService {
         LastAccessedAt = DateTime.UtcNow,
       };
 
-      _context.ContentInteractions.Add(interaction);
+      context.ContentInteractions.Add(interaction);
     }
     else {
       interaction.Status = status;
@@ -301,7 +297,7 @@ public class ProgramService : IProgramService {
     // Recalculate overall progress
     await RecalculateUserProgressAsync(programUser.Id);
 
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -320,7 +316,7 @@ public class ProgramService : IProgramService {
 
     program.Status = ContentStatus.UnderReview;
     program.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -332,7 +328,7 @@ public class ProgramService : IProgramService {
 
     program.Status = ContentStatus.Published;
     program.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -347,7 +343,7 @@ public class ProgramService : IProgramService {
     program.SetMetadata("rejectionReason", reason);
     program.SetMetadata("rejectionDate", DateTime.UtcNow);
     program.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -359,7 +355,7 @@ public class ProgramService : IProgramService {
 
     program.Status = ContentStatus.Archived;
     program.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -371,7 +367,7 @@ public class ProgramService : IProgramService {
 
     program.Status = ContentStatus.Draft;
     program.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -384,7 +380,7 @@ public class ProgramService : IProgramService {
 
     program.Status = ContentStatus.Published;
     program.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -396,7 +392,7 @@ public class ProgramService : IProgramService {
 
     program.Status = ContentStatus.Draft;
     program.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -408,7 +404,7 @@ public class ProgramService : IProgramService {
 
     program.SetMetadata("scheduledPublishAt", publishAt);
     program.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -420,7 +416,7 @@ public class ProgramService : IProgramService {
 
     program.Visibility = visibility;
     program.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -429,7 +425,7 @@ public class ProgramService : IProgramService {
   public async Task<IEnumerable<ProgramEntity>> SearchProgramsAsync(string searchTerm, int skip = 0, int take = 50) {
     if (string.IsNullOrWhiteSpace(searchTerm)) return await GetProgramsAsync(skip, take);
 
-    return await _context.Programs
+    return await context.Programs
                          .Where(p => !p.IsDeleted &&
                                      (p.Title.Contains(searchTerm) || (p.Description != null && p.Description.Contains(searchTerm)))
                          )
@@ -442,7 +438,7 @@ public class ProgramService : IProgramService {
   public async Task<IEnumerable<ProgramEntity>> GetProgramsByCreatorAsync(Guid creatorId, int skip = 0, int take = 50) {
     // Since Program doesn't have CreatorId, we'll return all programs for now
     // In a real implementation, you'd need to add a CreatorId property to Program
-    return await _context.Programs.Where(p => !p.IsDeleted)
+    return await context.Programs.Where(p => !p.IsDeleted)
                          .OrderByDescending(p => p.CreatedAt)
                          .Skip(skip)
                          .Take(take)
@@ -450,21 +446,21 @@ public class ProgramService : IProgramService {
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetFeaturedProgramsAsync(int count = 10) {
-    return await _context.Programs.Where(p => !p.IsDeleted && p.Status == ContentStatus.Published)
+    return await context.Programs.Where(p => !p.IsDeleted && p.Status == ContentStatus.Published)
                          .OrderByDescending(p => p.ProgramUsers.Count(pu => !pu.IsDeleted && pu.IsActive))
                          .Take(count)
                          .ToListAsync();
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetRecentProgramsAsync(int count = 10) {
-    return await _context.Programs.Where(p => !p.IsDeleted && p.Status == ContentStatus.Published)
+    return await context.Programs.Where(p => !p.IsDeleted && p.Status == ContentStatus.Published)
                          .OrderByDescending(p => p.CreatedAt)
                          .Take(count)
                          .ToListAsync();
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetPopularProgramsAsync(int count = 10) {
-    return await _context.Programs.Where(p => !p.IsDeleted && p.Status == ContentStatus.Published)
+    return await context.Programs.Where(p => !p.IsDeleted && p.Status == ContentStatus.Published)
                          .OrderByDescending(p => p.ProgramUsers.Count(pu => !pu.IsDeleted && pu.IsActive))
                          .ThenByDescending(p => p.CreatedAt)
                          .Take(count)
@@ -473,7 +469,7 @@ public class ProgramService : IProgramService {
 
   // Analytics & Statistics
   public async Task<int> GetProgramCountAsync(ContentStatus? status = null, AccessLevel? visibility = null) {
-    var query = _context.Programs.Where(p => !p.IsDeleted);
+    var query = context.Programs.Where(p => !p.IsDeleted);
 
     if (status.HasValue) query = query.Where(p => p.Status == status.Value);
 
@@ -483,12 +479,12 @@ public class ProgramService : IProgramService {
   }
 
   public async Task<int> GetUserCountForProgramAsync(Guid programId) {
-    return await _context.ProgramUsers.Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive)
+    return await context.ProgramUsers.Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive)
                          .CountAsync();
   }
 
   public async Task<decimal> GetAverageCompletionRateAsync(Guid programId) {
-    var averageCompletion = await _context.ProgramUsers
+    var averageCompletion = await context.ProgramUsers
                                           .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive)
                                           .AverageAsync(pu => (decimal?)pu.CompletionPercentage) ??
                             0;
@@ -499,7 +495,7 @@ public class ProgramService : IProgramService {
   public async Task<Dictionary<string, object>> GetProgramStatisticsAsync(Guid programId) {
     var userCount = await GetUserCountForProgramAsync(programId);
     var averageCompletion = await GetAverageCompletionRateAsync(programId);
-    var completedCount = await _context.ProgramUsers
+    var completedCount = await context.ProgramUsers
                                        .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive && pu.CompletedAt != null)
                                        .CountAsync();
 
@@ -510,11 +506,11 @@ public class ProgramService : IProgramService {
   private string GenerateSlug(string title) { return title.ToLowerInvariant().Replace(" ", "-").Replace("'", "").Replace("\"", ""); }
 
   private async Task RecalculateUserProgressAsync(Guid programUserId) {
-    var programUser = await _context.ProgramUsers.Where(pu => pu.Id == programUserId).FirstOrDefaultAsync();
+    var programUser = await context.ProgramUsers.Where(pu => pu.Id == programUserId).FirstOrDefaultAsync();
 
     if (programUser == null) return;
 
-    var totalContent = await _context.ProgramContents
+    var totalContent = await context.ProgramContents
                                      .Where(pc => !pc.IsDeleted && pc.ProgramId == programUser.ProgramId && pc.IsRequired)
                                      .CountAsync();
 
@@ -524,7 +520,7 @@ public class ProgramService : IProgramService {
       return;
     }
 
-    var completedContent = await _context.ContentInteractions.Where(ci =>
+    var completedContent = await context.ContentInteractions.Where(ci =>
                                                                       !ci.IsDeleted && ci.ProgramUserId == programUserId && ci.Status == ProgressStatus.Completed
                                          )
                                          .CountAsync();
@@ -552,8 +548,8 @@ public class ProgramService : IProgramService {
       UpdatedAt = DateTime.UtcNow,
     };
 
-    _context.Programs.Add(program);
-    await _context.SaveChangesAsync();
+    context.Programs.Add(program);
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -568,7 +564,7 @@ public class ProgramService : IProgramService {
     if (updateDto.Thumbnail != null) program.Thumbnail = updateDto.Thumbnail;
 
     program.UpdatedAt = DateTime.UtcNow;
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -578,7 +574,7 @@ public class ProgramService : IProgramService {
     ProgramCategory category, int skip = 0,
     int take = 50
   ) {
-    return await _context.Programs.Where(p => !p.IsDeleted && p.Category == category)
+    return await context.Programs.Where(p => !p.IsDeleted && p.Category == category)
                          .OrderByDescending(p => p.CreatedAt)
                          .Skip(skip)
                          .Take(take)
@@ -589,7 +585,7 @@ public class ProgramService : IProgramService {
     ProgramDifficulty difficulty, int skip = 0,
     int take = 50
   ) {
-    return await _context.Programs.Where(p => !p.IsDeleted && p.Difficulty == difficulty)
+    return await context.Programs.Where(p => !p.IsDeleted && p.Difficulty == difficulty)
                          .OrderByDescending(p => p.CreatedAt)
                          .Skip(skip)
                          .Take(take)
@@ -597,7 +593,7 @@ public class ProgramService : IProgramService {
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetPublishedProgramsAsync(int skip = 0, int take = 50) {
-    return await _context.Programs.Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published)
+    return await context.Programs.Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published)
                          .OrderByDescending(p => p.CreatedAt)
                          .Skip(skip)
                          .Take(take)
@@ -624,15 +620,15 @@ public class ProgramService : IProgramService {
       UpdatedAt = DateTime.UtcNow,
     };
 
-    _context.ProgramContents.Add(content);
-    await _context.SaveChangesAsync();
+    context.ProgramContents.Add(content);
+    await context.SaveChangesAsync();
 
     return content;
   }
 
   public async Task<ProgramContent?> UpdateContentAsync(Guid programId, Guid contentId, UpdateContentDto contentDto) {
     var content =
-      await _context.ProgramContents.FirstOrDefaultAsync(c =>
+      await context.ProgramContents.FirstOrDefaultAsync(c =>
                                                            c.Id == contentId && c.ProgramId == programId && !c.IsDeleted
       );
 
@@ -646,21 +642,21 @@ public class ProgramService : IProgramService {
     if (contentDto.EstimatedMinutes != null) content.EstimatedMinutes = contentDto.EstimatedMinutes;
 
     content.UpdatedAt = DateTime.UtcNow;
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return content;
   }
 
   public async Task<bool> RemoveContentAsync(Guid programId, Guid contentId) {
     var content =
-      await _context.ProgramContents.FirstOrDefaultAsync(c =>
+      await context.ProgramContents.FirstOrDefaultAsync(c =>
                                                            c.Id == contentId && c.ProgramId == programId && !c.IsDeleted
       );
 
     if (content == null) return false;
 
     content.SoftDelete();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return true;
   }
@@ -672,7 +668,7 @@ public class ProgramService : IProgramService {
     if (program == null) return null;
 
     var existingUser =
-      await _context.ProgramUsers.FirstOrDefaultAsync(pu =>
+      await context.ProgramUsers.FirstOrDefaultAsync(pu =>
                                                         pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
       );
 
@@ -691,28 +687,28 @@ public class ProgramService : IProgramService {
       UpdatedAt = DateTime.UtcNow,
     };
 
-    _context.ProgramUsers.Add(programUser);
-    await _context.SaveChangesAsync();
+    context.ProgramUsers.Add(programUser);
+    await context.SaveChangesAsync();
 
     return await GetUserProgressDtoAsync(programId, userId);
   }
 
   public async Task<bool> RemoveUserFromProgramAsync(Guid programId, Guid userId) {
     var programUser =
-      await _context.ProgramUsers.FirstOrDefaultAsync(pu =>
+      await context.ProgramUsers.FirstOrDefaultAsync(pu =>
                                                         pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
       );
 
     if (programUser == null) return false;
 
     programUser.SoftDelete();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return true;
   }
 
   public async Task<IEnumerable<UserProgressDto>> GetProgramUsersAsync(Guid programId, int skip = 0, int take = 50) {
-    var programUsers = await _context.ProgramUsers.Where(pu => pu.ProgramId == programId && !pu.IsDeleted)
+    var programUsers = await context.ProgramUsers.Where(pu => pu.ProgramId == programId && !pu.IsDeleted)
                                      .Skip(skip)
                                      .Take(take)
                                      .ToListAsync();
@@ -729,7 +725,7 @@ public class ProgramService : IProgramService {
 
   public async Task<UserProgressDto?> GetUserProgressDtoAsync(Guid programId, Guid userId) {
     var programUser =
-      await _context.ProgramUsers.FirstOrDefaultAsync(pu =>
+      await context.ProgramUsers.FirstOrDefaultAsync(pu =>
                                                         pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
       );
 
@@ -752,7 +748,7 @@ public class ProgramService : IProgramService {
     UpdateProgressDto progressDto
   ) {
     var programUser =
-      await _context.ProgramUsers.FirstOrDefaultAsync(pu =>
+      await context.ProgramUsers.FirstOrDefaultAsync(pu =>
                                                         pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
       );
 
@@ -761,7 +757,7 @@ public class ProgramService : IProgramService {
     if (progressDto.LastAccessedAt != null) programUser.LastAccessedAt = progressDto.LastAccessedAt.Value;
     programUser.UpdatedAt = DateTime.UtcNow;
 
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return await GetUserProgressDtoAsync(programId, userId);
   }
@@ -769,7 +765,7 @@ public class ProgramService : IProgramService {
   public async Task<bool> MarkContentCompletedAsync(Guid programId, Guid userId, Guid contentId) {
     // Get the program user to recalculate progress
     var programUser =
-      await _context.ProgramUsers.FirstOrDefaultAsync(pu =>
+      await context.ProgramUsers.FirstOrDefaultAsync(pu =>
                                                         pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
       );
 
@@ -782,7 +778,7 @@ public class ProgramService : IProgramService {
 
   public async Task<bool> ResetUserProgressAsync(Guid programId, Guid userId) {
     var programUser =
-      await _context.ProgramUsers.FirstOrDefaultAsync(pu =>
+      await context.ProgramUsers.FirstOrDefaultAsync(pu =>
                                                         pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
       );
 
@@ -794,7 +790,7 @@ public class ProgramService : IProgramService {
     programUser.LastAccessedAt = DateTime.UtcNow;
     programUser.UpdatedAt = DateTime.UtcNow;
 
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return true;
   }
@@ -807,7 +803,7 @@ public class ProgramService : IProgramService {
 
     program.Status = ContentStatus.Published; // Using Published as substitute for submitted
     program.UpdatedAt = DateTime.UtcNow;
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -819,7 +815,7 @@ public class ProgramService : IProgramService {
 
     program.Status = ContentStatus.Published; // Using Published as approved
     program.UpdatedAt = DateTime.UtcNow;
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -831,7 +827,7 @@ public class ProgramService : IProgramService {
 
     program.Status = ContentStatus.Draft; // Using Draft as rejected
     program.UpdatedAt = DateTime.UtcNow;
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -843,7 +839,7 @@ public class ProgramService : IProgramService {
 
     program.Status = ContentStatus.Draft;
     program.UpdatedAt = DateTime.UtcNow;
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -855,7 +851,7 @@ public class ProgramService : IProgramService {
 
     program.Status = ContentStatus.Archived;
     program.UpdatedAt = DateTime.UtcNow;
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -867,7 +863,7 @@ public class ProgramService : IProgramService {
 
     program.Status = ContentStatus.Published;
     program.UpdatedAt = DateTime.UtcNow;
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -881,7 +877,7 @@ public class ProgramService : IProgramService {
     // For now, just set the status to published
     program.Status = ContentStatus.Published;
     program.UpdatedAt = DateTime.UtcNow;
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -894,7 +890,7 @@ public class ProgramService : IProgramService {
 
     // In a real implementation, you'd set monetization properties
     program.UpdatedAt = DateTime.UtcNow;
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -906,7 +902,7 @@ public class ProgramService : IProgramService {
 
     // In a real implementation, you'd disable monetization
     program.UpdatedAt = DateTime.UtcNow;
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return program;
   }
@@ -935,7 +931,7 @@ public class ProgramService : IProgramService {
 
     if (program == null) return null;
 
-    var userCount = await _context.ProgramUsers.CountAsync(pu => pu.ProgramId == id && !pu.IsDeleted);
+    var userCount = await context.ProgramUsers.CountAsync(pu => pu.ProgramId == id && !pu.IsDeleted);
 
     return new ProgramAnalyticsDto(
       id,

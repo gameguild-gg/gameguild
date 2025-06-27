@@ -12,21 +12,17 @@ namespace GameGuild.Modules.Product.Services;
 /// Service implementation for Product business logic
 /// Provides operations for managing products, pricing, subscriptions, and access control
 /// </summary>
-public class ProductService : IProductService {
-  private readonly ApplicationDbContext _context;
-
-  public ProductService(ApplicationDbContext context) { _context = context; }
-
+public class ProductService(ApplicationDbContext context) : IProductService {
   // Basic CRUD operations
   public async Task<ProductEntity?> GetProductByIdAsync(Guid id) {
-    return await _context.Products.Include(p => p.Creator)
+    return await context.Products.Include(p => p.Creator)
                          .Include(p => p.ProductPricings)
                          .Where(p => p.DeletedAt == null)
                          .FirstOrDefaultAsync(p => p.Id == id);
   }
 
   public async Task<ProductEntity?> GetProductByIdWithDetailsAsync(Guid id) {
-    return await _context.Products.Include(p => p.Creator)
+    return await context.Products.Include(p => p.Creator)
                          .Include(p => p.ProductPricings)
                          .Include(p => p.SubscriptionPlans)
                          .Include(p => p.UserProducts)
@@ -37,7 +33,7 @@ public class ProductService : IProductService {
   }
 
   public async Task<IEnumerable<ProductEntity>> GetProductsAsync(int skip = 0, int take = 50) {
-    return await _context.Products.Include(p => p.Creator)
+    return await context.Products.Include(p => p.Creator)
                          .Include(p => p.ProductPricings)
                          .Where(p => p.DeletedAt == null)
                          .OrderBy(p => p.Name)
@@ -47,7 +43,7 @@ public class ProductService : IProductService {
   }
 
   public async Task<IEnumerable<ProductEntity>> GetProductsByTypeAsync(ProductType type, int skip = 0, int take = 50) {
-    return await _context.Products.Include(p => p.Creator)
+    return await context.Products.Include(p => p.Creator)
                          .Include(p => p.ProductPricings)
                          .Where(p => p.DeletedAt == null && p.Type == type)
                          .OrderBy(p => p.Name)
@@ -57,7 +53,7 @@ public class ProductService : IProductService {
   }
 
   public async Task<IEnumerable<ProductEntity>> GetPublishedProductsAsync(int skip = 0, int take = 50) {
-    return await _context.Products.Include(p => p.Creator)
+    return await context.Products.Include(p => p.Creator)
                          .Include(p => p.ProductPricings)
                          .Where(p => p.DeletedAt == null &&
                                      p.Status == ContentStatus.Published &&
@@ -73,30 +69,30 @@ public class ProductService : IProductService {
     product.Status = ContentStatus.Draft;
     product.Visibility = Common.Entities.AccessLevel.Private;
 
-    _context.Products.Add(product);
-    await _context.SaveChangesAsync();
+    context.Products.Add(product);
+    await context.SaveChangesAsync();
 
     return product;
   }
 
   public async Task<ProductEntity> UpdateProductAsync(ProductEntity product) {
     product.Touch();
-    _context.Products.Update(product);
-    await _context.SaveChangesAsync();
+    context.Products.Update(product);
+    await context.SaveChangesAsync();
 
     return product;
   }
 
   public async Task DeleteProductAsync(Guid id) {
-    var product = await _context.Products.FindAsync(id);
+    var product = await context.Products.FindAsync(id);
 
     if (product != null) {
       product.SoftDelete();
-      await _context.SaveChangesAsync();
+      await context.SaveChangesAsync();
     }
   }
 
-  public async Task<bool> ProductExistsAsync(Guid id) { return await _context.Products.Where(p => p.DeletedAt == null).AnyAsync(p => p.Id == id); }
+  public async Task<bool> ProductExistsAsync(Guid id) { return await context.Products.Where(p => p.DeletedAt == null).AnyAsync(p => p.Id == id); }
 
   // Visibility and publishing
   public async Task<ProductEntity> PublishProductAsync(Guid id) {
@@ -106,7 +102,7 @@ public class ProductService : IProductService {
 
     product.Status = ContentStatus.Published;
     product.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return product;
   }
@@ -118,7 +114,7 @@ public class ProductService : IProductService {
 
     product.Status = ContentStatus.Draft;
     product.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return product;
   }
@@ -130,7 +126,7 @@ public class ProductService : IProductService {
 
     product.Status = ContentStatus.Archived;
     product.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return product;
   }
@@ -142,7 +138,7 @@ public class ProductService : IProductService {
 
     product.Visibility = visibility;
     product.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return product;
   }
@@ -157,7 +153,7 @@ public class ProductService : IProductService {
 
     if (!bundleItemIds.Any()) return [];
 
-    return await _context.Products.Include(p => p.Creator)
+    return await context.Products.Include(p => p.Creator)
                          .Include(p => p.ProductPricings)
                          .Where(p => p.DeletedAt == null && bundleItemIds.Contains(p.Id))
                          .OrderBy(p => p.Name)
@@ -181,7 +177,7 @@ public class ProductService : IProductService {
       bundleItemIds.Add(productId);
       bundle.SetBundleItemIds(bundleItemIds);
       bundle.Touch();
-      await _context.SaveChangesAsync();
+      await context.SaveChangesAsync();
     }
 
     return bundle;
@@ -199,7 +195,7 @@ public class ProductService : IProductService {
     if (bundleItemIds.Remove(productId)) {
       bundle.SetBundleItemIds(bundleItemIds);
       bundle.Touch();
-      await _context.SaveChangesAsync();
+      await context.SaveChangesAsync();
     }
 
     return bundle;
@@ -217,13 +213,13 @@ public class ProductService : IProductService {
 
   // Pricing management
   public async Task<ProductPricing?> GetCurrentPricingAsync(Guid productId) {
-    return await _context.ProductPricings.Where(pp => pp.DeletedAt == null && pp.ProductId == productId && pp.IsDefault)
+    return await context.ProductPricings.Where(pp => pp.DeletedAt == null && pp.ProductId == productId && pp.IsDefault)
                          .OrderByDescending(pp => pp.CreatedAt)
                          .FirstOrDefaultAsync();
   }
 
   public async Task<IEnumerable<ProductPricing>> GetPricingHistoryAsync(Guid productId) {
-    return await _context.ProductPricings.Where(pp => pp.DeletedAt == null && pp.ProductId == productId)
+    return await context.ProductPricings.Where(pp => pp.DeletedAt == null && pp.ProductId == productId)
                          .OrderByDescending(pp => pp.CreatedAt)
                          .ToListAsync();
   }
@@ -250,64 +246,64 @@ public class ProductService : IProductService {
       IsDefault = true,
     };
 
-    _context.ProductPricings.Add(pricing);
-    await _context.SaveChangesAsync();
+    context.ProductPricings.Add(pricing);
+    await context.SaveChangesAsync();
 
     return pricing;
   }
 
   public async Task<ProductPricing> UpdatePricingAsync(Guid pricingId, decimal basePrice) {
-    var pricing = await _context.ProductPricings.Where(pp => pp.DeletedAt == null)
+    var pricing = await context.ProductPricings.Where(pp => pp.DeletedAt == null)
                                 .FirstOrDefaultAsync(pp => pp.Id == pricingId);
 
     if (pricing == null) throw new ArgumentException("Pricing not found", nameof(pricingId));
 
     pricing.BasePrice = basePrice;
     pricing.Touch();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return pricing;
   }
 
   // Subscription management
   public async Task<IEnumerable<ProductSubscriptionPlan>> GetSubscriptionPlansAsync(Guid productId) {
-    return await _context.ProductSubscriptionPlans.Where(psp => !psp.IsDeleted && psp.ProductId == productId)
+    return await context.ProductSubscriptionPlans.Where(psp => !psp.IsDeleted && psp.ProductId == productId)
                          .OrderBy(psp => psp.Name)
                          .ToListAsync();
   }
 
   public async Task<ProductSubscriptionPlan?> GetSubscriptionPlanAsync(Guid planId) {
-    return await _context.ProductSubscriptionPlans.Where(psp => !psp.IsDeleted)
+    return await context.ProductSubscriptionPlans.Where(psp => !psp.IsDeleted)
                          .FirstOrDefaultAsync(psp => psp.Id == planId);
   }
 
   public async Task<ProductSubscriptionPlan> CreateSubscriptionPlanAsync(ProductSubscriptionPlan plan) {
-    _context.ProductSubscriptionPlans.Add(plan);
-    await _context.SaveChangesAsync();
+    context.ProductSubscriptionPlans.Add(plan);
+    await context.SaveChangesAsync();
 
     return plan;
   }
 
   public async Task<ProductSubscriptionPlan> UpdateSubscriptionPlanAsync(ProductSubscriptionPlan plan) {
     plan.Touch();
-    _context.ProductSubscriptionPlans.Update(plan);
-    await _context.SaveChangesAsync();
+    context.ProductSubscriptionPlans.Update(plan);
+    await context.SaveChangesAsync();
 
     return plan;
   }
 
   public async Task DeleteSubscriptionPlanAsync(Guid planId) {
-    var plan = await _context.ProductSubscriptionPlans.FindAsync(planId);
+    var plan = await context.ProductSubscriptionPlans.FindAsync(planId);
 
     if (plan != null) {
       plan.SoftDelete();
-      await _context.SaveChangesAsync();
+      await context.SaveChangesAsync();
     }
   }
 
   // User access and ownership
   public async Task<bool> HasUserAccessAsync(Guid userId, Guid productId) {
-    return await _context.UserProducts.Where(up =>
+    return await context.UserProducts.Where(up =>
                                                !up.IsDeleted &&
                                                up.UserId == userId &&
                                                up.ProductId == productId &&
@@ -318,14 +314,14 @@ public class ProductService : IProductService {
   }
 
   public async Task<UserProduct?> GetUserProductAsync(Guid userId, Guid productId) {
-    return await _context.UserProducts.Include(up => up.User)
+    return await context.UserProducts.Include(up => up.User)
                          .Include(up => up.Product)
                          .Where(up => !up.IsDeleted && up.UserId == userId && up.ProductId == productId)
                          .FirstOrDefaultAsync();
   }
 
   public async Task<IEnumerable<UserProduct>> GetUserProductsAsync(Guid userId) {
-    return await _context.UserProducts.Include(up => up.Product)
+    return await context.UserProducts.Include(up => up.Product)
                          .Where(up => !up.IsDeleted && up.UserId == userId)
                          .OrderByDescending(up => up.CreatedAt)
                          .ToListAsync();
@@ -351,8 +347,8 @@ public class ProductService : IProductService {
       AccessEndDate = expiresAt,
     };
 
-    _context.UserProducts.Add(userProduct);
-    await _context.SaveChangesAsync();
+    context.UserProducts.Add(userProduct);
+    await context.SaveChangesAsync();
 
     return userProduct;
   }
@@ -363,38 +359,38 @@ public class ProductService : IProductService {
     if (userProduct != null) {
       userProduct.AccessStatus = ProductAccessStatus.Revoked;
       userProduct.Touch();
-      await _context.SaveChangesAsync();
+      await context.SaveChangesAsync();
     }
   }
 
   // Promo code management
   public async Task<PromoCode?> GetPromoCodeAsync(string code) {
-    return await _context.PromoCodes.Include(pc => pc.Product)
+    return await context.PromoCodes.Include(pc => pc.Product)
                          .Where(pc => !pc.IsDeleted && pc.Code == code)
                          .FirstOrDefaultAsync();
   }
 
   public async Task<PromoCode> CreatePromoCodeAsync(PromoCode promoCode) {
-    _context.PromoCodes.Add(promoCode);
-    await _context.SaveChangesAsync();
+    context.PromoCodes.Add(promoCode);
+    await context.SaveChangesAsync();
 
     return promoCode;
   }
 
   public async Task<PromoCode> UpdatePromoCodeAsync(PromoCode promoCode) {
     promoCode.Touch();
-    _context.PromoCodes.Update(promoCode);
-    await _context.SaveChangesAsync();
+    context.PromoCodes.Update(promoCode);
+    await context.SaveChangesAsync();
 
     return promoCode;
   }
 
   public async Task DeletePromoCodeAsync(Guid id) {
-    var promoCode = await _context.PromoCodes.FindAsync(id);
+    var promoCode = await context.PromoCodes.FindAsync(id);
 
     if (promoCode != null) {
       promoCode.SoftDelete();
-      await _context.SaveChangesAsync();
+      await context.SaveChangesAsync();
     }
   }
 
@@ -412,12 +408,12 @@ public class ProductService : IProductService {
       DiscountApplied = discountAmount,
     };
 
-    _context.PromoCodeUses.Add(promoCodeUse);
+    context.PromoCodeUses.Add(promoCodeUse);
 
     // The usage count is managed by the collection, not a separate field
     promoCode.Touch();
 
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return promoCodeUse;
   }
@@ -436,7 +432,7 @@ public class ProductService : IProductService {
 
     // Check usage limits
     if (promoCode.MaxUses.HasValue) {
-      var currentUsageCount = await _context.PromoCodeUses
+      var currentUsageCount = await context.PromoCodeUses
                                             .Where(pcu => !pcu.IsDeleted && pcu.PromoCodeId == promoCode.Id)
                                             .CountAsync();
 
@@ -451,7 +447,7 @@ public class ProductService : IProductService {
 
   // Analytics and statistics
   public async Task<int> GetProductCountAsync(ProductType? type = null, Common.Entities.AccessLevel? visibility = null) {
-    var query = _context.Products.Where(p => p.DeletedAt == null);
+    var query = context.Products.Where(p => p.DeletedAt == null);
 
     if (type.HasValue) query = query.Where(p => p.Type == type.Value);
 
@@ -461,19 +457,19 @@ public class ProductService : IProductService {
   }
 
   public async Task<int> GetUserCountForProductAsync(Guid productId) {
-    return await _context.UserProducts
+    return await context.UserProducts
                          .Where(up => !up.IsDeleted && up.ProductId == productId && up.AccessStatus == ProductAccessStatus.Active)
                          .CountAsync();
   }
 
   public async Task<decimal> GetTotalRevenueForProductAsync(Guid productId) {
-    return await _context.UserProducts
+    return await context.UserProducts
                          .Where(up => !up.IsDeleted && up.ProductId == productId && up.AccessStatus == ProductAccessStatus.Active)
                          .SumAsync(up => up.PricePaid);
   }
 
   public async Task<IEnumerable<ProductEntity>> GetPopularProductsAsync(int count = 10) {
-    return await _context.Products.Include(p => p.Creator)
+    return await context.Products.Include(p => p.Creator)
                          .Include(p => p.ProductPricings)
                          .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published)
                          .OrderByDescending(p =>
@@ -484,7 +480,7 @@ public class ProductService : IProductService {
   }
 
   public async Task<IEnumerable<ProductEntity>> GetRecentProductsAsync(int count = 10) {
-    return await _context.Products.Include(p => p.Creator)
+    return await context.Products.Include(p => p.Creator)
                          .Include(p => p.ProductPricings)
                          .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published)
                          .OrderByDescending(p => p.CreatedAt)
@@ -496,7 +492,7 @@ public class ProductService : IProductService {
   public async Task<IEnumerable<ProductEntity>> SearchProductsAsync(string searchTerm, int skip = 0, int take = 50) {
     if (string.IsNullOrWhiteSpace(searchTerm)) return await GetProductsAsync(skip, take);
 
-    return await _context.Products.Include(p => p.Creator)
+    return await context.Products.Include(p => p.Creator)
                          .Include(p => p.ProductPricings)
                          .Where(p => p.DeletedAt == null &&
                                      (p.Name.Contains(searchTerm) ||
@@ -509,7 +505,7 @@ public class ProductService : IProductService {
   }
 
   public async Task<IEnumerable<ProductEntity>> GetProductsByCreatorAsync(Guid creatorId, int skip = 0, int take = 50) {
-    return await _context.Products.Include(p => p.Creator)
+    return await context.Products.Include(p => p.Creator)
                          .Include(p => p.ProductPricings)
                          .Where(p => p.DeletedAt == null && p.CreatorId == creatorId)
                          .OrderByDescending(p => p.CreatedAt)
@@ -522,7 +518,7 @@ public class ProductService : IProductService {
     decimal minPrice, decimal maxPrice,
     string currency = "USD", int skip = 0, int take = 50
   ) {
-    var productIds = await _context.ProductPricings
+    var productIds = await context.ProductPricings
                                    .Where(pp => pp.DeletedAt == null &&
                                                 pp.IsDefault &&
                                                 pp.Currency == currency &&
@@ -532,7 +528,7 @@ public class ProductService : IProductService {
                                    .Select(pp => pp.ProductId)
                                    .ToListAsync();
 
-    return await _context.Products.Include(p => p.Creator)
+    return await context.Products.Include(p => p.Creator)
                          .Include(p => p.ProductPricings)
                          .Where(p => p.DeletedAt == null && productIds.Contains(p.Id))
                          .OrderBy(p => p.Name)

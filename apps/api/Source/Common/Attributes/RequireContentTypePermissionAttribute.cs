@@ -14,11 +14,8 @@ namespace GameGuild.Common.Attributes;
 /// </summary>
 /// <typeparam name="T">The entity type representing the content-type/table</typeparam>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
-public class RequireContentTypePermissionAttribute<T> : Attribute, IAsyncAuthorizationFilter where T : class {
-  private readonly PermissionType _requiredPermission;
-
-  public RequireContentTypePermissionAttribute(PermissionType requiredPermission) { _requiredPermission = requiredPermission; }
-
+public class RequireContentTypePermissionAttribute<T>(PermissionType requiredPermission) : Attribute, IAsyncAuthorizationFilter
+  where T : class {
   public async Task OnAuthorizationAsync(AuthorizationFilterContext context) {
     var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
 
@@ -44,7 +41,7 @@ public class RequireContentTypePermissionAttribute<T> : Attribute, IAsyncAuthori
 
     // Check content-type level permission with hierarchical fallback
     var hasPermission =
-      await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
+      await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, requiredPermission);
 
     if (!hasPermission) context.Result = new ForbidResult();
   }

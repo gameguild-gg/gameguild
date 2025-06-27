@@ -14,17 +14,8 @@ namespace GameGuild.Modules.Auth.Services {
     Task<User.Models.User> FindOrCreateWeb3UserAsync(string walletAddress, string chainId);
   }
 
-  public class Web3Service : IWeb3Service {
-    private readonly ApplicationDbContext _context;
-
-    private readonly ILogger<Web3Service> _logger;
-
+  public class Web3Service(ApplicationDbContext context, ILogger<Web3Service> logger) : IWeb3Service {
     private readonly Dictionary<string, Web3ChallengeResponseDto> _challenges = new();
-
-    public Web3Service(ApplicationDbContext context, ILogger<Web3Service> logger) {
-      _context = context;
-      _logger = logger;
-    }
 
     public async Task<Web3ChallengeResponseDto> GenerateChallengeAsync(Web3ChallengeRequestDto request) {
       // Validate wallet address
@@ -50,14 +41,14 @@ namespace GameGuild.Modules.Auth.Services {
     public async Task<bool> VerifySignatureAsync(Web3VerifyRequestDto request) {
       // Check if challenge exists and is valid
       if (!_challenges.TryGetValue(request.Nonce, out var challenge)) {
-        _logger.LogWarning("Invalid or expired nonce: {Nonce}", request.Nonce);
+        logger.LogWarning("Invalid or expired nonce: {Nonce}", request.Nonce);
 
         return false;
       }
 
       if (challenge.ExpiresAt < DateTime.UtcNow) {
         _challenges.Remove(request.Nonce);
-        _logger.LogWarning("Expired challenge for nonce: {Nonce}", request.Nonce);
+        logger.LogWarning("Expired challenge for nonce: {Nonce}", request.Nonce);
 
         return false;
       }
@@ -67,7 +58,7 @@ namespace GameGuild.Modules.Auth.Services {
             ExtractWalletFromChallenge(challenge.Challenge),
             StringComparison.OrdinalIgnoreCase
           )) {
-        _logger.LogWarning("Wallet address mismatch for nonce: {Nonce}", request.Nonce);
+        logger.LogWarning("Wallet address mismatch for nonce: {Nonce}", request.Nonce);
 
         return false;
       }
@@ -86,7 +77,7 @@ namespace GameGuild.Modules.Auth.Services {
 
     public async Task<User.Models.User> FindOrCreateWeb3UserAsync(string walletAddress, string chainId = "1") {
       // Try to find user by wallet address in credentials
-      var credential = await _context.Credentials.Include(c => c.User)
+      var credential = await context.Credentials.Include(c => c.User)
                                      .FirstOrDefaultAsync(c => c.Type == "web3_wallet" && c.Value == walletAddress.ToLower());
 
       if (credential?.User != null) return credential.User;
@@ -100,7 +91,7 @@ namespace GameGuild.Modules.Auth.Services {
         UpdatedAt = DateTime.UtcNow,
       };
 
-      _context.Users.Add(user);
+      context.Users.Add(user);
 
       // Add Web3 credential
       var web3Credential = new Credential {
@@ -113,8 +104,8 @@ namespace GameGuild.Modules.Auth.Services {
         UpdatedAt = DateTime.UtcNow,
       };
 
-      _context.Credentials.Add(web3Credential);
-      await _context.SaveChangesAsync();
+      context.Credentials.Add(web3Credential);
+      await context.SaveChangesAsync();
 
       return user;
     }
@@ -157,7 +148,7 @@ namespace GameGuild.Modules.Auth.Services {
 
         // For now, return true if basic validation passes
         // TODO: Implement actual signature verification using Nethereum
-        _logger.LogInformation(
+        logger.LogInformation(
           "Web3 signature verification for wallet {WalletAddress} - basic validation passed",
           walletAddress
         );
@@ -165,7 +156,7 @@ namespace GameGuild.Modules.Auth.Services {
         return Task.FromResult(true);
       }
       catch (Exception ex) {
-        _logger.LogError(ex, "Error verifying Web3 signature for wallet {WalletAddress}", walletAddress);
+        logger.LogError(ex, "Error verifying Web3 signature for wallet {WalletAddress}", walletAddress);
 
         return Task.FromResult(false);
       }

@@ -14,16 +14,7 @@ namespace GameGuild.Common.Attributes;
 /// how to implement resource-specific permission checking for concrete entity types.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
-public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationFilter {
-  private readonly PermissionType _requiredPermission;
-
-  private readonly string _resourceIdParameterName;
-
-  public RequireCommentPermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id") {
-    _requiredPermission = requiredPermission;
-    _resourceIdParameterName = resourceIdParameterName;
-  }
-
+public class RequireCommentPermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id") : Attribute, IAsyncAuthorizationFilter {
   public async Task OnAuthorizationAsync(AuthorizationFilterContext context) {
     var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
 
@@ -45,7 +36,7 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
     }
 
     // Extract resource ID from route parameters
-    var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
+    var resourceIdValue = context.RouteData.Values[resourceIdParameterName]?.ToString();
 
     if (!Guid.TryParse(resourceIdValue, out var resourceId)) {
       context.Result = new BadRequestResult();
@@ -60,7 +51,7 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
         userId,
         tenantId,
         resourceId,
-        _requiredPermission
+        requiredPermission
       );
 
     if (!hasPermission) context.Result = new ForbidResult();

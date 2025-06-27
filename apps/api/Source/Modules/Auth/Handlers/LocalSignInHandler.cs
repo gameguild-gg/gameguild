@@ -9,14 +9,10 @@ namespace GameGuild.Modules.Auth.Handlers;
 /// <summary>
 /// Handler for local sign-in command
 /// </summary>
-public class LocalSignInHandler : IRequestHandler<LocalSignInCommand, SignInResponseDto> {
-  private readonly IAuthService _authService;
-
-  public LocalSignInHandler(IAuthService authService) { _authService = authService; }
-
+public class LocalSignInHandler(IAuthService authService) : IRequestHandler<LocalSignInCommand, SignInResponseDto> {
   public async Task<SignInResponseDto> Handle(LocalSignInCommand request, CancellationToken cancellationToken) {
     var signInRequest = new LocalSignInRequestDto { Email = request.Email, Password = request.Password, TenantId = request.TenantId };
 
-    return await _authService.LocalSignInAsync(signInRequest);
+    return await authService.LocalSignInAsync(signInRequest);
   }
 }
