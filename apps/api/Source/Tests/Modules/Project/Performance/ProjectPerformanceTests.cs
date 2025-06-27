@@ -20,7 +20,7 @@ public class ProjectPerformanceTests : IDisposable {
 
   public ProjectPerformanceTests() {
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                  .UseInMemoryDatabase(databaseName: $"PerformanceTestDb_{Guid.NewGuid()}")
+                  .UseInMemoryDatabase($"PerformanceTestDb_{Guid.NewGuid()}")
                   .Options;
 
     _context = new ApplicationDbContext(options);
@@ -111,7 +111,7 @@ public class ProjectPerformanceTests : IDisposable {
 
     // Act - Search for "game" (lowercase to match the method's ToLower)
     stopwatch.Start();
-    var result = await _projectService.SearchProjectsAsync("game", skip: 0, take: 1000);
+    var result = await _projectService.SearchProjectsAsync("game", 0, 1000);
     stopwatch.Stop();
 
     // Debug: Output the count and some sample titles
@@ -277,7 +277,7 @@ public class ProjectPerformanceTests : IDisposable {
 
     // Act - Get first 50 projects
     stopwatch.Start();
-    var result = await _projectService.GetProjectsAsync(skip: 0, take: 50);
+    var result = await _projectService.GetProjectsAsync(0, 50);
     stopwatch.Stop();
 
     // Assert

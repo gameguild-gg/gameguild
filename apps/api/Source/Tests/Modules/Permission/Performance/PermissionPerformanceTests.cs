@@ -24,7 +24,7 @@ public class PermissionPerformanceTests : IDisposable {
 
   public PermissionPerformanceTests() {
     _databaseName = Guid.NewGuid().ToString();
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: _databaseName)
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(_databaseName)
                                                                      .Options;
 
     _context = new ApplicationDbContext(options);
@@ -436,7 +436,7 @@ public class PermissionPerformanceTests : IDisposable {
 
   // Helper method to create a new DbContext instance
   private ApplicationDbContext CreateNewDbContext() {
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: _databaseName)
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(_databaseName)
                                                                      .Options;
 
     return new ApplicationDbContext(options);

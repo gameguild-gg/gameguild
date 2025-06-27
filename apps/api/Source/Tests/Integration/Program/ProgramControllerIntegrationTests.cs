@@ -11,7 +11,7 @@ namespace GameGuild.Tests.Integration.Program;
 public class ProgramControllerIntegrationTests {
   private ApplicationDbContext GetInMemoryContext() {
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .UseInMemoryDatabase(Guid.NewGuid().ToString())
                   .Options;
 
     return new ApplicationDbContext(options);

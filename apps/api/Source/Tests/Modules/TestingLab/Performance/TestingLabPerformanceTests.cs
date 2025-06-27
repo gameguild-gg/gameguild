@@ -21,7 +21,7 @@ public class TestingLabPerformanceTests : IDisposable {
 
   public TestingLabPerformanceTests() {
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                  .UseInMemoryDatabase(databaseName: $"TestingLabPerformanceDb_{Guid.NewGuid()}")
+                  .UseInMemoryDatabase($"TestingLabPerformanceDb_{Guid.NewGuid()}")
                   .Options;
 
     _context = new ApplicationDbContext(options);

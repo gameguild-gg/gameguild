@@ -39,7 +39,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     // Use a separate in-memory database for E2E tests
     var services = new ServiceCollection();
     services.AddDbContext<ApplicationDbContext>(options =>
-                                                  options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                                                  options.UseInMemoryDatabase(Guid.NewGuid().ToString())
     );
     services.AddScoped<IPermissionService, PermissionService>();
 

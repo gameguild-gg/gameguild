@@ -30,7 +30,7 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
     // Use a separate in-memory database for integration tests
     var services = new ServiceCollection();
     services.AddDbContext<ApplicationDbContext>(options =>
-                                                  options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                                                  options.UseInMemoryDatabase(Guid.NewGuid().ToString())
     );
     services.AddScoped<IPermissionService, PermissionService>();
 
@@ -124,10 +124,10 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
     var tenantId = Guid.NewGuid();
 
     // Set global default permissions
-    await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, [PermissionType.Read]);
+    await _permissionService.GrantTenantPermissionAsync(null, null, [PermissionType.Read]);
 
     // Set tenant default permissions
-    await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, [PermissionType.Comment]);
+    await _permissionService.GrantTenantPermissionAsync(null, tenantId, [PermissionType.Comment]);
 
     // User has no specific permissions
 
@@ -150,14 +150,14 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
 
     // Set global default permissions
     await _permissionService.GrantTenantPermissionAsync(
-      userId: null,
-      tenantId: null,
+      null,
+      null,
       [PermissionType.Read, PermissionType.Comment]
     );
 
     // Set tenant default permissions
     await _permissionService.GrantTenantPermissionAsync(
-      userId: null,
+      null,
       tenantId,
       [PermissionType.Read, PermissionType.Edit]
     );
@@ -194,11 +194,11 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
     var contentType = "Article";
 
     // Set global defaults (everyone can read)
-    await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, [PermissionType.Read]);
+    await _permissionService.GrantTenantPermissionAsync(null, null, [PermissionType.Read]);
 
     // Set tenant defaults for Article content type (basic commenting)
     await _permissionService.GrantContentTypePermissionAsync(
-      userId: null,
+      null,
       tenantId,
       contentType,
       [PermissionType.Comment]
@@ -508,12 +508,12 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
 
     // Set up complex permission hierarchy
     await _permissionService.GrantTenantPermissionAsync(
-      userId: null,
-      tenantId: null,
+      null,
+      null,
       [PermissionType.Read]
     ); // Global default
     await _permissionService.GrantTenantPermissionAsync(
-      userId: null,
+      null,
       tenantId,
       [PermissionType.Comment, PermissionType.Vote]
     ); // Tenant default
