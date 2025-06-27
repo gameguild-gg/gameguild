@@ -20,7 +20,7 @@ public class ProductMutations {
       ShortDescription = input.ShortDescription,
       Description = input.ShortDescription, // Using short description for both fields
       Type = input.Type,
-      IsBundle = input.IsBundle
+      IsBundle = input.IsBundle,
     };
 
     if (input.TenantId.HasValue) {
@@ -172,12 +172,13 @@ public class ProductMutations {
       ValidFrom = input.ValidFrom,
       ValidUntil = input.ValidUntil,
       MaxUses = input.MaxUses,
-      IsActive = true
+      IsActive = true,
     };
 
     // Set the discount value based on type
-    if (input.DiscountType == PromoCodeTypeEnum.PercentageOff) { promoCode.DiscountPercentage = input.DiscountValue; }
-    else if (input.DiscountType == PromoCodeTypeEnum.FixedAmountOff) { promoCode.DiscountAmount = input.DiscountValue; }
+    if (input.DiscountType == PromoCodeTypeEnum.PercentageOff)
+      promoCode.DiscountPercentage = input.DiscountValue;
+    else if (input.DiscountType == PromoCodeTypeEnum.FixedAmountOff) promoCode.DiscountAmount = input.DiscountValue;
 
     return await productService.CreatePromoCodeAsync(promoCode);
   }

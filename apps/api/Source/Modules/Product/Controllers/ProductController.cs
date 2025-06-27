@@ -75,7 +75,7 @@ public class ProductController : ControllerBase {
   [HttpPost]
   [RequireContentTypePermission<ProductEntity>(PermissionType.Draft)]
   public async Task<ActionResult<ProductEntity>> CreateProduct([FromBody] ProductEntity product) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var createdProduct = await _productService.CreateProductAsync(product);
 
@@ -157,7 +157,7 @@ public class ProductController : ControllerBase {
   public async Task<ActionResult<ProductEntity>> GetProduct(Guid id) {
     var product = await _productService.GetProductByIdAsync(id);
 
-    if (product == null) { return NotFound(); }
+    if (product == null) return NotFound();
 
     return Ok(product);
   }
@@ -170,7 +170,7 @@ public class ProductController : ControllerBase {
   public async Task<ActionResult<ProductEntity>> GetProductWithDetails(Guid id) {
     var product = await _productService.GetProductByIdWithDetailsAsync(id);
 
-    if (product == null) { return NotFound(); }
+    if (product == null) return NotFound();
 
     return Ok(product);
   }
@@ -181,13 +181,13 @@ public class ProductController : ControllerBase {
   [HttpPut("{id}")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductEntity>> UpdateProduct(Guid id, [FromBody] ProductEntity product) {
-    if (id != product.Id) { return BadRequest("Product ID mismatch"); }
+    if (id != product.Id) return BadRequest("Product ID mismatch");
 
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var existingProduct = await _productService.GetProductByIdAsync(id);
 
-    if (existingProduct == null) { return NotFound(); }
+    if (existingProduct == null) return NotFound();
 
     var updatedProduct = await _productService.UpdateProductAsync(product);
 
@@ -202,7 +202,7 @@ public class ProductController : ControllerBase {
   public async Task<ActionResult> DeleteProduct(Guid id) {
     var existingProduct = await _productService.GetProductByIdAsync(id);
 
-    if (existingProduct == null) { return NotFound(); }
+    if (existingProduct == null) return NotFound();
 
     await _productService.DeleteProductAsync(id);
 
@@ -301,7 +301,7 @@ public class ProductController : ControllerBase {
   public async Task<ActionResult<ProductPricing>> GetCurrentPricing(Guid id) {
     var pricing = await _productService.GetCurrentPricingAsync(id);
 
-    if (pricing == null) { return NotFound(); }
+    if (pricing == null) return NotFound();
 
     return Ok(pricing);
   }
@@ -363,7 +363,7 @@ public class ProductController : ControllerBase {
   public async Task<ActionResult<ProductSubscriptionPlan>> GetSubscriptionPlan(Guid planId) {
     var plan = await _productService.GetSubscriptionPlanAsync(planId);
 
-    if (plan == null) { return NotFound(); }
+    if (plan == null) return NotFound();
 
     return Ok(plan);
   }
@@ -389,7 +389,7 @@ public class ProductController : ControllerBase {
   public async Task<ActionResult<UserProduct>> GetUserProduct(Guid id, Guid userId) {
     var userProduct = await _productService.GetUserProductAsync(userId, id);
 
-    if (userProduct == null) { return NotFound(); }
+    if (userProduct == null) return NotFound();
 
     return Ok(userProduct);
   }

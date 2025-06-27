@@ -27,5 +27,5 @@ public enum LocalizationStatus {
   /// <summary>
   /// Machine-translated content, may need human review
   /// </summary>
-  MachineTrans = 4
+  MachineTrans = 4,
 }

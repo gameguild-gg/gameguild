@@ -7,14 +7,12 @@ namespace GameGuild.Modules.User.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class UsersController : ControllerBase {
-  private readonly IUserService _userService;
-
-  public UsersController(IUserService userService) { _userService = userService; } // GET: users
+public class UsersController(IUserService userService) : ControllerBase {
+  // GET: users
 
   [HttpGet]
   public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetUsers() {
-    var users = await _userService.GetAllUsersAsync();
+    var users = await userService.GetAllUsersAsync();
 
     var userDtos = users.Select(u => new UserResponseDto {
                                   Id = u.Id,
@@ -25,8 +23,8 @@ public class UsersController : ControllerBase {
                                   CreatedAt = u.CreatedAt,
                                   UpdatedAt = u.UpdatedAt,
                                   DeletedAt = u.DeletedAt,
-                                  IsDeleted = u.IsDeleted
-                                }
+                                  IsDeleted = u.IsDeleted,
+      }
     );
 
     return Ok(userDtos);
@@ -35,7 +33,7 @@ public class UsersController : ControllerBase {
   // GET: users/deleted
   [HttpGet("deleted")]
   public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetDeletedUsers() {
-    var users = await _userService.GetDeletedUsersAsync();
+    var users = await userService.GetDeletedUsersAsync();
 
     var userDtos = users.Select(u => new UserResponseDto {
                                   Id = u.Id,
@@ -46,19 +44,19 @@ public class UsersController : ControllerBase {
                                   CreatedAt = u.CreatedAt,
                                   UpdatedAt = u.UpdatedAt,
                                   DeletedAt = u.DeletedAt,
-                                  IsDeleted = u.IsDeleted
-                                }
+                                  IsDeleted = u.IsDeleted,
+      }
     );
 
     return Ok(userDtos);
   }
 
   // GET: users/{id}
-  [HttpGet("{id}")]
+  [HttpGet("{id:guid}")]
   public async Task<ActionResult<UserResponseDto>> GetUser(Guid id) {
-    var user = await _userService.GetUserByIdAsync(id);
+    var user = await userService.GetUserByIdAsync(id);
 
-    if (user == null) { return NotFound(); }
+    if (user == null) return NotFound();
 
     var userDto = new UserResponseDto {
       Id = user.Id,
@@ -69,7 +67,7 @@ public class UsersController : ControllerBase {
       CreatedAt = user.CreatedAt,
       UpdatedAt = user.UpdatedAt,
       DeletedAt = user.DeletedAt,
-      IsDeleted = user.IsDeleted
+      IsDeleted = user.IsDeleted,
     };
 
     return Ok(userDto);
@@ -81,7 +79,7 @@ public class UsersController : ControllerBase {
     // Use BaseEntity.Create for consistent creation pattern
     var user = new Models.User(new { createUserDto.Name, createUserDto.Email, IsActive = true });
 
-    var createdUser = await _userService.CreateUserAsync(user);
+    var createdUser = await userService.CreateUserAsync(user);
 
     var userDto = new UserResponseDto {
       Id = createdUser.Id,
@@ -92,27 +90,27 @@ public class UsersController : ControllerBase {
       CreatedAt = createdUser.CreatedAt,
       UpdatedAt = createdUser.UpdatedAt,
       DeletedAt = createdUser.DeletedAt,
-      IsDeleted = createdUser.IsDeleted
+      IsDeleted = createdUser.IsDeleted,
     };
 
     return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, userDto);
   }
 
   // PUT: users/{id}
-  [HttpPut("{id}")]
+  [HttpPut("{id:guid}")]
   public async Task<ActionResult<UserResponseDto>> UpdateUser(Guid id, UpdateUserDto updateUserDto) {
-    var existingUser = await _userService.GetUserByIdAsync(id);
+    var existingUser = await userService.GetUserByIdAsync(id);
 
-    if (existingUser == null) { return NotFound(); }
+    if (existingUser == null) return NotFound();
 
     // Update only provided properties
     if (!string.IsNullOrEmpty(updateUserDto.Name)) existingUser.Name = updateUserDto.Name;
 
     if (!string.IsNullOrEmpty(updateUserDto.Email)) existingUser.Email = updateUserDto.Email;
 
-    var updatedUser = await _userService.UpdateUserAsync(id, existingUser);
+    var updatedUser = await userService.UpdateUserAsync(id, existingUser);
 
-    if (updatedUser == null) { return NotFound(); }
+    if (updatedUser == null) return NotFound();
 
     var userDto = new UserResponseDto {
       Id = updatedUser.Id,
@@ -123,38 +121,38 @@ public class UsersController : ControllerBase {
       CreatedAt = updatedUser.CreatedAt,
       UpdatedAt = updatedUser.UpdatedAt,
       DeletedAt = updatedUser.DeletedAt,
-      IsDeleted = updatedUser.IsDeleted
+      IsDeleted = updatedUser.IsDeleted,
     };
 
     return Ok(userDto);
   }
 
   // DELETE: users/{id}
-  [HttpDelete("{id}")]
+  [HttpDelete("{id:guid}")]
   public async Task<IActionResult> DeleteUser(Guid id) {
-    var result = await _userService.DeleteUserAsync(id);
+    var result = await userService.DeleteUserAsync(id);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }
 
   // DELETE: users/{id}/soft
-  [HttpDelete("{id}/soft")]
+  [HttpDelete("{id:guid}/soft")]
   public async Task<IActionResult> SoftDeleteUser(Guid id) {
-    var result = await _userService.SoftDeleteUserAsync(id);
+    var result = await userService.SoftDeleteUserAsync(id);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }
 
   // POST: users/{id}/restore
-  [HttpPost("{id}/restore")]
+  [HttpPost("{id:guid}/restore")]
   public async Task<IActionResult> RestoreUser(Guid id) {
-    var result = await _userService.RestoreUserAsync(id);
+    var result = await userService.RestoreUserAsync(id);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }

@@ -54,7 +54,7 @@ namespace GameGuild.Tests.Helpers {
                   { "Jwt:ExpiryInMinutes", "15" },
                   { "Jwt:RefreshTokenExpiryInDays", "7" },
                   { "OAuth:GitHub:ClientId", "test-github-client-id" },
-                  { "OAuth:GitHub:ClientSecret", "test-github-client-secret" }
+                  { "OAuth:GitHub:ClientSecret", "test-github-client-secret" },
                 }
               );
             }
@@ -65,14 +65,14 @@ namespace GameGuild.Tests.Helpers {
               var descriptor =
                 services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
 
-              if (descriptor != null) { services.Remove(descriptor); }
+              if (descriptor != null) services.Remove(descriptor);
 
               // Remove all EF Core related services to prevent conflicts
               var efCoreServices = services
                                    .Where(s => s.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true)
                                    .ToList();
 
-              foreach (var service in efCoreServices) { services.Remove(service); }
+              foreach (var service in efCoreServices) services.Remove(service);
 
               // Add in-memory database for testing
               services.AddDbContext<ApplicationDbContext>(options => {
@@ -96,7 +96,7 @@ namespace GameGuild.Tests.Helpers {
                             .Where(s => s.ServiceType == typeof(Microsoft.AspNetCore.Mvc.Filters.IFilterProvider))
                             .ToList();
 
-              foreach (var filter in filters) { services.Remove(filter); }
+              foreach (var filter in filters) services.Remove(filter);
 
               // Register mock tenant context service for tests
               services

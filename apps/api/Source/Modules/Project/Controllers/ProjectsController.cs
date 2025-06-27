@@ -17,7 +17,7 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
     // Get the current authenticated user's ID
     var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
     // Return only projects created by the authenticated user
     var projects = await projectService.GetProjectsByCreatorAsync(userId);
@@ -31,7 +31,7 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
   public async Task<ActionResult<Models.Project>> GetProject(Guid id) {
     var project = await projectService.GetProjectByIdAsync(id);
 
-    if (project == null) { return NotFound(); }
+    if (project == null) return NotFound();
 
     return Ok(project);
   }
@@ -42,7 +42,7 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
   public async Task<ActionResult<Models.Project>> GetProjectBySlug(string slug) {
     var project = await projectService.GetProjectBySlugAsync(slug);
 
-    if (project == null) { return NotFound(); }
+    if (project == null) return NotFound();
 
     return Ok(project);
   }
@@ -80,15 +80,15 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
     // Get the current authenticated user's ID
     var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
     // Set the creator ID from the authenticated user
     project.CreatedById = userId;
 
     // Auto-generate slug if not provided
-    if (string.IsNullOrEmpty(project.Slug)) { project.Slug = Models.Project.GenerateSlug(project.Title); }
+    if (string.IsNullOrEmpty(project.Slug)) project.Slug = Models.Project.GenerateSlug(project.Title);
 
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var createdProject = await projectService.CreateProjectAsync(project);
 
@@ -99,9 +99,9 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
   [HttpPut("{id}")]
   [RequireResourcePermission<Models.Project>(PermissionType.Edit)]
   public async Task<ActionResult<Models.Project>> UpdateProject(Guid id, [FromBody] Models.Project project) {
-    if (id != project.Id) { return BadRequest("Project ID mismatch"); }
+    if (id != project.Id) return BadRequest("Project ID mismatch");
 
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     try {
       var updatedProject = await projectService.UpdateProjectAsync(project);
@@ -117,7 +117,7 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
   public async Task<ActionResult> DeleteProject(Guid id) {
     var success = await projectService.DeleteProjectAsync(id);
 
-    if (!success) { return NotFound(); }
+    if (!success) return NotFound();
 
     return NoContent();
   }
@@ -128,7 +128,7 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
   public async Task<ActionResult> RestoreProject(Guid id) {
     var success = await projectService.RestoreProjectAsync(id);
 
-    if (!success) { return NotFound(); }
+    if (!success) return NotFound();
 
     return NoContent();
   }

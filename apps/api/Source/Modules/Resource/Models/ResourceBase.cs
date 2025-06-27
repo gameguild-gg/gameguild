@@ -99,7 +99,7 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable {
       Language = language,
       FieldName = fieldName,
       Content = content,
-      Status = status
+      Status = status,
     };
 
     Localizations.Add(localization);

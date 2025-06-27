@@ -33,7 +33,7 @@ namespace GameGuild.Modules.TestingLab.Dtos {
         MaxTesters = MaxTesters,
         Status = Status,
         ManagerUserId = ManagerUserId,
-        CreatedById = createdById
+        CreatedById = createdById,
       };
     }
   }

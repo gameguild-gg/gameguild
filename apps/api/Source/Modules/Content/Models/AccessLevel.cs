@@ -26,5 +26,5 @@ public enum AccessLevel {
   /// <summary>
   /// Resource is protected and requires special access
   /// </summary>
-  Protected = 6
+  Protected = 6,
 }

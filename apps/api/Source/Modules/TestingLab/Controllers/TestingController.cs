@@ -36,7 +36,7 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult<TestingRequest>> GetTestingRequest(Guid id) {
     var request = await _testService.GetTestingRequestByIdAsync(id);
 
-    if (request == null) { return NotFound(); }
+    if (request == null) return NotFound();
 
     return Ok(request);
   }
@@ -47,7 +47,7 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult<TestingRequest>> GetTestingRequestWithDetails(Guid id) {
     var request = await _testService.GetTestingRequestByIdWithDetailsAsync(id);
 
-    if (request == null) { return NotFound(); }
+    if (request == null) return NotFound();
 
     return Ok(request);
   } // POST: testing/requests
@@ -59,7 +59,7 @@ public class TestingController : ControllerBase {
       // Get the current authenticated user's ID
       var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
       var request = requestDto.ToTestingRequest(userId);
       var createdRequest = await _testService.CreateTestingRequestAsync(request);
@@ -73,7 +73,7 @@ public class TestingController : ControllerBase {
   [HttpPut("requests/{id}")]
   [RequireResourcePermission<TestingRequest>(PermissionType.Edit)]
   public async Task<ActionResult<TestingRequest>> UpdateTestingRequest(Guid id, TestingRequest request) {
-    if (id != request.Id) { return BadRequest("ID mismatch"); }
+    if (id != request.Id) return BadRequest("ID mismatch");
 
     try {
       var updatedRequest = await _testService.UpdateTestingRequestAsync(request);
@@ -90,7 +90,7 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult> DeleteTestingRequest(Guid id) {
     var result = await _testService.DeleteTestingRequestAsync(id);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -101,7 +101,7 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult> RestoreTestingRequest(Guid id) {
     var result = await _testService.RestoreTestingRequestAsync(id);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return Ok();
   }
@@ -128,7 +128,7 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult<TestingSession>> GetTestingSession(Guid id) {
     var session = await _testService.GetTestingSessionByIdAsync(id);
 
-    if (session == null) { return NotFound(); }
+    if (session == null) return NotFound();
 
     return Ok(session);
   }
@@ -139,7 +139,7 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult<TestingSession>> GetTestingSessionWithDetails(Guid id) {
     var session = await _testService.GetTestingSessionByIdWithDetailsAsync(id);
 
-    if (session == null) { return NotFound(); }
+    if (session == null) return NotFound();
 
     return Ok(session);
   }
@@ -152,7 +152,7 @@ public class TestingController : ControllerBase {
       // Get the current authenticated user's ID
       var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
       session.CreatedById = userId;
       var createdSession = await _testService.CreateTestingSessionAsync(session);
@@ -166,7 +166,7 @@ public class TestingController : ControllerBase {
   [HttpPut("sessions/{id}")]
   [RequireResourcePermission<TestingSession>(PermissionType.Edit)]
   public async Task<ActionResult<TestingSession>> UpdateTestingSession(Guid id, TestingSession session) {
-    if (id != session.Id) { return BadRequest("ID mismatch"); }
+    if (id != session.Id) return BadRequest("ID mismatch");
 
     try {
       var updatedSession = await _testService.UpdateTestingSessionAsync(session);
@@ -183,7 +183,7 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult> DeleteTestingSession(Guid id) {
     var result = await _testService.DeleteTestingSessionAsync(id);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -194,7 +194,7 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult> RestoreTestingSession(Guid id) {
     var result = await _testService.RestoreTestingSessionAsync(id);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return Ok();
   }
@@ -270,7 +270,7 @@ public class TestingController : ControllerBase {
   [HttpGet("requests/search")]
   [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingRequest>>> SearchTestingRequests([FromQuery] string searchTerm) {
-    if (string.IsNullOrWhiteSpace(searchTerm)) { return BadRequest("Search term is required"); }
+    if (string.IsNullOrWhiteSpace(searchTerm)) return BadRequest("Search term is required");
 
     var requests = await _testService.SearchTestingRequestsAsync(searchTerm);
 
@@ -281,7 +281,7 @@ public class TestingController : ControllerBase {
   [HttpGet("sessions/search")]
   [RequireResourcePermission<TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingSession>>> SearchTestingSessions([FromQuery] string searchTerm) {
-    if (string.IsNullOrWhiteSpace(searchTerm)) { return BadRequest("Search term is required"); }
+    if (string.IsNullOrWhiteSpace(searchTerm)) return BadRequest("Search term is required");
 
     var sessions = await _testService.SearchTestingSessionsAsync(searchTerm);
 
@@ -310,7 +310,7 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult> RemoveParticipant(Guid requestId, Guid userId) {
     var result = await _testService.RemoveParticipantAsync(requestId, userId);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -348,7 +348,7 @@ public class TestingController : ControllerBase {
       // Get the current authenticated user's ID
       var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
       var registration =
         await _testService.RegisterForSessionAsync(sessionId, userId, request.RegistrationType, request.Notes);
@@ -365,11 +365,11 @@ public class TestingController : ControllerBase {
     // Get the current authenticated user's ID
     var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
     var result = await _testService.UnregisterFromSessionAsync(sessionId, userId);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -394,7 +394,7 @@ public class TestingController : ControllerBase {
       // Get the current authenticated user's ID
       var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
       var waitlistEntry =
         await _testService.AddToWaitlistAsync(sessionId, userId, request.RegistrationType, request.Notes);
@@ -411,11 +411,11 @@ public class TestingController : ControllerBase {
     // Get the current authenticated user's ID
     var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
     var result = await _testService.RemoveFromWaitlistAsync(sessionId, userId);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -441,7 +441,7 @@ public class TestingController : ControllerBase {
       // Get the current authenticated user's ID
       var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
 
       var feedback = await _testService.AddFeedbackAsync(
                        requestId,

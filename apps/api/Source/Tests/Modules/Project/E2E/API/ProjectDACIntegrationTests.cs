@@ -190,7 +190,7 @@ public class ProjectDACIntegrationTests : IDisposable {
     var projectId = Guid.NewGuid();
 
     var expiredPermission = new ProjectPermission {
-      UserId = userId, TenantId = tenantId, ResourceId = projectId, ExpiresAt = DateTime.UtcNow.AddDays(-1) // Expired
+      UserId = userId, TenantId = tenantId, ResourceId = projectId, ExpiresAt = DateTime.UtcNow.AddDays(-1), // Expired
     };
 
     expiredPermission.AddPermission(PermissionType.Edit);
@@ -399,10 +399,11 @@ public class ProjectDACIntegrationTests : IDisposable {
           tenantId,
           projectId,
           permissionType
-        )) { return true; }
+        ))
+      return true;
 
     // Layer 2: Check content-type permissions
-    if (await permissionService.HasContentTypePermissionAsync(userId, tenantId, "Project", permissionType)) { return true; }
+    if (await permissionService.HasContentTypePermissionAsync(userId, tenantId, "Project", permissionType)) return true;
 
     // Layer 3: Check tenant-level permissions
     return await permissionService.HasTenantPermissionAsync(userId, tenantId, permissionType);

@@ -147,7 +147,7 @@ public enum PermissionType {
   Feedback = 88,
   Audit = 89,
   Standards = 90,
-  Improvement = 91
+  Improvement = 91,
 
   #endregion
 }

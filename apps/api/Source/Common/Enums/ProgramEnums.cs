@@ -11,7 +11,7 @@ public enum Visibility {
   Published,
 
   [Description("Content no longer actively shown but preserved for reference")]
-  Archived
+  Archived,
 }
 
 public enum ProductType {
@@ -38,7 +38,7 @@ public enum ProductType {
   [Description("Industry credentials")] Certification,
 
   [Description("Future product categories")]
-  Other
+  Other,
 }
 
 public enum ProgramContentType {
@@ -64,7 +64,7 @@ public enum ProgramContentType {
   Reflection,
 
   [Description("Data collection activity without grading")]
-  Survey
+  Survey,
 }
 
 public enum ProgramRoleType {
@@ -81,7 +81,7 @@ public enum ProgramRoleType {
   Administrator,
 
   [Description("Can grade submissions and assist students but with limited content editing abilities")]
-  TeachingAssistant
+  TeachingAssistant,
 }
 
 public enum GradingMethod {
@@ -95,7 +95,7 @@ public enum GradingMethod {
   Ai,
 
   [Description("Graded automatically using predefined test cases")]
-  AutomatedTests
+  AutomatedTests,
 }
 
 public enum ModerationStatus {
@@ -109,7 +109,7 @@ public enum ModerationStatus {
   Rejected,
 
   [Description("Content flagged for review due to reports or policy violations")]
-  Flagged
+  Flagged,
 }
 
 public enum ProgressStatus {
@@ -123,7 +123,7 @@ public enum ProgressStatus {
   Completed,
 
   [Description("User has opted to skip this optional content")]
-  Skipped
+  Skipped,
 }
 
 public enum ProgramCategory {
@@ -171,7 +171,7 @@ public enum ProgramCategory {
   [Description("Science and mathematics")]
   Science,
   [Description("Language learning")] Language,
-  [Description("Other categories")] Other
+  [Description("Other categories")] Other,
 }
 
 public enum ProgramDifficulty {
@@ -185,5 +185,5 @@ public enum ProgramDifficulty {
   Advanced,
 
   [Description("Requires expert-level knowledge")]
-  Expert
+  Expert,
 }

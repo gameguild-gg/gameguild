@@ -247,7 +247,7 @@ public class ProductService : IProductService {
       Name = "Standard",
       BasePrice = basePrice,
       Currency = currency,
-      IsDefault = true
+      IsDefault = true,
     };
 
     _context.ProductPricings.Add(pricing);
@@ -339,7 +339,7 @@ public class ProductService : IProductService {
     // Check if user already has access
     var existingAccess = await GetUserProductAsync(userId, productId);
 
-    if (existingAccess != null && existingAccess.AccessStatus == ProductAccessStatus.Active) { return existingAccess; }
+    if (existingAccess != null && existingAccess.AccessStatus == ProductAccessStatus.Active) return existingAccess;
 
     var userProduct = new UserProduct {
       UserId = userId,
@@ -348,7 +348,7 @@ public class ProductService : IProductService {
       AccessStatus = ProductAccessStatus.Active,
       PricePaid = purchasePrice,
       Currency = currency,
-      AccessEndDate = expiresAt
+      AccessEndDate = expiresAt,
     };
 
     _context.UserProducts.Add(userProduct);
@@ -409,7 +409,7 @@ public class ProductService : IProductService {
       PromoCodeId = promoCode.Id,
       UserId = userId,
       FinancialTransactionId = Guid.NewGuid(), // This should be set to actual transaction ID
-      DiscountApplied = discountAmount
+      DiscountApplied = discountAmount,
     };
 
     _context.PromoCodeUses.Add(promoCodeUse);

@@ -140,7 +140,7 @@ public class ProgramController : ControllerBase {
   [HttpPost]
   [RequireContentTypePermission<ProgramEntity>(PermissionType.Draft)]
   public async Task<ActionResult<ProgramEntity>> CreateProgram([FromBody] CreateProgramDto createDto) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var program = await _programService.CreateProgramAsync(createDto);
 
@@ -157,7 +157,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> GetProgram(Guid id) {
     var program = await _programService.GetProgramByIdAsync(id);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -170,7 +170,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> GetProgramWithContent(Guid id) {
     var program = await _programService.GetProgramWithContentAsync(id);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -181,11 +181,11 @@ public class ProgramController : ControllerBase {
   [HttpPut("{id}")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProgramEntity>> UpdateProgram(Guid id, [FromBody] UpdateProgramDto updateDto) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var program = await _programService.UpdateProgramAsync(id, updateDto);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -198,7 +198,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult> DeleteProgram(Guid id) {
     var existingProgram = await _programService.GetProgramByIdAsync(id);
 
-    if (existingProgram == null) { return NotFound(); }
+    if (existingProgram == null) return NotFound();
 
     await _programService.DeleteProgramAsync(id);
 
@@ -211,11 +211,11 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/clone")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Clone)]
   public async Task<ActionResult<ProgramEntity>> CloneProgram(Guid id, [FromBody] CloneProgramDto cloneDto) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var program = await _programService.CloneProgramAsync(id, cloneDto.NewTitle);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return CreatedAtAction(nameof(GetProgram), new { id = program.Id }, program);
   }
@@ -228,11 +228,11 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/content")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProgramContent>> AddContent(Guid id, [FromBody] CreateContentDto contentDto) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var content = await _programService.AddContentAsync(id, contentDto);
 
-    if (content == null) { return NotFound("Program not found"); }
+    if (content == null) return NotFound("Program not found");
 
     return Ok(content);
   }
@@ -246,11 +246,11 @@ public class ProgramController : ControllerBase {
     Guid id, Guid contentId,
     [FromBody] UpdateContentDto contentDto
   ) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var content = await _programService.UpdateContentAsync(id, contentId, contentDto);
 
-    if (content == null) { return NotFound(); }
+    if (content == null) return NotFound();
 
     return Ok(content);
   }
@@ -263,7 +263,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult> RemoveContent(Guid id, Guid contentId) {
     var success = await _programService.RemoveContentAsync(id, contentId);
 
-    if (!success) { return NotFound(); }
+    if (!success) return NotFound();
 
     return NoContent();
   }
@@ -274,11 +274,11 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/content/reorder")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> ReorderContent(Guid id, [FromBody] ReorderContentDto reorderDto) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var program = await _programService.ReorderContentAsync(id, reorderDto.ContentIds);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return NoContent();
   }
@@ -293,7 +293,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<UserProgressDto>> AddUserToProgram(Guid id, Guid userId) {
     var progress = await _programService.AddUserToProgramAsync(id, userId);
 
-    if (progress == null) { return NotFound(); }
+    if (progress == null) return NotFound();
 
     return Ok(progress);
   }
@@ -306,7 +306,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult> RemoveUserFromProgram(Guid id, Guid userId) {
     var success = await _programService.RemoveUserFromProgramAsync(id, userId);
 
-    if (!success) { return NotFound(); }
+    if (!success) return NotFound();
 
     return NoContent();
   }
@@ -333,7 +333,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<UserProgressDto>> GetUserProgress(Guid id, Guid userId) {
     var progress = await _programService.GetUserProgressDtoAsync(id, userId);
 
-    if (progress == null) { return NotFound(); }
+    if (progress == null) return NotFound();
 
     return Ok(progress);
   }
@@ -347,11 +347,11 @@ public class ProgramController : ControllerBase {
     Guid id, Guid userId,
     [FromBody] UpdateProgressDto progressDto
   ) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var progress = await _programService.UpdateUserProgressAsync(id, userId, progressDto);
 
-    if (progress == null) { return NotFound(); }
+    if (progress == null) return NotFound();
 
     return Ok(progress);
   }
@@ -364,7 +364,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult> MarkContentCompleted(Guid id, Guid userId, Guid contentId) {
     var success = await _programService.MarkContentCompletedAsync(id, userId, contentId);
 
-    if (!success) { return NotFound(); }
+    if (!success) return NotFound();
 
     return NoContent();
   }
@@ -377,7 +377,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult> ResetUserProgress(Guid id, Guid userId) {
     var success = await _programService.ResetUserProgressAsync(id, userId);
 
-    if (!success) { return NotFound(); }
+    if (!success) return NotFound();
 
     return NoContent();
   }
@@ -392,7 +392,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> SubmitProgram(Guid id) {
     var program = await _programService.SubmitProgramAsync(id);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -405,7 +405,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> ApproveProgram(Guid id) {
     var program = await _programService.ApproveProgramAsync(id);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -416,11 +416,11 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/reject")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Reject)]
   public async Task<ActionResult<ProgramEntity>> RejectProgram(Guid id, [FromBody] RejectProgramDto rejectDto) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var program = await _programService.RejectProgramAsync(id, rejectDto.Reason);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -433,7 +433,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> WithdrawProgram(Guid id) {
     var program = await _programService.WithdrawProgramAsync(id);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -446,7 +446,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> ArchiveProgram(Guid id) {
     var program = await _programService.ArchiveProgramAsync(id);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -459,7 +459,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> RestoreProgram(Guid id) {
     var program = await _programService.RestoreProgramAsync(id);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -474,7 +474,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> PublishProgram(Guid id) {
     var program = await _programService.PublishProgramAsync(id);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -487,7 +487,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> UnpublishProgram(Guid id) {
     var program = await _programService.UnpublishProgramAsync(id);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -498,11 +498,11 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/schedule")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Schedule)]
   public async Task<ActionResult<ProgramEntity>> ScheduleProgram(Guid id, [FromBody] ScheduleProgramDto scheduleDto) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var program = await _programService.ScheduleProgramAsync(id, scheduleDto.PublishAt);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -515,11 +515,11 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/monetize")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Monetize)]
   public async Task<ActionResult<ProgramEntity>> EnableMonetization(Guid id, [FromBody] MonetizationDto monetizationDto) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var program = await _programService.EnableMonetizationAsync(id, monetizationDto);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -532,7 +532,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> DisableMonetization(Guid id) {
     var program = await _programService.DisableMonetizationAsync(id);
 
-    if (program == null) { return NotFound(); }
+    if (program == null) return NotFound();
 
     return Ok(program);
   }
@@ -545,7 +545,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<PricingDto>> GetProgramPricing(Guid id) {
     var pricing = await _programService.GetProgramPricingAsync(id);
 
-    if (pricing == null) { return NotFound(); }
+    if (pricing == null) return NotFound();
 
     return Ok(pricing);
   }
@@ -556,11 +556,11 @@ public class ProgramController : ControllerBase {
   [HttpPut("{id}/pricing")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Pricing)]
   public async Task<ActionResult<PricingDto>> UpdateProgramPricing(Guid id, [FromBody] UpdatePricingDto pricingDto) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var pricing = await _programService.UpdateProgramPricingAsync(id, pricingDto);
 
-    if (pricing == null) { return NotFound(); }
+    if (pricing == null) return NotFound();
 
     return Ok(pricing);
   }
@@ -575,7 +575,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramAnalyticsDto>> GetProgramAnalytics(Guid id) {
     var analytics = await _programService.GetProgramAnalyticsAsync(id);
 
-    if (analytics == null) { return NotFound(); }
+    if (analytics == null) return NotFound();
 
     return Ok(analytics);
   }
@@ -588,7 +588,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<CompletionRatesDto>> GetCompletionRates(Guid id) {
     var rates = await _programService.GetCompletionRatesAsync(id);
 
-    if (rates == null) { return NotFound(); }
+    if (rates == null) return NotFound();
 
     return Ok(rates);
   }
@@ -601,7 +601,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<EngagementMetricsDto>> GetEngagementMetrics(Guid id) {
     var metrics = await _programService.GetEngagementMetricsAsync(id);
 
-    if (metrics == null) { return NotFound(); }
+    if (metrics == null) return NotFound();
 
     return Ok(metrics);
   }
@@ -614,7 +614,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<RevenueAnalyticsDto>> GetRevenueAnalytics(Guid id) {
     var revenue = await _programService.GetRevenueAnalyticsAsync(id);
 
-    if (revenue == null) { return NotFound(); }
+    if (revenue == null) return NotFound();
 
     return Ok(revenue);
   }
@@ -630,11 +630,11 @@ public class ProgramController : ControllerBase {
     Guid id,
     [FromBody] CreateProductFromProgramDto productDto
   ) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var productId = await _programService.CreateProductFromProgramAsync(id, productDto);
 
-    if (productId == null) { return NotFound(); }
+    if (productId == null) return NotFound();
 
     return Ok(new { ProductId = productId });
   }
@@ -647,7 +647,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult> LinkProgramToProduct(Guid id, Guid productId) {
     var success = await _programService.LinkProgramToProductAsync(id, productId);
 
-    if (!success) { return NotFound(); }
+    if (!success) return NotFound();
 
     return NoContent();
   }
@@ -660,7 +660,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult> UnlinkProgramFromProduct(Guid id, Guid productId) {
     var success = await _programService.UnlinkProgramFromProductAsync(id, productId);
 
-    if (!success) { return NotFound(); }
+    if (!success) return NotFound();
 
     return NoContent();
   }

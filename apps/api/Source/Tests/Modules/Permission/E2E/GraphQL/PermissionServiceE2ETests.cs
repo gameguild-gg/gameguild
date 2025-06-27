@@ -141,7 +141,8 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
       var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
 
       if (jsonResponse.TryGetProperty("data", out var data) &&
-          data.TryGetProperty("hasTenantPermission", out var hasPermission)) { Assert.True(hasPermission.GetBoolean()); }
+          data.TryGetProperty("hasTenantPermission", out var hasPermission))
+        Assert.True(hasPermission.GetBoolean());
     }
 
     if (responseNotGranted.IsSuccessStatusCode) {
@@ -149,7 +150,8 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
       var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
 
       if (jsonResponse.TryGetProperty("data", out var data) &&
-          data.TryGetProperty("hasTenantPermission", out var hasPermission)) { Assert.False(hasPermission.GetBoolean()); }
+          data.TryGetProperty("hasTenantPermission", out var hasPermission))
+        Assert.False(hasPermission.GetBoolean());
     }
   }
 
@@ -338,9 +340,9 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
           tenantId = tenant.Id,
           resourceId = comment.Id,
           resourceType = "Comment",
-          permissions = new[] { "Edit", "Delete" }
-        }
-      }
+          permissions = new[] { "Edit", "Delete" },
+        },
+      },
     };
 
     // Act
@@ -402,7 +404,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
       targetUserId = targetUser.Id,
       tenantId = tenant.Id,
       permissions = new[] { "Read", "Comment" },
-      expiresAt = DateTime.UtcNow.AddDays(30)
+      expiresAt = DateTime.UtcNow.AddDays(30),
     };
 
     var json = JsonSerializer.Serialize(shareResourceDto);
@@ -581,7 +583,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
 
   private async Task<Comment> CreateTestCommentAsync() {
     var comment = new Comment {
-      Id = Guid.NewGuid(), Content = "Test comment content"
+      Id = Guid.NewGuid(), Content = "Test comment content",
       // Note: Comment entity doesn't have IsEdited property
     };
 

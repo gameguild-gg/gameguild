@@ -62,7 +62,7 @@ public class TestService : ITestService {
   public async Task<TestingRequest> UpdateTestingRequestAsync(TestingRequest testingRequest) {
     var existingRequest = await _context.TestingRequests.FindAsync(testingRequest.Id);
 
-    if (existingRequest == null) { throw new InvalidOperationException($"Testing request with ID {testingRequest.Id} not found."); }
+    if (existingRequest == null) throw new InvalidOperationException($"Testing request with ID {testingRequest.Id} not found.");
 
     // Update properties
     existingRequest.Title = testingRequest.Title;
@@ -85,7 +85,7 @@ public class TestService : ITestService {
   public async Task<bool> DeleteTestingRequestAsync(Guid id) {
     var testingRequest = await _context.TestingRequests.FindAsync(id);
 
-    if (testingRequest == null) { return false; }
+    if (testingRequest == null) return false;
 
     testingRequest.DeletedAt = DateTime.UtcNow;
     await _context.SaveChangesAsync();
@@ -96,7 +96,7 @@ public class TestService : ITestService {
   public async Task<bool> RestoreTestingRequestAsync(Guid id) {
     var testingRequest = await _context.TestingRequests.IgnoreQueryFilters().FirstOrDefaultAsync(tr => tr.Id == id);
 
-    if (testingRequest == null) { return false; }
+    if (testingRequest == null) return false;
 
     testingRequest.DeletedAt = null;
     testingRequest.UpdatedAt = DateTime.UtcNow;
@@ -155,7 +155,7 @@ public class TestService : ITestService {
   public async Task<TestingSession> UpdateTestingSessionAsync(TestingSession testingSession) {
     var existingSession = await _context.TestingSessions.FindAsync(testingSession.Id);
 
-    if (existingSession == null) { throw new InvalidOperationException($"Testing session with ID {testingSession.Id} not found."); }
+    if (existingSession == null) throw new InvalidOperationException($"Testing session with ID {testingSession.Id} not found.");
 
     // Update properties
     existingSession.SessionName = testingSession.SessionName;
@@ -175,7 +175,7 @@ public class TestService : ITestService {
   public async Task<bool> DeleteTestingSessionAsync(Guid id) {
     var testingSession = await _context.TestingSessions.FindAsync(id);
 
-    if (testingSession == null) { return false; }
+    if (testingSession == null) return false;
 
     testingSession.DeletedAt = DateTime.UtcNow;
     await _context.SaveChangesAsync();
@@ -186,7 +186,7 @@ public class TestService : ITestService {
   public async Task<bool> RestoreTestingSessionAsync(Guid id) {
     var testingSession = await _context.TestingSessions.IgnoreQueryFilters().FirstOrDefaultAsync(ts => ts.Id == id);
 
-    if (testingSession == null) { return false; }
+    if (testingSession == null) return false;
 
     testingSession.DeletedAt = null;
     testingSession.UpdatedAt = DateTime.UtcNow;
@@ -291,14 +291,14 @@ public class TestService : ITestService {
                                                                tp.TestingRequestId == testingRequestId && tp.UserId == userId
       );
 
-    if (existingParticipant != null) { return existingParticipant; }
+    if (existingParticipant != null) return existingParticipant;
 
     var participant = new TestingParticipant {
       Id = Guid.NewGuid(),
       TestingRequestId = testingRequestId,
       UserId = userId,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.TestingParticipants.Add(participant);
@@ -315,7 +315,7 @@ public class TestService : ITestService {
                                                                tp.TestingRequestId == testingRequestId && tp.UserId == userId
       );
 
-    if (participant == null) { return false; }
+    if (participant == null) return false;
 
     _context.TestingParticipants.Remove(participant);
     await _context.SaveChangesAsync();
@@ -348,7 +348,7 @@ public class TestService : ITestService {
     var existingRegistration =
       await _context.SessionRegistrations.FirstOrDefaultAsync(sr => sr.SessionId == sessionId && sr.UserId == userId);
 
-    if (existingRegistration != null) { return existingRegistration; }
+    if (existingRegistration != null) return existingRegistration;
 
     var registration = new SessionRegistration {
       Id = Guid.NewGuid(),
@@ -357,7 +357,7 @@ public class TestService : ITestService {
       RegistrationType = registrationType,
       RegistrationNotes = notes,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.SessionRegistrations.Add(registration);
@@ -366,8 +366,9 @@ public class TestService : ITestService {
     var session = await _context.TestingSessions.FindAsync(sessionId);
 
     if (session != null) {
-      if (registrationType == RegistrationType.Tester) { session.RegisteredTesterCount++; }
-      else if (registrationType == RegistrationType.ProjectMember) { session.RegisteredProjectMemberCount++; }
+      if (registrationType == RegistrationType.Tester)
+        session.RegisteredTesterCount++;
+      else if (registrationType == RegistrationType.ProjectMember) session.RegisteredProjectMemberCount++;
     }
 
     await _context.SaveChangesAsync();
@@ -381,14 +382,15 @@ public class TestService : ITestService {
     var registration =
       await _context.SessionRegistrations.FirstOrDefaultAsync(sr => sr.SessionId == sessionId && sr.UserId == userId);
 
-    if (registration == null) { return false; }
+    if (registration == null) return false;
 
     // Update session counts
     var session = await _context.TestingSessions.FindAsync(sessionId);
 
     if (session != null) {
-      if (registration.RegistrationType == RegistrationType.Tester) { session.RegisteredTesterCount = Math.Max(0, session.RegisteredTesterCount - 1); }
-      else if (registration.RegistrationType == RegistrationType.ProjectMember) { session.RegisteredProjectMemberCount = Math.Max(0, session.RegisteredProjectMemberCount - 1); }
+      if (registration.RegistrationType == RegistrationType.Tester)
+        session.RegisteredTesterCount = Math.Max(0, session.RegisteredTesterCount - 1);
+      else if (registration.RegistrationType == RegistrationType.ProjectMember) session.RegisteredProjectMemberCount = Math.Max(0, session.RegisteredProjectMemberCount - 1);
     }
 
     _context.SessionRegistrations.Remove(registration);
@@ -412,7 +414,7 @@ public class TestService : ITestService {
     var existingWaitlist =
       await _context.SessionWaitlists.FirstOrDefaultAsync(sw => sw.SessionId == sessionId && sw.UserId == userId);
 
-    if (existingWaitlist != null) { return existingWaitlist; }
+    if (existingWaitlist != null) return existingWaitlist;
 
     // Get next position in waitlist
     var maxPosition = await _context.SessionWaitlists.Where(sw => sw.SessionId == sessionId)
@@ -427,7 +429,7 @@ public class TestService : ITestService {
       Position = maxPosition + 1,
       RegistrationNotes = notes,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.SessionWaitlists.Add(waitlistEntry);
@@ -442,7 +444,7 @@ public class TestService : ITestService {
     var waitlistEntry =
       await _context.SessionWaitlists.FirstOrDefaultAsync(sw => sw.SessionId == sessionId && sw.UserId == userId);
 
-    if (waitlistEntry == null) { return false; }
+    if (waitlistEntry == null) return false;
 
     var removedPosition = waitlistEntry.Position;
 
@@ -453,7 +455,7 @@ public class TestService : ITestService {
                                          .Where(sw => sw.SessionId == sessionId && sw.Position > removedPosition)
                                          .ToListAsync();
 
-    foreach (var entry in remainingEntries) { entry.Position--; }
+    foreach (var entry in remainingEntries) entry.Position--;
 
     await _context.SaveChangesAsync();
 
@@ -485,7 +487,7 @@ public class TestService : ITestService {
       FeedbackData = feedbackData,
       AdditionalNotes = additionalNotes,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.TestingFeedback.Add(feedback);
@@ -538,7 +540,7 @@ public class TestService : ITestService {
   public async Task<object> GetTestingSessionStatisticsAsync(Guid testingSessionId) {
     var session = await _context.TestingSessions.FindAsync(testingSessionId);
 
-    if (session == null) { return new { }; }
+    if (session == null) return new { };
 
     var registrationCount = await _context.SessionRegistrations.CountAsync(sr => sr.SessionId == testingSessionId);
 
@@ -551,7 +553,7 @@ public class TestService : ITestService {
       RegisteredCount = registrationCount,
       WaitlistCount = waitlistCount,
       FeedbackCount = feedbackCount,
-      AvailableSlots = Math.Max(0, session.MaxTesters - registrationCount)
+      AvailableSlots = Math.Max(0, session.MaxTesters - registrationCount),
     };
   }
 
@@ -573,7 +575,7 @@ public class TestService : ITestService {
       SessionRegistrationCount = sessionRegistrationCount,
       FeedbackCount = feedbackCount,
       ManagedSessionCount = managedSessionCount,
-      CreatedRequestCount = createdRequestCount
+      CreatedRequestCount = createdRequestCount,
     };
   }
 
