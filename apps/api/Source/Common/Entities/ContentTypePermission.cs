@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace GameGuild.Common.Entities;
 
 /// <summary>
-/// Content-type-wide permissions (Layer 3 of DAC permission system)
+/// Content-type-wide permissions (Layer 3 of a DAC permission system)
 /// Allows setting permissions for specific content types within a tenant
 /// </summary>
 [Table("ContentTypePermissions")]

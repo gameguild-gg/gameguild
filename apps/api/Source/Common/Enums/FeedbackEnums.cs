@@ -2,25 +2,26 @@ using System.ComponentModel;
 
 namespace GameGuild.Common.Enums;
 
-public enum FeedbackFormQuestionType {
-  [Description("Single line text input")]
-  ShortAnswer,
+public enum FeedbackFormQuestionType
+{
+    [Description("Single line text input")]
+    ShortAnswer,
 
-  [Description("Multi-line text area")]
-  LongAnswer,
+    [Description("Multi-line text area")]
+    LongAnswer,
 
-  [Description("Select one option from multiple choices")]
-  MultipleChoice,
+    [Description("Select one option from multiple choices")]
+    MultipleChoice,
 
-  [Description("Select multiple options from a list")]
-  Checkbox,
+    [Description("Select multiple options from a list")]
+    Checkbox,
 
-  [Description("Numeric rating scale (e.g., 1-5 stars)")]
-  RatingScale,
+    [Description("Numeric rating scale (e.g., 1-5 stars)")]
+    RatingScale,
 
-  [Description("Simple yes/no question")]
-  YesNo,
+    [Description("Simple yes/no question")]
+    YesNo,
 
-  [Description("Select one option from dropdown menu")]
-  Dropdown
+    [Description("Select one option from dropdown menu")]
+    Dropdown
 }
