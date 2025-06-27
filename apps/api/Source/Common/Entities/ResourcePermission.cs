@@ -8,20 +8,13 @@ namespace GameGuild.Common.Entities;
 /// Generic implementation allows strong typing for each content type
 /// </summary>
 public abstract class ResourcePermission<T> : WithPermissions where T : BaseEntity {
-  private Guid _resourceId;
-
-  private T _resource = null!;
-
   /// <summary>
   /// Resource reference - strongly typed to the content entity
   /// </summary>
   [GraphQLType(typeof(NonNullType<UuidType>))]
   [GraphQLDescription("The ID of the resource this permission applies to")]
   [Required]
-  public Guid ResourceId {
-    get => _resourceId;
-    set => _resourceId = value;
-  }
+  public Guid ResourceId { get; set; }
 
   /// <summary>
   /// Navigation property to the resource entity
@@ -29,10 +22,7 @@ public abstract class ResourcePermission<T> : WithPermissions where T : BaseEnti
   [GraphQLIgnore] // Cannot use generic type parameters in GraphQL attributes
   [GraphQLDescription("The resource this permission applies to")]
   [ForeignKey(nameof(ResourceId))]
-  public virtual T Resource {
-    get => _resource;
-    set => _resource = value;
-  }
+  public virtual T Resource { get; set; } = null!;
 
   // Computed properties specific to resource permissions
 
