@@ -92,7 +92,7 @@
 
 ### Types & Interfaces
 - `apps/web/src/types/auth.ts` - Auth response types
-- `apps/web/src/types/tenant.ts` - Tenant types
+- `apps/web/src/types/types.ts` - Tenant types
 - `apps/web/src/types/next-auth.d.ts` - NextAuth.js extensions
 
 ### API & HTTP Layer
@@ -101,7 +101,7 @@
 - `apps/web/src/app/api/test-cms/route.ts` - **NEW** Direct CMS test route
 
 ### Context & State Management
-- `apps/web/src/lib/context/TenantContext.tsx` - Tenant context provider
+- `apps/web/src/lib/context/TenantProvider.tsx` - Tenant context provider
 - `apps/web/src/components/providers/Providers.tsx` - App providers
 
 ### Server Actions

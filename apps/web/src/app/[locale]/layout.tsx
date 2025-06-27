@@ -1,28 +1,28 @@
 import React, { PropsWithChildren } from 'react';
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
 import { SessionProvider } from 'next-auth/react';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
-import { WebVitals } from '@/components/analytics/web-vitals';
-import { ThemeProvider } from '@/components/theme/theme-provider';
+import { WebVitals } from '@/components/analytics';
+import { ThemeProvider } from '@/components/theme';
 import { Web3Provider } from '@/components/web3/web3-context';
-import { TenantProvider } from '@/lib/context/TenantContext';
-import { auth } from '@/auth';
+import { TenantProvider } from '@/lib/tenant/tenant-provider';
 import { environment } from '@/configs/environment';
+import { auth } from '@/auth';
 import { routing } from '@/i18n/routing';
 import { PropsWithLocaleParams } from '@/types';
-import { Metadata } from 'next';
 
 export async function generateMetadata({ params }: PropsWithLocaleParams): Promise<Metadata> {
-  // const { locale } = await params;
-
+  const { locale } = await params;
+  // TODO: Use the locale to fetch metadata if needed.
   // const metadata = getWebsiteMetadata(locale);
 
   return {
     title: {
-      template: ' %s | Matheus Martins',
-      default: 'Matheus Martins',
+      template: ' %s | Game Guild',
+      default: 'Game Guild',
     },
   };
 }
@@ -33,7 +33,7 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
 
   if (!hasLocale(routing.locales, locale)) notFound();
 
-  // Enable static rendering.
+  // Enable static rendering (cache) based on the locale.
   setRequestLocale(locale);
 
   return (
@@ -44,7 +44,8 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
           <GoogleAnalytics gaId={environment.googleAnalyticsMeasurementId} />
           <GoogleTagManager gtmId={environment.googleTagManagerId} />
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            {/*TODO: see if the session has a user and the user is authenticated by web3 and if so set the account address*/}            <Web3Provider>
+            {/*TODO: If the session has a user and it has signed-in by a web3 address then try to connect to the wallet address.*/}
+            <Web3Provider>
               <SessionProvider session={session}>
                 <TenantProvider>
                   {/*TODO: Move this to a better place*/}

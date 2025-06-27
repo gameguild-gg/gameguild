@@ -39,7 +39,7 @@ export function ProjectCard({ id, name, status, createdAt, updatedAt, slug }: Pr
     if (e.target instanceof Element && e.target.closest('.hover-card-content')) {
       e.preventDefault();
     }
-  };  return (    <Link href={`/dashboard/projects/${slug || id}`} className="block h-full" onClick={handleClick}>
+  };  return (    <Link href={`/apps/web/src/lib/old/dashboard/projects/${ slug || id }`} className="block h-full" onClick={handleClick}>
       <HoverCard>
         <HoverCardTrigger asChild>
           <div className="h-full p-4 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer flex flex-col min-h-[120px]">

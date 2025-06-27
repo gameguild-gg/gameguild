@@ -73,7 +73,7 @@ function MyComponent() {
 ### Tenant Management
 
 ```tsx
-import { useTenant } from '@/lib/context/TenantContext';
+import { useTenant } from '@/lib/context/TenantProvider';
 import { TenantSelector } from '@/components/auth/TenantSelector';
 
 function Dashboard() {
@@ -93,7 +93,7 @@ function Dashboard() {
 ### Authenticated API Calls
 
 ```tsx
-import { useAuthenticatedApi } from '@/lib/context/TenantContext';
+import { useAuthenticatedApi } from '@/lib/context/TenantProvider';
 
 function DataComponent() {
   const { makeRequest } = useAuthenticatedApi();
@@ -159,14 +159,14 @@ src/
 │   └── useAuthError.ts             # Authentication error handling
 ├── lib/
 │   ├── context/
-│   │   └── TenantContext.tsx       # Tenant state management
+│   │   └── tenant-provider.tsx       # Tenant state management
 │   ├── services/
 │   │   ├── auth.service.ts         # Authentication operations
 │   │   └── tenant.service.ts       # Tenant operations
 │   └── api-client.ts               # Base API client
 ├── types/
 │   ├── auth.ts                     # Authentication types
-│   ├── tenant.ts                   # Tenant types
+│   ├── types.ts                   # Tenant types
 │   └── next-auth.d.ts              # NextAuth type extensions
 ├── configs/
 │   └── auth.config.ts              # NextAuth configuration
