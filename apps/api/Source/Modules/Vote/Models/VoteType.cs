@@ -12,5 +12,5 @@ public enum VoteType {
   /// <summary>
   /// Represents a negative vote
   /// </summary>
-  Downvote
+  Downvote,
 }

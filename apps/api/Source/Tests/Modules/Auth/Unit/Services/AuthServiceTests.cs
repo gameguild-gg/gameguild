@@ -78,7 +78,7 @@ public class AuthServiceTests : IDisposable {
       RefreshToken = "mock-refresh-token",
       User = new UserDto { Email = "test@example.com", Username = "testuser" },
       TenantId = tenantId,
-      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } }
+      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } },
     };
 
     _mockTenantAuthService
@@ -144,7 +144,7 @@ public class AuthServiceTests : IDisposable {
       RefreshToken = "mock-refresh-token",
       User = new UserDto { Id = user.Id, Email = user.Email, Username = user.Name },
       TenantId = tenantId,
-      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } }
+      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } },
     };
 
     _mockTenantAuthService
@@ -221,7 +221,7 @@ public class AuthServiceTests : IDisposable {
       Signature = "mock-signature",
       Nonce = "mock-nonce",
       ChainId = "1",
-      TenantId = tenantId
+      TenantId = tenantId,
     };
 
     var user = new User { Email = "web3user@example.com", Name = "Web3 User" };
@@ -240,7 +240,7 @@ public class AuthServiceTests : IDisposable {
       RefreshToken = "mock-refresh-token",
       User = new UserDto { Id = user.Id, Email = user.Email, Username = user.Name },
       TenantId = tenantId,
-      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } }
+      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } },
     };
 
     _mockTenantAuthService
@@ -280,7 +280,7 @@ public class AuthServiceTests : IDisposable {
       Signature = "mock-signature",
       Nonce = "mock-nonce",
       ChainId = "1",
-      TenantId = invalidTenantId
+      TenantId = invalidTenantId,
     };
 
     var user = new User { Email = "web3user@example.com", Name = "Web3 User" };
@@ -300,7 +300,7 @@ public class AuthServiceTests : IDisposable {
       RefreshToken = "mock-refresh-token",
       User = new UserDto { Id = user.Id, Email = user.Email, Username = user.Name },
       TenantId = defaultTenantId, // Note: different from requested tenant ID
-      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = defaultTenantId, Name = "Default Tenant", IsActive = true } }
+      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = defaultTenantId, Name = "Default Tenant", IsActive = true } },
     };
 
     _mockTenantAuthService
@@ -327,7 +327,7 @@ public class AuthServiceTests : IDisposable {
     _context.Users.Add(user);
 
     var refreshToken = new GameGuild.Modules.Auth.Models.RefreshToken {
-      UserId = user.Id, Token = "valid-refresh-token", ExpiresAt = DateTime.UtcNow.AddDays(7), IsRevoked = false // IsActive is calculated from !IsRevoked && !IsExpired
+      UserId = user.Id, Token = "valid-refresh-token", ExpiresAt = DateTime.UtcNow.AddDays(7), IsRevoked = false, // IsActive is calculated from !IsRevoked && !IsExpired
     };
 
     _context.RefreshTokens.Add(refreshToken);
@@ -350,8 +350,8 @@ public class AuthServiceTests : IDisposable {
     // Setup GetUserTenantsAsync to return a list with a valid tenant permission
     var tenantPermissions = new List<TenantPermission> {
       new TenantPermission {
-        Id = Guid.NewGuid(), UserId = user.Id, TenantId = tenantId, ExpiresAt = null // Not expired = IsValid will be true
-      }
+        Id = Guid.NewGuid(), UserId = user.Id, TenantId = tenantId, ExpiresAt = null, // Not expired = IsValid will be true
+      },
     };
 
     _mockTenantAuthService.Setup(x => x.GetUserTenantsAsync(It.IsAny<User>())).ReturnsAsync(tenantPermissions);

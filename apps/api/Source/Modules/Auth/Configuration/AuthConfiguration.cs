@@ -53,7 +53,7 @@ namespace GameGuild.Modules.Auth.Configuration {
                     ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
                     RequireSignedTokens = true,
                     // Don't require kid when using symmetric keys
-                    TryAllIssuerSigningKeys = true
+                    TryAllIssuerSigningKeys = true,
                   };
 
                   options.Events = new JwtBearerEvents {
@@ -62,7 +62,7 @@ namespace GameGuild.Modules.Auth.Configuration {
                       var accessToken = context.Request.Query["access_token"];
                       var path = context.HttpContext.Request.Path;
 
-                      if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs")) { context.Token = accessToken; }
+                      if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs")) context.Token = accessToken;
 
                       return Task.CompletedTask;
                     },
@@ -73,7 +73,7 @@ namespace GameGuild.Modules.Auth.Configuration {
                       logger.LogWarning("JWT authentication failed: {Exception}", context.Exception.Message);
 
                       return Task.CompletedTask;
-                    }
+                    },
                   };
                 }
               );

@@ -129,7 +129,7 @@ public class PermissionPerformanceTests : IDisposable {
     var resources = new List<Comment>();
 
     // Create test resources efficiently
-    for (var i = 0; i < resourceCount; i++) { resources.Add(await CreateTestCommentAsync($"Comment content {i}")); }
+    for (var i = 0; i < resourceCount; i++) resources.Add(await CreateTestCommentAsync($"Comment content {i}"));
 
     var permissions = new[] { PermissionType.Read, PermissionType.Edit };
     var stopwatch = Stopwatch.StartNew();
@@ -283,7 +283,7 @@ public class PermissionPerformanceTests : IDisposable {
     var users = new List<User>();
 
     // Create tenants
-    for (var i = 0; i < tenantCount; i++) { tenants.Add(await CreateTestTenantAsync($"Tenant {i}")); }
+    for (var i = 0; i < tenantCount; i++) tenants.Add(await CreateTestTenantAsync($"Tenant {i}"));
 
     // Create users and assign them to random tenants
     var random = new Random(42); // Fixed seed for reproducibility
@@ -296,7 +296,7 @@ public class PermissionPerformanceTests : IDisposable {
       var tenantAssignments = random.Next(2, 4);
       var selectedTenants = tenants.OrderBy(_ => random.Next()).Take(tenantAssignments);
 
-      foreach (var tenant in selectedTenants) { await _permissionService.JoinTenantAsync(user.Id, tenant.Id); }
+      foreach (var tenant in selectedTenants) await _permissionService.JoinTenantAsync(user.Id, tenant.Id);
     }
 
     var stopwatch = Stopwatch.StartNew();
@@ -423,7 +423,7 @@ public class PermissionPerformanceTests : IDisposable {
 
   private async Task<Comment> CreateTestCommentAsync(string content = "Test comment content") {
     var comment = new Comment {
-      Id = Guid.NewGuid(), Content = content
+      Id = Guid.NewGuid(), Content = content,
       // Note: Comment entity doesn't have IsEdited property
     };
 

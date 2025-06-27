@@ -46,6 +46,6 @@ public class RequireContentTypePermissionAttribute<T> : Attribute, IAsyncAuthori
     var hasPermission =
       await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
 
-    if (!hasPermission) { context.Result = new ForbidResult(); }
+    if (!hasPermission) context.Result = new ForbidResult();
   }
 }

@@ -22,5 +22,5 @@ public enum ContentStatus {
   /// <summary>
   /// Content is archived and not normally visible
   /// </summary>
-  Archived = 3
+  Archived = 3,
 }

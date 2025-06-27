@@ -41,6 +41,6 @@ public class RequireTenantPermissionAttribute : Attribute, IAsyncAuthorizationFi
     // Check tenant-level permission
     var hasPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, _requiredPermission);
 
-    if (!hasPermission) { context.Result = new ForbidResult(); }
+    if (!hasPermission) context.Result = new ForbidResult();
   }
 }

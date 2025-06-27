@@ -17,7 +17,7 @@ public enum KycProvider {
   Jumio,
 
   [Description("Custom or internal KYC verification process")]
-  Custom
+  Custom,
 }
 
 public enum KycVerificationStatus {
@@ -37,5 +37,5 @@ public enum KycVerificationStatus {
   Suspended,
 
   [Description("Verification has expired and needs renewal")]
-  Expired
+  Expired,
 }

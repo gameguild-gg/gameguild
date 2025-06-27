@@ -60,7 +60,7 @@ public class AuthControllerTests {
       RefreshToken = "mock-refresh-token",
       User = new UserDto { Email = "test@example.com", Username = "testuser" },
       TenantId = tenantId,
-      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } }
+      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } },
     };
 
     // Mock the MediatR response for the LocalSignUpCommand

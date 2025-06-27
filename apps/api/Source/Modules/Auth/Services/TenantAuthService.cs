@@ -50,17 +50,18 @@ public class TenantAuthService(
     var availableTenants = tenantPermissions.Where(tp => tp.IsValid).ToList();
 
     // If no tenants available, return original result
-    if (!availableTenants.Any()) { return authResult; }
+    if (!availableTenants.Any()) return authResult;
 
     // Use specified tenant ID or the first available tenant
     Guid selectedTenantId;
 
-    if (tenantId.HasValue) { selectedTenantId = tenantId.Value; }
-    else if (availableTenants.First().TenantId.HasValue) { selectedTenantId = availableTenants.First().TenantId.Value; }
-    else {
+    if (tenantId.HasValue)
+      selectedTenantId = tenantId.Value;
+    else if (availableTenants.First().TenantId.HasValue)
+      selectedTenantId = availableTenants.First().TenantId.Value;
+    else
       // If we somehow don't have a valid tenant ID, return original result
       return authResult;
-    }
 
     // Validate tenant access
     var tenantPermission =
@@ -70,11 +71,11 @@ public class TenantAuthService(
       // If specified tenant is not accessible, use the first available
       tenantPermission = availableTenants.First();
 
-      if (tenantPermission.TenantId.HasValue) { selectedTenantId = tenantPermission.TenantId.Value; }
-      else {
+      if (tenantPermission.TenantId.HasValue)
+        selectedTenantId = tenantPermission.TenantId.Value;
+      else
         // If we somehow don't have a valid tenant ID, return original result
         return authResult;
-      }
     }
 
     // Get tenant claims

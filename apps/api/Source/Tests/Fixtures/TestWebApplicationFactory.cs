@@ -54,7 +54,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
             { "Jwt:ExpiryInMinutes", "60" },
             { "Jwt:RefreshTokenExpiryInDays", "7" },
             { "OAuth:GitHub:ClientId", "test-github-client-id" },
-            { "OAuth:GitHub:ClientSecret", "test-github-client-secret" }
+            { "OAuth:GitHub:ClientSecret", "test-github-client-secret" },
           }
         );
       }
@@ -96,21 +96,21 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
         var descriptor =
           services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
 
-        if (descriptor != null) { services.Remove(descriptor); }
+        if (descriptor != null) services.Remove(descriptor);
 
         // Remove all EF Core related services to prevent conflicts
         var efCoreServices = services
                              .Where(s => s.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true)
                              .ToList();
 
-        foreach (var service in efCoreServices) { services.Remove(service); }
+        foreach (var service in efCoreServices) services.Remove(service);
 
         // Replace TenantContextService with mock for testing
         var tenantContextServiceDescriptor = services.SingleOrDefault(d =>
                                                                         d.ServiceType == typeof(GameGuild.Modules.Tenant.Services.ITenantContextService)
         );
 
-        if (tenantContextServiceDescriptor != null) { services.Remove(tenantContextServiceDescriptor); }
+        if (tenantContextServiceDescriptor != null) services.Remove(tenantContextServiceDescriptor);
 
         services
           .AddSingleton<GameGuild.Modules.Tenant.Services.ITenantContextService,
@@ -127,7 +127,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
                                                           { "Jwt:SecretKey", "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters" },
                                                           { "Jwt:Issuer", "TestIssuer" },
                                                           { "Jwt:Audience", "TestAudience" },
-                                                          { "Jwt:ExpiryInMinutes", "60" }
+                                                          { "Jwt:ExpiryInMinutes", "60" },
                                                         }
                                                       )
                                                       .Build();
@@ -136,7 +136,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
         var jwtServiceDescriptor =
           services.SingleOrDefault(d => d.ServiceType == typeof(GameGuild.Modules.Auth.Services.IJwtTokenService));
 
-        if (jwtServiceDescriptor != null) { services.Remove(jwtServiceDescriptor); }
+        if (jwtServiceDescriptor != null) services.Remove(jwtServiceDescriptor);
 
         services.AddSingleton<GameGuild.Modules.Auth.Services.IJwtTokenService>(provider =>
                                                                                   new GameGuild.Modules.Auth.Services.JwtTokenService(testJwtConfig)
@@ -161,7 +161,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
                 ),
               ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
               RequireSignedTokens = true,
-              TryAllIssuerSigningKeys = true
+              TryAllIssuerSigningKeys = true,
             };
 
             // Add event handlers for debugging
@@ -193,7 +193,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
                 logger.LogDebug("JWT message received: {HasToken}", !string.IsNullOrEmpty(context.Token));
 
                 return Task.CompletedTask;
-              }
+              },
             };
           }
         );

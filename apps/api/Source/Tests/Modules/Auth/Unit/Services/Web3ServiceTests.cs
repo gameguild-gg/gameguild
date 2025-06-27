@@ -95,7 +95,7 @@ public class Web3ServiceTests : IDisposable {
       Signature =
         "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1b", // 132 chars
       Nonce = challenge.Nonce,
-      ChainId = "1"
+      ChainId = "1",
     };
 
     // Act

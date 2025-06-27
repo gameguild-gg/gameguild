@@ -222,7 +222,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
       ProjectId = project.Id,
       VersionNumber = "1.0.0",
       CreatedById = user.Id,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     // ProjectVersion is accessed through Project.Versions, not a separate DbSet
@@ -241,7 +241,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
       EndDate = DateTime.UtcNow.AddDays(7),
       Status = TestingRequestStatus.Open,
       CreatedById = user.Id,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.TestingRequests.Add(testingRequest);
@@ -263,7 +263,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
       MaxTestersCapacity = 10,
       MaxProjectsCapacity = 5,
       Status = LocationStatus.Active,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.TestingLocations.Add(location);
@@ -281,7 +281,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
       Status = SessionStatus.Scheduled,
       ManagerUserId = testingRequest.CreatedById,
       CreatedById = testingRequest.CreatedById,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.TestingSessions.Add(testingSession);

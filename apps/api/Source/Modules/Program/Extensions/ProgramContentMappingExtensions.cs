@@ -33,7 +33,7 @@ public static class ProgramContentMappingExtensions {
       ParentTitle = content.Parent?.Title,
       ChildrenCount = content.Children?.Count(c => !c.IsDeleted) ?? 0,
       Children = content.Children?.Where(c => !c.IsDeleted).Select(c => c.ToDto()).ToList() ??
-                 new List<ProgramContentDto>()
+                 new List<ProgramContentDto>(),
     };
   }
 
@@ -59,7 +59,7 @@ public static class ProgramContentMappingExtensions {
       GradingMethod = dto.GradingMethod,
       MaxPoints = dto.MaxPoints,
       EstimatedMinutes = dto.EstimatedMinutes,
-      Visibility = dto.Visibility
+      Visibility = dto.Visibility,
     };
   }
 

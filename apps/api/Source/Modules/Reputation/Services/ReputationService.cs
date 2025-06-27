@@ -56,7 +56,7 @@ public class ReputationService : IReputationService {
           TenantPermission = tenantPermission,
           Score = Math.Max(0, scoreChange), // Don't allow negative starting scores
           LastUpdated = DateTime.UtcNow,
-          Title = $"Reputation for {user.Name} in {tenantPermission.Tenant?.Name ?? "Tenant"}"
+          Title = $"Reputation for {user.Name} in {tenantPermission.Tenant?.Name ?? "Tenant"}",
         };
 
         _context.UserTenantReputations.Add(tenantReputation);
@@ -68,7 +68,7 @@ public class ReputationService : IReputationService {
           User = user,
           Score = Math.Max(0, scoreChange), // Don't allow negative starting scores
           LastUpdated = DateTime.UtcNow,
-          Title = $"Global Reputation for {user.Name}"
+          Title = $"Global Reputation for {user.Name}",
         };
 
         _context.UserReputations.Add(globalReputation);
@@ -117,12 +117,13 @@ public class ReputationService : IReputationService {
       NewScore = reputation.Score,
       Reason = reason,
       OccurredAt = DateTime.UtcNow,
-      Title = $"Reputation change: {scoreChange:+#;-#;0}"
+      Title = $"Reputation change: {scoreChange:+#;-#;0}",
     };
 
     // Set the appropriate foreign key based on reputation type
-    if (reputation is UserReputation userRep) { historyEntry.UserId = userRep.UserId; }
-    else if (reputation is UserTenantReputation tenantRep) { historyEntry.TenantPermissionId = tenantRep.TenantPermissionId; }
+    if (reputation is UserReputation userRep)
+      historyEntry.UserId = userRep.UserId;
+    else if (reputation is UserTenantReputation tenantRep) historyEntry.TenantPermissionId = tenantRep.TenantPermissionId;
 
     _context.UserReputationHistory.Add(historyEntry);
   }
@@ -173,14 +174,14 @@ public class ReputationService : IReputationService {
                         .Include(h => h.NewLevel)
                         .Where(h => !h.IsDeleted);
 
-    if (tenantId.HasValue) {
+    if (tenantId.HasValue)
       query = query.Where(h =>
                             h.TenantPermissionId != null &&
                             h.TenantPermission!.UserId == userId &&
                             h.TenantPermission.TenantId == tenantId.Value
       );
-    }
-    else { query = query.Where(h => h.UserId == userId); }
+    else
+      query = query.Where(h => h.UserId == userId);
 
     return await query.OrderByDescending(h => h.OccurredAt).Take(limit).ToListAsync();
   }

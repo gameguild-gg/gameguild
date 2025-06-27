@@ -24,7 +24,7 @@ public class ProjectMutations {
       SocialLinks = input.SocialLinks,
       CategoryId = input.CategoryId,
       Status = input.Status ?? ContentStatus.Draft,
-      Visibility = input.Visibility ?? AccessLevel.Private
+      Visibility = input.Visibility ?? AccessLevel.Private,
     };
 
     return await projectService.CreateProjectAsync(project);
@@ -40,7 +40,7 @@ public class ProjectMutations {
   ) {
     var existingProject = await projectService.GetProjectByIdAsync(id);
 
-    if (existingProject == null) { throw new InvalidOperationException("Project not found"); }
+    if (existingProject == null) throw new InvalidOperationException("Project not found");
 
     // Update only provided fields
     if (!string.IsNullOrEmpty(input.Title)) existingProject.Title = input.Title;

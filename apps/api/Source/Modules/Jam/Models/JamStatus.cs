@@ -4,6 +4,6 @@ namespace GameGuild.Modules.Jam.Models {
     Active,
     Voting,
     Completed,
-    Cancelled
+    Cancelled,
   }
 }

@@ -22,12 +22,10 @@ namespace GameGuild.Modules.Auth.Filters {
       var publicAttribute =
         context.ActionDescriptor.EndpointMetadata.OfType<PublicAttribute>().FirstOrDefault();
 
-      if (publicAttribute?.IsPublic == true) {
-        return; // Skip authentication for public endpoints
-      }
+      if (publicAttribute?.IsPublic == true) return; // Skip authentication for public endpoints
 
       // Check for AllowAnonymous attribute
-      if (context.ActionDescriptor.EndpointMetadata.OfType<AllowAnonymousAttribute>().Any()) { return; }
+      if (context.ActionDescriptor.EndpointMetadata.OfType<AllowAnonymousAttribute>().Any()) return;
 
       var token = ExtractTokenFromHeader(context.HttpContext.Request);
 
@@ -47,7 +45,7 @@ namespace GameGuild.Modules.Auth.Filters {
     private string? ExtractTokenFromHeader(HttpRequest request) {
       var authHeader = request.Headers["Authorization"].FirstOrDefault();
 
-      if (authHeader != null && authHeader.StartsWith("Bearer ")) { return authHeader.Substring("Bearer ".Length).Trim(); }
+      if (authHeader != null && authHeader.StartsWith("Bearer ")) return authHeader.Substring("Bearer ".Length).Trim();
 
       return null;
     }
@@ -64,7 +62,7 @@ namespace GameGuild.Modules.Auth.Filters {
         ValidateAudience = true,
         ValidAudience = _configuration["Jwt:Audience"],
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes clock skew tolerance
+        ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
       };
 
       var principal =

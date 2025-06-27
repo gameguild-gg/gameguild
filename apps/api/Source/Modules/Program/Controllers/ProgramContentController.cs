@@ -55,7 +55,7 @@ public class ProgramContentController : ControllerBase {
   public async Task<ActionResult<ProgramContentDto>> GetContent(Guid programId, Guid id) {
     var content = await _contentService.GetContentByIdAsync(id);
 
-    if (content == null || content.ProgramId != programId) { return NotFound(); }
+    if (content == null || content.ProgramId != programId) return NotFound();
 
     var contentDto = content.ToDto();
 
@@ -71,7 +71,7 @@ public class ProgramContentController : ControllerBase {
     Guid programId,
     [FromBody] CreateProgramContentDto createDto
   ) {
-    if (createDto.ProgramId != programId) { return BadRequest("Program ID in URL must match Program ID in request body"); }
+    if (createDto.ProgramId != programId) return BadRequest("Program ID in URL must match Program ID in request body");
 
     var content = createDto.ToEntity();
     var createdContent = await _contentService.CreateContentAsync(content);
@@ -93,11 +93,11 @@ public class ProgramContentController : ControllerBase {
     Guid programId, Guid id,
     [FromBody] UpdateProgramContentDto updateDto
   ) {
-    if (updateDto.Id != id) { return BadRequest("Content ID in URL must match Content ID in request body"); }
+    if (updateDto.Id != id) return BadRequest("Content ID in URL must match Content ID in request body");
 
     var existingContent = await _contentService.GetContentByIdAsync(id);
 
-    if (existingContent == null || existingContent.ProgramId != programId) { return NotFound(); }
+    if (existingContent == null || existingContent.ProgramId != programId) return NotFound();
 
     // Apply updates from DTO
     existingContent.ApplyUpdates(updateDto);
@@ -116,11 +116,11 @@ public class ProgramContentController : ControllerBase {
   public async Task<ActionResult> DeleteContent(Guid programId, Guid id) {
     var content = await _contentService.GetContentByIdAsync(id);
 
-    if (content == null || content.ProgramId != programId) { return NotFound(); }
+    if (content == null || content.ProgramId != programId) return NotFound();
 
     var deleted = await _contentService.DeleteContentAsync(id);
 
-    if (!deleted) { return NotFound(); }
+    if (!deleted) return NotFound();
 
     return NoContent();
   }
@@ -134,7 +134,7 @@ public class ProgramContentController : ControllerBase {
     // Verify parent belongs to the program
     var parent = await _contentService.GetContentByIdAsync(parentId);
 
-    if (parent == null || parent.ProgramId != programId) { return NotFound("Parent content not found or does not belong to this program"); }
+    if (parent == null || parent.ProgramId != programId) return NotFound("Parent content not found or does not belong to this program");
 
     var children = await _contentService.GetContentByParentAsync(parentId);
     var childrenDtos = children.ToDtos();
@@ -152,7 +152,7 @@ public class ProgramContentController : ControllerBase {
     var newOrder = reorderDto.ContentIds.Select((id, index) => (id, index + 1)).ToList();
     var success = await _contentService.ReorderContentAsync(programId, newOrder);
 
-    if (!success) { return BadRequest("Failed to reorder content. Some content items may not exist."); }
+    if (!success) return BadRequest("Failed to reorder content. Some content items may not exist.");
 
     return Ok();
   }
@@ -163,15 +163,15 @@ public class ProgramContentController : ControllerBase {
   [HttpPost("{id}/move")]
   [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit)]
   public async Task<ActionResult> MoveContent(Guid programId, Guid id, [FromBody] MoveContentDto moveDto) {
-    if (moveDto.ContentId != id) { return BadRequest("Content ID in URL must match Content ID in request body"); }
+    if (moveDto.ContentId != id) return BadRequest("Content ID in URL must match Content ID in request body");
 
     var content = await _contentService.GetContentByIdAsync(id);
 
-    if (content == null || content.ProgramId != programId) { return NotFound(); }
+    if (content == null || content.ProgramId != programId) return NotFound();
 
     var success = await _contentService.MoveContentAsync(id, moveDto.NewParentId, moveDto.NewSortOrder);
 
-    if (!success) { return BadRequest("Failed to move content"); }
+    if (!success) return BadRequest("Failed to move content");
 
     return Ok();
   }
@@ -227,7 +227,7 @@ public class ProgramContentController : ControllerBase {
     Guid programId,
     [FromBody] SearchContentDto searchDto
   ) {
-    if (searchDto.ProgramId != programId) { return BadRequest("Program ID in URL must match Program ID in request body"); }
+    if (searchDto.ProgramId != programId) return BadRequest("Program ID in URL must match Program ID in request body");
 
     var content = await _contentService.SearchContentAsync(programId, searchDto.SearchTerm);
     var contentDtos = content.ToDtos();

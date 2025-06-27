@@ -52,7 +52,7 @@ public class CreateTenantDomainDto {
       IsMainDomain = IsMainDomain,
       IsSecondaryDomain = IsSecondaryDomain,
       TenantId = TenantId,
-      UserGroupId = UserGroupId
+      UserGroupId = UserGroupId,
     };
   }
 }
@@ -152,7 +152,7 @@ public class CreateTenantUserGroupDto {
       TenantId = TenantId,
       ParentGroupId = ParentGroupId,
       IsDefault = IsDefault,
-      IsActive = IsActive
+      IsActive = IsActive,
     };
   }
 }
@@ -296,7 +296,7 @@ public class TenantDomainDto {
       TenantId = domain.TenantId,
       UserGroupId = domain.UserGroupId,
       CreatedAt = domain.CreatedAt,
-      UpdatedAt = domain.UpdatedAt
+      UpdatedAt = domain.UpdatedAt,
     };
   }
 }
@@ -363,7 +363,7 @@ public class TenantUserGroupDto {
       TenantId = group.TenantId,
       IsActive = group.IsActive,
       CreatedAt = group.CreatedAt,
-      UpdatedAt = group.UpdatedAt
+      UpdatedAt = group.UpdatedAt,
     };
   }
 }
@@ -412,7 +412,7 @@ public class TenantUserGroupMembershipDto {
       GroupId = membership.UserGroupId,
       IsAutoAssigned = membership.IsAutoAssigned,
       CreatedAt = membership.CreatedAt,
-      UpdatedAt = membership.UpdatedAt
+      UpdatedAt = membership.UpdatedAt,
     };
   }
 }

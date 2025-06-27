@@ -33,11 +33,10 @@ var corsOptions =
 
 // Add CORS services
 builder.Services.AddCors(options => {
-    if (builder.Environment.IsDevelopment()) {
+    if (builder.Environment.IsDevelopment())
       // Allow all origins in development for easier testing
       options.AddPolicy("Development", policy => { policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(); });
-    }
-    else {
+    else
       // Use configured origins in production
       options.AddPolicy(
         "Production",
@@ -46,10 +45,9 @@ builder.Services.AddCors(options => {
                 .WithMethods(corsOptions.AllowedMethods)
                 .WithHeaders(corsOptions.AllowedHeaders);
 
-          if (corsOptions.AllowCredentials) { policy.AllowCredentials(); }
+          if (corsOptions.AllowCredentials) policy.AllowCredentials();
         }
       );
-    }
 
     // Default policy for specific origins (can be used in development too)
     options.AddPolicy(
@@ -59,7 +57,7 @@ builder.Services.AddCors(options => {
               .WithMethods(corsOptions.AllowedMethods)
               .WithHeaders(corsOptions.AllowedHeaders);
 
-        if (corsOptions.AllowCredentials) { policy.AllowCredentials(); }
+        if (corsOptions.AllowCredentials) policy.AllowCredentials();
       }
     );
   }
@@ -118,14 +116,12 @@ var useInMemoryDb = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("US
 
 // Add Entity Framework with the appropriate provider
 builder.Services.AddDbContext<ApplicationDbContext>(options => {
-    if (useInMemoryDb) {
+    if (useInMemoryDb)
       // Use InMemory for tests
       options.UseInMemoryDatabase("TestDatabase_" + Guid.NewGuid().ToString());
-    }
-    else {
+    else
       // Use SQLite for regular development
       options.UseSqlite(connectionString);
-    }
 
     // Suppress SQLite pragma warnings
     options.ConfigureWarnings(warnings =>

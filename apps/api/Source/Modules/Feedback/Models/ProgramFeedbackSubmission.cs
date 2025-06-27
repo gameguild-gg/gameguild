@@ -138,7 +138,7 @@ public class ProgramFeedbackSubmission : BaseEntity {
     try {
       var json = JsonDocument.Parse(FeedbackData);
 
-      if (json.RootElement.TryGetProperty(questionId, out var element)) { return JsonSerializer.Deserialize<T>(element.GetRawText()); }
+      if (json.RootElement.TryGetProperty(questionId, out var element)) return JsonSerializer.Deserialize<T>(element.GetRawText());
     }
     catch {
       // Handle JSON parsing errors gracefully

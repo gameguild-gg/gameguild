@@ -49,7 +49,7 @@ public class DatabaseSeeder(
       PermissionType.Vote, // Allow voting on content
       PermissionType.Share, // Allow sharing content
       PermissionType.Follow, // Allow following other users
-      PermissionType.Bookmark // Allow bookmarking content
+      PermissionType.Bookmark, // Allow bookmarking content
     };
 
     await permissionService.SetGlobalDefaultPermissionsAsync(defaultPermissions);
@@ -67,7 +67,7 @@ public class DatabaseSeeder(
       PermissionType.Read,
       PermissionType.Create, // Allow users to create projects
       PermissionType.Edit, // Allow users to edit their own projects
-      PermissionType.Delete // Allow users to delete their own projects
+      PermissionType.Delete, // Allow users to delete their own projects
     };
 
     await permissionService.GrantContentTypePermissionAsync(null, null, "Project", projectPermissions);

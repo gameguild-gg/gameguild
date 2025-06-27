@@ -60,8 +60,8 @@ public class TenantAuthServiceTests : IDisposable {
         // Initialize as not expired and not deleted for IsValid to be true
         ExpiresAt = null, // Not expired
         // IsDeleted is false by default
-        Tenant = new GameGuild.Modules.Tenant.Models.Tenant { Id = tenantId, Name = "Test Tenant", IsActive = true }
-      }
+        Tenant = new GameGuild.Modules.Tenant.Models.Tenant { Id = tenantId, Name = "Test Tenant", IsActive = true },
+      },
     };
 
     _mockTenantService.Setup(x => x.GetTenantsForUserAsync(user.Id)).ReturnsAsync(tenantPermissions);

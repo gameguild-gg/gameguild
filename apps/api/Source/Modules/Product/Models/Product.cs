@@ -147,7 +147,7 @@ public class Product : Content {
     try {
       var metadataDict = JsonSerializer.Deserialize<Dictionary<string, object>>(Metadata.AdditionalData);
 
-      if (metadataDict != null && metadataDict.TryGetValue(key, out var value)) { return JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value)); }
+      if (metadataDict != null && metadataDict.TryGetValue(key, out var value)) return JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value));
     }
     catch {
       // Handle JSON parsing errors gracefully
@@ -157,7 +157,7 @@ public class Product : Content {
   }
 
   public void SetBundleMetadata<T>(string key, T value) {
-    if (Metadata == null) { Metadata = new ResourceMetadata { ResourceType = nameof(Product), AdditionalData = "{}" }; }
+    if (Metadata == null) Metadata = new ResourceMetadata { ResourceType = nameof(Product), AdditionalData = "{}" };
 
     var metadataDict = string.IsNullOrEmpty(Metadata.AdditionalData)
                          ? new Dictionary<string, object>()

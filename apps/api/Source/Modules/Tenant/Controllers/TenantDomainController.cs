@@ -38,7 +38,7 @@ public class TenantDomainController : ControllerBase {
   public async Task<ActionResult<TenantDomain>> GetDomain(Guid id) {
     var domain = await _tenantDomainService.GetDomainByIdAsync(id);
 
-    if (domain == null) { return NotFound(); }
+    if (domain == null) return NotFound();
 
     return Ok(domain);
   }
@@ -51,7 +51,7 @@ public class TenantDomainController : ControllerBase {
       // Validate domain ownership (in a real implementation)
       var isValid = await _tenantDomainService.ValidateDomainOwnershipAsync(request.TenantId, request.TopLevelDomain);
 
-      if (!isValid) { return BadRequest("Domain ownership could not be validated"); }
+      if (!isValid) return BadRequest("Domain ownership could not be validated");
 
       var domain = request.ToTenantDomain();
       var createdDomain = await _tenantDomainService.CreateDomainAsync(domain);
@@ -68,7 +68,7 @@ public class TenantDomainController : ControllerBase {
     try {
       var existingDomain = await _tenantDomainService.GetDomainByIdAsync(id);
 
-      if (existingDomain == null) { return NotFound(); }
+      if (existingDomain == null) return NotFound();
 
       request.UpdateTenantDomain(existingDomain);
       var updatedDomain = await _tenantDomainService.UpdateDomainAsync(existingDomain);
@@ -84,7 +84,7 @@ public class TenantDomainController : ControllerBase {
   public async Task<ActionResult> DeleteDomain(Guid id) {
     var result = await _tenantDomainService.DeleteDomainAsync(id);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -95,7 +95,7 @@ public class TenantDomainController : ControllerBase {
   public async Task<ActionResult> SetMainDomain(Guid tenantId, Guid domainId) {
     var result = await _tenantDomainService.SetMainDomainAsync(tenantId, domainId);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return Ok();
   }
@@ -124,7 +124,7 @@ public class TenantDomainController : ControllerBase {
   public async Task<ActionResult<TenantUserGroupDto>> GetUserGroup(Guid id) {
     var userGroup = await _tenantDomainService.GetUserGroupByIdAsync(id);
 
-    if (userGroup == null) { return NotFound(); }
+    if (userGroup == null) return NotFound();
 
     var dto = TenantUserGroupDto.FromTenantUserGroup(userGroup);
 
@@ -153,7 +153,7 @@ public class TenantDomainController : ControllerBase {
     try {
       var existingUserGroup = await _tenantDomainService.GetUserGroupByIdAsync(id);
 
-      if (existingUserGroup == null) { return NotFound(); }
+      if (existingUserGroup == null) return NotFound();
 
       request.UpdateTenantUserGroup(existingUserGroup);
       var updatedUserGroup = await _tenantDomainService.UpdateUserGroupAsync(existingUserGroup);
@@ -170,7 +170,7 @@ public class TenantDomainController : ControllerBase {
   public async Task<ActionResult> DeleteUserGroup(Guid id) {
     var result = await _tenantDomainService.DeleteUserGroupAsync(id);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -198,7 +198,7 @@ public class TenantDomainController : ControllerBase {
   public async Task<ActionResult> RemoveUserFromGroup([FromQuery] Guid userId, [FromQuery] Guid userGroupId) {
     var result = await _tenantDomainService.RemoveUserFromGroupAsync(userId, userGroupId);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -251,7 +251,7 @@ public class TenantDomainController : ControllerBase {
           UserId = firstMembership.UserId,
           GroupId = firstMembership.UserGroupId,
           IsAutoAssigned = firstMembership.IsAutoAssigned,
-          CreatedAt = firstMembership.CreatedAt
+          CreatedAt = firstMembership.CreatedAt,
         };
 
         return CreatedAtAction(nameof(GetUserGroups), new { userId = firstMembership.UserId }, membershipDto);
@@ -300,7 +300,7 @@ public class TenantDomainController : ControllerBase {
   public async Task<ActionResult<TenantDomain>> FindMatchingDomain([FromQuery] string email) {
     var domain = await _tenantDomainService.FindMatchingDomainAsync(email);
 
-    if (domain == null) { return NotFound("No matching domain found for the provided email"); }
+    if (domain == null) return NotFound("No matching domain found for the provided email");
 
     return Ok(domain);
   }

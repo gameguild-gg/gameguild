@@ -29,10 +29,10 @@ namespace GameGuild.Modules.Auth.Services {
     public string GenerateAccessToken(UserDto user, string[] roles, IEnumerable<Claim>? additionalClaims = null) {
       var claims = new List<Claim> { new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), new Claim(JwtRegisteredClaimNames.Email, user.Email), new Claim("username", user.Username) };
 
-      foreach (var role in roles) { claims.Add(new Claim(ClaimTypes.Role, role)); }
+      foreach (var role in roles) claims.Add(new Claim(ClaimTypes.Role, role));
 
       // Add any additional claims (like tenant claims)
-      if (additionalClaims != null) { claims.AddRange(additionalClaims); }
+      if (additionalClaims != null) claims.AddRange(additionalClaims);
 
       var key = new SymmetricSecurityKey(
         Encoding.UTF8.GetBytes(
@@ -75,7 +75,7 @@ namespace GameGuild.Modules.Auth.Services {
             "development-fallback-key-that-is-at-least-32-characters-long-for-testing"
           )
         ),
-        ValidateLifetime = false // We don't care about the token's expiration date
+        ValidateLifetime = false, // We don't care about the token's expiration date
       };
 
       var tokenHandler = new JwtSecurityTokenHandler();
@@ -88,7 +88,8 @@ namespace GameGuild.Modules.Auth.Services {
             !jwtSecurityToken.Header.Alg.Equals(
               SecurityAlgorithms.HmacSha256,
               StringComparison.InvariantCultureIgnoreCase
-            )) { throw new SecurityTokenException("Invalid token"); }
+            ))
+          throw new SecurityTokenException("Invalid token");
 
         return principal;
       }
@@ -115,7 +116,7 @@ namespace GameGuild.Modules.Auth.Services {
           )
         ),
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes clock skew tolerance
+        ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
       };
 
       var tokenHandler = new JwtSecurityTokenHandler();
@@ -128,7 +129,8 @@ namespace GameGuild.Modules.Auth.Services {
             !jwtSecurityToken.Header.Alg.Equals(
               SecurityAlgorithms.HmacSha256,
               StringComparison.InvariantCultureIgnoreCase
-            )) { throw new SecurityTokenException("Invalid token"); }
+            ))
+          throw new SecurityTokenException("Invalid token");
 
         return principal;
       }

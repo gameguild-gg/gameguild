@@ -74,7 +74,7 @@ public class ProgramService : IProgramService {
       Slug = GenerateSlug(newTitle),
       Thumbnail = originalProgram.Thumbnail,
       Status = ContentStatus.Draft,
-      Visibility = AccessLevel.Private
+      Visibility = AccessLevel.Private,
     };
 
     _context.Programs.Add(clonedProgram);
@@ -93,7 +93,7 @@ public class ProgramService : IProgramService {
         GradingMethod = content.GradingMethod,
         MaxPoints = content.MaxPoints,
         EstimatedMinutes = content.EstimatedMinutes,
-        Visibility = content.Visibility
+        Visibility = content.Visibility,
       };
 
       _context.ProgramContents.Add(clonedContent);
@@ -281,7 +281,7 @@ public class ProgramService : IProgramService {
         ContentId = contentId,
         Status = status,
         FirstAccessedAt = DateTime.UtcNow,
-        LastAccessedAt = DateTime.UtcNow
+        LastAccessedAt = DateTime.UtcNow,
       };
 
       _context.ContentInteractions.Add(interaction);
@@ -531,7 +531,7 @@ public class ProgramService : IProgramService {
 
     programUser.CompletionPercentage = (decimal)completedContent / totalContent * 100;
 
-    if (programUser.CompletionPercentage >= 100 && programUser.CompletedAt == null) { programUser.CompletedAt = DateTime.UtcNow; }
+    if (programUser.CompletionPercentage >= 100 && programUser.CompletedAt == null) programUser.CompletedAt = DateTime.UtcNow;
 
     programUser.Touch();
   }
@@ -549,7 +549,7 @@ public class ProgramService : IProgramService {
       Status = ContentStatus.Draft,
       Visibility = AccessLevel.Private,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.Programs.Add(program);
@@ -621,7 +621,7 @@ public class ProgramService : IProgramService {
       IsRequired = contentDto.IsRequired,
       EstimatedMinutes = contentDto.EstimatedMinutes,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.ProgramContents.Add(content);
@@ -676,10 +676,9 @@ public class ProgramService : IProgramService {
                                                         pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
       );
 
-    if (existingUser != null) {
+    if (existingUser != null)
       // User already exists, return their progress
       return await GetUserProgressDtoAsync(programId, userId);
-    }
 
     var programUser = new ProgramUser {
       Id = Guid.NewGuid(),
@@ -689,7 +688,7 @@ public class ProgramService : IProgramService {
       LastAccessedAt = DateTime.UtcNow,
       CompletionPercentage = 0,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.ProgramUsers.Add(programUser);

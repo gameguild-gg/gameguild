@@ -19,7 +19,7 @@ public static class SlugCase {
       TrimWhitespace = true,
       // Add custom replacements if needed
       // Use Unidecode if we need a more comprehensive transliteration
-      StringReplacements = new Dictionary<string, string> { { "&", "and" }, { "+", "plus" } }
+      StringReplacements = new Dictionary<string, string> { { "&", "and" }, { "+", "plus" } },
     };
 
     SlugHelper = new SlugHelper(config);
@@ -27,7 +27,7 @@ public static class SlugCase {
     // Initialize cache with the same configuration as SnakeCase
     var cacheOptions = new MemoryCacheOptions {
       SizeLimit = 1000, // Maximum 1000 entries
-      CompactionPercentage = 0.25 // Remove 25% of entries when limit is reached
+      CompactionPercentage = 0.25, // Remove 25% of entries when limit is reached
     };
 
     _cache = new MemoryCache(cacheOptions);
@@ -41,9 +41,9 @@ public static class SlugCase {
   /// <returns>A URL-friendly slug string.</returns>
   /// <exception cref="ArgumentException">Thrown when text is null or empty.</exception>
   public static string Convert(string text, int maxLength = 100) {
-    if (string.IsNullOrEmpty(text)) { throw new ArgumentException("Text cannot be null or empty.", nameof(text)); }
+    if (string.IsNullOrEmpty(text)) throw new ArgumentException("Text cannot be null or empty.", nameof(text));
 
-    if (maxLength <= 0) { throw new ArgumentException("Max length must be greater than zero.", nameof(maxLength)); }
+    if (maxLength <= 0) throw new ArgumentException("Max length must be greater than zero.", nameof(maxLength));
 
     var cacheKey = $"slugify:{text}:{maxLength}";
 
@@ -57,7 +57,7 @@ public static class SlugCase {
                var slug = SlugHelper.GenerateSlug(text);
 
                // Truncate if necessary
-               if (slug.Length > maxLength) { slug = slug.Substring(0, maxLength).TrimEnd('-'); }
+               if (slug.Length > maxLength) slug = slug.Substring(0, maxLength).TrimEnd('-');
 
                return slug;
              }
@@ -75,7 +75,7 @@ public static class SlugCase {
   public static string Convert(string text, string separator, int maxLength = 100) {
     var slug = Convert(text, maxLength);
 
-    if (!string.IsNullOrEmpty(separator) && separator != "-") { slug = slug.Replace("-", separator); }
+    if (!string.IsNullOrEmpty(separator) && separator != "-") slug = slug.Replace("-", separator);
 
     return slug;
   }
@@ -86,11 +86,11 @@ public static class SlugCase {
   /// <param name="texts">The strings to convert.</param>
   /// <returns>An array of slug strings.</returns>
   public static string[] ConvertMany(params string[] texts) {
-    if (texts == null || texts.Length == 0) { return []; }
+    if (texts == null || texts.Length == 0) return [];
 
     var result = new string[texts.Length];
 
-    for (var i = 0; i < texts.Length; i++) { result[i] = Convert(texts[i]); }
+    for (var i = 0; i < texts.Length; i++) result[i] = Convert(texts[i]);
 
     return result;
   }
@@ -105,7 +105,7 @@ public static class SlugCase {
   public static string GenerateUnique(string text, IEnumerable<string> existingSlugs, int maxLength = 100) {
     var baseSlug = Convert(text, maxLength);
 
-    if (existingSlugs == null || !existingSlugs.Contains(baseSlug)) { return baseSlug; }
+    if (existingSlugs == null || !existingSlugs.Contains(baseSlug)) return baseSlug;
 
     var existingSet = new HashSet<string>(existingSlugs, StringComparer.OrdinalIgnoreCase);
     var counter = 1;
@@ -135,7 +135,7 @@ public static class SlugCase {
   /// <param name="text">The text to validate.</param>
   /// <returns>True if the text is a valid slug, false otherwise.</returns>
   public static bool IsValidSlug(string text) {
-    if (string.IsNullOrEmpty(text)) { return false; }
+    if (string.IsNullOrEmpty(text)) return false;
 
     // Check if it matches slug pattern: lowercase letters, numbers, and dashes
     // No leading/trailing dashes, no consecutive dashes
@@ -158,7 +158,7 @@ public static class SlugCase {
   /// <returns>A slug based on the type name.</returns>
   /// <exception cref="ArgumentNullException">Thrown when type is null.</exception>
   public static string FromType(Type type, int maxLength = 100) {
-    if (type == null) { throw new ArgumentNullException(nameof(type)); }
+    if (type == null) throw new ArgumentNullException(nameof(type));
 
     return Convert(type.Name, maxLength);
   }
@@ -170,14 +170,14 @@ public static class SlugCase {
   /// <param name="maxLength">Maximum length of the resulting slug (default: 100).</param>
   /// <returns>A URL-friendly slug string.</returns>
   public static string ConvertUncached(string text, int maxLength = 100) {
-    if (string.IsNullOrEmpty(text)) { return string.Empty; }
+    if (string.IsNullOrEmpty(text)) return string.Empty;
 
-    if (maxLength <= 0) { throw new ArgumentException("Max length must be greater than zero.", nameof(maxLength)); }
+    if (maxLength <= 0) throw new ArgumentException("Max length must be greater than zero.", nameof(maxLength));
 
     var slug = SlugHelper.GenerateSlug(text);
 
     // Truncate if necessary
-    if (slug.Length > maxLength) { slug = slug.Substring(0, maxLength).TrimEnd('-'); }
+    if (slug.Length > maxLength) slug = slug.Substring(0, maxLength).TrimEnd('-');
 
     return slug;
   }
@@ -191,7 +191,7 @@ public static class SlugCase {
 
     var cacheOptions = new MemoryCacheOptions {
       SizeLimit = 1000, // Maximum 1000 entries
-      CompactionPercentage = 0.25 // Remove 25% of entries when limit is reached
+      CompactionPercentage = 0.25, // Remove 25% of entries when limit is reached
     };
 
     _cache = new MemoryCache(cacheOptions);

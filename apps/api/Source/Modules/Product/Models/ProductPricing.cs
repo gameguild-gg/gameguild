@@ -129,7 +129,7 @@ public class ProductPricing : BaseEntity {
   /// Get the current effective price (sale price if active, otherwise base price)
   /// </summary>
   public decimal GetCurrentPrice() {
-    if (SalePrice.HasValue && IsSaleActive()) { return SalePrice.Value; }
+    if (SalePrice.HasValue && IsSaleActive()) return SalePrice.Value;
 
     return BasePrice;
   }

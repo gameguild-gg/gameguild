@@ -48,19 +48,19 @@ public class TenantContextService : ITenantContextService {
   /// </summary>
   public async Task<Guid?> GetCurrentTenantIdAsync(ClaimsPrincipal? user = null, string? tenantHeader = null) {
     // Check header first (highest priority)
-    if (!string.IsNullOrEmpty(tenantHeader) && Guid.TryParse(tenantHeader, out var tenantHeaderId)) {
+    if (!string.IsNullOrEmpty(tenantHeader) && Guid.TryParse(tenantHeader, out var tenantHeaderId))
       // Verify tenant exists
-      if (await _context.Tenants.AnyAsync(t => t.Id == tenantHeaderId && t.IsActive)) { return tenantHeaderId; }
-    }
+      if (await _context.Tenants.AnyAsync(t => t.Id == tenantHeaderId && t.IsActive))
+        return tenantHeaderId;
 
     // Check user claims
     if (user?.Identity?.IsAuthenticated == true) {
       var tenantClaim = user.FindFirst(TenantClaim);
 
-      if (tenantClaim != null && Guid.TryParse(tenantClaim.Value, out var tenantClaimId)) {
+      if (tenantClaim != null && Guid.TryParse(tenantClaim.Value, out var tenantClaimId))
         // Verify tenant exists
-        if (await _context.Tenants.AnyAsync(t => t.Id == tenantClaimId && t.IsActive)) { return tenantClaimId; }
-      }
+        if (await _context.Tenants.AnyAsync(t => t.Id == tenantClaimId && t.IsActive))
+          return tenantClaimId;
     }
 
     return null;
@@ -72,7 +72,7 @@ public class TenantContextService : ITenantContextService {
   public async Task<Models.Tenant?> GetCurrentTenantAsync(ClaimsPrincipal? user = null, string? tenantHeader = null) {
     var tenantId = await GetCurrentTenantIdAsync(user, tenantHeader);
 
-    if (!tenantId.HasValue) { return null; }
+    if (!tenantId.HasValue) return null;
 
     return await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId && t.IsActive);
   }
@@ -91,7 +91,8 @@ public class TenantContextService : ITenantContextService {
   /// </summary>
   public async Task<bool> CanAccessTenantAsync(ClaimsPrincipal user, Guid tenantId) {
     if (!user.Identity?.IsAuthenticated == true ||
-        string.IsNullOrEmpty(user.FindFirst(ClaimTypes.NameIdentifier)?.Value)) { return false; }
+        string.IsNullOrEmpty(user.FindFirst(ClaimTypes.NameIdentifier)?.Value))
+      return false;
 
     var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
     var permission = await GetTenantPermissionAsync(userId, tenantId);

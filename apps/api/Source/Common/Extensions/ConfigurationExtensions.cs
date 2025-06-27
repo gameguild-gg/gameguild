@@ -26,7 +26,7 @@ public static class ConfigurationExtensions {
     // Override with environment variable if present
     var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 
-    if (!string.IsNullOrEmpty(connectionString)) { dbConfig.ConnectionString = connectionString; }
+    if (!string.IsNullOrEmpty(connectionString)) dbConfig.ConnectionString = connectionString;
 
     dbConfig.EnableSensitiveDataLogging = appConfig.IsDevelopmentEnvironment;
     dbConfig.EnableDetailedErrors = appConfig.IsDevelopmentEnvironment;

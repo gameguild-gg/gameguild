@@ -489,7 +489,7 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
     Assert.True(await _permissionService.IsUserInTenantAsync(userId, tenantId));
 
     // Should have minimal permissions
-    foreach (var permission in TenantPermissionConstants.MinimalUserPermissions) { Assert.True(await _permissionService.HasTenantPermissionAsync(userId, tenantId, permission)); }
+    foreach (var permission in TenantPermissionConstants.MinimalUserPermissions) Assert.True(await _permissionService.HasTenantPermissionAsync(userId, tenantId, permission));
 
     // Should NOT have the previously granted additional permissions
     Assert.False(await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit));
@@ -559,24 +559,20 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
     // Grant permissions to various resources for both users
     for (var i = 0; i < resourceIds.Length; i++) {
       if (i % 2 == 0) // Even resources for user1
-      {
         await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
           user1Id,
           tenantId,
           resourceIds[i],
           [PermissionType.Read, PermissionType.Edit]
         );
-      }
 
       if (i % 3 == 0) // Every third resource for user2
-      {
         await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
           user2Id,
           tenantId,
           resourceIds[i],
           [PermissionType.Read, PermissionType.Delete]
         );
-      }
     }
 
     // Act

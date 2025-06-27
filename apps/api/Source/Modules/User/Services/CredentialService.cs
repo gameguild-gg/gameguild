@@ -61,7 +61,7 @@ public class CredentialService : ICredentialService {
   public async Task<Credential> UpdateCredentialAsync(Credential credential) {
     var existingCredential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == credential.Id);
 
-    if (existingCredential == null) { throw new InvalidOperationException($"Credential with ID {credential.Id} not found"); }
+    if (existingCredential == null) throw new InvalidOperationException($"Credential with ID {credential.Id} not found");
 
     // Update properties
     existingCredential.Type = credential.Type;
@@ -87,7 +87,7 @@ public class CredentialService : ICredentialService {
   public async Task<bool> SoftDeleteCredentialAsync(Guid id) {
     var credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id);
 
-    if (credential == null) { return false; }
+    if (credential == null) return false;
 
     credential.SoftDelete();
     await _context.SaveChangesAsync();
@@ -105,7 +105,7 @@ public class CredentialService : ICredentialService {
     var credential = await _context.Credentials.IgnoreQueryFilters()
                                    .FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt != null);
 
-    if (credential == null) { return false; }
+    if (credential == null) return false;
 
     credential.Restore();
     await _context.SaveChangesAsync();
@@ -122,7 +122,7 @@ public class CredentialService : ICredentialService {
     // Include deleted entities to allow hard deletion of soft-deleted credentials
     var credential = await _context.Credentials.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == id);
 
-    if (credential == null) { return false; }
+    if (credential == null) return false;
 
     _context.Credentials.Remove(credential);
     await _context.SaveChangesAsync();
@@ -138,7 +138,7 @@ public class CredentialService : ICredentialService {
   public async Task<bool> MarkCredentialAsUsedAsync(Guid id) {
     var credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id);
 
-    if (credential == null) { return false; }
+    if (credential == null) return false;
 
     credential.MarkAsUsed();
     await _context.SaveChangesAsync();
@@ -154,7 +154,7 @@ public class CredentialService : ICredentialService {
   public async Task<bool> DeactivateCredentialAsync(Guid id) {
     var credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id);
 
-    if (credential == null) { return false; }
+    if (credential == null) return false;
 
     credential.Deactivate();
     await _context.SaveChangesAsync();
@@ -170,7 +170,7 @@ public class CredentialService : ICredentialService {
   public async Task<bool> ActivateCredentialAsync(Guid id) {
     var credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id);
 
-    if (credential == null) { return false; }
+    if (credential == null) return false;
 
     credential.Activate();
     await _context.SaveChangesAsync();

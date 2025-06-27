@@ -70,7 +70,7 @@ public class ProgramContentService : IProgramContentService {
     var existingContent =
       await _context.ProgramContents.FirstOrDefaultAsync(pc => pc.Id == content.Id && !pc.IsDeleted);
 
-    if (existingContent == null) { throw new InvalidOperationException($"ProgramContent with ID {content.Id} not found or has been deleted"); }
+    if (existingContent == null) throw new InvalidOperationException($"ProgramContent with ID {content.Id} not found or has been deleted");
 
     // Update properties
     existingContent.Title = content.Title;
@@ -94,12 +94,12 @@ public class ProgramContentService : IProgramContentService {
     var content = await _context.ProgramContents.Include(pc => pc.Children)
                                 .FirstOrDefaultAsync(pc => pc.Id == id && !pc.IsDeleted);
 
-    if (content == null) { return false; }
+    if (content == null) return false;
 
     // Soft delete the content and all its children
     content.DeletedAt = DateTime.UtcNow;
 
-    foreach (var child in content.Children.Where(c => !c.IsDeleted)) { child.DeletedAt = DateTime.UtcNow; }
+    foreach (var child in content.Children.Where(c => !c.IsDeleted)) child.DeletedAt = DateTime.UtcNow;
 
     await _context.SaveChangesAsync();
 
@@ -113,9 +113,7 @@ public class ProgramContentService : IProgramContentService {
                                      .Where(pc => contentIds.Contains(pc.Id) && pc.ProgramId == programId && !pc.IsDeleted)
                                      .ToListAsync();
 
-    if (contentItems.Count != newOrder.Count) {
-      return false; // Some content items not found
-    }
+    if (contentItems.Count != newOrder.Count) return false; // Some content items not found
 
     // Update sort orders
     foreach (var (contentId, sortOrder) in newOrder) {
@@ -151,7 +149,7 @@ public class ProgramContentService : IProgramContentService {
   public async Task<bool> MoveContentAsync(Guid contentId, Guid? newParentId, int newSortOrder) {
     var content = await _context.ProgramContents.FirstOrDefaultAsync(pc => pc.Id == contentId && !pc.IsDeleted);
 
-    if (content == null) { return false; }
+    if (content == null) return false;
 
     // Update parent and sort order
     content.ParentId = newParentId;

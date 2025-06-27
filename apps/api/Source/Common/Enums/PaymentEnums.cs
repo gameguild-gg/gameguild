@@ -17,7 +17,7 @@ public enum PaymentMethodType {
   WalletBalance,
 
   [Description("Direct bank transfer or wire payment")]
-  BankTransfer
+  BankTransfer,
 }
 
 public enum PaymentMethodStatus {
@@ -31,7 +31,7 @@ public enum PaymentMethodStatus {
   Expired,
 
   [Description("Payment method has been deleted by the user")]
-  Removed
+  Removed,
 }
 
 public enum TransactionStatus {
@@ -51,7 +51,7 @@ public enum TransactionStatus {
   Refunded,
 
   [Description("Transaction was cancelled before processing")]
-  Cancelled
+  Cancelled,
 }
 
 public enum TransactionType {
@@ -74,7 +74,7 @@ public enum TransactionType {
   Fee,
 
   [Description("Manual correction to balance")]
-  Adjustment
+  Adjustment,
 }
 
 public enum WalletStatus {
@@ -85,7 +85,7 @@ public enum WalletStatus {
   Frozen,
 
   [Description("Wallet permanently deactivated")]
-  Closed
+  Closed,
 }
 
 public enum PromoCodeType {
@@ -99,7 +99,7 @@ public enum PromoCodeType {
   BuyOneGetOne,
 
   [Description("No charge for the first month of a subscription")]
-  FirstMonthFree
+  FirstMonthFree,
 }
 
 public enum ProductAcquisitionType {
@@ -113,7 +113,7 @@ public enum ProductAcquisitionType {
   Free,
 
   [Description("Product received as a gift from another user")]
-  Gift
+  Gift,
 }
 
 public enum ProductAccessStatus {
@@ -127,5 +127,5 @@ public enum ProductAccessStatus {
   Revoked,
 
   [Description("Temporary hold on access that may be restored")]
-  Suspended
+  Suspended,
 }

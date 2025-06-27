@@ -58,7 +58,7 @@ public class BaseEntity : BaseEntity<Guid> {
   /// </summary>
   protected BaseEntity() {
     // Generate new GUID for new entities
-    if (Id == Guid.Empty) { Id = Guid.NewGuid(); }
+    if (Id == Guid.Empty) Id = Guid.NewGuid();
   }
 
   /// <summary>
@@ -67,7 +67,7 @@ public class BaseEntity : BaseEntity<Guid> {
   /// <param name="partial">Partial entity data to initialize with</param>
   protected BaseEntity(object partial) : base(partial) {
     // Generate new GUID for new entities if not provided in partial
-    if (Id == Guid.Empty) { Id = Guid.NewGuid(); }
+    if (Id == Guid.Empty) Id = Guid.NewGuid();
   }
 
   /// <summary>
@@ -90,7 +90,7 @@ public class BaseEntity : BaseEntity<Guid> {
         var properties = partial.GetType().GetProperties();
         var propDict = new Dictionary<string, object?>();
 
-        foreach (var prop in properties) { propDict[prop.Name] = prop.GetValue(partial); }
+        foreach (var prop in properties) propDict[prop.Name] = prop.GetValue(partial);
 
         instance.SetProperties(propDict);
 

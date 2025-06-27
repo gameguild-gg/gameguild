@@ -73,7 +73,7 @@ namespace GameGuild.Modules.Auth.Services {
         var emailContent = await emailResponse.Content.ReadAsStringAsync();
         var emails = JsonSerializer.Deserialize<JsonElement[]>(emailContent);
 
-        if (emails != null) {
+        if (emails != null)
           foreach (var email in emails) {
             if (email.GetProperty("primary").GetBoolean()) {
               user.Email = email.GetProperty("email").GetString() ?? "";
@@ -81,7 +81,6 @@ namespace GameGuild.Modules.Auth.Services {
               break;
             }
           }
-        }
       }
 
       return user;
@@ -96,7 +95,7 @@ namespace GameGuild.Modules.Auth.Services {
         { "client_secret", clientSecret! },
         { "code", code },
         { "grant_type", "authorization_code" },
-        { "redirect_uri", redirectUri }
+        { "redirect_uri", redirectUri },
       };
 
       var content = new FormUrlEncodedContent(tokenRequest);
@@ -129,7 +128,7 @@ namespace GameGuild.Modules.Auth.Services {
         var response =
           await _httpClient.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}");
 
-        if (!response.IsSuccessStatusCode) { throw new UnauthorizedAccessException($"Google tokeninfo API returned {response.StatusCode}"); }
+        if (!response.IsSuccessStatusCode) throw new UnauthorizedAccessException($"Google tokeninfo API returned {response.StatusCode}");
 
         var content = await response.Content.ReadAsStringAsync();
 
@@ -137,7 +136,7 @@ namespace GameGuild.Modules.Auth.Services {
         var tokenInfo = JsonSerializer.Deserialize<JsonElement>(content);
 
         // Validate that the token is valid
-        if (!tokenInfo.TryGetProperty("aud", out _)) { throw new UnauthorizedAccessException("Invalid Google ID token: missing audience"); }
+        if (!tokenInfo.TryGetProperty("aud", out _)) throw new UnauthorizedAccessException("Invalid Google ID token: missing audience");
 
         // Extract user information and map to GoogleUserDto
         var googleUser = new GoogleUserDto {
@@ -149,7 +148,7 @@ namespace GameGuild.Modules.Auth.Services {
                       ? pictureElement.GetString() ?? ""
                       : "",
           EmailVerified = tokenInfo.TryGetProperty("email_verified", out var verifiedElement) &&
-                          (verifiedElement.GetString() == "true" || verifiedElement.ValueKind == JsonValueKind.True)
+                          (verifiedElement.GetString() == "true" || verifiedElement.ValueKind == JsonValueKind.True),
         };
 
         return googleUser;

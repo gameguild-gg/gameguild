@@ -47,7 +47,7 @@ public enum ProjectType {
   /// <summary>
   /// Other type of project
   /// </summary>
-  Other = 99
+  Other = 99,
 }
 
 /// <summary>
@@ -97,7 +97,7 @@ public enum DevelopmentStatus {
   /// <summary>
   /// Project is archived or deprecated
   /// </summary>
-  Archived = 8
+  Archived = 8,
 }
 
 /// <summary>
@@ -127,5 +127,5 @@ public enum ContentVisibility {
   /// <summary>
   /// Hidden from public view but accessible via direct link
   /// </summary>
-  Unlisted = 4
+  Unlisted = 4,
 }

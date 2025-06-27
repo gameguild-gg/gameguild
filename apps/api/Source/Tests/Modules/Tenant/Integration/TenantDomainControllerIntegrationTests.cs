@@ -55,7 +55,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       Description = "Test tenant for domain integration tests",
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.Tenants.Add(tenant);
@@ -66,7 +66,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       Name = "Test User",
       Email = "test@example.com",
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.Users.Add(user);
@@ -86,7 +86,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       TopLevelDomain = "example.com",
       Subdomain = null,
       IsMainDomain = true,
-      IsSecondaryDomain = false
+      IsSecondaryDomain = false,
     };
 
     var json = JsonSerializer.Serialize(createDto);
@@ -125,7 +125,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       TopLevelDomain = "university.edu",
       Subdomain = "cs",
       IsMainDomain = false,
-      IsSecondaryDomain = true
+      IsSecondaryDomain = true,
     };
 
     var json = JsonSerializer.Serialize(createDto);
@@ -165,7 +165,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsMainDomain = true,
       IsSecondaryDomain = false,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var domain2 = new TenantDomain {
@@ -176,7 +176,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsMainDomain = false,
       IsSecondaryDomain = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.TenantDomains.AddRange(domain1, domain2);
@@ -215,7 +215,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsMainDomain = true,
       IsSecondaryDomain = false,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.TenantDomains.Add(domain);
@@ -264,7 +264,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsMainDomain = true,
       IsSecondaryDomain = false,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.TenantDomains.Add(domain);
@@ -297,7 +297,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       Name = "Students",
       Description = "Student group",
       IsDefault = true,
-      ParentGroupId = null
+      ParentGroupId = null,
     };
 
     var json = JsonSerializer.Serialize(createDto);
@@ -341,7 +341,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsDefault = true,
       ParentGroupId = null,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var group2 = new TenantUserGroup {
@@ -352,7 +352,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsDefault = false,
       ParentGroupId = null,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.TenantUserGroups.AddRange(group1, group2);
@@ -395,7 +395,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsDefault = true,
       ParentGroupId = null,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.TenantUserGroups.Add(group);
@@ -443,7 +443,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsDefault = true,
       ParentGroupId = null,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var group2 = new TenantUserGroup {
@@ -454,7 +454,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsDefault = false,
       ParentGroupId = null,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.TenantUserGroups.AddRange(group1, group2);
@@ -465,7 +465,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       UserGroupId = group1.Id,
       IsAutoAssigned = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var membership2 = new TenantUserGroupMembership {
@@ -474,7 +474,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       UserGroupId = group2.Id,
       IsAutoAssigned = false,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.TenantUserGroupMemberships.AddRange(membership1, membership2);
@@ -517,7 +517,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsMainDomain = true,
       IsSecondaryDomain = false,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var group = new TenantUserGroup {
@@ -528,7 +528,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsDefault = true,
       ParentGroupId = null,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.TenantDomains.Add(domain);
@@ -609,7 +609,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       Name = "Test User 2",
       Email = "test2@example.com",
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.Users.Add(user2);
@@ -622,7 +622,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsDefault = true,
       ParentGroupId = null,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.TenantUserGroups.Add(group);
@@ -633,7 +633,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       UserGroupId = group.Id,
       IsAutoAssigned = false,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var membership2 = new TenantUserGroupMembership {
@@ -642,7 +642,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       UserGroupId = group.Id,
       IsAutoAssigned = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.TenantUserGroupMemberships.AddRange(membership1, membership2);
@@ -681,7 +681,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsDefault = true,
       ParentGroupId = null,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var group2 = new TenantUserGroup {
@@ -692,7 +692,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       IsDefault = false,
       ParentGroupId = null,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.TenantUserGroups.AddRange(group1, group2);
@@ -703,7 +703,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       UserGroupId = group1.Id,
       IsAutoAssigned = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var membership2 = new TenantUserGroupMembership {
@@ -712,7 +712,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       UserGroupId = group2.Id,
       IsAutoAssigned = false,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.TenantUserGroupMemberships.AddRange(membership1, membership2);

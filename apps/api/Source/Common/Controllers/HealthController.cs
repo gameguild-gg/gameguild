@@ -33,7 +33,7 @@ public class HealthController : ControllerBase {
           timestamp = DateTime.UtcNow,
           environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
           database = "disconnected",
-          error = ex.Message
+          error = ex.Message,
         }
       );
     }

@@ -18,8 +18,10 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
       "Data Source=app.db"; // Fallback to SQLite for design-time
 
     // Configure database provider based on connection string
-    if (connectionString.Contains("Data Source=") || connectionString.Contains("DataSource=")) { optionsBuilder.UseSqlite(connectionString); }
-    else { optionsBuilder.UseNpgsql(connectionString); }
+    if (connectionString.Contains("Data Source=") || connectionString.Contains("DataSource="))
+      optionsBuilder.UseSqlite(connectionString);
+    else
+      optionsBuilder.UseNpgsql(connectionString);
 
     return new ApplicationDbContext(optionsBuilder.Options);
   }

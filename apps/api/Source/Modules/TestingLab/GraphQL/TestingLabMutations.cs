@@ -21,7 +21,7 @@ public class TestingLabMutations {
     // Get the current authenticated user's ID
     var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { throw new UnauthorizedAccessException("User ID not found in token"); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) throw new UnauthorizedAccessException("User ID not found in token");
 
     var request = input.ToTestingRequest(userId);
 
@@ -37,7 +37,7 @@ public class TestingLabMutations {
   ) {
     var existingRequest = await testService.GetTestingRequestByIdAsync(id);
 
-    if (existingRequest == null) { throw new ArgumentException($"Testing request with ID {id} not found"); }
+    if (existingRequest == null) throw new ArgumentException($"Testing request with ID {id} not found");
 
     // Update properties using the DTO
     input.UpdateTestingRequest(existingRequest);
@@ -60,7 +60,7 @@ public class TestingLabMutations {
     // Get the current authenticated user's ID
     var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { throw new UnauthorizedAccessException("User ID not found in token"); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) throw new UnauthorizedAccessException("User ID not found in token");
 
     var session = input.ToTestingSession(userId);
 
@@ -76,7 +76,7 @@ public class TestingLabMutations {
   ) {
     var existingSession = await testService.GetTestingSessionByIdAsync(id);
 
-    if (existingSession == null) { throw new ArgumentException($"Testing session with ID {id} not found"); }
+    if (existingSession == null) throw new ArgumentException($"Testing session with ID {id} not found");
 
     // Update properties
     existingSession.TestingRequestId = input.TestingRequestId;

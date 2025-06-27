@@ -43,7 +43,7 @@ public class ProgramContentMutations {
       SortOrder = sortOrder ?? 0,
       IsRequired = isRequired,
       GradingMethod = gradingMethod,
-      MaxPoints = maxPoints
+      MaxPoints = maxPoints,
     };
 
     return await contentService.CreateContentAsync(content);
@@ -71,7 +71,7 @@ public class ProgramContentMutations {
   ) {
     var existingContent = await contentService.GetContentByIdAsync(contentId);
 
-    if (existingContent == null) { throw new ArgumentException($"Content with ID {contentId} not found"); }
+    if (existingContent == null) throw new ArgumentException($"Content with ID {contentId} not found");
 
     // Update only provided fields
     if (title != null) existingContent.Title = title;
@@ -118,7 +118,7 @@ public class ProgramContentMutations {
     [Service] IProgramContentService contentService, Guid programId,
     List<Guid> contentIds, List<int> sortOrders
   ) {
-    if (contentIds.Count != sortOrders.Count) { throw new ArgumentException("ContentIds and SortOrders must have the same length"); }
+    if (contentIds.Count != sortOrders.Count) throw new ArgumentException("ContentIds and SortOrders must have the same length");
 
     var reorderList = contentIds.Zip(sortOrders, (id, order) => (id, order)).ToList();
 

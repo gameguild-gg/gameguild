@@ -23,7 +23,7 @@ public enum TagType {
   Industry,
 
   [Description("Professional or industry certification")]
-  Certification
+  Certification,
 }
 
 public enum TagRelationshipType {
@@ -40,7 +40,7 @@ public enum TagRelationshipType {
   Requires,
 
   [Description("Suggested prerequisite or related tag")]
-  Suggested
+  Suggested,
 }
 
 public enum CertificateTagRelationshipType {
@@ -51,5 +51,5 @@ public enum CertificateTagRelationshipType {
   Optional,
 
   [Description("Tag indicates skill mastery demonstrated by this certificate")]
-  Demonstrates
+  Demonstrates,
 }

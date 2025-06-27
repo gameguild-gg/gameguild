@@ -63,6 +63,6 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
         _requiredPermission
       );
 
-    if (!hasPermission) { context.Result = new ForbidResult(); }
+    if (!hasPermission) context.Result = new ForbidResult();
   }
 }

@@ -20,7 +20,7 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) { throw new UnauthorizedAccessException("Authentication required"); }
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
 
     return await tenantService.GetAllTenantsAsync();
   }
@@ -35,7 +35,7 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) { throw new UnauthorizedAccessException("Authentication required"); }
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
 
     return await tenantService.GetTenantByIdAsync(id);
   }
@@ -50,7 +50,7 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) { throw new UnauthorizedAccessException("Authentication required"); }
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
 
     return await tenantService.GetDeletedTenantsAsync();
   }
@@ -65,7 +65,7 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) { throw new UnauthorizedAccessException("Authentication required"); }
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
 
     return await tenantService.GetUsersInTenantAsync(tenantId);
   }

@@ -21,5 +21,5 @@ public enum FeedbackFormQuestionType {
   YesNo,
 
   [Description("Select one option from dropdown menu")]
-  Dropdown
+  Dropdown,
 }
