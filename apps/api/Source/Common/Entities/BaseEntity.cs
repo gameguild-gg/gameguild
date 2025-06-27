@@ -5,8 +5,6 @@ namespace GameGuild.Common.Entities;
 
 /// <summary>
 /// Base entity class that provides common properties and functionality for all domain entities.
-/// Mirrors the functionality of NestJS EntityBase with UUID primary keys, version control, and soft delete.
-/// Uses Guid as the default ID type to match the NestJS implementation.
 /// </summary>
 public class BaseEntity : BaseEntity<Guid> {
   /// <summary>
