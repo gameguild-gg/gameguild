@@ -6,6 +6,7 @@ using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 using GameGuild.Modules.Payment.Models;
 
+
 namespace GameGuild.Modules.Product.Models;
 
 /// <summary>
@@ -250,11 +251,7 @@ public class PromoCode : BaseEntity {
 
     if (MinimumOrderAmount.HasValue && orderAmount < MinimumOrderAmount.Value) return 0;
 
-    return Type switch {
-      PromoCodeType.PercentageOff => orderAmount * (DiscountPercentage ?? 0) / 100,
-      PromoCodeType.FixedAmountOff => Math.Min(DiscountAmount ?? 0, orderAmount),
-      _ => 0
-    };
+    return Type switch { PromoCodeType.PercentageOff => orderAmount * (DiscountPercentage ?? 0) / 100, PromoCodeType.FixedAmountOff => Math.Min(DiscountAmount ?? 0, orderAmount), _ => 0 };
   }
 }
 
@@ -264,9 +261,15 @@ public class PromoCode : BaseEntity {
 public class PromoCodeConfiguration : IEntityTypeConfiguration<PromoCode> {
   public void Configure(EntityTypeBuilder<PromoCode> builder) {
     // Configure relationship with CreatedByUser (can't be done with annotations)
-    builder.HasOne(pc => pc.CreatedByUser).WithMany().HasForeignKey(pc => pc.CreatedBy).OnDelete(DeleteBehavior.Restrict);
+    builder.HasOne(pc => pc.CreatedByUser)
+           .WithMany()
+           .HasForeignKey(pc => pc.CreatedBy)
+           .OnDelete(DeleteBehavior.Restrict);
 
     // Configure relationship with Product (can't be done with annotations)
-    builder.HasOne(pc => pc.Product).WithMany(p => p.PromoCodes).HasForeignKey(pc => pc.ProductId).OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(pc => pc.Product)
+           .WithMany(p => p.PromoCodes)
+           .HasForeignKey(pc => pc.ProductId)
+           .OnDelete(DeleteBehavior.Cascade);
   }
 }

@@ -7,6 +7,7 @@ using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Modules.TestingLab.Services;
 using GameGuild.Modules.TestingLab.Dtos;
 
+
 namespace GameGuild.Modules.TestingLab.Controllers;
 
 [ApiController]
@@ -21,7 +22,10 @@ public class TestingController : ControllerBase {
   // GET: testing/requests
   [HttpGet("requests")]
   [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequests([FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequests(
+    [FromQuery] int skip = 0,
+    [FromQuery] int take = 50
+  ) {
     var requests = await _testService.GetTestingRequestsAsync(skip, take);
 
     return Ok(requests);
@@ -110,7 +114,10 @@ public class TestingController : ControllerBase {
   // GET: testing/sessions
   [HttpGet("sessions")]
   [RequireResourcePermission<TestingSession>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessions([FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessions(
+    [FromQuery] int skip = 0,
+    [FromQuery] int take = 50
+  ) {
     var sessions = await _testService.GetTestingSessionsAsync(skip, take);
 
     return Ok(sessions);
@@ -334,14 +341,18 @@ public class TestingController : ControllerBase {
   // POST: testing/sessions/{sessionId}/register
   [HttpPost("sessions/{sessionId}/register")]
   [RequireResourcePermission<SessionRegistration>(PermissionType.Create)]
-  public async Task<ActionResult<SessionRegistration>> RegisterForSession(Guid sessionId, [FromBody] SessionRegistrationRequest request) {
+  public async Task<ActionResult<SessionRegistration>> RegisterForSession(
+    Guid sessionId,
+    [FromBody] SessionRegistrationRequest request
+  ) {
     try {
       // Get the current authenticated user's ID
       string? userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
       if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)) { return Unauthorized("User ID not found in token"); }
 
-      var registration = await _testService.RegisterForSessionAsync(sessionId, userId, request.RegistrationType, request.Notes);
+      var registration =
+        await _testService.RegisterForSessionAsync(sessionId, userId, request.RegistrationType, request.Notes);
 
       return Ok(registration);
     }
@@ -376,14 +387,18 @@ public class TestingController : ControllerBase {
   // POST: testing/sessions/{sessionId}/waitlist
   [HttpPost("sessions/{sessionId}/waitlist")]
   [RequireResourcePermission<SessionWaitlist>(PermissionType.Create)]
-  public async Task<ActionResult<SessionWaitlist>> AddToWaitlist(Guid sessionId, [FromBody] SessionRegistrationRequest request) {
+  public async Task<ActionResult<SessionWaitlist>> AddToWaitlist(
+    Guid sessionId,
+    [FromBody] SessionRegistrationRequest request
+  ) {
     try {
       // Get the current authenticated user's ID
       string? userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
       if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)) { return Unauthorized("User ID not found in token"); }
 
-      var waitlistEntry = await _testService.AddToWaitlistAsync(sessionId, userId, request.RegistrationType, request.Notes);
+      var waitlistEntry =
+        await _testService.AddToWaitlistAsync(sessionId, userId, request.RegistrationType, request.Notes);
 
       return Ok(waitlistEntry);
     }
@@ -429,7 +444,15 @@ public class TestingController : ControllerBase {
 
       if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)) { return Unauthorized("User ID not found in token"); }
 
-      var feedback = await _testService.AddFeedbackAsync(requestId, userId, request.FeedbackFormId, request.FeedbackData, request.TestingContext, request.SessionId, request.AdditionalNotes);
+      var feedback = await _testService.AddFeedbackAsync(
+                       requestId,
+                       userId,
+                       request.FeedbackFormId,
+                       request.FeedbackData,
+                       request.TestingContext,
+                       request.SessionId,
+                       request.AdditionalNotes
+                     );
 
       return Ok(feedback);
     }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 
+
 namespace GameGuild.Modules.Project.Models;
 
 /// <summary>
@@ -14,45 +15,10 @@ namespace GameGuild.Modules.Project.Models;
 [Index(nameof(ProjectId), nameof(ReleasedAt), Name = "IX_ProjectReleases_Project_Date")]
 [Index(nameof(IsLatest), Name = "IX_ProjectReleases_Latest")]
 public class ProjectRelease : ResourceBase {
-  private Guid _projectId;
-
-  private string _releaseVersion = string.Empty;
-
-  private DateTime _releasedAt = DateTime.UtcNow;
-
-  private bool _isLatest = false;
-
-  private bool _isPrerelease = false;
-
-  private string? _downloadUrl;
-
-  private long? _fileSize;
-
-  private int _downloadCount = 0;
-
-  private string? _releaseNotes;
-
-  private string? _checksum;
-
-  private string? _systemRequirements;
-
-  private string? _supportedPlatforms;
-
-  private string _releaseType = "stable";
-
-  private ContentStatus _status = ContentStatus.Draft;
-
-  private string? _buildNumber;
-
-  private string? _releaseMetadata;
-
   /// <summary>
   /// Project this release belongs to
   /// </summary>
-  public Guid ProjectId {
-    get => _projectId;
-    set => _projectId = value;
-  }
+  public Guid ProjectId { get; set; }
 
   // Navigation property commented out temporarily to resolve circular compilation
   // /// <summary>
@@ -65,10 +31,7 @@ public class ProjectRelease : ResourceBase {
   /// </summary>
   [Required]
   [MaxLength(50)]
-  public string ReleaseVersion {
-    get => _releaseVersion;
-    set => _releaseVersion = value;
-  }
+  public string ReleaseVersion { get; set; } = string.Empty;
 
   // Title and Description are inherited from ResourceBase
   // We can override them if needed with different attributes
@@ -76,119 +39,77 @@ public class ProjectRelease : ResourceBase {
   /// <summary>
   /// Date when this version was released
   /// </summary>
-  public DateTime ReleasedAt {
-    get => _releasedAt;
-    set => _releasedAt = value;
-  }
+  public DateTime ReleasedAt { get; set; } = DateTime.UtcNow;
 
   /// <summary>
   /// Whether this is the latest release
   /// </summary>
-  public bool IsLatest {
-    get => _isLatest;
-    set => _isLatest = value;
-  }
+  public bool IsLatest { get; set; } = false;
 
   /// <summary>
   /// Whether this is a pre-release (alpha, beta, etc.)
   /// </summary>
-  public bool IsPrerelease {
-    get => _isPrerelease;
-    set => _isPrerelease = value;
-  }
+  public bool IsPrerelease { get; set; } = false;
 
   /// <summary>
   /// Download URL for this release
   /// </summary>
   [MaxLength(500)]
-  public string? DownloadUrl {
-    get => _downloadUrl;
-    set => _downloadUrl = value;
-  }
+  public string? DownloadUrl { get; set; }
 
   /// <summary>
   /// File size in bytes
   /// </summary>
-  public long? FileSize {
-    get => _fileSize;
-    set => _fileSize = value;
-  }
+  public long? FileSize { get; set; }
 
   /// <summary>
   /// Number of downloads for this release
   /// </summary>
-  public int DownloadCount {
-    get => _downloadCount;
-    set => _downloadCount = value;
-  }
+  public int DownloadCount { get; set; } = 0;
 
   /// <summary>
   /// Release notes in markdown format
   /// </summary>
-  public string? ReleaseNotes {
-    get => _releaseNotes;
-    set => _releaseNotes = value;
-  }
+  public string? ReleaseNotes { get; set; }
 
   /// <summary>
   /// Checksum/hash of the release file
   /// </summary>
   [MaxLength(128)]
-  public string? Checksum {
-    get => _checksum;
-    set => _checksum = value;
-  }
+  public string? Checksum { get; set; }
 
   /// <summary>
   /// Minimum system requirements
   /// </summary>
   [MaxLength(1000)]
-  public string? SystemRequirements {
-    get => _systemRequirements;
-    set => _systemRequirements = value;
-  }
+  public string? SystemRequirements { get; set; }
 
   /// <summary>
   /// Supported platforms (JSON array)
   /// </summary>
   [MaxLength(500)]
-  public string? SupportedPlatforms {
-    get => _supportedPlatforms;
-    set => _supportedPlatforms = value;
-  }
+  public string? SupportedPlatforms { get; set; }
 
   /// <summary>
   /// Release type (stable, beta, alpha, etc.)
   /// </summary>
   [MaxLength(50)]
-  public string ReleaseType {
-    get => _releaseType;
-    set => _releaseType = value;
-  }
+  public string ReleaseType { get; set; } = "stable";
 
   /// <summary>
   /// Release status
   /// </summary>
-  public ContentStatus Status {
-    get => _status;
-    set => _status = value;
-  }
+  public ContentStatus Status { get; set; } = ContentStatus.Draft;
 
   /// <summary>
   /// Build number or commit hash
   /// </summary>
   [MaxLength(100)]
-  public string? BuildNumber {
-    get => _buildNumber;
-    set => _buildNumber = value;
-  }
+  public string? BuildNumber { get; set; }
 
   /// <summary>
   /// Additional release metadata (JSON)
   /// </summary>
   [MaxLength(2000)]
-  public string? ReleaseMetadata {
-    get => _releaseMetadata;
-    set => _releaseMetadata = value;
-  }
+  public string? ReleaseMetadata { get; set; }
 }

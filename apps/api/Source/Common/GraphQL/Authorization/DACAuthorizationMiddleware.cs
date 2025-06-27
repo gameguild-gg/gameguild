@@ -5,6 +5,7 @@ using System.Security.Claims;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 
+
 namespace GameGuild.Common.GraphQL.Authorization;
 
 /// <summary>
@@ -45,7 +46,10 @@ public class DACAuthorizationMiddleware {
     var userIdClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
     var tenantIdClaim = claims.FirstOrDefault(c => c.Type == "tenantId")?.Value;
 
-    if (userIdClaim == null || tenantIdClaim == null || !Guid.TryParse(userIdClaim, out var userId) || !Guid.TryParse(tenantIdClaim, out var tenantId)) { return null; }
+    if (userIdClaim == null ||
+        tenantIdClaim == null ||
+        !Guid.TryParse(userIdClaim, out var userId) ||
+        !Guid.TryParse(tenantIdClaim, out var tenantId)) { return null; }
 
     return new UserContext { UserId = userId, TenantId = tenantId };
   }
@@ -58,19 +62,35 @@ public class DACAuthorizationMiddleware {
     // Get the resolver method attributes
     var resolverMember = field.ResolverMember;
 
-    if (resolverMember != null) { return resolverMember.GetCustomAttributes(typeof(DACAuthorizationAttribute), true).FirstOrDefault() as DACAuthorizationAttribute; }
+    if (resolverMember != null) {
+      return resolverMember.GetCustomAttributes(typeof(DACAuthorizationAttribute), true).FirstOrDefault() as
+               DACAuthorizationAttribute;
+    }
 
     return null;
   }
 
-  private async ValueTask<bool> CheckPermissionAsync(IPermissionService permissionService, UserContext userContext, DACAuthorizationAttribute dacAttribute, IMiddlewareContext context) {
+  private async ValueTask<bool> CheckPermissionAsync(
+    IPermissionService permissionService, UserContext userContext,
+    DACAuthorizationAttribute dacAttribute, IMiddlewareContext context
+  ) {
     return dacAttribute switch {
-      RequireTenantPermissionAttribute tenantAttr => await CheckTenantPermissionAsync(permissionService, userContext, tenantAttr),
-
-      _ when IsContentTypePermissionAttribute(dacAttribute) => await CheckContentTypePermissionDynamicAsync(permissionService, userContext, dacAttribute),
-
-      _ when IsResourcePermissionAttribute(dacAttribute) => await CheckResourcePermissionDynamicAsync(permissionService, userContext, dacAttribute, context),
-
+      RequireTenantPermissionAttribute tenantAttr => await CheckTenantPermissionAsync(
+                                                       permissionService,
+                                                       userContext,
+                                                       tenantAttr
+                                                     ),
+      _ when IsContentTypePermissionAttribute(dacAttribute) => await CheckContentTypePermissionDynamicAsync(
+                                                                 permissionService,
+                                                                 userContext,
+                                                                 dacAttribute
+                                                               ),
+      _ when IsResourcePermissionAttribute(dacAttribute) => await CheckResourcePermissionDynamicAsync(
+                                                              permissionService,
+                                                              userContext,
+                                                              dacAttribute,
+                                                              context
+                                                            ),
       _ => false
     };
   }
@@ -87,19 +107,37 @@ public class DACAuthorizationMiddleware {
     return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(RequireResourcePermissionAttribute<,>);
   }
 
-  private async ValueTask<bool> CheckTenantPermissionAsync(IPermissionService permissionService, UserContext userContext, RequireTenantPermissionAttribute attribute) {
-    return await permissionService.HasTenantPermissionAsync(userContext.UserId, userContext.TenantId, attribute.RequiredPermission);
+  private async ValueTask<bool> CheckTenantPermissionAsync(
+    IPermissionService permissionService,
+    UserContext userContext, RequireTenantPermissionAttribute attribute
+  ) {
+    return await permissionService.HasTenantPermissionAsync(
+             userContext.UserId,
+             userContext.TenantId,
+             attribute.RequiredPermission
+           );
   }
 
-  private async ValueTask<bool> CheckContentTypePermissionDynamicAsync(IPermissionService permissionService, UserContext userContext, DACAuthorizationAttribute attribute) {
+  private async ValueTask<bool> CheckContentTypePermissionDynamicAsync(
+    IPermissionService permissionService,
+    UserContext userContext, DACAuthorizationAttribute attribute
+  ) {
     var entityType = attribute.GetType().GetGenericArguments()[0];
     var requiredPermissionProperty = attribute.GetType().GetProperty("RequiredPermission");
     var requiredPermission = (PermissionType)requiredPermissionProperty!.GetValue(attribute)!;
 
-    return await permissionService.HasContentTypePermissionAsync(userContext.UserId, userContext.TenantId, entityType.Name, requiredPermission);
+    return await permissionService.HasContentTypePermissionAsync(
+             userContext.UserId,
+             userContext.TenantId,
+             entityType.Name,
+             requiredPermission
+           );
   }
 
-  private async ValueTask<bool> CheckResourcePermissionDynamicAsync(IPermissionService permissionService, UserContext userContext, DACAuthorizationAttribute attribute, IMiddlewareContext context) {
+  private async ValueTask<bool> CheckResourcePermissionDynamicAsync(
+    IPermissionService permissionService,
+    UserContext userContext, DACAuthorizationAttribute attribute, IMiddlewareContext context
+  ) {
     var resourceIdParameterProperty = attribute.GetType().GetProperty("ResourceIdParameterName");
     var resourceIdParameter = resourceIdParameterProperty?.GetValue(attribute) as string ?? "id";
 
@@ -115,7 +153,12 @@ public class DACAuthorizationMiddleware {
     var requiredPermission = (PermissionType)requiredPermissionProperty!.GetValue(attribute)!;
 
     // For now, fall back to content-type level permission since we can't easily call the generic method dynamically
-    return await permissionService.HasContentTypePermissionAsync(userContext.UserId, userContext.TenantId, entityType.Name, requiredPermission);
+    return await permissionService.HasContentTypePermissionAsync(
+             userContext.UserId,
+             userContext.TenantId,
+             entityType.Name,
+             requiredPermission
+           );
   }
 
   private Guid? GetResourceIdFromContext(IMiddlewareContext context, string parameterName) {

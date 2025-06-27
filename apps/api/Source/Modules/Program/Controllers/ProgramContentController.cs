@@ -9,6 +9,7 @@ using GameGuild.Common.Attributes;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 
+
 namespace GameGuild.Modules.Program.Controllers;
 
 /// <summary>
@@ -67,14 +68,21 @@ public class ProgramContentController : ControllerBase {
   /// </summary>
   [HttpPost]
   [RequireContentTypePermission<ProgramContent>(PermissionType.Create)]
-  public async Task<ActionResult<ProgramContentDto>> CreateContent(Guid programId, [FromBody] CreateProgramContentDto createDto) {
+  public async Task<ActionResult<ProgramContentDto>> CreateContent(
+    Guid programId,
+    [FromBody] CreateProgramContentDto createDto
+  ) {
     if (createDto.ProgramId != programId) { return BadRequest("Program ID in URL must match Program ID in request body"); }
 
     var content = createDto.ToEntity();
     var createdContent = await _contentService.CreateContentAsync(content);
     var contentDto = createdContent.ToDto();
 
-    return CreatedAtAction(nameof(GetContent), new { programId = createdContent.ProgramId, id = createdContent.Id }, contentDto);
+    return CreatedAtAction(
+      nameof(GetContent),
+      new { programId = createdContent.ProgramId, id = createdContent.Id },
+      contentDto
+    );
   }
 
   /// <summary>
@@ -82,7 +90,10 @@ public class ProgramContentController : ControllerBase {
   /// </summary>
   [HttpPut("{id}")]
   [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit)]
-  public async Task<ActionResult<ProgramContentDto>> UpdateContent(Guid programId, Guid id, [FromBody] UpdateProgramContentDto updateDto) {
+  public async Task<ActionResult<ProgramContentDto>> UpdateContent(
+    Guid programId, Guid id,
+    [FromBody] UpdateProgramContentDto updateDto
+  ) {
     if (updateDto.Id != id) { return BadRequest("Content ID in URL must match Content ID in request body"); }
 
     var existingContent = await _contentService.GetContentByIdAsync(id);
@@ -183,7 +194,10 @@ public class ProgramContentController : ControllerBase {
   /// </summary>
   [HttpGet("by-type/{type}")]
   [RequireContentTypePermission<ProgramContent>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetContentByType(Guid programId, ProgramContentType type) {
+  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetContentByType(
+    Guid programId,
+    ProgramContentType type
+  ) {
     var content = await _contentService.GetContentByTypeAsync(programId, type);
     var contentDtos = content.ToDtos();
 
@@ -195,7 +209,10 @@ public class ProgramContentController : ControllerBase {
   /// </summary>
   [HttpGet("by-visibility/{visibility}")]
   [RequireContentTypePermission<ProgramContent>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetContentByVisibility(Guid programId, Visibility visibility) {
+  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetContentByVisibility(
+    Guid programId,
+    Visibility visibility
+  ) {
     var content = await _contentService.GetContentByVisibilityAsync(programId, visibility);
     var contentDtos = content.ToDtos();
 
@@ -207,7 +224,10 @@ public class ProgramContentController : ControllerBase {
   /// </summary>
   [HttpPost("search")]
   [RequireContentTypePermission<ProgramContent>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> SearchContent(Guid programId, [FromBody] SearchContentDto searchDto) {
+  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> SearchContent(
+    Guid programId,
+    [FromBody] SearchContentDto searchDto
+  ) {
     if (searchDto.ProgramId != programId) { return BadRequest("Program ID in URL must match Program ID in request body"); }
 
     var content = await _contentService.SearchContentAsync(programId, searchDto.SearchTerm);

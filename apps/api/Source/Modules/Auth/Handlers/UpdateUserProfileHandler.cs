@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Commands;
 
+
 namespace GameGuild.Modules.Auth.Handlers;
 
 /// <summary>
@@ -15,13 +16,18 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
 
   public async Task<User.Models.User> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken) {
     // Find the user
-    User.Models.User? user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && !u.IsDeleted, cancellationToken);
+    User.Models.User? user =
+      await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && !u.IsDeleted, cancellationToken);
 
     if (user == null) { throw new InvalidOperationException($"User with ID {request.UserId} not found"); }
 
     // Business logic: Check if email is already taken by another user
     if (!string.IsNullOrEmpty(request.Email) && request.Email != user.Email) {
-      bool emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email && u.Id != request.UserId && !u.IsDeleted, cancellationToken);
+      bool emailExists =
+        await _context.Users.AnyAsync(
+          u => u.Email == request.Email && u.Id != request.UserId && !u.IsDeleted,
+          cancellationToken
+        );
 
       if (emailExists) { throw new InvalidOperationException($"Email '{request.Email}' is already taken by another user"); }
     }

@@ -3,6 +3,7 @@ using GameGuild.Modules.Auth.Commands;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
 
+
 namespace GameGuild.Modules.Auth.Handlers;
 
 /// <summary>

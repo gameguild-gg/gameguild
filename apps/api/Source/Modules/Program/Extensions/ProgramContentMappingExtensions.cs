@@ -2,6 +2,7 @@ using GameGuild.Modules.Program.Models;
 using GameGuild.Modules.Program.DTOs;
 using System.Text.Json;
 
+
 namespace GameGuild.Modules.Program.Extensions;
 
 /// <summary>
@@ -31,7 +32,8 @@ public static class ProgramContentMappingExtensions {
       ProgramTitle = content.Program?.Title,
       ParentTitle = content.Parent?.Title,
       ChildrenCount = content.Children?.Count(c => !c.IsDeleted) ?? 0,
-      Children = content.Children?.Where(c => !c.IsDeleted).Select(c => c.ToDto()).ToList() ?? new List<ProgramContentDto>()
+      Children = content.Children?.Where(c => !c.IsDeleted).Select(c => c.ToDto()).ToList() ??
+                 new List<ProgramContentDto>()
     };
   }
 

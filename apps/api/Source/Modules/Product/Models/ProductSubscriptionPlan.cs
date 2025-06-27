@@ -6,6 +6,7 @@ using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 using GameGuild.Modules.Subscription.Models;
 
+
 namespace GameGuild.Modules.Product.Models;
 
 /// <summary>
@@ -162,7 +163,10 @@ public class ProductSubscriptionPlan : BaseEntity {
 public class ProductSubscriptionPlanConfiguration : IEntityTypeConfiguration<ProductSubscriptionPlan> {
   public void Configure(EntityTypeBuilder<ProductSubscriptionPlan> builder) {
     // Configure relationship with Product (can't be done with annotations)
-    builder.HasOne(psp => psp.Product).WithMany(p => p.SubscriptionPlans).HasForeignKey(psp => psp.ProductId).OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(psp => psp.Product)
+           .WithMany(p => p.SubscriptionPlans)
+           .HasForeignKey(psp => psp.ProductId)
+           .OnDelete(DeleteBehavior.Cascade);
 
     // Configure additional indexes for performance
     builder.HasIndex(psp => psp.ProductId).HasDatabaseName("IX_ProductSubscriptionPlans_ProductId");

@@ -1,5 +1,6 @@
 using GameGuild.Common.Enums;
 
+
 namespace GameGuild.Modules.Product.Interfaces;
 
 /// <summary>
@@ -48,7 +49,10 @@ public interface IProductPricingService {
 /// Interface for user product access services
 /// </summary>
 public interface IUserProductService {
-  Task<Models.UserProduct> GrantProductAccessAsync(int userId, int productId, ProductAcquisitionType acquisitionType, decimal pricePaid = 0);
+  Task<Models.UserProduct> GrantProductAccessAsync(
+    int userId, int productId, ProductAcquisitionType acquisitionType,
+    decimal pricePaid = 0
+  );
 
   Task<Models.UserProduct?> GetUserProductAsync(int userId, int productId);
 

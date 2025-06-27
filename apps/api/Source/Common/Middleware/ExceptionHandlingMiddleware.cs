@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 
+
 namespace GameGuild.Common.Middleware;
 
 public class ExceptionHandlingMiddleware {

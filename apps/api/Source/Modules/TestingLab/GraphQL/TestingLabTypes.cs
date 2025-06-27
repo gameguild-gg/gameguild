@@ -2,6 +2,7 @@ using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Modules.Project.Models;
 using GameGuild.Modules.User.Models;
 
+
 namespace GameGuild.Modules.TestingLab.GraphQL;
 
 /// <summary>
@@ -13,20 +14,28 @@ public class TestingRequestType : ObjectType<TestingRequest> {
     descriptor.Description("Represents a testing request in the TestingLab system.");
 
     // Base Entity Properties
-    descriptor.Field(p => p.Id).Type<NonNullType<UuidType>>().Description("The unique identifier for the testing request (UUID).");
+    descriptor.Field(p => p.Id)
+              .Type<NonNullType<UuidType>>()
+              .Description("The unique identifier for the testing request (UUID).");
 
-    descriptor.Field(p => p.CreatedAt).Type<NonNullType<DateTimeType>>().Description("When the testing request was created.");
+    descriptor.Field(p => p.CreatedAt)
+              .Type<NonNullType<DateTimeType>>()
+              .Description("When the testing request was created.");
 
     descriptor.Field(p => p.UpdatedAt).Type<DateTimeType>().Description("When the testing request was last updated.");
 
     // Core Properties
-    descriptor.Field(p => p.ProjectVersionId).Type<NonNullType<UuidType>>().Description("The project version ID this testing request is for.");
+    descriptor.Field(p => p.ProjectVersionId)
+              .Type<NonNullType<UuidType>>()
+              .Description("The project version ID this testing request is for.");
 
     descriptor.Field(p => p.Title).Type<NonNullType<StringType>>().Description("The title of the testing request.");
 
     descriptor.Field(p => p.Description).Type<StringType>().Description("Description of what needs to be tested.");
 
-    descriptor.Field(p => p.InstructionsType).Type<NonNullType<EnumType<InstructionType>>>().Description("Type of instructions provided (Text, Video, etc.)");
+    descriptor.Field(p => p.InstructionsType)
+              .Type<NonNullType<EnumType<InstructionType>>>()
+              .Description("Type of instructions provided (Text, Video, etc.)");
 
     descriptor.Field(p => p.InstructionsContent).Type<StringType>().Description("Text instructions for testing.");
 
@@ -36,24 +45,42 @@ public class TestingRequestType : ObjectType<TestingRequest> {
 
     descriptor.Field(p => p.MaxTesters).Type<IntType>().Description("Maximum number of testers allowed.");
 
-    descriptor.Field(p => p.CurrentTesterCount).Type<NonNullType<IntType>>().Description("Current number of registered testers.");
+    descriptor.Field(p => p.CurrentTesterCount)
+              .Type<NonNullType<IntType>>()
+              .Description("Current number of registered testers.");
 
     descriptor.Field(p => p.StartDate).Type<NonNullType<DateTimeType>>().Description("When testing should start.");
 
     descriptor.Field(p => p.EndDate).Type<NonNullType<DateTimeType>>().Description("When testing should end.");
 
-    descriptor.Field(p => p.Status).Type<NonNullType<EnumType<TestingRequestStatus>>>().Description("Current status of the testing request.");
+    descriptor.Field(p => p.Status)
+              .Type<NonNullType<EnumType<TestingRequestStatus>>>()
+              .Description("Current status of the testing request.");
 
-    descriptor.Field(p => p.CreatedById).Type<NonNullType<UuidType>>().Description("ID of the user who created this testing request.");
+    descriptor.Field(p => p.CreatedById)
+              .Type<NonNullType<UuidType>>()
+              .Description("ID of the user who created this testing request.");
 
     // Navigation Properties
-    descriptor.Field("projectVersion").ResolveWith<TestingRequestResolvers>(r => r.GetProjectVersion(default!, default!)).Type<ObjectType<ProjectVersion>>().Description("The project version being tested.");
+    descriptor.Field("projectVersion")
+              .ResolveWith<TestingRequestResolvers>(r => r.GetProjectVersion(default!, default!))
+              .Type<ObjectType<ProjectVersion>>()
+              .Description("The project version being tested.");
 
-    descriptor.Field("createdBy").ResolveWith<TestingRequestResolvers>(r => r.GetCreatedBy(default!, default!)).Type<ObjectType<User.Models.User>>().Description("The user who created this testing request.");
+    descriptor.Field("createdBy")
+              .ResolveWith<TestingRequestResolvers>(r => r.GetCreatedBy(default!, default!))
+              .Type<ObjectType<User.Models.User>>()
+              .Description("The user who created this testing request.");
 
-    descriptor.Field("participants").ResolveWith<TestingRequestResolvers>(r => r.GetParticipants(default!, default!)).Type<ListType<TestingParticipantType>>().Description("Users participating in this testing request.");
+    descriptor.Field("participants")
+              .ResolveWith<TestingRequestResolvers>(r => r.GetParticipants(default!, default!))
+              .Type<ListType<TestingParticipantType>>()
+              .Description("Users participating in this testing request.");
 
-    descriptor.Field("sessions").ResolveWith<TestingRequestResolvers>(r => r.GetSessions(default!, default!)).Type<ListType<TestingSessionType>>().Description("Testing sessions for this request.");
+    descriptor.Field("sessions")
+              .ResolveWith<TestingRequestResolvers>(r => r.GetSessions(default!, default!))
+              .Type<ListType<TestingSessionType>>()
+              .Description("Testing sessions for this request.");
   }
 }
 
@@ -65,9 +92,13 @@ public class TestingSessionType : ObjectType<TestingSession> {
     descriptor.Name("TestingSession");
     descriptor.Description("Represents a testing session in the TestingLab system.");
 
-    descriptor.Field(p => p.Id).Type<NonNullType<UuidType>>().Description("The unique identifier for the testing session.");
+    descriptor.Field(p => p.Id)
+              .Type<NonNullType<UuidType>>()
+              .Description("The unique identifier for the testing session.");
 
-    descriptor.Field(p => p.TestingRequestId).Type<NonNullType<UuidType>>().Description("The testing request this session belongs to.");
+    descriptor.Field(p => p.TestingRequestId)
+              .Type<NonNullType<UuidType>>()
+              .Description("The testing request this session belongs to.");
 
     descriptor.Field(p => p.LocationId).Type<UuidType>().Description("The location where testing will take place.");
 
@@ -81,11 +112,15 @@ public class TestingSessionType : ObjectType<TestingSession> {
 
     descriptor.Field(p => p.MaxTesters).Type<IntType>().Description("Maximum testers for this session.");
 
-    descriptor.Field(p => p.Status).Type<NonNullType<EnumType<SessionStatus>>>().Description("Current status of the session.");
+    descriptor.Field(p => p.Status)
+              .Type<NonNullType<EnumType<SessionStatus>>>()
+              .Description("Current status of the session.");
 
     descriptor.Field(p => p.ManagerUserId).Type<UuidType>().Description("User managing this session.");
 
-    descriptor.Field(p => p.CreatedById).Type<NonNullType<UuidType>>().Description("ID of the user who created this session.");
+    descriptor.Field(p => p.CreatedById)
+              .Type<NonNullType<UuidType>>()
+              .Description("ID of the user who created this session.");
 
     descriptor.Field(p => p.CreatedAt).Type<NonNullType<DateTimeType>>().Description("When the session was created.");
 
@@ -103,15 +138,23 @@ public class TestingParticipantType : ObjectType<TestingParticipant> {
 
     descriptor.Field(p => p.Id).Type<NonNullType<UuidType>>().Description("The unique identifier for the participant.");
 
-    descriptor.Field(p => p.TestingRequestId).Type<NonNullType<UuidType>>().Description("The testing request this participant is part of.");
+    descriptor.Field(p => p.TestingRequestId)
+              .Type<NonNullType<UuidType>>()
+              .Description("The testing request this participant is part of.");
 
     descriptor.Field(p => p.UserId).Type<NonNullType<UuidType>>().Description("The user ID of the participant.");
 
-    descriptor.Field(p => p.InstructionsAcknowledged).Type<NonNullType<BooleanType>>().Description("Whether the participant has acknowledged instructions.");
+    descriptor.Field(p => p.InstructionsAcknowledged)
+              .Type<NonNullType<BooleanType>>()
+              .Description("Whether the participant has acknowledged instructions.");
 
-    descriptor.Field(p => p.InstructionsAcknowledgedAt).Type<DateTimeType>().Description("When the participant acknowledged instructions.");
+    descriptor.Field(p => p.InstructionsAcknowledgedAt)
+              .Type<DateTimeType>()
+              .Description("When the participant acknowledged instructions.");
 
-    descriptor.Field(p => p.StartedAt).Type<NonNullType<DateTimeType>>().Description("When the participant started testing.");
+    descriptor.Field(p => p.StartedAt)
+              .Type<NonNullType<DateTimeType>>()
+              .Description("When the participant started testing.");
 
     descriptor.Field(p => p.CompletedAt).Type<DateTimeType>().Description("When the participant completed testing.");
   }
@@ -129,11 +172,17 @@ public class TestingLocationType : ObjectType<TestingLocation> {
 
     descriptor.Field(p => p.Name).Type<NonNullType<StringType>>().Description("Name of the testing location.");
 
-    descriptor.Field(p => p.MaxTestersCapacity).Type<IntType>().Description("Maximum number of testers this location can accommodate.");
+    descriptor.Field(p => p.MaxTestersCapacity)
+              .Type<IntType>()
+              .Description("Maximum number of testers this location can accommodate.");
 
-    descriptor.Field(p => p.MaxProjectsCapacity).Type<IntType>().Description("Maximum number of projects that can be tested simultaneously.");
+    descriptor.Field(p => p.MaxProjectsCapacity)
+              .Type<IntType>()
+              .Description("Maximum number of projects that can be tested simultaneously.");
 
-    descriptor.Field(p => p.Status).Type<NonNullType<EnumType<LocationStatus>>>().Description("Current status of the location.");
+    descriptor.Field(p => p.Status)
+              .Type<NonNullType<EnumType<LocationStatus>>>()
+              .Description("Current status of the location.");
 
     descriptor.Field(p => p.CreatedAt).Type<NonNullType<DateTimeType>>().Description("When the location was created.");
 

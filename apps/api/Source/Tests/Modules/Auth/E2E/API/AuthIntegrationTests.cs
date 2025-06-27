@@ -8,6 +8,7 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Tests.Helpers;
 using Xunit.Abstractions;
 
+
 namespace GameGuild.Tests.Modules.Auth.E2E.API;
 
 public class AuthIntegrationTests {
@@ -70,7 +71,9 @@ public class AuthIntegrationTests {
 
       // Configure the mock tenant context service with our test tenant
       using IServiceScope serviceScope = _factory.Services.CreateScope();
-      var mockTenantService = serviceScope.ServiceProvider.GetRequiredService<GameGuild.Modules.Tenant.Services.ITenantContextService>() as MockTenantContextService;
+      var mockTenantService =
+        serviceScope.ServiceProvider.GetRequiredService<GameGuild.Modules.Tenant.Services.ITenantContextService>() as
+          MockTenantContextService;
       mockTenantService?.AddTenant(testTenant);
 
       // For test users with tenant permissions, we'll create them during the specific tests
@@ -193,7 +196,10 @@ public class AuthIntegrationTests {
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     string responseContent = await response.Content.ReadAsStringAsync();
-    var challengeResponse = JsonSerializer.Deserialize<Web3ChallengeResponseDto>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var challengeResponse = JsonSerializer.Deserialize<Web3ChallengeResponseDto>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(challengeResponse);
     Assert.NotEmpty(challengeResponse.Challenge);
@@ -231,7 +237,10 @@ public class AuthIntegrationTests {
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     string responseContent = await response.Content.ReadAsStringAsync();
-    var emailResponse = JsonSerializer.Deserialize<EmailOperationResponseDto>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var emailResponse = JsonSerializer.Deserialize<EmailOperationResponseDto>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(emailResponse);
     // Print out the actual response for debugging

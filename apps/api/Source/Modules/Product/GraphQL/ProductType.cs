@@ -6,6 +6,7 @@ using System.Security.Claims;
 using GameGuild.Modules.Product.Models;
 using ProductEntity = GameGuild.Modules.Product.Models.Product;
 
+
 namespace GameGuild.Modules.Product.GraphQL;
 
 /// <summary>
@@ -17,17 +18,27 @@ public class ProductType : ObjectType<ProductEntity> {
     descriptor.Description("Represents a product in the CMS system with full EntityBase support and DAC permissions.");
 
     // Base Entity Properties
-    descriptor.Field(p => p.Id).Type<NonNullType<UuidType>>().Description("The unique identifier for the product (UUID).");
+    descriptor.Field(p => p.Id)
+              .Type<NonNullType<UuidType>>()
+              .Description("The unique identifier for the product (UUID).");
 
     descriptor.Field(p => p.Version).Description("Version control for optimistic concurrency.");
 
-    descriptor.Field(p => p.CreatedAt).Type<NonNullType<DateTimeType>>().Description("The date and time when the product was created.");
+    descriptor.Field(p => p.CreatedAt)
+              .Type<NonNullType<DateTimeType>>()
+              .Description("The date and time when the product was created.");
 
-    descriptor.Field(p => p.UpdatedAt).Type<DateTimeType>().Description("The date and time when the product was last updated.");
+    descriptor.Field(p => p.UpdatedAt)
+              .Type<DateTimeType>()
+              .Description("The date and time when the product was last updated.");
 
-    descriptor.Field(p => p.DeletedAt).Type<DateTimeType>().Description("The date and time when the product was soft deleted (null if not deleted).");
+    descriptor.Field(p => p.DeletedAt)
+              .Type<DateTimeType>()
+              .Description("The date and time when the product was soft deleted (null if not deleted).");
 
-    descriptor.Field(p => p.IsDeleted).Type<NonNullType<BooleanType>>().Description("Indicates whether the product has been soft deleted.");
+    descriptor.Field(p => p.IsDeleted)
+              .Type<NonNullType<BooleanType>>()
+              .Description("Indicates whether the product has been soft deleted.");
 
     // Product-specific Properties
     descriptor.Field(p => p.Title).Type<NonNullType<StringType>>().Description("The title of the product.");
@@ -38,24 +49,42 @@ public class ProductType : ObjectType<ProductEntity> {
 
     descriptor.Field(p => p.Type).Type<NonNullType<EnumType<ProductType>>>().Description("The type of the product.");
 
-    descriptor.Field(p => p.Status).Type<NonNullType<EnumType<ContentStatus>>>().Description("The publication status of the product.");
+    descriptor.Field(p => p.Status)
+              .Type<NonNullType<EnumType<ContentStatus>>>()
+              .Description("The publication status of the product.");
 
-    descriptor.Field(p => p.Visibility).Type<NonNullType<EnumType<Common.Entities.AccessLevel>>>().Description("The access level of the product.");
+    descriptor.Field(p => p.Visibility)
+              .Type<NonNullType<EnumType<Common.Entities.AccessLevel>>>()
+              .Description("The access level of the product.");
 
-    descriptor.Field(p => p.IsBundle).Type<NonNullType<BooleanType>>().Description("Indicates whether this product is a bundle containing other products.");
+    descriptor.Field(p => p.IsBundle)
+              .Type<NonNullType<BooleanType>>()
+              .Description("Indicates whether this product is a bundle containing other products.");
 
-    descriptor.Field(p => p.Name).Type<NonNullType<StringType>>().Description("The name of the product (product-specific field).");
+    descriptor.Field(p => p.Name)
+              .Type<NonNullType<StringType>>()
+              .Description("The name of the product (product-specific field).");
 
-    descriptor.Field(p => p.Creator).Type<ObjectType<GameGuild.Modules.User.Models.User>>().Description("The user who created this product.");
+    descriptor.Field(p => p.Creator)
+              .Type<ObjectType<GameGuild.Modules.User.Models.User>>()
+              .Description("The user who created this product.");
 
-    descriptor.Field(p => p.Tenant).Type<ObjectType<GameGuild.Modules.Tenant.Models.Tenant>>().Description("The tenant this product belongs to.");
+    descriptor.Field(p => p.Tenant)
+              .Type<ObjectType<GameGuild.Modules.Tenant.Models.Tenant>>()
+              .Description("The tenant this product belongs to.");
 
     // Related entities
-    descriptor.Field(p => p.ProductPricings).Type<ListType<ProductPricingType>>().Description("Pricing information for this product.");
+    descriptor.Field(p => p.ProductPricings)
+              .Type<ListType<ProductPricingType>>()
+              .Description("Pricing information for this product.");
 
-    descriptor.Field(p => p.UserProducts).Type<ListType<UserProductType>>().Description("User access records for this product.");
+    descriptor.Field(p => p.UserProducts)
+              .Type<ListType<UserProductType>>()
+              .Description("User access records for this product.");
 
-    descriptor.Field(p => p.PromoCodes).Type<ListType<PromoCodeType>>().Description("Promotional codes associated with this product.");
+    descriptor.Field(p => p.PromoCodes)
+              .Type<ListType<PromoCodeType>>()
+              .Description("Promotional codes associated with this product.");
 
     // Computed fields based on DAC permissions
     descriptor.Field("canEdit")
@@ -73,7 +102,13 @@ public class ProductType : ObjectType<ProductEntity> {
                   // Hierarchical permission check: Resource → Content-Type → Tenant
                   try {
                     // 1. Check resource-level permission
-                    bool hasResourcePermission = await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(userId.Value, product.Tenant?.Id, product.Id, PermissionType.Edit);
+                    bool hasResourcePermission =
+                      await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
+                        userId.Value,
+                        product.Tenant?.Id,
+                        product.Id,
+                        PermissionType.Edit
+                      );
 
                     if (hasResourcePermission) return true;
                   }
@@ -82,12 +117,19 @@ public class ProductType : ObjectType<ProductEntity> {
                   }
 
                   // 2. Check content-type permission
-                  bool hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(userId.Value, product.Tenant?.Id, "Product", PermissionType.Edit);
+                  bool hasContentTypePermission =
+                    await permissionService.HasContentTypePermissionAsync(
+                      userId.Value,
+                      product.Tenant?.Id,
+                      "Product",
+                      PermissionType.Edit
+                    );
 
                   if (hasContentTypePermission) return true;
 
                   // 3. Check tenant permission
-                  bool hasTenantPermission = await permissionService.HasTenantPermissionAsync(userId.Value, product.Tenant?.Id, PermissionType.Edit);
+                  bool hasTenantPermission =
+                    await permissionService.HasTenantPermissionAsync(userId.Value, product.Tenant?.Id, PermissionType.Edit);
 
                   return hasTenantPermission;
                 }
@@ -106,17 +148,30 @@ public class ProductType : ObjectType<ProductEntity> {
                   var permissionService = context.Service<IPermissionService>();
 
                   try {
-                    bool hasResourcePermission = await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(userId.Value, product.Tenant?.Id, product.Id, PermissionType.Delete);
+                    bool hasResourcePermission =
+                      await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
+                        userId.Value,
+                        product.Tenant?.Id,
+                        product.Id,
+                        PermissionType.Delete
+                      );
 
                     if (hasResourcePermission) return true;
                   }
                   catch { }
 
-                  bool hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(userId.Value, product.Tenant?.Id, "Product", PermissionType.Delete);
+                  bool hasContentTypePermission =
+                    await permissionService.HasContentTypePermissionAsync(
+                      userId.Value,
+                      product.Tenant?.Id,
+                      "Product",
+                      PermissionType.Delete
+                    );
 
                   if (hasContentTypePermission) return true;
 
-                  bool hasTenantPermission = await permissionService.HasTenantPermissionAsync(userId.Value, product.Tenant?.Id, PermissionType.Delete);
+                  bool hasTenantPermission =
+                    await permissionService.HasTenantPermissionAsync(userId.Value, product.Tenant?.Id, PermissionType.Delete);
 
                   return hasTenantPermission;
                 }
@@ -135,17 +190,30 @@ public class ProductType : ObjectType<ProductEntity> {
                   var permissionService = context.Service<IPermissionService>();
 
                   try {
-                    bool hasResourcePermission = await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(userId.Value, product.Tenant?.Id, product.Id, PermissionType.Publish);
+                    bool hasResourcePermission =
+                      await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
+                        userId.Value,
+                        product.Tenant?.Id,
+                        product.Id,
+                        PermissionType.Publish
+                      );
 
                     if (hasResourcePermission) return true;
                   }
                   catch { }
 
-                  bool hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(userId.Value, product.Tenant?.Id, "Product", PermissionType.Publish);
+                  bool hasContentTypePermission =
+                    await permissionService.HasContentTypePermissionAsync(
+                      userId.Value,
+                      product.Tenant?.Id,
+                      "Product",
+                      PermissionType.Publish
+                    );
 
                   if (hasContentTypePermission) return true;
 
-                  bool hasTenantPermission = await permissionService.HasTenantPermissionAsync(userId.Value, product.Tenant?.Id, PermissionType.Publish);
+                  bool hasTenantPermission =
+                    await permissionService.HasTenantPermissionAsync(userId.Value, product.Tenant?.Id, PermissionType.Publish);
 
                   return hasTenantPermission;
                 }
@@ -216,11 +284,17 @@ public class ProductPricingType : ObjectType<ProductPricing> {
 
     descriptor.Field(pp => pp.Name).Type<NonNullType<StringType>>().Description("The name of this pricing tier");
 
-    descriptor.Field(pp => pp.BasePrice).Type<NonNullType<DecimalType>>().Description("The base price for this product");
+    descriptor.Field(pp => pp.BasePrice)
+              .Type<NonNullType<DecimalType>>()
+              .Description("The base price for this product");
 
-    descriptor.Field(pp => pp.Currency).Type<NonNullType<StringType>>().Description("The currency code (e.g., USD, EUR)");
+    descriptor.Field(pp => pp.Currency)
+              .Type<NonNullType<StringType>>()
+              .Description("The currency code (e.g., USD, EUR)");
 
-    descriptor.Field(pp => pp.IsDefault).Type<NonNullType<BooleanType>>().Description("Indicates if this is the default pricing");
+    descriptor.Field(pp => pp.IsDefault)
+              .Type<NonNullType<BooleanType>>()
+              .Description("Indicates if this is the default pricing");
 
     descriptor.Field(pp => pp.CreatedAt).Type<NonNullType<DateTimeType>>().Description("When this pricing was created");
   }
@@ -234,19 +308,31 @@ public class UserProductType : ObjectType<UserProduct> {
     descriptor.Name("UserProduct");
     descriptor.Description("Represents a user's access to a product");
 
-    descriptor.Field(up => up.Id).Type<NonNullType<UuidType>>().Description("The unique identifier for the user product record");
+    descriptor.Field(up => up.Id)
+              .Type<NonNullType<UuidType>>()
+              .Description("The unique identifier for the user product record");
 
-    descriptor.Field(up => up.AcquisitionType).Type<NonNullType<EnumType<ProductAcquisitionType>>>().Description("How the user acquired access to this product");
+    descriptor.Field(up => up.AcquisitionType)
+              .Type<NonNullType<EnumType<ProductAcquisitionType>>>()
+              .Description("How the user acquired access to this product");
 
-    descriptor.Field(up => up.AccessStatus).Type<NonNullType<EnumType<ProductAccessStatus>>>().Description("The current access status");
+    descriptor.Field(up => up.AccessStatus)
+              .Type<NonNullType<EnumType<ProductAccessStatus>>>()
+              .Description("The current access status");
 
-    descriptor.Field(up => up.PricePaid).Type<NonNullType<DecimalType>>().Description("The price paid for this product");
+    descriptor.Field(up => up.PricePaid)
+              .Type<NonNullType<DecimalType>>()
+              .Description("The price paid for this product");
 
     descriptor.Field(up => up.Currency).Type<NonNullType<StringType>>().Description("The currency used for payment");
 
-    descriptor.Field(up => up.AccessEndDate).Type<DateTimeType>().Description("When the access expires (null for permanent access)");
+    descriptor.Field(up => up.AccessEndDate)
+              .Type<DateTimeType>()
+              .Description("When the access expires (null for permanent access)");
 
-    descriptor.Field(up => up.User).Type<ObjectType<GameGuild.Modules.User.Models.User>>().Description("The user who has access");
+    descriptor.Field(up => up.User)
+              .Type<ObjectType<GameGuild.Modules.User.Models.User>>()
+              .Description("The user who has access");
 
     descriptor.Field(up => up.Product).Type<ProductType>().Description("The product being accessed");
   }
@@ -264,11 +350,17 @@ public class PromoCodeType : ObjectType<PromoCode> {
 
     descriptor.Field(pc => pc.Code).Type<NonNullType<StringType>>().Description("The promotional code");
 
-    descriptor.Field(pc => pc.Type).Type<NonNullType<EnumType<PromoCodeType>>>().Description("The type of discount (percentage or fixed amount)");
+    descriptor.Field(pc => pc.Type)
+              .Type<NonNullType<EnumType<PromoCodeType>>>()
+              .Description("The type of discount (percentage or fixed amount)");
 
-    descriptor.Field(pc => pc.DiscountPercentage).Type<DecimalType>().Description("The discount percentage (for percentage-based discounts)");
+    descriptor.Field(pc => pc.DiscountPercentage)
+              .Type<DecimalType>()
+              .Description("The discount percentage (for percentage-based discounts)");
 
-    descriptor.Field(pc => pc.DiscountAmount).Type<DecimalType>().Description("The discount amount (for fixed amount discounts)");
+    descriptor.Field(pc => pc.DiscountAmount)
+              .Type<DecimalType>()
+              .Description("The discount amount (for fixed amount discounts)");
 
     descriptor.Field(pc => pc.ValidFrom).Type<DateTimeType>().Description("When the promo code becomes valid");
 
@@ -283,7 +375,8 @@ public class PromoCodeType : ObjectType<PromoCode> {
                   var promoCode = context.Parent<PromoCode>();
                   var dbContext = context.Service<Data.ApplicationDbContext>();
 
-                  return await dbContext.PromoCodeUses.Where(pcu => !pcu.IsDeleted && pcu.PromoCodeId == promoCode.Id).CountAsync();
+                  return await dbContext.PromoCodeUses.Where(pcu => !pcu.IsDeleted && pcu.PromoCodeId == promoCode.Id)
+                                        .CountAsync();
                 }
               );
 

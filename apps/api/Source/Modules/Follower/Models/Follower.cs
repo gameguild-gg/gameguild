@@ -1,6 +1,7 @@
 using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.User.Models;
 
+
 namespace GameGuild.Common.Entities;
 
 /// <summary>

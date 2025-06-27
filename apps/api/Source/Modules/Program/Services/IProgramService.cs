@@ -4,6 +4,7 @@ using GameGuild.Modules.Program.Models;
 using GameGuild.Modules.Program.DTOs;
 using ProgramEntity = GameGuild.Modules.Program.Models.Program;
 
+
 namespace GameGuild.Modules.Program.Services;
 
 /// <summary>
@@ -241,7 +242,10 @@ public interface IProgramService {
   /// <summary>
   /// Get programs by difficulty level
   /// </summary>
-  Task<IEnumerable<ProgramEntity>> GetProgramsByDifficultyAsync(ProgramDifficulty difficulty, int skip = 0, int take = 50);
+  Task<IEnumerable<ProgramEntity>> GetProgramsByDifficultyAsync(
+    ProgramDifficulty difficulty, int skip = 0,
+    int take = 50
+  );
 
   /// <summary>
   /// Get published programs for public access

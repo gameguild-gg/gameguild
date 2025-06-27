@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 
+
 namespace GameGuild.Config;
 
 public class CorsOptions {
   public const string SectionName = "Cors";
 
-  [Required]
-  public string[] AllowedOrigins { get; set; } = [];
+  [Required] public string[] AllowedOrigins { get; set; } = [];
 
   public bool AllowCredentials { get; set; } = true;
 

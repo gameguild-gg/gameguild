@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Modules.Tenant.Models;
 
+
 namespace GameGuild.Common.Entities;
 
 /// <summary>
@@ -89,7 +90,10 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable {
   /// <summary>
   /// Adds a localization for a specific field in the given language
   /// </summary>
-  public virtual ResourceLocalization AddLocalization(string fieldName, string content, Language language, LocalizationStatus status = LocalizationStatus.Draft) {
+  public virtual ResourceLocalization AddLocalization(
+    string fieldName, string content, Language language,
+    LocalizationStatus status = LocalizationStatus.Draft
+  ) {
     var localization = new ResourceLocalization {
       ResourceType = GetType().Name,
       Language = language,

@@ -5,6 +5,7 @@ using System.Text;
 using GameGuild.Modules.Auth.Dtos;
 using Microsoft.IdentityModel.Tokens;
 
+
 namespace GameGuild.Modules.Auth.Services {
   public interface IJwtTokenService {
     string GenerateAccessToken(UserDto user, string[] roles);
@@ -33,13 +34,24 @@ namespace GameGuild.Modules.Auth.Services {
       // Add any additional claims (like tenant claims)
       if (additionalClaims != null) { claims.AddRange(additionalClaims); }
 
-      var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? "development-fallback-key-that-is-at-least-32-characters-long-for-testing"));
+      var key = new SymmetricSecurityKey(
+        Encoding.UTF8.GetBytes(
+          _configuration["Jwt:SecretKey"] ??
+          "development-fallback-key-that-is-at-least-32-characters-long-for-testing"
+        )
+      );
       var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
       int expiryMinutes = int.Parse(_configuration["Jwt:ExpiryInMinutes"] ?? "60");
       DateTime expires = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
-      var token = new JwtSecurityToken(issuer: _configuration["Jwt:Issuer"], audience: _configuration["Jwt:Audience"], claims: claims, expires: expires, signingCredentials: creds);
+      var token = new JwtSecurityToken(
+        issuer: _configuration["Jwt:Issuer"],
+        audience: _configuration["Jwt:Audience"],
+        claims: claims,
+        expires: expires,
+        signingCredentials: creds
+      );
 
       return new JwtSecurityTokenHandler().WriteToken(token);
     }
@@ -57,16 +69,26 @@ namespace GameGuild.Modules.Auth.Services {
         ValidateAudience = false,
         ValidateIssuer = false,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? "development-fallback-key-that-is-at-least-32-characters-long-for-testing")),
+        IssuerSigningKey = new SymmetricSecurityKey(
+          Encoding.UTF8.GetBytes(
+            _configuration["Jwt:SecretKey"] ??
+            "development-fallback-key-that-is-at-least-32-characters-long-for-testing"
+          )
+        ),
         ValidateLifetime = false // We don't care about the token's expiration date
       };
 
       var tokenHandler = new JwtSecurityTokenHandler();
 
       try {
-        ClaimsPrincipal? principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+        ClaimsPrincipal? principal =
+          tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
 
-        if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase)) { throw new SecurityTokenException("Invalid token"); }
+        if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+            !jwtSecurityToken.Header.Alg.Equals(
+              SecurityAlgorithms.HmacSha256,
+              StringComparison.InvariantCultureIgnoreCase
+            )) { throw new SecurityTokenException("Invalid token"); }
 
         return principal;
       }
@@ -86,7 +108,12 @@ namespace GameGuild.Modules.Auth.Services {
         ValidateIssuerSigningKey = true,
         ValidIssuer = _configuration["Jwt:Issuer"],
         ValidAudience = _configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? "development-fallback-key-that-is-at-least-32-characters-long-for-testing")),
+        IssuerSigningKey = new SymmetricSecurityKey(
+          Encoding.UTF8.GetBytes(
+            _configuration["Jwt:SecretKey"] ??
+            "development-fallback-key-that-is-at-least-32-characters-long-for-testing"
+          )
+        ),
         ValidateLifetime = true,
         ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes clock skew tolerance
       };
@@ -94,9 +121,14 @@ namespace GameGuild.Modules.Auth.Services {
       var tokenHandler = new JwtSecurityTokenHandler();
 
       try {
-        ClaimsPrincipal? principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+        ClaimsPrincipal? principal =
+          tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
 
-        if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase)) { throw new SecurityTokenException("Invalid token"); }
+        if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+            !jwtSecurityToken.Header.Alg.Equals(
+              SecurityAlgorithms.HmacSha256,
+              StringComparison.InvariantCultureIgnoreCase
+            )) { throw new SecurityTokenException("Invalid token"); }
 
         return principal;
       }

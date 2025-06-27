@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Tenant.Models;
 
+
 namespace GameGuild.Modules.Reputation.Models;
 
 /// <summary>
@@ -121,9 +122,15 @@ public class UserTenantReputation : ResourceBase, IReputation {
 public class UserTenantReputationConfiguration : IEntityTypeConfiguration<UserTenantReputation> {
   public void Configure(EntityTypeBuilder<UserTenantReputation> builder) {
     // Configure relationship with UserTenant (can't be done with annotations)
-    builder.HasOne(utr => utr.TenantPermission).WithMany().HasForeignKey(utr => utr.TenantPermissionId).OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(utr => utr.TenantPermission)
+           .WithMany()
+           .HasForeignKey(utr => utr.TenantPermissionId)
+           .OnDelete(DeleteBehavior.Cascade);
 
     // Configure relationship with CurrentLevel (can't be done with annotations)
-    builder.HasOne(utr => utr.CurrentLevel).WithMany().HasForeignKey(utr => utr.CurrentLevelId).OnDelete(DeleteBehavior.SetNull);
+    builder.HasOne(utr => utr.CurrentLevel)
+           .WithMany()
+           .HasForeignKey(utr => utr.CurrentLevelId)
+           .OnDelete(DeleteBehavior.SetNull);
   }
 }

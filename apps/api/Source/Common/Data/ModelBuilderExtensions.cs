@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using GameGuild.Common.Entities;
 using Microsoft.EntityFrameworkCore.Metadata;
 
+
 namespace GameGuild.Common.Data;
 
 /// <summary>
@@ -44,9 +45,15 @@ public static class ModelBuilderExtensions {
             builder.Property(nameof(BaseEntity.Version)).IsConcurrencyToken();
 
             // Timestamp and soft delete configuration - for all concrete types in TPC
-            builder.Property(nameof(BaseEntity.CreatedAt)).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP").ValueGeneratedOnAdd();
+            builder.Property(nameof(BaseEntity.CreatedAt))
+                   .IsRequired()
+                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                   .ValueGeneratedOnAdd();
 
-            builder.Property(nameof(BaseEntity.UpdatedAt)).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP").ValueGeneratedOnAddOrUpdate();
+            builder.Property(nameof(BaseEntity.UpdatedAt))
+                   .IsRequired()
+                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                   .ValueGeneratedOnAddOrUpdate();
 
             builder.Property(nameof(BaseEntity.DeletedAt)).IsRequired(false);
 

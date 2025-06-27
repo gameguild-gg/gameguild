@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Product.Models;
 
 /// <summary>
@@ -9,7 +10,13 @@ namespace GameGuild.Modules.Product.Models;
 /// Provides granular permission control for individual products
 /// </summary>
 [Table("ProductPermissions")]
-[Index(nameof(UserId), nameof(TenantId), nameof(ResourceId), IsUnique = true, Name = "IX_ProductPermissions_User_Tenant_Resource")]
+[Index(
+  nameof(UserId),
+  nameof(TenantId),
+  nameof(ResourceId),
+  IsUnique = true,
+  Name = "IX_ProductPermissions_User_Tenant_Resource"
+)]
 [Index(nameof(ResourceId), nameof(UserId), Name = "IX_ProductPermissions_Resource_User")]
 [Index(nameof(TenantId), Name = "IX_ProductPermissions_TenantId")]
 [Index(nameof(ExpiresAt), Name = "IX_ProductPermissions_Expiration")]

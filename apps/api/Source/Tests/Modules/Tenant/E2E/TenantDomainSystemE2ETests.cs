@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
+
 namespace GameGuild.Tests.Modules.Tenant.E2E;
 
 public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Program>> {
@@ -121,7 +122,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     if (response.StatusCode != HttpStatusCode.Created) { throw new Exception($"Domain creation failed. Status: {response.StatusCode}, Content: {responseContent}"); }
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var mainDomainResult = JsonSerializer.Deserialize<TenantDomainDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var mainDomainResult = JsonSerializer.Deserialize<TenantDomainDto>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(mainDomainResult);
 
     // Step 2: Create CS subdomain
@@ -138,7 +142,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     response = await _client.PostAsync("/api/tenant-domains", content);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var csDomainResult = JsonSerializer.Deserialize<TenantDomainDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var csDomainResult = JsonSerializer.Deserialize<TenantDomainDto>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(csDomainResult);
 
     // Step 3: Create Faculty subdomain
@@ -155,7 +162,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     response = await _client.PostAsync("/api/tenant-domains", content);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var facultyDomainResult = JsonSerializer.Deserialize<TenantDomainDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var facultyDomainResult = JsonSerializer.Deserialize<TenantDomainDto>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(facultyDomainResult);
 
     // Step 4: Create user groups
@@ -173,7 +183,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     response = await _client.PostAsync("/api/tenant-domains/user-groups", content);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var studentsGroupResult = JsonSerializer.Deserialize<TenantUserGroupDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var studentsGroupResult = JsonSerializer.Deserialize<TenantUserGroupDto>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(studentsGroupResult);
 
     // CS Students group (for CS subdomain)
@@ -190,7 +203,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     response = await _client.PostAsync("/api/tenant-domains/user-groups", content);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var csGroupResult = JsonSerializer.Deserialize<TenantUserGroupDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var csGroupResult = JsonSerializer.Deserialize<TenantUserGroupDto>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(csGroupResult);
 
     // Faculty group (for faculty subdomain)
@@ -207,7 +223,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     response = await _client.PostAsync("/api/tenant-domains/user-groups", content);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var facultyGroupResult = JsonSerializer.Deserialize<TenantUserGroupDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var facultyGroupResult = JsonSerializer.Deserialize<TenantUserGroupDto>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(facultyGroupResult);
 
     // Step 5: Setup auto-assignment rules (manually in database for this test)
@@ -236,7 +255,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     response = await _client.PostAsync("/api/tenant-domains/auto-assign", content);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var studentMembershipResult = JsonSerializer.Deserialize<TenantUserGroupMembershipDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var studentMembershipResult = JsonSerializer.Deserialize<TenantUserGroupMembershipDto>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(studentMembershipResult);
     Assert.Equal(studentUser.Id, studentMembershipResult.UserId);
     Assert.Equal(studentsGroup.Id, studentMembershipResult.GroupId);
@@ -250,7 +272,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     response = await _client.PostAsync("/api/tenant-domains/auto-assign", content);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var csMembershipResult = JsonSerializer.Deserialize<TenantUserGroupMembershipDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var csMembershipResult = JsonSerializer.Deserialize<TenantUserGroupMembershipDto>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(csMembershipResult);
     Assert.Equal(csStudentUser.Id, csMembershipResult.UserId);
     Assert.Equal(csGroup.Id, csMembershipResult.GroupId);
@@ -264,7 +289,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     response = await _client.PostAsync("/api/tenant-domains/auto-assign", content);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var facultyMembershipResult = JsonSerializer.Deserialize<TenantUserGroupMembershipDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var facultyMembershipResult = JsonSerializer.Deserialize<TenantUserGroupMembershipDto>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(facultyMembershipResult);
     Assert.Equal(professorUser.Id, facultyMembershipResult.UserId);
     Assert.Equal(facultyGroup.Id, facultyMembershipResult.GroupId);
@@ -283,7 +311,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     // Check Students group has the general student
     response = await _client.GetAsync($"/api/tenant-domains/groups/{studentsGroup.Id}/users");
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    var studentsGroupUsers = JsonSerializer.Deserialize<List<UserDto>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var studentsGroupUsers = JsonSerializer.Deserialize<List<UserDto>>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(studentsGroupUsers);
     Assert.Single(studentsGroupUsers);
     Assert.Contains(studentsGroupUsers, u => u.Id == studentUser.Id);
@@ -291,7 +322,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     // Check CS group has the CS student
     response = await _client.GetAsync($"/api/tenant-domains/groups/{csGroup.Id}/users");
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    var csGroupUsers = JsonSerializer.Deserialize<List<UserDto>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var csGroupUsers = JsonSerializer.Deserialize<List<UserDto>>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(csGroupUsers);
     Assert.Single(csGroupUsers);
     Assert.Contains(csGroupUsers, u => u.Id == csStudentUser.Id);
@@ -299,7 +333,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     // Check Faculty group has the professor
     response = await _client.GetAsync($"/api/tenant-domains/groups/{facultyGroup.Id}/users");
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    var facultyGroupUsers = JsonSerializer.Deserialize<List<UserDto>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var facultyGroupUsers = JsonSerializer.Deserialize<List<UserDto>>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(facultyGroupUsers);
     Assert.Single(facultyGroupUsers);
     Assert.Contains(facultyGroupUsers, u => u.Id == professorUser.Id);
@@ -308,7 +345,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     // Check CS student's groups
     response = await _client.GetAsync($"/api/tenant-domains/users/{csStudentUser.Id}/groups");
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    var csStudentGroups = JsonSerializer.Deserialize<List<TenantUserGroupDto>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var csStudentGroups = JsonSerializer.Deserialize<List<TenantUserGroupDto>>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(csStudentGroups);
     Assert.Single(csStudentGroups);
     Assert.Contains(csStudentGroups, g => g.Id == csGroup.Id);
@@ -321,7 +361,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     response = await _client.PostAsync("/api/tenant-domains/memberships", content);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var manualMembershipResult = JsonSerializer.Deserialize<TenantUserGroupMembershipDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var manualMembershipResult = JsonSerializer.Deserialize<TenantUserGroupMembershipDto>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(manualMembershipResult);
     Assert.Equal(professorUser.Id, manualMembershipResult.UserId);
     Assert.Equal(studentsGroup.Id, manualMembershipResult.GroupId);
@@ -330,7 +373,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     // Verify professor is now in both groups
     response = await _client.GetAsync($"/api/tenant-domains/users/{professorUser.Id}/groups");
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    var professorGroups = JsonSerializer.Deserialize<List<TenantUserGroupDto>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var professorGroups = JsonSerializer.Deserialize<List<TenantUserGroupDto>>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(professorGroups);
     Assert.Equal(2, professorGroups.Count);
     Assert.Contains(professorGroups, g => g.Id == facultyGroup.Id);
@@ -339,7 +385,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     // Step 13: Test getting all domains for tenant
     response = await _client.GetAsync($"/api/tenant-domains/tenant/{tenantId}");
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    var tenantDomains = JsonSerializer.Deserialize<List<TenantDomainDto>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var tenantDomains = JsonSerializer.Deserialize<List<TenantDomainDto>>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(tenantDomains);
     Assert.Equal(3, tenantDomains.Count);
     Assert.Contains(tenantDomains, d => d.TopLevelDomain == "university.edu" && d.Subdomain == null);
@@ -349,7 +398,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     // Step 14: Test getting all groups for tenant
     response = await _client.GetAsync($"/api/tenant-domains/user-groups/tenant/{tenantId}");
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    var tenantGroups = JsonSerializer.Deserialize<List<TenantUserGroupDto>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var tenantGroups = JsonSerializer.Deserialize<List<TenantUserGroupDto>>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(tenantGroups);
     Assert.Equal(3, tenantGroups.Count);
     Assert.Contains(tenantGroups, g => g.Name == "Students");
@@ -460,7 +512,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     response = await _client.PostAsync("/api/tenant-domains/user-groups", content);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var employeesGroupResult = JsonSerializer.Deserialize<TenantUserGroupDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var employeesGroupResult = JsonSerializer.Deserialize<TenantUserGroupDto>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     var createContractorsGroupDto = new CreateTenantUserGroupDto {
       TenantId = tenantId,
@@ -475,11 +530,16 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     response = await _client.PostAsync("/api/tenant-domains/user-groups", content);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var contractorsGroupResult = JsonSerializer.Deserialize<TenantUserGroupDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var contractorsGroupResult = JsonSerializer.Deserialize<TenantUserGroupDto>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     // Step 4: Test auto-assignment based on email domains
     // Setup auto-assignment rules manually in database
-    var mainDomain = await db.TenantDomains.FirstAsync(d => d.TenantId == tenantId && d.TopLevelDomain == "techcorp.com" && d.Subdomain == null);
+    var mainDomain = await db.TenantDomains.FirstAsync(d =>
+                                                         d.TenantId == tenantId && d.TopLevelDomain == "techcorp.com" && d.Subdomain == null
+                     );
     var partnersDomain = await db.TenantDomains.FirstAsync(d => d.TenantId == tenantId && d.Subdomain == "partners");
 
     var employeesGroup = await db.TenantUserGroups.FirstAsync(g => g.Id == employeesGroupResult!.Id);
@@ -521,7 +581,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     // Check Employees group has both dev and HR users
     response = await _client.GetAsync($"/api/tenant-domains/groups/{employeesGroup.Id}/users");
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    var employeesGroupUsers = JsonSerializer.Deserialize<List<UserDto>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var employeesGroupUsers = JsonSerializer.Deserialize<List<UserDto>>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(employeesGroupUsers);
     Assert.Equal(2, employeesGroupUsers.Count);
     Assert.Contains(employeesGroupUsers, u => u.Id == devUser.Id);
@@ -530,7 +593,10 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     // Check Contractors group has contractor user
     response = await _client.GetAsync($"/api/tenant-domains/groups/{contractorsGroup.Id}/users");
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    var contractorsGroupUsers = JsonSerializer.Deserialize<List<UserDto>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var contractorsGroupUsers = JsonSerializer.Deserialize<List<UserDto>>(
+      await response.Content.ReadAsStringAsync(),
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(contractorsGroupUsers);
     Assert.Single(contractorsGroupUsers);
     Assert.Contains(contractorsGroupUsers, u => u.Id == contractorUser.Id);
@@ -545,13 +611,28 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
 
     // Grant permissions for TenantDomain operations
     var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
-    await permissionService.GrantContentTypePermissionAsync(user.Id, tenant.Id, "TenantDomain", new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete });
+    await permissionService.GrantContentTypePermissionAsync(
+      user.Id,
+      tenant.Id,
+      "TenantDomain",
+      new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete }
+    );
 
     // Grant permissions for TenantUserGroup operations
-    await permissionService.GrantContentTypePermissionAsync(user.Id, tenant.Id, "TenantUserGroup", new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete });
+    await permissionService.GrantContentTypePermissionAsync(
+      user.Id,
+      tenant.Id,
+      "TenantUserGroup",
+      new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete }
+    );
 
     // Grant permissions for TenantUserGroupMembership operations
-    await permissionService.GrantContentTypePermissionAsync(user.Id, tenant.Id, "TenantUserGroupMembership", new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete });
+    await permissionService.GrantContentTypePermissionAsync(
+      user.Id,
+      tenant.Id,
+      "TenantUserGroupMembership",
+      new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete }
+    );
 
     // Generate JWT token
     var token = CreateJwtTokenForUser(user, tenant, scope);

@@ -5,6 +5,7 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.User.Models;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace GameGuild.Modules.Auth.Services {
   public interface IEmailVerificationService {
     Task<EmailOperationResponseDto> SendEmailVerificationAsync(string email);
@@ -30,7 +31,10 @@ namespace GameGuild.Modules.Auth.Services {
     // In production, use Redis or database for token storage
     private readonly Dictionary<string, TokenInfo> _tokens = new();
 
-    public EmailVerificationService(ApplicationDbContext context, ILogger<EmailVerificationService> logger, IConfiguration configuration) {
+    public EmailVerificationService(
+      ApplicationDbContext context, ILogger<EmailVerificationService> logger,
+      IConfiguration configuration
+    ) {
       _context = context;
       _logger = logger;
       _configuration = configuration;
@@ -125,7 +129,8 @@ namespace GameGuild.Modules.Auth.Services {
 
         if (tokenInfo.Type != "password_reset") { return new EmailOperationResponseDto { Success = false, Message = "Invalid token type" }; }
 
-        User.Models.User? user = await _context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.Id == tokenInfo.UserId);
+        User.Models.User? user = await _context.Users.Include(u => u.Credentials)
+                                               .FirstOrDefaultAsync(u => u.Id == tokenInfo.UserId);
 
         if (user == null) { return new EmailOperationResponseDto { Success = false, Message = "User not found" }; }
 

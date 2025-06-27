@@ -20,6 +20,7 @@ using ProjectModel = GameGuild.Modules.Project.Models.Project;
 using ProjectVersionModel = GameGuild.Modules.Project.Models.ProjectVersion;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
+
 namespace GameGuild.Tests.Modules.TestingLab.E2E;
 
 public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory>, IDisposable {
@@ -54,7 +55,11 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     var content = await response.Content.ReadAsStringAsync();
-    var requests = JsonSerializer.Deserialize<TestingRequest[]>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var requests =
+      JsonSerializer.Deserialize<TestingRequest[]>(
+        content,
+        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+      );
 
     Assert.NotNull(requests);
     Assert.True(requests.Length > 0);
@@ -83,7 +88,11 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     var content = await response.Content.ReadAsStringAsync();
-    var request = JsonSerializer.Deserialize<TestingRequest>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var request =
+      JsonSerializer.Deserialize<TestingRequest>(
+        content,
+        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+      );
 
     Assert.NotNull(request);
     Assert.Equal(testingRequest.Id, request.Id);
@@ -137,7 +146,11 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     var content = await response.Content.ReadAsStringAsync();
-    var sessions = JsonSerializer.Deserialize<TestingSession[]>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var sessions =
+      JsonSerializer.Deserialize<TestingSession[]>(
+        content,
+        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+      );
 
     Assert.NotNull(sessions);
     Assert.True(sessions.Length > 0);
@@ -166,7 +179,10 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var session = JsonSerializer.Deserialize<TestingSession>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var session = JsonSerializer.Deserialize<TestingSession>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(session);
     Assert.Equal(testingSession.Id, session.Id);
@@ -182,9 +198,26 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     context.Users.Add(user);
 
     // Grant tenant permissions and content type permissions for TestingRequest
-    await GrantTenantPermissionsAsync(context, user.Id, tenant.Id, [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]);
-    await GrantContentTypePermissionsAsync(context, user.Id, tenant.Id, "TestingRequest", [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]);
-    await GrantContentTypePermissionsAsync(context, user.Id, tenant.Id, "TestingSession", [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]);
+    await GrantTenantPermissionsAsync(
+      context,
+      user.Id,
+      tenant.Id,
+      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
+    );
+    await GrantContentTypePermissionsAsync(
+      context,
+      user.Id,
+      tenant.Id,
+      "TestingRequest",
+      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
+    );
+    await GrantContentTypePermissionsAsync(
+      context,
+      user.Id,
+      tenant.Id,
+      "TestingSession",
+      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
+    );
 
     // Create test project
     var project = new ProjectModel { Id = Guid.NewGuid(), Title = "Test Project", CreatedById = user.Id, CreatedAt = DateTime.UtcNow };
@@ -225,7 +258,9 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     return (testingRequest, user, tenant);
   }
 
-  private async Task<(TestingSession, User, GameGuild.Modules.Tenant.Models.Tenant)> SeedTestSessionDataAsync(ApplicationDbContext context) {
+  private async Task<(TestingSession, User, GameGuild.Modules.Tenant.Models.Tenant)> SeedTestSessionDataAsync(
+    ApplicationDbContext context
+  ) {
     var (testingRequest, user, tenant) = await SeedTestDataAsync(context);
 
     // Create test location
@@ -276,14 +311,20 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     return Task.FromResult(jwtService.GenerateAccessToken(userDto, roles, additionalClaims));
   }
 
-  private async Task GrantTenantPermissionsAsync(ApplicationDbContext context, Guid userId, Guid tenantId, PermissionType[] permissions) {
+  private async Task GrantTenantPermissionsAsync(
+    ApplicationDbContext context, Guid userId, Guid tenantId,
+    PermissionType[] permissions
+  ) {
     // Use the permission service from the factory's DI container
     using var scope = _factory.Services.CreateScope();
     var permissionService = scope.ServiceProvider.GetRequiredService<GameGuild.Common.Services.IPermissionService>();
     await permissionService.GrantTenantPermissionAsync(userId, tenantId, permissions);
   }
 
-  private async Task GrantContentTypePermissionsAsync(ApplicationDbContext context, Guid userId, Guid tenantId, string contentType, PermissionType[] permissions) {
+  private async Task GrantContentTypePermissionsAsync(
+    ApplicationDbContext context, Guid userId, Guid tenantId,
+    string contentType, PermissionType[] permissions
+  ) {
     // Use the permission service from the factory's DI container
     using var scope = _factory.Services.CreateScope();
     var permissionService = scope.ServiceProvider.GetRequiredService<GameGuild.Common.Services.IPermissionService>();

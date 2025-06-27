@@ -4,6 +4,7 @@ using GameGuild.Data;
 using GameGuild.Modules.Auth.Filters;
 using Microsoft.AspNetCore.Mvc.Authorization;
 
+
 namespace GameGuild.Tests.Helpers {
   /// <summary>
   /// Helper class for running integration tests with a mock database
@@ -20,8 +21,14 @@ namespace GameGuild.Tests.Helpers {
       Environment.SetEnvironmentVariable("USE_IN_MEMORY_DB", "true");
 
       // Add JWT environment variables
-      Environment.SetEnvironmentVariable("JWT_SECRET", "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters");
-      Environment.SetEnvironmentVariable("JWT_REFRESH_SECRET", "test-jwt-refresh-secret-key-for-integration-testing-minimum-32-characters");
+      Environment.SetEnvironmentVariable(
+        "JWT_SECRET",
+        "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters"
+      );
+      Environment.SetEnvironmentVariable(
+        "JWT_REFRESH_SECRET",
+        "test-jwt-refresh-secret-key-for-integration-testing-minimum-32-characters"
+      );
 
       // GitHub OAuth settings (mock values for tests)
       Environment.SetEnvironmentVariable("GITHUB_CLIENT_ID", "test-github-client-id");
@@ -55,12 +62,15 @@ namespace GameGuild.Tests.Helpers {
 
           builder.ConfigureServices(services => {
               // Remove the existing DbContext configurations to prevent multiple database provider registration
-              ServiceDescriptor? descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+              ServiceDescriptor? descriptor =
+                services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
 
               if (descriptor != null) { services.Remove(descriptor); }
 
               // Remove all EF Core related services to prevent conflicts
-              var efCoreServices = services.Where(s => s.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true).ToList();
+              var efCoreServices = services
+                                   .Where(s => s.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true)
+                                   .ToList();
 
               foreach (ServiceDescriptor service in efCoreServices) { services.Remove(service); }
 
@@ -75,15 +85,22 @@ namespace GameGuild.Tests.Helpers {
               );
 
               // Override auth configuration for tests
-              services.AddAuthentication("Test").AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
+              services.AddAuthentication("Test")
+                      .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, TestAuthHandler>(
+                        "Test",
+                        options => { }
+                      );
 
               // Remove JWT authentication filter since it's causing issues with tests
-              var filters = services.Where(s => s.ServiceType == typeof(Microsoft.AspNetCore.Mvc.Filters.IFilterProvider)).ToList();
+              var filters = services
+                            .Where(s => s.ServiceType == typeof(Microsoft.AspNetCore.Mvc.Filters.IFilterProvider))
+                            .ToList();
 
               foreach (ServiceDescriptor filter in filters) { services.Remove(filter); }
 
               // Register mock tenant context service for tests
-              services.AddSingleton<GameGuild.Modules.Tenant.Services.ITenantContextService, MockTenantContextService>();
+              services
+                .AddSingleton<GameGuild.Modules.Tenant.Services.ITenantContextService, MockTenantContextService>();
 
               // Add controllers with test filter that bypasses authentication
               services.AddControllers(options => { options.Filters.Add(new AllowAnonymousFilter()); });

@@ -1,32 +1,26 @@
 using GameGuild.Data;
 using GameGuild.Common.Entities;
-using Microsoft.EntityFrameworkCore;
+
 
 namespace GameGuild.Common.Services;
 
 /// <summary>
 /// Database seeder for initial data setup
 /// </summary>
-public class DatabaseSeeder : IDatabaseSeeder {
-  private readonly ApplicationDbContext _context;
-  private readonly IPermissionService _permissionService;
-  private readonly ILogger<DatabaseSeeder> _logger;
-
-  public DatabaseSeeder(ApplicationDbContext context, IPermissionService permissionService, ILogger<DatabaseSeeder> logger) {
-    _context = context;
-    _permissionService = permissionService;
-    _logger = logger;
-  }
-
+public class DatabaseSeeder(
+  ApplicationDbContext context,
+  IPermissionService permissionService,
+  ILogger<DatabaseSeeder> logger
+) : IDatabaseSeeder {
   public async Task SeedAsync() {
-    _logger.LogInformation("Starting database seeding...");
+    logger.LogInformation("Starting database seeding...");
 
     try {
       // Check if global default permissions have already been seeded
-      var existingPermissions = await _permissionService.GetGlobalDefaultPermissionsAsync();
+      var existingPermissions = await permissionService.GetGlobalDefaultPermissionsAsync();
 
       if (existingPermissions.Any()) {
-        _logger.LogInformation("Global default permissions already exist, skipping seeding");
+        logger.LogInformation("Global default permissions already exist, skipping seeding");
 
         return;
       }
@@ -34,18 +28,18 @@ public class DatabaseSeeder : IDatabaseSeeder {
       await SeedGlobalDefaultPermissionsAsync();
       await SeedContentTypeDefaultPermissionsAsync();
 
-      await _context.SaveChangesAsync();
-      _logger.LogInformation("Database seeding completed successfully");
+      await context.SaveChangesAsync();
+      logger.LogInformation("Database seeding completed successfully");
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error occurred during database seeding");
+      logger.LogError(ex, "Error occurred during database seeding");
 
       throw;
     }
   }
 
   public async Task SeedGlobalDefaultPermissionsAsync() {
-    _logger.LogInformation("Seeding global default permissions...");
+    logger.LogInformation("Seeding global default permissions...");
 
     // Define basic permissions that every user should have by default
     // Note: CREATE permission for tenants should be explicitly granted, not a global default
@@ -58,12 +52,14 @@ public class DatabaseSeeder : IDatabaseSeeder {
       PermissionType.Bookmark // Allow bookmarking content
     };
 
-    await _permissionService.SetGlobalDefaultPermissionsAsync(defaultPermissions);
-    _logger.LogInformation($"Global default permissions seeded successfully with {defaultPermissions.Length} permissions");
+    await permissionService.SetGlobalDefaultPermissionsAsync(defaultPermissions);
+    logger.LogInformation(
+      $"Global default permissions seeded successfully with {defaultPermissions.Length} permissions"
+    );
   }
 
   public async Task SeedContentTypeDefaultPermissionsAsync() {
-    _logger.LogInformation("Seeding content-type default permissions...");
+    logger.LogInformation("Seeding content-type default permissions...");
 
     // Grant default permissions for Projects so users can create and manage their own projects
     // Setting userId and tenantId to null makes these global defaults for the content type
@@ -74,7 +70,9 @@ public class DatabaseSeeder : IDatabaseSeeder {
       PermissionType.Delete // Allow users to delete their own projects
     };
 
-    await _permissionService.GrantContentTypePermissionAsync(null, null, "Project", projectPermissions);
-    _logger.LogInformation($"Content-type default permissions seeded for Project with {projectPermissions.Length} permissions");
+    await permissionService.GrantContentTypePermissionAsync(null, null, "Project", projectPermissions);
+    logger.LogInformation(
+      $"Content-type default permissions seeded for Project with {projectPermissions.Length} permissions"
+    );
   }
 }

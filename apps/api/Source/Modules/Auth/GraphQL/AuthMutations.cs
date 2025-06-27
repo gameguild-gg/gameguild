@@ -3,6 +3,7 @@ using GameGuild.Modules.Auth.Commands;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.User.GraphQL;
 
+
 namespace GameGuild.Modules.Auth.GraphQL;
 
 /// <summary>
@@ -31,7 +32,10 @@ public class AuthMutations {
   /// <summary>
   /// Generate Web3 challenge using CQRS
   /// </summary>
-  public async Task<Web3ChallengeResponseDto> GenerateWeb3Challenge(Web3ChallengeRequestDto input, [Service] IMediator mediator) {
+  public async Task<Web3ChallengeResponseDto> GenerateWeb3Challenge(
+    Web3ChallengeRequestDto input,
+    [Service] IMediator mediator
+  ) {
     var command = new GenerateWeb3ChallengeCommand { WalletAddress = input.WalletAddress, ChainId = input.ChainId };
 
     return await mediator.Send(command);

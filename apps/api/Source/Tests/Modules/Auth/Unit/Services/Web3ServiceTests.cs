@@ -6,6 +6,7 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.User.Models;
 
+
 namespace GameGuild.Tests.Modules.Auth.Unit.Services;
 
 public class Web3ServiceTests : IDisposable {
@@ -16,7 +17,9 @@ public class Web3ServiceTests : IDisposable {
   private readonly Web3Service _web3Service;
 
   public Web3ServiceTests() {
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .Options;
 
     _context = new ApplicationDbContext(options);
     _mockLogger = new Mock<ILogger<Web3Service>>();
@@ -89,7 +92,8 @@ public class Web3ServiceTests : IDisposable {
     // Now create the verify request with the generated nonce
     var verifyRequest = new Web3VerifyRequestDto {
       WalletAddress = walletAddress,
-      Signature = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1b", // 132 chars
+      Signature =
+        "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1b", // 132 chars
       Nonce = challenge.Nonce,
       ChainId = "1"
     };
@@ -174,7 +178,8 @@ public class Web3ServiceTests : IDisposable {
     Assert.Equal(user1.Id, user2.Id); // Should be the same user
 
     // Verify only one credential exists (current implementation behavior)
-    var credentials = await _context.Credentials.Where(c => c.UserId == user1.Id && c.Type == "web3_wallet").ToListAsync();
+    var credentials = await _context.Credentials.Where(c => c.UserId == user1.Id && c.Type == "web3_wallet")
+                                    .ToListAsync();
 
     Assert.Single(credentials);
     Assert.Equal(walletAddress, credentials.First().Value);

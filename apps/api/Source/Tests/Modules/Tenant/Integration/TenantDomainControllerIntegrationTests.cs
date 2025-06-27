@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Xunit;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
+
 namespace GameGuild.Tests.Modules.Tenant.Integration;
 
 public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable {
@@ -98,7 +99,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<TenantDomainDto>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var result = JsonSerializer.Deserialize<TenantDomainDto>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(result);
     Assert.Equal(createDto.TopLevelDomain, result.TopLevelDomain);
@@ -134,7 +138,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<TenantDomainDto>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var result = JsonSerializer.Deserialize<TenantDomainDto>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(result);
     Assert.Equal("university.edu", result.TopLevelDomain);
@@ -182,7 +189,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<List<TenantDomainDto>>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var result = JsonSerializer.Deserialize<List<TenantDomainDto>>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(result);
     Assert.Equal(2, result.Count);
@@ -223,7 +233,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<TenantDomainDto>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var result = JsonSerializer.Deserialize<TenantDomainDto>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(result);
     Assert.False(result.IsMainDomain);
@@ -297,7 +310,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<TenantUserGroupDto>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var result = JsonSerializer.Deserialize<TenantUserGroupDto>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(result);
     Assert.Equal(createDto.Name, result.Name);
@@ -349,7 +365,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<List<TenantUserGroupDto>>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var result = JsonSerializer.Deserialize<List<TenantUserGroupDto>>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(result);
     Assert.Equal(2, result.Count);
@@ -394,7 +413,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<TenantUserGroupMembershipDto>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var result = JsonSerializer.Deserialize<TenantUserGroupMembershipDto>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(result);
     Assert.Equal(assignDto.UserId, result.UserId);
@@ -465,7 +487,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<List<TenantUserGroupMembershipDto>>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var result = JsonSerializer.Deserialize<List<TenantUserGroupMembershipDto>>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(result);
     Assert.Equal(2, result.Count);
@@ -528,7 +553,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<TenantUserGroupMembershipDto>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var result = JsonSerializer.Deserialize<TenantUserGroupMembershipDto>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(result);
     Assert.Equal(_userId, result.UserId);
@@ -536,7 +564,8 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.True(result.IsAutoAssigned);
 
     // Verify it was saved to database
-    var savedMembership = await db.TenantUserGroupMemberships.FirstOrDefaultAsync(m => m.UserId == _userId && m.UserGroupId == group.Id);
+    var savedMembership =
+      await db.TenantUserGroupMemberships.FirstOrDefaultAsync(m => m.UserId == _userId && m.UserGroupId == group.Id);
     Assert.NotNull(savedMembership);
     Assert.True(savedMembership.IsAutoAssigned);
   }
@@ -626,7 +655,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<List<UserDto>>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var result = JsonSerializer.Deserialize<List<UserDto>>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(result);
     Assert.Equal(2, result.Count);
@@ -693,7 +725,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<List<TenantUserGroupDto>>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var result = JsonSerializer.Deserialize<List<TenantUserGroupDto>>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(result);
     Assert.Equal(2, result.Count);
@@ -715,7 +750,12 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
 
     // Grant permissions for TenantDomain operations
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
-    await permissionService.GrantContentTypePermissionAsync(user.Id, tenant.Id, "TenantDomain", new[] { PermissionType.Read, PermissionType.Create, PermissionType.Delete });
+    await permissionService.GrantContentTypePermissionAsync(
+      user.Id,
+      tenant.Id,
+      "TenantDomain",
+      new[] { PermissionType.Read, PermissionType.Create, PermissionType.Delete }
+    );
 
     // Generate JWT token
     var token = CreateJwtTokenForUserAsync(user, tenant);

@@ -17,6 +17,7 @@ using System.Net.Http.Headers;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 using Xunit.Abstractions;
 
+
 namespace GameGuild.Tests.Modules.Project.E2E;
 
 /// <summary>
@@ -294,7 +295,8 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     Assert.Contains("new-graphql-project", responseContent);
 
     // Verify in database
-    GameGuild.Modules.Project.Models.Project? createdProject = await _context.Projects.FirstOrDefaultAsync(p => p.Title == "New GraphQL Project");
+    GameGuild.Modules.Project.Models.Project? createdProject =
+      await _context.Projects.FirstOrDefaultAsync(p => p.Title == "New GraphQL Project");
 
     Assert.NotNull(createdProject);
     Assert.Equal("Created via GraphQL mutation", createdProject.Description);
@@ -357,7 +359,8 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
 
     // Verify in database - refresh the context to get latest changes
     _context.ChangeTracker.Clear();
-    GameGuild.Modules.Project.Models.Project? updatedProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == project.Id);
+    GameGuild.Modules.Project.Models.Project? updatedProject =
+      await _context.Projects.FirstOrDefaultAsync(p => p.Id == project.Id);
     Assert.NotNull(updatedProject);
     Assert.Equal("Updated Project Title", updatedProject.Title);
     Assert.Equal("Updated description", updatedProject.Description);
@@ -409,7 +412,8 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
 
     // Verify soft delete in database (need to ignore query filters to find soft-deleted items)
     _context.ChangeTracker.Clear(); // Clear change tracker to ensure fresh data
-    GameGuild.Modules.Project.Models.Project? deletedProject = await _context.Projects.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == project.Id);
+    GameGuild.Modules.Project.Models.Project? deletedProject =
+      await _context.Projects.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == project.Id);
     Assert.NotNull(deletedProject);
     Assert.True(deletedProject.IsDeleted);
     Assert.NotNull(deletedProject.DeletedAt);
@@ -578,7 +582,10 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   /// <summary>
   /// Grants content-type permissions for a user to perform operations on projects
   /// </summary>
-  private async Task GrantContentTypePermissions(User user, TenantModel tenant, string contentTypeName, PermissionType[] permissions) {
+  private async Task GrantContentTypePermissions(
+    User user, TenantModel tenant, string contentTypeName,
+    PermissionType[] permissions
+  ) {
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
     await permissionService.GrantContentTypePermissionAsync(user.Id, tenant.Id, contentTypeName, permissions);
   }

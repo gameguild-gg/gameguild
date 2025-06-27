@@ -12,19 +12,24 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using MediatR;
 
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Load environment variables from .env file
 Env.Load();
 
 // Setup configuration sources
-builder.Configuration.SetBasePath(AppContext.BaseDirectory).AddJsonFile("appsettings.json", true, true).AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true).AddEnvironmentVariables();
+builder.Configuration.SetBasePath(AppContext.BaseDirectory)
+       .AddJsonFile("appsettings.json", true, true)
+       .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
+       .AddEnvironmentVariables();
 
 // Add configuration services
 builder.Services.AddAppConfiguration(builder.Configuration);
 
 // Configure CORS options from appsettings
-CorsOptions corsOptions = builder.Configuration.GetSection(CorsOptions.SectionName).Get<CorsOptions>() ?? new CorsOptions();
+CorsOptions corsOptions =
+  builder.Configuration.GetSection(CorsOptions.SectionName).Get<CorsOptions>() ?? new CorsOptions();
 
 // Add CORS services
 builder.Services.AddCors(options => {
@@ -37,7 +42,9 @@ builder.Services.AddCors(options => {
       options.AddPolicy(
         "Production",
         policy => {
-          policy.WithOrigins(corsOptions.AllowedOrigins).WithMethods(corsOptions.AllowedMethods).WithHeaders(corsOptions.AllowedHeaders);
+          policy.WithOrigins(corsOptions.AllowedOrigins)
+                .WithMethods(corsOptions.AllowedMethods)
+                .WithHeaders(corsOptions.AllowedHeaders);
 
           if (corsOptions.AllowCredentials) { policy.AllowCredentials(); }
         }
@@ -48,7 +55,9 @@ builder.Services.AddCors(options => {
     options.AddPolicy(
       "Configured",
       policy => {
-        policy.WithOrigins(corsOptions.AllowedOrigins).WithMethods(corsOptions.AllowedMethods).WithHeaders(corsOptions.AllowedHeaders);
+        policy.WithOrigins(corsOptions.AllowedOrigins)
+              .WithMethods(corsOptions.AllowedMethods)
+              .WithHeaders(corsOptions.AllowedHeaders);
 
         if (corsOptions.AllowCredentials) { policy.AllowCredentials(); }
       }
@@ -58,11 +67,19 @@ builder.Services.AddCors(options => {
 
 // Add services to the container.
 builder.Services.AddOpenApi();
-builder.Services.AddControllers(opts => opts.Conventions.Add(new RouteTokenTransformerConvention(new ToKebabParameterTransformer()))).AddAuthFilters(); // Add authentication filters
+builder.Services
+       .AddControllers(opts => opts.Conventions.Add(new RouteTokenTransformerConvention(new ToKebabParameterTransformer())))
+       .AddAuthFilters(); // Add authentication filters
 
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo { Title = "GameGuild CMS API", Version = "v1", Description = "A Content Management System API for GameGuild" }); });
+builder.Services.AddSwaggerGen(c => {
+    c.SwaggerDoc(
+      "v1",
+      new OpenApiInfo { Title = "GameGuild CMS API", Version = "v1", Description = "A Content Management System API for GameGuild" }
+    );
+  }
+);
 
 // Add common services and modules
 builder.Services.AddCommonServices();
@@ -87,10 +104,17 @@ builder.Services.AddMediatR(typeof(Program));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(GameGuild.Common.Behaviors.LoggingBehavior<,>));
 
 // Get connection string from the environment
-string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ?? throw new InvalidOperationException("DB_CONNECTION_STRING environment variable is not set. Please check your .env file or environment configuration.");
+string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
+                          throw new InvalidOperationException(
+                            "DB_CONNECTION_STRING environment variable is not set. Please check your .env file or environment configuration."
+                          );
 
 // Check if we should use the in-memory database (for tests)
-bool useInMemoryDb = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("USE_IN_MEMORY_DB")) && Environment.GetEnvironmentVariable("USE_IN_MEMORY_DB")!.Equals("true", StringComparison.OrdinalIgnoreCase);
+bool useInMemoryDb = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("USE_IN_MEMORY_DB")) &&
+                     Environment.GetEnvironmentVariable("USE_IN_MEMORY_DB")!.Equals(
+                       "true",
+                       StringComparison.OrdinalIgnoreCase
+                     );
 
 // Add Entity Framework with the appropriate provider
 builder.Services.AddDbContext<ApplicationDbContext>(options => {
@@ -104,7 +128,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => {
     }
 
     // Suppress SQLite pragma warnings
-    options.ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+    options.ConfigureWarnings(warnings =>
+                                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+    );
 
     // Enable sensitive data logging in development
     if (!builder.Environment.IsDevelopment()) return;

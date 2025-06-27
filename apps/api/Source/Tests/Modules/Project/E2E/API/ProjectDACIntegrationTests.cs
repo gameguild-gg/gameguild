@@ -6,6 +6,7 @@ using GameGuild.Modules.Project.Models;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Tests.Modules.Project.E2E.API;
 
 /// <summary>
@@ -18,7 +19,9 @@ public class ProjectDACIntegrationTests : IDisposable {
   private readonly Mock<IPermissionService> _mockPermissionService;
 
   public ProjectDACIntegrationTests() {
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: $"DACTestDb_{Guid.NewGuid()}").Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                  .UseInMemoryDatabase(databaseName: $"DACTestDb_{Guid.NewGuid()}")
+                  .Options;
 
     _context = new ApplicationDbContext(options);
     _mockPermissionService = new Mock<IPermissionService>();
@@ -41,16 +44,31 @@ public class ProjectDACIntegrationTests : IDisposable {
     await _context.SaveChangesAsync();
 
     // Mock the permission service to return true for resource permission
-    _mockPermissionService.Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(userId, tenantId, projectId, PermissionType.Edit)).ReturnsAsync(true);
+    _mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+               userId,
+               tenantId,
+               projectId,
+               PermissionType.Edit
+             )
+      )
+      .ReturnsAsync(true);
 
     // Act
-    bool hasPermission = await CheckProjectPermissionHierarchy(_mockPermissionService.Object, userId, tenantId, projectId, PermissionType.Edit);
+    bool hasPermission = await CheckProjectPermissionHierarchy(
+                           _mockPermissionService.Object,
+                           userId,
+                           tenantId,
+                           projectId,
+                           PermissionType.Edit
+                         );
 
     // Assert
     Assert.True(hasPermission); // "User should have edit permission at resource level"
 
     // Verify the permission exists in database
-    ProjectPermission? dbPermission = await _context.ProjectPermissions.FirstOrDefaultAsync(p => p.UserId == userId && p.ResourceId == projectId);
+    ProjectPermission? dbPermission =
+      await _context.ProjectPermissions.FirstOrDefaultAsync(p => p.UserId == userId && p.ResourceId == projectId);
 
     Assert.NotNull(dbPermission);
     Assert.True(dbPermission.CanEdit);
@@ -64,12 +82,27 @@ public class ProjectDACIntegrationTests : IDisposable {
     var projectId = Guid.NewGuid();
 
     // Mock the permission service hierarchy
-    _mockPermissionService.Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(userId, tenantId, projectId, PermissionType.Edit)).ReturnsAsync(false); // No resource-level permission
+    _mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+               userId,
+               tenantId,
+               projectId,
+               PermissionType.Edit
+             )
+      )
+      .ReturnsAsync(false); // No resource-level permission
 
-    _mockPermissionService.Setup(x => x.HasContentTypePermissionAsync(userId, tenantId, "Project", PermissionType.Edit)).ReturnsAsync(true); // Has content-type permission
+    _mockPermissionService.Setup(x => x.HasContentTypePermissionAsync(userId, tenantId, "Project", PermissionType.Edit))
+                          .ReturnsAsync(true); // Has content-type permission
 
     // Act
-    bool hasPermission = await CheckProjectPermissionHierarchy(_mockPermissionService.Object, userId, tenantId, projectId, PermissionType.Edit);
+    bool hasPermission = await CheckProjectPermissionHierarchy(
+                           _mockPermissionService.Object,
+                           userId,
+                           tenantId,
+                           projectId,
+                           PermissionType.Edit
+                         );
 
     // Assert
     Assert.True(hasPermission); // "User should have edit permission at content type level"
@@ -83,14 +116,30 @@ public class ProjectDACIntegrationTests : IDisposable {
     var projectId = Guid.NewGuid();
 
     // Mock the permission service hierarchy
-    _mockPermissionService.Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(userId, tenantId, projectId, PermissionType.Edit)).ReturnsAsync(false); // No resource-level permission
+    _mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+               userId,
+               tenantId,
+               projectId,
+               PermissionType.Edit
+             )
+      )
+      .ReturnsAsync(false); // No resource-level permission
 
-    _mockPermissionService.Setup(x => x.HasContentTypePermissionAsync(userId, tenantId, "Project", PermissionType.Edit)).ReturnsAsync(false); // No content-type permission
+    _mockPermissionService.Setup(x => x.HasContentTypePermissionAsync(userId, tenantId, "Project", PermissionType.Edit))
+                          .ReturnsAsync(false); // No content-type permission
 
-    _mockPermissionService.Setup(x => x.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit)).ReturnsAsync(true); // Has tenant-level permission
+    _mockPermissionService.Setup(x => x.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit))
+                          .ReturnsAsync(true); // Has tenant-level permission
 
     // Act
-    bool hasPermission = await CheckProjectPermissionHierarchy(_mockPermissionService.Object, userId, tenantId, projectId, PermissionType.Edit);
+    bool hasPermission = await CheckProjectPermissionHierarchy(
+                           _mockPermissionService.Object,
+                           userId,
+                           tenantId,
+                           projectId,
+                           PermissionType.Edit
+                         );
 
     // Assert
     Assert.True(hasPermission); // "User should have edit permission at tenant level"
@@ -104,14 +153,30 @@ public class ProjectDACIntegrationTests : IDisposable {
     var projectId = Guid.NewGuid();
 
     // Mock all permission levels to return false
-    _mockPermissionService.Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(userId, tenantId, projectId, PermissionType.Edit)).ReturnsAsync(false);
+    _mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+               userId,
+               tenantId,
+               projectId,
+               PermissionType.Edit
+             )
+      )
+      .ReturnsAsync(false);
 
-    _mockPermissionService.Setup(x => x.HasContentTypePermissionAsync(userId, tenantId, "Project", PermissionType.Edit)).ReturnsAsync(false);
+    _mockPermissionService.Setup(x => x.HasContentTypePermissionAsync(userId, tenantId, "Project", PermissionType.Edit))
+                          .ReturnsAsync(false);
 
-    _mockPermissionService.Setup(x => x.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit)).ReturnsAsync(false);
+    _mockPermissionService.Setup(x => x.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit))
+                          .ReturnsAsync(false);
 
     // Act
-    bool hasPermission = await CheckProjectPermissionHierarchy(_mockPermissionService.Object, userId, tenantId, projectId, PermissionType.Edit);
+    bool hasPermission = await CheckProjectPermissionHierarchy(
+                           _mockPermissionService.Object,
+                           userId,
+                           tenantId,
+                           projectId,
+                           PermissionType.Edit
+                         );
 
     // Assert
     Assert.False(hasPermission); // "User should not have edit permission at any level"
@@ -134,18 +199,34 @@ public class ProjectDACIntegrationTests : IDisposable {
     await _context.SaveChangesAsync();
 
     // Mock the permission service
-    _mockPermissionService.Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(userId, tenantId, projectId, PermissionType.Edit)).ReturnsAsync(false); // Expired resource permission
+    _mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+               userId,
+               tenantId,
+               projectId,
+               PermissionType.Edit
+             )
+      )
+      .ReturnsAsync(false); // Expired resource permission
 
-    _mockPermissionService.Setup(x => x.HasContentTypePermissionAsync(userId, tenantId, "Project", PermissionType.Edit)).ReturnsAsync(true); // Valid content-type permission
+    _mockPermissionService.Setup(x => x.HasContentTypePermissionAsync(userId, tenantId, "Project", PermissionType.Edit))
+                          .ReturnsAsync(true); // Valid content-type permission
 
     // Act
-    bool hasPermission = await CheckProjectPermissionHierarchy(_mockPermissionService.Object, userId, tenantId, projectId, PermissionType.Edit);
+    bool hasPermission = await CheckProjectPermissionHierarchy(
+                           _mockPermissionService.Object,
+                           userId,
+                           tenantId,
+                           projectId,
+                           PermissionType.Edit
+                         );
 
     // Assert
     Assert.True(hasPermission); // "Should fallback to content-type permission when resource permission is expired"
 
     // Verify the expired permission is not valid
-    ProjectPermission? dbPermission = await _context.ProjectPermissions.FirstOrDefaultAsync(p => p.UserId == userId && p.ResourceId == projectId);
+    ProjectPermission? dbPermission =
+      await _context.ProjectPermissions.FirstOrDefaultAsync(p => p.UserId == userId && p.ResourceId == projectId);
 
     Assert.NotNull(dbPermission);
     Assert.False(dbPermission.IsValid); // "Expired permission should not be valid"
@@ -169,16 +250,26 @@ public class ProjectDACIntegrationTests : IDisposable {
     _context.ProjectPermissions.Add(projectPermission);
     await _context.SaveChangesAsync();
 
-    _mockPermissionService.Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(userId, tenantId, projectId, permissionType)).ReturnsAsync(true);
+    _mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+               userId,
+               tenantId,
+               projectId,
+               permissionType
+             )
+      )
+      .ReturnsAsync(true);
 
     // Act
-    bool hasPermission = await CheckProjectPermissionHierarchy(_mockPermissionService.Object, userId, tenantId, projectId, permissionType);
+    bool hasPermission =
+      await CheckProjectPermissionHierarchy(_mockPermissionService.Object, userId, tenantId, projectId, permissionType);
 
     // Assert
     Assert.True(hasPermission); // $"User should have {permissionType} permission"
 
     // Verify specific permission properties
-    ProjectPermission? dbPermission = await _context.ProjectPermissions.FirstOrDefaultAsync(p => p.UserId == userId && p.ResourceId == projectId);
+    ProjectPermission? dbPermission =
+      await _context.ProjectPermissions.FirstOrDefaultAsync(p => p.UserId == userId && p.ResourceId == projectId);
 
     Assert.NotNull(dbPermission);
 
@@ -212,25 +303,81 @@ public class ProjectDACIntegrationTests : IDisposable {
     await _context.SaveChangesAsync();
 
     // Mock permission service responses
-    _mockPermissionService.Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(user1Id, tenantId, project1Id, PermissionType.Edit)).ReturnsAsync(true);
+    _mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+               user1Id,
+               tenantId,
+               project1Id,
+               PermissionType.Edit
+             )
+      )
+      .ReturnsAsync(true);
 
-    _mockPermissionService.Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(user1Id, tenantId, project2Id, PermissionType.Edit)).ReturnsAsync(false);
+    _mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+               user1Id,
+               tenantId,
+               project2Id,
+               PermissionType.Edit
+             )
+      )
+      .ReturnsAsync(false);
 
-    _mockPermissionService.Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(user2Id, tenantId, project2Id, PermissionType.Read)).ReturnsAsync(true);
+    _mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+               user2Id,
+               tenantId,
+               project2Id,
+               PermissionType.Read
+             )
+      )
+      .ReturnsAsync(true);
 
-    _mockPermissionService.Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(user2Id, tenantId, project1Id, PermissionType.Read)).ReturnsAsync(false);
+    _mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+               user2Id,
+               tenantId,
+               project1Id,
+               PermissionType.Read
+             )
+      )
+      .ReturnsAsync(false);
 
     // Act & Assert
-    bool user1CanEditProject1 = await CheckProjectPermissionHierarchy(_mockPermissionService.Object, user1Id, tenantId, project1Id, PermissionType.Edit);
+    bool user1CanEditProject1 = await CheckProjectPermissionHierarchy(
+                                  _mockPermissionService.Object,
+                                  user1Id,
+                                  tenantId,
+                                  project1Id,
+                                  PermissionType.Edit
+                                );
     Assert.True(user1CanEditProject1); // "User1 should be able to edit Project1"
 
-    bool user1CanEditProject2 = await CheckProjectPermissionHierarchy(_mockPermissionService.Object, user1Id, tenantId, project2Id, PermissionType.Edit);
+    bool user1CanEditProject2 = await CheckProjectPermissionHierarchy(
+                                  _mockPermissionService.Object,
+                                  user1Id,
+                                  tenantId,
+                                  project2Id,
+                                  PermissionType.Edit
+                                );
     Assert.False(user1CanEditProject2); // "User1 should not be able to edit Project2"
 
-    bool user2CanReadProject2 = await CheckProjectPermissionHierarchy(_mockPermissionService.Object, user2Id, tenantId, project2Id, PermissionType.Read);
+    bool user2CanReadProject2 = await CheckProjectPermissionHierarchy(
+                                  _mockPermissionService.Object,
+                                  user2Id,
+                                  tenantId,
+                                  project2Id,
+                                  PermissionType.Read
+                                );
     Assert.True(user2CanReadProject2); // "User2 should be able to read Project2"
 
-    bool user2CanReadProject1 = await CheckProjectPermissionHierarchy(_mockPermissionService.Object, user2Id, tenantId, project1Id, PermissionType.Read);
+    bool user2CanReadProject1 = await CheckProjectPermissionHierarchy(
+                                  _mockPermissionService.Object,
+                                  user2Id,
+                                  tenantId,
+                                  project1Id,
+                                  PermissionType.Read
+                                );
     Assert.False(user2CanReadProject1); // "User2 should not be able to read Project1"
   }
 
@@ -242,9 +389,17 @@ public class ProjectDACIntegrationTests : IDisposable {
   /// Layer 2: Content-type permissions 
   /// Layer 3: Tenant permissions (lowest priority)
   /// </summary>
-  private async Task<bool> CheckProjectPermissionHierarchy(IPermissionService permissionService, Guid userId, Guid tenantId, Guid projectId, PermissionType permissionType) {
+  private async Task<bool> CheckProjectPermissionHierarchy(
+    IPermissionService permissionService, Guid userId,
+    Guid tenantId, Guid projectId, PermissionType permissionType
+  ) {
     // Layer 1: Check resource-specific permissions
-    if (await permissionService.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(userId, tenantId, projectId, permissionType)) { return true; }
+    if (await permissionService.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+          userId,
+          tenantId,
+          projectId,
+          permissionType
+        )) { return true; }
 
     // Layer 2: Check content-type permissions
     if (await permissionService.HasContentTypePermissionAsync(userId, tenantId, "Project", permissionType)) { return true; }

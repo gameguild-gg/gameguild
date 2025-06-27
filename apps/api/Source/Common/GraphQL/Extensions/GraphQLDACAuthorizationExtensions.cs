@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using GameGuild.Common.GraphQL.Authorization;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Common.GraphQL.Extensions;
 
 /// <summary>
@@ -51,8 +52,15 @@ public static class GraphQLFieldDACExtensions {
   /// <param name="descriptor">The field descriptor</param>
   /// <param name="permission">The required permission</param>
   /// <returns>The field descriptor for method chaining</returns>
-  public static IObjectFieldDescriptor RequireTenantPermission(this IObjectFieldDescriptor descriptor, GameGuild.Common.Entities.PermissionType permission) {
-    return descriptor.Directive("dacAuthorize", new ArgumentNode("level", new StringValueNode(DACPermissionLevel.Tenant.ToString())), new ArgumentNode("permission", new StringValueNode(permission.ToString())));
+  public static IObjectFieldDescriptor RequireTenantPermission(
+    this IObjectFieldDescriptor descriptor,
+    GameGuild.Common.Entities.PermissionType permission
+  ) {
+    return descriptor.Directive(
+      "dacAuthorize",
+      new ArgumentNode("level", new StringValueNode(DACPermissionLevel.Tenant.ToString())),
+      new ArgumentNode("permission", new StringValueNode(permission.ToString()))
+    );
   }
 
   /// <summary>
@@ -62,7 +70,10 @@ public static class GraphQLFieldDACExtensions {
   /// <param name="descriptor">The field descriptor</param>
   /// <param name="permission">The required permission</param>
   /// <returns>The field descriptor for method chaining</returns>
-  public static IObjectFieldDescriptor RequireContentTypePermission<TEntity>(this IObjectFieldDescriptor descriptor, GameGuild.Common.Entities.PermissionType permission) where TEntity : class {
+  public static IObjectFieldDescriptor RequireContentTypePermission<TEntity>(
+    this IObjectFieldDescriptor descriptor,
+    GameGuild.Common.Entities.PermissionType permission
+  ) where TEntity : class {
     return descriptor.Directive(
       "dacAuthorize",
       new ArgumentNode("level", new StringValueNode(DACPermissionLevel.ContentType.ToString())),
@@ -80,8 +91,12 @@ public static class GraphQLFieldDACExtensions {
   /// <param name="permission">The required permission</param>
   /// <param name="resourceIdParameter">The parameter name containing the resource ID</param>
   /// <returns>The field descriptor for method chaining</returns>
-  public static IObjectFieldDescriptor RequireResourcePermission<TPermission, TEntity>(this IObjectFieldDescriptor descriptor, GameGuild.Common.Entities.PermissionType permission, string resourceIdParameter = "id")
-    where TPermission : GameGuild.Common.Entities.ResourcePermission<TEntity> where TEntity : GameGuild.Common.Entities.BaseEntity {
+  public static IObjectFieldDescriptor RequireResourcePermission<TPermission, TEntity>(
+    this IObjectFieldDescriptor descriptor, GameGuild.Common.Entities.PermissionType permission,
+    string resourceIdParameter = "id"
+  )
+    where TPermission : GameGuild.Common.Entities.ResourcePermission<TEntity>
+    where TEntity : GameGuild.Common.Entities.BaseEntity {
     return descriptor.Directive(
       "dacAuthorize",
       new ArgumentNode("level", new StringValueNode(DACPermissionLevel.Resource.ToString())),
@@ -100,7 +115,10 @@ public static class GraphQLFieldDACExtensions {
   /// <param name="permission">The required permission</param>
   /// <param name="resourceIdParameter">The parameter name containing the resource ID</param>
   /// <returns>The field descriptor for method chaining</returns>
-  public static IObjectFieldDescriptor RequireResourcePermission<TEntity>(this IObjectFieldDescriptor descriptor, GameGuild.Common.Entities.PermissionType permission, string resourceIdParameter = "id")
+  public static IObjectFieldDescriptor RequireResourcePermission<TEntity>(
+    this IObjectFieldDescriptor descriptor,
+    GameGuild.Common.Entities.PermissionType permission, string resourceIdParameter = "id"
+  )
     where TEntity : GameGuild.Common.Entities.BaseEntity {
     return descriptor.Directive(
       "dacAuthorize",

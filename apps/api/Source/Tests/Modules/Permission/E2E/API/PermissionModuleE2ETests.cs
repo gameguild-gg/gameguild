@@ -13,6 +13,7 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Tests.Fixtures;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
+
 namespace GameGuild.Tests.Modules.Permission.E2E;
 
 /// <summary>
@@ -32,7 +33,9 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
 
     // Use a separate in-memory database for E2E tests
     var services = new ServiceCollection();
-    services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+    services.AddDbContext<ApplicationDbContext>(options =>
+                                                  options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+    );
 
     ServiceProvider serviceProvider = services.BuildServiceProvider();
     _context = serviceProvider.GetRequiredService<ApplicationDbContext>();
@@ -98,7 +101,9 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
                                   var messages = new List<string>();
                                   if (e.TryGetProperty("message", out JsonElement message) && message.ValueKind == JsonValueKind.String) messages.Add(message.GetString()!);
 
-                                  if (e.TryGetProperty("extensions", out JsonElement extensions) && extensions.TryGetProperty("message", out JsonElement extMessage) && extMessage.ValueKind == JsonValueKind.String)
+                                  if (e.TryGetProperty("extensions", out JsonElement extensions) &&
+                                      extensions.TryGetProperty("message", out JsonElement extMessage) &&
+                                      extMessage.ValueKind == JsonValueKind.String)
                                     messages.Add(extMessage.GetString()!);
 
                                   return messages;
@@ -106,7 +111,12 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
                               )
                               .ToList();
 
-    Assert.Contains(errorMessages, m => m != null && (m.Contains("Authentication required", StringComparison.OrdinalIgnoreCase) || m.Contains("Unauthorized", StringComparison.OrdinalIgnoreCase)));
+    Assert.Contains(
+      errorMessages,
+      m => m != null &&
+           (m.Contains("Authentication required", StringComparison.OrdinalIgnoreCase) ||
+            m.Contains("Unauthorized", StringComparison.OrdinalIgnoreCase))
+    );
   }
 
   [Fact]
@@ -145,7 +155,9 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
                                       var messages = new List<string>();
                                       if (e.TryGetProperty("message", out JsonElement message) && message.ValueKind == JsonValueKind.String) messages.Add(message.GetString()!);
 
-                                      if (e.TryGetProperty("extensions", out JsonElement extensions) && extensions.TryGetProperty("message", out JsonElement extMessage) && extMessage.ValueKind == JsonValueKind.String)
+                                      if (e.TryGetProperty("extensions", out JsonElement extensions) &&
+                                          extensions.TryGetProperty("message", out JsonElement extMessage) &&
+                                          extMessage.ValueKind == JsonValueKind.String)
                                         messages.Add(extMessage.GetString()!);
 
                                       return messages;
@@ -203,7 +215,10 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
       if (jsonResponse.TryGetProperty("errors", out JsonElement errors)) {
         var errorMessages = errors.EnumerateArray().Select(e => e.GetProperty("message").GetString()).ToList();
 
-        Assert.DoesNotContain(errorMessages, m => m != null && m.Contains("permission", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(
+          errorMessages,
+          m => m != null && m.Contains("permission", StringComparison.OrdinalIgnoreCase)
+        );
       }
     }
     else {
@@ -248,7 +263,10 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     Console.WriteLine($"DEBUG: Expected 403/401 but got {response.StatusCode}. Content: {responseContent}");
 
     // Assert
-    Assert.True(response.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized, $"Expected 403 Forbidden or 401 Unauthorized but got {response.StatusCode}. Response: {responseContent}");
+    Assert.True(
+      response.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized,
+      $"Expected 403 Forbidden or 401 Unauthorized but got {response.StatusCode}. Response: {responseContent}"
+    );
   }
 
   [Fact]
@@ -320,7 +338,12 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
       if (jsonResponse.TryGetProperty("errors", out JsonElement errors)) {
         var errorMessages = errors.EnumerateArray().Select(e => e.GetProperty("message").GetString()).ToList();
 
-        Assert.DoesNotContain(errorMessages, m => m != null && m.Contains("comment", StringComparison.OrdinalIgnoreCase) && m.Contains("permission", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(
+          errorMessages,
+          m => m != null &&
+               m.Contains("comment", StringComparison.OrdinalIgnoreCase) &&
+               m.Contains("permission", StringComparison.OrdinalIgnoreCase)
+        );
       }
     }
   }
@@ -381,7 +404,11 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     HttpResponseMessage response = await _client.GetAsync($"/tenants/{tenant2.Id}");
 
     // Assert - Should be forbidden due to cross-tenant access
-    Assert.True(response.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.NotFound);
+    Assert.True(
+      response.StatusCode is System.Net.HttpStatusCode.Forbidden
+                             or System.Net.HttpStatusCode.Unauthorized
+                             or System.Net.HttpStatusCode.NotFound
+    );
   }
 
   #endregion
@@ -428,7 +455,10 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     await _context.SaveChangesAsync();
   }
 
-  private async Task GrantContentTypePermissionsAsync(Guid userId, Guid tenantId, string contentTypeName, PermissionType[] permissions) {
+  private async Task GrantContentTypePermissionsAsync(
+    Guid userId, Guid tenantId, string contentTypeName,
+    PermissionType[] permissions
+  ) {
     var contentTypePermission = new ContentTypePermission {
       UserId = userId, TenantId = tenantId, ContentType = contentTypeName // The correct property name is ContentType, not ContentTypeName
     };
@@ -439,7 +469,10 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     await _context.SaveChangesAsync();
   }
 
-  private async Task GrantResourcePermissionsAsync(Guid userId, Guid tenantId, Guid resourceId, PermissionType[] permissions) {
+  private async Task GrantResourcePermissionsAsync(
+    Guid userId, Guid tenantId, Guid resourceId,
+    PermissionType[] permissions
+  ) {
     var resourcePermission = new CommentPermission { UserId = userId, TenantId = tenantId, ResourceId = resourceId };
 
     foreach (PermissionType permission in permissions) { resourcePermission.AddPermission(permission); }
@@ -467,7 +500,10 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
   private void ClearAuthorizationHeader() { _client.DefaultRequestHeaders.Authorization = null; }
 
   private async Task<HttpResponseMessage> PostGraphQlAsync(object request) {
-    string json = JsonSerializer.Serialize(request, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+    string json = JsonSerializer.Serialize(
+      request,
+      new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
+    );
 
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 

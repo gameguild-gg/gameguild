@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
 using GameGuild.Modules.UserProfile.Commands;
 
+
 namespace GameGuild.Modules.UserProfile.Handlers;
 
 /// <summary>
@@ -19,7 +20,8 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
   }
 
   public async Task<Models.UserProfile> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken) {
-    Models.UserProfile? userProfile = await _context.Resources.OfType<Models.UserProfile>().FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
+    Models.UserProfile? userProfile = await _context.Resources.OfType<Models.UserProfile>()
+                                                    .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 
     if (userProfile == null) { throw new InvalidOperationException($"User profile with ID {request.UserProfileId} not found"); }
 

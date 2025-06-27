@@ -1,5 +1,6 @@
 using MediatR;
 
+
 namespace GameGuild.Modules.Auth.Commands;
 
 /// <summary>

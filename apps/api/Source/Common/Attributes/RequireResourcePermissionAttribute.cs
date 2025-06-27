@@ -8,6 +8,7 @@ using GameGuild.Modules.Product.Models;
 using GameGuild.Modules.Project.Models;
 using GameGuild.Modules.Auth.Constants;
 
+
 namespace GameGuild.Common.Attributes;
 
 /// <summary>
@@ -17,7 +18,8 @@ namespace GameGuild.Common.Attributes;
 /// <typeparam name="TPermission">The permission entity type (e.g., CommentPermission, ProductPermission)</typeparam>
 /// <typeparam name="TResource">The resource entity type (e.g., Comment, Product)</typeparam>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
-public class RequireResourcePermissionAttribute<TPermission, TResource> : Attribute, IAsyncAuthorizationFilter where TPermission : ResourcePermission<TResource> where TResource : BaseEntity {
+public class RequireResourcePermissionAttribute<TPermission, TResource> : Attribute, IAsyncAuthorizationFilter
+  where TPermission : ResourcePermission<TResource> where TResource : BaseEntity {
   private readonly PermissionType _requiredPermission;
 
   private readonly string _resourceIdParameterName;
@@ -56,7 +58,13 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
 
     // Step 1 - Check resource-level permission using generic types
     try {
-      bool hasResourcePermission = await permissionService.HasResourcePermissionAsync<TPermission, TResource>(userId, tenantId, resourceId, _requiredPermission);
+      bool hasResourcePermission =
+        await permissionService.HasResourcePermissionAsync<TPermission, TResource>(
+          userId,
+          tenantId,
+          resourceId,
+          _requiredPermission
+        );
 
       if (hasResourcePermission) {
         return; // Permission granted at resource level
@@ -68,7 +76,8 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
 
     // Step 2 - Check content-type level permission (fallback)
     string contentTypeName = typeof(TResource).Name;
-    bool hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
+    bool hasContentTypePermission =
+      await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
 
     if (hasContentTypePermission) {
       return; // Permission granted at content-type level
@@ -89,7 +98,8 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
 /// </summary>
 /// <typeparam name="TResource">The resource entity type (e.g., Comment, Product)</typeparam>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
-public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAuthorizationFilter where TResource : BaseEntity {
+public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAuthorizationFilter
+  where TResource : BaseEntity {
   private readonly PermissionType _requiredPermission;
 
   private readonly string _resourceIdParameterName;
@@ -124,7 +134,8 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
 
       // For CREATE operations or READ operations on collections, we typically don't have a resource ID yet
       // So we skip resource-level permission checks and go to content-type/tenant checks
-      if (!hasResourceId && (_requiredPermission == PermissionType.Create || _requiredPermission == PermissionType.Read)) {
+      if (!hasResourceId &&
+          (_requiredPermission == PermissionType.Create || _requiredPermission == PermissionType.Read)) {
         // Skip resource-level check for CREATE operations or READ collection operations
       }
       else if (!hasResourceId) {
@@ -144,7 +155,13 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
 
           switch (resourceTypeName) {
             case "Comment":
-              bool hasCommentPermission = await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(userId, tenantId, resourceId, _requiredPermission);
+              bool hasCommentPermission =
+                await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
+                  userId,
+                  tenantId,
+                  resourceId,
+                  _requiredPermission
+                );
 
               if (hasCommentPermission) {
                 return; // Permission granted at resource level
@@ -153,7 +170,13 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
               break;
 
             case "Product":
-              bool hasProductPermission = await permissionService.HasResourcePermissionAsync<ProductPermission, Product>(userId, tenantId, resourceId, _requiredPermission);
+              bool hasProductPermission =
+                await permissionService.HasResourcePermissionAsync<ProductPermission, Product>(
+                  userId,
+                  tenantId,
+                  resourceId,
+                  _requiredPermission
+                );
 
               if (hasProductPermission) {
                 return; // Permission granted at resource level
@@ -162,7 +185,14 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
               break;
 
             case "Project":
-              bool hasProjectPermission = await permissionService.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(userId, tenantId, resourceId, _requiredPermission);
+              bool hasProjectPermission =
+                await permissionService
+                  .HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+                    userId,
+                    tenantId,
+                    resourceId,
+                    _requiredPermission
+                  );
 
               if (hasProjectPermission) {
                 return; // Permission granted at resource level
@@ -171,7 +201,10 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
               break; // Add more resource types here as they are implemented
 
             case "Program":
-              var hasProgramPermission = await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Program.Models.ProgramPermission, GameGuild.Modules.Program.Models.Program>(userId, tenantId, resourceId, _requiredPermission);
+              var hasProgramPermission =
+                await permissionService
+                  .HasResourcePermissionAsync<GameGuild.Modules.Program.Models.ProgramPermission,
+                    GameGuild.Modules.Program.Models.Program>(userId, tenantId, resourceId, _requiredPermission);
 
               if (hasProgramPermission) {
                 return; // Permission granted at resource level
@@ -191,21 +224,24 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
 
       // Step 2 - Check content-type level permission (fallback)
       string contentTypeName = typeof(TResource).Name;
-      bool hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
+      bool hasContentTypePermission =
+        await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
 
       if (hasContentTypePermission) {
         return; // Permission granted at content-type level
       }
 
       // Step 3 - Check tenant-level permission (final fallback)
-      bool hasTenantPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, _requiredPermission);
+      bool hasTenantPermission =
+        await permissionService.HasTenantPermissionAsync(userId, tenantId, _requiredPermission);
 
       if (!hasTenantPermission) { context.Result = new ForbidResult(); }
       // If we reach here with tenant permission, access is granted
     }
     catch (Exception ex) {
       // Log the exception and return 500 error
-      var logger = context.HttpContext.RequestServices.GetService<ILogger<RequireResourcePermissionAttribute<TResource>>>();
+      var logger = context.HttpContext.RequestServices
+                          .GetService<ILogger<RequireResourcePermissionAttribute<TResource>>>();
       logger?.LogError(ex, "Authorization error in RequireResourcePermissionAttribute");
       context.Result = new Microsoft.AspNetCore.Mvc.ObjectResult("Authorization error occurred") { StatusCode = 500 };
     }

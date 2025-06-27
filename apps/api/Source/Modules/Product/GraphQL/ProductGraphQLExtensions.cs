@@ -1,5 +1,6 @@
 using HotChocolate.Execution.Configuration;
 
+
 namespace GameGuild.Modules.Product.GraphQL;
 
 /// <summary>
@@ -10,6 +11,11 @@ public static class ProductGraphQlExtensions {
   /// Configure GraphQL server with DAC authorization for Product entity
   /// </summary>
   public static IRequestExecutorBuilder AddProductGraphQl(this IRequestExecutorBuilder builder) {
-    return builder.AddType<ProductType>().AddType<ProductPricingType>().AddType<UserProductType>().AddType<PromoCodeType>().AddTypeExtension<ProductQueries>().AddTypeExtension<ProductMutations>();
+    return builder.AddType<ProductType>()
+                  .AddType<ProductPricingType>()
+                  .AddType<UserProductType>()
+                  .AddType<PromoCodeType>()
+                  .AddTypeExtension<ProductQueries>()
+                  .AddTypeExtension<ProductMutations>();
   }
 }

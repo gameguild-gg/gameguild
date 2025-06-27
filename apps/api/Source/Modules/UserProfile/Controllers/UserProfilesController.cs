@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using GameGuild.Modules.UserProfile.Dtos;
 using GameGuild.Modules.UserProfile.Services;
 
+
 namespace GameGuild.Modules.UserProfile.Controllers;
 
 [ApiController]
@@ -17,18 +18,18 @@ public class UserProfilesController : ControllerBase {
     var userProfiles = await _userProfileService.GetAllUserProfilesAsync();
 
     var userProfileDtos = userProfiles.Select(up => new UserProfileResponseDto {
-        Id = up.Id,
-        Version = up.Version,
-        GivenName = up.GivenName,
-        FamilyName = up.FamilyName,
-        DisplayName = up.DisplayName,
-        Title = up.Title,
-        Description = up.Description,
-        CreatedAt = up.CreatedAt,
-        UpdatedAt = up.UpdatedAt,
-        DeletedAt = up.DeletedAt,
-        IsDeleted = up.IsDeleted
-      }
+                                                Id = up.Id,
+                                                Version = up.Version,
+                                                GivenName = up.GivenName,
+                                                FamilyName = up.FamilyName,
+                                                DisplayName = up.DisplayName,
+                                                Title = up.Title,
+                                                Description = up.Description,
+                                                CreatedAt = up.CreatedAt,
+                                                UpdatedAt = up.UpdatedAt,
+                                                DeletedAt = up.DeletedAt,
+                                                IsDeleted = up.IsDeleted
+                                              }
     );
 
     return Ok(userProfileDtos);
@@ -40,18 +41,18 @@ public class UserProfilesController : ControllerBase {
     var userProfiles = await _userProfileService.GetDeletedUserProfilesAsync();
 
     var userProfileDtos = userProfiles.Select(up => new UserProfileResponseDto {
-        Id = up.Id,
-        Version = up.Version,
-        GivenName = up.GivenName,
-        FamilyName = up.FamilyName,
-        DisplayName = up.DisplayName,
-        Title = up.Title,
-        Description = up.Description,
-        CreatedAt = up.CreatedAt,
-        UpdatedAt = up.UpdatedAt,
-        DeletedAt = up.DeletedAt,
-        IsDeleted = up.IsDeleted
-      }
+                                                Id = up.Id,
+                                                Version = up.Version,
+                                                GivenName = up.GivenName,
+                                                FamilyName = up.FamilyName,
+                                                DisplayName = up.DisplayName,
+                                                Title = up.Title,
+                                                Description = up.Description,
+                                                CreatedAt = up.CreatedAt,
+                                                UpdatedAt = up.UpdatedAt,
+                                                DeletedAt = up.DeletedAt,
+                                                IsDeleted = up.IsDeleted
+                                              }
     );
 
     return Ok(userProfileDtos);
@@ -137,7 +138,10 @@ public class UserProfilesController : ControllerBase {
 
   // PUT: user-profiles/{id}
   [HttpPut("{id}")]
-  public async Task<ActionResult<UserProfileResponseDto>> UpdateUserProfile(Guid id, UpdateUserProfileDto updateUserProfileDto) {
+  public async Task<ActionResult<UserProfileResponseDto>> UpdateUserProfile(
+    Guid id,
+    UpdateUserProfileDto updateUserProfileDto
+  ) {
     var userProfile = new Models.UserProfile {
       GivenName = updateUserProfileDto.GivenName,
       FamilyName = updateUserProfileDto.FamilyName,

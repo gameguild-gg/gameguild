@@ -9,6 +9,7 @@ using GameGuild.Modules.User.Models;
 using System.Diagnostics;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
+
 namespace GameGuild.Tests.Modules.Permission.Performance;
 
 /// <summary>
@@ -24,7 +25,8 @@ public class PermissionPerformanceTests : IDisposable {
 
   public PermissionPerformanceTests() {
     _databaseName = Guid.NewGuid().ToString();
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: _databaseName).Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: _databaseName)
+                                                                     .Options;
 
     _context = new ApplicationDbContext(options);
     _permissionService = new PermissionService(_context);
@@ -62,12 +64,16 @@ public class PermissionPerformanceTests : IDisposable {
     stopwatch.Stop();
 
     // Assert
-    Assert.True(stopwatch.ElapsedMilliseconds < maxAcceptableTimeMs, $"Bulk permission grant took {stopwatch.ElapsedMilliseconds}ms, expected under {maxAcceptableTimeMs}ms");
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < maxAcceptableTimeMs,
+      $"Bulk permission grant took {stopwatch.ElapsedMilliseconds}ms, expected under {maxAcceptableTimeMs}ms"
+    );
 
     // Verify a sample of permissions were actually granted
     User sampleUser = users[userCount / 2];
     bool hasRead = await _permissionService.HasTenantPermissionAsync(sampleUser.Id, tenant.Id, PermissionType.Read);
-    bool hasComment = await _permissionService.HasTenantPermissionAsync(sampleUser.Id, tenant.Id, PermissionType.Comment);
+    bool hasComment =
+      await _permissionService.HasTenantPermissionAsync(sampleUser.Id, tenant.Id, PermissionType.Comment);
 
     Assert.True(hasRead);
     Assert.True(hasComment);
@@ -87,19 +93,28 @@ public class PermissionPerformanceTests : IDisposable {
       User user = await CreateTestUserAsync($"user{i}@test.com");
       users.Add(user);
 
-      await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id, [PermissionType.Read, PermissionType.Comment]);
+      await _permissionService.GrantTenantPermissionAsync(
+        user.Id,
+        tenant.Id,
+        [PermissionType.Read, PermissionType.Comment]
+      );
     }
 
     var stopwatch = Stopwatch.StartNew();
 
     // Act - Check permissions for all users
-    var checkTasks = users.Select(async user => await _permissionService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read));
+    var checkTasks = users.Select(async user =>
+                                    await _permissionService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read)
+    );
 
     bool[] results = await Task.WhenAll(checkTasks);
     stopwatch.Stop();
 
     // Assert
-    Assert.True(stopwatch.ElapsedMilliseconds < maxAcceptableTimeMs, $"Bulk permission check took {stopwatch.ElapsedMilliseconds}ms, expected under {maxAcceptableTimeMs}ms");
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < maxAcceptableTimeMs,
+      $"Bulk permission check took {stopwatch.ElapsedMilliseconds}ms, expected under {maxAcceptableTimeMs}ms"
+    );
 
     Assert.True(results.All(r => r), "All users should have Read permission");
   }
@@ -122,15 +137,28 @@ public class PermissionPerformanceTests : IDisposable {
 
     // Act - Grant resource permissions using bulk method for better performance
     var resourceIds = resources.Select(r => r.Id).ToArray();
-    await _permissionService.BulkGrantResourcePermissionAsync<CommentPermission, Comment>(user.Id, tenant.Id, resourceIds, permissions);
+    await _permissionService.BulkGrantResourcePermissionAsync<CommentPermission, Comment>(
+      user.Id,
+      tenant.Id,
+      resourceIds,
+      permissions
+    );
 
     // Now check bulk permissions
-    var bulkResult = await _permissionService.GetBulkResourcePermissionsAsync<CommentPermission, Comment>(user.Id, tenant.Id, resourceIds);
+    var bulkResult =
+      await _permissionService.GetBulkResourcePermissionsAsync<CommentPermission, Comment>(
+        user.Id,
+        tenant.Id,
+        resourceIds
+      );
 
     stopwatch.Stop();
 
     // Assert
-    Assert.True(stopwatch.ElapsedMilliseconds < maxAcceptableTimeMs, $"Bulk resource operations took {stopwatch.ElapsedMilliseconds}ms, expected under {maxAcceptableTimeMs}ms");
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < maxAcceptableTimeMs,
+      $"Bulk resource operations took {stopwatch.ElapsedMilliseconds}ms, expected under {maxAcceptableTimeMs}ms"
+    );
 
     Assert.Equal(resourceCount, bulkResult.Count);
 
@@ -178,7 +206,10 @@ public class PermissionPerformanceTests : IDisposable {
     long memoryIncrease = finalMemory - initialMemory;
 
     // Assert - Memory increase should be reasonable (less than 10MB)
-    Assert.True(memoryIncrease < 10 * 1024 * 1024, $"Memory increased by {memoryIncrease} bytes, which may indicate a memory leak");
+    Assert.True(
+      memoryIncrease < 10 * 1024 * 1024,
+      $"Memory increased by {memoryIncrease} bytes, which may indicate a memory leak"
+    );
   }
 
   #endregion
@@ -199,7 +230,12 @@ public class PermissionPerformanceTests : IDisposable {
     await _permissionService.SetTenantDefaultPermissionsAsync(tenant.Id, [PermissionType.Comment]);
     await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id, [PermissionType.Vote]);
     await _permissionService.GrantContentTypePermissionAsync(user.Id, tenant.Id, "Comment", [PermissionType.Reply]);
-    await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(user.Id, tenant.Id, comment.Id, [PermissionType.Edit]);
+    await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
+      user.Id,
+      tenant.Id,
+      comment.Id,
+      [PermissionType.Edit]
+    );
 
     var stopwatch = Stopwatch.StartNew();
 
@@ -207,15 +243,25 @@ public class PermissionPerformanceTests : IDisposable {
     bool hasRead = await _permissionService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read);
     bool hasComment = await _permissionService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Comment);
     bool hasVote = await _permissionService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Vote);
-    bool hasReply = await _permissionService.HasContentTypePermissionAsync(user.Id, tenant.Id, "Comment", PermissionType.Reply);
-    bool hasEdit = await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(user.Id, tenant.Id, comment.Id, PermissionType.Edit);
+    bool hasReply =
+      await _permissionService.HasContentTypePermissionAsync(user.Id, tenant.Id, "Comment", PermissionType.Reply);
+    bool hasEdit =
+      await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
+        user.Id,
+        tenant.Id,
+        comment.Id,
+        PermissionType.Edit
+      );
     var effectivePermissions = await _permissionService.GetEffectiveTenantPermissionsAsync(user.Id, tenant.Id);
     var effectiveList = effectivePermissions.ToList();
 
     stopwatch.Stop();
 
     // Assert
-    Assert.True(stopwatch.ElapsedMilliseconds < maxAcceptableTimeMs, $"Complex permission query took {stopwatch.ElapsedMilliseconds}ms, expected under {maxAcceptableTimeMs}ms");
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < maxAcceptableTimeMs,
+      $"Complex permission query took {stopwatch.ElapsedMilliseconds}ms, expected under {maxAcceptableTimeMs}ms"
+    );
 
     Assert.True(hasRead);
     Assert.True(hasComment);
@@ -268,7 +314,10 @@ public class PermissionPerformanceTests : IDisposable {
     stopwatch.Stop();
 
     // Assert
-    Assert.True(stopwatch.ElapsedMilliseconds < maxAcceptableTimeMs, $"Tenant membership queries took {stopwatch.ElapsedMilliseconds}ms, expected under {maxAcceptableTimeMs}ms");
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < maxAcceptableTimeMs,
+      $"Tenant membership queries took {stopwatch.ElapsedMilliseconds}ms, expected under {maxAcceptableTimeMs}ms"
+    );
 
     Assert.True(membershipCounts.All(count => count >= 2 && count <= 3));
     Assert.Equal(userCount, membershipCounts.Length);
@@ -308,7 +357,13 @@ public class PermissionPerformanceTests : IDisposable {
           // For the grant operation, use a separate context and service
           ApplicationDbContext grantContext = CreateNewDbContext();
           var grantService = new PermissionService(grantContext);
-          userTasks.Add(grantService.GrantTenantPermissionAsync(user.Id, tenant.Id, [PermissionType.Read, PermissionType.Comment]));
+          userTasks.Add(
+            grantService.GrantTenantPermissionAsync(
+              user.Id,
+              tenant.Id,
+              [PermissionType.Read, PermissionType.Comment]
+            )
+          );
 
           // For the check operation, use another separate context and service
           userTasks.Add(
@@ -337,7 +392,9 @@ public class PermissionPerformanceTests : IDisposable {
     // Verify all users have permissions - use a fresh context for verification
     ApplicationDbContext verificationContext = CreateNewDbContext();
     var verificationService = new PermissionService(verificationContext);
-    var verificationTasks = users.Select(async user => await verificationService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read));
+    var verificationTasks = users.Select(async user =>
+                                           await verificationService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read)
+    );
 
     bool allHavePermissions = (await Task.WhenAll(verificationTasks)).All(result => result);
     Assert.True(allHavePermissions, "All users should have been granted permissions");
@@ -380,7 +437,8 @@ public class PermissionPerformanceTests : IDisposable {
 
   // Helper method to create a new DbContext instance
   private ApplicationDbContext CreateNewDbContext() {
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: _databaseName).Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: _databaseName)
+                                                                     .Options;
 
     return new ApplicationDbContext(options);
   }

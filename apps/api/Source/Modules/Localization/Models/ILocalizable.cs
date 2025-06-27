@@ -12,5 +12,8 @@ public interface ILocalizable {
   /// <summary>
   /// Adds a localization for a specific field in the given language
   /// </summary>
-  ResourceLocalization AddLocalization(string fieldName, string content, Language language, LocalizationStatus status = LocalizationStatus.Draft);
+  ResourceLocalization AddLocalization(
+    string fieldName, string content, Language language,
+    LocalizationStatus status = LocalizationStatus.Draft
+  );
 }

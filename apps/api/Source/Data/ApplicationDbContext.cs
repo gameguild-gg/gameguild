@@ -21,6 +21,7 @@ using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Modules.User.Models;
 using Tag = GameGuild.Modules.Tag.Models.Tag;
 
+
 namespace GameGuild.Data;
 
 // NOTE: do not add fluent api configurations here, they should be in the same file of the entity. On the entity, use notations for simple configurations, and fluent API for complex ones.
@@ -484,14 +485,28 @@ public class ApplicationDbContext : DbContext {
     // NOTE: do not add fluent api configurations here, they should be in the same file of the entity. On the entity, use notations for simple configurations, and fluent API for complex ones.
 
     // Configure ContentTypePermission relationships explicitly to avoid ambiguity
-    modelBuilder.Entity<ContentTypePermission>().HasOne(ctp => ctp.User).WithMany().HasForeignKey(ctp => ctp.UserId).OnDelete(DeleteBehavior.Cascade);
+    modelBuilder.Entity<ContentTypePermission>()
+                .HasOne(ctp => ctp.User)
+                .WithMany()
+                .HasForeignKey(ctp => ctp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
     // Configure TenantPermission relationships explicitly to avoid ambiguity
-    modelBuilder.Entity<TenantPermission>().HasOne(tp => tp.User).WithMany().HasForeignKey(tp => tp.UserId).OnDelete(DeleteBehavior.Cascade);
+    modelBuilder.Entity<TenantPermission>()
+                .HasOne(tp => tp.User)
+                .WithMany()
+                .HasForeignKey(tp => tp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
     // Configure ITenantable entities (this logic needs to stay in OnModelCreating)
-    foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes().Where(t => typeof(ITenantable).IsAssignableFrom(t.ClrType))) {
-      modelBuilder.Entity(entityType.ClrType).HasOne(typeof(Tenant).Name).WithMany().HasForeignKey("TenantId").IsRequired(false).OnDelete(DeleteBehavior.SetNull);
+    foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes()
+                                                          .Where(t => typeof(ITenantable).IsAssignableFrom(t.ClrType))) {
+      modelBuilder.Entity(entityType.ClrType)
+                  .HasOne(typeof(Tenant).Name)
+                  .WithMany()
+                  .HasForeignKey("TenantId")
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.SetNull);
     }
 
     // Configure base entity properties for all entities
@@ -527,7 +542,8 @@ public class ApplicationDbContext : DbContext {
   /// Also handles Version incrementing for optimistic concurrency control
   /// </summary>
   private void UpdateTimestamps() {
-    var entries = ChangeTracker.Entries().Where(e => e.Entity is IEntity && e.State is EntityState.Added or EntityState.Modified);
+    var entries = ChangeTracker.Entries()
+                               .Where(e => e.Entity is IEntity && e.State is EntityState.Added or EntityState.Modified);
 
     foreach (EntityEntry entry in entries) {
       var entity = (IEntity)entry.Entity;

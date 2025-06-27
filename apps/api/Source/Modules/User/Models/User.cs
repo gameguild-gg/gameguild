@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Tenant.Models;
 
+
 namespace GameGuild.Modules.User.Models;
 
 [Table("Users")]

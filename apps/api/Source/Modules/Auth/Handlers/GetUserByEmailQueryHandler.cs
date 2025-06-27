@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Queries;
 
+
 namespace GameGuild.Modules.Auth.Handlers;
 
 /// <summary>

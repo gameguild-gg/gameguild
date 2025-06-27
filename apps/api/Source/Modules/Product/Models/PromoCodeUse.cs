@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Payment.Models;
 
+
 namespace GameGuild.Modules.Product.Models;
 
 /// <summary>
@@ -108,12 +109,18 @@ public class PromoCodeUse : BaseEntity {
 public class PromoCodeUseConfiguration : IEntityTypeConfiguration<PromoCodeUse> {
   public void Configure(EntityTypeBuilder<PromoCodeUse> builder) {
     // Configure relationship with PromoCode (can't be done with annotations)
-    builder.HasOne(pcu => pcu.PromoCode).WithMany(pc => pc.PromoCodeUses).HasForeignKey(pcu => pcu.PromoCodeId).OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(pcu => pcu.PromoCode)
+           .WithMany(pc => pc.PromoCodeUses)
+           .HasForeignKey(pcu => pcu.PromoCodeId)
+           .OnDelete(DeleteBehavior.Cascade);
 
     // Configure relationship with User (can't be done with annotations)
     builder.HasOne(pcu => pcu.User).WithMany().HasForeignKey(pcu => pcu.UserId).OnDelete(DeleteBehavior.Cascade);
 
     // Configure relationship with FinancialTransaction (can't be done with annotations)
-    builder.HasOne(pcu => pcu.FinancialTransaction).WithMany(ft => ft.PromoCodeUses).HasForeignKey(pcu => pcu.FinancialTransactionId).OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(pcu => pcu.FinancialTransaction)
+           .WithMany(ft => ft.PromoCodeUses)
+           .HasForeignKey(pcu => pcu.FinancialTransactionId)
+           .OnDelete(DeleteBehavior.Cascade);
   }
 }

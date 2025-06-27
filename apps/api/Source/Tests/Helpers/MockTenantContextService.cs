@@ -3,6 +3,7 @@ using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Tenant.Services;
 using GameGuild.Modules.Auth.Constants;
 
+
 namespace GameGuild.Tests.Helpers {
   /// <summary>
   /// Mock implementation of ITenantContextService for testing purposes
@@ -100,7 +101,8 @@ namespace GameGuild.Tests.Helpers {
     /// Check if user has permission to access the specified tenant
     /// </summary>
     public async Task<bool> CanAccessTenantAsync(ClaimsPrincipal user, Guid tenantId) {
-      if (user.Identity?.IsAuthenticated != true || string.IsNullOrEmpty(user.FindFirst(ClaimTypes.NameIdentifier)?.Value)) { return false; }
+      if (user.Identity?.IsAuthenticated != true ||
+          string.IsNullOrEmpty(user.FindFirst(ClaimTypes.NameIdentifier)?.Value)) { return false; }
 
       Guid userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
       TenantPermission? permission = await GetTenantPermissionAsync(userId, tenantId);

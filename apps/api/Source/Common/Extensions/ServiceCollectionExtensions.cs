@@ -1,5 +1,6 @@
 using GameGuild.Common.Services;
 
+
 namespace GameGuild.Common.Extensions;
 
 public static class ServiceCollectionExtensions {
@@ -21,7 +22,8 @@ public static class ServiceCollectionExtensions {
 
   public static IServiceCollection AddUserProfileModule(this IServiceCollection services) {
     // Register UserProfile module services
-    services.AddScoped<Modules.UserProfile.Services.IUserProfileService, Modules.UserProfile.Services.UserProfileService>();
+    services
+      .AddScoped<Modules.UserProfile.Services.IUserProfileService, Modules.UserProfile.Services.UserProfileService>();
 
     return services;
   }
@@ -43,7 +45,8 @@ public static class ServiceCollectionExtensions {
   public static IServiceCollection AddProgramModule(this IServiceCollection services) {
     // Register Program module services
     services.AddScoped<Modules.Program.Services.IProgramService, Modules.Program.Services.ProgramService>();
-    services.AddScoped<Modules.Program.Interfaces.IProgramContentService, Modules.Program.Services.ProgramContentService>();
+    services
+      .AddScoped<Modules.Program.Interfaces.IProgramContentService, Modules.Program.Services.ProgramContentService>();
 
     return services;
   }

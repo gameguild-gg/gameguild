@@ -1,5 +1,6 @@
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Reputation.Models;
 
 /// <summary>

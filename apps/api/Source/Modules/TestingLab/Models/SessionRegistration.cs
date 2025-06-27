@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using GameGuild.Models;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.TestingLab.Models {
   public class SessionRegistration : BaseEntity {
     private Guid _sessionId;

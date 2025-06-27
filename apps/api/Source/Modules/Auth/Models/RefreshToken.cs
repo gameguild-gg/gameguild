@@ -1,5 +1,6 @@
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Auth.Models {
   /// <summary>
   /// Refresh token entity for managing user sessions

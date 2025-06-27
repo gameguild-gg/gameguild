@@ -1,6 +1,7 @@
 using GameGuild.Modules.User.GraphQL;
 using GameGuild.Modules.UserProfile.Services;
 
+
 namespace GameGuild.Modules.UserProfile.GraphQL;
 
 /// <summary>
@@ -11,7 +12,10 @@ public class UserProfileMutations {
   /// <summary>
   /// Create a new user profile
   /// </summary>
-  public async Task<Models.UserProfile> CreateUserProfile([Service] IUserProfileService userProfileService, CreateUserProfileInput input) {
+  public async Task<Models.UserProfile> CreateUserProfile(
+    [Service] IUserProfileService userProfileService,
+    CreateUserProfileInput input
+  ) {
     var userProfile = new Models.UserProfile {
       GivenName = input.GivenName,
       FamilyName = input.FamilyName,
@@ -32,7 +36,10 @@ public class UserProfileMutations {
   /// <summary>
   /// Update an existing user profile
   /// </summary>
-  public async Task<Models.UserProfile?> UpdateUserProfile([Service] IUserProfileService userProfileService, UpdateUserProfileInput input) {
+  public async Task<Models.UserProfile?> UpdateUserProfile(
+    [Service] IUserProfileService userProfileService,
+    UpdateUserProfileInput input
+  ) {
     var userProfile = new Models.UserProfile {
       Id = input.Id,
       GivenName = input.GivenName,

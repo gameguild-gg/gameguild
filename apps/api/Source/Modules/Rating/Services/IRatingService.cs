@@ -13,7 +13,10 @@ public interface IRatingService {
   /// <param name="user">The user providing the rating</param>
   /// <param name="comment">Optional comment with the rating</param>
   /// <returns>The created rating</returns>
-  Task<Models.Rating> AddRatingAsync(Guid entityId, string entityType, int value, User.Models.User user, string? comment = null);
+  Task<Models.Rating> AddRatingAsync(
+    Guid entityId, string entityType, int value, User.Models.User user,
+    string? comment = null
+  );
 
   /// <summary>
   /// Updates an existing rating

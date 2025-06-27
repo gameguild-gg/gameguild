@@ -1,5 +1,6 @@
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Common.GraphQL.Authorization;
 
 /// <summary>
@@ -70,7 +71,8 @@ public class RequireTenantPermissionAttribute : DACAuthorizationAttribute {
   /// Initialize tenant-level permission requirement
   /// </summary>
   /// <param name="requiredPermission">The permission type required</param>
-  public RequireTenantPermissionAttribute(PermissionType requiredPermission) : base(requiredPermission, typeof(object)) // No specific entity type for tenant-level
+  public RequireTenantPermissionAttribute(PermissionType requiredPermission) :
+    base(requiredPermission, typeof(object)) // No specific entity type for tenant-level
   { }
 }
 
@@ -86,7 +88,10 @@ public class RequireContentTypePermissionAttribute<TEntity> : DACAuthorizationAt
   /// Initialize content-type level permission requirement
   /// </summary>
   /// <param name="requiredPermission">The permission type required</param>
-  public RequireContentTypePermissionAttribute(PermissionType requiredPermission) : base(requiredPermission, typeof(TEntity)) { }
+  public RequireContentTypePermissionAttribute(PermissionType requiredPermission) : base(
+    requiredPermission,
+    typeof(TEntity)
+  ) { }
 }
 
 /// <summary>
@@ -94,7 +99,8 @@ public class RequireContentTypePermissionAttribute<TEntity> : DACAuthorizationAt
 /// Checks permissions for specific content entries within a tenant
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
-public class RequireResourcePermissionAttribute<TPermission, TEntity> : DACAuthorizationAttribute where TPermission : ResourcePermission<TEntity> where TEntity : BaseEntity {
+public class RequireResourcePermissionAttribute<TPermission, TEntity> : DACAuthorizationAttribute
+  where TPermission : ResourcePermission<TEntity> where TEntity : BaseEntity {
   public override DACPermissionLevel PermissionLevel => DACPermissionLevel.Resource;
 
   public override Type PermissionType => typeof(TPermission);
@@ -104,7 +110,10 @@ public class RequireResourcePermissionAttribute<TPermission, TEntity> : DACAutho
   /// </summary>
   /// <param name="requiredPermission">The permission type required</param>
   /// <param name="resourceIdParameterName">The parameter name containing the resource ID (default: "id")</param>
-  public RequireResourcePermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id") : base(requiredPermission, typeof(TEntity)) { ResourceIdParameterName = resourceIdParameterName; }
+  public RequireResourcePermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id") :
+    base(requiredPermission, typeof(TEntity)) {
+    ResourceIdParameterName = resourceIdParameterName;
+  }
 }
 
 /// <summary>
@@ -119,5 +128,8 @@ public class RequireResourcePermissionAttribute<TEntity> : DACAuthorizationAttri
   /// </summary>
   /// <param name="requiredPermission">The permission type required</param>
   /// <param name="resourceIdParameterName">The parameter name containing the resource ID (default: "id")</param>
-  public RequireResourcePermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id") : base(requiredPermission, typeof(TEntity)) { ResourceIdParameterName = resourceIdParameterName; }
+  public RequireResourcePermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id") :
+    base(requiredPermission, typeof(TEntity)) {
+    ResourceIdParameterName = resourceIdParameterName;
+  }
 }

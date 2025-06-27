@@ -3,6 +3,7 @@ using Xunit;
 using GameGuild.Modules.Project.Models;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Tests.Modules.Project.Unit.Services;
 
 /// <summary>
@@ -166,9 +167,10 @@ public class ProjectPermissionTests {
     var permission = new ProjectPermission();
 
     // Act & Assert
-    TableAttribute? tableAttribute = typeof(ProjectPermission).GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.Schema.TableAttribute), false)
-                                                              .Cast<System.ComponentModel.DataAnnotations.Schema.TableAttribute>()
-                                                              .FirstOrDefault();
+    TableAttribute? tableAttribute = typeof(ProjectPermission)
+                                     .GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.Schema.TableAttribute), false)
+                                     .Cast<System.ComponentModel.DataAnnotations.Schema.TableAttribute>()
+                                     .FirstOrDefault();
 
     Assert.NotNull(tableAttribute);
     Assert.Equal("ProjectPermissions", tableAttribute.Name);

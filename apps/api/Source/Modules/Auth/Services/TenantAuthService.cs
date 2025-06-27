@@ -4,6 +4,7 @@ using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Tenant.Services;
 using GameGuild.Modules.Auth.Constants;
 
+
 namespace GameGuild.Modules.Auth.Services;
 
 /// <summary>
@@ -13,7 +14,10 @@ public interface ITenantAuthService {
   /// <summary>
   /// Validate user's tenant access and include tenant data in authentication result
   /// </summary>
-  Task<SignInResponseDto> EnhanceWithTenantDataAsync(SignInResponseDto authResult, GameGuild.Modules.User.Models.User user, Guid? tenantId = null);
+  Task<SignInResponseDto> EnhanceWithTenantDataAsync(
+    SignInResponseDto authResult,
+    GameGuild.Modules.User.Models.User user, Guid? tenantId = null
+  );
 
   /// <summary>
   /// Get tenant-specific claims for a user
@@ -29,11 +33,18 @@ public interface ITenantAuthService {
 /// <summary>
 /// Implementation of tenant auth service
 /// </summary>
-public class TenantAuthService(ITenantService tenantService, ITenantContextService tenantContextService, IJwtTokenService jwtTokenService) : ITenantAuthService {
+public class TenantAuthService(
+  ITenantService tenantService,
+  ITenantContextService tenantContextService,
+  IJwtTokenService jwtTokenService
+) : ITenantAuthService {
   /// <summary>
   /// Enhance authentication result with tenant data
   /// </summary>
-  public async Task<SignInResponseDto> EnhanceWithTenantDataAsync(SignInResponseDto authResult, GameGuild.Modules.User.Models.User user, Guid? tenantId = null) {
+  public async Task<SignInResponseDto> EnhanceWithTenantDataAsync(
+    SignInResponseDto authResult,
+    GameGuild.Modules.User.Models.User user, Guid? tenantId = null
+  ) {
     // Get available tenants for the user
     var tenantPermissions = await tenantService.GetTenantsForUserAsync(user.Id);
     var availableTenants = tenantPermissions.Where(tp => tp.IsValid).ToList();
@@ -52,7 +63,8 @@ public class TenantAuthService(ITenantService tenantService, ITenantContextServi
     }
 
     // Validate tenant access
-    TenantPermission? tenantPermission = availableTenants.FirstOrDefault(tp => tp.TenantId.HasValue && tp.TenantId.Value == selectedTenantId);
+    TenantPermission? tenantPermission =
+      availableTenants.FirstOrDefault(tp => tp.TenantId.HasValue && tp.TenantId.Value == selectedTenantId);
 
     if (tenantPermission == null) {
       // If specified tenant is not accessible, use the first available
@@ -76,7 +88,9 @@ public class TenantAuthService(ITenantService tenantService, ITenantContextServi
     // Update response with new token and tenant info
     authResult.AccessToken = accessToken;
     authResult.TenantId = selectedTenantId;
-    authResult.AvailableTenants = availableTenants.Where(tp => tp.TenantId.HasValue).Select(tp => new TenantInfoDto { Id = tp.TenantId.Value, Name = tp.Tenant?.Name ?? "Unknown Tenant", IsActive = tp.Tenant?.IsActive ?? false }).ToList();
+    authResult.AvailableTenants = availableTenants.Where(tp => tp.TenantId.HasValue)
+                                                  .Select(tp => new TenantInfoDto { Id = tp.TenantId.Value, Name = tp.Tenant?.Name ?? "Unknown Tenant", IsActive = tp.Tenant?.IsActive ?? false })
+                                                  .ToList();
 
     return authResult;
   }

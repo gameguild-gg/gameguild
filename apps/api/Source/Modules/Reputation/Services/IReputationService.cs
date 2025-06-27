@@ -1,5 +1,6 @@
 using GameGuild.Modules.Reputation.Models;
 
+
 namespace GameGuild.Modules.Reputation.Services;
 
 /// <summary>

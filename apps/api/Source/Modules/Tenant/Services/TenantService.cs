@@ -3,6 +3,7 @@ using GameGuild.Common.Services;
 using GameGuild.Data;
 using GameGuild.Modules.Tenant.Models;
 
+
 namespace GameGuild.Modules.Tenant.Services;
 
 /// <summary>
@@ -29,7 +30,11 @@ public class TenantService : ITenantService {
   /// </summary>
   /// <param name="id">Tenant ID</param>
   /// <returns>Tenant or null if not found</returns>
-  public async Task<Models.Tenant?> GetTenantByIdAsync(Guid id) { return await _context.Tenants.Include(t => t.TenantPermissions).ThenInclude(tp => tp.User).FirstOrDefaultAsync(t => t.Id == id); }
+  public async Task<Models.Tenant?> GetTenantByIdAsync(Guid id) {
+    return await _context.Tenants.Include(t => t.TenantPermissions)
+                         .ThenInclude(tp => tp.User)
+                         .FirstOrDefaultAsync(t => t.Id == id);
+  }
 
   /// <summary>
   /// Get a tenant by name
@@ -93,7 +98,8 @@ public class TenantService : ITenantService {
   /// <param name="id">Tenant ID to restore</param>
   /// <returns>True if restored successfully</returns>
   public async Task<bool> RestoreTenantAsync(Guid id) {
-    Models.Tenant? tenant = await _context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt != null);
+    Models.Tenant? tenant = await _context.Tenants.IgnoreQueryFilters()
+                                          .FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt != null);
 
     if (tenant == null) { return false; }
 
@@ -155,7 +161,12 @@ public class TenantService : ITenantService {
   /// Get soft-deleted tenants
   /// </summary>
   /// <returns>List of soft-deleted tenants</returns>
-  public async Task<IEnumerable<Models.Tenant>> GetDeletedTenantsAsync() { return await _context.Tenants.IgnoreQueryFilters().Where(t => t.DeletedAt != null).Include(t => t.TenantPermissions).ToListAsync(); }
+  public async Task<IEnumerable<Models.Tenant>> GetDeletedTenantsAsync() {
+    return await _context.Tenants.IgnoreQueryFilters()
+                         .Where(t => t.DeletedAt != null)
+                         .Include(t => t.TenantPermissions)
+                         .ToListAsync();
+  }
 
   /// <summary>
   /// Add a user to a tenant
@@ -186,7 +197,10 @@ public class TenantService : ITenantService {
   /// <param name="tenantId">Tenant ID</param>
   /// <returns>List of TenantPermission relationships</returns>
   public async Task<IEnumerable<TenantPermission>> GetUsersInTenantAsync(Guid tenantId) {
-    return await _context.TenantPermissions.Where(tp => tp.TenantId == tenantId && tp.UserId != null).Include(tp => tp.User).Include(tp => tp.Tenant).ToListAsync();
+    return await _context.TenantPermissions.Where(tp => tp.TenantId == tenantId && tp.UserId != null)
+                         .Include(tp => tp.User)
+                         .Include(tp => tp.Tenant)
+                         .ToListAsync();
   }
 
   /// <summary>

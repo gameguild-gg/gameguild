@@ -3,6 +3,7 @@ using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using Moq;
 
+
 namespace GameGuild.Tests.Modules.Project.E2E.GraphQL;
 
 /// <summary>
@@ -32,14 +33,28 @@ public class DACPermissionLogicTests {
   public async Task CheckCommentPermissionHierarchy_WithResourcePermission_ReturnsTrue() {
     // Arrange
     var mockPermissionService = new Mock<IPermissionService>();
-    mockPermissionService.Setup(x => x.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<Guid>(), It.IsAny<PermissionType>())).ReturnsAsync(true);
+    mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
+               It.IsAny<Guid>(),
+               It.IsAny<Guid?>(),
+               It.IsAny<Guid>(),
+               It.IsAny<PermissionType>()
+             )
+      )
+      .ReturnsAsync(true);
 
     var userId = Guid.NewGuid();
     var tenantId = Guid.NewGuid();
     var commentId = Guid.NewGuid();
 
     // Act
-    bool result = await CheckCommentPermissionHierarchy(mockPermissionService.Object, userId, tenantId, commentId, PermissionType.Comment);
+    bool result = await CheckCommentPermissionHierarchy(
+                    mockPermissionService.Object,
+                    userId,
+                    tenantId,
+                    commentId,
+                    PermissionType.Comment
+                  );
 
     // Assert
     Assert.True(result);
@@ -49,15 +64,37 @@ public class DACPermissionLogicTests {
   public async Task CheckCommentPermissionHierarchy_WithContentTypePermission_ReturnsTrue() {
     // Arrange
     var mockPermissionService = new Mock<IPermissionService>();
-    mockPermissionService.Setup(x => x.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<Guid>(), It.IsAny<PermissionType>())).ReturnsAsync(false);
-    mockPermissionService.Setup(x => x.HasContentTypePermissionAsync(It.IsAny<Guid>(), It.IsAny<Guid?>(), "Comment", It.IsAny<PermissionType>())).ReturnsAsync(true);
+    mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
+               It.IsAny<Guid>(),
+               It.IsAny<Guid?>(),
+               It.IsAny<Guid>(),
+               It.IsAny<PermissionType>()
+             )
+      )
+      .ReturnsAsync(false);
+    mockPermissionService
+      .Setup(x => x.HasContentTypePermissionAsync(
+               It.IsAny<Guid>(),
+               It.IsAny<Guid?>(),
+               "Comment",
+               It.IsAny<PermissionType>()
+             )
+      )
+      .ReturnsAsync(true);
 
     var userId = Guid.NewGuid();
     var tenantId = Guid.NewGuid();
     var commentId = Guid.NewGuid();
 
     // Act
-    bool result = await CheckCommentPermissionHierarchy(mockPermissionService.Object, userId, tenantId, commentId, PermissionType.Comment);
+    bool result = await CheckCommentPermissionHierarchy(
+                    mockPermissionService.Object,
+                    userId,
+                    tenantId,
+                    commentId,
+                    PermissionType.Comment
+                  );
 
     // Assert
     Assert.True(result);
@@ -67,16 +104,40 @@ public class DACPermissionLogicTests {
   public async Task CheckCommentPermissionHierarchy_WithTenantPermission_ReturnsTrue() {
     // Arrange
     var mockPermissionService = new Mock<IPermissionService>();
-    mockPermissionService.Setup(x => x.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<Guid>(), It.IsAny<PermissionType>())).ReturnsAsync(false);
-    mockPermissionService.Setup(x => x.HasContentTypePermissionAsync(It.IsAny<Guid>(), It.IsAny<Guid?>(), "Comment", It.IsAny<PermissionType>())).ReturnsAsync(false);
-    mockPermissionService.Setup(x => x.HasTenantPermissionAsync(It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<PermissionType>())).ReturnsAsync(true);
+    mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
+               It.IsAny<Guid>(),
+               It.IsAny<Guid?>(),
+               It.IsAny<Guid>(),
+               It.IsAny<PermissionType>()
+             )
+      )
+      .ReturnsAsync(false);
+    mockPermissionService
+      .Setup(x => x.HasContentTypePermissionAsync(
+               It.IsAny<Guid>(),
+               It.IsAny<Guid?>(),
+               "Comment",
+               It.IsAny<PermissionType>()
+             )
+      )
+      .ReturnsAsync(false);
+    mockPermissionService
+      .Setup(x => x.HasTenantPermissionAsync(It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<PermissionType>()))
+      .ReturnsAsync(true);
 
     var userId = Guid.NewGuid();
     var tenantId = Guid.NewGuid();
     var commentId = Guid.NewGuid();
 
     // Act
-    bool result = await CheckCommentPermissionHierarchy(mockPermissionService.Object, userId, tenantId, commentId, PermissionType.Comment);
+    bool result = await CheckCommentPermissionHierarchy(
+                    mockPermissionService.Object,
+                    userId,
+                    tenantId,
+                    commentId,
+                    PermissionType.Comment
+                  );
 
     // Assert
     Assert.True(result);
@@ -86,16 +147,40 @@ public class DACPermissionLogicTests {
   public async Task CheckCommentPermissionHierarchy_WithNoPermissions_ReturnsFalse() {
     // Arrange
     var mockPermissionService = new Mock<IPermissionService>();
-    mockPermissionService.Setup(x => x.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<Guid>(), It.IsAny<PermissionType>())).ReturnsAsync(false);
-    mockPermissionService.Setup(x => x.HasContentTypePermissionAsync(It.IsAny<Guid>(), It.IsAny<Guid?>(), "Comment", It.IsAny<PermissionType>())).ReturnsAsync(false);
-    mockPermissionService.Setup(x => x.HasTenantPermissionAsync(It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<PermissionType>())).ReturnsAsync(false);
+    mockPermissionService
+      .Setup(x => x.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
+               It.IsAny<Guid>(),
+               It.IsAny<Guid?>(),
+               It.IsAny<Guid>(),
+               It.IsAny<PermissionType>()
+             )
+      )
+      .ReturnsAsync(false);
+    mockPermissionService
+      .Setup(x => x.HasContentTypePermissionAsync(
+               It.IsAny<Guid>(),
+               It.IsAny<Guid?>(),
+               "Comment",
+               It.IsAny<PermissionType>()
+             )
+      )
+      .ReturnsAsync(false);
+    mockPermissionService
+      .Setup(x => x.HasTenantPermissionAsync(It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<PermissionType>()))
+      .ReturnsAsync(false);
 
     var userId = Guid.NewGuid();
     var tenantId = Guid.NewGuid();
     var commentId = Guid.NewGuid();
 
     // Act
-    bool result = await CheckCommentPermissionHierarchy(mockPermissionService.Object, userId, tenantId, commentId, PermissionType.Comment);
+    bool result = await CheckCommentPermissionHierarchy(
+                    mockPermissionService.Object,
+                    userId,
+                    tenantId,
+                    commentId,
+                    PermissionType.Comment
+                  );
 
     // Assert
     Assert.False(result);
@@ -105,10 +190,19 @@ public class DACPermissionLogicTests {
   /// Copy of the hierarchical permission check method from CommentQuery
   /// This allows us to unit test the logic independently
   /// </summary>
-  private static async Task<bool> CheckCommentPermissionHierarchy(IPermissionService permissionService, Guid userId, Guid tenantId, Guid commentId, PermissionType permission) {
+  private static async Task<bool> CheckCommentPermissionHierarchy(
+    IPermissionService permissionService, Guid userId,
+    Guid tenantId, Guid commentId, PermissionType permission
+  ) {
     try {
       // 1. Check resource-level permission
-      bool hasResourcePermission = await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(userId, tenantId, commentId, permission);
+      bool hasResourcePermission =
+        await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
+          userId,
+          tenantId,
+          commentId,
+          permission
+        );
 
       if (hasResourcePermission) return true;
     }
@@ -117,7 +211,8 @@ public class DACPermissionLogicTests {
     }
 
     // 2. Check content-type permission
-    bool hasContentTypePermission = await permissionService.HasContentTypePermissionAsync(userId, tenantId, "Comment", permission);
+    bool hasContentTypePermission =
+      await permissionService.HasContentTypePermissionAsync(userId, tenantId, "Comment", permission);
 
     if (hasContentTypePermission) return true;
 

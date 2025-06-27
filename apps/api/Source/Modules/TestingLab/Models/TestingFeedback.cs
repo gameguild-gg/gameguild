@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.TestingLab.Models {
   public class TestingFeedback : BaseEntity {
     private Guid _testingRequestId;

@@ -3,6 +3,7 @@ using GameGuild.Data;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Modules.Auth.Attributes;
 
+
 namespace GameGuild.Common.Controllers;
 
 [ApiController]
@@ -49,6 +50,11 @@ public class HealthController : ControllerBase {
 
       return Ok(new { status = "healthy", connected = canConnect, userCount, timestamp = DateTime.UtcNow });
     }
-    catch (Exception ex) { return StatusCode(503, new { status = "unhealthy", connected = false, error = ex.Message, timestamp = DateTime.UtcNow }); }
+    catch (Exception ex) {
+      return StatusCode(
+        503,
+        new { status = "unhealthy", connected = false, error = ex.Message, timestamp = DateTime.UtcNow }
+      );
+    }
   }
 }

@@ -1,5 +1,6 @@
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Models {
   public class TeamMember : BaseEntity {
     private Guid _teamId;

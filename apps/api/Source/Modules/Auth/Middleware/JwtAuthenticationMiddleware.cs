@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
+
 namespace GameGuild.Modules.Auth.Middleware {
   /// <summary>
   /// JWT Authentication middleware
@@ -56,7 +57,8 @@ namespace GameGuild.Modules.Auth.Middleware {
         ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes clock skew tolerance
       };
 
-      ClaimsPrincipal? principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+      ClaimsPrincipal? principal =
+        tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
 
       return principal;
     }

@@ -6,6 +6,7 @@ using System.Text.Json;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 
+
 namespace GameGuild.Modules.Product.Models;
 
 [Table("Products")]
@@ -158,7 +159,10 @@ public class Product : Content {
   public void SetBundleMetadata<T>(string key, T value) {
     if (Metadata == null) { Metadata = new ResourceMetadata { ResourceType = nameof(Product), AdditionalData = "{}" }; }
 
-    var metadataDict = string.IsNullOrEmpty(Metadata.AdditionalData) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(Metadata.AdditionalData) ?? new Dictionary<string, object>();
+    var metadataDict = string.IsNullOrEmpty(Metadata.AdditionalData)
+                         ? new Dictionary<string, object>()
+                         : JsonSerializer.Deserialize<Dictionary<string, object>>(Metadata.AdditionalData) ??
+                           new Dictionary<string, object>();
 
     metadataDict[key] = value!;
     Metadata.AdditionalData = JsonSerializer.Serialize(metadataDict);

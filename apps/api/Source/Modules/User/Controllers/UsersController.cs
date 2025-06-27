@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using GameGuild.Modules.User.Dtos;
 using GameGuild.Modules.User.Services;
 
+
 namespace GameGuild.Modules.User.Controllers;
 
 [ApiController]
@@ -16,16 +17,16 @@ public class UsersController : ControllerBase {
     var users = await _userService.GetAllUsersAsync();
 
     var userDtos = users.Select(u => new UserResponseDto {
-        Id = u.Id,
-        Version = u.Version,
-        Name = u.Name,
-        Email = u.Email,
-        IsActive = u.IsActive,
-        CreatedAt = u.CreatedAt,
-        UpdatedAt = u.UpdatedAt,
-        DeletedAt = u.DeletedAt,
-        IsDeleted = u.IsDeleted
-      }
+                                  Id = u.Id,
+                                  Version = u.Version,
+                                  Name = u.Name,
+                                  Email = u.Email,
+                                  IsActive = u.IsActive,
+                                  CreatedAt = u.CreatedAt,
+                                  UpdatedAt = u.UpdatedAt,
+                                  DeletedAt = u.DeletedAt,
+                                  IsDeleted = u.IsDeleted
+                                }
     );
 
     return Ok(userDtos);
@@ -37,23 +38,24 @@ public class UsersController : ControllerBase {
     var users = await _userService.GetDeletedUsersAsync();
 
     var userDtos = users.Select(u => new UserResponseDto {
-        Id = u.Id,
-        Version = u.Version,
-        Name = u.Name,
-        Email = u.Email,
-        IsActive = u.IsActive,
-        CreatedAt = u.CreatedAt,
-        UpdatedAt = u.UpdatedAt,
-        DeletedAt = u.DeletedAt,
-        IsDeleted = u.IsDeleted
-      }
+                                  Id = u.Id,
+                                  Version = u.Version,
+                                  Name = u.Name,
+                                  Email = u.Email,
+                                  IsActive = u.IsActive,
+                                  CreatedAt = u.CreatedAt,
+                                  UpdatedAt = u.UpdatedAt,
+                                  DeletedAt = u.DeletedAt,
+                                  IsDeleted = u.IsDeleted
+                                }
     );
 
     return Ok(userDtos);
   }
 
   // GET: users/{id}
-  [HttpGet("{id}")] public async Task<ActionResult<UserResponseDto>> GetUser(Guid id) {
+  [HttpGet("{id}")]
+  public async Task<ActionResult<UserResponseDto>> GetUser(Guid id) {
     Models.User? user = await _userService.GetUserByIdAsync(id);
 
     if (user == null) { return NotFound(); }
@@ -74,7 +76,8 @@ public class UsersController : ControllerBase {
   }
 
   // POST: users
-  [HttpPost] public async Task<ActionResult<UserResponseDto>> CreateUser(CreateUserDto createUserDto) {
+  [HttpPost]
+  public async Task<ActionResult<UserResponseDto>> CreateUser(CreateUserDto createUserDto) {
     // Use BaseEntity.Create for consistent creation pattern
     var user = new Models.User(new { createUserDto.Name, createUserDto.Email, IsActive = true });
 
@@ -96,7 +99,8 @@ public class UsersController : ControllerBase {
   }
 
   // PUT: users/{id}
-  [HttpPut("{id}")] public async Task<ActionResult<UserResponseDto>> UpdateUser(Guid id, UpdateUserDto updateUserDto) {
+  [HttpPut("{id}")]
+  public async Task<ActionResult<UserResponseDto>> UpdateUser(Guid id, UpdateUserDto updateUserDto) {
     Models.User? existingUser = await _userService.GetUserByIdAsync(id);
 
     if (existingUser == null) { return NotFound(); }
@@ -126,7 +130,8 @@ public class UsersController : ControllerBase {
   }
 
   // DELETE: users/{id}
-  [HttpDelete("{id}")] public async Task<IActionResult> DeleteUser(Guid id) {
+  [HttpDelete("{id}")]
+  public async Task<IActionResult> DeleteUser(Guid id) {
     bool result = await _userService.DeleteUserAsync(id);
 
     if (!result) { return NotFound(); }

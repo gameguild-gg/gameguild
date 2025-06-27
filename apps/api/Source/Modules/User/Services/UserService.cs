@@ -1,6 +1,7 @@
 using GameGuild.Data;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace GameGuild.Modules.User.Services;
 
 public interface IUserService {

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
+
 namespace GameGuild.Tests.Fixtures;
 
 /// <summary>
@@ -26,8 +27,14 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
     Environment.SetEnvironmentVariable("ASPNETCORE_DETAILEDERRORS", "true");
 
     // Add JWT environment variables
-    Environment.SetEnvironmentVariable("JWT_SECRET", "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters");
-    Environment.SetEnvironmentVariable("JWT_REFRESH_SECRET", "test-jwt-refresh-secret-key-for-integration-testing-minimum-32-characters");
+    Environment.SetEnvironmentVariable(
+      "JWT_SECRET",
+      "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters"
+    );
+    Environment.SetEnvironmentVariable(
+      "JWT_REFRESH_SECRET",
+      "test-jwt-refresh-secret-key-for-integration-testing-minimum-32-characters"
+    );
 
     // GitHub OAuth settings (mock values for tests)
     Environment.SetEnvironmentVariable("GITHUB_CLIENT_ID", "test-github-client-id");
@@ -69,9 +76,17 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
               var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<TestWebApplicationFactory>>();
 
               // Log detailed validation errors
-              var errors = context.ModelState.Where(x => x.Value?.Errors.Count > 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray());
+              var errors = context.ModelState.Where(x => x.Value?.Errors.Count > 0)
+                                  .ToDictionary(
+                                    kvp => kvp.Key,
+                                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray()
+                                  );
 
-              logger.LogWarning("Model validation failed for {Path}. Errors: {@Errors}", context.HttpContext.Request.Path, errors);
+              logger.LogWarning(
+                "Model validation failed for {Path}. Errors: {@Errors}",
+                context.HttpContext.Request.Path,
+                errors
+              );
 
               return new BadRequestObjectResult(new { Title = "One or more validation errors occurred.", Status = 400, Errors = errors, TraceId = context.HttpContext.TraceIdentifier });
             };
@@ -79,21 +94,28 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
         );
 
         // Remove the existing DbContext configurations to prevent multiple database provider registration
-        ServiceDescriptor? descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+        ServiceDescriptor? descriptor =
+          services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
 
         if (descriptor != null) { services.Remove(descriptor); }
 
         // Remove all EF Core related services to prevent conflicts
-        var efCoreServices = services.Where(s => s.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true).ToList();
+        var efCoreServices = services
+                             .Where(s => s.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true)
+                             .ToList();
 
         foreach (ServiceDescriptor service in efCoreServices) { services.Remove(service); }
 
         // Replace TenantContextService with mock for testing
-        var tenantContextServiceDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(GameGuild.Modules.Tenant.Services.ITenantContextService));
+        var tenantContextServiceDescriptor = services.SingleOrDefault(d =>
+                                                                        d.ServiceType == typeof(GameGuild.Modules.Tenant.Services.ITenantContextService)
+        );
 
         if (tenantContextServiceDescriptor != null) { services.Remove(tenantContextServiceDescriptor); }
 
-        services.AddSingleton<GameGuild.Modules.Tenant.Services.ITenantContextService, GameGuild.Tests.Helpers.MockTenantContextService>();
+        services
+          .AddSingleton<GameGuild.Modules.Tenant.Services.ITenantContextService,
+            GameGuild.Tests.Helpers.MockTenantContextService>();
 
         // Add in-memory database for testing with unique database name
         var databaseName = $"TestDatabase_{Guid.NewGuid()}";
@@ -112,11 +134,14 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
                                                       .Build();
 
         // Remove existing JWT configuration and re-add with test settings
-        var jwtServiceDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(GameGuild.Modules.Auth.Services.IJwtTokenService));
+        var jwtServiceDescriptor =
+          services.SingleOrDefault(d => d.ServiceType == typeof(GameGuild.Modules.Auth.Services.IJwtTokenService));
 
         if (jwtServiceDescriptor != null) { services.Remove(jwtServiceDescriptor); }
 
-        services.AddSingleton<GameGuild.Modules.Auth.Services.IJwtTokenService>(provider => new GameGuild.Modules.Auth.Services.JwtTokenService(testJwtConfig));
+        services.AddSingleton<GameGuild.Modules.Auth.Services.IJwtTokenService>(provider =>
+                                                                                  new GameGuild.Modules.Auth.Services.JwtTokenService(testJwtConfig)
+        );
 
         // Configure JWT Bearer options for tests by overriding the existing options
         services.PostConfigure<JwtBearerOptions>(
@@ -129,7 +154,12 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
               ValidateIssuerSigningKey = true,
               ValidIssuer = "TestIssuer",
               ValidAudience = "TestAudience",
-              IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters")),
+              IssuerSigningKey =
+                new SymmetricSecurityKey(
+                  Encoding.UTF8.GetBytes(
+                    "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters"
+                  )
+                ),
               ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
               RequireSignedTokens = true,
               TryAllIssuerSigningKeys = true
@@ -138,19 +168,29 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
             // Add event handlers for debugging
             options.Events = new JwtBearerEvents {
               OnAuthenticationFailed = context => {
-                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<TestWebApplicationFactory>>();
-                logger.LogError("JWT authentication failed: {Exception} for token: {Token}", context.Exception.Message, context.Request.Headers.Authorization.FirstOrDefault());
+                var logger =
+                  context.HttpContext.RequestServices.GetRequiredService<ILogger<TestWebApplicationFactory>>();
+                logger.LogError(
+                  "JWT authentication failed: {Exception} for token: {Token}",
+                  context.Exception.Message,
+                  context.Request.Headers.Authorization.FirstOrDefault()
+                );
 
                 return Task.CompletedTask;
               },
               OnTokenValidated = context => {
-                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<TestWebApplicationFactory>>();
-                logger.LogInformation("JWT token validated successfully for user: {UserId}", context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var logger =
+                  context.HttpContext.RequestServices.GetRequiredService<ILogger<TestWebApplicationFactory>>();
+                logger.LogInformation(
+                  "JWT token validated successfully for user: {UserId}",
+                  context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                );
 
                 return Task.CompletedTask;
               },
               OnMessageReceived = context => {
-                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<TestWebApplicationFactory>>();
+                var logger =
+                  context.HttpContext.RequestServices.GetRequiredService<ILogger<TestWebApplicationFactory>>();
                 logger.LogDebug("JWT message received: {HasToken}", !string.IsNullOrEmpty(context.Token));
 
                 return Task.CompletedTask;
@@ -184,7 +224,9 @@ public class TestErrorLoggingMiddleware {
       if (context.Response.StatusCode >= 400) {
         var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
         var hasAuth = !string.IsNullOrEmpty(authHeader);
-        var userClaims = context.User.Identity?.IsAuthenticated == true ? string.Join(", ", context.User.Claims.Select(c => $"{c.Type}={c.Value}")) : "Not authenticated";
+        var userClaims = context.User.Identity?.IsAuthenticated == true
+                           ? string.Join(", ", context.User.Claims.Select(c => $"{c.Type}={c.Value}"))
+                           : "Not authenticated";
 
         _logger.LogWarning(
           "Request failed with status {StatusCode} for {Method} {Path}. Query: {Query}. HasAuth: {HasAuth}. User: {UserClaims}",
@@ -198,7 +240,13 @@ public class TestErrorLoggingMiddleware {
       }
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Unhandled exception in request {Method} {Path}. Query: {Query}", context.Request.Method, context.Request.Path, context.Request.QueryString);
+      _logger.LogError(
+        ex,
+        "Unhandled exception in request {Method} {Path}. Query: {Query}",
+        context.Request.Method,
+        context.Request.Path,
+        context.Request.QueryString
+      );
 
       throw;
     }

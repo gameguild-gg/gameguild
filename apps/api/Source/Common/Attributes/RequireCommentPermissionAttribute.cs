@@ -6,6 +6,7 @@ using GameGuild.Common.Entities;
 using GameGuild.Modules.Comment.Models;
 using GameGuild.Modules.Auth.Constants;
 
+
 namespace GameGuild.Common.Attributes;
 
 /// <summary>
@@ -54,7 +55,13 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
 
     // Check resource-level permission with hierarchical fallback
     // This uses the specific CommentPermission and Comment types
-    bool hasPermission = await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(userId, tenantId, resourceId, _requiredPermission);
+    bool hasPermission =
+      await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
+        userId,
+        tenantId,
+        resourceId,
+        _requiredPermission
+      );
 
     if (!hasPermission) { context.Result = new ForbidResult(); }
   }

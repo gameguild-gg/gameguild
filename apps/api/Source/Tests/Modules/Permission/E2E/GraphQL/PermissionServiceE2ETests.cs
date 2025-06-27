@@ -14,6 +14,7 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Tests.Fixtures;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
+
 namespace GameGuild.Tests.Modules.Permission.E2E;
 
 /// <summary>
@@ -38,7 +39,9 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
 
     // Use a separate in-memory database for E2E tests
     var services = new ServiceCollection();
-    services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+    services.AddDbContext<ApplicationDbContext>(options =>
+                                                  options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+    );
     services.AddScoped<IPermissionService, PermissionService>();
 
     ServiceProvider serviceProvider = services.BuildServiceProvider();
@@ -85,7 +88,8 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
       string content = await response.Content.ReadAsStringAsync();
       var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
 
-      if (jsonResponse.TryGetProperty("data", out JsonElement data) && data.TryGetProperty("grantTenantPermission", out JsonElement permissionData)) {
+      if (jsonResponse.TryGetProperty("data", out JsonElement data) &&
+          data.TryGetProperty("grantTenantPermission", out JsonElement permissionData)) {
         Assert.Equal(user.Id.ToString(), permissionData.GetProperty("userId").GetString());
         Assert.Equal(tenant.Id.ToString(), permissionData.GetProperty("tenantId").GetString());
 
@@ -108,7 +112,11 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     TenantModel tenant = await CreateTestTenantAsync();
 
     // Grant specific permissions
-    await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id, [PermissionType.Read, PermissionType.Comment]);
+    await _permissionService.GrantTenantPermissionAsync(
+      user.Id,
+      tenant.Id,
+      [PermissionType.Read, PermissionType.Comment]
+    );
 
     string token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
@@ -133,14 +141,16 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
       string content = await responseGranted.Content.ReadAsStringAsync();
       var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
 
-      if (jsonResponse.TryGetProperty("data", out JsonElement data) && data.TryGetProperty("hasTenantPermission", out JsonElement hasPermission)) { Assert.True(hasPermission.GetBoolean()); }
+      if (jsonResponse.TryGetProperty("data", out JsonElement data) &&
+          data.TryGetProperty("hasTenantPermission", out JsonElement hasPermission)) { Assert.True(hasPermission.GetBoolean()); }
     }
 
     if (responseNotGranted.IsSuccessStatusCode) {
       string content = await responseNotGranted.Content.ReadAsStringAsync();
       var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
 
-      if (jsonResponse.TryGetProperty("data", out JsonElement data) && data.TryGetProperty("hasTenantPermission", out JsonElement hasPermission)) { Assert.False(hasPermission.GetBoolean()); }
+      if (jsonResponse.TryGetProperty("data", out JsonElement data) &&
+          data.TryGetProperty("hasTenantPermission", out JsonElement hasPermission)) { Assert.False(hasPermission.GetBoolean()); }
     }
   }
 
@@ -172,7 +182,8 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
       string content = await response.Content.ReadAsStringAsync();
       var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
 
-      if (jsonResponse.TryGetProperty("data", out JsonElement data) && data.TryGetProperty("getUserTenantPermissions", out JsonElement permissions)) {
+      if (jsonResponse.TryGetProperty("data", out JsonElement data) &&
+          data.TryGetProperty("getUserTenantPermissions", out JsonElement permissions)) {
         var permissionList = permissions.EnumerateArray().Select(p => p.GetString()).ToList();
 
         Assert.Contains("Read", permissionList);
@@ -233,7 +244,11 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     TenantModel tenant = await CreateTestTenantAsync();
 
     // First, grant permissions
-    await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id, [PermissionType.Read, PermissionType.Edit, PermissionType.Comment]);
+    await _permissionService.GrantTenantPermissionAsync(
+      user.Id,
+      tenant.Id,
+      [PermissionType.Read, PermissionType.Edit, PermissionType.Comment]
+    );
 
     string token = await CreateJwtTokenForUserAsync(admin, tenant);
     SetAuthorizationHeader(token);
@@ -271,10 +286,12 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     SetAuthorizationHeader(token);
 
     // Act - Check granted permission
-    HttpResponseMessage responseGranted = await _client.GetAsync($"/api/permissions/tenant/check?userId={user.Id}&tenantId={tenant.Id}&permission=Read");
+    HttpResponseMessage responseGranted =
+      await _client.GetAsync($"/api/permissions/tenant/check?userId={user.Id}&tenantId={tenant.Id}&permission=Read");
 
     // Act - Check non-granted permission
-    HttpResponseMessage responseNotGranted = await _client.GetAsync($"/api/permissions/tenant/check?userId={user.Id}&tenantId={tenant.Id}&permission=Delete");
+    HttpResponseMessage responseNotGranted =
+      await _client.GetAsync($"/api/permissions/tenant/check?userId={user.Id}&tenantId={tenant.Id}&permission=Delete");
 
     // Assert
     if (responseGranted.IsSuccessStatusCode) {
@@ -335,13 +352,26 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
       string content = await response.Content.ReadAsStringAsync();
       var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
 
-      if (jsonResponse.TryGetProperty("data", out JsonElement data) && data.TryGetProperty("grantResourcePermission", out JsonElement permissionData)) {
+      if (jsonResponse.TryGetProperty("data", out JsonElement data) &&
+          data.TryGetProperty("grantResourcePermission", out JsonElement permissionData)) {
         Assert.Equal(user.Id.ToString(), permissionData.GetProperty("userId").GetString());
         Assert.Equal(comment.Id.ToString(), permissionData.GetProperty("resourceId").GetString());
 
         // Verify permissions through service
-        bool hasEdit = await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(user.Id, tenant.Id, comment.Id, PermissionType.Edit);
-        bool hasDelete = await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(user.Id, tenant.Id, comment.Id, PermissionType.Delete);
+        bool hasEdit =
+          await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
+            user.Id,
+            tenant.Id,
+            comment.Id,
+            PermissionType.Edit
+          );
+        bool hasDelete =
+          await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
+            user.Id,
+            tenant.Id,
+            comment.Id,
+            PermissionType.Delete
+          );
 
         Assert.True(hasEdit);
         Assert.True(hasDelete);
@@ -358,7 +388,12 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     Comment comment = await CreateTestCommentAsync();
 
     // Grant owner permission to share
-    await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(owner.Id, tenant.Id, comment.Id, [PermissionType.Share, PermissionType.Edit]);
+    await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
+      owner.Id,
+      tenant.Id,
+      comment.Id,
+      [PermissionType.Share, PermissionType.Edit]
+    );
 
     string token = await CreateJwtTokenForUserAsync(owner, tenant);
     SetAuthorizationHeader(token);
@@ -380,8 +415,20 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     // Assert
     if (response.IsSuccessStatusCode) {
       // Verify target user received permissions
-      bool hasRead = await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(targetUser.Id, tenant.Id, comment.Id, PermissionType.Read);
-      bool hasComment = await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(targetUser.Id, tenant.Id, comment.Id, PermissionType.Comment);
+      bool hasRead =
+        await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
+          targetUser.Id,
+          tenant.Id,
+          comment.Id,
+          PermissionType.Read
+        );
+      bool hasComment =
+        await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
+          targetUser.Id,
+          tenant.Id,
+          comment.Id,
+          PermissionType.Comment
+        );
 
       Assert.True(hasRead);
       Assert.True(hasComment);
@@ -420,7 +467,8 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
       string content = await response.Content.ReadAsStringAsync();
       var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
 
-      if (jsonResponse.TryGetProperty("data", out JsonElement data) && data.TryGetProperty("getEffectiveTenantPermissions", out JsonElement permissions)) {
+      if (jsonResponse.TryGetProperty("data", out JsonElement data) &&
+          data.TryGetProperty("getEffectiveTenantPermissions", out JsonElement permissions)) {
         var permissionList = permissions.EnumerateArray().Select(p => p.GetString()).ToList();
 
         // Should have both default (Read) and user-specific (Comment) permissions
@@ -444,8 +492,18 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     Comment comment3 = await CreateTestCommentAsync();
 
     // Grant permissions to some resources
-    await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(user.Id, tenant.Id, comment1.Id, [PermissionType.Read, PermissionType.Edit]);
-    await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(user.Id, tenant.Id, comment3.Id, [PermissionType.Read]);
+    await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
+      user.Id,
+      tenant.Id,
+      comment1.Id,
+      [PermissionType.Read, PermissionType.Edit]
+    );
+    await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
+      user.Id,
+      tenant.Id,
+      comment3.Id,
+      [PermissionType.Read]
+    );
 
     string token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
@@ -504,7 +562,11 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
 
     // Grant admin permissions (in real app, this would be done differently)
     TenantModel tenant = await CreateTestTenantAsync();
-    await _permissionService.GrantTenantPermissionAsync(admin.Id, tenant.Id, [PermissionType.Draft, PermissionType.Edit, PermissionType.Delete, PermissionType.Read]);
+    await _permissionService.GrantTenantPermissionAsync(
+      admin.Id,
+      tenant.Id,
+      [PermissionType.Draft, PermissionType.Edit, PermissionType.Delete, PermissionType.Read]
+    );
 
     return admin;
   }
@@ -546,7 +608,10 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
   private void SetAuthorizationHeader(string token) { _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token); }
 
   private async Task<HttpResponseMessage> PostGraphQlAsync(object request) {
-    string json = JsonSerializer.Serialize(request, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+    string json = JsonSerializer.Serialize(
+      request,
+      new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
+    );
 
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 

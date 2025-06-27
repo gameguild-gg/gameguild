@@ -1,6 +1,7 @@
 using GameGuild.Common.Enums;
 using GameGuild.Modules.TestingLab.Models;
 
+
 namespace GameGuild.Modules.TestingLab.Services;
 
 /// <summary>
@@ -174,7 +175,10 @@ public interface ITestService {
   /// <summary>
   /// Register user for a testing session
   /// </summary>
-  Task<SessionRegistration> RegisterForSessionAsync(Guid sessionId, Guid userId, RegistrationType registrationType, string? notes = null);
+  Task<SessionRegistration> RegisterForSessionAsync(
+    Guid sessionId, Guid userId, RegistrationType registrationType,
+    string? notes = null
+  );
 
   /// <summary>
   /// Unregister user from a testing session
@@ -189,7 +193,10 @@ public interface ITestService {
   /// <summary>
   /// Add user to session waitlist
   /// </summary>
-  Task<SessionWaitlist> AddToWaitlistAsync(Guid sessionId, Guid userId, RegistrationType registrationType, string? notes = null);
+  Task<SessionWaitlist> AddToWaitlistAsync(
+    Guid sessionId, Guid userId, RegistrationType registrationType,
+    string? notes = null
+  );
 
   /// <summary>
   /// Remove user from session waitlist
@@ -208,7 +215,10 @@ public interface ITestService {
   /// <summary>
   /// Add feedback for a testing request
   /// </summary>
-  Task<TestingFeedback> AddFeedbackAsync(Guid testingRequestId, Guid userId, Guid feedbackFormId, string feedbackData, TestingContext context, Guid? sessionId = null, string? additionalNotes = null);
+  Task<TestingFeedback> AddFeedbackAsync(
+    Guid testingRequestId, Guid userId, Guid feedbackFormId, string feedbackData,
+    TestingContext context, Guid? sessionId = null, string? additionalNotes = null
+  );
 
   /// <summary>
   /// Get feedback for a testing request

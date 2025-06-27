@@ -2,6 +2,7 @@ using Xunit;
 using GameGuild.Common.Entities;
 using System.Collections.ObjectModel;
 
+
 namespace GameGuild.Tests.Modules.Permission.Unit.Models;
 
 /// <summary>

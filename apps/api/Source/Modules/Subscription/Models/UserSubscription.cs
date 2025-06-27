@@ -6,6 +6,7 @@ using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 using GameGuild.Modules.Product.Models;
 
+
 namespace GameGuild.Modules.Subscription.Models;
 
 [Table("user_subscriptions")]
@@ -150,6 +151,9 @@ public class UserSubscriptionConfiguration : IEntityTypeConfiguration<UserSubscr
     builder.HasOne(us => us.User).WithMany().HasForeignKey(us => us.UserId).OnDelete(DeleteBehavior.Cascade);
 
     // Configure relationship with SubscriptionPlan (can't be done with annotations)
-    builder.HasOne(us => us.SubscriptionPlan).WithMany().HasForeignKey(us => us.SubscriptionPlanId).OnDelete(DeleteBehavior.Restrict);
+    builder.HasOne(us => us.SubscriptionPlan)
+           .WithMany()
+           .HasForeignKey(us => us.SubscriptionPlanId)
+           .OnDelete(DeleteBehavior.Restrict);
   }
 }

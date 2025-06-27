@@ -1,6 +1,7 @@
 using System.Reflection;
 using GameGuild.Modules.Tenant.Models;
 
+
 namespace GameGuild.Common.Entities;
 
 /// <summary>
@@ -28,19 +29,22 @@ public class BaseEntity : BaseEntity<Guid> {
   /// <summary>
   /// Timestamp when the entity was last updated
   /// </summary>
-  [GraphQLType(typeof(NonNullType<DateTimeType>)), GraphQLDescription("The date and time when the entity was last updated.")]
+  [GraphQLType(typeof(NonNullType<DateTimeType>)),
+   GraphQLDescription("The date and time when the entity was last updated.")]
   public override sealed DateTime UpdatedAt { get; set; }
 
   /// <summary>
   /// Timestamp when the entity was soft-deleted (null if not deleted)
   /// </summary>
-  [GraphQLType(typeof(DateTimeType)), GraphQLDescription("The date and time when the entity was soft deleted (null if not deleted).")]
+  [GraphQLType(typeof(DateTimeType)),
+   GraphQLDescription("The date and time when the entity was soft deleted (null if not deleted).")]
   public override sealed DateTime? DeletedAt { get; set; }
 
   /// <summary>
   /// Whether the entity is soft-deleted
   /// </summary>
-  [GraphQLType(typeof(NonNullType<BooleanType>)), GraphQLDescription("Indicates whether the entity has been soft deleted.")]
+  [GraphQLType(typeof(NonNullType<BooleanType>)),
+   GraphQLDescription("Indicates whether the entity has been soft deleted.")]
   public override bool IsDeleted {
     get => DeletedAt.HasValue;
   }

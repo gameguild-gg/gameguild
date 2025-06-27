@@ -5,6 +5,7 @@ using System.Text.Json;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Program.Models;
 
+
 namespace GameGuild.Modules.Feedback.Models;
 
 [Table("program_feedback_submissions")]
@@ -147,7 +148,9 @@ public class ProgramFeedbackSubmission : BaseEntity {
   }
 
   public void SetFeedbackResponse<T>(string questionId, T value) {
-    var data = string.IsNullOrEmpty(FeedbackData) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(FeedbackData) ?? new Dictionary<string, object>();
+    var data = string.IsNullOrEmpty(FeedbackData)
+                 ? new Dictionary<string, object>()
+                 : JsonSerializer.Deserialize<Dictionary<string, object>>(FeedbackData) ?? new Dictionary<string, object>();
 
     data[questionId] = value!;
     FeedbackData = JsonSerializer.Serialize(data);
@@ -166,6 +169,9 @@ public class ProgramFeedbackSubmissionConfiguration : IEntityTypeConfiguration<P
     builder.HasOne(pfs => pfs.Product).WithMany().HasForeignKey(pfs => pfs.ProductId).OnDelete(DeleteBehavior.SetNull);
 
     // Configure relationship with ProgramUser (can't be done with annotations)
-    builder.HasOne(pfs => pfs.ProgramUser).WithMany().HasForeignKey(pfs => pfs.ProgramUserId).OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(pfs => pfs.ProgramUser)
+           .WithMany()
+           .HasForeignKey(pfs => pfs.ProgramUserId)
+           .OnDelete(DeleteBehavior.Cascade);
   }
 }

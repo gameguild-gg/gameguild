@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 
+
 namespace GameGuild.Common.Transformers;
 
 /// <summary>
@@ -7,8 +8,7 @@ namespace GameGuild.Common.Transformers;
 /// Example: "TenantRoles" becomes "tenant-roles"
 /// </summary>
 public partial class ToKebabParameterTransformer : IOutboundParameterTransformer {
-  [GeneratedRegex("([a-z])([A-Z])")]
-  public static partial Regex KebabCaseGeneratedRegex();
+  [GeneratedRegex("([a-z])([A-Z])")] private static partial Regex KebabCaseGeneratedRegex();
 
   public string? TransformOutbound(object? value) { return value is not string s ? null : KebabCaseGeneratedRegex().Replace(s, "$1-$2").ToLower(); }
 }
