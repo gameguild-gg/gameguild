@@ -1,9 +1,6 @@
 using HotChocolate.Execution.Configuration;
-using HotChocolate.Types;
 using HotChocolate.Language;
-using Microsoft.Extensions.DependencyInjection;
 using GameGuild.Common.GraphQL.Authorization;
-using GameGuild.Common.Entities;
 
 
 namespace GameGuild.Common.GraphQL.Extensions;

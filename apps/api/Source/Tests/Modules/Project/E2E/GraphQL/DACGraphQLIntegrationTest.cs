@@ -48,13 +48,13 @@ public class DACPermissionLogicTests {
     var commentId = Guid.NewGuid();
 
     // Act
-    bool result = await CheckCommentPermissionHierarchy(
-                    mockPermissionService.Object,
-                    userId,
-                    tenantId,
-                    commentId,
-                    PermissionType.Comment
-                  );
+    var result = await CheckCommentPermissionHierarchy(
+                   mockPermissionService.Object,
+                   userId,
+                   tenantId,
+                   commentId,
+                   PermissionType.Comment
+                 );
 
     // Assert
     Assert.True(result);
@@ -88,13 +88,13 @@ public class DACPermissionLogicTests {
     var commentId = Guid.NewGuid();
 
     // Act
-    bool result = await CheckCommentPermissionHierarchy(
-                    mockPermissionService.Object,
-                    userId,
-                    tenantId,
-                    commentId,
-                    PermissionType.Comment
-                  );
+    var result = await CheckCommentPermissionHierarchy(
+                   mockPermissionService.Object,
+                   userId,
+                   tenantId,
+                   commentId,
+                   PermissionType.Comment
+                 );
 
     // Assert
     Assert.True(result);
@@ -131,13 +131,13 @@ public class DACPermissionLogicTests {
     var commentId = Guid.NewGuid();
 
     // Act
-    bool result = await CheckCommentPermissionHierarchy(
-                    mockPermissionService.Object,
-                    userId,
-                    tenantId,
-                    commentId,
-                    PermissionType.Comment
-                  );
+    var result = await CheckCommentPermissionHierarchy(
+                   mockPermissionService.Object,
+                   userId,
+                   tenantId,
+                   commentId,
+                   PermissionType.Comment
+                 );
 
     // Assert
     Assert.True(result);
@@ -174,13 +174,13 @@ public class DACPermissionLogicTests {
     var commentId = Guid.NewGuid();
 
     // Act
-    bool result = await CheckCommentPermissionHierarchy(
-                    mockPermissionService.Object,
-                    userId,
-                    tenantId,
-                    commentId,
-                    PermissionType.Comment
-                  );
+    var result = await CheckCommentPermissionHierarchy(
+                   mockPermissionService.Object,
+                   userId,
+                   tenantId,
+                   commentId,
+                   PermissionType.Comment
+                 );
 
     // Assert
     Assert.False(result);
@@ -196,7 +196,7 @@ public class DACPermissionLogicTests {
   ) {
     try {
       // 1. Check resource-level permission
-      bool hasResourcePermission =
+      var hasResourcePermission =
         await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
           userId,
           tenantId,
@@ -211,13 +211,13 @@ public class DACPermissionLogicTests {
     }
 
     // 2. Check content-type permission
-    bool hasContentTypePermission =
+    var hasContentTypePermission =
       await permissionService.HasContentTypePermissionAsync(userId, tenantId, "Comment", permission);
 
     if (hasContentTypePermission) return true;
 
     // 3. Check tenant permission
-    bool hasTenantPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, permission);
+    var hasTenantPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, permission);
 
     return hasTenantPermission;
   }

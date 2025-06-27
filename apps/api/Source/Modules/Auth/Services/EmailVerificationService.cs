@@ -42,11 +42,11 @@ namespace GameGuild.Modules.Auth.Services {
 
     public async Task<EmailOperationResponseDto> SendEmailVerificationAsync(string email) {
       try {
-        User.Models.User? user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null) { return new EmailOperationResponseDto { Success = false, Message = "User not found" }; }
 
-        string token = await GenerateEmailVerificationTokenAsync(user.Id);
+        var token = await GenerateEmailVerificationTokenAsync(user.Id);
 
         // TODO: Send actual email using an email service (SendGrid, SMTP, etc.)
         // For now, just log the token (in production, never log sensitive tokens)
@@ -63,7 +63,7 @@ namespace GameGuild.Modules.Auth.Services {
 
     public async Task<EmailOperationResponseDto> VerifyEmailAsync(string token) {
       try {
-        if (!_tokens.TryGetValue(token, out TokenInfo? tokenInfo)) { return new EmailOperationResponseDto { Success = false, Message = "Invalid or expired token" }; }
+        if (!_tokens.TryGetValue(token, out var tokenInfo)) { return new EmailOperationResponseDto { Success = false, Message = "Invalid or expired token" }; }
 
         if (tokenInfo.ExpiresAt < DateTime.UtcNow) {
           _tokens.Remove(token);
@@ -73,7 +73,7 @@ namespace GameGuild.Modules.Auth.Services {
 
         if (tokenInfo.Type != "email_verification") { return new EmailOperationResponseDto { Success = false, Message = "Invalid token type" }; }
 
-        User.Models.User? user = await _context.Users.FindAsync(tokenInfo.UserId);
+        var user = await _context.Users.FindAsync(tokenInfo.UserId);
 
         if (user == null) { return new EmailOperationResponseDto { Success = false, Message = "User not found" }; }
 
@@ -95,14 +95,14 @@ namespace GameGuild.Modules.Auth.Services {
 
     public async Task<EmailOperationResponseDto> SendPasswordResetAsync(string email) {
       try {
-        User.Models.User? user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null) {
           // Don't reveal if user exists or not for security
           return new EmailOperationResponseDto { Success = true, Message = "If an account with that email exists, a password reset link has been sent" };
         }
 
-        string token = await GeneratePasswordResetTokenAsync(user.Id);
+        var token = await GeneratePasswordResetTokenAsync(user.Id);
 
         // TODO: Send actual email using an email service
         // For now, just log the token (in production, never log sensitive tokens)
@@ -119,7 +119,7 @@ namespace GameGuild.Modules.Auth.Services {
 
     public async Task<EmailOperationResponseDto> ResetPasswordAsync(string token, string newPassword) {
       try {
-        if (!_tokens.TryGetValue(token, out TokenInfo? tokenInfo)) { return new EmailOperationResponseDto { Success = false, Message = "Invalid or expired token" }; }
+        if (!_tokens.TryGetValue(token, out var tokenInfo)) { return new EmailOperationResponseDto { Success = false, Message = "Invalid or expired token" }; }
 
         if (tokenInfo.ExpiresAt < DateTime.UtcNow) {
           _tokens.Remove(token);
@@ -129,13 +129,13 @@ namespace GameGuild.Modules.Auth.Services {
 
         if (tokenInfo.Type != "password_reset") { return new EmailOperationResponseDto { Success = false, Message = "Invalid token type" }; }
 
-        User.Models.User? user = await _context.Users.Include(u => u.Credentials)
-                                               .FirstOrDefaultAsync(u => u.Id == tokenInfo.UserId);
+        var user = await _context.Users.Include(u => u.Credentials)
+                                 .FirstOrDefaultAsync(u => u.Id == tokenInfo.UserId);
 
         if (user == null) { return new EmailOperationResponseDto { Success = false, Message = "User not found" }; }
 
         // Find and update password credential
-        Credential? passwordCredential = user.Credentials?.FirstOrDefault(c => c.Type == "password");
+        var passwordCredential = user.Credentials?.FirstOrDefault(c => c.Type == "password");
 
         if (passwordCredential != null) {
           passwordCredential.Value = HashPassword(newPassword);
@@ -171,7 +171,7 @@ namespace GameGuild.Modules.Auth.Services {
     }
 
     public Task<string> GenerateEmailVerificationTokenAsync(Guid userId) {
-      string token = GenerateSecureToken();
+      var token = GenerateSecureToken();
 
       var tokenInfo = new TokenInfo {
         UserId = userId, Type = "email_verification", ExpiresAt = DateTime.UtcNow.AddHours(24) // 24-hour expiration
@@ -186,7 +186,7 @@ namespace GameGuild.Modules.Auth.Services {
     }
 
     public Task<string> GeneratePasswordResetTokenAsync(Guid userId) {
-      string token = GenerateSecureToken();
+      var token = GenerateSecureToken();
 
       var tokenInfo = new TokenInfo {
         UserId = userId, Type = "password_reset", ExpiresAt = DateTime.UtcNow.AddHours(1) // 1-hour expiration
@@ -211,7 +211,7 @@ namespace GameGuild.Modules.Auth.Services {
     private string HashPassword(string password) {
       // Use the same hashing logic as in AuthService
       using var sha256 = SHA256.Create();
-      byte[] hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+      var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
 
       return Convert.ToBase64String(hashedBytes);
     }
@@ -219,7 +219,7 @@ namespace GameGuild.Modules.Auth.Services {
     private void CleanupExpiredTokens() {
       var expiredKeys = _tokens.Where(kvp => kvp.Value.ExpiresAt < DateTime.UtcNow).Select(kvp => kvp.Key).ToList();
 
-      foreach (string key in expiredKeys) { _tokens.Remove(key); }
+      foreach (var key in expiredKeys) { _tokens.Remove(key); }
     }
 
     private class TokenInfo {

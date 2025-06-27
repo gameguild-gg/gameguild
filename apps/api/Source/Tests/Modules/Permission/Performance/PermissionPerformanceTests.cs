@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
-using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Comment.Models;
 using GameGuild.Modules.User.Models;
 using System.Diagnostics;
@@ -42,7 +41,7 @@ public class PermissionPerformanceTests : IDisposable {
     const int userCount = 1000;
     const int maxAcceptableTimeMs = 5000; // 5 seconds
 
-    TenantModel tenant = await CreateTestTenantAsync();
+    var tenant = await CreateTestTenantAsync();
     var users = new List<User>();
 
     // Create test users in bulk (more efficient)
@@ -70,9 +69,9 @@ public class PermissionPerformanceTests : IDisposable {
     );
 
     // Verify a sample of permissions were actually granted
-    User sampleUser = users[userCount / 2];
-    bool hasRead = await _permissionService.HasTenantPermissionAsync(sampleUser.Id, tenant.Id, PermissionType.Read);
-    bool hasComment =
+    var sampleUser = users[userCount / 2];
+    var hasRead = await _permissionService.HasTenantPermissionAsync(sampleUser.Id, tenant.Id, PermissionType.Read);
+    var hasComment =
       await _permissionService.HasTenantPermissionAsync(sampleUser.Id, tenant.Id, PermissionType.Comment);
 
     Assert.True(hasRead);
@@ -85,12 +84,12 @@ public class PermissionPerformanceTests : IDisposable {
     const int userCount = 500;
     const int maxAcceptableTimeMs = 3000; // 3 seconds
 
-    TenantModel tenant = await CreateTestTenantAsync();
+    var tenant = await CreateTestTenantAsync();
     var users = new List<User>();
 
     // Create and grant permissions to test users
     for (var i = 0; i < userCount; i++) {
-      User user = await CreateTestUserAsync($"user{i}@test.com");
+      var user = await CreateTestUserAsync($"user{i}@test.com");
       users.Add(user);
 
       await _permissionService.GrantTenantPermissionAsync(
@@ -107,7 +106,7 @@ public class PermissionPerformanceTests : IDisposable {
                                     await _permissionService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read)
     );
 
-    bool[] results = await Task.WhenAll(checkTasks);
+    var results = await Task.WhenAll(checkTasks);
     stopwatch.Stop();
 
     // Assert
@@ -125,8 +124,8 @@ public class PermissionPerformanceTests : IDisposable {
     const int resourceCount = 1000;
     const int maxAcceptableTimeMs = 8000; // 8 seconds
 
-    User user = await CreateTestUserAsync();
-    TenantModel tenant = await CreateTestTenantAsync();
+    var user = await CreateTestUserAsync();
+    var tenant = await CreateTestTenantAsync();
     var resources = new List<Comment>();
 
     // Create test resources efficiently
@@ -163,7 +162,7 @@ public class PermissionPerformanceTests : IDisposable {
     Assert.Equal(resourceCount, bulkResult.Count);
 
     // Verify sample permissions
-    Comment sampleResource = resources[resourceCount / 2];
+    var sampleResource = resources[resourceCount / 2];
     Assert.True(bulkResult.ContainsKey(sampleResource.Id));
     Assert.Contains(PermissionType.Read, bulkResult[sampleResource.Id]);
     Assert.Contains(PermissionType.Edit, bulkResult[sampleResource.Id]);
@@ -177,15 +176,15 @@ public class PermissionPerformanceTests : IDisposable {
   public async Task PermissionHierarchyResolution_DoesNotCauseMemoryLeaks() {
     // Arrange
     const int iterationCount = 100;
-    User user = await CreateTestUserAsync();
-    TenantModel tenant = await CreateTestTenantAsync();
+    var user = await CreateTestUserAsync();
+    var tenant = await CreateTestTenantAsync();
 
     // Set up complex permission hierarchy
     await _permissionService.SetGlobalDefaultPermissionsAsync([PermissionType.Read]);
     await _permissionService.SetTenantDefaultPermissionsAsync(tenant.Id, [PermissionType.Comment]);
     await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id, [PermissionType.Vote]);
 
-    long initialMemory = GC.GetTotalMemory(true);
+    var initialMemory = GC.GetTotalMemory(true);
 
     // Act - Repeatedly resolve effective permissions
     for (var i = 0; i < iterationCount; i++) {
@@ -202,8 +201,8 @@ public class PermissionPerformanceTests : IDisposable {
       }
     }
 
-    long finalMemory = GC.GetTotalMemory(true);
-    long memoryIncrease = finalMemory - initialMemory;
+    var finalMemory = GC.GetTotalMemory(true);
+    var memoryIncrease = finalMemory - initialMemory;
 
     // Assert - Memory increase should be reasonable (less than 10MB)
     Assert.True(
@@ -221,9 +220,9 @@ public class PermissionPerformanceTests : IDisposable {
     // Arrange
     const int maxAcceptableTimeMs = 1000; // 1 second
 
-    User user = await CreateTestUserAsync();
-    TenantModel tenant = await CreateTestTenantAsync();
-    Comment comment = await CreateTestCommentAsync();
+    var user = await CreateTestUserAsync();
+    var tenant = await CreateTestTenantAsync();
+    var comment = await CreateTestCommentAsync();
 
     // Create complex permission scenario
     await _permissionService.SetGlobalDefaultPermissionsAsync([PermissionType.Read]);
@@ -240,12 +239,12 @@ public class PermissionPerformanceTests : IDisposable {
     var stopwatch = Stopwatch.StartNew();
 
     // Act - Perform complex permission checks
-    bool hasRead = await _permissionService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read);
-    bool hasComment = await _permissionService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Comment);
-    bool hasVote = await _permissionService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Vote);
-    bool hasReply =
+    var hasRead = await _permissionService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read);
+    var hasComment = await _permissionService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Comment);
+    var hasVote = await _permissionService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Vote);
+    var hasReply =
       await _permissionService.HasContentTypePermissionAsync(user.Id, tenant.Id, "Comment", PermissionType.Reply);
-    bool hasEdit =
+    var hasEdit =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         user.Id,
         tenant.Id,
@@ -290,14 +289,14 @@ public class PermissionPerformanceTests : IDisposable {
     var random = new Random(42); // Fixed seed for reproducibility
 
     for (var i = 0; i < userCount; i++) {
-      User user = await CreateTestUserAsync($"user{i}@test.com");
+      var user = await CreateTestUserAsync($"user{i}@test.com");
       users.Add(user);
 
       // Assign user to 2-3 random tenants
-      int tenantAssignments = random.Next(2, 4);
+      var tenantAssignments = random.Next(2, 4);
       var selectedTenants = tenants.OrderBy(_ => random.Next()).Take(tenantAssignments);
 
-      foreach (TenantModel tenant in selectedTenants) { await _permissionService.JoinTenantAsync(user.Id, tenant.Id); }
+      foreach (var tenant in selectedTenants) { await _permissionService.JoinTenantAsync(user.Id, tenant.Id); }
     }
 
     var stopwatch = Stopwatch.StartNew();
@@ -310,7 +309,7 @@ public class PermissionPerformanceTests : IDisposable {
       }
     );
 
-    int[] membershipCounts = await Task.WhenAll(membershipTasks);
+    var membershipCounts = await Task.WhenAll(membershipTasks);
     stopwatch.Stop();
 
     // Assert
@@ -355,7 +354,7 @@ public class PermissionPerformanceTests : IDisposable {
         // Create separate DbContext instances for each task to avoid threading issues
         for (var i = 0; i < operationsPerUser; i++) {
           // For the grant operation, use a separate context and service
-          ApplicationDbContext grantContext = CreateNewDbContext();
+          var grantContext = CreateNewDbContext();
           var grantService = new PermissionService(grantContext);
           userTasks.Add(
             grantService.GrantTenantPermissionAsync(
@@ -368,7 +367,7 @@ public class PermissionPerformanceTests : IDisposable {
           // For the check operation, use another separate context and service
           userTasks.Add(
             Task.Run(async () => {
-                ApplicationDbContext checkContext = CreateNewDbContext();
+                var checkContext = CreateNewDbContext();
                 var checkService = new PermissionService(checkContext);
                 await checkService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read);
               }
@@ -390,13 +389,13 @@ public class PermissionPerformanceTests : IDisposable {
     );
 
     // Verify all users have permissions - use a fresh context for verification
-    ApplicationDbContext verificationContext = CreateNewDbContext();
+    var verificationContext = CreateNewDbContext();
     var verificationService = new PermissionService(verificationContext);
     var verificationTasks = users.Select(async user =>
                                            await verificationService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read)
     );
 
-    bool allHavePermissions = (await Task.WhenAll(verificationTasks)).All(result => result);
+    var allHavePermissions = (await Task.WhenAll(verificationTasks)).All(result => result);
     Assert.True(allHavePermissions, "All users should have been granted permissions");
   }
 

@@ -61,7 +61,7 @@ public class UserProfilesController : ControllerBase {
   // GET: user-profiles/{id}
   [HttpGet("{id}")]
   public async Task<ActionResult<UserProfileResponseDto>> GetUserProfile(Guid id) {
-    Models.UserProfile? userProfile = await _userProfileService.GetUserProfileByIdAsync(id);
+    var userProfile = await _userProfileService.GetUserProfileByIdAsync(id);
 
     if (userProfile == null) { return NotFound(); }
 
@@ -85,7 +85,7 @@ public class UserProfilesController : ControllerBase {
   // GET: user-profiles/user/{userId}
   [HttpGet("user/{userId}")]
   public async Task<ActionResult<UserProfileResponseDto>> GetUserProfileByUserId(Guid userId) {
-    Models.UserProfile? userProfile = await _userProfileService.GetUserProfileByUserIdAsync(userId);
+    var userProfile = await _userProfileService.GetUserProfileByUserIdAsync(userId);
 
     if (userProfile == null) { return NotFound(); }
 
@@ -117,7 +117,7 @@ public class UserProfilesController : ControllerBase {
       Description = createUserProfileDto.Description,
     };
 
-    Models.UserProfile createdUserProfile = await _userProfileService.CreateUserProfileAsync(userProfile);
+    var createdUserProfile = await _userProfileService.CreateUserProfileAsync(userProfile);
 
     var userProfileDto = new UserProfileResponseDto {
       Id = createdUserProfile.Id,
@@ -150,7 +150,7 @@ public class UserProfilesController : ControllerBase {
       Description = updateUserProfileDto.Description,
     };
 
-    Models.UserProfile? updatedUserProfile = await _userProfileService.UpdateUserProfileAsync(id, userProfile);
+    var updatedUserProfile = await _userProfileService.UpdateUserProfileAsync(id, userProfile);
 
     if (updatedUserProfile == null) { return NotFound(); }
 
@@ -174,7 +174,7 @@ public class UserProfilesController : ControllerBase {
   // DELETE: user-profiles/{id}
   [HttpDelete("{id}")]
   public async Task<IActionResult> DeleteUserProfile(Guid id) {
-    bool result = await _userProfileService.DeleteUserProfileAsync(id);
+    var result = await _userProfileService.DeleteUserProfileAsync(id);
 
     if (!result) { return NotFound(); }
 
@@ -184,7 +184,7 @@ public class UserProfilesController : ControllerBase {
   // DELETE: user-profiles/{id}/soft
   [HttpDelete("{id}/soft")]
   public async Task<IActionResult> SoftDeleteUserProfile(Guid id) {
-    bool result = await _userProfileService.SoftDeleteUserProfileAsync(id);
+    var result = await _userProfileService.SoftDeleteUserProfileAsync(id);
 
     if (!result) { return NotFound(); }
 
@@ -194,7 +194,7 @@ public class UserProfilesController : ControllerBase {
   // POST: user-profiles/{id}/restore
   [HttpPost("{id}/restore")]
   public async Task<IActionResult> RestoreUserProfile(Guid id) {
-    bool result = await _userProfileService.RestoreUserProfileAsync(id);
+    var result = await _userProfileService.RestoreUserProfileAsync(id);
 
     if (!result) { return NotFound(); }
 

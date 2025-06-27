@@ -22,24 +22,24 @@ public class RequireTenantPermissionAttribute : Attribute, IAsyncAuthorizationFi
     var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
 
     // Extract user ID and tenant ID from JWT token
-    string? userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (!Guid.TryParse(userIdClaim, out Guid userId)) {
+    if (!Guid.TryParse(userIdClaim, out var userId)) {
       context.Result = new UnauthorizedResult();
 
       return;
     }
 
-    string? tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
+    var tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
 
-    if (!Guid.TryParse(tenantIdClaim, out Guid tenantId)) {
+    if (!Guid.TryParse(tenantIdClaim, out var tenantId)) {
       context.Result = new UnauthorizedResult();
 
       return;
     }
 
     // Check tenant-level permission
-    bool hasPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, _requiredPermission);
+    var hasPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, _requiredPermission);
 
     if (!hasPermission) { context.Result = new ForbidResult(); }
   }

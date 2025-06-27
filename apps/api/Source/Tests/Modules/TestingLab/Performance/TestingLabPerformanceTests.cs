@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using GameGuild.Data;
 using GameGuild.Modules.TestingLab.Services;
-using GameGuild.Common.Entities;
 using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Modules.User.Models;
 using ProjectModel = GameGuild.Modules.Project.Models.Project;
@@ -74,7 +73,7 @@ public class TestingLabPerformanceTests : IDisposable {
     // Create 1000 testing requests
     var requests = new List<TestingRequest>();
 
-    for (int i = 0; i < 1000; i++) {
+    for (var i = 0; i < 1000; i++) {
       var request = new TestingRequest {
         ProjectVersionId = projectVersion.Id,
         Title = $"Performance Test Request {i}",
@@ -119,7 +118,7 @@ public class TestingLabPerformanceTests : IDisposable {
     // Create 1000 testing requests with searchable content
     var requests = new List<TestingRequest>();
 
-    for (int i = 0; i < 1000; i++) {
+    for (var i = 0; i < 1000; i++) {
       var request = new TestingRequest {
         ProjectVersionId = projectVersion.Id,
         Title = i % 10 == 0 ? $"Unity Game Test {i}" : $"Performance Test Request {i}",
@@ -200,7 +199,7 @@ public class TestingLabPerformanceTests : IDisposable {
     var testingRequest = await CreateTestRequestAsync(projectVersion.Id, user.Id);
 
     // Add some test data for statistics
-    for (int i = 0; i < 50; i++) {
+    for (var i = 0; i < 50; i++) {
       var participant = new TestingParticipant {
         TestingRequestId = testingRequest.Id,
         UserId = user.Id,
@@ -242,7 +241,7 @@ public class TestingLabPerformanceTests : IDisposable {
 
     var requests = new List<TestingRequest>();
 
-    for (int i = 0; i < requestCount; i++) {
+    for (var i = 0; i < requestCount; i++) {
       var request = new TestingRequest {
         ProjectVersionId = projectVersion.Id,
         Title = $"Bulk Test Request {i}",
@@ -283,7 +282,7 @@ public class TestingLabPerformanceTests : IDisposable {
     var projectVersion = await CreateTestProjectVersionAsync(project.Id, user.Id);
 
     // Create some test data
-    for (int i = 0; i < 100; i++) {
+    for (var i = 0; i < 100; i++) {
       var request = new TestingRequest {
         ProjectVersionId = projectVersion.Id,
         Title = $"Concurrent Test Request {i}",
@@ -308,7 +307,7 @@ public class TestingLabPerformanceTests : IDisposable {
     stopwatch.Start();
     var tasks = new List<Task<IEnumerable<TestingRequest>>>();
 
-    for (int i = 0; i < 10; i++) { tasks.Add(_testService.GetTestingRequestsAsync(0, 100)); }
+    for (var i = 0; i < 10; i++) { tasks.Add(_testService.GetTestingRequestsAsync(0, 100)); }
 
     await Task.WhenAll(tasks);
     stopwatch.Stop();

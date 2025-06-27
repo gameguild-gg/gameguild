@@ -77,7 +77,7 @@ public class ProductController : ControllerBase {
   public async Task<ActionResult<ProductEntity>> CreateProduct([FromBody] ProductEntity product) {
     if (!ModelState.IsValid) { return BadRequest(ModelState); }
 
-    ProductEntity createdProduct = await _productService.CreateProductAsync(product);
+    var createdProduct = await _productService.CreateProductAsync(product);
 
     return CreatedAtAction(nameof(GetProduct), new { id = createdProduct.Id }, createdProduct);
   }
@@ -155,7 +155,7 @@ public class ProductController : ControllerBase {
   [HttpGet("{id}")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<ProductEntity>> GetProduct(Guid id) {
-    ProductEntity? product = await _productService.GetProductByIdAsync(id);
+    var product = await _productService.GetProductByIdAsync(id);
 
     if (product == null) { return NotFound(); }
 
@@ -168,7 +168,7 @@ public class ProductController : ControllerBase {
   [HttpGet("{id}/details")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<ProductEntity>> GetProductWithDetails(Guid id) {
-    ProductEntity? product = await _productService.GetProductByIdWithDetailsAsync(id);
+    var product = await _productService.GetProductByIdWithDetailsAsync(id);
 
     if (product == null) { return NotFound(); }
 
@@ -185,11 +185,11 @@ public class ProductController : ControllerBase {
 
     if (!ModelState.IsValid) { return BadRequest(ModelState); }
 
-    ProductEntity? existingProduct = await _productService.GetProductByIdAsync(id);
+    var existingProduct = await _productService.GetProductByIdAsync(id);
 
     if (existingProduct == null) { return NotFound(); }
 
-    ProductEntity updatedProduct = await _productService.UpdateProductAsync(product);
+    var updatedProduct = await _productService.UpdateProductAsync(product);
 
     return Ok(updatedProduct);
   }
@@ -200,7 +200,7 @@ public class ProductController : ControllerBase {
   [HttpDelete("{id}")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteProduct(Guid id) {
-    ProductEntity? existingProduct = await _productService.GetProductByIdAsync(id);
+    var existingProduct = await _productService.GetProductByIdAsync(id);
 
     if (existingProduct == null) { return NotFound(); }
 
@@ -215,7 +215,7 @@ public class ProductController : ControllerBase {
   [HttpPost("{id}/publish")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Publish)]
   public async Task<ActionResult<ProductEntity>> PublishProduct(Guid id) {
-    ProductEntity product = await _productService.PublishProductAsync(id);
+    var product = await _productService.PublishProductAsync(id);
 
     return Ok(product);
   }
@@ -226,7 +226,7 @@ public class ProductController : ControllerBase {
   [HttpPost("{id}/unpublish")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductEntity>> UnpublishProduct(Guid id) {
-    ProductEntity product = await _productService.UnpublishProductAsync(id);
+    var product = await _productService.UnpublishProductAsync(id);
 
     return Ok(product);
   }
@@ -237,7 +237,7 @@ public class ProductController : ControllerBase {
   [HttpPost("{id}/archive")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductEntity>> ArchiveProduct(Guid id) {
-    ProductEntity product = await _productService.ArchiveProductAsync(id);
+    var product = await _productService.ArchiveProductAsync(id);
 
     return Ok(product);
   }
@@ -251,7 +251,7 @@ public class ProductController : ControllerBase {
     Guid id,
     [FromBody] Common.Entities.AccessLevel visibility
   ) {
-    ProductEntity product = await _productService.SetVisibilityAsync(id, visibility);
+    var product = await _productService.SetVisibilityAsync(id, visibility);
 
     return Ok(product);
   }
@@ -275,7 +275,7 @@ public class ProductController : ControllerBase {
   [HttpPost("{bundleId}/bundle-items/{productId}")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Edit, "bundleId")]
   public async Task<ActionResult<ProductEntity>> AddToBundle(Guid bundleId, Guid productId) {
-    ProductEntity bundle = await _productService.AddToBundleAsync(bundleId, productId);
+    var bundle = await _productService.AddToBundleAsync(bundleId, productId);
 
     return Ok(bundle);
   }
@@ -286,7 +286,7 @@ public class ProductController : ControllerBase {
   [HttpDelete("{bundleId}/bundle-items/{productId}")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Edit, "bundleId")]
   public async Task<ActionResult<ProductEntity>> RemoveFromBundle(Guid bundleId, Guid productId) {
-    ProductEntity bundle = await _productService.RemoveFromBundleAsync(bundleId, productId);
+    var bundle = await _productService.RemoveFromBundleAsync(bundleId, productId);
 
     return Ok(bundle);
   }
@@ -299,7 +299,7 @@ public class ProductController : ControllerBase {
   [HttpGet("{id}/pricing/current")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<ProductPricing>> GetCurrentPricing(Guid id) {
-    ProductPricing? pricing = await _productService.GetCurrentPricingAsync(id);
+    var pricing = await _productService.GetCurrentPricingAsync(id);
 
     if (pricing == null) { return NotFound(); }
 
@@ -323,7 +323,7 @@ public class ProductController : ControllerBase {
   [HttpPost("{id}/pricing")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductPricing>> SetPricing(Guid id, [FromBody] SetPricingRequest request) {
-    ProductPricing pricing = await _productService.SetPricingAsync(id, request.BasePrice, request.Currency);
+    var pricing = await _productService.SetPricingAsync(id, request.BasePrice, request.Currency);
 
     return Ok(pricing);
   }
@@ -351,7 +351,7 @@ public class ProductController : ControllerBase {
     [FromBody] ProductSubscriptionPlan plan
   ) {
     plan.ProductId = id; // Ensure the product ID matches the route
-    ProductSubscriptionPlan createdPlan = await _productService.CreateSubscriptionPlanAsync(plan);
+    var createdPlan = await _productService.CreateSubscriptionPlanAsync(plan);
 
     return CreatedAtAction(nameof(GetSubscriptionPlan), new { planId = createdPlan.Id }, createdPlan);
   }
@@ -361,7 +361,7 @@ public class ProductController : ControllerBase {
   /// </summary>
   [HttpGet("subscription-plans/{planId}")]
   public async Task<ActionResult<ProductSubscriptionPlan>> GetSubscriptionPlan(Guid planId) {
-    ProductSubscriptionPlan? plan = await _productService.GetSubscriptionPlanAsync(planId);
+    var plan = await _productService.GetSubscriptionPlanAsync(planId);
 
     if (plan == null) { return NotFound(); }
 
@@ -376,7 +376,7 @@ public class ProductController : ControllerBase {
   [HttpGet("{id}/access/{userId}")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<bool>> HasUserAccess(Guid id, Guid userId) {
-    bool hasAccess = await _productService.HasUserAccessAsync(userId, id);
+    var hasAccess = await _productService.HasUserAccessAsync(userId, id);
 
     return Ok(hasAccess);
   }
@@ -387,7 +387,7 @@ public class ProductController : ControllerBase {
   [HttpGet("{id}/user-product/{userId}")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<UserProduct>> GetUserProduct(Guid id, Guid userId) {
-    UserProduct? userProduct = await _productService.GetUserProductAsync(userId, id);
+    var userProduct = await _productService.GetUserProductAsync(userId, id);
 
     if (userProduct == null) { return NotFound(); }
 
@@ -403,14 +403,14 @@ public class ProductController : ControllerBase {
     Guid id, Guid userId,
     [FromBody] GrantAccessRequest request
   ) {
-    UserProduct userProduct = await _productService.GrantUserAccessAsync(
-                                userId,
-                                id,
-                                request.AcquisitionType,
-                                request.PurchasePrice,
-                                request.Currency,
-                                request.ExpiresAt
-                              );
+    var userProduct = await _productService.GrantUserAccessAsync(
+                        userId,
+                        id,
+                        request.AcquisitionType,
+                        request.PurchasePrice,
+                        request.Currency,
+                        request.ExpiresAt
+                      );
 
     return Ok(userProduct);
   }
@@ -437,7 +437,7 @@ public class ProductController : ControllerBase {
     [FromQuery] ProductType? type = null,
     [FromQuery] Common.Entities.AccessLevel? visibility = null
   ) {
-    int count = await _productService.GetProductCountAsync(type, visibility);
+    var count = await _productService.GetProductCountAsync(type, visibility);
 
     return Ok(count);
   }
@@ -448,7 +448,7 @@ public class ProductController : ControllerBase {
   [HttpGet("{id}/analytics/user-count")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<int>> GetUserCountForProduct(Guid id) {
-    int count = await _productService.GetUserCountForProductAsync(id);
+    var count = await _productService.GetUserCountForProductAsync(id);
 
     return Ok(count);
   }
@@ -459,7 +459,7 @@ public class ProductController : ControllerBase {
   [HttpGet("{id}/analytics/revenue")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<decimal>> GetTotalRevenueForProduct(Guid id) {
-    decimal revenue = await _productService.GetTotalRevenueForProductAsync(id);
+    var revenue = await _productService.GetTotalRevenueForProductAsync(id);
 
     return Ok(revenue);
   }

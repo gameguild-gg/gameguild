@@ -19,11 +19,11 @@ namespace GameGuild.Modules.Auth.Middleware {
     }
 
     public async Task InvokeAsync(HttpContext context) {
-      string? token = ExtractTokenFromHeader(context.Request);
+      var token = ExtractTokenFromHeader(context.Request);
 
       if (!string.IsNullOrEmpty(token)) {
         try {
-          ClaimsPrincipal principal = ValidateToken(token);
+          var principal = ValidateToken(token);
           context.User = principal;
         }
         catch (Exception) {
@@ -35,7 +35,7 @@ namespace GameGuild.Modules.Auth.Middleware {
     }
 
     private string? ExtractTokenFromHeader(HttpRequest request) {
-      string? authHeader = request.Headers["Authorization"].FirstOrDefault();
+      var authHeader = request.Headers["Authorization"].FirstOrDefault();
 
       if (authHeader != null && authHeader.StartsWith("Bearer ")) { return authHeader.Substring("Bearer ".Length).Trim(); }
 
@@ -44,7 +44,7 @@ namespace GameGuild.Modules.Auth.Middleware {
 
     private ClaimsPrincipal ValidateToken(string token) {
       var tokenHandler = new JwtSecurityTokenHandler();
-      byte[] key = Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? "dev-key");
+      var key = Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? "dev-key");
 
       var validationParameters = new TokenValidationParameters {
         ValidateIssuerSigningKey = true,
@@ -57,8 +57,8 @@ namespace GameGuild.Modules.Auth.Middleware {
         ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes clock skew tolerance
       };
 
-      ClaimsPrincipal? principal =
-        tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+      var principal =
+        tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
 
       return principal;
     }

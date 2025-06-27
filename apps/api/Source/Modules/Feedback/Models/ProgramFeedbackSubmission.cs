@@ -136,9 +136,9 @@ public class ProgramFeedbackSubmission : BaseEntity {
     if (string.IsNullOrEmpty(FeedbackData)) return null;
 
     try {
-      JsonDocument json = JsonDocument.Parse(FeedbackData);
+      var json = JsonDocument.Parse(FeedbackData);
 
-      if (json.RootElement.TryGetProperty(questionId, out JsonElement element)) { return JsonSerializer.Deserialize<T>(element.GetRawText()); }
+      if (json.RootElement.TryGetProperty(questionId, out var element)) { return JsonSerializer.Deserialize<T>(element.GetRawText()); }
     }
     catch {
       // Handle JSON parsing errors gracefully

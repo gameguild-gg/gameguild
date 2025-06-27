@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using MediatR;
 
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 // Load environment variables from .env file
 Env.Load();
@@ -28,7 +28,7 @@ builder.Configuration.SetBasePath(AppContext.BaseDirectory)
 builder.Services.AddAppConfiguration(builder.Configuration);
 
 // Configure CORS options from appsettings
-CorsOptions corsOptions =
+var corsOptions =
   builder.Configuration.GetSection(CorsOptions.SectionName).Get<CorsOptions>() ?? new CorsOptions();
 
 // Add CORS services
@@ -104,17 +104,17 @@ builder.Services.AddMediatR(typeof(Program));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(GameGuild.Common.Behaviors.LoggingBehavior<,>));
 
 // Get connection string from the environment
-string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
-                          throw new InvalidOperationException(
-                            "DB_CONNECTION_STRING environment variable is not set. Please check your .env file or environment configuration."
-                          );
+var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
+                       throw new InvalidOperationException(
+                         "DB_CONNECTION_STRING environment variable is not set. Please check your .env file or environment configuration."
+                       );
 
 // Check if we should use the in-memory database (for tests)
-bool useInMemoryDb = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("USE_IN_MEMORY_DB")) &&
-                     Environment.GetEnvironmentVariable("USE_IN_MEMORY_DB")!.Equals(
-                       "true",
-                       StringComparison.OrdinalIgnoreCase
-                     );
+var useInMemoryDb = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("USE_IN_MEMORY_DB")) &&
+                    Environment.GetEnvironmentVariable("USE_IN_MEMORY_DB")!.Equals(
+                      "true",
+                      StringComparison.OrdinalIgnoreCase
+                    );
 
 // Add Entity Framework with the appropriate provider
 builder.Services.AddDbContext<ApplicationDbContext>(options => {
@@ -175,13 +175,13 @@ builder.Services.AddGraphQLServer()
        .ModifyOptions(opt => { opt.RemoveUnreachableTypes = true; })
        .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment());
 
-WebApplication app = builder.Build();
+var app = builder.Build();
 
 // Add exception handling middleware (similar to NestJS global filters)
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Automatically apply pending migrations and create a database if it doesn't exist
-using (IServiceScope scope = app.Services.CreateScope()) {
+using (var scope = app.Services.CreateScope()) {
   var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
   var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 

@@ -39,7 +39,7 @@ public class UserService : IUserService {
   }
 
   public async Task<Models.User?> UpdateUserAsync(Guid id, Models.User user) {
-    Models.User? existingUser = await _context.Users.FindAsync(id);
+    var existingUser = await _context.Users.FindAsync(id);
 
     if (existingUser == null) return null;
 
@@ -53,7 +53,7 @@ public class UserService : IUserService {
   }
 
   public async Task<bool> DeleteUserAsync(Guid id) {
-    Models.User? user = await _context.Users.FindAsync(id);
+    var user = await _context.Users.FindAsync(id);
 
     if (user == null) return false;
 
@@ -64,7 +64,7 @@ public class UserService : IUserService {
   }
 
   public async Task<bool> SoftDeleteUserAsync(Guid id) {
-    Models.User? user = await _context.Users.FindAsync(id);
+    var user = await _context.Users.FindAsync(id);
 
     if (user == null) return false;
 
@@ -76,7 +76,7 @@ public class UserService : IUserService {
 
   public async Task<bool> RestoreUserAsync(Guid id) {
     // Need to include deleted entities to find soft-deleted user
-    Models.User? user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
+    var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
 
     if (user == null || !user.IsDeleted) return false;
 

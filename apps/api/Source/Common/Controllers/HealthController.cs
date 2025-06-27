@@ -45,8 +45,8 @@ public class HealthController : ControllerBase {
   [HttpGet("database")]
   public async Task<IActionResult> GetDatabaseHealth() {
     try {
-      bool canConnect = await _context.Database.CanConnectAsync();
-      int userCount = await _context.Users.CountAsync();
+      var canConnect = await _context.Database.CanConnectAsync();
+      var userCount = await _context.Users.CountAsync();
 
       return Ok(new { status = "healthy", connected = canConnect, userCount, timestamp = DateTime.UtcNow });
     }

@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Reflection;
 
 
 namespace GameGuild.Common.Entities;
@@ -61,20 +60,20 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
   /// <param name="partial">Partial entity data to initialize with</param>
   protected BaseEntity(object partial) : this() {
     var properties = partial.GetType().GetProperties();
-    Type entityType = GetType();
+    var entityType = GetType();
 
-    foreach (PropertyInfo sourceProperty in properties) {
-      PropertyInfo? targetProperty = entityType.GetProperty(sourceProperty.Name);
+    foreach (var sourceProperty in properties) {
+      var targetProperty = entityType.GetProperty(sourceProperty.Name);
 
       if (targetProperty == null || !targetProperty.CanWrite) continue;
 
       try {
-        object? value = sourceProperty.GetValue(partial);
+        var value = sourceProperty.GetValue(partial);
 
         if (value != null) {
           // Handle type conversion if necessary
           if (value.GetType() != targetProperty.PropertyType) {
-            Type targetType = Nullable.GetUnderlyingType(targetProperty.PropertyType) ?? targetProperty.PropertyType;
+            var targetType = Nullable.GetUnderlyingType(targetProperty.PropertyType) ?? targetProperty.PropertyType;
             value = Convert.ChangeType(value, targetType);
           }
 
@@ -97,19 +96,19 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
   /// </summary>
   /// <param name="properties">Dictionary of property names and values</param>
   public virtual void SetProperties(Dictionary<string, object?> properties) {
-    Type entityType = GetType();
+    var entityType = GetType();
 
     foreach (var property in properties) {
-      PropertyInfo? propertyInfo = entityType.GetProperty(property.Key);
+      var propertyInfo = entityType.GetProperty(property.Key);
 
       if (propertyInfo != null && propertyInfo.CanWrite) {
         try {
           // Handle type conversion if necessary
-          object? value = property.Value;
+          var value = property.Value;
 
           if (value != null && value.GetType() != propertyInfo.PropertyType) {
             // Handle nullable types
-            Type targetType = Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType;
+            var targetType = Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType;
             value = Convert.ChangeType(value, targetType);
           }
 
@@ -168,7 +167,7 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
     var result = new Dictionary<string, object?>();
     var properties = GetType().GetProperties();
 
-    foreach (PropertyInfo property in properties) {
+    foreach (var property in properties) {
       if (property.CanRead) { result[property.Name] = property.GetValue(this); }
     }
 
@@ -179,7 +178,7 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
   /// Override for better debugging and logging
   /// </summary>
   public override string ToString() {
-    string deletedStatus = IsDeleted ? " (DELETED)" : "";
+    var deletedStatus = IsDeleted ? " (DELETED)" : "";
 
     return
       $"{GetType().Name} {{ Id = {Id}, Version = {Version}, CreatedAt = {CreatedAt:yyyy-MM-dd HH:mm:ss}, UpdatedAt = {UpdatedAt:yyyy-MM-dd HH:mm:ss}{deletedStatus} }}";

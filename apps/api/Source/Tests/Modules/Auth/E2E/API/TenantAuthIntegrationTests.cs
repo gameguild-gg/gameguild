@@ -114,18 +114,18 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
   [Fact]
   public async Task Login_WithTenantId_ReturnsTenantInformationInResponse() {
     // Setup test data in the same scope as the test
-    using IServiceScope scope = _factory.Services.CreateScope();
+    using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await SetupTestTenantData(db);
 
     // Arrange
     var request = new LocalSignInRequestDto { Email = "tenant@example.com", Password = "P455W0RD", TenantId = Guid.Parse("22222222-2222-2222-2222-222222222222") };
 
-    string json = JsonSerializer.Serialize(request);
+    var json = JsonSerializer.Serialize(request);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/auth/sign-in", content);
+    var response = await _client.PostAsync("/auth/sign-in", content);
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -142,18 +142,18 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
   [Fact]
   public async Task Login_WithoutTenantId_ReturnsFirstTenant() {
     // Setup test data in the same scope as the test
-    using IServiceScope scope = _factory.Services.CreateScope();
+    using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await SetupTestTenantData(db);
 
     // Arrange
     var request = new LocalSignInRequestDto { Email = "tenant@example.com", Password = "P455W0RD" };
 
-    string json = JsonSerializer.Serialize(request);
+    var json = JsonSerializer.Serialize(request);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/auth/sign-in", content);
+    var response = await _client.PostAsync("/auth/sign-in", content);
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -170,17 +170,17 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
   [Fact]
   public async Task RefreshToken_WithTenantId_ReturnsTenantSpecificToken() {
     // Setup test data in the same scope as the test
-    using IServiceScope scope = _factory.Services.CreateScope();
+    using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await SetupTestTenantData(db);
 
     // First login to get a refresh token
     var loginRequest = new LocalSignInRequestDto { Email = "tenant@example.com", Password = "P455W0RD" };
 
-    string loginJson = JsonSerializer.Serialize(loginRequest);
+    var loginJson = JsonSerializer.Serialize(loginRequest);
     var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
 
-    HttpResponseMessage loginResponse = await _client.PostAsync("/auth/sign-in", loginContent);
+    var loginResponse = await _client.PostAsync("/auth/sign-in", loginContent);
     var loginData = await loginResponse.Content.ReadFromJsonAsync<SignInResponseDto>();
 
     Assert.NotNull(loginData);
@@ -191,11 +191,11 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
       RefreshToken = loginData.RefreshToken, TenantId = Guid.Parse("33333333-3333-3333-3333-333333333333") // Use the second tenant
     };
 
-    string refreshJson = JsonSerializer.Serialize(refreshRequest);
+    var refreshJson = JsonSerializer.Serialize(refreshRequest);
     var refreshContent = new StringContent(refreshJson, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage refreshResponse = await _client.PostAsync("/auth/refresh-token", refreshContent);
+    var refreshResponse = await _client.PostAsync("/auth/refresh-token", refreshContent);
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, refreshResponse.StatusCode);

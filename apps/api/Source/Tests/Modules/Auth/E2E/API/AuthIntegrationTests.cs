@@ -33,7 +33,7 @@ public class AuthIntegrationTests {
   /// Set up test data for integration tests
   /// </summary>
   private async Task SetupTestDataAsync() {
-    using IServiceScope scope = _factory.Services.CreateScope();
+    using var scope = _factory.Services.CreateScope();
 
     try {
       var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -70,7 +70,7 @@ public class AuthIntegrationTests {
       await context.SaveChangesAsync();
 
       // Configure the mock tenant context service with our test tenant
-      using IServiceScope serviceScope = _factory.Services.CreateScope();
+      using var serviceScope = _factory.Services.CreateScope();
       var mockTenantService =
         serviceScope.ServiceProvider.GetRequiredService<GameGuild.Modules.Tenant.Services.ITenantContextService>() as
           MockTenantContextService;
@@ -92,11 +92,11 @@ public class AuthIntegrationTests {
     // Arrange
     var registerRequest = new LocalSignUpRequestDto { Email = "integration-test@example.com", Password = "P455W0RD", Username = "integration-user" };
 
-    string json = JsonSerializer.Serialize(registerRequest);
+    var json = JsonSerializer.Serialize(registerRequest);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/auth/sign-up", content);
+    var response = await _client.PostAsync("/auth/sign-up", content);
 
     // Assert - The endpoint should return OK and create a new user
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -112,18 +112,18 @@ public class AuthIntegrationTests {
     // Arrange - First register a user
     var registerRequest = new LocalSignUpRequestDto { Email = "login-test@example.com", Password = "P455W0RD", Username = "login-user" };
 
-    string registerJson = JsonSerializer.Serialize(registerRequest);
+    var registerJson = JsonSerializer.Serialize(registerRequest);
     var registerContent = new StringContent(registerJson, Encoding.UTF8, "application/json");
     await _client.PostAsync("/auth/sign-up", registerContent);
 
     // Now try to log in
     var loginRequest = new LocalSignInRequestDto { Email = "login-test@example.com", Password = "P455W0RD" };
 
-    string loginJson = JsonSerializer.Serialize(loginRequest);
+    var loginJson = JsonSerializer.Serialize(loginRequest);
     var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/auth/sign-in", loginContent);
+    var response = await _client.PostAsync("/auth/sign-in", loginContent);
 
     // Assert - The endpoint should return OK and provide tokens
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -139,11 +139,11 @@ public class AuthIntegrationTests {
     // Arrange
     var loginRequest = new LocalSignInRequestDto { Email = "nonexistent@example.com", Password = "wrong-password" };
 
-    string json = JsonSerializer.Serialize(loginRequest);
+    var json = JsonSerializer.Serialize(loginRequest);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/auth/sign-in", content);
+    var response = await _client.PostAsync("/auth/sign-in", content);
 
     // Assert - In test environments, the endpoint returns Unauthorized due to auth configuration
     Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -154,9 +154,9 @@ public class AuthIntegrationTests {
     // Arrange - First register and get tokens
     var registerRequest = new LocalSignUpRequestDto { Email = "refresh-test@example.com", Password = "P455W0RD", Username = "refresh-user" };
 
-    string registerJson = JsonSerializer.Serialize(registerRequest);
+    var registerJson = JsonSerializer.Serialize(registerRequest);
     var registerContent = new StringContent(registerJson, Encoding.UTF8, "application/json");
-    HttpResponseMessage registerResponse = await _client.PostAsync("/auth/sign-up", registerContent);
+    var registerResponse = await _client.PostAsync("/auth/sign-up", registerContent);
 
     // Registration should now work and return tokens
     Assert.Equal(HttpStatusCode.OK, registerResponse.StatusCode);
@@ -166,11 +166,11 @@ public class AuthIntegrationTests {
     // Now use the real refresh token
     var refreshRequest = new RefreshTokenRequestDto { RefreshToken = registerData.RefreshToken };
 
-    string refreshJson = JsonSerializer.Serialize(refreshRequest);
+    var refreshJson = JsonSerializer.Serialize(refreshRequest);
     var refreshContent = new StringContent(refreshJson, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/auth/refresh-token", refreshContent);
+    var response = await _client.PostAsync("/auth/refresh-token", refreshContent);
 
     // Assert - The refresh should work and return new tokens
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -186,16 +186,16 @@ public class AuthIntegrationTests {
     // Arrange
     var challengeRequest = new Web3ChallengeRequestDto { WalletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower(), ChainId = "1" };
 
-    string json = JsonSerializer.Serialize(challengeRequest);
+    var json = JsonSerializer.Serialize(challengeRequest);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/auth/web3/challenge", content);
+    var response = await _client.PostAsync("/auth/web3/challenge", content);
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-    string responseContent = await response.Content.ReadAsStringAsync();
+    var responseContent = await response.Content.ReadAsStringAsync();
     var challengeResponse = JsonSerializer.Deserialize<Web3ChallengeResponseDto>(
       responseContent,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
@@ -212,11 +212,11 @@ public class AuthIntegrationTests {
     // Arrange
     var challengeRequest = new Web3ChallengeRequestDto { WalletAddress = "invalid-address", ChainId = "1" };
 
-    string json = JsonSerializer.Serialize(challengeRequest);
+    var json = JsonSerializer.Serialize(challengeRequest);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/auth/web3/challenge", content);
+    var response = await _client.PostAsync("/auth/web3/challenge", content);
 
     // Assert
     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -227,16 +227,16 @@ public class AuthIntegrationTests {
     // Arrange
     var request = new SendEmailVerificationRequestDto { Email = "verification-test@example.com" };
 
-    string json = JsonSerializer.Serialize(request);
+    var json = JsonSerializer.Serialize(request);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/auth/send-email-verification", content);
+    var response = await _client.PostAsync("/auth/send-email-verification", content);
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-    string responseContent = await response.Content.ReadAsStringAsync();
+    var responseContent = await response.Content.ReadAsStringAsync();
     var emailResponse = JsonSerializer.Deserialize<EmailOperationResponseDto>(
       responseContent,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
@@ -256,12 +256,12 @@ public class AuthIntegrationTests {
     const string redirectUri = "https://example.com/callback";
 
     // Act
-    HttpResponseMessage response = await _client.GetAsync($"/auth/github/signin?redirectUri={redirectUri}");
+    var response = await _client.GetAsync($"/auth/github/signin?redirectUri={redirectUri}");
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-    string responseContent = await response.Content.ReadAsStringAsync();
+    var responseContent = await response.Content.ReadAsStringAsync();
     Assert.Contains("authUrl", responseContent); // JSON properties are camelCase in responses
   }
 
@@ -270,7 +270,7 @@ public class AuthIntegrationTests {
     // Arrange - First register a user
     var registerRequest = new LocalSignUpRequestDto { Email = "duplicate-test@example.com", Password = "P455W0RD", Username = "duplicate-user" };
 
-    string json = JsonSerializer.Serialize(registerRequest);
+    var json = JsonSerializer.Serialize(registerRequest);
     var content1 = new StringContent(json, Encoding.UTF8, "application/json");
     await _client.PostAsync("/auth/sign-up", content1);
 
@@ -278,7 +278,7 @@ public class AuthIntegrationTests {
     var content2 = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/auth/sign-up", content2);
+    var response = await _client.PostAsync("/auth/sign-up", content2);
 
     // Assert - Should return BadRequest for duplicate email
     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

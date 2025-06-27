@@ -47,8 +47,8 @@ public class PermissionServiceResourceTests : IDisposable {
     );
 
     // Assert
-    CommentPermission? permission = await _context.Set<CommentPermission>()
-                                                  .FirstOrDefaultAsync(cp => cp.UserId == userId && cp.TenantId == tenantId && cp.ResourceId == resourceId);
+    var permission = await _context.Set<CommentPermission>()
+                                   .FirstOrDefaultAsync(cp => cp.UserId == userId && cp.TenantId == tenantId && cp.ResourceId == resourceId);
 
     Assert.NotNull(permission);
     Assert.True(permission.HasPermission(PermissionType.Read));
@@ -80,15 +80,15 @@ public class PermissionServiceResourceTests : IDisposable {
     );
 
     // Assert
-    CommentPermission? permission = await _context.Set<CommentPermission>()
-                                                  .FirstOrDefaultAsync(cp => cp.UserId == userId && cp.TenantId == tenantId && cp.ResourceId == resourceId);
+    var permission = await _context.Set<CommentPermission>()
+                                   .FirstOrDefaultAsync(cp => cp.UserId == userId && cp.TenantId == tenantId && cp.ResourceId == resourceId);
 
     Assert.NotNull(permission);
     Assert.True(permission.HasPermission(PermissionType.Read));
     Assert.True(permission.HasPermission(PermissionType.Edit));
 
     // Verify only one record exists
-    int count = await _context.Set<CommentPermission>()
+    var count = await _context.Set<CommentPermission>()
                               .CountAsync(cp => cp.UserId == userId && cp.TenantId == tenantId && cp.ResourceId == resourceId);
     Assert.Equal(1, count);
   }
@@ -109,8 +109,8 @@ public class PermissionServiceResourceTests : IDisposable {
     );
 
     // Assert
-    CommentPermission? permission = await _context.Set<CommentPermission>()
-                                                  .FirstOrDefaultAsync(cp => cp.UserId == null && cp.TenantId == tenantId && cp.ResourceId == resourceId);
+    var permission = await _context.Set<CommentPermission>()
+                                   .FirstOrDefaultAsync(cp => cp.UserId == null && cp.TenantId == tenantId && cp.ResourceId == resourceId);
 
     Assert.NotNull(permission);
     Assert.Null(permission.UserId);
@@ -136,8 +136,8 @@ public class PermissionServiceResourceTests : IDisposable {
     );
 
     // Assert
-    CommentPermission? permission = await _context.Set<CommentPermission>()
-                                                  .FirstOrDefaultAsync(cp => cp.UserId == null && cp.TenantId == null && cp.ResourceId == resourceId);
+    var permission = await _context.Set<CommentPermission>()
+                                   .FirstOrDefaultAsync(cp => cp.UserId == null && cp.TenantId == null && cp.ResourceId == resourceId);
 
     Assert.NotNull(permission);
     Assert.Null(permission.UserId);
@@ -166,7 +166,7 @@ public class PermissionServiceResourceTests : IDisposable {
     );
 
     // Act
-    bool result =
+    var result =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,
@@ -186,7 +186,7 @@ public class PermissionServiceResourceTests : IDisposable {
     var resourceId = Guid.NewGuid();
 
     // Act
-    bool result =
+    var result =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,
@@ -213,7 +213,7 @@ public class PermissionServiceResourceTests : IDisposable {
     await _context.SaveChangesAsync();
 
     // Act
-    bool result =
+    var result =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,
@@ -241,7 +241,7 @@ public class PermissionServiceResourceTests : IDisposable {
     await _context.SaveChangesAsync();
 
     // Act
-    bool result =
+    var result =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,
@@ -330,21 +330,21 @@ public class PermissionServiceResourceTests : IDisposable {
     );
 
     // Assert
-    bool hasRead =
+    var hasRead =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,
         resourceId,
         PermissionType.Read
       );
-    bool hasEdit =
+    var hasEdit =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,
         resourceId,
         PermissionType.Edit
       );
-    bool hasDelete =
+    var hasDelete =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,
@@ -472,21 +472,21 @@ public class PermissionServiceResourceTests : IDisposable {
     );
 
     // Assert
-    bool hasRead =
+    var hasRead =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         targetUserId,
         tenantId,
         resourceId,
         PermissionType.Read
       );
-    bool hasComment =
+    var hasComment =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         targetUserId,
         tenantId,
         resourceId,
         PermissionType.Comment
       );
-    bool hasEdit =
+    var hasEdit =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         targetUserId,
         tenantId,
@@ -506,7 +506,7 @@ public class PermissionServiceResourceTests : IDisposable {
     var tenantId = Guid.NewGuid();
     var resourceId = Guid.NewGuid();
     var permissions = new[] { PermissionType.Read };
-    DateTime expiresAt = DateTime.UtcNow.AddDays(7);
+    var expiresAt = DateTime.UtcNow.AddDays(7);
 
     // Act
     await _permissionService.ShareResourceAsync<CommentPermission, Comment>(
@@ -518,10 +518,10 @@ public class PermissionServiceResourceTests : IDisposable {
     );
 
     // Assert
-    CommentPermission? permission = await _context.Set<CommentPermission>()
-                                                  .FirstOrDefaultAsync(cp =>
-                                                                         cp.UserId == targetUserId && cp.TenantId == tenantId && cp.ResourceId == resourceId
-                                                  );
+    var permission = await _context.Set<CommentPermission>()
+                                   .FirstOrDefaultAsync(cp =>
+                                                          cp.UserId == targetUserId && cp.TenantId == tenantId && cp.ResourceId == resourceId
+                                   );
 
     Assert.NotNull(permission);
     Assert.NotNull(permission.ExpiresAt);
@@ -556,28 +556,28 @@ public class PermissionServiceResourceTests : IDisposable {
     );
 
     // Act & Assert
-    bool hasResource1Edit =
+    var hasResource1Edit =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,
         resource1Id,
         PermissionType.Edit
       );
-    bool hasResource1Delete =
+    var hasResource1Delete =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,
         resource1Id,
         PermissionType.Delete
       );
-    bool hasResource2Edit =
+    var hasResource2Edit =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,
         resource2Id,
         PermissionType.Edit
       );
-    bool hasResource2Delete =
+    var hasResource2Delete =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,
@@ -614,28 +614,28 @@ public class PermissionServiceResourceTests : IDisposable {
     );
 
     // Act & Assert
-    bool user1HasEdit =
+    var user1HasEdit =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         user1Id,
         tenantId,
         resourceId,
         PermissionType.Edit
       );
-    bool user2HasEdit =
+    var user2HasEdit =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         user2Id,
         tenantId,
         resourceId,
         PermissionType.Edit
       );
-    bool user1HasRead =
+    var user1HasRead =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         user1Id,
         tenantId,
         resourceId,
         PermissionType.Read
       );
-    bool user2HasRead =
+    var user2HasRead =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         user2Id,
         tenantId,

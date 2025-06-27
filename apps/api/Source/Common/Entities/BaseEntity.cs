@@ -1,4 +1,3 @@
-using System.Reflection;
 using GameGuild.Modules.Tenant.Models;
 
 
@@ -91,7 +90,7 @@ public class BaseEntity : BaseEntity<Guid> {
         var properties = partial.GetType().GetProperties();
         var propDict = new Dictionary<string, object?>();
 
-        foreach (PropertyInfo prop in properties) { propDict[prop.Name] = prop.GetValue(partial); }
+        foreach (var prop in properties) { propDict[prop.Name] = prop.GetValue(partial); }
 
         instance.SetProperties(propDict);
 

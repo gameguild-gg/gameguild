@@ -20,8 +20,8 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
   }
 
   public async Task<Models.UserProfile> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken) {
-    Models.UserProfile? userProfile = await _context.Resources.OfType<Models.UserProfile>()
-                                                    .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
+    var userProfile = await _context.Resources.OfType<Models.UserProfile>()
+                                    .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 
     if (userProfile == null) { throw new InvalidOperationException($"User profile with ID {request.UserProfileId} not found"); }
 

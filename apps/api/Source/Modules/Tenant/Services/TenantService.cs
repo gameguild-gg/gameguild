@@ -61,7 +61,7 @@ public class TenantService : ITenantService {
   /// <param name="tenant">Tenant to update</param>
   /// <returns>Updated tenant</returns>
   public async Task<Models.Tenant> UpdateTenantAsync(Models.Tenant tenant) {
-    Models.Tenant? existingTenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenant.Id);
+    var existingTenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenant.Id);
 
     if (existingTenant == null) { throw new InvalidOperationException($"Tenant with ID {tenant.Id} not found"); }
 
@@ -82,7 +82,7 @@ public class TenantService : ITenantService {
   /// <param name="id">Tenant ID to delete</param>
   /// <returns>True if deleted successfully</returns>
   public async Task<bool> SoftDeleteTenantAsync(Guid id) {
-    Models.Tenant? tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
+    var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
 
     if (tenant == null) { return false; }
 
@@ -98,8 +98,8 @@ public class TenantService : ITenantService {
   /// <param name="id">Tenant ID to restore</param>
   /// <returns>True if restored successfully</returns>
   public async Task<bool> RestoreTenantAsync(Guid id) {
-    Models.Tenant? tenant = await _context.Tenants.IgnoreQueryFilters()
-                                          .FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt != null);
+    var tenant = await _context.Tenants.IgnoreQueryFilters()
+                               .FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt != null);
 
     if (tenant == null) { return false; }
 
@@ -115,7 +115,7 @@ public class TenantService : ITenantService {
   /// <param name="id">Tenant ID to delete</param>
   /// <returns>True if deleted successfully</returns>
   public async Task<bool> HardDeleteTenantAsync(Guid id) {
-    Models.Tenant? tenant = await _context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id);
+    var tenant = await _context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id);
 
     if (tenant == null) { return false; }
 
@@ -131,7 +131,7 @@ public class TenantService : ITenantService {
   /// <param name="id">Tenant ID</param>
   /// <returns>True if activated successfully</returns>
   public async Task<bool> ActivateTenantAsync(Guid id) {
-    Models.Tenant? tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
+    var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
 
     if (tenant == null) { return false; }
 
@@ -147,7 +147,7 @@ public class TenantService : ITenantService {
   /// <param name="id">Tenant ID</param>
   /// <returns>True if deactivated successfully</returns>
   public async Task<bool> DeactivateTenantAsync(Guid id) {
-    Models.Tenant? tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
+    var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
 
     if (tenant == null) { return false; }
 

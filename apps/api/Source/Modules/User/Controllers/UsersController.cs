@@ -56,7 +56,7 @@ public class UsersController : ControllerBase {
   // GET: users/{id}
   [HttpGet("{id}")]
   public async Task<ActionResult<UserResponseDto>> GetUser(Guid id) {
-    Models.User? user = await _userService.GetUserByIdAsync(id);
+    var user = await _userService.GetUserByIdAsync(id);
 
     if (user == null) { return NotFound(); }
 
@@ -81,7 +81,7 @@ public class UsersController : ControllerBase {
     // Use BaseEntity.Create for consistent creation pattern
     var user = new Models.User(new { createUserDto.Name, createUserDto.Email, IsActive = true });
 
-    Models.User createdUser = await _userService.CreateUserAsync(user);
+    var createdUser = await _userService.CreateUserAsync(user);
 
     var userDto = new UserResponseDto {
       Id = createdUser.Id,
@@ -101,7 +101,7 @@ public class UsersController : ControllerBase {
   // PUT: users/{id}
   [HttpPut("{id}")]
   public async Task<ActionResult<UserResponseDto>> UpdateUser(Guid id, UpdateUserDto updateUserDto) {
-    Models.User? existingUser = await _userService.GetUserByIdAsync(id);
+    var existingUser = await _userService.GetUserByIdAsync(id);
 
     if (existingUser == null) { return NotFound(); }
 
@@ -110,7 +110,7 @@ public class UsersController : ControllerBase {
 
     if (!string.IsNullOrEmpty(updateUserDto.Email)) existingUser.Email = updateUserDto.Email;
 
-    Models.User? updatedUser = await _userService.UpdateUserAsync(id, existingUser);
+    var updatedUser = await _userService.UpdateUserAsync(id, existingUser);
 
     if (updatedUser == null) { return NotFound(); }
 
@@ -132,7 +132,7 @@ public class UsersController : ControllerBase {
   // DELETE: users/{id}
   [HttpDelete("{id}")]
   public async Task<IActionResult> DeleteUser(Guid id) {
-    bool result = await _userService.DeleteUserAsync(id);
+    var result = await _userService.DeleteUserAsync(id);
 
     if (!result) { return NotFound(); }
 
@@ -142,7 +142,7 @@ public class UsersController : ControllerBase {
   // DELETE: users/{id}/soft
   [HttpDelete("{id}/soft")]
   public async Task<IActionResult> SoftDeleteUser(Guid id) {
-    bool result = await _userService.SoftDeleteUserAsync(id);
+    var result = await _userService.SoftDeleteUserAsync(id);
 
     if (!result) { return NotFound(); }
 
@@ -152,7 +152,7 @@ public class UsersController : ControllerBase {
   // POST: users/{id}/restore
   [HttpPost("{id}/restore")]
   public async Task<IActionResult> RestoreUser(Guid id) {
-    bool result = await _userService.RestoreUserAsync(id);
+    var result = await _userService.RestoreUserAsync(id);
 
     if (!result) { return NotFound(); }
 

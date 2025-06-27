@@ -32,7 +32,7 @@ public class Web3ServiceTests : IDisposable {
     var request = new Web3ChallengeRequestDto { WalletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower(), ChainId = "1" };
 
     // Act
-    Web3ChallengeResponseDto result = await _web3Service.GenerateChallengeAsync(request);
+    var result = await _web3Service.GenerateChallengeAsync(request);
 
     // Assert
     Assert.NotNull(result);
@@ -58,7 +58,7 @@ public class Web3ServiceTests : IDisposable {
   [InlineData("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")]
   public void IsValidEthereumAddress_ValidAddress_ReturnsTrue(string address) {
     // Act
-    bool result = _web3Service.IsValidEthereumAddress(address);
+    var result = _web3Service.IsValidEthereumAddress(address);
 
     // Assert
     Assert.True(result);
@@ -74,7 +74,7 @@ public class Web3ServiceTests : IDisposable {
   [InlineData("0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC1")]
   public void IsValidEthereumAddress_InvalidAddress_ReturnsFalse(string address) {
     // Act
-    bool result = _web3Service.IsValidEthereumAddress(address);
+    var result = _web3Service.IsValidEthereumAddress(address);
 
     // Assert
     Assert.False(result);
@@ -83,11 +83,11 @@ public class Web3ServiceTests : IDisposable {
   [Fact]
   public async Task VerifySignatureAsync_MockImplementation_ReturnsTrue() {
     // Arrange
-    string walletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower();
+    var walletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower();
 
     // First generate a challenge
     var challengeRequest = new Web3ChallengeRequestDto { WalletAddress = walletAddress };
-    Web3ChallengeResponseDto challenge = await _web3Service.GenerateChallengeAsync(challengeRequest);
+    var challenge = await _web3Service.GenerateChallengeAsync(challengeRequest);
 
     // Now create the verify request with the generated nonce
     var verifyRequest = new Web3VerifyRequestDto {
@@ -99,7 +99,7 @@ public class Web3ServiceTests : IDisposable {
     };
 
     // Act
-    bool result = await _web3Service.VerifySignatureAsync(verifyRequest);
+    var result = await _web3Service.VerifySignatureAsync(verifyRequest);
 
     // Assert
     // Note: This should return true for the mock implementation
@@ -110,11 +110,11 @@ public class Web3ServiceTests : IDisposable {
   [Fact]
   public async Task FindOrCreateWeb3UserAsync_NewWallet_CreatesUserAndCredential() {
     // Arrange
-    string walletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower();
+    var walletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower();
     var chainId = "1";
 
     // Act
-    User user = await _web3Service.FindOrCreateWeb3UserAsync(walletAddress, chainId);
+    var user = await _web3Service.FindOrCreateWeb3UserAsync(walletAddress, chainId);
 
     // Assert
     Assert.NotNull(user);
@@ -122,11 +122,11 @@ public class Web3ServiceTests : IDisposable {
     Assert.Equal($"{walletAddress}@web3.local", user.Email);
 
     // Verify user was saved to database
-    User? savedUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
+    var savedUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
     Assert.NotNull(savedUser);
 
     // Verify credential was created
-    Credential? credential = await _context.Credentials.FirstOrDefaultAsync(c => c.UserId == user.Id);
+    var credential = await _context.Credentials.FirstOrDefaultAsync(c => c.UserId == user.Id);
     Assert.NotNull(credential);
     Assert.Equal("web3_wallet", credential.Type);
     Assert.Equal(walletAddress, credential.Value);
@@ -136,7 +136,7 @@ public class Web3ServiceTests : IDisposable {
   [Fact]
   public async Task FindOrCreateWeb3UserAsync_ExistingWallet_ReturnsExistingUser() {
     // Arrange
-    string walletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower();
+    var walletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower();
     var chainId = "1";
 
     // Create existing user first
@@ -149,7 +149,7 @@ public class Web3ServiceTests : IDisposable {
     await _context.SaveChangesAsync();
 
     // Act
-    User user = await _web3Service.FindOrCreateWeb3UserAsync(walletAddress, chainId);
+    var user = await _web3Service.FindOrCreateWeb3UserAsync(walletAddress, chainId);
 
     // Assert
     Assert.NotNull(user);
@@ -157,20 +157,20 @@ public class Web3ServiceTests : IDisposable {
     Assert.Equal("Existing Web3 User", user.Name);
 
     // Verify no duplicate users were created
-    int userCount = await _context.Users.CountAsync(u => u.Email == $"{walletAddress}@web3.local");
+    var userCount = await _context.Users.CountAsync(u => u.Email == $"{walletAddress}@web3.local");
     Assert.Equal(1, userCount);
   }
 
   [Fact]
   public async Task FindOrCreateWeb3UserAsync_MultipleChains_ReturnsSameUser() {
     // Arrange
-    string walletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower();
+    var walletAddress = "0x742d35Cc6634C0532925a3b8D7fE0a26cfEb00dC".ToLower();
     var chainId1 = "1"; // Ethereum mainnet
     var chainId2 = "137"; // Polygon
 
     // Act
-    User user1 = await _web3Service.FindOrCreateWeb3UserAsync(walletAddress, chainId1);
-    User user2 = await _web3Service.FindOrCreateWeb3UserAsync(walletAddress, chainId2);
+    var user1 = await _web3Service.FindOrCreateWeb3UserAsync(walletAddress, chainId1);
+    var user2 = await _web3Service.FindOrCreateWeb3UserAsync(walletAddress, chainId2);
 
     // Assert
     Assert.NotNull(user1);

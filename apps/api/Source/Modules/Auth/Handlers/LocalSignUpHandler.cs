@@ -23,7 +23,7 @@ public class LocalSignUpHandler : IRequestHandler<LocalSignUpCommand, SignInResp
   public async Task<SignInResponseDto> Handle(LocalSignUpCommand request, CancellationToken cancellationToken) {
     var signUpRequest = new LocalSignUpRequestDto { Email = request.Email, Password = request.Password, Username = request.Username, TenantId = request.TenantId };
 
-    SignInResponseDto result = await _authService.LocalSignUpAsync(signUpRequest);
+    var result = await _authService.LocalSignUpAsync(signUpRequest);
 
     // Publish notification for side effects (email, analytics, etc.)
     var notification = new UserSignedUpNotification {

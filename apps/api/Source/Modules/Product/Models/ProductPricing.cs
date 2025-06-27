@@ -140,7 +140,7 @@ public class ProductPricing : BaseEntity {
   public bool IsSaleActive() {
     if (!SalePrice.HasValue) return false;
 
-    DateTime now = DateTime.UtcNow;
+    var now = DateTime.UtcNow;
 
     return (SaleStartDate == null || SaleStartDate <= now) && (SaleEndDate == null || SaleEndDate > now);
   }

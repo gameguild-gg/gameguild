@@ -134,9 +134,9 @@ public class ContentInteraction : BaseEntity {
     if (string.IsNullOrEmpty(SubmissionData)) return null;
 
     try {
-      JsonDocument json = JsonDocument.Parse(SubmissionData);
+      var json = JsonDocument.Parse(SubmissionData);
 
-      if (json.RootElement.TryGetProperty(key, out JsonElement element)) { return JsonSerializer.Deserialize<T>(element.GetRawText()); }
+      if (json.RootElement.TryGetProperty(key, out var element)) { return JsonSerializer.Deserialize<T>(element.GetRawText()); }
     }
     catch {
       // Handle JSON parsing errors gracefully

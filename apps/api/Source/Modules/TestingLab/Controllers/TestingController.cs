@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Attributes;
-using GameGuild.Modules.Auth.Attributes;
 using System.Security.Claims;
 using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Modules.TestingLab.Services;
@@ -58,9 +57,9 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult<TestingRequest>> CreateTestingRequest(CreateTestingRequestDto requestDto) {
     try {
       // Get the current authenticated user's ID
-      string? userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)) { return Unauthorized("User ID not found in token"); }
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
 
       var request = requestDto.ToTestingRequest(userId);
       var createdRequest = await _testService.CreateTestingRequestAsync(request);
@@ -151,9 +150,9 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult<TestingSession>> CreateTestingSession(TestingSession session) {
     try {
       // Get the current authenticated user's ID
-      string? userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)) { return Unauthorized("User ID not found in token"); }
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
 
       session.CreatedById = userId;
       var createdSession = await _testService.CreateTestingSessionAsync(session);
@@ -347,9 +346,9 @@ public class TestingController : ControllerBase {
   ) {
     try {
       // Get the current authenticated user's ID
-      string? userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)) { return Unauthorized("User ID not found in token"); }
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
 
       var registration =
         await _testService.RegisterForSessionAsync(sessionId, userId, request.RegistrationType, request.Notes);
@@ -364,9 +363,9 @@ public class TestingController : ControllerBase {
   [RequireResourcePermission<SessionRegistration>(PermissionType.Delete)]
   public async Task<ActionResult> UnregisterFromSession(Guid sessionId) {
     // Get the current authenticated user's ID
-    string? userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)) { return Unauthorized("User ID not found in token"); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
 
     var result = await _testService.UnregisterFromSessionAsync(sessionId, userId);
 
@@ -393,9 +392,9 @@ public class TestingController : ControllerBase {
   ) {
     try {
       // Get the current authenticated user's ID
-      string? userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)) { return Unauthorized("User ID not found in token"); }
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
 
       var waitlistEntry =
         await _testService.AddToWaitlistAsync(sessionId, userId, request.RegistrationType, request.Notes);
@@ -410,9 +409,9 @@ public class TestingController : ControllerBase {
   [RequireResourcePermission<SessionWaitlist>(PermissionType.Delete)]
   public async Task<ActionResult> RemoveFromWaitlist(Guid sessionId) {
     // Get the current authenticated user's ID
-    string? userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)) { return Unauthorized("User ID not found in token"); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
 
     var result = await _testService.RemoveFromWaitlistAsync(sessionId, userId);
 
@@ -440,9 +439,9 @@ public class TestingController : ControllerBase {
   public async Task<ActionResult<TestingFeedback>> AddFeedback(Guid requestId, [FromBody] FeedbackRequest request) {
     try {
       // Get the current authenticated user's ID
-      string? userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)) { return Unauthorized("User ID not found in token"); }
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized("User ID not found in token"); }
 
       var feedback = await _testService.AddFeedbackAsync(
                        requestId,

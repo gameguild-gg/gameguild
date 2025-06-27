@@ -4,7 +4,6 @@ using GameGuild.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -17,7 +16,7 @@ namespace GameGuild.Tests.Fixtures;
 public class TestWebApplicationFactory : WebApplicationFactory<Program> {
   protected override void ConfigureWebHost(IWebHostBuilder builder) {
     // Set the content root to the project directory
-    string projectDir = Directory.GetCurrentDirectory();
+    var projectDir = Directory.GetCurrentDirectory();
     builder.UseContentRoot(projectDir);
 
     // Set required environment variables for tests
@@ -94,7 +93,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
         );
 
         // Remove the existing DbContext configurations to prevent multiple database provider registration
-        ServiceDescriptor? descriptor =
+        var descriptor =
           services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
 
         if (descriptor != null) { services.Remove(descriptor); }
@@ -104,7 +103,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
                              .Where(s => s.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true)
                              .ToList();
 
-        foreach (ServiceDescriptor service in efCoreServices) { services.Remove(service); }
+        foreach (var service in efCoreServices) { services.Remove(service); }
 
         // Replace TenantContextService with mock for testing
         var tenantContextServiceDescriptor = services.SingleOrDefault(d =>

@@ -19,12 +19,12 @@ public class BaseEntityIntegrationTests {
   [Fact]
   public async Task User_BaseEntityProperties_ShouldWork() {
     // Arrange
-    using ApplicationDbContext context = GetInMemoryContext();
+    using var context = GetInMemoryContext();
     var userService = new UserService(context);
 
     // Act - Create user using BaseEntity constructor pattern
     var user = new User(new { Name = "Test User", Email = "test@example.com" });
-    User createdUser = await userService.CreateUserAsync(user);
+    var createdUser = await userService.CreateUserAsync(user);
 
     // Assert
     Assert.NotEqual(Guid.Empty, createdUser.Id);
@@ -42,11 +42,11 @@ public class BaseEntityIntegrationTests {
   [Fact]
   public async Task User_SoftDelete_ShouldWork() {
     // Arrange
-    using ApplicationDbContext context = GetInMemoryContext();
+    using var context = GetInMemoryContext();
     var userService = new UserService(context);
 
     var user = new User(new { Name = "Delete Test", Email = "delete@example.com" });
-    User createdUser = await userService.CreateUserAsync(user);
+    var createdUser = await userService.CreateUserAsync(user);
 
     // Act
     await userService.SoftDeleteUserAsync(createdUser.Id);
@@ -58,7 +58,7 @@ public class BaseEntityIntegrationTests {
     Assert.DoesNotContain(activeUsers, u => u.Id == createdUser.Id);
     Assert.Contains(deletedUsers, u => u.Id == createdUser.Id);
 
-    User deletedUser = deletedUsers.First(u => u.Id == createdUser.Id);
+    var deletedUser = deletedUsers.First(u => u.Id == createdUser.Id);
     Assert.True(deletedUser.IsDeleted);
     Assert.NotNull(deletedUser.DeletedAt);
   }
@@ -66,11 +66,11 @@ public class BaseEntityIntegrationTests {
   [Fact]
   public async Task User_RestoreAfterSoftDelete_ShouldWork() {
     // Arrange
-    using ApplicationDbContext context = GetInMemoryContext();
+    using var context = GetInMemoryContext();
     var userService = new UserService(context);
 
     var user = new User(new { Name = "Restore Test", Email = "restore@example.com" });
-    User createdUser = await userService.CreateUserAsync(user);
+    var createdUser = await userService.CreateUserAsync(user);
 
     // Act
     await userService.SoftDeleteUserAsync(createdUser.Id);
@@ -83,7 +83,7 @@ public class BaseEntityIntegrationTests {
     Assert.Contains(activeUsers, u => u.Id == createdUser.Id);
     Assert.DoesNotContain(deletedUsers, u => u.Id == createdUser.Id);
 
-    User restoredUser = activeUsers.First(u => u.Id == createdUser.Id);
+    var restoredUser = activeUsers.First(u => u.Id == createdUser.Id);
     Assert.False(restoredUser.IsDeleted);
     Assert.Null(restoredUser.DeletedAt);
   }

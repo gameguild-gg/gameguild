@@ -37,7 +37,7 @@ public class PermissionServiceTenantTests : IDisposable {
     var permissions = new[] { PermissionType.Read, PermissionType.Comment };
 
     // Act
-    TenantPermission result = await _permissionService.GrantTenantPermissionAsync(userId, tenantId, permissions);
+    var result = await _permissionService.GrantTenantPermissionAsync(userId, tenantId, permissions);
 
     // Assert
     Assert.NotNull(result);
@@ -58,7 +58,7 @@ public class PermissionServiceTenantTests : IDisposable {
     await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Read]);
 
     // Act - Grant additional permissions
-    TenantPermission result =
+    var result =
       await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Comment]);
 
     // Assert
@@ -66,7 +66,7 @@ public class PermissionServiceTenantTests : IDisposable {
     Assert.True(result.HasPermission(PermissionType.Comment));
 
     // Verify only one record exists
-    int count = await _context.TenantPermissions.CountAsync(tp => tp.UserId == userId && tp.TenantId == tenantId);
+    var count = await _context.TenantPermissions.CountAsync(tp => tp.UserId == userId && tp.TenantId == tenantId);
     Assert.Equal(1, count);
   }
 
@@ -76,7 +76,7 @@ public class PermissionServiceTenantTests : IDisposable {
     var permissions = new[] { PermissionType.Read, PermissionType.Comment };
 
     // Act
-    TenantPermission result =
+    var result =
       await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, permissions);
 
     // Assert
@@ -95,7 +95,7 @@ public class PermissionServiceTenantTests : IDisposable {
     var permissions = new[] { PermissionType.Read, PermissionType.Comment };
 
     // Act
-    TenantPermission result = await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, permissions);
+    var result = await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, permissions);
 
     // Assert
     Assert.NotNull(result);
@@ -142,7 +142,7 @@ public class PermissionServiceTenantTests : IDisposable {
     await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Read]);
 
     // Act
-    bool result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
+    var result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
 
     // Assert
     Assert.True(result);
@@ -155,7 +155,7 @@ public class PermissionServiceTenantTests : IDisposable {
     var tenantId = Guid.NewGuid();
 
     // Act
-    bool result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
+    var result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
 
     // Assert
     Assert.False(result);
@@ -171,7 +171,7 @@ public class PermissionServiceTenantTests : IDisposable {
     await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, [PermissionType.Read]);
 
     // Act
-    bool result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
+    var result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
 
     // Assert
     Assert.True(result);
@@ -187,7 +187,7 @@ public class PermissionServiceTenantTests : IDisposable {
     await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, [PermissionType.Read]);
 
     // Act
-    bool result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
+    var result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
 
     // Assert
     Assert.True(result);
@@ -206,8 +206,8 @@ public class PermissionServiceTenantTests : IDisposable {
     await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Comment]);
 
     // Act
-    bool hasRead = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
-    bool hasComment = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Comment);
+    var hasRead = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
+    var hasComment = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Comment);
 
     // Assert
     Assert.True(hasComment); // User has comment permission
@@ -228,7 +228,7 @@ public class PermissionServiceTenantTests : IDisposable {
     await _context.SaveChangesAsync();
 
     // Act
-    bool result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
+    var result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
 
     // Assert
     Assert.False(result);
@@ -249,7 +249,7 @@ public class PermissionServiceTenantTests : IDisposable {
     await _context.SaveChangesAsync();
 
     // Act
-    bool result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
+    var result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
 
     // Assert
     Assert.False(result);
@@ -310,9 +310,9 @@ public class PermissionServiceTenantTests : IDisposable {
     await _permissionService.RevokeTenantPermissionAsync(userId, tenantId, revokePermissions);
 
     // Assert
-    bool hasRead = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
-    bool hasComment = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Comment);
-    bool hasVote = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Vote);
+    var hasRead = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
+    var hasComment = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Comment);
+    var hasVote = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Vote);
 
     Assert.True(hasRead);
     Assert.False(hasComment); // Should be revoked
@@ -341,7 +341,7 @@ public class PermissionServiceTenantTests : IDisposable {
     var tenantId = Guid.NewGuid();
 
     // Act
-    TenantPermission result = await _permissionService.JoinTenantAsync(userId, tenantId);
+    var result = await _permissionService.JoinTenantAsync(userId, tenantId);
 
     // Assert
     Assert.NotNull(result);
@@ -350,7 +350,7 @@ public class PermissionServiceTenantTests : IDisposable {
     Assert.True(result.IsActiveMembership);
 
     // Should have minimal permissions
-    foreach (PermissionType permission in TenantPermissionConstants.MinimalUserPermissions) { Assert.True(result.HasPermission(permission)); }
+    foreach (var permission in TenantPermissionConstants.MinimalUserPermissions) { Assert.True(result.HasPermission(permission)); }
   }
 
   [Fact]
@@ -365,7 +365,7 @@ public class PermissionServiceTenantTests : IDisposable {
     await _context.SaveChangesAsync();
 
     // Act
-    TenantPermission result = await _permissionService.JoinTenantAsync(userId, tenantId);
+    var result = await _permissionService.JoinTenantAsync(userId, tenantId);
 
     // Assert
     Assert.NotNull(result);
@@ -384,7 +384,7 @@ public class PermissionServiceTenantTests : IDisposable {
     await _permissionService.LeaveTenantAsync(userId, tenantId);
 
     // Assert
-    TenantPermission? membership =
+    var membership =
       await _context.TenantPermissions.FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId);
 
     Assert.NotNull(membership);
@@ -400,7 +400,7 @@ public class PermissionServiceTenantTests : IDisposable {
     await _permissionService.JoinTenantAsync(userId, tenantId);
 
     // Act
-    bool result = await _permissionService.IsUserInTenantAsync(userId, tenantId);
+    var result = await _permissionService.IsUserInTenantAsync(userId, tenantId);
 
     // Assert
     Assert.True(result);
@@ -413,7 +413,7 @@ public class PermissionServiceTenantTests : IDisposable {
     var tenantId = Guid.NewGuid();
 
     // Act
-    bool result = await _permissionService.IsUserInTenantAsync(userId, tenantId);
+    var result = await _permissionService.IsUserInTenantAsync(userId, tenantId);
 
     // Assert
     Assert.False(result);

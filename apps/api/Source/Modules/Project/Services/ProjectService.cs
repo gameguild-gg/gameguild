@@ -126,7 +126,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<IEnumerable<Models.Project>> SearchProjectsAsync(string searchTerm, int skip = 0, int take = 50) {
-    string lowerSearchTerm = searchTerm.ToLower();
+    var lowerSearchTerm = searchTerm.ToLower();
 
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
@@ -165,7 +165,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<Models.Project> UpdateProjectAsync(Models.Project project) {
-    Models.Project? existingProject = await GetProjectByIdAsync(project.Id);
+    var existingProject = await GetProjectByIdAsync(project.Id);
 
     if (existingProject == null) throw new InvalidOperationException($"Project with ID {project.Id} not found");
 
@@ -197,7 +197,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<bool> DeleteProjectAsync(Guid id) {
-    Models.Project? project = await GetProjectByIdAsync(id);
+    var project = await GetProjectByIdAsync(id);
 
     if (project == null) return false;
 
@@ -211,7 +211,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<bool> RestoreProjectAsync(Guid id) {
-    Models.Project? project = await context.Projects.FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt != null);
+    var project = await context.Projects.FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt != null);
 
     if (project == null) return false;
 
@@ -322,7 +322,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<bool> RemoveTeamFromProjectAsync(Guid projectId, Guid teamId) {
-    ProjectTeam? projectTeam =
+    var projectTeam =
       await context.ProjectTeams.FirstOrDefaultAsync(pt => pt.ProjectId == projectId && pt.TeamId == teamId);
 
     if (projectTeam == null) return false;
@@ -360,7 +360,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     bool pushNotifications = true
   ) {
     // Check if already following
-    ProjectFollower? existing =
+    var existing =
       await context.ProjectFollowers.FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
 
     if (existing != null) return existing;
@@ -380,7 +380,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<bool> UnfollowProjectAsync(Guid projectId, Guid userId) {
-    ProjectFollower? follower =
+    var follower =
       await context.ProjectFollowers.FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
 
     if (follower == null) return false;
@@ -419,7 +419,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     string? content = null
   ) {
     // Check if the user already has feedback for this project
-    ProjectFeedback? existing =
+    var existing =
       await context.ProjectFeedbacks.FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
 
     if (existing != null) {
@@ -452,7 +452,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     Guid feedbackId, int rating, string title,
     string? content = null
   ) {
-    ProjectFeedback? feedback = await context.ProjectFeedbacks.FindAsync(feedbackId);
+    var feedback = await context.ProjectFeedbacks.FindAsync(feedbackId);
 
     if (feedback == null) throw new ArgumentException("Feedback not found", nameof(feedbackId));
 
@@ -467,7 +467,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<bool> DeleteProjectFeedbackAsync(Guid feedbackId) {
-    ProjectFeedback? feedback = await context.ProjectFeedbacks.FindAsync(feedbackId);
+    var feedback = await context.ProjectFeedbacks.FindAsync(feedbackId);
 
     if (feedback == null) return false;
 
@@ -500,7 +500,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     string? submissionNotes = null
   ) {
     // Check if already submitted
-    ProjectJamSubmission? existing =
+    var existing =
       await context.ProjectJamSubmissions.FirstOrDefaultAsync(pjs => pjs.ProjectId == projectId && pjs.JamId == jamId);
 
     if (existing != null) return existing;
@@ -520,7 +520,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<bool> RemoveProjectFromJamAsync(Guid projectId, Guid jamId) {
-    ProjectJamSubmission? submission =
+    var submission =
       await context.ProjectJamSubmissions.FirstOrDefaultAsync(pjs => pjs.ProjectId == projectId && pjs.JamId == jamId);
 
     if (submission == null) return false;
@@ -563,7 +563,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<bool> MoveProjectToTenantAsync(Guid projectId, Guid? tenantId) {
-    Models.Project? project = await context.Projects.FindAsync(projectId);
+    var project = await context.Projects.FindAsync(projectId);
 
     if (project == null) return false;
 
@@ -579,17 +579,17 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   #region Analytics and Statistics
 
   public async Task<ProjectStatistics> GetProjectStatisticsAsync(Guid projectId) {
-    Models.Project? project = await context.Projects.Include(p => p.Followers)
-                                           .Include(p => p.Feedbacks)
-                                           .Include(p => p.Teams)
-                                           .Include(p => p.Collaborators)
-                                           .Include(p => p.Releases)
-                                           .Include(p => p.JamSubmissions)
-                                           .FirstOrDefaultAsync(p => p.Id == projectId);
+    var project = await context.Projects.Include(p => p.Followers)
+                               .Include(p => p.Feedbacks)
+                               .Include(p => p.Teams)
+                               .Include(p => p.Collaborators)
+                               .Include(p => p.Releases)
+                               .Include(p => p.JamSubmissions)
+                               .FirstOrDefaultAsync(p => p.Id == projectId);
 
     if (project == null) throw new ArgumentException("Project not found", nameof(projectId));
 
-    DateTime thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+    var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
 
     return new ProjectStatistics {
       ProjectId = projectId,
@@ -611,7 +611,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<IEnumerable<Models.Project>> GetTrendingProjectsAsync(int take = 10, TimeSpan? timeWindow = null) {
-    DateTime cutoffDate = DateTime.UtcNow.Subtract(timeWindow ?? TimeSpan.FromDays(7));
+    var cutoffDate = DateTime.UtcNow.Subtract(timeWindow ?? TimeSpan.FromDays(7));
 
     var projects = await context.Projects.Include(p => p.CreatedBy)
                                 .Include(p => p.Category)
@@ -636,12 +636,12 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   private static decimal CalculateTrendingScore(Models.Project project, DateTime cutoffDate) {
-    int recentFollowers = project.Followers.Count(f => f.FollowedAt >= cutoffDate);
-    int recentFeedback = project.Feedbacks.Count(f => f.CreatedAt >= cutoffDate);
-    int totalDownloads = project.Releases.Sum(r => r.DownloadCount);
-    double averageRating = project.Feedbacks.Any()
-                             ? project.Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating)
-                             : 0;
+    var recentFollowers = project.Followers.Count(f => f.FollowedAt >= cutoffDate);
+    var recentFeedback = project.Feedbacks.Count(f => f.CreatedAt >= cutoffDate);
+    var totalDownloads = project.Releases.Sum(r => r.DownloadCount);
+    var averageRating = project.Feedbacks.Any()
+                          ? project.Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating)
+                          : 0;
 
     // Weighted trending score
     return (decimal)((recentFollowers * 2.0) +

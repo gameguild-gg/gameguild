@@ -28,17 +28,17 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
     var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
 
     // Extract user ID and tenant ID from JWT token
-    string? userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (!Guid.TryParse(userIdClaim, out Guid userId)) {
+    if (!Guid.TryParse(userIdClaim, out var userId)) {
       context.Result = new UnauthorizedResult();
 
       return;
     }
 
-    string? tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
+    var tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
 
-    if (!Guid.TryParse(tenantIdClaim, out Guid tenantId)) {
+    if (!Guid.TryParse(tenantIdClaim, out var tenantId)) {
       context.Result = new UnauthorizedResult();
 
       return;
@@ -47,7 +47,7 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
     // Extract resource ID from route parameters
     var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
 
-    if (!Guid.TryParse(resourceIdValue, out Guid resourceId)) {
+    if (!Guid.TryParse(resourceIdValue, out var resourceId)) {
       context.Result = new BadRequestResult();
 
       return;
@@ -55,7 +55,7 @@ public class RequireCommentPermissionAttribute : Attribute, IAsyncAuthorizationF
 
     // Check resource-level permission with hierarchical fallback
     // This uses the specific CommentPermission and Comment types
-    bool hasPermission =
+    var hasPermission =
       await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,

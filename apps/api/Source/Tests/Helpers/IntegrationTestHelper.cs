@@ -62,7 +62,7 @@ namespace GameGuild.Tests.Helpers {
 
           builder.ConfigureServices(services => {
               // Remove the existing DbContext configurations to prevent multiple database provider registration
-              ServiceDescriptor? descriptor =
+              var descriptor =
                 services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
 
               if (descriptor != null) { services.Remove(descriptor); }
@@ -72,12 +72,12 @@ namespace GameGuild.Tests.Helpers {
                                    .Where(s => s.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true)
                                    .ToList();
 
-              foreach (ServiceDescriptor service in efCoreServices) { services.Remove(service); }
+              foreach (var service in efCoreServices) { services.Remove(service); }
 
               // Add in-memory database for testing
               services.AddDbContext<ApplicationDbContext>(options => {
                   // Use the provided database name or a default one
-                  string dbName = databaseName ?? "TestDatabase";
+                  var dbName = databaseName ?? "TestDatabase";
                   options.UseInMemoryDatabase(dbName);
                   // Enable sensitive data logging for tests
                   options.EnableSensitiveDataLogging();
@@ -96,7 +96,7 @@ namespace GameGuild.Tests.Helpers {
                             .Where(s => s.ServiceType == typeof(Microsoft.AspNetCore.Mvc.Filters.IFilterProvider))
                             .ToList();
 
-              foreach (ServiceDescriptor filter in filters) { services.Remove(filter); }
+              foreach (var filter in filters) { services.Remove(filter); }
 
               // Register mock tenant context service for tests
               services
@@ -109,7 +109,7 @@ namespace GameGuild.Tests.Helpers {
               services.AddScoped<JwtAuthenticationFilter, TestJwtAuthenticationFilter>();
 
               // Ensure the database is created for the test DbContext
-              using IServiceScope scope = services.BuildServiceProvider().CreateScope();
+              using var scope = services.BuildServiceProvider().CreateScope();
               var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
               dbContext.Database.EnsureCreated();
             }

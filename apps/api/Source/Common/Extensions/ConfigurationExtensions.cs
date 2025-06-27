@@ -10,7 +10,7 @@ public static class ConfigurationExtensions {
     configuration.GetSection("App").Bind(appConfig);
 
     // Set environment-specific defaults
-    string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+    var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
     appConfig.Environment = environment;
     appConfig.IsDevelopmentEnvironment = environment == "Development";
     appConfig.IsProductionEnvironment = environment == "Production";
@@ -24,7 +24,7 @@ public static class ConfigurationExtensions {
     configuration.GetSection("Database").Bind(dbConfig);
 
     // Override with environment variable if present
-    string? connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+    var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 
     if (!string.IsNullOrEmpty(connectionString)) { dbConfig.ConnectionString = connectionString; }
 

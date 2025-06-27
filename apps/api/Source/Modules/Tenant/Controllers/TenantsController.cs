@@ -38,7 +38,7 @@ public class TenantsController : ControllerBase {
   /// <returns>Tenant details</returns>
   [HttpGet("{id}")]
   public async Task<ActionResult<TenantResponseDto>> GetTenant(Guid id) {
-    Models.Tenant? tenant = await _tenantService.GetTenantByIdAsync(id);
+    var tenant = await _tenantService.GetTenantByIdAsync(id);
 
     if (tenant == null) { return NotFound($"Tenant with ID {id} not found"); }
 
@@ -52,7 +52,7 @@ public class TenantsController : ControllerBase {
   /// <returns>Tenant details</returns>
   [HttpGet("by-name/{name}")]
   public async Task<ActionResult<TenantResponseDto>> GetTenantByName(string name) {
-    Models.Tenant? tenant = await _tenantService.GetTenantByNameAsync(name);
+    var tenant = await _tenantService.GetTenantByNameAsync(name);
 
     if (tenant == null) { return NotFound($"Tenant with name '{name}' not found"); }
 
@@ -71,8 +71,8 @@ public class TenantsController : ControllerBase {
 
     var tenant = new Models.Tenant(new { createDto.Name, createDto.Description, createDto.IsActive });
 
-    Models.Tenant createdTenant = await _tenantService.CreateTenantAsync(tenant);
-    TenantResponseDto response = MapToResponseDto(createdTenant);
+    var createdTenant = await _tenantService.CreateTenantAsync(tenant);
+    var response = MapToResponseDto(createdTenant);
 
     return CreatedAtAction(nameof(GetTenant), new { id = createdTenant.Id }, response);
   }
@@ -87,7 +87,7 @@ public class TenantsController : ControllerBase {
   public async Task<ActionResult<TenantResponseDto>> UpdateTenant(Guid id, [FromBody] UpdateTenantDto updateDto) {
     if (!ModelState.IsValid) { return BadRequest(ModelState); }
 
-    Models.Tenant? existingTenant = await _tenantService.GetTenantByIdAsync(id);
+    var existingTenant = await _tenantService.GetTenantByIdAsync(id);
 
     if (existingTenant == null) { return NotFound($"Tenant with ID {id} not found"); }
 
@@ -97,8 +97,8 @@ public class TenantsController : ControllerBase {
     existingTenant.IsActive = updateDto.IsActive;
 
     try {
-      Models.Tenant updatedTenant = await _tenantService.UpdateTenantAsync(existingTenant);
-      TenantResponseDto response = MapToResponseDto(updatedTenant);
+      var updatedTenant = await _tenantService.UpdateTenantAsync(existingTenant);
+      var response = MapToResponseDto(updatedTenant);
 
       return Ok(response);
     }
@@ -112,7 +112,7 @@ public class TenantsController : ControllerBase {
   /// <returns>No content if successful</returns>
   [HttpDelete("{id:guid}")]
   public async Task<IActionResult> SoftDeleteTenant(Guid id) {
-    bool result = await _tenantService.SoftDeleteTenantAsync(id);
+    var result = await _tenantService.SoftDeleteTenantAsync(id);
 
     if (!result) { return NotFound($"Tenant with ID {id} not found"); }
 
@@ -126,7 +126,7 @@ public class TenantsController : ControllerBase {
   /// <returns>No content if successful</returns>
   [HttpPost("{id:guid}/restore")]
   public async Task<IActionResult> RestoreTenant(Guid id) {
-    bool result = await _tenantService.RestoreTenantAsync(id);
+    var result = await _tenantService.RestoreTenantAsync(id);
 
     if (!result) { return NotFound($"Deleted tenant with ID {id} not found"); }
 
@@ -140,7 +140,7 @@ public class TenantsController : ControllerBase {
   /// <returns>No content if successful</returns>
   [HttpDelete("{id:guid}/hard")]
   public async Task<IActionResult> HardDeleteTenant(Guid id) {
-    bool result = await _tenantService.HardDeleteTenantAsync(id);
+    var result = await _tenantService.HardDeleteTenantAsync(id);
 
     if (!result) { return NotFound($"Tenant with ID {id} not found"); }
 
@@ -154,7 +154,7 @@ public class TenantsController : ControllerBase {
   /// <returns>No content if successful</returns>
   [HttpPost("{id:guid}/activate")]
   public async Task<IActionResult> ActivateTenant(Guid id) {
-    bool result = await _tenantService.ActivateTenantAsync(id);
+    var result = await _tenantService.ActivateTenantAsync(id);
 
     if (!result) { return NotFound($"Tenant with ID {id} not found"); }
 
@@ -168,7 +168,7 @@ public class TenantsController : ControllerBase {
   /// <returns>No content if successful</returns>
   [HttpPost("{id:guid}/deactivate")]
   public async Task<IActionResult> DeactivateTenant(Guid id) {
-    bool result = await _tenantService.DeactivateTenantAsync(id);
+    var result = await _tenantService.DeactivateTenantAsync(id);
 
     if (!result) { return NotFound($"Tenant with ID {id} not found"); }
 
@@ -196,8 +196,8 @@ public class TenantsController : ControllerBase {
   [HttpPost("{id:guid}/users/{userId:guid}")]
   public async Task<ActionResult<TenantPermissionResponseDto>> AddUserToTenant(Guid id, Guid userId) {
     try {
-      TenantPermission tenantPermission = await _tenantService.AddUserToTenantAsync(userId, id);
-      TenantPermissionResponseDto response = MapTenantPermissionToResponseDto(tenantPermission);
+      var tenantPermission = await _tenantService.AddUserToTenantAsync(userId, id);
+      var response = MapTenantPermissionToResponseDto(tenantPermission);
 
       return Ok(response);
     }
@@ -212,7 +212,7 @@ public class TenantsController : ControllerBase {
   /// <returns>No content if successful</returns>
   [HttpDelete("{id}/users/{userId}")]
   public async Task<IActionResult> RemoveUserFromTenant(Guid id, Guid userId) {
-    bool result = await _tenantService.RemoveUserFromTenantAsync(userId, id);
+    var result = await _tenantService.RemoveUserFromTenantAsync(userId, id);
 
     if (!result) { return NotFound($"User {userId} not found in tenant {id}"); }
 

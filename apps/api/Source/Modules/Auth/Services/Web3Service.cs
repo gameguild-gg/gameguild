@@ -30,9 +30,9 @@ namespace GameGuild.Modules.Auth.Services {
       // Validate wallet address
       if (!IsValidEthereumAddress(request.WalletAddress)) { throw new ArgumentException("Invalid Ethereum address", nameof(request.WalletAddress)); }
 
-      string nonce = GenerateNonce();
-      string challenge = GenerateChallenge(request.WalletAddress, nonce);
-      DateTime expiresAt = DateTime.UtcNow.AddMinutes(5); // 5-minute expiration
+      var nonce = GenerateNonce();
+      var challenge = GenerateChallenge(request.WalletAddress, nonce);
+      var expiresAt = DateTime.UtcNow.AddMinutes(5); // 5-minute expiration
 
       var challengeResponse = new Web3ChallengeResponseDto { Challenge = challenge, Nonce = nonce, ExpiresAt = expiresAt };
 
@@ -42,14 +42,14 @@ namespace GameGuild.Modules.Auth.Services {
       // Clean up expired challenges
       var expiredKeys = _challenges.Where(kvp => kvp.Value.ExpiresAt < DateTime.UtcNow).Select(kvp => kvp.Key).ToList();
 
-      foreach (string key in expiredKeys) { _challenges.Remove(key); }
+      foreach (var key in expiredKeys) { _challenges.Remove(key); }
 
       return await Task.FromResult(challengeResponse);
     }
 
     public async Task<bool> VerifySignatureAsync(Web3VerifyRequestDto request) {
       // Check if challenge exists and is valid
-      if (!_challenges.TryGetValue(request.Nonce, out Web3ChallengeResponseDto? challenge)) {
+      if (!_challenges.TryGetValue(request.Nonce, out var challenge)) {
         _logger.LogWarning("Invalid or expired nonce: {Nonce}", request.Nonce);
 
         return false;
@@ -74,7 +74,7 @@ namespace GameGuild.Modules.Auth.Services {
 
       // In a real implementation, you would verify the signature using a library like Nethereum
       // For now, we'll do a basic validation
-      bool isValidSignature =
+      var isValidSignature =
         await VerifyEthereumSignature(challenge.Challenge, request.Signature, request.WalletAddress);
 
       if (isValidSignature) {
@@ -87,8 +87,8 @@ namespace GameGuild.Modules.Auth.Services {
 
     public async Task<User.Models.User> FindOrCreateWeb3UserAsync(string walletAddress, string chainId = "1") {
       // Try to find user by wallet address in credentials
-      Credential? credential = await _context.Credentials.Include(c => c.User)
-                                             .FirstOrDefaultAsync(c => c.Type == "web3_wallet" && c.Value == walletAddress.ToLower());
+      var credential = await _context.Credentials.Include(c => c.User)
+                                     .FirstOrDefaultAsync(c => c.Type == "web3_wallet" && c.Value == walletAddress.ToLower());
 
       if (credential?.User != null) { return credential.User; }
 
@@ -129,7 +129,7 @@ namespace GameGuild.Modules.Auth.Services {
     }
 
     private string GenerateChallenge(string walletAddress, string nonce) {
-      long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+      var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
       return
         $"Sign this message to authenticate with GameGuild CMS.\n\nWallet: {walletAddress}\nNonce: {nonce}\nTimestamp: {timestamp}";
@@ -137,8 +137,8 @@ namespace GameGuild.Modules.Auth.Services {
 
     private string ExtractWalletFromChallenge(string challenge) {
       // Extract wallet address from challenge message
-      string[] lines = challenge.Split('\n');
-      string? walletLine = lines.FirstOrDefault(l => l.StartsWith("Wallet: "));
+      var lines = challenge.Split('\n');
+      var walletLine = lines.FirstOrDefault(l => l.StartsWith("Wallet: "));
 
       return walletLine?.Substring("Wallet: ".Length) ?? "";
     }

@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using GameGuild.Data;
 using GameGuild.Modules.Tenant.Models;
 using UserModel = GameGuild.Modules.User.Models.User;
 

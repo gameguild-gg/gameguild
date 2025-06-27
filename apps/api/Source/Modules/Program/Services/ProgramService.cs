@@ -154,7 +154,7 @@ public class ProgramService : IProgramService {
                                  .Where(pc => !pc.IsDeleted && pc.ProgramId == programId && contentIds.Contains(pc.Id))
                                  .ToListAsync();
 
-    for (int i = 0; i < contentIds.Count; i++) {
+    for (var i = 0; i < contentIds.Count; i++) {
       var content = contents.FirstOrDefault(c => c.Id == contentIds[i]);
 
       if (content != null) {

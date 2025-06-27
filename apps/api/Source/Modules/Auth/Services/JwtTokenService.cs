@@ -29,7 +29,7 @@ namespace GameGuild.Modules.Auth.Services {
     public string GenerateAccessToken(UserDto user, string[] roles, IEnumerable<Claim>? additionalClaims = null) {
       var claims = new List<Claim> { new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), new Claim(JwtRegisteredClaimNames.Email, user.Email), new Claim("username", user.Username) };
 
-      foreach (string role in roles) { claims.Add(new Claim(ClaimTypes.Role, role)); }
+      foreach (var role in roles) { claims.Add(new Claim(ClaimTypes.Role, role)); }
 
       // Add any additional claims (like tenant claims)
       if (additionalClaims != null) { claims.AddRange(additionalClaims); }
@@ -42,8 +42,8 @@ namespace GameGuild.Modules.Auth.Services {
       );
       var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-      int expiryMinutes = int.Parse(_configuration["Jwt:ExpiryInMinutes"] ?? "60");
-      DateTime expires = DateTime.UtcNow.AddMinutes(expiryMinutes);
+      var expiryMinutes = int.Parse(_configuration["Jwt:ExpiryInMinutes"] ?? "60");
+      var expires = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
       var token = new JwtSecurityToken(
         issuer: _configuration["Jwt:Issuer"],
@@ -81,8 +81,8 @@ namespace GameGuild.Modules.Auth.Services {
       var tokenHandler = new JwtSecurityTokenHandler();
 
       try {
-        ClaimsPrincipal? principal =
-          tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+        var principal =
+          tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
 
         if (securityToken is not JwtSecurityToken jwtSecurityToken ||
             !jwtSecurityToken.Header.Alg.Equals(
@@ -121,8 +121,8 @@ namespace GameGuild.Modules.Auth.Services {
       var tokenHandler = new JwtSecurityTokenHandler();
 
       try {
-        ClaimsPrincipal? principal =
-          tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+        var principal =
+          tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
 
         if (securityToken is not JwtSecurityToken jwtSecurityToken ||
             !jwtSecurityToken.Header.Alg.Equals(

@@ -303,18 +303,18 @@ public class WithPermissions : BaseEntity {
   public void RemovePermission(PermissionType permission) { SetPermission(permission, false); }
 
   public void RemovePermissions(Collection<PermissionType> permissions) {
-    foreach (PermissionType permission in permissions) SetPermission(permission, false);
+    foreach (var permission in permissions) SetPermission(permission, false);
   }
 
   private void SetPermission(PermissionType permission, bool value) {
     var bitPos = (int)permission;
 
     if (bitPos < 64) {
-      ulong mask = 1UL << bitPos;
+      var mask = 1UL << bitPos;
       PermissionFlags1 = value ? (PermissionFlags1 | mask) : (PermissionFlags1 & ~mask);
     }
     else if (bitPos < 128) {
-      ulong mask = 1UL << (bitPos - 64);
+      var mask = 1UL << (bitPos - 64);
       PermissionFlags2 = value ? (PermissionFlags2 | mask) : (PermissionFlags2 & ~mask);
     }
   }
@@ -329,12 +329,12 @@ public static class PermissionQueryHelper {
     var bitPos = (int)permission;
 
     if (bitPos < 64) {
-      ulong mask = 1UL << bitPos;
+      var mask = 1UL << bitPos;
 
       return query.Where(x => (x.PermissionFlags1 & mask) == mask);
     }
     else if (bitPos < 128) {
-      ulong mask = 1UL << (bitPos - 64);
+      var mask = 1UL << (bitPos - 64);
 
       return query.Where(x => (x.PermissionFlags2 & mask) == mask);
     }
@@ -347,7 +347,7 @@ public static class PermissionQueryHelper {
     var mask1 = 0UL;
     var mask2 = 0UL;
 
-    foreach (PermissionType permission in permissions) {
+    foreach (var permission in permissions) {
       var bitPos = (int)permission;
 
       if (bitPos < 64)
@@ -369,7 +369,7 @@ public static class PermissionQueryHelper {
     var mask1 = 0UL;
     var mask2 = 0UL;
 
-    foreach (PermissionType permission in permissions) {
+    foreach (var permission in permissions) {
       var bitPos = (int)permission;
 
       if (bitPos < 64)
@@ -393,7 +393,7 @@ public static class PermissionQueryHelper {
     var mask1 = 0UL;
     var mask2 = 0UL;
 
-    foreach (PermissionType permission in permissions) {
+    foreach (var permission in permissions) {
       var bitPos = (int)permission;
 
       if (bitPos < 64)

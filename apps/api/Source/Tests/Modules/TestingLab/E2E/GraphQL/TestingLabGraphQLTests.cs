@@ -1,18 +1,14 @@
 using Xunit;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text;
 using GameGuild.Data;
 using GameGuild.Common.Entities;
-using GameGuild.Common.Enums;
 using GameGuild.Common.Services;
 using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Tests.Fixtures;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.User.Models;
-using GameGuild.Modules.Tenant.Models;
 using System.Net.Http.Headers;
 using Xunit.Abstractions;
 using ProjectModel = GameGuild.Modules.Project.Models.Project;

@@ -34,7 +34,7 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
     );
     services.AddScoped<IPermissionService, PermissionService>();
 
-    ServiceProvider serviceProvider = services.BuildServiceProvider();
+    var serviceProvider = services.BuildServiceProvider();
     _context = serviceProvider.GetRequiredService<ApplicationDbContext>();
     _permissionService = serviceProvider.GetRequiredService<IPermissionService>();
   }
@@ -66,16 +66,16 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
     );
 
     // Act
-    bool hasContentTypeRead =
+    var hasContentTypeRead =
       await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
-    bool hasResourceRead =
+    var hasResourceRead =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,
         resourceId,
         PermissionType.Read
       );
-    bool hasResourceEdit =
+    var hasResourceEdit =
       await _permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
         userId,
         tenantId,
@@ -103,11 +103,11 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
     await _permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, [PermissionType.Read]);
 
     // Act
-    bool hasTenantRead = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
-    bool hasTenantEdit = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit);
-    bool hasContentTypeRead =
+    var hasTenantRead = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
+    var hasTenantEdit = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit);
+    var hasContentTypeRead =
       await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Read);
-    bool hasContentTypeEdit =
+    var hasContentTypeEdit =
       await _permissionService.HasContentTypePermissionAsync(userId, tenantId, contentType, PermissionType.Edit);
 
     // Assert
@@ -132,9 +132,9 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
     // User has no specific permissions
 
     // Act
-    bool hasRead = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
-    bool hasComment = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Comment);
-    bool hasEdit = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit);
+    var hasRead = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
+    var hasComment = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Comment);
+    var hasEdit = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit);
 
     // Assert
     Assert.True(hasRead); // Should inherit from global default
@@ -166,10 +166,10 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
     await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Vote]);
 
     // Act
-    bool hasRead = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
-    bool hasComment = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Comment);
-    bool hasEdit = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit);
-    bool hasVote = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Vote);
+    var hasRead = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
+    var hasComment = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Comment);
+    var hasEdit = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit);
+    var hasVote = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Vote);
 
     // Assert
     Assert.True(hasVote); // User-specific permission
@@ -463,7 +463,7 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
     var tenantId = Guid.NewGuid();
 
     // Grant membership with minimal permissions
-    TenantPermission membership = await _permissionService.JoinTenantAsync(userId, tenantId);
+    var membership = await _permissionService.JoinTenantAsync(userId, tenantId);
     Assert.True(membership.IsActiveMembership);
 
     // Grant additional permissions
@@ -482,14 +482,14 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
     Assert.False(await _permissionService.IsUserInTenantAsync(userId, tenantId));
 
     // Act - Rejoin tenant
-    TenantPermission rejoinedMembership = await _permissionService.JoinTenantAsync(userId, tenantId);
+    var rejoinedMembership = await _permissionService.JoinTenantAsync(userId, tenantId);
 
     // Assert - Should reactivate with minimal permissions only
     Assert.True(rejoinedMembership.IsActiveMembership);
     Assert.True(await _permissionService.IsUserInTenantAsync(userId, tenantId));
 
     // Should have minimal permissions
-    foreach (PermissionType permission in TenantPermissionConstants.MinimalUserPermissions) { Assert.True(await _permissionService.HasTenantPermissionAsync(userId, tenantId, permission)); }
+    foreach (var permission in TenantPermissionConstants.MinimalUserPermissions) { Assert.True(await _permissionService.HasTenantPermissionAsync(userId, tenantId, permission)); }
 
     // Should NOT have the previously granted additional permissions
     Assert.False(await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit));
