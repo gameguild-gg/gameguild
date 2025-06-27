@@ -9,21 +9,12 @@ namespace GameGuild.Modules.Tenant.Services;
 /// <summary>
 /// Service implementation for managing tenants
 /// </summary>
-public class TenantService : ITenantService {
-  private readonly ApplicationDbContext _context;
-
-  private readonly IPermissionService _permissionService;
-
-  public TenantService(ApplicationDbContext context, IPermissionService permissionService) {
-    _context = context;
-    _permissionService = permissionService;
-  }
-
+public class TenantService(ApplicationDbContext context, IPermissionService permissionService) : ITenantService {
   /// <summary>
   /// Get all tenants
   /// </summary>
   /// <returns>List of tenants</returns>
-  public async Task<IEnumerable<Models.Tenant>> GetAllTenantsAsync() { return await _context.Tenants.Include(t => t.TenantPermissions).ToListAsync(); }
+  public async Task<IEnumerable<Models.Tenant>> GetAllTenantsAsync() { return await context.Tenants.Include(t => t.TenantPermissions).ToListAsync(); }
 
   /// <summary>
   /// Get a specific tenant by ID
@@ -31,7 +22,7 @@ public class TenantService : ITenantService {
   /// <param name="id">Tenant ID</param>
   /// <returns>Tenant or null if not found</returns>
   public async Task<Models.Tenant?> GetTenantByIdAsync(Guid id) {
-    return await _context.Tenants.Include(t => t.TenantPermissions)
+    return await context.Tenants.Include(t => t.TenantPermissions)
                          .ThenInclude(tp => tp.User)
                          .FirstOrDefaultAsync(t => t.Id == id);
   }
@@ -41,7 +32,7 @@ public class TenantService : ITenantService {
   /// </summary>
   /// <param name="name">Tenant name</param>
   /// <returns>Tenant or null if not found</returns>
-  public async Task<Models.Tenant?> GetTenantByNameAsync(string name) { return await _context.Tenants.Include(t => t.TenantPermissions).FirstOrDefaultAsync(t => t.Name == name); }
+  public async Task<Models.Tenant?> GetTenantByNameAsync(string name) { return await context.Tenants.Include(t => t.TenantPermissions).FirstOrDefaultAsync(t => t.Name == name); }
 
   /// <summary>
   /// Create a new tenant
@@ -49,8 +40,8 @@ public class TenantService : ITenantService {
   /// <param name="tenant">Tenant to create</param>
   /// <returns>Created tenant</returns>
   public async Task<Models.Tenant> CreateTenantAsync(Models.Tenant tenant) {
-    _context.Tenants.Add(tenant);
-    await _context.SaveChangesAsync();
+    context.Tenants.Add(tenant);
+    await context.SaveChangesAsync();
 
     return tenant;
   }
@@ -61,7 +52,7 @@ public class TenantService : ITenantService {
   /// <param name="tenant">Tenant to update</param>
   /// <returns>Updated tenant</returns>
   public async Task<Models.Tenant> UpdateTenantAsync(Models.Tenant tenant) {
-    var existingTenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenant.Id);
+    var existingTenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenant.Id);
 
     if (existingTenant == null) throw new InvalidOperationException($"Tenant with ID {tenant.Id} not found");
 
@@ -71,7 +62,7 @@ public class TenantService : ITenantService {
     existingTenant.IsActive = tenant.IsActive;
     existingTenant.Touch(); // Update timestamp
 
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return existingTenant;
   }
@@ -82,12 +73,12 @@ public class TenantService : ITenantService {
   /// <param name="id">Tenant ID to delete</param>
   /// <returns>True if deleted successfully</returns>
   public async Task<bool> SoftDeleteTenantAsync(Guid id) {
-    var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
+    var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
 
     if (tenant == null) return false;
 
     tenant.SoftDelete();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return true;
   }
@@ -98,13 +89,13 @@ public class TenantService : ITenantService {
   /// <param name="id">Tenant ID to restore</param>
   /// <returns>True if restored successfully</returns>
   public async Task<bool> RestoreTenantAsync(Guid id) {
-    var tenant = await _context.Tenants.IgnoreQueryFilters()
+    var tenant = await context.Tenants.IgnoreQueryFilters()
                                .FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt != null);
 
     if (tenant == null) return false;
 
     tenant.Restore();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return true;
   }
@@ -115,12 +106,12 @@ public class TenantService : ITenantService {
   /// <param name="id">Tenant ID to delete</param>
   /// <returns>True if deleted successfully</returns>
   public async Task<bool> HardDeleteTenantAsync(Guid id) {
-    var tenant = await _context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id);
+    var tenant = await context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id);
 
     if (tenant == null) return false;
 
-    _context.Tenants.Remove(tenant);
-    await _context.SaveChangesAsync();
+    context.Tenants.Remove(tenant);
+    await context.SaveChangesAsync();
 
     return true;
   }
@@ -131,12 +122,12 @@ public class TenantService : ITenantService {
   /// <param name="id">Tenant ID</param>
   /// <returns>True if activated successfully</returns>
   public async Task<bool> ActivateTenantAsync(Guid id) {
-    var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
+    var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
 
     if (tenant == null) return false;
 
     tenant.Activate();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return true;
   }
@@ -147,12 +138,12 @@ public class TenantService : ITenantService {
   /// <param name="id">Tenant ID</param>
   /// <returns>True if deactivated successfully</returns>
   public async Task<bool> DeactivateTenantAsync(Guid id) {
-    var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
+    var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
 
     if (tenant == null) return false;
 
     tenant.Deactivate();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return true;
   }
@@ -162,7 +153,7 @@ public class TenantService : ITenantService {
   /// </summary>
   /// <returns>List of soft-deleted tenants</returns>
   public async Task<IEnumerable<Models.Tenant>> GetDeletedTenantsAsync() {
-    return await _context.Tenants.IgnoreQueryFilters()
+    return await context.Tenants.IgnoreQueryFilters()
                          .Where(t => t.DeletedAt != null)
                          .Include(t => t.TenantPermissions)
                          .ToListAsync();
@@ -176,7 +167,7 @@ public class TenantService : ITenantService {
   /// <returns>Created TenantPermission relationship</returns>
   public async Task<TenantPermission> AddUserToTenantAsync(Guid userId, Guid tenantId) {
     // Use the permission service to handle tenant membership
-    return await _permissionService.JoinTenantAsync(userId, tenantId);
+    return await permissionService.JoinTenantAsync(userId, tenantId);
   }
 
   /// <summary>
@@ -186,7 +177,7 @@ public class TenantService : ITenantService {
   /// <param name="tenantId">Tenant ID</param>
   /// <returns>True if removed successfully</returns>
   public async Task<bool> RemoveUserFromTenantAsync(Guid userId, Guid tenantId) {
-    await _permissionService.LeaveTenantAsync(userId, tenantId);
+    await permissionService.LeaveTenantAsync(userId, tenantId);
 
     return true;
   }
@@ -197,7 +188,7 @@ public class TenantService : ITenantService {
   /// <param name="tenantId">Tenant ID</param>
   /// <returns>List of TenantPermission relationships</returns>
   public async Task<IEnumerable<TenantPermission>> GetUsersInTenantAsync(Guid tenantId) {
-    return await _context.TenantPermissions.Where(tp => tp.TenantId == tenantId && tp.UserId != null)
+    return await context.TenantPermissions.Where(tp => tp.TenantId == tenantId && tp.UserId != null)
                          .Include(tp => tp.User)
                          .Include(tp => tp.Tenant)
                          .ToListAsync();
@@ -208,5 +199,5 @@ public class TenantService : ITenantService {
   /// </summary>
   /// <param name="userId">User ID</param>
   /// <returns>List of TenantPermission relationships</returns>
-  public async Task<IEnumerable<TenantPermission>> GetTenantsForUserAsync(Guid userId) { return await _permissionService.GetUserTenantsAsync(userId); }
+  public async Task<IEnumerable<TenantPermission>> GetTenantsForUserAsync(Guid userId) { return await permissionService.GetUserTenantsAsync(userId); }
 }

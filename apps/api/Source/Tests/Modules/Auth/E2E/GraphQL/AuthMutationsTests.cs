@@ -9,14 +9,9 @@ using Xunit;
 namespace GameGuild.Tests.Modules.Auth.E2E.GraphQL;
 
 public class AuthMutationsTests {
-  private readonly Mock<IMediator> _mockMediator;
+  private readonly Mock<IMediator> _mockMediator = new();
 
-  private readonly AuthMutations _authMutations;
-
-  public AuthMutationsTests() {
-    _mockMediator = new Mock<IMediator>();
-    _authMutations = new AuthMutations();
-  }
+  private readonly AuthMutations _authMutations = new();
 
   [Fact]
   public async Task LocalSignUp_WithTenantId_IncludesTenantIdInCommand() {

@@ -10,11 +10,7 @@ namespace GameGuild.Common.GraphQL.Authorization;
 /// HotChocolate middleware for 3-layer DAC permission system
 /// Supports Tenant, Content-Type, and Resource level permissions
 /// </summary>
-public class DACAuthorizationMiddleware {
-  private readonly FieldDelegate _next;
-
-  public DACAuthorizationMiddleware(FieldDelegate next) { _next = next; }
-
+public class DACAuthorizationMiddleware(FieldDelegate next) {
   public async ValueTask InvokeAsync(IMiddlewareContext context) {
     var permissionService = context.Services.GetRequiredService<IPermissionService>();
 
@@ -32,7 +28,7 @@ public class DACAuthorizationMiddleware {
       if (!hasPermission) throw new UnauthorizedAccessException($"Insufficient permissions for {dacAttribute.GetType().Name}");
     }
 
-    await _next(context);
+    await next(context);
   }
 
   private async ValueTask<UserContext?> GetUserContextAsync(IMiddlewareContext context) {

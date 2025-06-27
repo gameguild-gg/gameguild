@@ -12,11 +12,7 @@ namespace GameGuild.Modules.Auth.Filters {
   /// <summary>
   /// JWT Authentication filter that validates tokens and sets user context
   /// </summary>
-  public class JwtAuthenticationFilter : IAuthorizationFilter {
-    private readonly IConfiguration _configuration;
-
-    public JwtAuthenticationFilter(IConfiguration configuration) { _configuration = configuration; }
-
+  public class JwtAuthenticationFilter(IConfiguration configuration) : IAuthorizationFilter {
     public virtual void OnAuthorization(AuthorizationFilterContext context) {
       // Check if the action/controller is marked as public
       var publicAttribute =
@@ -52,15 +48,15 @@ namespace GameGuild.Modules.Auth.Filters {
 
     private ClaimsPrincipal ValidateToken(string token) {
       var tokenHandler = new JwtSecurityTokenHandler();
-      var key = Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? "dev-key");
+      var key = Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"] ?? "dev-key");
 
       var validationParameters = new TokenValidationParameters {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
-        ValidIssuer = _configuration["Jwt:Issuer"],
+        ValidIssuer = configuration["Jwt:Issuer"],
         ValidateAudience = true,
-        ValidAudience = _configuration["Jwt:Audience"],
+        ValidAudience = configuration["Jwt:Audience"],
         ValidateLifetime = true,
         ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
       };

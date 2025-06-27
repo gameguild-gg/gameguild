@@ -21,28 +21,20 @@ namespace GameGuild.Modules.Auth.Services {
     Task<string> GeneratePasswordResetTokenAsync(Guid userId);
   }
 
-  public class EmailVerificationService : IEmailVerificationService {
-    private readonly ApplicationDbContext _context;
-
-    private readonly ILogger<EmailVerificationService> _logger;
-
-    private readonly IConfiguration _configuration;
+  public class EmailVerificationService(
+    ApplicationDbContext context,
+    ILogger<EmailVerificationService> logger,
+    IConfiguration configuration
+  )
+    : IEmailVerificationService {
+    private readonly IConfiguration _configuration = configuration;
 
     // In production, use Redis or database for token storage
     private readonly Dictionary<string, TokenInfo> _tokens = new();
 
-    public EmailVerificationService(
-      ApplicationDbContext context, ILogger<EmailVerificationService> logger,
-      IConfiguration configuration
-    ) {
-      _context = context;
-      _logger = logger;
-      _configuration = configuration;
-    }
-
     public async Task<EmailOperationResponseDto> SendEmailVerificationAsync(string email) {
       try {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null) return new EmailOperationResponseDto { Success = false, Message = "User not found" };
 
@@ -50,12 +42,12 @@ namespace GameGuild.Modules.Auth.Services {
 
         // TODO: Send actual email using an email service (SendGrid, SMTP, etc.)
         // For now, just log the token (in production, never log sensitive tokens)
-        _logger.LogInformation("Email verification token for {Email}: {Token}", email, token);
+        logger.LogInformation("Email verification token for {Email}: {Token}", email, token);
 
         return new EmailOperationResponseDto { Success = true, Message = "Verification email sent successfully" };
       }
       catch (Exception ex) {
-        _logger.LogError(ex, "Error sending email verification to {Email}", email);
+        logger.LogError(ex, "Error sending email verification to {Email}", email);
 
         return new EmailOperationResponseDto { Success = false, Message = "Failed to send verification email" };
       }
@@ -73,13 +65,13 @@ namespace GameGuild.Modules.Auth.Services {
 
         if (tokenInfo.Type != "email_verification") return new EmailOperationResponseDto { Success = false, Message = "Invalid token type" };
 
-        var user = await _context.Users.FindAsync(tokenInfo.UserId);
+        var user = await context.Users.FindAsync(tokenInfo.UserId);
 
         if (user == null) return new EmailOperationResponseDto { Success = false, Message = "User not found" };
 
         // Mark email as verified (you might want to add an EmailVerified field to User model)
         user.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Remove used token
         _tokens.Remove(token);
@@ -87,7 +79,7 @@ namespace GameGuild.Modules.Auth.Services {
         return new EmailOperationResponseDto { Success = true, Message = "Email verified successfully" };
       }
       catch (Exception ex) {
-        _logger.LogError(ex, "Error verifying email with token {Token}", token);
+        logger.LogError(ex, "Error verifying email with token {Token}", token);
 
         return new EmailOperationResponseDto { Success = false, Message = "Email verification failed" };
       }
@@ -95,7 +87,7 @@ namespace GameGuild.Modules.Auth.Services {
 
     public async Task<EmailOperationResponseDto> SendPasswordResetAsync(string email) {
       try {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null)
           // Don't reveal if user exists or not for security
@@ -105,12 +97,12 @@ namespace GameGuild.Modules.Auth.Services {
 
         // TODO: Send actual email using an email service
         // For now, just log the token (in production, never log sensitive tokens)
-        _logger.LogInformation("Password reset token for {Email}: {Token}", email, token);
+        logger.LogInformation("Password reset token for {Email}: {Token}", email, token);
 
         return new EmailOperationResponseDto { Success = true, Message = "If an account with that email exists, a password reset link has been sent" };
       }
       catch (Exception ex) {
-        _logger.LogError(ex, "Error sending password reset to {Email}", email);
+        logger.LogError(ex, "Error sending password reset to {Email}", email);
 
         return new EmailOperationResponseDto { Success = false, Message = "Failed to send password reset email" };
       }
@@ -128,7 +120,7 @@ namespace GameGuild.Modules.Auth.Services {
 
         if (tokenInfo.Type != "password_reset") return new EmailOperationResponseDto { Success = false, Message = "Invalid token type" };
 
-        var user = await _context.Users.Include(u => u.Credentials)
+        var user = await context.Users.Include(u => u.Credentials)
                                  .FirstOrDefaultAsync(u => u.Id == tokenInfo.UserId);
 
         if (user == null) return new EmailOperationResponseDto { Success = false, Message = "User not found" };
@@ -151,11 +143,11 @@ namespace GameGuild.Modules.Auth.Services {
             UpdatedAt = DateTime.UtcNow,
           };
 
-          _context.Credentials.Add(passwordCredential);
+          context.Credentials.Add(passwordCredential);
         }
 
         user.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Remove used token
         _tokens.Remove(token);
@@ -163,7 +155,7 @@ namespace GameGuild.Modules.Auth.Services {
         return new EmailOperationResponseDto { Success = true, Message = "Password reset successfully" };
       }
       catch (Exception ex) {
-        _logger.LogError(ex, "Error resetting password with token {Token}", token);
+        logger.LogError(ex, "Error resetting password with token {Token}", token);
 
         return new EmailOperationResponseDto { Success = false, Message = "Password reset failed" };
       }

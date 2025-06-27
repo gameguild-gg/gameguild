@@ -22,11 +22,7 @@ namespace GameGuild.Modules.Program.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class ProgramController : ControllerBase {
-  private readonly IProgramService _programService;
-
-  public ProgramController(IProgramService programService) { _programService = programService; }
-
+public class ProgramController(IProgramService programService) : ControllerBase {
   // ===== CONTENT-TYPE LEVEL OPERATIONS =====
 
   /// <summary>
@@ -38,7 +34,7 @@ public class ProgramController : ControllerBase {
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50
   ) {
-    var programs = await _programService.GetProgramsAsync(skip, take);
+    var programs = await programService.GetProgramsAsync(skip, take);
 
     return Ok(programs);
   }
@@ -51,7 +47,7 @@ public class ProgramController : ControllerBase {
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50
   ) {
-    var programs = await _programService.GetPublishedProgramsAsync(skip, take);
+    var programs = await programService.GetPublishedProgramsAsync(skip, take);
 
     return Ok(programs);
   }
@@ -65,7 +61,7 @@ public class ProgramController : ControllerBase {
     ProgramCategory category,
     [FromQuery] int skip = 0, [FromQuery] int take = 50
   ) {
-    var programs = await _programService.GetProgramsByCategoryAsync(category, skip, take);
+    var programs = await programService.GetProgramsByCategoryAsync(category, skip, take);
 
     return Ok(programs);
   }
@@ -79,7 +75,7 @@ public class ProgramController : ControllerBase {
     ProgramDifficulty difficulty,
     [FromQuery] int skip = 0, [FromQuery] int take = 50
   ) {
-    var programs = await _programService.GetProgramsByDifficultyAsync(difficulty, skip, take);
+    var programs = await programService.GetProgramsByDifficultyAsync(difficulty, skip, take);
 
     return Ok(programs);
   }
@@ -93,7 +89,7 @@ public class ProgramController : ControllerBase {
     [FromQuery] string searchTerm,
     [FromQuery] int skip = 0, [FromQuery] int take = 50
   ) {
-    var programs = await _programService.SearchProgramsAsync(searchTerm, skip, take);
+    var programs = await programService.SearchProgramsAsync(searchTerm, skip, take);
 
     return Ok(programs);
   }
@@ -107,7 +103,7 @@ public class ProgramController : ControllerBase {
     Guid creatorId,
     [FromQuery] int skip = 0, [FromQuery] int take = 50
   ) {
-    var programs = await _programService.GetProgramsByCreatorAsync(creatorId, skip, take);
+    var programs = await programService.GetProgramsByCreatorAsync(creatorId, skip, take);
 
     return Ok(programs);
   }
@@ -118,7 +114,7 @@ public class ProgramController : ControllerBase {
   [HttpGet("popular")]
   [RequireContentTypePermission<ProgramEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProgramEntity>>> GetPopularPrograms([FromQuery] int count = 10) {
-    var programs = await _programService.GetPopularProgramsAsync(count);
+    var programs = await programService.GetPopularProgramsAsync(count);
 
     return Ok(programs);
   }
@@ -129,7 +125,7 @@ public class ProgramController : ControllerBase {
   [HttpGet("recent")]
   [RequireContentTypePermission<ProgramEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProgramEntity>>> GetRecentPrograms([FromQuery] int count = 10) {
-    var programs = await _programService.GetRecentProgramsAsync(count);
+    var programs = await programService.GetRecentProgramsAsync(count);
 
     return Ok(programs);
   }
@@ -142,7 +138,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> CreateProgram([FromBody] CreateProgramDto createDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await _programService.CreateProgramAsync(createDto);
+    var program = await programService.CreateProgramAsync(createDto);
 
     return CreatedAtAction(nameof(GetProgram), new { id = program.Id }, program);
   }
@@ -155,7 +151,7 @@ public class ProgramController : ControllerBase {
   [HttpGet("{id}")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
   public async Task<ActionResult<ProgramEntity>> GetProgram(Guid id) {
-    var program = await _programService.GetProgramByIdAsync(id);
+    var program = await programService.GetProgramByIdAsync(id);
 
     if (program == null) return NotFound();
 
@@ -168,7 +164,7 @@ public class ProgramController : ControllerBase {
   [HttpGet("{id}/with-content")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
   public async Task<ActionResult<ProgramEntity>> GetProgramWithContent(Guid id) {
-    var program = await _programService.GetProgramWithContentAsync(id);
+    var program = await programService.GetProgramWithContentAsync(id);
 
     if (program == null) return NotFound();
 
@@ -183,7 +179,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> UpdateProgram(Guid id, [FromBody] UpdateProgramDto updateDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await _programService.UpdateProgramAsync(id, updateDto);
+    var program = await programService.UpdateProgramAsync(id, updateDto);
 
     if (program == null) return NotFound();
 
@@ -196,11 +192,11 @@ public class ProgramController : ControllerBase {
   [HttpDelete("{id}")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteProgram(Guid id) {
-    var existingProgram = await _programService.GetProgramByIdAsync(id);
+    var existingProgram = await programService.GetProgramByIdAsync(id);
 
     if (existingProgram == null) return NotFound();
 
-    await _programService.DeleteProgramAsync(id);
+    await programService.DeleteProgramAsync(id);
 
     return NoContent();
   }
@@ -213,7 +209,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> CloneProgram(Guid id, [FromBody] CloneProgramDto cloneDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await _programService.CloneProgramAsync(id, cloneDto.NewTitle);
+    var program = await programService.CloneProgramAsync(id, cloneDto.NewTitle);
 
     if (program == null) return NotFound();
 
@@ -230,7 +226,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramContent>> AddContent(Guid id, [FromBody] CreateContentDto contentDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var content = await _programService.AddContentAsync(id, contentDto);
+    var content = await programService.AddContentAsync(id, contentDto);
 
     if (content == null) return NotFound("Program not found");
 
@@ -248,7 +244,7 @@ public class ProgramController : ControllerBase {
   ) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var content = await _programService.UpdateContentAsync(id, contentId, contentDto);
+    var content = await programService.UpdateContentAsync(id, contentId, contentDto);
 
     if (content == null) return NotFound();
 
@@ -261,7 +257,7 @@ public class ProgramController : ControllerBase {
   [HttpDelete("{id}/content/{contentId}")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> RemoveContent(Guid id, Guid contentId) {
-    var success = await _programService.RemoveContentAsync(id, contentId);
+    var success = await programService.RemoveContentAsync(id, contentId);
 
     if (!success) return NotFound();
 
@@ -276,7 +272,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult> ReorderContent(Guid id, [FromBody] ReorderContentDto reorderDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await _programService.ReorderContentAsync(id, reorderDto.ContentIds);
+    var program = await programService.ReorderContentAsync(id, reorderDto.ContentIds);
 
     if (program == null) return NotFound();
 
@@ -291,7 +287,7 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/users/{userId}")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult<UserProgressDto>> AddUserToProgram(Guid id, Guid userId) {
-    var progress = await _programService.AddUserToProgramAsync(id, userId);
+    var progress = await programService.AddUserToProgramAsync(id, userId);
 
     if (progress == null) return NotFound();
 
@@ -304,7 +300,7 @@ public class ProgramController : ControllerBase {
   [HttpDelete("{id}/users/{userId}")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> RemoveUserFromProgram(Guid id, Guid userId) {
-    var success = await _programService.RemoveUserFromProgramAsync(id, userId);
+    var success = await programService.RemoveUserFromProgramAsync(id, userId);
 
     if (!success) return NotFound();
 
@@ -320,7 +316,7 @@ public class ProgramController : ControllerBase {
     Guid id, [FromQuery] int skip = 0,
     [FromQuery] int take = 50
   ) {
-    var users = await _programService.GetProgramUsersAsync(id, skip, take);
+    var users = await programService.GetProgramUsersAsync(id, skip, take);
 
     return Ok(users);
   }
@@ -331,7 +327,7 @@ public class ProgramController : ControllerBase {
   [HttpGet("{id}/users/{userId}/progress")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
   public async Task<ActionResult<UserProgressDto>> GetUserProgress(Guid id, Guid userId) {
-    var progress = await _programService.GetUserProgressDtoAsync(id, userId);
+    var progress = await programService.GetUserProgressDtoAsync(id, userId);
 
     if (progress == null) return NotFound();
 
@@ -349,7 +345,7 @@ public class ProgramController : ControllerBase {
   ) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var progress = await _programService.UpdateUserProgressAsync(id, userId, progressDto);
+    var progress = await programService.UpdateUserProgressAsync(id, userId, progressDto);
 
     if (progress == null) return NotFound();
 
@@ -362,7 +358,7 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/users/{userId}/content/{contentId}/complete")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> MarkContentCompleted(Guid id, Guid userId, Guid contentId) {
-    var success = await _programService.MarkContentCompletedAsync(id, userId, contentId);
+    var success = await programService.MarkContentCompletedAsync(id, userId, contentId);
 
     if (!success) return NotFound();
 
@@ -375,7 +371,7 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/users/{userId}/reset")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> ResetUserProgress(Guid id, Guid userId) {
-    var success = await _programService.ResetUserProgressAsync(id, userId);
+    var success = await programService.ResetUserProgressAsync(id, userId);
 
     if (!success) return NotFound();
 
@@ -390,7 +386,7 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/submit")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Submit)]
   public async Task<ActionResult<ProgramEntity>> SubmitProgram(Guid id) {
-    var program = await _programService.SubmitProgramAsync(id);
+    var program = await programService.SubmitProgramAsync(id);
 
     if (program == null) return NotFound();
 
@@ -403,7 +399,7 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/approve")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Approve)]
   public async Task<ActionResult<ProgramEntity>> ApproveProgram(Guid id) {
-    var program = await _programService.ApproveProgramAsync(id);
+    var program = await programService.ApproveProgramAsync(id);
 
     if (program == null) return NotFound();
 
@@ -418,7 +414,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> RejectProgram(Guid id, [FromBody] RejectProgramDto rejectDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await _programService.RejectProgramAsync(id, rejectDto.Reason);
+    var program = await programService.RejectProgramAsync(id, rejectDto.Reason);
 
     if (program == null) return NotFound();
 
@@ -431,7 +427,7 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/withdraw")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Withdraw)]
   public async Task<ActionResult<ProgramEntity>> WithdrawProgram(Guid id) {
-    var program = await _programService.WithdrawProgramAsync(id);
+    var program = await programService.WithdrawProgramAsync(id);
 
     if (program == null) return NotFound();
 
@@ -444,7 +440,7 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/archive")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Archive)]
   public async Task<ActionResult<ProgramEntity>> ArchiveProgram(Guid id) {
-    var program = await _programService.ArchiveProgramAsync(id);
+    var program = await programService.ArchiveProgramAsync(id);
 
     if (program == null) return NotFound();
 
@@ -457,7 +453,7 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/restore")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Restore)]
   public async Task<ActionResult<ProgramEntity>> RestoreProgram(Guid id) {
-    var program = await _programService.RestoreProgramAsync(id);
+    var program = await programService.RestoreProgramAsync(id);
 
     if (program == null) return NotFound();
 
@@ -472,7 +468,7 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/publish")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Publish)]
   public async Task<ActionResult<ProgramEntity>> PublishProgram(Guid id) {
-    var program = await _programService.PublishProgramAsync(id);
+    var program = await programService.PublishProgramAsync(id);
 
     if (program == null) return NotFound();
 
@@ -485,7 +481,7 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/unpublish")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Unpublish)]
   public async Task<ActionResult<ProgramEntity>> UnpublishProgram(Guid id) {
-    var program = await _programService.UnpublishProgramAsync(id);
+    var program = await programService.UnpublishProgramAsync(id);
 
     if (program == null) return NotFound();
 
@@ -500,7 +496,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> ScheduleProgram(Guid id, [FromBody] ScheduleProgramDto scheduleDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await _programService.ScheduleProgramAsync(id, scheduleDto.PublishAt);
+    var program = await programService.ScheduleProgramAsync(id, scheduleDto.PublishAt);
 
     if (program == null) return NotFound();
 
@@ -517,7 +513,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<ProgramEntity>> EnableMonetization(Guid id, [FromBody] MonetizationDto monetizationDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var program = await _programService.EnableMonetizationAsync(id, monetizationDto);
+    var program = await programService.EnableMonetizationAsync(id, monetizationDto);
 
     if (program == null) return NotFound();
 
@@ -530,7 +526,7 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/disable-monetization")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Monetize)]
   public async Task<ActionResult<ProgramEntity>> DisableMonetization(Guid id) {
-    var program = await _programService.DisableMonetizationAsync(id);
+    var program = await programService.DisableMonetizationAsync(id);
 
     if (program == null) return NotFound();
 
@@ -543,7 +539,7 @@ public class ProgramController : ControllerBase {
   [HttpGet("{id}/pricing")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
   public async Task<ActionResult<PricingDto>> GetProgramPricing(Guid id) {
-    var pricing = await _programService.GetProgramPricingAsync(id);
+    var pricing = await programService.GetProgramPricingAsync(id);
 
     if (pricing == null) return NotFound();
 
@@ -558,7 +554,7 @@ public class ProgramController : ControllerBase {
   public async Task<ActionResult<PricingDto>> UpdateProgramPricing(Guid id, [FromBody] UpdatePricingDto pricingDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var pricing = await _programService.UpdateProgramPricingAsync(id, pricingDto);
+    var pricing = await programService.UpdateProgramPricingAsync(id, pricingDto);
 
     if (pricing == null) return NotFound();
 
@@ -573,7 +569,7 @@ public class ProgramController : ControllerBase {
   [HttpGet("{id}/analytics")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Analytics)]
   public async Task<ActionResult<ProgramAnalyticsDto>> GetProgramAnalytics(Guid id) {
-    var analytics = await _programService.GetProgramAnalyticsAsync(id);
+    var analytics = await programService.GetProgramAnalyticsAsync(id);
 
     if (analytics == null) return NotFound();
 
@@ -586,7 +582,7 @@ public class ProgramController : ControllerBase {
   [HttpGet("{id}/analytics/completion-rates")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Analytics)]
   public async Task<ActionResult<CompletionRatesDto>> GetCompletionRates(Guid id) {
-    var rates = await _programService.GetCompletionRatesAsync(id);
+    var rates = await programService.GetCompletionRatesAsync(id);
 
     if (rates == null) return NotFound();
 
@@ -599,7 +595,7 @@ public class ProgramController : ControllerBase {
   [HttpGet("{id}/analytics/engagement")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Analytics)]
   public async Task<ActionResult<EngagementMetricsDto>> GetEngagementMetrics(Guid id) {
-    var metrics = await _programService.GetEngagementMetricsAsync(id);
+    var metrics = await programService.GetEngagementMetricsAsync(id);
 
     if (metrics == null) return NotFound();
 
@@ -612,7 +608,7 @@ public class ProgramController : ControllerBase {
   [HttpGet("{id}/analytics/revenue")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Revenue)]
   public async Task<ActionResult<RevenueAnalyticsDto>> GetRevenueAnalytics(Guid id) {
-    var revenue = await _programService.GetRevenueAnalyticsAsync(id);
+    var revenue = await programService.GetRevenueAnalyticsAsync(id);
 
     if (revenue == null) return NotFound();
 
@@ -632,7 +628,7 @@ public class ProgramController : ControllerBase {
   ) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var productId = await _programService.CreateProductFromProgramAsync(id, productDto);
+    var productId = await programService.CreateProductFromProgramAsync(id, productDto);
 
     if (productId == null) return NotFound();
 
@@ -645,7 +641,7 @@ public class ProgramController : ControllerBase {
   [HttpPost("{id}/link-product/{productId}")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> LinkProgramToProduct(Guid id, Guid productId) {
-    var success = await _programService.LinkProgramToProductAsync(id, productId);
+    var success = await programService.LinkProgramToProductAsync(id, productId);
 
     if (!success) return NotFound();
 
@@ -658,7 +654,7 @@ public class ProgramController : ControllerBase {
   [HttpDelete("{id}/link-product/{productId}")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> UnlinkProgramFromProduct(Guid id, Guid productId) {
-    var success = await _programService.UnlinkProgramFromProductAsync(id, productId);
+    var success = await programService.UnlinkProgramFromProductAsync(id, productId);
 
     if (!success) return NotFound();
 
@@ -671,7 +667,7 @@ public class ProgramController : ControllerBase {
   [HttpGet("{id}/products")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<Guid>>> GetLinkedProducts(Guid id) {
-    var productIds = await _programService.GetLinkedProductsAsync(id);
+    var productIds = await programService.GetLinkedProductsAsync(id);
 
     return Ok(productIds);
   }
