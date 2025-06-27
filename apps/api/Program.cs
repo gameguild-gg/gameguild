@@ -5,6 +5,7 @@ using GameGuild.Common.Middleware;
 using GameGuild.Common.Transformers;
 using GameGuild.Modules.Auth.Configuration;
 using GameGuild.Config;
+using GameGuild.Common.GraphQL.Extensions;
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using Microsoft.OpenApi.Models;
@@ -150,11 +151,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     }
 );
 
+// Add DAC authorization services for GraphQL
+builder.Services.AddDACAuthorizationServices();
+
 // Add GraphQL services
 builder.Services
     .AddGraphQLServer()
     .AddQueryType<Query>()
     .AddMutationType<Mutation>()
+    .AddDACAuthorization() // Add 3-layer DAC authorization
     .AddTypeExtension<GameGuild.Modules.Tenant.GraphQL.TenantQueries>()
     .AddTypeExtension<GameGuild.Modules.Tenant.GraphQL.TenantMutations>()    .AddTypeExtension<GameGuild.Modules.UserProfile.GraphQL.UserProfileQueries>()
     .AddTypeExtension<GameGuild.Modules.UserProfile.GraphQL.UserProfileMutations>()

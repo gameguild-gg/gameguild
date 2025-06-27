@@ -111,6 +111,88 @@ public class CommentController : ControllerBase
 }
 ```
 
+### GraphQL Implementation Example
+
+The same DAC attributes work seamlessly with **HotChocolate GraphQL** using custom extension methods:
+
+```csharp
+[ExtendObjectType<Query>]
+public class ProgramContentQueries
+{
+    // Content-type level operations
+    [RequireContentTypePermission<ProgramContent>(PermissionType.Read)]
+    public async Task<IEnumerable<ProgramContent>> GetProgramContents(
+        [Service] IProgramContentService contentService)
+    {
+        return await contentService.GetAllContentAsync();
+    }
+
+    // Resource-level operations (with permission inheritance)
+    [RequireResourcePermission<Program>(PermissionType.Read, "programId")]
+    public async Task<ProgramContent?> GetProgramContentById(
+        Guid id,
+        [Service] IProgramContentService programContentService)
+    {
+        return await programContentService.GetContentByIdAsync(id);
+    }
+}
+
+[ExtendObjectType<Mutation>]
+public class ProgramContentMutations
+{
+    // Resource-level operations (checking parent Program permissions)
+    [RequireResourcePermission<Program>(PermissionType.Create, "programId")]
+    public async Task<ProgramContent> CreateContentAsync(
+        [Service] IProgramContentService contentService,
+        Guid programId,
+        string title,
+        ProgramContentTypeEnum type,
+        string body,
+        string description)
+    {
+        return await contentService.CreateContentAsync(programId, title, type, body, description);
+    }
+
+    [RequireResourcePermission<Program>(PermissionType.Update, "programId")]
+    public async Task<ProgramContent> UpdateContentAsync(
+        [Service] IProgramContentService contentService,
+        Guid id,
+        string? title = null,
+        string? body = null,
+        string? description = null)
+    {
+        return await contentService.UpdateContentAsync(id, title, body, description);
+    }
+}
+```
+
+#### GraphQL DAC Extension Methods
+
+The GraphQL implementation uses these extension methods for field-level authorization:
+
+```csharp
+// Tenant-level permission
+.RequireTenantPermission(PermissionType.ReadContent)
+
+// Content-type permission  
+.RequireContentTypePermission<ProgramContent>(PermissionType.CreateContent)
+
+// Resource-level permission with parameter mapping
+.RequireResourcePermission<Program>(PermissionType.UpdateProgram, "programId")
+```
+
+#### Permission Inheritance in GraphQL
+
+Notice how **ProgramContent** operations check **Program permissions** instead of ProgramContent permissions:
+
+```csharp
+// ProgramContent inherits permissions from parent Program
+[RequireResourcePermission<Program>(PermissionType.Read, "programId")]  // ← Checks Program permissions
+public async Task<ProgramContent?> GetProgramContentById(Guid id) { ... }
+```
+
+This demonstrates the **permission inheritance pattern** where child entities derive authorization from their parent resources.
+
 ## How It Works
 
 ### Hierarchical Permission Checking
@@ -221,10 +303,15 @@ To add DAC support for a new resource type:
    dotnet ef migrations add AddMyResourcePermission
    ```
 
-5. **Use in controllers:**
+5. **Use in controllers and GraphQL resolvers:**
    ```csharp
+   // MVC Controller
    [RequireResourcePermission<MyResource>(PermissionType.Read)]
    public async Task<ActionResult<MyResource>> GetMyResource(Guid id) { ... }
+   
+   // GraphQL Query
+   [RequireResourcePermission<MyResource>(PermissionType.Read)]
+   public async Task<MyResource?> GetMyResourceById(Guid id, [Service] IMyResourceService service) { ... }
    ```
 
 ## Backwards Compatibility
