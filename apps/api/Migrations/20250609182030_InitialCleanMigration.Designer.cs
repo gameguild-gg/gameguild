@@ -35,7 +35,7 @@ namespace GameGuild.Migrations
                     b.ToTable("ContentContentLicense");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.ContentTypePermission", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.ContentTypePermission", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -109,7 +109,7 @@ namespace GameGuild.Migrations
                     b.ToTable("ContentTypePermissions");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.Language", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.Language", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -165,7 +165,7 @@ namespace GameGuild.Migrations
                     b.ToTable("Languages");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.ResourceBase", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.ResourceBase", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -222,7 +222,7 @@ namespace GameGuild.Migrations
                     b.UseTpcMappingStrategy();
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.ResourceLocalization", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.ResourceLocalization", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -293,7 +293,7 @@ namespace GameGuild.Migrations
                     b.ToTable("ResourceLocalizations");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.ResourceMetadata", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.ResourceMetadata", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -348,7 +348,7 @@ namespace GameGuild.Migrations
                     b.ToTable("ResourceMetadata");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.ResourcePermission", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.ResourcePermission", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -428,7 +428,7 @@ namespace GameGuild.Migrations
                     b.ToTable("ResourcePermissions");
                 });
 
-            modelBuilder.Entity("cms.Modules.Auth.Models.RefreshToken", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Auth.Models.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -492,7 +492,7 @@ namespace GameGuild.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
-            modelBuilder.Entity("cms.Modules.Certificate.Models.Certificate", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Certificate.Models.Certificate", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -589,7 +589,7 @@ namespace GameGuild.Migrations
                     b.ToTable("certificates");
                 });
 
-            modelBuilder.Entity("cms.Modules.Certificate.Models.CertificateBlockchainAnchor", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Certificate.Models.CertificateBlockchainAnchor", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -677,7 +677,7 @@ namespace GameGuild.Migrations
                     b.ToTable("certificate_blockchain_anchors");
                 });
 
-            modelBuilder.Entity("cms.Modules.Certificate.Models.CertificateTag", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Certificate.Models.CertificateTag", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -743,7 +743,7 @@ namespace GameGuild.Migrations
                     b.ToTable("certificate_tags");
                 });
 
-            modelBuilder.Entity("cms.Modules.Certificate.Models.UserCertificate", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Certificate.Models.UserCertificate", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -846,7 +846,7 @@ namespace GameGuild.Migrations
                     b.ToTable("user_certificates");
                 });
 
-            modelBuilder.Entity("cms.Modules.Feedback.Models.ProgramFeedbackSubmission", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Feedback.Models.ProgramFeedbackSubmission", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -937,7 +937,7 @@ namespace GameGuild.Migrations
                     b.ToTable("program_feedback_submissions");
                 });
 
-            modelBuilder.Entity("cms.Modules.Feedback.Models.ProgramRating", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Feedback.Models.ProgramRating", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1044,7 +1044,7 @@ namespace GameGuild.Migrations
                     b.ToTable("program_ratings");
                 });
 
-            modelBuilder.Entity("cms.Modules.Kyc.Models.UserKycVerification", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Kyc.Models.UserKycVerification", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1133,7 +1133,7 @@ namespace GameGuild.Migrations
                     b.ToTable("user_kyc_verifications");
                 });
 
-            modelBuilder.Entity("cms.Modules.Payment.Models.FinancialTransaction", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Payment.Models.FinancialTransaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1251,7 +1251,7 @@ namespace GameGuild.Migrations
                     b.ToTable("financial_transactions");
                 });
 
-            modelBuilder.Entity("cms.Modules.Payment.Models.UserFinancialMethod", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Payment.Models.UserFinancialMethod", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1336,7 +1336,7 @@ namespace GameGuild.Migrations
                     b.ToTable("user_financial_methods");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.ProductPricing", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.ProductPricing", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1412,7 +1412,7 @@ namespace GameGuild.Migrations
                     b.ToTable("product_pricing");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.ProductProgram", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.ProductProgram", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1472,7 +1472,7 @@ namespace GameGuild.Migrations
                     b.ToTable("product_programs");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.ProductSubscriptionPlan", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.ProductSubscriptionPlan", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1563,7 +1563,7 @@ namespace GameGuild.Migrations
                     b.ToTable("product_subscription_plans");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.PromoCode", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.PromoCode", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1667,7 +1667,7 @@ namespace GameGuild.Migrations
                     b.ToTable("promo_codes");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.PromoCodeUse", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.PromoCodeUse", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1723,7 +1723,7 @@ namespace GameGuild.Migrations
                     b.ToTable("promo_code_uses");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.UserProduct", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.UserProduct", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1820,7 +1820,7 @@ namespace GameGuild.Migrations
                     b.ToTable("user_products");
                 });
 
-            modelBuilder.Entity("cms.Modules.Program.Models.ActivityGrade", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Program.Models.ActivityGrade", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1890,7 +1890,7 @@ namespace GameGuild.Migrations
                     b.ToTable("activity_grades");
                 });
 
-            modelBuilder.Entity("cms.Modules.Program.Models.ContentInteraction", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Program.Models.ContentInteraction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1967,7 +1967,7 @@ namespace GameGuild.Migrations
                     b.ToTable("content_interactions");
                 });
 
-            modelBuilder.Entity("cms.Modules.Program.Models.ProgramContent", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Program.Models.ProgramContent", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2061,7 +2061,7 @@ namespace GameGuild.Migrations
                     b.ToTable("program_contents");
                 });
 
-            modelBuilder.Entity("cms.Modules.Program.Models.ProgramUser", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Program.Models.ProgramUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2139,7 +2139,7 @@ namespace GameGuild.Migrations
                     b.ToTable("program_users");
                 });
 
-            modelBuilder.Entity("cms.Modules.Subscription.Models.UserSubscription", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Subscription.Models.UserSubscription", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2230,7 +2230,7 @@ namespace GameGuild.Migrations
                     b.ToTable("user_subscriptions");
                 });
 
-            modelBuilder.Entity("cms.Modules.Tag.Models.Tag", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tag.Models.Tag", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2300,7 +2300,7 @@ namespace GameGuild.Migrations
                     b.ToTable("tags");
                 });
 
-            modelBuilder.Entity("cms.Modules.Tag.Models.TagProficiency", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tag.Models.TagProficiency", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2372,7 +2372,7 @@ namespace GameGuild.Migrations
                     b.ToTable("tag_proficiencies");
                 });
 
-            modelBuilder.Entity("cms.Modules.Tag.Models.TagRelationship", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tag.Models.TagRelationship", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2438,7 +2438,7 @@ namespace GameGuild.Migrations
                         });
                 });
 
-            modelBuilder.Entity("cms.Modules.Tenant.Models.Tenant", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tenant.Models.Tenant", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2496,7 +2496,7 @@ namespace GameGuild.Migrations
                     b.ToTable("Tenants");
                 });
 
-            modelBuilder.Entity("cms.Modules.Tenant.Models.UserTenant", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tenant.Models.UserTenant", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2546,7 +2546,7 @@ namespace GameGuild.Migrations
                     b.ToTable("UserTenants");
                 });
 
-            modelBuilder.Entity("cms.Modules.User.Models.Credential", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.User.Models.Credential", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2612,7 +2612,7 @@ namespace GameGuild.Migrations
                     b.ToTable("Credentials");
                 });
 
-            modelBuilder.Entity("cms.Modules.User.Models.User", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.User.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2672,9 +2672,9 @@ namespace GameGuild.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.Content", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.Content", b =>
                 {
-                    b.HasBaseType("cms.Common.Entities.ResourceBase");
+                    b.HasBaseType("GameGuild.API.Common.Entities.ResourceBase");
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -2687,9 +2687,9 @@ namespace GameGuild.Migrations
                     b.ToTable((string)null);
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.ContentLicense", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.ContentLicense", b =>
                 {
-                    b.HasBaseType("cms.Common.Entities.ResourceBase");
+                    b.HasBaseType("GameGuild.API.Common.Entities.ResourceBase");
 
                     b.Property<string>("Url")
                         .HasMaxLength(500)
@@ -2702,9 +2702,9 @@ namespace GameGuild.Migrations
                     b.ToTable("ContentLicenses");
                 });
 
-            modelBuilder.Entity("cms.Modules.Reputation.Models.ReputationAction", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Reputation.Models.ReputationAction", b =>
                 {
-                    b.HasBaseType("cms.Common.Entities.ResourceBase");
+                    b.HasBaseType("GameGuild.API.Common.Entities.ResourceBase");
 
                     b.Property<string>("ActionType")
                         .IsRequired()
@@ -2751,9 +2751,9 @@ namespace GameGuild.Migrations
                     b.ToTable("ReputationActions");
                 });
 
-            modelBuilder.Entity("cms.Modules.Reputation.Models.ReputationTier", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Reputation.Models.ReputationTier", b =>
                 {
-                    b.HasBaseType("cms.Common.Entities.ResourceBase");
+                    b.HasBaseType("GameGuild.API.Common.Entities.ResourceBase");
 
                     b.Property<string>("Color")
                         .HasMaxLength(50)
@@ -2796,9 +2796,9 @@ namespace GameGuild.Migrations
                     b.ToTable("ReputationLevels");
                 });
 
-            modelBuilder.Entity("cms.Modules.Reputation.Models.UserReputation", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Reputation.Models.UserReputation", b =>
                 {
-                    b.HasBaseType("cms.Common.Entities.ResourceBase");
+                    b.HasBaseType("GameGuild.API.Common.Entities.ResourceBase");
 
                     b.Property<Guid?>("CurrentLevelId")
                         .HasColumnType("TEXT");
@@ -2841,9 +2841,9 @@ namespace GameGuild.Migrations
                     b.ToTable("UserReputations");
                 });
 
-            modelBuilder.Entity("cms.Modules.Reputation.Models.UserReputationHistory", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Reputation.Models.UserReputationHistory", b =>
                 {
-                    b.HasBaseType("cms.Common.Entities.ResourceBase");
+                    b.HasBaseType("GameGuild.API.Common.Entities.ResourceBase");
 
                     b.Property<Guid?>("NewLevelId")
                         .HasColumnType("TEXT");
@@ -2920,9 +2920,9 @@ namespace GameGuild.Migrations
                         });
                 });
 
-            modelBuilder.Entity("cms.Modules.Reputation.Models.UserTenantReputation", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Reputation.Models.UserTenantReputation", b =>
                 {
-                    b.HasBaseType("cms.Common.Entities.ResourceBase");
+                    b.HasBaseType("GameGuild.API.Common.Entities.ResourceBase");
 
                     b.Property<Guid?>("CurrentLevelId")
                         .HasColumnType("TEXT");
@@ -2959,9 +2959,9 @@ namespace GameGuild.Migrations
                     b.ToTable("UserTenantReputations");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.Product", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.Product", b =>
                 {
-                    b.HasBaseType("cms.Common.Entities.Content");
+                    b.HasBaseType("GameGuild.API.Common.Entities.Content");
 
                     b.Property<decimal>("AffiliateCommissionPercentage")
                         .HasColumnType("decimal(5,2)");
@@ -3012,9 +3012,9 @@ namespace GameGuild.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("cms.Modules.Program.Models.Program", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Program.Models.Program", b =>
                 {
-                    b.HasBaseType("cms.Common.Entities.Content");
+                    b.HasBaseType("GameGuild.API.Common.Entities.Content");
 
                     b.Property<string>("Thumbnail")
                         .HasMaxLength(500)
@@ -3035,39 +3035,39 @@ namespace GameGuild.Migrations
 
             modelBuilder.Entity("ContentContentLicense", b =>
                 {
-                    b.HasOne("cms.Common.Entities.Content", null)
+                    b.HasOne("GameGuild.API.Common.Entities.Content", null)
                         .WithMany()
                         .HasForeignKey("ContentsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Common.Entities.ContentLicense", null)
+                    b.HasOne("GameGuild.API.Common.Entities.ContentLicense", null)
                         .WithMany()
                         .HasForeignKey("LicensesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.ContentTypePermission", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.ContentTypePermission", b =>
                 {
-                    b.HasOne("cms.Modules.User.Models.User", "AssignedByUser")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "AssignedByUser")
                         .WithMany()
                         .HasForeignKey("AssignedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany("ContentTypePermissions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tenant.Models.UserTenant", null)
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.UserTenant", null)
                         .WithMany("ContentTypePermissions")
                         .HasForeignKey("UserTenantId");
 
@@ -3078,28 +3078,28 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.Language", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.Language", b =>
                 {
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.ResourceBase", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.ResourceBase", b =>
                 {
-                    b.HasOne("cms.Common.Entities.ResourceMetadata", "Metadata")
+                    b.HasOne("GameGuild.API.Common.Entities.ResourceMetadata", "Metadata")
                         .WithMany()
                         .HasForeignKey("MetadataId");
 
-                    b.HasOne("cms.Modules.User.Models.User", "Owner")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -3111,19 +3111,19 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.ResourceLocalization", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.ResourceLocalization", b =>
                 {
-                    b.HasOne("cms.Common.Entities.Language", "Language")
+                    b.HasOne("GameGuild.API.Common.Entities.Language", "Language")
                         .WithMany("ResourceLocalizations")
                         .HasForeignKey("LanguageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Common.Entities.ResourceBase", null)
+                    b.HasOne("GameGuild.API.Common.Entities.ResourceBase", null)
                         .WithMany("Localizations")
                         .HasForeignKey("ResourceBaseId");
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
@@ -3132,39 +3132,39 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.ResourceMetadata", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.ResourceMetadata", b =>
                 {
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.ResourcePermission", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.ResourcePermission", b =>
                 {
-                    b.HasOne("cms.Modules.User.Models.User", "GrantedByUser")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "GrantedByUser")
                         .WithMany("GrantedPermissions")
                         .HasForeignKey("GrantedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("cms.Common.Entities.ResourceBase", "Resource")
+                    b.HasOne("GameGuild.API.Common.Entities.ResourceBase", "Resource")
                         .WithMany("ResourcePermissions")
                         .HasForeignKey("ResourceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Common.Entities.ResourceMetadata", "ResourceMetadata")
+                    b.HasOne("GameGuild.API.Common.Entities.ResourceMetadata", "ResourceMetadata")
                         .WithMany("ResourcePermissions")
                         .HasForeignKey("ResourceMetadataId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany("GrantedResourcePermissions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -3180,32 +3180,32 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Modules.Auth.Models.RefreshToken", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Auth.Models.RefreshToken", b =>
                 {
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Certificate.Models.Certificate", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Certificate.Models.Certificate", b =>
                 {
-                    b.HasOne("cms.Modules.Product.Models.Product", "Product")
+                    b.HasOne("GameGuild.API.Modules.Product.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Program.Models.Program", "Program")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.Program", "Program")
                         .WithMany()
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Program.Models.Program", null)
+                    b.HasOne("GameGuild.API.Modules.Program.Models.Program", null)
                         .WithMany("Certificates")
                         .HasForeignKey("ProgramId1");
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -3217,15 +3217,15 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Certificate.Models.CertificateBlockchainAnchor", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Certificate.Models.CertificateBlockchainAnchor", b =>
                 {
-                    b.HasOne("cms.Modules.Certificate.Models.UserCertificate", "Certificate")
+                    b.HasOne("GameGuild.API.Modules.Certificate.Models.UserCertificate", "Certificate")
                         .WithMany("BlockchainAnchors")
                         .HasForeignKey("CertificateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
@@ -3234,29 +3234,29 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Certificate.Models.CertificateTag", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Certificate.Models.CertificateTag", b =>
                 {
-                    b.HasOne("cms.Modules.Certificate.Models.Certificate", "Certificate")
+                    b.HasOne("GameGuild.API.Modules.Certificate.Models.Certificate", "Certificate")
                         .WithMany()
                         .HasForeignKey("CertificateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Certificate.Models.Certificate", null)
+                    b.HasOne("GameGuild.API.Modules.Certificate.Models.Certificate", null)
                         .WithMany("CertificateTags")
                         .HasForeignKey("CertificateId1");
 
-                    b.HasOne("cms.Modules.Tag.Models.TagProficiency", "Tag")
+                    b.HasOne("GameGuild.API.Modules.Tag.Models.TagProficiency", "Tag")
                         .WithMany()
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tag.Models.TagProficiency", null)
+                    b.HasOne("GameGuild.API.Modules.Tag.Models.TagProficiency", null)
                         .WithMany("CertificateTags")
                         .HasForeignKey("TagProficiencyId");
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
@@ -3267,38 +3267,38 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Certificate.Models.UserCertificate", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Certificate.Models.UserCertificate", b =>
                 {
-                    b.HasOne("cms.Modules.Certificate.Models.Certificate", "Certificate")
+                    b.HasOne("GameGuild.API.Modules.Certificate.Models.Certificate", "Certificate")
                         .WithMany()
                         .HasForeignKey("CertificateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Certificate.Models.Certificate", null)
+                    b.HasOne("GameGuild.API.Modules.Certificate.Models.Certificate", null)
                         .WithMany("UserCertificates")
                         .HasForeignKey("CertificateId1");
 
-                    b.HasOne("cms.Modules.Product.Models.Product", "Product")
+                    b.HasOne("GameGuild.API.Modules.Product.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Program.Models.Program", "Program")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.Program", "Program")
                         .WithMany()
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Program.Models.ProgramUser", "ProgramUser")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.ProgramUser", "ProgramUser")
                         .WithMany("UserCertificates")
                         .HasForeignKey("ProgramUserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3317,38 +3317,38 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Modules.Feedback.Models.ProgramFeedbackSubmission", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Feedback.Models.ProgramFeedbackSubmission", b =>
                 {
-                    b.HasOne("cms.Modules.Product.Models.Product", "Product")
+                    b.HasOne("GameGuild.API.Modules.Product.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Program.Models.Program", "Program")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.Program", "Program")
                         .WithMany()
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Program.Models.Program", null)
+                    b.HasOne("GameGuild.API.Modules.Program.Models.Program", null)
                         .WithMany("FeedbackSubmissions")
                         .HasForeignKey("ProgramId1");
 
-                    b.HasOne("cms.Modules.Program.Models.ProgramUser", "ProgramUser")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.ProgramUser", "ProgramUser")
                         .WithMany()
                         .HasForeignKey("ProgramUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Program.Models.ProgramUser", null)
+                    b.HasOne("GameGuild.API.Modules.Program.Models.ProgramUser", null)
                         .WithMany("FeedbackSubmissions")
                         .HasForeignKey("ProgramUserId1");
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3365,37 +3365,37 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Modules.Feedback.Models.ProgramRating", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Feedback.Models.ProgramRating", b =>
                 {
-                    b.HasOne("cms.Modules.User.Models.User", "Moderator")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "Moderator")
                         .WithMany()
                         .HasForeignKey("ModeratedBy");
 
-                    b.HasOne("cms.Modules.Product.Models.Product", "Product")
+                    b.HasOne("GameGuild.API.Modules.Product.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId");
 
-                    b.HasOne("cms.Modules.Program.Models.Program", "Program")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.Program", "Program")
                         .WithMany()
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Program.Models.Program", null)
+                    b.HasOne("GameGuild.API.Modules.Program.Models.Program", null)
                         .WithMany("ProgramRatings")
                         .HasForeignKey("ProgramId1");
 
-                    b.HasOne("cms.Modules.Program.Models.ProgramUser", "ProgramUser")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.ProgramUser", "ProgramUser")
                         .WithMany("ProgramRatings")
                         .HasForeignKey("ProgramUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3414,13 +3414,13 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Modules.Kyc.Models.UserKycVerification", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Kyc.Models.UserKycVerification", b =>
                 {
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3431,32 +3431,32 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Modules.Payment.Models.FinancialTransaction", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Payment.Models.FinancialTransaction", b =>
                 {
-                    b.HasOne("cms.Modules.User.Models.User", "FromUser")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "FromUser")
                         .WithMany()
                         .HasForeignKey("FromUserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Payment.Models.UserFinancialMethod", "PaymentMethod")
+                    b.HasOne("GameGuild.API.Modules.Payment.Models.UserFinancialMethod", "PaymentMethod")
                         .WithMany()
                         .HasForeignKey("PaymentMethodId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Product.Models.PromoCode", "PromoCode")
+                    b.HasOne("GameGuild.API.Modules.Product.Models.PromoCode", "PromoCode")
                         .WithMany()
                         .HasForeignKey("PromoCodeId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Product.Models.PromoCode", null)
+                    b.HasOne("GameGuild.API.Modules.Product.Models.PromoCode", null)
                         .WithMany("FinancialTransactions")
                         .HasForeignKey("PromoCodeId1");
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
-                    b.HasOne("cms.Modules.User.Models.User", "ToUser")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "ToUser")
                         .WithMany()
                         .HasForeignKey("ToUserId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -3472,13 +3472,13 @@ namespace GameGuild.Migrations
                     b.Navigation("ToUser");
                 });
 
-            modelBuilder.Entity("cms.Modules.Payment.Models.UserFinancialMethod", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Payment.Models.UserFinancialMethod", b =>
                 {
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3489,15 +3489,15 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.ProductPricing", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.ProductPricing", b =>
                 {
-                    b.HasOne("cms.Modules.Product.Models.Product", "Product")
+                    b.HasOne("GameGuild.API.Modules.Product.Models.Product", "Product")
                         .WithMany("ProductPricings")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
@@ -3506,25 +3506,25 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.ProductProgram", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.ProductProgram", b =>
                 {
-                    b.HasOne("cms.Modules.Product.Models.Product", "Product")
+                    b.HasOne("GameGuild.API.Modules.Product.Models.Product", "Product")
                         .WithMany("ProductPrograms")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Program.Models.Program", "Program")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.Program", "Program")
                         .WithMany()
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Program.Models.Program", null)
+                    b.HasOne("GameGuild.API.Modules.Program.Models.Program", null)
                         .WithMany("ProductPrograms")
                         .HasForeignKey("ProgramId1");
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
@@ -3535,15 +3535,15 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.ProductSubscriptionPlan", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.ProductSubscriptionPlan", b =>
                 {
-                    b.HasOne("cms.Modules.Product.Models.Product", "Product")
+                    b.HasOne("GameGuild.API.Modules.Product.Models.Product", "Product")
                         .WithMany("SubscriptionPlans")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
@@ -3552,20 +3552,20 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.PromoCode", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.PromoCode", b =>
                 {
-                    b.HasOne("cms.Modules.User.Models.User", "CreatedByUser")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "CreatedByUser")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Product.Models.Product", "Product")
+                    b.HasOne("GameGuild.API.Modules.Product.Models.Product", "Product")
                         .WithMany("PromoCodes")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
@@ -3576,25 +3576,25 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.PromoCodeUse", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.PromoCodeUse", b =>
                 {
-                    b.HasOne("cms.Modules.Payment.Models.FinancialTransaction", "FinancialTransaction")
+                    b.HasOne("GameGuild.API.Modules.Payment.Models.FinancialTransaction", "FinancialTransaction")
                         .WithMany("PromoCodeUses")
                         .HasForeignKey("FinancialTransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Product.Models.PromoCode", "PromoCode")
+                    b.HasOne("GameGuild.API.Modules.Product.Models.PromoCode", "PromoCode")
                         .WithMany("PromoCodeUses")
                         .HasForeignKey("PromoCodeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3609,39 +3609,39 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.UserProduct", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.UserProduct", b =>
                 {
-                    b.HasOne("cms.Modules.User.Models.User", "GiftedByUser")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "GiftedByUser")
                         .WithMany()
                         .HasForeignKey("GiftedByUserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Product.Models.Product", "Product")
+                    b.HasOne("GameGuild.API.Modules.Product.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Product.Models.Product", null)
+                    b.HasOne("GameGuild.API.Modules.Product.Models.Product", null)
                         .WithMany("UserProducts")
                         .HasForeignKey("ProductId1");
 
-                    b.HasOne("cms.Modules.Subscription.Models.UserSubscription", "Subscription")
+                    b.HasOne("GameGuild.API.Modules.Subscription.Models.UserSubscription", "Subscription")
                         .WithMany()
                         .HasForeignKey("SubscriptionId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Subscription.Models.UserSubscription", null)
+                    b.HasOne("GameGuild.API.Modules.Subscription.Models.UserSubscription", null)
                         .WithMany("UserProducts")
                         .HasForeignKey("UserSubscriptionId");
 
@@ -3656,29 +3656,29 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Modules.Program.Models.ActivityGrade", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Program.Models.ActivityGrade", b =>
                 {
-                    b.HasOne("cms.Modules.Program.Models.ContentInteraction", "ContentInteraction")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.ContentInteraction", "ContentInteraction")
                         .WithMany("ActivityGrades")
                         .HasForeignKey("ContentInteractionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Program.Models.ProgramUser", "GraderProgramUser")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.ProgramUser", "GraderProgramUser")
                         .WithMany()
                         .HasForeignKey("GraderProgramUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Program.Models.ProgramUser", null)
+                    b.HasOne("GameGuild.API.Modules.Program.Models.ProgramUser", null)
                         .WithMany("GivenGrades")
                         .HasForeignKey("ProgramUserId");
 
-                    b.HasOne("cms.Modules.Program.Models.ProgramUser", null)
+                    b.HasOne("GameGuild.API.Modules.Program.Models.ProgramUser", null)
                         .WithMany("ReceivedGrades")
                         .HasForeignKey("ProgramUserId1");
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
@@ -3689,25 +3689,25 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Program.Models.ContentInteraction", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Program.Models.ContentInteraction", b =>
                 {
-                    b.HasOne("cms.Modules.Program.Models.ProgramContent", "Content")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.ProgramContent", "Content")
                         .WithMany()
                         .HasForeignKey("ContentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Program.Models.ProgramContent", null)
+                    b.HasOne("GameGuild.API.Modules.Program.Models.ProgramContent", null)
                         .WithMany("ContentInteractions")
                         .HasForeignKey("ProgramContentId");
 
-                    b.HasOne("cms.Modules.Program.Models.ProgramUser", "ProgramUser")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.ProgramUser", "ProgramUser")
                         .WithMany("ContentInteractions")
                         .HasForeignKey("ProgramUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
@@ -3718,20 +3718,20 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Program.Models.ProgramContent", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Program.Models.ProgramContent", b =>
                 {
-                    b.HasOne("cms.Modules.Program.Models.ProgramContent", "Parent")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.ProgramContent", "Parent")
                         .WithMany("Children")
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("cms.Modules.Program.Models.Program", "Program")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.Program", "Program")
                         .WithMany("ProgramContents")
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
@@ -3742,19 +3742,19 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Program.Models.ProgramUser", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Program.Models.ProgramUser", b =>
                 {
-                    b.HasOne("cms.Modules.Program.Models.Program", "Program")
+                    b.HasOne("GameGuild.API.Modules.Program.Models.Program", "Program")
                         .WithMany("ProgramUsers")
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3767,23 +3767,23 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Modules.Subscription.Models.UserSubscription", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Subscription.Models.UserSubscription", b =>
                 {
-                    b.HasOne("cms.Modules.Product.Models.ProductSubscriptionPlan", null)
+                    b.HasOne("GameGuild.API.Modules.Product.Models.ProductSubscriptionPlan", null)
                         .WithMany("UserSubscriptions")
                         .HasForeignKey("ProductSubscriptionPlanId");
 
-                    b.HasOne("cms.Modules.Product.Models.ProductSubscriptionPlan", "SubscriptionPlan")
+                    b.HasOne("GameGuild.API.Modules.Product.Models.ProductSubscriptionPlan", "SubscriptionPlan")
                         .WithMany()
                         .HasForeignKey("SubscriptionPlanId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3796,9 +3796,9 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Modules.Tag.Models.Tag", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tag.Models.Tag", b =>
                 {
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -3806,30 +3806,30 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Tag.Models.TagProficiency", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tag.Models.TagProficiency", b =>
                 {
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Tag.Models.TagRelationship", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tag.Models.TagRelationship", b =>
                 {
-                    b.HasOne("cms.Modules.Tag.Models.Tag", "Source")
+                    b.HasOne("GameGuild.API.Modules.Tag.Models.Tag", "Source")
                         .WithMany("SourceRelationships")
                         .HasForeignKey("SourceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tag.Models.Tag", "Target")
+                    b.HasOne("GameGuild.API.Modules.Tag.Models.Tag", "Target")
                         .WithMany("TargetRelationships")
                         .HasForeignKey("TargetId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
@@ -3840,24 +3840,24 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Tenant.Models.Tenant", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tenant.Models.Tenant", b =>
                 {
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Tenant.Models.UserTenant", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tenant.Models.UserTenant", b =>
                 {
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany("UserTenants")
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany("UserTenants")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3868,14 +3868,14 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Modules.User.Models.Credential", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.User.Models.Credential", b =>
                 {
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany("Credentials")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3886,18 +3886,18 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Modules.User.Models.User", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.User.Models.User", b =>
                 {
-                    b.HasOne("cms.Modules.Tenant.Models.Tenant", "Tenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
 
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Reputation.Models.ReputationAction", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Reputation.Models.ReputationAction", b =>
                 {
-                    b.HasOne("cms.Modules.Reputation.Models.ReputationTier", "RequiredLevel")
+                    b.HasOne("GameGuild.API.Modules.Reputation.Models.ReputationTier", "RequiredLevel")
                         .WithMany()
                         .HasForeignKey("RequiredLevelId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -3905,18 +3905,18 @@ namespace GameGuild.Migrations
                     b.Navigation("RequiredLevel");
                 });
 
-            modelBuilder.Entity("cms.Modules.Reputation.Models.UserReputation", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Reputation.Models.UserReputation", b =>
                 {
-                    b.HasOne("cms.Modules.Reputation.Models.ReputationTier", "CurrentLevel")
+                    b.HasOne("GameGuild.API.Modules.Reputation.Models.ReputationTier", "CurrentLevel")
                         .WithMany()
                         .HasForeignKey("CurrentLevelId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Reputation.Models.ReputationTier", null)
+                    b.HasOne("GameGuild.API.Modules.Reputation.Models.ReputationTier", null)
                         .WithMany("UserReputations")
                         .HasForeignKey("ReputationTierId");
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3927,48 +3927,48 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("cms.Modules.Reputation.Models.UserReputationHistory", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Reputation.Models.UserReputationHistory", b =>
                 {
-                    b.HasOne("cms.Modules.Reputation.Models.ReputationTier", "NewLevel")
+                    b.HasOne("GameGuild.API.Modules.Reputation.Models.ReputationTier", "NewLevel")
                         .WithMany()
                         .HasForeignKey("NewLevelId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Reputation.Models.ReputationTier", "PreviousLevel")
+                    b.HasOne("GameGuild.API.Modules.Reputation.Models.ReputationTier", "PreviousLevel")
                         .WithMany()
                         .HasForeignKey("PreviousLevelId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Common.Entities.ResourceBase", "RelatedResource")
+                    b.HasOne("GameGuild.API.Common.Entities.ResourceBase", "RelatedResource")
                         .WithMany()
                         .HasForeignKey("RelatedResourceId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Reputation.Models.ReputationAction", "ReputationAction")
+                    b.HasOne("GameGuild.API.Modules.Reputation.Models.ReputationAction", "ReputationAction")
                         .WithMany("ReputationHistory")
                         .HasForeignKey("ReputationActionId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.User.Models.User", "TriggeredByUser")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "TriggeredByUser")
                         .WithMany()
                         .HasForeignKey("TriggeredByUserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.User.Models.User", "User")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Reputation.Models.UserReputation", null)
+                    b.HasOne("GameGuild.API.Modules.Reputation.Models.UserReputation", null)
                         .WithMany("History")
                         .HasForeignKey("UserReputationId");
 
-                    b.HasOne("cms.Modules.Tenant.Models.UserTenant", "UserTenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.UserTenant", "UserTenant")
                         .WithMany()
                         .HasForeignKey("UserTenantId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Reputation.Models.UserTenantReputation", null)
+                    b.HasOne("GameGuild.API.Modules.Reputation.Models.UserTenantReputation", null)
                         .WithMany("History")
                         .HasForeignKey("UserTenantReputationId");
 
@@ -3987,14 +3987,14 @@ namespace GameGuild.Migrations
                     b.Navigation("UserTenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Reputation.Models.UserTenantReputation", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Reputation.Models.UserTenantReputation", b =>
                 {
-                    b.HasOne("cms.Modules.Reputation.Models.ReputationTier", "CurrentLevel")
+                    b.HasOne("GameGuild.API.Modules.Reputation.Models.ReputationTier", "CurrentLevel")
                         .WithMany()
                         .HasForeignKey("CurrentLevelId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("cms.Modules.Tenant.Models.UserTenant", "UserTenant")
+                    b.HasOne("GameGuild.API.Modules.Tenant.Models.UserTenant", "UserTenant")
                         .WithMany()
                         .HasForeignKey("UserTenantId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4005,9 +4005,9 @@ namespace GameGuild.Migrations
                     b.Navigation("UserTenant");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.Product", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.Product", b =>
                 {
-                    b.HasOne("cms.Modules.User.Models.User", "Creator")
+                    b.HasOne("GameGuild.API.Modules.User.Models.User", "Creator")
                         .WithMany()
                         .HasForeignKey("CreatorId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -4016,65 +4016,65 @@ namespace GameGuild.Migrations
                     b.Navigation("Creator");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.Language", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.Language", b =>
                 {
                     b.Navigation("ResourceLocalizations");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.ResourceBase", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.ResourceBase", b =>
                 {
                     b.Navigation("Localizations");
 
                     b.Navigation("ResourcePermissions");
                 });
 
-            modelBuilder.Entity("cms.Common.Entities.ResourceMetadata", b =>
+            modelBuilder.Entity("GameGuild.API.Common.Entities.ResourceMetadata", b =>
                 {
                     b.Navigation("ResourcePermissions");
                 });
 
-            modelBuilder.Entity("cms.Modules.Certificate.Models.Certificate", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Certificate.Models.Certificate", b =>
                 {
                     b.Navigation("CertificateTags");
 
                     b.Navigation("UserCertificates");
                 });
 
-            modelBuilder.Entity("cms.Modules.Certificate.Models.UserCertificate", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Certificate.Models.UserCertificate", b =>
                 {
                     b.Navigation("BlockchainAnchors");
                 });
 
-            modelBuilder.Entity("cms.Modules.Payment.Models.FinancialTransaction", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Payment.Models.FinancialTransaction", b =>
                 {
                     b.Navigation("PromoCodeUses");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.ProductSubscriptionPlan", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.ProductSubscriptionPlan", b =>
                 {
                     b.Navigation("UserSubscriptions");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.PromoCode", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.PromoCode", b =>
                 {
                     b.Navigation("FinancialTransactions");
 
                     b.Navigation("PromoCodeUses");
                 });
 
-            modelBuilder.Entity("cms.Modules.Program.Models.ContentInteraction", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Program.Models.ContentInteraction", b =>
                 {
                     b.Navigation("ActivityGrades");
                 });
 
-            modelBuilder.Entity("cms.Modules.Program.Models.ProgramContent", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Program.Models.ProgramContent", b =>
                 {
                     b.Navigation("Children");
 
                     b.Navigation("ContentInteractions");
                 });
 
-            modelBuilder.Entity("cms.Modules.Program.Models.ProgramUser", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Program.Models.ProgramUser", b =>
                 {
                     b.Navigation("ContentInteractions");
 
@@ -4089,34 +4089,34 @@ namespace GameGuild.Migrations
                     b.Navigation("UserCertificates");
                 });
 
-            modelBuilder.Entity("cms.Modules.Subscription.Models.UserSubscription", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Subscription.Models.UserSubscription", b =>
                 {
                     b.Navigation("UserProducts");
                 });
 
-            modelBuilder.Entity("cms.Modules.Tag.Models.Tag", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tag.Models.Tag", b =>
                 {
                     b.Navigation("SourceRelationships");
 
                     b.Navigation("TargetRelationships");
                 });
 
-            modelBuilder.Entity("cms.Modules.Tag.Models.TagProficiency", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tag.Models.TagProficiency", b =>
                 {
                     b.Navigation("CertificateTags");
                 });
 
-            modelBuilder.Entity("cms.Modules.Tenant.Models.Tenant", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tenant.Models.Tenant", b =>
                 {
                     b.Navigation("UserTenants");
                 });
 
-            modelBuilder.Entity("cms.Modules.Tenant.Models.UserTenant", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Tenant.Models.UserTenant", b =>
                 {
                     b.Navigation("ContentTypePermissions");
                 });
 
-            modelBuilder.Entity("cms.Modules.User.Models.User", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.User.Models.User", b =>
                 {
                     b.Navigation("ContentTypePermissions");
 
@@ -4129,27 +4129,27 @@ namespace GameGuild.Migrations
                     b.Navigation("UserTenants");
                 });
 
-            modelBuilder.Entity("cms.Modules.Reputation.Models.ReputationAction", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Reputation.Models.ReputationAction", b =>
                 {
                     b.Navigation("ReputationHistory");
                 });
 
-            modelBuilder.Entity("cms.Modules.Reputation.Models.ReputationTier", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Reputation.Models.ReputationTier", b =>
                 {
                     b.Navigation("UserReputations");
                 });
 
-            modelBuilder.Entity("cms.Modules.Reputation.Models.UserReputation", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Reputation.Models.UserReputation", b =>
                 {
                     b.Navigation("History");
                 });
 
-            modelBuilder.Entity("cms.Modules.Reputation.Models.UserTenantReputation", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Reputation.Models.UserTenantReputation", b =>
                 {
                     b.Navigation("History");
                 });
 
-            modelBuilder.Entity("cms.Modules.Product.Models.Product", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Product.Models.Product", b =>
                 {
                     b.Navigation("ProductPricings");
 
@@ -4162,7 +4162,7 @@ namespace GameGuild.Migrations
                     b.Navigation("UserProducts");
                 });
 
-            modelBuilder.Entity("cms.Modules.Program.Models.Program", b =>
+            modelBuilder.Entity("GameGuild.API.Modules.Program.Models.Program", b =>
                 {
                     b.Navigation("Certificates");
 

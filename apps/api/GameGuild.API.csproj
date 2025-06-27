@@ -5,6 +5,7 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+        <RootNamespace>cms</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
