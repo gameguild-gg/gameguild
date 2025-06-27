@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { TooltipProvider } from "@/components/editor/ui/tooltip"
 import { useEffect } from "react"
 
 // Import types
@@ -16,8 +16,8 @@ import { SourceCodeDialogs } from "./components/source-code-dialogs"
 import { getBaseName, getFileIcon, getStateIcon, getLanguageLabel } from "./utils"
 
 // Import hooks
-import { useSourceCodeEditor } from "../../../hooks/use-source-code-editor"
-import { useCustomTestFiles } from "../../../hooks/use-custom-test-files"
+import { useSourceCodeEditor } from "@/hooks/editor/use-source-code-editor"
+import { useCustomTestFiles } from "@/hooks/editor/use-custom-test-files"
 
 export interface SourceCodeRendererProps {
   data: SourceCodeData & { hasConfiguredSettings?: boolean; initialFileLanguage?: string }

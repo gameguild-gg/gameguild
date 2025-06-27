@@ -8,9 +8,9 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import DOMPurify from "dompurify"
 import { cn } from "@/lib/utils"
 
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
+import { Button } from "@/components/editor/ui/button"
+import { Textarea } from "@/components/editor/ui/textarea"
+import { Switch } from "@/components/editor/ui/switch"
 import type React from "react" // Import React
 import { EditorLoadingContext } from "../lexical-editor"
 

@@ -93,7 +93,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/editor/ui/alert-dialog"
 import { useState } from "react"
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
 import type { LexicalEditor } from "lexical"
