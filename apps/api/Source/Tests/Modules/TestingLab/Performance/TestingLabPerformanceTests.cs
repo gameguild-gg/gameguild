@@ -9,6 +9,7 @@ using GameGuild.Modules.User.Models;
 using ProjectModel = GameGuild.Modules.Project.Models.Project;
 using ProjectVersionModel = GameGuild.Modules.Project.Models.ProjectVersion;
 
+
 namespace GameGuild.Tests.Modules.TestingLab.Performance;
 
 /// <summary>
@@ -20,7 +21,9 @@ public class TestingLabPerformanceTests : IDisposable {
   private readonly TestService _testService;
 
   public TestingLabPerformanceTests() {
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: $"TestingLabPerformanceDb_{Guid.NewGuid()}").Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                  .UseInMemoryDatabase(databaseName: $"TestingLabPerformanceDb_{Guid.NewGuid()}")
+                  .Options;
 
     _context = new ApplicationDbContext(options);
     _testService = new TestService(_context);
@@ -55,7 +58,10 @@ public class TestingLabPerformanceTests : IDisposable {
 
     // Assert
     Assert.NotNull(result);
-    Assert.True(stopwatch.ElapsedMilliseconds < 200, $"Testing request creation took {stopwatch.ElapsedMilliseconds}ms, expected under 200ms");
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 200,
+      $"Testing request creation took {stopwatch.ElapsedMilliseconds}ms, expected under 200ms"
+    );
   }
 
   [Fact]
@@ -97,7 +103,10 @@ public class TestingLabPerformanceTests : IDisposable {
 
     // Assert
     Assert.Equal(1000, result.Count());
-    Assert.True(stopwatch.ElapsedMilliseconds < 1000, $"Getting 1000 testing requests took {stopwatch.ElapsedMilliseconds}ms, expected under 1000ms");
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 1000,
+      $"Getting 1000 testing requests took {stopwatch.ElapsedMilliseconds}ms, expected under 1000ms"
+    );
   }
 
   [Fact]
@@ -139,7 +148,10 @@ public class TestingLabPerformanceTests : IDisposable {
 
     // Assert
     Assert.True(result.Any());
-    Assert.True(stopwatch.ElapsedMilliseconds < 500, $"Searching 1000 testing requests took {stopwatch.ElapsedMilliseconds}ms, expected under 500ms");
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 500,
+      $"Searching 1000 testing requests took {stopwatch.ElapsedMilliseconds}ms, expected under 500ms"
+    );
   }
 
   [Fact]
@@ -173,7 +185,10 @@ public class TestingLabPerformanceTests : IDisposable {
 
     // Assert
     Assert.NotNull(result);
-    Assert.True(stopwatch.ElapsedMilliseconds < 200, $"Testing session creation took {stopwatch.ElapsedMilliseconds}ms, expected under 200ms");
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 200,
+      $"Testing session creation took {stopwatch.ElapsedMilliseconds}ms, expected under 200ms"
+    );
   }
 
   [Fact]
@@ -209,7 +224,10 @@ public class TestingLabPerformanceTests : IDisposable {
 
     // Assert
     Assert.NotNull(result);
-    Assert.True(stopwatch.ElapsedMilliseconds < 300, $"Getting testing request statistics took {stopwatch.ElapsedMilliseconds}ms, expected under 300ms");
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 300,
+      $"Getting testing request statistics took {stopwatch.ElapsedMilliseconds}ms, expected under 300ms"
+    );
   }
 
   [Theory]
@@ -251,7 +269,10 @@ public class TestingLabPerformanceTests : IDisposable {
 
     // Assert
     var timePerRequest = (double)stopwatch.ElapsedMilliseconds / requestCount;
-    Assert.True(timePerRequest < 5.0, $"Bulk operation took {timePerRequest}ms per request, expected under 5ms per request");
+    Assert.True(
+      timePerRequest < 5.0,
+      $"Bulk operation took {timePerRequest}ms per request, expected under 5ms per request"
+    );
   }
 
   [Fact]
@@ -293,7 +314,10 @@ public class TestingLabPerformanceTests : IDisposable {
     stopwatch.Stop();
 
     // Assert
-    Assert.True(stopwatch.ElapsedMilliseconds < 2000, $"10 concurrent read operations took {stopwatch.ElapsedMilliseconds}ms, expected under 2000ms");
+    Assert.True(
+      stopwatch.ElapsedMilliseconds < 2000,
+      $"10 concurrent read operations took {stopwatch.ElapsedMilliseconds}ms, expected under 2000ms"
+    );
     Assert.All(tasks, task => Assert.Equal(100, task.Result.Count()));
   }
 

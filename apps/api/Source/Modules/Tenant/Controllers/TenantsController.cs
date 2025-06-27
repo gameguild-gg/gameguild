@@ -6,6 +6,7 @@ using GameGuild.Modules.User.Dtos;
 using GameGuild.Common.Attributes;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Tenant.Controllers;
 
 /// <summary>
@@ -246,7 +247,8 @@ public class TenantsController : ControllerBase {
       CreatedAt = tenant.CreatedAt,
       UpdatedAt = tenant.UpdatedAt,
       DeletedAt = tenant.DeletedAt,
-      TenantPermissions = tenant.TenantPermissions?.Select(MapTenantPermissionToResponseDto).ToList() ?? new List<TenantPermissionResponseDto>()
+      TenantPermissions = tenant.TenantPermissions?.Select(MapTenantPermissionToResponseDto).ToList() ??
+                          new List<TenantPermissionResponseDto>()
     };
   }
 
@@ -269,17 +271,17 @@ public class TenantsController : ControllerBase {
       UpdatedAt = tenantPermission.UpdatedAt,
       DeletedAt = tenantPermission.DeletedAt,
       User = tenantPermission.User != null
-        ? new UserResponseDto {
-          Id = tenantPermission.User.Id,
-          Name = tenantPermission.User.Name,
-          Email = tenantPermission.User.Email,
-          IsActive = tenantPermission.User.IsActive,
-          Version = tenantPermission.User.Version,
-          CreatedAt = tenantPermission.User.CreatedAt,
-          UpdatedAt = tenantPermission.User.UpdatedAt,
-          DeletedAt = tenantPermission.User.DeletedAt
-        }
-        : null
+               ? new UserResponseDto {
+                 Id = tenantPermission.User.Id,
+                 Name = tenantPermission.User.Name,
+                 Email = tenantPermission.User.Email,
+                 IsActive = tenantPermission.User.IsActive,
+                 Version = tenantPermission.User.Version,
+                 CreatedAt = tenantPermission.User.CreatedAt,
+                 UpdatedAt = tenantPermission.User.UpdatedAt,
+                 DeletedAt = tenantPermission.User.DeletedAt
+               }
+               : null
     };
   }
 }

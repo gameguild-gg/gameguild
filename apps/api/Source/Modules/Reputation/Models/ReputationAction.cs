@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Reputation.Models;
 
 /// <summary>
@@ -125,7 +126,10 @@ public class ReputationAction : ResourceBase {
 public class ReputationActionConfiguration : IEntityTypeConfiguration<ReputationAction> {
   public void Configure(EntityTypeBuilder<ReputationAction> builder) {
     // Configure relationship with RequiredLevel (can't be done with annotations)
-    builder.HasOne(ra => ra.RequiredLevel).WithMany().HasForeignKey(ra => ra.RequiredLevelId).OnDelete(DeleteBehavior.SetNull);
+    builder.HasOne(ra => ra.RequiredLevel)
+           .WithMany()
+           .HasForeignKey(ra => ra.RequiredLevelId)
+           .OnDelete(DeleteBehavior.SetNull);
 
     // Configure shadow property for TenantId (since ReputationAction implements ITenantable)
     builder.Property<Guid?>("TenantId");

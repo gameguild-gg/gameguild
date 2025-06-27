@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Xunit;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
+
 namespace GameGuild.Tests.Modules.Auth.E2E.API;
 
 public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>> {
@@ -52,7 +53,10 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
       Id = Guid.NewGuid(),
       UserId = user.Id,
       Type = "password",
-      Value = Convert.ToBase64String(System.Security.Cryptography.SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes("P455W0RD"))),
+      Value = Convert.ToBase64String(
+        System.Security.Cryptography.SHA256.Create()
+              .ComputeHash(Encoding.UTF8.GetBytes("P455W0RD"))
+      ),
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow

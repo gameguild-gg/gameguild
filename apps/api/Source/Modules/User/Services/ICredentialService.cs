@@ -1,5 +1,6 @@
 using GameGuild.Modules.User.Models;
 
+
 namespace GameGuild.Modules.User.Services;
 
 /// <summary>

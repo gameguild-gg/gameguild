@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
+
 namespace GameGuild.Common.Extensions;
 
 /// <summary>
@@ -12,7 +13,8 @@ public static class MigrationExtensions {
   /// <param name="serviceProvider">The service provider</param>
   /// <param name="logger">Optional logger</param>
   /// <returns>A task that represents the asynchronous migration operation</returns>
-  public static async Task ApplyMigrationsAsync<TContext>(this IServiceProvider serviceProvider, ILogger? logger = null) where TContext : DbContext {
+  public static async Task ApplyMigrationsAsync<TContext>(this IServiceProvider serviceProvider, ILogger? logger = null)
+    where TContext : DbContext {
     using IServiceScope scope = serviceProvider.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<TContext>();
 

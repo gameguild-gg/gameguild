@@ -6,6 +6,7 @@ using GameGuild.Common.Entities;
 using System.Security.Claims;
 using GameGuild.Modules.Auth.Constants;
 
+
 namespace GameGuild.Modules.Tenant.GraphQL;
 
 /// <summary>
@@ -16,7 +17,11 @@ public class TenantMutations {
   /// <summary>
   /// Create a new tenant
   /// </summary>
-  public async Task<Models.Tenant> CreateTenant([Service] ITenantService tenantService, [Service] IPermissionService permissionService, [Service] IHttpContextAccessor httpContextAccessor, CreateTenantInput input) {
+  public async Task<Models.Tenant> CreateTenant(
+    [Service] ITenantService tenantService,
+    [Service] IPermissionService permissionService, [Service] IHttpContextAccessor httpContextAccessor,
+    CreateTenantInput input
+  ) {
     // Extract user ID and tenant ID from JWT token for permission check
     HttpContext? httpContext = httpContextAccessor.HttpContext;
 
@@ -62,7 +67,12 @@ public class TenantMutations {
   /// <summary>
   /// Add a user to a tenant
   /// </summary>
-  public async Task<TenantPermission> AddUserToTenant([Service] ITenantService tenantService, AddUserToTenantInput input) { return await tenantService.AddUserToTenantAsync(input.UserId, input.TenantId); }
+  public async Task<TenantPermission> AddUserToTenant(
+    [Service] ITenantService tenantService,
+    AddUserToTenantInput input
+  ) {
+    return await tenantService.AddUserToTenantAsync(input.UserId, input.TenantId);
+  }
 
   /// <summary>
   /// Remove a user from a tenant

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
 using GameGuild.Modules.Tenant.Models;
 
+
 namespace GameGuild.Modules.Tenant.Services;
 
 /// <summary>
@@ -79,13 +80,18 @@ public class TenantContextService : ITenantContextService {
   /// <summary>
   /// Get permission data for user in the specified tenant
   /// </summary>
-  public async Task<TenantPermission?> GetTenantPermissionAsync(Guid userId, Guid tenantId) { return await _context.TenantPermissions.FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId && tp.IsValid); }
+  public async Task<TenantPermission?> GetTenantPermissionAsync(Guid userId, Guid tenantId) {
+    return await _context.TenantPermissions.FirstOrDefaultAsync(tp =>
+                                                                  tp.UserId == userId && tp.TenantId == tenantId && tp.IsValid
+           );
+  }
 
   /// <summary>
   /// Check if user has permission to access the specified tenant
   /// </summary>
   public async Task<bool> CanAccessTenantAsync(ClaimsPrincipal user, Guid tenantId) {
-    if (!user.Identity?.IsAuthenticated == true || string.IsNullOrEmpty(user.FindFirst(ClaimTypes.NameIdentifier)?.Value)) { return false; }
+    if (!user.Identity?.IsAuthenticated == true ||
+        string.IsNullOrEmpty(user.FindFirst(ClaimTypes.NameIdentifier)?.Value)) { return false; }
 
     Guid userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
     TenantPermission? permission = await GetTenantPermissionAsync(userId, tenantId);

@@ -6,6 +6,7 @@ using System.Text.Json;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 
+
 namespace GameGuild.Modules.Program.Models;
 
 [Table("program_contents")]
@@ -180,7 +181,9 @@ public class ProgramContent : BaseEntity {
   }
 
   public void SetBodyContent<T>(string key, T value) {
-    var body = string.IsNullOrEmpty(Body) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(Body) ?? new Dictionary<string, object>();
+    var body = string.IsNullOrEmpty(Body)
+                 ? new Dictionary<string, object>()
+                 : JsonSerializer.Deserialize<Dictionary<string, object>>(Body) ?? new Dictionary<string, object>();
 
     body[key] = value!;
     Body = JsonSerializer.Serialize(body);
@@ -197,9 +200,15 @@ public class ProgramContent : BaseEntity {
 public class ProgramContentConfiguration : IEntityTypeConfiguration<ProgramContent> {
   public void Configure(EntityTypeBuilder<ProgramContent> builder) {
     // Configure relationship with Program (can't be done with annotations)
-    builder.HasOne(pc => pc.Program).WithMany(p => p.ProgramContents).HasForeignKey(pc => pc.ProgramId).OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(pc => pc.Program)
+           .WithMany(p => p.ProgramContents)
+           .HasForeignKey(pc => pc.ProgramId)
+           .OnDelete(DeleteBehavior.Cascade);
 
     // Configure relationship with Parent (self-referencing, can't be done with annotations)
-    builder.HasOne(pc => pc.Parent).WithMany(pc => pc.Children).HasForeignKey(pc => pc.ParentId).OnDelete(DeleteBehavior.Restrict);
+    builder.HasOne(pc => pc.Parent)
+           .WithMany(pc => pc.Children)
+           .HasForeignKey(pc => pc.ParentId)
+           .OnDelete(DeleteBehavior.Restrict);
   }
 }

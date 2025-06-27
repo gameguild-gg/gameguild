@@ -10,6 +10,7 @@ using GameGuild.Modules.Tenant.Models;
 using System.Security.Claims;
 using GameGuild.Modules.Auth.Models;
 
+
 namespace GameGuild.Tests.Modules.Auth.Unit.Services;
 
 public class AuthServiceTests : IDisposable {
@@ -32,7 +33,9 @@ public class AuthServiceTests : IDisposable {
   private readonly AuthService _authService;
 
   public AuthServiceTests() {
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .Options;
 
     _context = new ApplicationDbContext(options);
     _mockJwtService = new Mock<IJwtTokenService>();
@@ -47,9 +50,19 @@ public class AuthServiceTests : IDisposable {
     _mockJwtService.Setup(x => x.GenerateRefreshToken()).Returns("mock-refresh-token");
 
     // Setup default tenant service behavior
-    _mockTenantService.Setup(x => x.AddUserToTenantAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(new TenantPermission());
+    _mockTenantService.Setup(x => x.AddUserToTenantAsync(It.IsAny<Guid>(), It.IsAny<Guid>()))
+                      .ReturnsAsync(new TenantPermission());
 
-    _authService = new AuthService(_context, _mockJwtService.Object, _mockOAuthService.Object, _mockConfiguration.Object, _mockWeb3Service.Object, _mockEmailService.Object, _mockTenantAuthService.Object, _mockTenantService.Object);
+    _authService = new AuthService(
+      _context,
+      _mockJwtService.Object,
+      _mockOAuthService.Object,
+      _mockConfiguration.Object,
+      _mockWeb3Service.Object,
+      _mockEmailService.Object,
+      _mockTenantAuthService.Object,
+      _mockTenantService.Object
+    );
   }
 
   [Fact]
@@ -58,7 +71,8 @@ public class AuthServiceTests : IDisposable {
     var tenantId = Guid.NewGuid();
     var request = new LocalSignUpRequestDto { Email = "test@example.com", Password = "P455W0RD", Username = "testuser", TenantId = tenantId };
 
-    _mockJwtService.Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>())).Returns("mock-access-token");
+    _mockJwtService.Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>()))
+                   .Returns("mock-access-token");
 
     var enhancedResponse = new SignInResponseDto {
       AccessToken = "tenant-enhanced-token",
@@ -68,7 +82,9 @@ public class AuthServiceTests : IDisposable {
       AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } }
     };
 
-    _mockTenantAuthService.Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<User>(), tenantId)).ReturnsAsync(enhancedResponse);
+    _mockTenantAuthService
+      .Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<User>(), tenantId))
+      .ReturnsAsync(enhancedResponse);
 
     // Act
     SignInResponseDto result = await _authService.LocalSignUpAsync(request);
@@ -110,7 +126,10 @@ public class AuthServiceTests : IDisposable {
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
 
-    string hashedPassword = Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("P455W0RD")));
+    string hashedPassword =
+      Convert.ToBase64String(
+        System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("P455W0RD"))
+      );
     var credential = new Credential { UserId = user.Id, Type = "password", Value = hashedPassword, IsActive = true };
     _context.Credentials.Add(credential);
     await _context.SaveChangesAsync();
@@ -118,7 +137,8 @@ public class AuthServiceTests : IDisposable {
     var tenantId = Guid.NewGuid();
     var request = new LocalSignInRequestDto { Email = "test@example.com", Password = "P455W0RD", TenantId = tenantId };
 
-    _mockJwtService.Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>())).Returns("mock-access-token");
+    _mockJwtService.Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>()))
+                   .Returns("mock-access-token");
 
     var enhancedResponse = new SignInResponseDto {
       AccessToken = "tenant-enhanced-token",
@@ -128,7 +148,9 @@ public class AuthServiceTests : IDisposable {
       AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } }
     };
 
-    _mockTenantAuthService.Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<User>(), tenantId)).ReturnsAsync(enhancedResponse);
+    _mockTenantAuthService
+      .Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<User>(), tenantId))
+      .ReturnsAsync(enhancedResponse);
 
     // Act
     SignInResponseDto result = await _authService.LocalSignInAsync(request);
@@ -158,7 +180,10 @@ public class AuthServiceTests : IDisposable {
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
 
-    string hashedPassword = Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("correctpassword")));
+    string hashedPassword =
+      Convert.ToBase64String(
+        System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("correctpassword"))
+      );
     var credential = new Credential { UserId = user.Id, Type = "password", Value = hashedPassword, IsActive = true };
     _context.Credentials.Add(credential);
     await _context.SaveChangesAsync();
@@ -206,7 +231,8 @@ public class AuthServiceTests : IDisposable {
 
     _mockWeb3Service.Setup(x => x.FindOrCreateWeb3UserAsync(request.WalletAddress, request.ChainId)).ReturnsAsync(user);
 
-    _mockJwtService.Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>())).Returns("mock-access-token");
+    _mockJwtService.Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>()))
+                   .Returns("mock-access-token");
 
     _mockJwtService.Setup(x => x.GenerateRefreshToken()).Returns("mock-refresh-token");
 
@@ -218,7 +244,9 @@ public class AuthServiceTests : IDisposable {
       AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } }
     };
 
-    _mockTenantAuthService.Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<User>(), tenantId)).ReturnsAsync(enhancedResponse);
+    _mockTenantAuthService
+      .Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<User>(), tenantId))
+      .ReturnsAsync(enhancedResponse);
 
     // Act
     SignInResponseDto result = await _authService.VerifyWeb3SignatureAsync(request);
@@ -262,7 +290,8 @@ public class AuthServiceTests : IDisposable {
 
     _mockWeb3Service.Setup(x => x.FindOrCreateWeb3UserAsync(request.WalletAddress, request.ChainId)).ReturnsAsync(user);
 
-    _mockJwtService.Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>())).Returns("mock-access-token");
+    _mockJwtService.Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>()))
+                   .Returns("mock-access-token");
 
     _mockJwtService.Setup(x => x.GenerateRefreshToken()).Returns("mock-refresh-token");
 
@@ -275,7 +304,9 @@ public class AuthServiceTests : IDisposable {
       AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = defaultTenantId, Name = "Default Tenant", IsActive = true } }
     };
 
-    _mockTenantAuthService.Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<User>(), invalidTenantId)).ReturnsAsync(enhancedResponse);
+    _mockTenantAuthService
+      .Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<User>(), invalidTenantId))
+      .ReturnsAsync(enhancedResponse);
 
     // Act
     SignInResponseDto result = await _authService.VerifyWeb3SignatureAsync(request);
@@ -308,9 +339,12 @@ public class AuthServiceTests : IDisposable {
 
     var tenantClaims = new List<Claim> { new Claim("tenant_id", tenantId.ToString()), new Claim("tenant_permission_flags1", "1"), new Claim("tenant_permission_flags2", "2") };
 
-    _mockJwtService.Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>())).Returns("new-access-token");
+    _mockJwtService.Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>()))
+                   .Returns("new-access-token");
 
-    _mockJwtService.Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>(), It.IsAny<IEnumerable<Claim>>())).Returns("new-access-token-with-tenant-claims");
+    _mockJwtService
+      .Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>(), It.IsAny<IEnumerable<Claim>>()))
+      .Returns("new-access-token-with-tenant-claims");
 
     _mockJwtService.Setup(x => x.GenerateRefreshToken()).Returns("new-refresh-token");
 
@@ -344,7 +378,16 @@ public class AuthServiceTests : IDisposable {
     _mockTenantAuthService.Verify(x => x.GetTenantClaimsAsync(It.IsAny<User>(), tenantId), Times.Once);
 
     // Verify token service was called with tenant claims
-    _mockJwtService.Verify(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>(), It.Is<IEnumerable<Claim>>(c => c.Any(claim => claim.Type == "tenant_id" && claim.Value == tenantId.ToString()))), Times.Once);
+    _mockJwtService.Verify(
+      x => x.GenerateAccessToken(
+        It.IsAny<UserDto>(),
+        It.IsAny<string[]>(),
+        It.Is<IEnumerable<Claim>>(c =>
+                                    c.Any(claim => claim.Type == "tenant_id" && claim.Value == tenantId.ToString())
+        )
+      ),
+      Times.Once
+    );
   }
 
   public void Dispose() { _context.Dispose(); }

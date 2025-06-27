@@ -5,6 +5,7 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
 using MediatR;
 
+
 namespace GameGuild.Modules.Auth.Controllers {
   [ApiController]
   [Route("[controller]")]
@@ -122,7 +123,9 @@ namespace GameGuild.Modules.Auth.Controllers {
 
     [HttpPost("web3/challenge")]
     [Public]
-    public async Task<ActionResult<Web3ChallengeResponseDto>> GenerateWeb3Challenge([FromBody] Web3ChallengeRequestDto request) {
+    public async Task<ActionResult<Web3ChallengeResponseDto>> GenerateWeb3Challenge(
+      [FromBody] Web3ChallengeRequestDto request
+    ) {
       try {
         Web3ChallengeResponseDto result = await authService.GenerateWeb3ChallengeAsync(request);
 
@@ -144,7 +147,9 @@ namespace GameGuild.Modules.Auth.Controllers {
 
     [HttpPost("send-email-verification")]
     [Public]
-    public async Task<ActionResult<EmailOperationResponseDto>> SendEmailVerification([FromBody] SendEmailVerificationRequestDto request) {
+    public async Task<ActionResult<EmailOperationResponseDto>> SendEmailVerification(
+      [FromBody] SendEmailVerificationRequestDto request
+    ) {
       EmailOperationResponseDto result = await authService.SendEmailVerificationAsync(request);
 
       return Ok(result);
@@ -160,7 +165,9 @@ namespace GameGuild.Modules.Auth.Controllers {
 
     [HttpPost("forgot-password")]
     [Public]
-    public async Task<ActionResult<EmailOperationResponseDto>> ForgotPassword([FromBody] ForgotPasswordRequestDto request) {
+    public async Task<ActionResult<EmailOperationResponseDto>> ForgotPassword(
+      [FromBody] ForgotPasswordRequestDto request
+    ) {
       EmailOperationResponseDto result = await authService.ForgotPasswordAsync(request);
 
       return Ok(result);
@@ -175,8 +182,11 @@ namespace GameGuild.Modules.Auth.Controllers {
     }
 
     [HttpPost("change-password")]
-    public async Task<ActionResult<EmailOperationResponseDto>> ChangePassword([FromBody] ChangePasswordRequestDto request) {
-      Guid userId = Guid.Parse(User.FindFirst("sub")?.Value ?? throw new UnauthorizedAccessException("User ID not found"));
+    public async Task<ActionResult<EmailOperationResponseDto>> ChangePassword(
+      [FromBody] ChangePasswordRequestDto request
+    ) {
+      Guid userId =
+        Guid.Parse(User.FindFirst("sub")?.Value ?? throw new UnauthorizedAccessException("User ID not found"));
       EmailOperationResponseDto result = await authService.ChangePasswordAsync(request, userId);
 
       return Ok(result);

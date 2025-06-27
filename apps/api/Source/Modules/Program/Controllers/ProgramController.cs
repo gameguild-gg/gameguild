@@ -7,6 +7,7 @@ using GameGuild.Modules.Program.Services;
 using GameGuild.Modules.Program.DTOs;
 using ProgramEntity = GameGuild.Modules.Program.Models.Program;
 
+
 namespace GameGuild.Modules.Program.Controllers;
 
 /// <summary>
@@ -33,7 +34,10 @@ public class ProgramController : ControllerBase {
   /// </summary>
   [HttpGet]
   [RequireContentTypePermission<ProgramEntity>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<ProgramEntity>>> GetPrograms([FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<ProgramEntity>>> GetPrograms(
+    [FromQuery] int skip = 0,
+    [FromQuery] int take = 50
+  ) {
     var programs = await _programService.GetProgramsAsync(skip, take);
 
     return Ok(programs);
@@ -43,7 +47,10 @@ public class ProgramController : ControllerBase {
   /// Get published programs (no permission required - public access)
   /// </summary>
   [HttpGet("published")]
-  public async Task<ActionResult<IEnumerable<ProgramEntity>>> GetPublishedPrograms([FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<ProgramEntity>>> GetPublishedPrograms(
+    [FromQuery] int skip = 0,
+    [FromQuery] int take = 50
+  ) {
     var programs = await _programService.GetPublishedProgramsAsync(skip, take);
 
     return Ok(programs);
@@ -54,7 +61,10 @@ public class ProgramController : ControllerBase {
   /// </summary>
   [HttpGet("category/{category}")]
   [RequireContentTypePermission<ProgramEntity>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<ProgramEntity>>> GetProgramsByCategory(ProgramCategory category, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<ProgramEntity>>> GetProgramsByCategory(
+    ProgramCategory category,
+    [FromQuery] int skip = 0, [FromQuery] int take = 50
+  ) {
     var programs = await _programService.GetProgramsByCategoryAsync(category, skip, take);
 
     return Ok(programs);
@@ -65,7 +75,10 @@ public class ProgramController : ControllerBase {
   /// </summary>
   [HttpGet("difficulty/{difficulty}")]
   [RequireContentTypePermission<ProgramEntity>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<ProgramEntity>>> GetProgramsByDifficulty(ProgramDifficulty difficulty, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<ProgramEntity>>> GetProgramsByDifficulty(
+    ProgramDifficulty difficulty,
+    [FromQuery] int skip = 0, [FromQuery] int take = 50
+  ) {
     var programs = await _programService.GetProgramsByDifficultyAsync(difficulty, skip, take);
 
     return Ok(programs);
@@ -76,7 +89,10 @@ public class ProgramController : ControllerBase {
   /// </summary>
   [HttpGet("search")]
   [RequireContentTypePermission<ProgramEntity>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<ProgramEntity>>> SearchPrograms([FromQuery] string searchTerm, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<ProgramEntity>>> SearchPrograms(
+    [FromQuery] string searchTerm,
+    [FromQuery] int skip = 0, [FromQuery] int take = 50
+  ) {
     var programs = await _programService.SearchProgramsAsync(searchTerm, skip, take);
 
     return Ok(programs);
@@ -87,7 +103,10 @@ public class ProgramController : ControllerBase {
   /// </summary>
   [HttpGet("creator/{creatorId}")]
   [RequireContentTypePermission<ProgramEntity>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<ProgramEntity>>> GetProgramsByCreator(Guid creatorId, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<ProgramEntity>>> GetProgramsByCreator(
+    Guid creatorId,
+    [FromQuery] int skip = 0, [FromQuery] int take = 50
+  ) {
     var programs = await _programService.GetProgramsByCreatorAsync(creatorId, skip, take);
 
     return Ok(programs);
@@ -223,7 +242,10 @@ public class ProgramController : ControllerBase {
   /// </summary>
   [HttpPut("{id}/content/{contentId}")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
-  public async Task<ActionResult<ProgramContent>> UpdateContent(Guid id, Guid contentId, [FromBody] UpdateContentDto contentDto) {
+  public async Task<ActionResult<ProgramContent>> UpdateContent(
+    Guid id, Guid contentId,
+    [FromBody] UpdateContentDto contentDto
+  ) {
     if (!ModelState.IsValid) { return BadRequest(ModelState); }
 
     var content = await _programService.UpdateContentAsync(id, contentId, contentDto);
@@ -294,7 +316,10 @@ public class ProgramController : ControllerBase {
   /// </summary>
   [HttpGet("{id}/users")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<UserProgressDto>>> GetProgramUsers(Guid id, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<UserProgressDto>>> GetProgramUsers(
+    Guid id, [FromQuery] int skip = 0,
+    [FromQuery] int take = 50
+  ) {
     var users = await _programService.GetProgramUsersAsync(id, skip, take);
 
     return Ok(users);
@@ -318,7 +343,10 @@ public class ProgramController : ControllerBase {
   /// </summary>
   [HttpPut("{id}/users/{userId}/progress")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
-  public async Task<ActionResult<UserProgressDto>> UpdateUserProgress(Guid id, Guid userId, [FromBody] UpdateProgressDto progressDto) {
+  public async Task<ActionResult<UserProgressDto>> UpdateUserProgress(
+    Guid id, Guid userId,
+    [FromBody] UpdateProgressDto progressDto
+  ) {
     if (!ModelState.IsValid) { return BadRequest(ModelState); }
 
     var progress = await _programService.UpdateUserProgressAsync(id, userId, progressDto);
@@ -598,7 +626,10 @@ public class ProgramController : ControllerBase {
   /// </summary>
   [HttpPost("{id}/create-product")]
   [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
-  public async Task<ActionResult<Guid>> CreateProductFromProgram(Guid id, [FromBody] CreateProductFromProgramDto productDto) {
+  public async Task<ActionResult<Guid>> CreateProductFromProgram(
+    Guid id,
+    [FromBody] CreateProductFromProgramDto productDto
+  ) {
     if (!ModelState.IsValid) { return BadRequest(ModelState); }
 
     var productId = await _programService.CreateProductFromProgramAsync(id, productDto);

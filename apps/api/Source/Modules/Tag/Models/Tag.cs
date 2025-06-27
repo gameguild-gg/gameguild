@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 
+
 namespace GameGuild.Modules.Tag.Models;
 
 [Table("tags")]

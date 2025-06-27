@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Serialization;
 
+
 /// <summary>
 /// Provides utilities for converting strings and type names to snake_case format.
 /// </summary>

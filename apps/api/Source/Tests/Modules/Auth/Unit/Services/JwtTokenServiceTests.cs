@@ -4,6 +4,7 @@ using System.Security.Claims;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
 
+
 namespace GameGuild.Tests.Modules.Auth.Unit.Services;
 
 public class JwtTokenServiceTests {
@@ -65,8 +66,16 @@ public class JwtTokenServiceTests {
 
     // Debug: Check all claims to understand what's available
     var allClaims = principal.Claims.ToList();
-    Claim? subClaim = allClaims.FirstOrDefault(c => c.Type is JwtRegisteredClaimNames.Sub or "sub" or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
-    Claim? emailClaim = allClaims.FirstOrDefault(c => c.Type is JwtRegisteredClaimNames.Email or "email" or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+    Claim? subClaim = allClaims.FirstOrDefault(c =>
+                                                 c.Type is JwtRegisteredClaimNames.Sub
+                                                           or "sub"
+                                                           or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+    );
+    Claim? emailClaim = allClaims.FirstOrDefault(c =>
+                                                   c.Type is JwtRegisteredClaimNames.Email
+                                                             or "email"
+                                                             or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+    );
 
     // Debug output - remove after fixing
     // foreach (var claim in allClaims)
@@ -141,8 +150,16 @@ public class JwtTokenServiceTests {
 
     // Assert
     Assert.NotNull(principal);
-    Claim? subClaim = principal.Claims.FirstOrDefault(c => c.Type is JwtRegisteredClaimNames.Sub or "sub" or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
-    Claim? emailClaim = principal.Claims.FirstOrDefault(c => c.Type is JwtRegisteredClaimNames.Email or "email" or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+    Claim? subClaim = principal.Claims.FirstOrDefault(c =>
+                                                        c.Type is JwtRegisteredClaimNames.Sub
+                                                                  or "sub"
+                                                                  or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+    );
+    Claim? emailClaim = principal.Claims.FirstOrDefault(c =>
+                                                          c.Type is JwtRegisteredClaimNames.Email
+                                                                    or "email"
+                                                                    or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+    );
 
     Assert.Equal(user.Id.ToString(), subClaim?.Value);
     Assert.Equal(user.Email, emailClaim?.Value);

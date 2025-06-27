@@ -6,6 +6,7 @@ using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 using GameGuild.Modules.Product.Models;
 
+
 namespace GameGuild.Modules.Payment.Models;
 
 [Table("financial_transactions")]
@@ -235,7 +236,10 @@ public class FinancialTransactionConfiguration : IEntityTypeConfiguration<Financ
     builder.HasOne(ft => ft.ToUser).WithMany().HasForeignKey(ft => ft.ToUserId).OnDelete(DeleteBehavior.SetNull);
 
     // Configure relationship with PaymentMethod (can't be done with annotations)
-    builder.HasOne(ft => ft.PaymentMethod).WithMany().HasForeignKey(ft => ft.PaymentMethodId).OnDelete(DeleteBehavior.SetNull);
+    builder.HasOne(ft => ft.PaymentMethod)
+           .WithMany()
+           .HasForeignKey(ft => ft.PaymentMethodId)
+           .OnDelete(DeleteBehavior.SetNull);
 
     // Configure relationship with PromoCode (can't be done with annotations)
     builder.HasOne(ft => ft.PromoCode).WithMany().HasForeignKey(ft => ft.PromoCodeId).OnDelete(DeleteBehavior.SetNull);

@@ -1,6 +1,7 @@
 using GameGuild.Modules.Project.Services;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Project.GraphQL;
 
 /// <summary>
@@ -26,17 +27,32 @@ public class ProjectQueries {
   /// <summary>
   /// Gets projects by category
   /// </summary>
-  public async Task<IEnumerable<Models.Project>> GetProjectsByCategory(Guid categoryId, [Service] IProjectService projectService) { return await projectService.GetProjectsByCategoryAsync(categoryId); }
+  public async Task<IEnumerable<Models.Project>> GetProjectsByCategory(
+    Guid categoryId,
+    [Service] IProjectService projectService
+  ) {
+    return await projectService.GetProjectsByCategoryAsync(categoryId);
+  }
 
   /// <summary>
   /// Gets projects by creator
   /// </summary>
-  public async Task<IEnumerable<Models.Project>> GetProjectsByCreator(Guid creatorId, [Service] IProjectService projectService) { return await projectService.GetProjectsByCreatorAsync(creatorId); }
+  public async Task<IEnumerable<Models.Project>> GetProjectsByCreator(
+    Guid creatorId,
+    [Service] IProjectService projectService
+  ) {
+    return await projectService.GetProjectsByCreatorAsync(creatorId);
+  }
 
   /// <summary>
   /// Gets projects by status
   /// </summary>
-  public async Task<IEnumerable<Models.Project>> GetProjectsByStatus(ContentStatus status, [Service] IProjectService projectService) { return await projectService.GetProjectsByStatusAsync(status); }
+  public async Task<IEnumerable<Models.Project>> GetProjectsByStatus(
+    ContentStatus status,
+    [Service] IProjectService projectService
+  ) {
+    return await projectService.GetProjectsByStatusAsync(status);
+  }
 
   /// <summary>
   /// Gets deleted projects (admin only)

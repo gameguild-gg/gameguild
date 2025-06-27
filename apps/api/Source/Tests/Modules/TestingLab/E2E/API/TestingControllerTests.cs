@@ -19,6 +19,7 @@ using ProjectModel = GameGuild.Modules.Project.Models.Project;
 using ProjectVersionModel = GameGuild.Modules.Project.Models.ProjectVersion;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
+
 namespace GameGuild.Tests.Modules.TestingLab.E2E;
 
 /// <summary>
@@ -61,7 +62,11 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 
     var content = await response.Content.ReadAsStringAsync();
-    var requests = JsonSerializer.Deserialize<TestingRequest[]>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var requests =
+      JsonSerializer.Deserialize<TestingRequest[]>(
+        content,
+        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+      );
 
     Assert.NotNull(requests);
     Assert.Empty(requests);
@@ -82,7 +87,11 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 
     var content = await response.Content.ReadAsStringAsync();
-    var requests = JsonSerializer.Deserialize<TestingRequest[]>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var requests =
+      JsonSerializer.Deserialize<TestingRequest[]>(
+        content,
+        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+      );
 
     Assert.NotNull(requests);
     Assert.Single(requests);
@@ -166,7 +175,11 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 
     var content = await response.Content.ReadAsStringAsync();
-    var request = JsonSerializer.Deserialize<TestingRequest>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var request =
+      JsonSerializer.Deserialize<TestingRequest>(
+        content,
+        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+      );
 
     Assert.NotNull(request);
     Assert.Equal(testingRequest.Id, request.Id);
@@ -205,7 +218,11 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 
     var content = await response.Content.ReadAsStringAsync();
-    var sessions = JsonSerializer.Deserialize<TestingSession[]>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var sessions =
+      JsonSerializer.Deserialize<TestingSession[]>(
+        content,
+        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+      );
 
     Assert.NotNull(sessions);
     Assert.Single(sessions);
@@ -233,7 +250,11 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 
     var content = await response.Content.ReadAsStringAsync();
-    var session = JsonSerializer.Deserialize<TestingSession>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var session =
+      JsonSerializer.Deserialize<TestingSession>(
+        content,
+        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+      );
 
     Assert.NotNull(session);
     Assert.Equal(testingSession.Id, session.Id);
@@ -344,7 +365,10 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     return project;
   }
 
-  private async Task<ProjectVersionModel> CreateTestProjectVersionAsync(ApplicationDbContext context, Guid projectId, Guid userId) {
+  private async Task<ProjectVersionModel> CreateTestProjectVersionAsync(
+    ApplicationDbContext context, Guid projectId,
+    Guid userId
+  ) {
     var version = new ProjectVersionModel {
       Id = Guid.NewGuid(),
       ProjectId = projectId,
@@ -364,10 +388,20 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
 
     // Grant content type permissions for TestingRequest
-    await permissionService.GrantContentTypePermissionAsync(userId, tenantId, "TestingRequest", [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]);
+    await permissionService.GrantContentTypePermissionAsync(
+      userId,
+      tenantId,
+      "TestingRequest",
+      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
+    );
 
     // Grant content type permissions for TestingSession
-    await permissionService.GrantContentTypePermissionAsync(userId, tenantId, "TestingSession", [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]);
+    await permissionService.GrantContentTypePermissionAsync(
+      userId,
+      tenantId,
+      "TestingSession",
+      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
+    );
   }
 
   private Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant) {

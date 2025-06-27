@@ -13,7 +13,8 @@ public class UserType : ObjectType<Models.User> {
 
     descriptor.Field(u => u.UpdatedAt).Description("The date and time when the user was last updated.");
 
-    descriptor.Field(u => u.DeletedAt).Description("The date and time when the user was soft deleted (null if not deleted).");
+    descriptor.Field(u => u.DeletedAt)
+              .Description("The date and time when the user was soft deleted (null if not deleted).");
 
     descriptor.Field(u => u.IsDeleted).Description("Indicates whether the user has been soft deleted.");
 

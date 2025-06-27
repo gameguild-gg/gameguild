@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Program.Models;
 
+
 namespace GameGuild.Modules.Program.Models;
 
 /// <summary>

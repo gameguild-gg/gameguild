@@ -2,6 +2,7 @@ using MediatR;
 using GameGuild.Modules.User.Queries;
 using GameGuild.Modules.User.Services;
 
+
 namespace GameGuild.Modules.User.Handlers;
 
 /// <summary>

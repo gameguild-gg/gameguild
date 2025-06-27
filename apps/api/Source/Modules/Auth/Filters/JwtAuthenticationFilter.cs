@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using GameGuild.Modules.Auth.Attributes;
 
+
 namespace GameGuild.Modules.Auth.Filters {
   /// <summary>
   /// JWT Authentication filter that validates tokens and sets user context
@@ -18,7 +19,8 @@ namespace GameGuild.Modules.Auth.Filters {
 
     public virtual void OnAuthorization(AuthorizationFilterContext context) {
       // Check if the action/controller is marked as public
-      PublicAttribute? publicAttribute = context.ActionDescriptor.EndpointMetadata.OfType<PublicAttribute>().FirstOrDefault();
+      PublicAttribute? publicAttribute =
+        context.ActionDescriptor.EndpointMetadata.OfType<PublicAttribute>().FirstOrDefault();
 
       if (publicAttribute?.IsPublic == true) {
         return; // Skip authentication for public endpoints
@@ -65,7 +67,8 @@ namespace GameGuild.Modules.Auth.Filters {
         ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes clock skew tolerance
       };
 
-      ClaimsPrincipal? principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+      ClaimsPrincipal? principal =
+        tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
 
       return principal;
     }

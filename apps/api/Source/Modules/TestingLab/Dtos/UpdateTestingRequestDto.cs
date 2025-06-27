@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Modules.TestingLab.Models;
 
+
 namespace GameGuild.Modules.TestingLab.Dtos {
   public class UpdateTestingRequestDto {
     public Guid? ProjectVersionId { get; set; }
 
-    [MaxLength(255)]
-    public string? Title { get; set; }
+    [MaxLength(255)] public string? Title { get; set; }
 
     public string? Description { get; set; }
 
@@ -14,8 +14,7 @@ namespace GameGuild.Modules.TestingLab.Dtos {
 
     public string? InstructionsContent { get; set; }
 
-    [MaxLength(500)]
-    public string? InstructionsUrl { get; set; }
+    [MaxLength(500)] public string? InstructionsUrl { get; set; }
 
     public Guid? InstructionsFileId { get; set; }
 

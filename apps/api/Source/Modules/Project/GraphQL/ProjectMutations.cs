@@ -2,6 +2,7 @@ using GameGuild.Modules.Project.Services;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Attributes;
 
+
 namespace GameGuild.Modules.Project.GraphQL;
 
 /// <summary>
@@ -33,7 +34,10 @@ public class ProjectMutations {
   /// Updates an existing project
   /// </summary>
   [RequireResourcePermission<Models.Project>(PermissionType.Edit)]
-  public async Task<Models.Project> UpdateProject(Guid id, UpdateProjectInput input, [Service] IProjectService projectService) {
+  public async Task<Models.Project> UpdateProject(
+    Guid id, UpdateProjectInput input,
+    [Service] IProjectService projectService
+  ) {
     Models.Project? existingProject = await projectService.GetProjectByIdAsync(id);
 
     if (existingProject == null) { throw new InvalidOperationException("Project not found"); }
@@ -76,7 +80,18 @@ public class ProjectMutations {
 /// <summary>
 /// Input type for creating a new project
 /// </summary>
-public record CreateProjectInput(string Title, string? Description, string? ShortDescription, string? WebsiteUrl, string? RepositoryUrl, string? SocialLinks, Guid CategoryId, string? Slug, ContentStatus? Status, AccessLevel? Visibility) {
+public record CreateProjectInput(
+  string Title,
+  string? Description,
+  string? ShortDescription,
+  string? WebsiteUrl,
+  string? RepositoryUrl,
+  string? SocialLinks,
+  Guid CategoryId,
+  string? Slug,
+  ContentStatus? Status,
+  AccessLevel? Visibility
+) {
   private readonly string _title = Title;
 
   private readonly string? _description = Description;
@@ -151,7 +166,17 @@ public record CreateProjectInput(string Title, string? Description, string? Shor
 /// <summary>
 /// Input type for updating an existing project
 /// </summary>
-public record UpdateProjectInput(string? Title, string? Description, string? ShortDescription, string? WebsiteUrl, string? RepositoryUrl, string? SocialLinks, Guid? CategoryId, ContentStatus? Status, AccessLevel? Visibility) {
+public record UpdateProjectInput(
+  string? Title,
+  string? Description,
+  string? ShortDescription,
+  string? WebsiteUrl,
+  string? RepositoryUrl,
+  string? SocialLinks,
+  Guid? CategoryId,
+  ContentStatus? Status,
+  AccessLevel? Visibility
+) {
   private readonly string? _title = Title;
 
   private readonly string? _description = Description;

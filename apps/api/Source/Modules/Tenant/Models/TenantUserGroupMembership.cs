@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 using UserModel = GameGuild.Modules.User.Models.User;
 
+
 namespace GameGuild.Modules.Tenant.Models;
 
 /// <summary>

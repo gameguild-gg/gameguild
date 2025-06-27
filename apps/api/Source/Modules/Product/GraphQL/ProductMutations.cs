@@ -3,6 +3,7 @@ using GameGuild.Modules.Product.Services;
 using ProductEntity = GameGuild.Modules.Product.Models.Product;
 using PromoCodeTypeEnum = GameGuild.Common.Enums.PromoCodeType;
 
+
 namespace GameGuild.Modules.Product.GraphQL;
 
 /// <summary>
@@ -88,7 +89,12 @@ public class ProductMutations {
   /// <summary>
   /// Sets product visibility
   /// </summary>
-  public async Task<ProductEntity?> SetProductVisibility(Guid id, Common.Entities.AccessLevel visibility, [Service] IProductService productService) { return await productService.SetVisibilityAsync(id, visibility); }
+  public async Task<ProductEntity?> SetProductVisibility(
+    Guid id, Common.Entities.AccessLevel visibility,
+    [Service] IProductService productService
+  ) {
+    return await productService.SetVisibilityAsync(id, visibility);
+  }
 
   /// <summary>
   /// Adds a product to a bundle
@@ -98,23 +104,48 @@ public class ProductMutations {
   /// <summary>
   /// Removes a product from a bundle
   /// </summary>
-  public async Task<ProductEntity?> RemoveFromBundle(BundleManagementInput input, [Service] IProductService productService) { return await productService.RemoveFromBundleAsync(input.BundleId, input.ProductId); }
+  public async Task<ProductEntity?> RemoveFromBundle(
+    BundleManagementInput input,
+    [Service] IProductService productService
+  ) {
+    return await productService.RemoveFromBundleAsync(input.BundleId, input.ProductId);
+  }
 
   /// <summary>
   /// Sets product pricing
   /// </summary>
-  public async Task<Models.ProductPricing> SetProductPricing(SetProductPricingInput input, [Service] IProductService productService) { return await productService.SetPricingAsync(input.ProductId, input.BasePrice, input.Currency); }
+  public async Task<Models.ProductPricing> SetProductPricing(
+    SetProductPricingInput input,
+    [Service] IProductService productService
+  ) {
+    return await productService.SetPricingAsync(input.ProductId, input.BasePrice, input.Currency);
+  }
 
   /// <summary>
   /// Updates product pricing
   /// </summary>
-  public async Task<Models.ProductPricing?> UpdateProductPricing(UpdateProductPricingInput input, [Service] IProductService productService) { return await productService.UpdatePricingAsync(input.PricingId, input.BasePrice ?? 0); }
+  public async Task<Models.ProductPricing?> UpdateProductPricing(
+    UpdateProductPricingInput input,
+    [Service] IProductService productService
+  ) {
+    return await productService.UpdatePricingAsync(input.PricingId, input.BasePrice ?? 0);
+  }
 
   /// <summary>
   /// Grants user access to a product
   /// </summary>
-  public async Task<Models.UserProduct> GrantUserAccess(GrantProductAccessInput input, [Service] IProductService productService) {
-    return await productService.GrantUserAccessAsync(input.UserId, input.ProductId, input.AcquisitionType, input.PurchasePrice, input.Currency, input.ExpiresAt);
+  public async Task<Models.UserProduct> GrantUserAccess(
+    GrantProductAccessInput input,
+    [Service] IProductService productService
+  ) {
+    return await productService.GrantUserAccessAsync(
+             input.UserId,
+             input.ProductId,
+             input.AcquisitionType,
+             input.PurchasePrice,
+             input.Currency,
+             input.ExpiresAt
+           );
   }
 
   /// <summary>
@@ -129,7 +160,10 @@ public class ProductMutations {
   /// <summary>
   /// Creates a promotional code
   /// </summary>
-  public async Task<Models.PromoCode> CreatePromoCode(CreatePromoCodeInput input, [Service] IProductService productService) {
+  public async Task<Models.PromoCode> CreatePromoCode(
+    CreatePromoCodeInput input,
+    [Service] IProductService productService
+  ) {
     var promoCode = new Models.PromoCode {
       Code = input.Code,
       Name = input.Code,
@@ -152,7 +186,10 @@ public class ProductMutations {
   /// <summary>
   /// Updates a promotional code
   /// </summary>
-  public async Task<Models.PromoCode?> UpdatePromoCode(UpdatePromoCodeInput input, [Service] IProductService productService) {
+  public async Task<Models.PromoCode?> UpdatePromoCode(
+    UpdatePromoCodeInput input,
+    [Service] IProductService productService
+  ) {
     PromoCode? promoCode = await productService.GetPromoCodeAsync(input.Code ?? "");
 
     if (promoCode == null) return null;
@@ -197,5 +234,10 @@ public class ProductMutations {
   /// <summary>
   /// Uses a promotional code
   /// </summary>
-  public async Task<Models.PromoCodeUse> UsePromoCode(Guid userId, string code, decimal discountAmount, [Service] IProductService productService) { return await productService.UsePromoCodeAsync(userId, code, discountAmount); }
+  public async Task<Models.PromoCodeUse> UsePromoCode(
+    Guid userId, string code, decimal discountAmount,
+    [Service] IProductService productService
+  ) {
+    return await productService.UsePromoCodeAsync(userId, code, discountAmount);
+  }
 }

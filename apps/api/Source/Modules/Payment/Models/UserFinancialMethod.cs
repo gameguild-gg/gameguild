@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 
+
 namespace GameGuild.Modules.Payment.Models;
 
 [Table("user_financial_methods")]

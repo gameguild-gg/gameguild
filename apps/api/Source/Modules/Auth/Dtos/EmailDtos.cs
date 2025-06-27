@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
+
 namespace GameGuild.Modules.Auth.Dtos {
   /// <summary>
   /// Request DTO for sending email verification

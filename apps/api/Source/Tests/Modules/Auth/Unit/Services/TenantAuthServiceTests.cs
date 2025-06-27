@@ -10,6 +10,7 @@ using Moq;
 using Xunit;
 using GameGuild.Modules.Auth.Constants;
 
+
 namespace GameGuild.Tests.Modules.Auth.Unit.Services;
 
 public class TenantAuthServiceTests : IDisposable {
@@ -25,7 +26,9 @@ public class TenantAuthServiceTests : IDisposable {
 
   public TenantAuthServiceTests() {
     // Set up in-memory database
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .Options;
 
     _context = new ApplicationDbContext(options);
 
@@ -35,7 +38,11 @@ public class TenantAuthServiceTests : IDisposable {
     _mockJwtTokenService = new Mock<IJwtTokenService>();
 
     // Create service instance
-    _tenantAuthService = new TenantAuthService(_mockTenantService.Object, _mockTenantContextService.Object, _mockJwtTokenService.Object);
+    _tenantAuthService = new TenantAuthService(
+      _mockTenantService.Object,
+      _mockTenantContextService.Object,
+      _mockJwtTokenService.Object
+    );
   }
 
   [Fact]
@@ -61,9 +68,12 @@ public class TenantAuthServiceTests : IDisposable {
 
     var claims = new List<Claim> { new Claim(JwtClaimTypes.TenantId, tenantId.ToString()), new Claim(JwtClaimTypes.TenantPermissionFlags1, "1"), new Claim(JwtClaimTypes.TenantPermissionFlags2, "2") };
 
-    _mockTenantContextService.Setup(x => x.GetTenantPermissionAsync(user.Id, tenantId)).ReturnsAsync(tenantPermissions.First());
+    _mockTenantContextService.Setup(x => x.GetTenantPermissionAsync(user.Id, tenantId))
+                             .ReturnsAsync(tenantPermissions.First());
 
-    _mockJwtTokenService.Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>(), It.IsAny<IEnumerable<Claim>>())).Returns("enhanced-token-with-tenant-claims");
+    _mockJwtTokenService
+      .Setup(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>(), It.IsAny<IEnumerable<Claim>>()))
+      .Returns("enhanced-token-with-tenant-claims");
 
     var authResult = new SignInResponseDto { AccessToken = "original-token", RefreshToken = "refresh-token", User = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email } };
 
@@ -103,7 +113,10 @@ public class TenantAuthServiceTests : IDisposable {
     Assert.Null(result.AvailableTenants);
 
     // Verify token was not regenerated
-    _mockJwtTokenService.Verify(x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>(), It.IsAny<IEnumerable<Claim>>()), Times.Never);
+    _mockJwtTokenService.Verify(
+      x => x.GenerateAccessToken(It.IsAny<UserDto>(), It.IsAny<string[]>(), It.IsAny<IEnumerable<Claim>>()),
+      Times.Never
+    );
   }
 
   [Fact]

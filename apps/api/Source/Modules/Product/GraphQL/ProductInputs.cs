@@ -3,6 +3,7 @@ using GameGuild.Common.Enums;
 using GameGuild.Common.Entities;
 using PromoCodeTypeEnum = GameGuild.Common.Enums.PromoCodeType;
 
+
 namespace GameGuild.Modules.Product.GraphQL;
 
 public class CreateProductInput {

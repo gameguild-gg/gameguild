@@ -2,6 +2,7 @@ using GameGuild.Common.Enums;
 using GameGuild.Modules.Product.Models;
 using ProductEntity = GameGuild.Modules.Product.Models.Product;
 
+
 namespace GameGuild.Modules.Product.Services;
 
 /// <summary>
@@ -73,7 +74,10 @@ public interface IProductService {
 
   Task<IEnumerable<UserProduct>> GetUserProductsAsync(Guid userId);
 
-  Task<UserProduct> GrantUserAccessAsync(Guid userId, Guid productId, ProductAcquisitionType acquisitionType, decimal purchasePrice = 0, string currency = "USD", DateTime? expiresAt = null);
+  Task<UserProduct> GrantUserAccessAsync(
+    Guid userId, Guid productId, ProductAcquisitionType acquisitionType,
+    decimal purchasePrice = 0, string currency = "USD", DateTime? expiresAt = null
+  );
 
   Task RevokeUserAccessAsync(Guid userId, Guid productId);
 
@@ -106,5 +110,8 @@ public interface IProductService {
 
   Task<IEnumerable<ProductEntity>> GetProductsByCreatorAsync(Guid creatorId, int skip = 0, int take = 50);
 
-  Task<IEnumerable<ProductEntity>> GetProductsInPriceRangeAsync(decimal minPrice, decimal maxPrice, string currency = "USD", int skip = 0, int take = 50);
+  Task<IEnumerable<ProductEntity>> GetProductsInPriceRangeAsync(
+    decimal minPrice, decimal maxPrice,
+    string currency = "USD", int skip = 0, int take = 50
+  );
 }

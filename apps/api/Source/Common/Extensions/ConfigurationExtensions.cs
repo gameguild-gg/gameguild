@@ -1,5 +1,6 @@
 using GameGuild.Config;
 
+
 namespace GameGuild.Common.Extensions;
 
 public static class ConfigurationExtensions {
@@ -13,7 +14,8 @@ public static class ConfigurationExtensions {
     appConfig.Environment = environment;
     appConfig.IsDevelopmentEnvironment = environment == "Development";
     appConfig.IsProductionEnvironment = environment == "Production";
-    appConfig.IsDocumentationEnabled = appConfig.IsDevelopmentEnvironment || Environment.GetEnvironmentVariable("DOCUMENTATION_ENABLED")?.ToLower() == "true";
+    appConfig.IsDocumentationEnabled = appConfig.IsDevelopmentEnvironment ||
+                                       Environment.GetEnvironmentVariable("DOCUMENTATION_ENABLED")?.ToLower() == "true";
 
     services.AddSingleton(appConfig);
 

@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Modules.User.Dtos;
 
+
 namespace GameGuild.Modules.Tenant.Dtos;
 
 /// <summary>

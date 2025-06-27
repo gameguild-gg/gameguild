@@ -8,6 +8,7 @@ using GameGuild.Modules.Feedback.Models;
 using GameGuild.Modules.Product.Models;
 using GameGuild.Common.Enums;
 
+
 namespace GameGuild.Modules.Program.Models;
 
 [Table("programs")]
@@ -27,7 +28,8 @@ public class Program : Content {
 
   private ICollection<Certificate.Models.Certificate> _certificates = new List<Certificate.Models.Certificate>();
 
-  private ICollection<ProgramFeedbackSubmission> _feedbackSubmissions = new List<Feedback.Models.ProgramFeedbackSubmission>();
+  private ICollection<ProgramFeedbackSubmission> _feedbackSubmissions =
+    new List<Feedback.Models.ProgramFeedbackSubmission>();
 
   private ICollection<ProgramRating> _programRatings = new List<Feedback.Models.ProgramRating>();
 
@@ -97,7 +99,10 @@ public class Program : Content {
   public void SetMetadata<T>(string key, T value) {
     if (Metadata == null) { Metadata = new ResourceMetadata { ResourceType = nameof(Program), AdditionalData = "{}" }; }
 
-    var metadataDict = string.IsNullOrEmpty(Metadata.AdditionalData) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(Metadata.AdditionalData) ?? new Dictionary<string, object>();
+    var metadataDict = string.IsNullOrEmpty(Metadata.AdditionalData)
+                         ? new Dictionary<string, object>()
+                         : JsonSerializer.Deserialize<Dictionary<string, object>>(Metadata.AdditionalData) ??
+                           new Dictionary<string, object>();
 
     metadataDict[key] = value!;
     Metadata.AdditionalData = JsonSerializer.Serialize(metadataDict);

@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 
+
 namespace GameGuild.Modules.Auth.Dtos {
   /// <summary>
   /// DTO for sign-in response

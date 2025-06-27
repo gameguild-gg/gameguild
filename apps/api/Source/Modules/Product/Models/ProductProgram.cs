@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Product.Models;
 
 /// <summary>
@@ -87,7 +88,10 @@ public class ProductProgram : BaseEntity {
 public class ProductProgramConfiguration : IEntityTypeConfiguration<ProductProgram> {
   public void Configure(EntityTypeBuilder<ProductProgram> builder) {
     // Configure relationship with Product (can't be done with annotations)
-    builder.HasOne(pp => pp.Product).WithMany(p => p.ProductPrograms).HasForeignKey(pp => pp.ProductId).OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(pp => pp.Product)
+           .WithMany(p => p.ProductPrograms)
+           .HasForeignKey(pp => pp.ProductId)
+           .OnDelete(DeleteBehavior.Cascade);
 
     // Configure relationship with Program (can't be done with annotations)
     builder.HasOne(pp => pp.Program).WithMany().HasForeignKey(pp => pp.ProgramId).OnDelete(DeleteBehavior.Cascade);

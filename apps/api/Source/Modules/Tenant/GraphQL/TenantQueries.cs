@@ -2,6 +2,7 @@ using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Tenant.Services;
 using GameGuild.Modules.User.GraphQL;
 
+
 namespace GameGuild.Modules.Tenant.GraphQL;
 
 /// <summary>
@@ -12,7 +13,10 @@ public class TenantQueries {
   /// <summary>
   /// Get all tenants (non-deleted only)
   /// </summary>
-  public async Task<IEnumerable<Models.Tenant>> GetTenants([Service] ITenantService tenantService, [Service] IHttpContextAccessor httpContextAccessor) {
+  public async Task<IEnumerable<Models.Tenant>> GetTenants(
+    [Service] ITenantService tenantService,
+    [Service] IHttpContextAccessor httpContextAccessor
+  ) {
     // Require authentication for tenant queries
     HttpContext? httpContext = httpContextAccessor.HttpContext;
 
@@ -24,7 +28,10 @@ public class TenantQueries {
   /// <summary>
   /// Get a tenant by ID
   /// </summary>
-  public async Task<Models.Tenant?> GetTenantById([Service] ITenantService tenantService, [Service] IHttpContextAccessor httpContextAccessor, Guid id) {
+  public async Task<Models.Tenant?> GetTenantById(
+    [Service] ITenantService tenantService,
+    [Service] IHttpContextAccessor httpContextAccessor, Guid id
+  ) {
     // Require authentication for tenant queries
     HttpContext? httpContext = httpContextAccessor.HttpContext;
 
@@ -36,7 +43,10 @@ public class TenantQueries {
   /// <summary>
   /// Get soft-deleted tenants
   /// </summary>
-  public async Task<IEnumerable<Models.Tenant>> GetDeletedTenants([Service] ITenantService tenantService, [Service] IHttpContextAccessor httpContextAccessor) {
+  public async Task<IEnumerable<Models.Tenant>> GetDeletedTenants(
+    [Service] ITenantService tenantService,
+    [Service] IHttpContextAccessor httpContextAccessor
+  ) {
     // Require authentication for tenant queries
     HttpContext? httpContext = httpContextAccessor.HttpContext;
 
@@ -48,7 +58,10 @@ public class TenantQueries {
   /// <summary>
   /// Get users in a tenant
   /// </summary>
-  public async Task<IEnumerable<TenantPermission>> GetUsersInTenant([Service] ITenantService tenantService, [Service] IHttpContextAccessor httpContextAccessor, Guid tenantId) {
+  public async Task<IEnumerable<TenantPermission>> GetUsersInTenant(
+    [Service] ITenantService tenantService,
+    [Service] IHttpContextAccessor httpContextAccessor, Guid tenantId
+  ) {
     // Require authentication for tenant queries
     HttpContext? httpContext = httpContextAccessor.HttpContext;
 

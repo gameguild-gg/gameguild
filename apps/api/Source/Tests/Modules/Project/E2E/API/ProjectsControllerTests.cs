@@ -17,6 +17,7 @@ using System.Net.Http.Headers;
 using Xunit.Abstractions;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 
+
 namespace GameGuild.Tests.Modules.Project.E2E;
 
 /// <summary>
@@ -47,7 +48,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     ClearDatabase();
   }
 
-  [Fact] public async Task GetProjects_ShouldReturnEmptyArray_WhenNoProjects() {
+  [Fact]
+  public async Task GetProjects_ShouldReturnEmptyArray_WhenNoProjects() {
     // Arrange - Clear database to ensure clean state
     ClearDatabase();
 
@@ -67,17 +69,23 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     string content = await response.Content.ReadAsStringAsync();
     _output.WriteLine($"Response Status: {response.StatusCode}");
     _output.WriteLine($"Response Content: {content}");
-    _output.WriteLine($"Response Headers: {string.Join(", ", response.Headers.Select(h => $"{h.Key}: {string.Join(";", h.Value)}"))}");
+    _output.WriteLine(
+      $"Response Headers: {string.Join(", ", response.Headers.Select(h => $"{h.Key}: {string.Join(";", h.Value)}"))}"
+    );
 
     // Assert
     Assert.True(response.IsSuccessStatusCode, $"Expected success but got {response.StatusCode}. Content: {content}");
-    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(
+      content,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(projects);
     Assert.Empty(projects);
   }
 
-  [Fact] public async Task GetProjects_ShouldReturnProjects_WhenProjectsExist() {
+  [Fact]
+  public async Task GetProjects_ShouldReturnProjects_WhenProjectsExist() {
     // Arrange - Clear database to ensure clean state
     ClearDatabase();
 
@@ -119,7 +127,10 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     // Assert
     Assert.True(response.IsSuccessStatusCode);
     string content = await response.Content.ReadAsStringAsync();
-    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(
+      content,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(projects);
     Assert.Equal(2, projects.Length);
@@ -127,7 +138,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     Assert.Contains(projects, p => p.Title == "Test Project 2");
   }
 
-  [Fact] public async Task CreateProject_ShouldCreateProject_WithValidData() {
+  [Fact]
+  public async Task CreateProject_ShouldCreateProject_WithValidData() {
     // Arrange - Clear database to ensure clean state
     ClearDatabase();
 
@@ -166,9 +178,15 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     _output.WriteLine($"Response Content: {responseContent}");
 
     // Assert
-    Assert.True(response.IsSuccessStatusCode, $"Expected success status code but got {response.StatusCode}. Content: {responseContent}");
+    Assert.True(
+      response.IsSuccessStatusCode,
+      $"Expected success status code but got {response.StatusCode}. Content: {responseContent}"
+    );
 
-    var createdProject = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var createdProject = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(createdProject);
     Assert.Equal("New Test Project", createdProject.Title);
@@ -176,12 +194,14 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     Assert.NotEqual(Guid.Empty, createdProject.Id);
 
     // Verify in database
-    GameGuild.Modules.Project.Models.Project? dbProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == createdProject.Id);
+    GameGuild.Modules.Project.Models.Project? dbProject =
+      await _context.Projects.FirstOrDefaultAsync(p => p.Id == createdProject.Id);
     Assert.NotNull(dbProject);
     Assert.Equal("New Test Project", dbProject.Title);
   }
 
-  [Fact] public async Task CreateProject_ShouldReturnBadRequest_WithInvalidData() {
+  [Fact]
+  public async Task CreateProject_ShouldReturnBadRequest_WithInvalidData() {
     // Arrange - Clear database to ensure clean state
     ClearDatabase();
 
@@ -205,7 +225,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
   }
 
-  [Fact] public async Task GetProject_ShouldReturnProject_WhenExists() {
+  [Fact]
+  public async Task GetProject_ShouldReturnProject_WhenExists() {
     // Arrange - Clear database to ensure clean state
     ClearDatabase();
 
@@ -235,14 +256,18 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     Assert.True(response.IsSuccessStatusCode);
 
     string content = await response.Content.ReadAsStringAsync();
-    var returnedProject = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var returnedProject = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project>(
+      content,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(returnedProject);
     Assert.Equal("Specific Test Project", returnedProject.Title);
     Assert.Equal(project.Id, returnedProject.Id);
   }
 
-  [Fact] public async Task GetProject_ShouldReturnNotFound_WhenNotExists() {
+  [Fact]
+  public async Task GetProject_ShouldReturnNotFound_WhenNotExists() {
     // Arrange - Clear database to ensure clean state
     ClearDatabase();
 
@@ -303,9 +328,15 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     _output.WriteLine($"Response Content: {responseContent}");
 
     // Assert
-    Assert.True(response.IsSuccessStatusCode, $"Expected success but got {response.StatusCode}. Content: {responseContent}");
+    Assert.True(
+      response.IsSuccessStatusCode,
+      $"Expected success but got {response.StatusCode}. Content: {responseContent}"
+    );
 
-    var returnedProject = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var returnedProject = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project>(
+      responseContent,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
     Assert.NotNull(returnedProject);
     Assert.Equal("Slug Test Project", returnedProject.Title);
     Assert.Equal(project.Id, returnedProject.Id);
@@ -323,7 +354,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
   }
 
-  [Fact] public async Task GetProjectsByCategory_ShouldReturnProjectsInCategory() {
+  [Fact]
+  public async Task GetProjectsByCategory_ShouldReturnProjectsInCategory() {
     // Arrange - Clear database to ensure clean state
     ClearDatabase();
 
@@ -373,7 +405,10 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     Assert.True(response.IsSuccessStatusCode);
 
     string content = await response.Content.ReadAsStringAsync();
-    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(
+      content,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(projects);
     Assert.Equal(2, projects.Length);
@@ -382,7 +417,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     Assert.DoesNotContain(projects, p => p.Title == "Other Category Project");
   }
 
-  [Fact] public async Task GetProjectsByStatus_ShouldReturnProjectsWithStatus() {
+  [Fact]
+  public async Task GetProjectsByStatus_ShouldReturnProjectsWithStatus() {
     // Arrange - Clear database to ensure clean state
     ClearDatabase();
 
@@ -419,14 +455,18 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     Assert.True(response.IsSuccessStatusCode);
 
     string content = await response.Content.ReadAsStringAsync();
-    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(
+      content,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(projects);
     Assert.Single(projects);
     Assert.Equal("Published Project", projects.First().Title);
   }
 
-  [Fact] public async Task GetPublicProjects_ShouldReturnOnlyPublicPublishedProjects() {
+  [Fact]
+  public async Task GetPublicProjects_ShouldReturnOnlyPublicPublishedProjects() {
     // Arrange - Clear database to ensure clean state
     ClearDatabase();
 
@@ -473,7 +513,11 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     var savedProjects = await _context.Projects.ToListAsync();
     Console.WriteLine($"DEBUG TEST: Projects in database after save: {savedProjects.Count}");
 
-    foreach (var p in savedProjects) { Console.WriteLine($"DEBUG TEST: Project in DB: {p.Title}, Status: {p.Status}, Visibility: {p.Visibility}, TenantId: {(p.Tenant?.Id.ToString() ?? "null")}, IsDeleted: {p.DeletedAt != null}"); }
+    foreach (var p in savedProjects) {
+      Console.WriteLine(
+        $"DEBUG TEST: Project in DB: {p.Title}, Status: {p.Status}, Visibility: {p.Visibility}, TenantId: {(p.Tenant?.Id.ToString() ?? "null")}, IsDeleted: {p.DeletedAt != null}"
+      );
+    }
 
     // Act
     HttpResponseMessage response = await _client.GetAsync("/projects/public");
@@ -486,7 +530,10 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     // Assert
     Assert.True(response.IsSuccessStatusCode, $"Expected success but got {response.StatusCode}. Content: {content}");
 
-    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(
+      content,
+      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    );
 
     Assert.NotNull(projects);
     Assert.Single(projects);
@@ -525,12 +572,20 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     return Task.FromResult(jwtService.GenerateAccessToken(userDto, roles, additionalClaims));
   }
 
-  private async Task GrantProjectPermissions(User user, TenantModel tenant, GameGuild.Modules.Project.Models.Project project, PermissionType[] permissions) {
+  private async Task GrantProjectPermissions(
+    User user, TenantModel tenant,
+    GameGuild.Modules.Project.Models.Project project, PermissionType[] permissions
+  ) {
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
-    await permissionService.GrantResourcePermissionAsync<GameGuild.Modules.Project.Models.ProjectPermission, GameGuild.Modules.Project.Models.Project>(user.Id, tenant.Id, project.Id, permissions);
+    await permissionService
+      .GrantResourcePermissionAsync<GameGuild.Modules.Project.Models.ProjectPermission,
+        GameGuild.Modules.Project.Models.Project>(user.Id, tenant.Id, project.Id, permissions);
   }
 
-  private async Task GrantContentTypePermissions(User user, TenantModel tenant, string contentTypeName, PermissionType[] permissions) {
+  private async Task GrantContentTypePermissions(
+    User user, TenantModel tenant, string contentTypeName,
+    PermissionType[] permissions
+  ) {
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
     await permissionService.GrantContentTypePermissionAsync(user.Id, tenant.Id, contentTypeName, permissions);
   }

@@ -8,6 +8,7 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
 using MediatR;
 
+
 namespace GameGuild.Tests.Modules.Auth.Unit.Controllers;
 
 public class AuthControllerTests {
@@ -35,7 +36,8 @@ public class AuthControllerTests {
     var expectedResponse = new SignInResponseDto { AccessToken = "mock-access-token", RefreshToken = "mock-refresh-token", User = new UserDto { Email = "test@example.com", Username = "testuser" } };
 
     // Mock the MediatR response for the LocalSignInCommand
-    _mockMediator.Setup(x => x.Send(It.IsAny<LocalSignInCommand>(), It.IsAny<CancellationToken>())).ReturnsAsync(expectedResponse);
+    _mockMediator.Setup(x => x.Send(It.IsAny<LocalSignInCommand>(), It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(expectedResponse);
 
     // Act
     var result = await _controller.LocalSignIn(request);
@@ -62,7 +64,17 @@ public class AuthControllerTests {
     };
 
     // Mock the MediatR response for the LocalSignUpCommand
-    _mockMediator.Setup(x => x.Send(It.Is<LocalSignUpCommand>(cmd => cmd.Email == request.Email && cmd.Password == request.Password && cmd.Username == request.Username && cmd.TenantId == request.TenantId), It.IsAny<CancellationToken>()))
+    _mockMediator.Setup(x =>
+                          x.Send(
+                            It.Is<LocalSignUpCommand>(cmd =>
+                                                        cmd.Email == request.Email &&
+                                                        cmd.Password == request.Password &&
+                                                        cmd.Username == request.Username &&
+                                                        cmd.TenantId == request.TenantId
+                            ),
+                            It.IsAny<CancellationToken>()
+                          )
+                 )
                  .ReturnsAsync(expectedResponse);
 
     // Act
@@ -98,7 +110,8 @@ public class AuthControllerTests {
     // Arrange
     var request = new RefreshTokenRequestDto { RefreshToken = "valid-refresh-token" };
 
-    _mockAuthService.Setup(x => x.RevokeRefreshTokenAsync(request.RefreshToken, It.IsAny<string>())).Returns(Task.CompletedTask);
+    _mockAuthService.Setup(x => x.RevokeRefreshTokenAsync(request.RefreshToken, It.IsAny<string>()))
+                    .Returns(Task.CompletedTask);
 
     // Act
     IActionResult result = await _controller.RevokeToken(request);
@@ -201,7 +214,8 @@ public class AuthControllerTests {
     // Arrange
     var request = new Web3VerifyRequestDto { WalletAddress = "0x742d35Cc6634C0532925a3b8D".ToLower(), Signature = "invalid-signature", Nonce = "mock-nonce", ChainId = "1" };
 
-    _mockAuthService.Setup(x => x.VerifyWeb3SignatureAsync(request)).ThrowsAsync(new UnauthorizedAccessException("Invalid signature"));
+    _mockAuthService.Setup(x => x.VerifyWeb3SignatureAsync(request))
+                    .ThrowsAsync(new UnauthorizedAccessException("Invalid signature"));
 
     // Act
     var result = await _controller.VerifyWeb3Signature(request);

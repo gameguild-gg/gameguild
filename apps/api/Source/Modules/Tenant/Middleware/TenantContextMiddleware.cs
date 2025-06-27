@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using GameGuild.Modules.Tenant.Services;
 
+
 namespace GameGuild.Modules.Tenant.Middleware;
 
 /// <summary>

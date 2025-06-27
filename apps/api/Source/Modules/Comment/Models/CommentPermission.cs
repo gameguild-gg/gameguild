@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Comment.Models;
 
 /// <summary>
@@ -9,7 +10,13 @@ namespace GameGuild.Modules.Comment.Models;
 /// Provides granular permission control for individual comments
 /// </summary>
 [Table("CommentPermissions")]
-[Index(nameof(UserId), nameof(TenantId), nameof(ResourceId), IsUnique = true, Name = "IX_CommentPermissions_User_Tenant_Resource")]
+[Index(
+  nameof(UserId),
+  nameof(TenantId),
+  nameof(ResourceId),
+  IsUnique = true,
+  Name = "IX_CommentPermissions_User_Tenant_Resource"
+)]
 [Index(nameof(ResourceId), nameof(UserId), Name = "IX_CommentPermissions_Resource_User")]
 [Index(nameof(TenantId), Name = "IX_CommentPermissions_TenantId")]
 [Index(nameof(ExpiresAt), Name = "IX_CommentPermissions_Expiration")]

@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 
+
 namespace GameGuild.Modules.Project.Models;
 
 /// <summary>
@@ -9,7 +10,13 @@ namespace GameGuild.Modules.Project.Models;
 /// Provide granular permission control for individual projects
 /// </summary>
 [Table("ProjectPermissions")]
-[Index(nameof(UserId), nameof(TenantId), nameof(ResourceId), IsUnique = true, Name = "IX_ProjectPermissions_User_Tenant_Resource")]
+[Index(
+  nameof(UserId),
+  nameof(TenantId),
+  nameof(ResourceId),
+  IsUnique = true,
+  Name = "IX_ProjectPermissions_User_Tenant_Resource"
+)]
 [Index(nameof(ResourceId), nameof(UserId), Name = "IX_ProjectPermissions_Resource_User")]
 [Index(nameof(TenantId), Name = "IX_ProjectPermissions_TenantId")]
 [Index(nameof(ExpiresAt), Name = "IX_ProjectPermissions_Expiration")]

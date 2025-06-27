@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
 using GameGuild.Modules.User.Models;
 
+
 namespace GameGuild.Modules.User.Services;
 
 /// <summary>
@@ -32,7 +33,10 @@ public class CredentialService : ICredentialService {
   /// <param name="userId">User ID</param>
   /// <param name="type">Credential type</param>
   /// <returns>Credential or null if not found</returns>
-  public async Task<Credential?> GetCredentialByUserIdAndTypeAsync(Guid userId, string type) { return await _context.Credentials.Include(c => c.User).FirstOrDefaultAsync(c => c.UserId == userId && c.Type == type); }
+  public async Task<Credential?> GetCredentialByUserIdAndTypeAsync(Guid userId, string type) {
+    return await _context.Credentials.Include(c => c.User)
+                         .FirstOrDefaultAsync(c => c.UserId == userId && c.Type == type);
+  }
 
   /// <summary>
   /// Create a new credential
@@ -98,7 +102,8 @@ public class CredentialService : ICredentialService {
   /// <returns>True if restored successfully</returns>
   public async Task<bool> RestoreCredentialAsync(Guid id) {
     // Need to include deleted entities to find soft-deleted credentials
-    Credential? credential = await _context.Credentials.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt != null);
+    Credential? credential = await _context.Credentials.IgnoreQueryFilters()
+                                           .FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt != null);
 
     if (credential == null) { return false; }
 
@@ -183,5 +188,10 @@ public class CredentialService : ICredentialService {
   /// Get soft-deleted credentials
   /// </summary>
   /// <returns>List of soft-deleted credentials</returns>
-  public async Task<IEnumerable<Credential>> GetDeletedCredentialsAsync() { return await _context.Credentials.IgnoreQueryFilters().Where(c => c.DeletedAt != null).Include(c => c.User).ToListAsync(); }
+  public async Task<IEnumerable<Credential>> GetDeletedCredentialsAsync() {
+    return await _context.Credentials.IgnoreQueryFilters()
+                         .Where(c => c.DeletedAt != null)
+                         .Include(c => c.User)
+                         .ToListAsync();
+  }
 }

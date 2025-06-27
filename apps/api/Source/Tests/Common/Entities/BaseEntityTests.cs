@@ -4,6 +4,7 @@ using GameGuild.Common.Entities;
 using GameGuild.Data;
 using GameGuild.Modules.User.Models;
 
+
 namespace GameGuild.Tests.Common.Entities;
 
 public class BaseEntityTests {
@@ -49,7 +50,11 @@ public class BaseEntityTests {
 
     // Assert
     Assert.True(user.UpdatedAt > originalUpdatedAt);
-    Assert.Equal(user.CreatedAt.Ticks, originalUpdatedAt.Ticks, TimeSpan.FromMilliseconds(10).Ticks); // CreatedAt should not change
+    Assert.Equal(
+      user.CreatedAt.Ticks,
+      originalUpdatedAt.Ticks,
+      TimeSpan.FromMilliseconds(10).Ticks
+    ); // CreatedAt should not change
   }
 
   [Fact]
@@ -173,7 +178,9 @@ public class BaseEntityTests {
   [Fact]
   public async Task BaseEntity_SaveToDatabase_IncrementsVersion() {
     // Arrange - Create in-memory database
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .Options;
 
     await using var context = new ApplicationDbContext(options);
 
@@ -197,7 +204,9 @@ public class BaseEntityTests {
   [Fact]
   public async Task BaseEntity_UpdateEntity_IncrementsVersionAgain() {
     // Arrange - Create in-memory database
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .Options;
 
     await using var context = new ApplicationDbContext(options);
 
@@ -224,7 +233,9 @@ public class BaseEntityTests {
   [Fact]
   public async Task BaseEntity_MultipleEntities_EachHasOwnVersion() {
     // Arrange - Create in-memory database
-    var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .Options;
 
     await using var context = new ApplicationDbContext(options);
 

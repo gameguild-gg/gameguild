@@ -2,6 +2,7 @@ using GameGuild.Modules.User.Queries;
 using GameGuild.Modules.User.Services;
 using MediatR;
 
+
 namespace GameGuild.Modules.User.GraphQL;
 
 public class Query {
