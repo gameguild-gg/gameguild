@@ -101,7 +101,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Type = ProjectType.Game,
       DevelopmentStatus = DevelopmentStatus.InDevelopment,
       CreatedById = user.Id, // Associate with the test user
-      TenantId = tenant.Id
+      TenantId = tenant.Id,
     };
 
     var project2 = new GameGuild.Modules.Project.Models.Project {
@@ -112,7 +112,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Type = ProjectType.Tool,
       DevelopmentStatus = DevelopmentStatus.Released,
       CreatedById = user.Id, // Associate with the test user
-      TenantId = tenant.Id
+      TenantId = tenant.Id,
     };
 
     _context.Projects.AddRange(project1, project2);
@@ -159,7 +159,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       WebsiteUrl = "https://example.com",
       RepositoryUrl = "https://github.com/test/repo",
       CreatedById = user.Id,
-      TenantId = tenant.Id
+      TenantId = tenant.Id,
     };
 
     var json = JsonSerializer.Serialize(project);
@@ -240,7 +240,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       CreatedById = user.Id,
-      TenantId = tenant.Id
+      TenantId = tenant.Id,
     };
 
     _context.Projects.Add(project);
@@ -297,7 +297,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Description = "This project tests slug functionality",
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
-      CreatedById = user.Id
+      CreatedById = user.Id,
     };
 
     // Manually set the slug using the Project's GenerateSlug method
@@ -308,7 +308,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     var savedProject = await _context.Projects.FirstOrDefaultAsync(p => p.Id == project.Id);
     _output.WriteLine($"Project saved in DB: {savedProject != null}");
 
-    if (savedProject != null) { _output.WriteLine($"Saved project: ID={savedProject.Id}, Title={savedProject.Title}, Slug={savedProject.Slug}"); }
+    if (savedProject != null) _output.WriteLine($"Saved project: ID={savedProject.Id}, Title={savedProject.Title}, Slug={savedProject.Slug}");
 
     var allProjects = await _context.Projects.ToListAsync();
     _output.WriteLine($"Total projects in DB: {allProjects.Count}");
@@ -371,7 +371,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       CreatedById = user.Id,
-      TenantId = tenant.Id
+      TenantId = tenant.Id,
     };
 
     var project2 = new GameGuild.Modules.Project.Models.Project {
@@ -380,7 +380,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       CreatedById = user.Id,
-      TenantId = tenant.Id
+      TenantId = tenant.Id,
     };
 
     var project3 = new GameGuild.Modules.Project.Models.Project {
@@ -389,7 +389,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       CreatedById = user.Id,
-      TenantId = tenant.Id
+      TenantId = tenant.Id,
     };
 
     _context.Projects.AddRange(project1, project2, project3);
@@ -431,7 +431,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       CreatedById = user.Id,
-      TenantId = tenant.Id
+      TenantId = tenant.Id,
     };
 
     var draftProject = new GameGuild.Modules.Project.Models.Project {
@@ -439,7 +439,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Draft,
       Visibility = AccessLevel.Public,
       CreatedById = user.Id,
-      TenantId = tenant.Id
+      TenantId = tenant.Id,
     };
 
     _context.Projects.AddRange(publishedProject, draftProject);
@@ -482,7 +482,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       Tenant = null, // Make it global - accessible across all tenants
-      CreatedById = user.Id
+      CreatedById = user.Id,
     };
 
     var privateProject = new GameGuild.Modules.Project.Models.Project {
@@ -491,7 +491,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Private,
       Tenant = null, // Make it global - accessible across all tenants
-      CreatedById = user.Id
+      CreatedById = user.Id,
     };
 
     var draftProject = new GameGuild.Modules.Project.Models.Project {
@@ -500,7 +500,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Draft,
       Visibility = AccessLevel.Public,
       Tenant = null, // Make it global - accessible across all tenants
-      CreatedById = user.Id
+      CreatedById = user.Id,
     };
 
     _context.Projects.AddRange(publicProject, privateProject, draftProject);

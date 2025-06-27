@@ -14,7 +14,7 @@ public enum CertificateStatus {
   Revoked,
 
   [Description("Certificate is in the process of being issued")]
-  Pending
+  Pending,
 }
 
 public enum VerificationMethod {
@@ -25,7 +25,7 @@ public enum VerificationMethod {
   Blockchain,
 
   [Description("Certificate uses both code and blockchain verification")]
-  Both
+  Both,
 }
 
 public enum CertificateType {
@@ -66,7 +66,7 @@ public enum CertificateType {
   TimeInvestment,
 
   [Description("Certificate based on peer validation or community contribution")]
-  PeerRecognition
+  PeerRecognition,
 }
 
 public enum SkillProficiencyLevel {
@@ -89,5 +89,5 @@ public enum SkillProficiencyLevel {
   Expert,
 
   [Description("Recognized authority, can define best practices")]
-  Master
+  Master,
 }

@@ -54,7 +54,7 @@ namespace GameGuild.Modules.Auth.Middleware {
         ValidateAudience = true,
         ValidAudience = _configuration["Jwt:Audience"],
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes clock skew tolerance
+        ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
       };
 
       var principal =

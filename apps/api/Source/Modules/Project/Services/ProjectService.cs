@@ -151,7 +151,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     project.UpdatedAt = DateTime.UtcNow;
 
     // Generate slug if not provided
-    if (string.IsNullOrEmpty(project.Slug)) { project.Slug = Models.Project.GenerateSlug(project.Title); }
+    if (string.IsNullOrEmpty(project.Slug)) project.Slug = Models.Project.GenerateSlug(project.Title);
 
     // Set default values
     if (project.Status == default) project.Status = ContentStatus.Draft;
@@ -312,7 +312,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
       Role = role,
       Permissions = permissions,
       AssignedAt = DateTime.UtcNow,
-      IsActive = true
+      IsActive = true,
     };
 
     context.ProjectTeams.Add(projectTeam);
@@ -370,7 +370,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
       UserId = userId,
       FollowedAt = DateTime.UtcNow,
       EmailNotifications = emailNotifications,
-      PushNotifications = pushNotifications
+      PushNotifications = pushNotifications,
     };
 
     context.ProjectFollowers.Add(follower);
@@ -439,7 +439,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
       Rating = rating,
       Title = title,
       Content = content,
-      Status = ContentStatus.Published
+      Status = ContentStatus.Published,
     };
 
     context.ProjectFeedbacks.Add(feedback);
@@ -510,7 +510,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
       JamId = jamId,
       SubmittedAt = DateTime.UtcNow,
       SubmissionNotes = submissionNotes,
-      IsEligible = true
+      IsEligible = true,
     };
 
     context.ProjectJamSubmissions.Add(submission);
@@ -606,7 +606,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
       AwardCount = project.JamSubmissions.Count(js => js.HasAward),
       NewFollowersLast30Days = project.Followers.Count(f => f.FollowedAt >= thirtyDaysAgo),
       CalculatedAt = DateTime.UtcNow,
-      TrendingScore = CalculateTrendingScore(project, thirtyDaysAgo)
+      TrendingScore = CalculateTrendingScore(project, thirtyDaysAgo),
     };
   }
 

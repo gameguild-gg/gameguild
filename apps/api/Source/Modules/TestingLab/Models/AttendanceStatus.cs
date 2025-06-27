@@ -3,6 +3,6 @@ namespace GameGuild.Modules.TestingLab.Models {
     Registered,
     CheckedIn,
     Completed,
-    NoShow
+    NoShow,
   }
 }

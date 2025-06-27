@@ -4,6 +4,6 @@ namespace GameGuild.Modules.TestingLab.Models {
     Open,
     InProgress,
     Completed,
-    Cancelled
+    Cancelled,
   }
 }

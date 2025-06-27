@@ -19,7 +19,7 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
     var user =
       await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && !u.IsDeleted, cancellationToken);
 
-    if (user == null) { throw new InvalidOperationException($"User with ID {request.UserId} not found"); }
+    if (user == null) throw new InvalidOperationException($"User with ID {request.UserId} not found");
 
     // Business logic: Check if email is already taken by another user
     if (!string.IsNullOrEmpty(request.Email) && request.Email != user.Email) {
@@ -29,15 +29,15 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
           cancellationToken
         );
 
-      if (emailExists) { throw new InvalidOperationException($"Email '{request.Email}' is already taken by another user"); }
+      if (emailExists) throw new InvalidOperationException($"Email '{request.Email}' is already taken by another user");
     }
 
     // Update user properties
-    if (!string.IsNullOrEmpty(request.Name)) { user.Name = request.Name; }
+    if (!string.IsNullOrEmpty(request.Name)) user.Name = request.Name;
 
-    if (!string.IsNullOrEmpty(request.Email)) { user.Email = request.Email; }
+    if (!string.IsNullOrEmpty(request.Email)) user.Email = request.Email;
 
-    if (request.IsActive.HasValue) { user.IsActive = request.IsActive.Value; }
+    if (request.IsActive.HasValue) user.IsActive = request.IsActive.Value;
 
     // Update the entity (triggers BaseEntity.Touch())
     user.Touch();

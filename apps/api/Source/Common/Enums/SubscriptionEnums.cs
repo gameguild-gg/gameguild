@@ -14,7 +14,7 @@ public enum SubscriptionType {
   Annual,
 
   [Description("One-time payment for permanent access")]
-  Lifetime
+  Lifetime,
 }
 
 public enum SubscriptionBillingInterval {
@@ -23,7 +23,7 @@ public enum SubscriptionBillingInterval {
 
   [Description("Billing occurs monthly")]
   Month,
-  [Description("Billing occurs yearly")] Year
+  [Description("Billing occurs yearly")] Year,
 }
 
 public enum SubscriptionStatus {
@@ -46,5 +46,5 @@ public enum SubscriptionStatus {
   IncompleteExpired,
 
   [Description("Payment failed after retries, subscription suspended")]
-  Unpaid
+  Unpaid,
 }

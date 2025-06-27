@@ -28,7 +28,7 @@ namespace GameGuild.Modules.Auth.Services {
 
     public async Task<Web3ChallengeResponseDto> GenerateChallengeAsync(Web3ChallengeRequestDto request) {
       // Validate wallet address
-      if (!IsValidEthereumAddress(request.WalletAddress)) { throw new ArgumentException("Invalid Ethereum address", nameof(request.WalletAddress)); }
+      if (!IsValidEthereumAddress(request.WalletAddress)) throw new ArgumentException("Invalid Ethereum address", nameof(request.WalletAddress));
 
       var nonce = GenerateNonce();
       var challenge = GenerateChallenge(request.WalletAddress, nonce);
@@ -42,7 +42,7 @@ namespace GameGuild.Modules.Auth.Services {
       // Clean up expired challenges
       var expiredKeys = _challenges.Where(kvp => kvp.Value.ExpiresAt < DateTime.UtcNow).Select(kvp => kvp.Key).ToList();
 
-      foreach (var key in expiredKeys) { _challenges.Remove(key); }
+      foreach (var key in expiredKeys) _challenges.Remove(key);
 
       return await Task.FromResult(challengeResponse);
     }
@@ -77,10 +77,9 @@ namespace GameGuild.Modules.Auth.Services {
       var isValidSignature =
         await VerifyEthereumSignature(challenge.Challenge, request.Signature, request.WalletAddress);
 
-      if (isValidSignature) {
+      if (isValidSignature)
         // Remove used challenge
         _challenges.Remove(request.Nonce);
-      }
 
       return isValidSignature;
     }
@@ -90,7 +89,7 @@ namespace GameGuild.Modules.Auth.Services {
       var credential = await _context.Credentials.Include(c => c.User)
                                      .FirstOrDefaultAsync(c => c.Type == "web3_wallet" && c.Value == walletAddress.ToLower());
 
-      if (credential?.User != null) { return credential.User; }
+      if (credential?.User != null) return credential.User;
 
       // Create new user with wallet address
       var user = new User.Models.User {
@@ -98,7 +97,7 @@ namespace GameGuild.Modules.Auth.Services {
         Name = $"User_{walletAddress[..8]}...", // Use first 8 chars of wallet as username
         Email = $"{walletAddress.ToLower()}@web3.local", // Placeholder email
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       };
 
       _context.Users.Add(user);
@@ -111,7 +110,7 @@ namespace GameGuild.Modules.Auth.Services {
         Value = walletAddress.ToLower(),
         Metadata = System.Text.Json.JsonSerializer.Serialize(new { ChainId = chainId, WalletType = "ethereum" }),
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       };
 
       _context.Credentials.Add(web3Credential);
@@ -150,13 +149,11 @@ namespace GameGuild.Modules.Auth.Services {
 
         // Basic validation checks
         if (string.IsNullOrEmpty(signature) || signature.Length < 132) // 0x + 130 hex chars
-        {
           return Task.FromResult(false);
-        }
 
-        if (!signature.StartsWith("0x")) { return Task.FromResult(false); }
+        if (!signature.StartsWith("0x")) return Task.FromResult(false);
 
-        if (!IsValidEthereumAddress(walletAddress)) { return Task.FromResult(false); }
+        if (!IsValidEthereumAddress(walletAddress)) return Task.FromResult(false);
 
         // For now, return true if basic validation passes
         // TODO: Implement actual signature verification using Nethereum
@@ -175,7 +172,7 @@ namespace GameGuild.Modules.Auth.Services {
     }
 
     public bool IsValidEthereumAddress(string address) {
-      if (string.IsNullOrEmpty(address) || !address.StartsWith("0x") || address.Length != 42) { return false; }
+      if (string.IsNullOrEmpty(address) || !address.StartsWith("0x") || address.Length != 42) return false;
 
       // Check if it's a valid hex string
       return address[2..].All(c => char.IsDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'));

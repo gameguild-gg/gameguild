@@ -13,7 +13,7 @@ public static class SnakeCase {
   static SnakeCase() {
     var options = new MemoryCacheOptions {
       SizeLimit = 1000, // Maximum 1000 entries
-      CompactionPercentage = 0.25 // Remove 25% of entries when limit is reached
+      CompactionPercentage = 0.25, // Remove 25% of entries when limit is reached
     };
 
     _cache = new MemoryCache(options);
@@ -26,7 +26,7 @@ public static class SnakeCase {
   /// <returns>The converted string in snake_case.</returns>
   /// <exception cref="ArgumentException">Thrown when name is null or empty.</exception>
   public static string Convert(string name) {
-    if (string.IsNullOrEmpty(name)) { throw new ArgumentException("Name cannot be null or empty.", nameof(name)); }
+    if (string.IsNullOrEmpty(name)) throw new ArgumentException("Name cannot be null or empty.", nameof(name));
 
     var cacheKey = $"string:{name}";
 
@@ -57,7 +57,7 @@ public static class SnakeCase {
   /// <returns>The converted type name in snake_case.</returns>
   /// <exception cref="ArgumentNullException">Thrown when type is null.</exception>
   public static string Convert(Type type) {
-    if (type == null) { throw new ArgumentNullException(nameof(type)); }
+    if (type == null) throw new ArgumentNullException(nameof(type));
 
     var cacheKey = $"type:{type.FullName}";
 
@@ -80,7 +80,7 @@ public static class SnakeCase {
   /// <param name="name">The string to convert.</param>
   /// <returns>The converted string in snake_case.</returns>
   public static string ConvertUncached(string name) {
-    if (string.IsNullOrEmpty(name)) { return string.Empty; }
+    if (string.IsNullOrEmpty(name)) return string.Empty;
 
     return NamingStrategy.GetPropertyName(name, false);
   }
@@ -91,11 +91,11 @@ public static class SnakeCase {
   /// <param name="names">The strings to convert.</param>
   /// <returns>An array of converted strings in snake_case.</returns>
   public static string[] ConvertMany(params string[] names) {
-    if (names == null || names.Length == 0) { return []; }
+    if (names == null || names.Length == 0) return [];
 
     var result = new string[names.Length];
 
-    for (var i = 0; i < names.Length; i++) { result[i] = Convert(names[i]); }
+    for (var i = 0; i < names.Length; i++) result[i] = Convert(names[i]);
 
     return result;
   }
@@ -106,11 +106,11 @@ public static class SnakeCase {
   /// <param name="types">The types whose names to convert.</param>
   /// <returns>An array of converted type names in snake_case.</returns>
   public static string[] ConvertMany(params Type[] types) {
-    if (types == null || types.Length == 0) { return []; }
+    if (types == null || types.Length == 0) return [];
 
     var result = new string[types.Length];
 
-    for (var i = 0; i < types.Length; i++) { result[i] = Convert(types[i]); }
+    for (var i = 0; i < types.Length; i++) result[i] = Convert(types[i]);
 
     return result;
   }
@@ -124,7 +124,7 @@ public static class SnakeCase {
 
     var options = new MemoryCacheOptions {
       SizeLimit = 1000, // Maximum 1000 entries
-      CompactionPercentage = 0.25 // Remove 25% of entries when limit is reached
+      CompactionPercentage = 0.25, // Remove 25% of entries when limit is reached
     };
 
     _cache = new MemoryCache(options);

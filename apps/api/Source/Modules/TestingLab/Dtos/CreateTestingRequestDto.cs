@@ -39,7 +39,7 @@ namespace GameGuild.Modules.TestingLab.Dtos {
         StartDate = StartDate,
         EndDate = EndDate,
         Status = Status,
-        CreatedById = createdById
+        CreatedById = createdById,
       };
     }
   }

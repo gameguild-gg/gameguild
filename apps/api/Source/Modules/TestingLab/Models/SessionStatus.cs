@@ -3,6 +3,6 @@ namespace GameGuild.Modules.TestingLab.Models {
     Scheduled,
     Active,
     Completed,
-    Cancelled
+    Cancelled,
   }
 }

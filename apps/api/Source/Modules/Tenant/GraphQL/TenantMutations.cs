@@ -25,20 +25,20 @@ public class TenantMutations {
     // Extract user ID and tenant ID from JWT token for permission check
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null) { throw new UnauthorizedAccessException("No HTTP context available"); }
+    if (httpContext == null) throw new UnauthorizedAccessException("No HTTP context available");
 
     var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (!Guid.TryParse(userIdClaim, out var userId)) { throw new UnauthorizedAccessException("Invalid or missing user ID in token"); }
+    if (!Guid.TryParse(userIdClaim, out var userId)) throw new UnauthorizedAccessException("Invalid or missing user ID in token");
 
     var tenantIdClaim = httpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
 
-    if (!Guid.TryParse(tenantIdClaim, out var tenantId)) { throw new UnauthorizedAccessException("Invalid or missing tenant ID in token"); }
+    if (!Guid.TryParse(tenantIdClaim, out var tenantId)) throw new UnauthorizedAccessException("Invalid or missing tenant ID in token");
 
     // Check if user has permission to create tenants
     var hasPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Create);
 
-    if (!hasPermission) { throw new UnauthorizedAccessException("Insufficient permissions to create tenant"); }
+    if (!hasPermission) throw new UnauthorizedAccessException("Insufficient permissions to create tenant");
 
     var tenant = new Models.Tenant { Name = input.Name, Description = input.Description, IsActive = input.IsActive };
 

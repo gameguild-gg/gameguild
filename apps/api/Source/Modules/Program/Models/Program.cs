@@ -87,7 +87,7 @@ public class Program : Content {
     try {
       var metadataDict = JsonSerializer.Deserialize<Dictionary<string, object>>(Metadata.AdditionalData);
 
-      if (metadataDict != null && metadataDict.TryGetValue(key, out var value)) { return JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value)); }
+      if (metadataDict != null && metadataDict.TryGetValue(key, out var value)) return JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value));
     }
     catch {
       // Handle JSON parsing errors gracefully
@@ -97,7 +97,7 @@ public class Program : Content {
   }
 
   public void SetMetadata<T>(string key, T value) {
-    if (Metadata == null) { Metadata = new ResourceMetadata { ResourceType = nameof(Program), AdditionalData = "{}" }; }
+    if (Metadata == null) Metadata = new ResourceMetadata { ResourceType = nameof(Program), AdditionalData = "{}" };
 
     var metadataDict = string.IsNullOrEmpty(Metadata.AdditionalData)
                          ? new Dictionary<string, object>()

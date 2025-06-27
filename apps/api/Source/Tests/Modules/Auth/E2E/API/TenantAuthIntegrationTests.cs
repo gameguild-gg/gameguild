@@ -43,7 +43,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
       Name = "tenant-test",
       Email = "tenant@example.com",
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.Users.Add(user);
@@ -59,7 +59,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
       ),
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.Credentials.Add(credential);
@@ -71,7 +71,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
       Description = "First test tenant",
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var tenant2 = new TenantModel {
@@ -80,7 +80,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
       Description = "Second test tenant",
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.Tenants.AddRange(tenant1, tenant2);
@@ -93,7 +93,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
       PermissionFlags1 = 1,
       PermissionFlags2 = 2,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var tenantPermission2 = new TenantPermission {
@@ -103,7 +103,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
       PermissionFlags1 = 4,
       PermissionFlags2 = 8,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.TenantPermissions.AddRange(tenantPermission1, tenantPermission2);
@@ -188,7 +188,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
 
     // Now refresh the token with a specific tenant ID
     var refreshRequest = new RefreshTokenRequestDto {
-      RefreshToken = loginData.RefreshToken, TenantId = Guid.Parse("33333333-3333-3333-3333-333333333333") // Use the second tenant
+      RefreshToken = loginData.RefreshToken, TenantId = Guid.Parse("33333333-3333-3333-3333-333333333333"), // Use the second tenant
     };
 
     var refreshJson = JsonSerializer.Serialize(refreshRequest);

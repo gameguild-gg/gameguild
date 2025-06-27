@@ -350,7 +350,7 @@ public class PermissionServiceTenantTests : IDisposable {
     Assert.True(result.IsActiveMembership);
 
     // Should have minimal permissions
-    foreach (var permission in TenantPermissionConstants.MinimalUserPermissions) { Assert.True(result.HasPermission(permission)); }
+    foreach (var permission in TenantPermissionConstants.MinimalUserPermissions) Assert.True(result.HasPermission(permission));
   }
 
   [Fact]

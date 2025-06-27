@@ -316,7 +316,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     // 1. Tenant-level READ should work
     var tenantResponse = await _client.GetAsync("/tenants");
 
-    if (tenantResponse.IsSuccessStatusCode || tenantResponse.StatusCode == System.Net.HttpStatusCode.NotFound) { Assert.NotEqual(System.Net.HttpStatusCode.Forbidden, tenantResponse.StatusCode); }
+    if (tenantResponse.IsSuccessStatusCode || tenantResponse.StatusCode == System.Net.HttpStatusCode.NotFound) Assert.NotEqual(System.Net.HttpStatusCode.Forbidden, tenantResponse.StatusCode);
 
     // 2. Content-type level comment permissions should be available via GraphQL
     var commentQuery = @"
@@ -435,7 +435,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
 
   private async Task<Comment> CreateTestCommentAsync() {
     var comment = new Comment {
-      Id = Guid.NewGuid(), Content = "Test comment content"
+      Id = Guid.NewGuid(), Content = "Test comment content",
       // Note: Comment entity doesn't have IsEdited property
     };
 
@@ -449,7 +449,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
   private async Task GrantTenantPermissionsAsync(Guid userId, Guid tenantId, PermissionType[] permissions) {
     var tenantPermission = new TenantPermission { UserId = userId, TenantId = tenantId };
 
-    foreach (var permission in permissions) { tenantPermission.AddPermission(permission); }
+    foreach (var permission in permissions) tenantPermission.AddPermission(permission);
 
     _context.TenantPermissions.Add(tenantPermission);
     await _context.SaveChangesAsync();
@@ -460,10 +460,10 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     PermissionType[] permissions
   ) {
     var contentTypePermission = new ContentTypePermission {
-      UserId = userId, TenantId = tenantId, ContentType = contentTypeName // The correct property name is ContentType, not ContentTypeName
+      UserId = userId, TenantId = tenantId, ContentType = contentTypeName, // The correct property name is ContentType, not ContentTypeName
     };
 
-    foreach (var permission in permissions) { contentTypePermission.AddPermission(permission); }
+    foreach (var permission in permissions) contentTypePermission.AddPermission(permission);
 
     _context.ContentTypePermissions.Add(contentTypePermission);
     await _context.SaveChangesAsync();
@@ -475,7 +475,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
   ) {
     var resourcePermission = new CommentPermission { UserId = userId, TenantId = tenantId, ResourceId = resourceId };
 
-    foreach (var permission in permissions) { resourcePermission.AddPermission(permission); }
+    foreach (var permission in permissions) resourcePermission.AddPermission(permission);
 
     _context.CommentPermissions.Add(resourcePermission);
     await _context.SaveChangesAsync();

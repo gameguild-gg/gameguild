@@ -28,8 +28,8 @@ public class UserProfilesController : ControllerBase {
                                                 CreatedAt = up.CreatedAt,
                                                 UpdatedAt = up.UpdatedAt,
                                                 DeletedAt = up.DeletedAt,
-                                                IsDeleted = up.IsDeleted
-                                              }
+                                                IsDeleted = up.IsDeleted,
+      }
     );
 
     return Ok(userProfileDtos);
@@ -51,8 +51,8 @@ public class UserProfilesController : ControllerBase {
                                                 CreatedAt = up.CreatedAt,
                                                 UpdatedAt = up.UpdatedAt,
                                                 DeletedAt = up.DeletedAt,
-                                                IsDeleted = up.IsDeleted
-                                              }
+                                                IsDeleted = up.IsDeleted,
+      }
     );
 
     return Ok(userProfileDtos);
@@ -63,7 +63,7 @@ public class UserProfilesController : ControllerBase {
   public async Task<ActionResult<UserProfileResponseDto>> GetUserProfile(Guid id) {
     var userProfile = await _userProfileService.GetUserProfileByIdAsync(id);
 
-    if (userProfile == null) { return NotFound(); }
+    if (userProfile == null) return NotFound();
 
     var userProfileDto = new UserProfileResponseDto {
       Id = userProfile.Id,
@@ -76,7 +76,7 @@ public class UserProfilesController : ControllerBase {
       CreatedAt = userProfile.CreatedAt,
       UpdatedAt = userProfile.UpdatedAt,
       DeletedAt = userProfile.DeletedAt,
-      IsDeleted = userProfile.IsDeleted
+      IsDeleted = userProfile.IsDeleted,
     };
 
     return Ok(userProfileDto);
@@ -87,7 +87,7 @@ public class UserProfilesController : ControllerBase {
   public async Task<ActionResult<UserProfileResponseDto>> GetUserProfileByUserId(Guid userId) {
     var userProfile = await _userProfileService.GetUserProfileByUserIdAsync(userId);
 
-    if (userProfile == null) { return NotFound(); }
+    if (userProfile == null) return NotFound();
 
     var userProfileDto = new UserProfileResponseDto {
       Id = userProfile.Id,
@@ -100,7 +100,7 @@ public class UserProfilesController : ControllerBase {
       CreatedAt = userProfile.CreatedAt,
       UpdatedAt = userProfile.UpdatedAt,
       DeletedAt = userProfile.DeletedAt,
-      IsDeleted = userProfile.IsDeleted
+      IsDeleted = userProfile.IsDeleted,
     };
 
     return Ok(userProfileDto);
@@ -130,7 +130,7 @@ public class UserProfilesController : ControllerBase {
       CreatedAt = createdUserProfile.CreatedAt,
       UpdatedAt = createdUserProfile.UpdatedAt,
       DeletedAt = createdUserProfile.DeletedAt,
-      IsDeleted = createdUserProfile.IsDeleted
+      IsDeleted = createdUserProfile.IsDeleted,
     };
 
     return CreatedAtAction(nameof(GetUserProfile), new { id = createdUserProfile.Id }, userProfileDto);
@@ -152,7 +152,7 @@ public class UserProfilesController : ControllerBase {
 
     var updatedUserProfile = await _userProfileService.UpdateUserProfileAsync(id, userProfile);
 
-    if (updatedUserProfile == null) { return NotFound(); }
+    if (updatedUserProfile == null) return NotFound();
 
     var userProfileDto = new UserProfileResponseDto {
       Id = updatedUserProfile.Id,
@@ -165,7 +165,7 @@ public class UserProfilesController : ControllerBase {
       CreatedAt = updatedUserProfile.CreatedAt,
       UpdatedAt = updatedUserProfile.UpdatedAt,
       DeletedAt = updatedUserProfile.DeletedAt,
-      IsDeleted = updatedUserProfile.IsDeleted
+      IsDeleted = updatedUserProfile.IsDeleted,
     };
 
     return Ok(userProfileDto);
@@ -176,7 +176,7 @@ public class UserProfilesController : ControllerBase {
   public async Task<IActionResult> DeleteUserProfile(Guid id) {
     var result = await _userProfileService.DeleteUserProfileAsync(id);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -186,7 +186,7 @@ public class UserProfilesController : ControllerBase {
   public async Task<IActionResult> SoftDeleteUserProfile(Guid id) {
     var result = await _userProfileService.SoftDeleteUserProfileAsync(id);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -196,7 +196,7 @@ public class UserProfilesController : ControllerBase {
   public async Task<IActionResult> RestoreUserProfile(Guid id) {
     var result = await _userProfileService.RestoreUserProfileAsync(id);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }

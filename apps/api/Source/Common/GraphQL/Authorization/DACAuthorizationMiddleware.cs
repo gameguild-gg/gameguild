@@ -21,7 +21,7 @@ public class DACAuthorizationMiddleware {
     // Extract user context from GraphQL context
     var userContext = await GetUserContextAsync(context);
 
-    if (userContext == null) { throw new UnauthorizedAccessException("User not authenticated"); }
+    if (userContext == null) throw new UnauthorizedAccessException("User not authenticated");
 
     // Check for DAC authorization attributes on the resolver
     var dacAttribute = GetDACAttribute(context);
@@ -29,7 +29,7 @@ public class DACAuthorizationMiddleware {
     if (dacAttribute != null) {
       var hasPermission = await CheckPermissionAsync(permissionService, userContext, dacAttribute, context);
 
-      if (!hasPermission) { throw new UnauthorizedAccessException($"Insufficient permissions for {dacAttribute.GetType().Name}"); }
+      if (!hasPermission) throw new UnauthorizedAccessException($"Insufficient permissions for {dacAttribute.GetType().Name}");
     }
 
     await _next(context);
@@ -38,7 +38,7 @@ public class DACAuthorizationMiddleware {
   private async ValueTask<UserContext?> GetUserContextAsync(IMiddlewareContext context) {
     var httpContext = context.Services.GetService<IHttpContextAccessor>()?.HttpContext;
 
-    if (httpContext?.User?.Identity?.IsAuthenticated != true) { return null; }
+    if (httpContext?.User?.Identity?.IsAuthenticated != true) return null;
 
     var claims = httpContext.User.Claims;
     var userIdClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -47,7 +47,8 @@ public class DACAuthorizationMiddleware {
     if (userIdClaim == null ||
         tenantIdClaim == null ||
         !Guid.TryParse(userIdClaim, out var userId) ||
-        !Guid.TryParse(tenantIdClaim, out var tenantId)) { return null; }
+        !Guid.TryParse(tenantIdClaim, out var tenantId))
+      return null;
 
     return new UserContext { UserId = userId, TenantId = tenantId };
   }
@@ -60,10 +61,9 @@ public class DACAuthorizationMiddleware {
     // Get the resolver method attributes
     var resolverMember = field.ResolverMember;
 
-    if (resolverMember != null) {
+    if (resolverMember != null)
       return resolverMember.GetCustomAttributes(typeof(DACAuthorizationAttribute), true).FirstOrDefault() as
                DACAuthorizationAttribute;
-    }
 
     return null;
   }
@@ -89,7 +89,7 @@ public class DACAuthorizationMiddleware {
                                                               dacAttribute,
                                                               context
                                                             ),
-      _ => false
+      _ => false,
     };
   }
 
@@ -142,7 +142,7 @@ public class DACAuthorizationMiddleware {
     // Get the resource ID from the context parameters
     var resourceId = GetResourceIdFromContext(context, resourceIdParameter);
 
-    if (resourceId == null) { return false; }
+    if (resourceId == null) return false;
 
     var genericArguments = attribute.GetType().GetGenericArguments();
     var entityType = genericArguments.Length > 1 ? genericArguments[1] : genericArguments[0];
@@ -162,9 +162,9 @@ public class DACAuthorizationMiddleware {
   private Guid? GetResourceIdFromContext(IMiddlewareContext context, string parameterName) {
     var argumentValue = context.ArgumentValue<object>(parameterName);
 
-    if (argumentValue is Guid guidValue) { return guidValue; }
+    if (argumentValue is Guid guidValue) return guidValue;
 
-    if (argumentValue is string stringValue && Guid.TryParse(stringValue, out var parsedGuid)) { return parsedGuid; }
+    if (argumentValue is string stringValue && Guid.TryParse(stringValue, out var parsedGuid)) return parsedGuid;
 
     return null;
   }

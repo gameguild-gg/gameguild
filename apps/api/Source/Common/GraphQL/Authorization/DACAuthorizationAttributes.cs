@@ -20,7 +20,7 @@ public enum DACPermissionLevel {
   /// <summary>
   /// Resource-level permissions - applies to specific content entries within a tenant
   /// </summary>
-  Resource
+  Resource,
 }
 
 /// <summary>

@@ -23,7 +23,7 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
     var userProfile = await _context.Resources.OfType<Models.UserProfile>()
                                     .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 
-    if (userProfile == null) { throw new InvalidOperationException($"User profile with ID {request.UserProfileId} not found"); }
+    if (userProfile == null) throw new InvalidOperationException($"User profile with ID {request.UserProfileId} not found");
 
     // Update profile properties - only the ones that exist in UserProfile model
     if (request.GivenName != null) userProfile.GivenName = request.GivenName;

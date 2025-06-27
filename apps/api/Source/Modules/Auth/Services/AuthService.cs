@@ -66,7 +66,7 @@ namespace GameGuild.Modules.Auth.Services {
         Value = HashPassword(request.Password),
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       };
 
       context.Credentials.Add(credential);
@@ -148,7 +148,7 @@ namespace GameGuild.Modules.Auth.Services {
 
       // Create new refresh token
       var newRefreshTokenEntity = new RefreshToken {
-        UserId = user.Id, Token = newRefreshToken, ExpiresAt = DateTime.UtcNow.AddDays(7), CreatedByIp = "0.0.0.0" // TODO: get real IP address
+        UserId = user.Id, Token = newRefreshToken, ExpiresAt = DateTime.UtcNow.AddDays(7), CreatedByIp = "0.0.0.0", // TODO: get real IP address
       };
 
       context.RefreshTokens.Add(newRefreshTokenEntity);
@@ -298,7 +298,7 @@ namespace GameGuild.Modules.Auth.Services {
           Name = name,
           Email = email,
           CreatedAt = DateTime.UtcNow,
-          UpdatedAt = DateTime.UtcNow
+          UpdatedAt = DateTime.UtcNow,
         };
 
         context.Users.Add(user);
@@ -319,7 +319,7 @@ namespace GameGuild.Modules.Auth.Services {
           Value = providerId, // Store provider ID in Value field
           Metadata = metadata, // Store additional provider info as JSON
           CreatedAt = DateTime.UtcNow,
-          UpdatedAt = DateTime.UtcNow
+          UpdatedAt = DateTime.UtcNow,
         };
 
         context.Credentials.Add(credential);
@@ -338,7 +338,7 @@ namespace GameGuild.Modules.Auth.Services {
         Token = refreshToken, // This is required and must not be empty
         ExpiresAt = DateTime.UtcNow.AddDays(7),
         IsRevoked = false, // Explicitly set IsRevoked to false
-        CreatedByIp = "0.0.0.0" // TODO: get real IP address
+        CreatedByIp = "0.0.0.0", // TODO: get real IP address
       };
 
       context.RefreshTokens.Add(refreshTokenEntity);

@@ -63,7 +63,7 @@ public class TenantService : ITenantService {
   public async Task<Models.Tenant> UpdateTenantAsync(Models.Tenant tenant) {
     var existingTenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenant.Id);
 
-    if (existingTenant == null) { throw new InvalidOperationException($"Tenant with ID {tenant.Id} not found"); }
+    if (existingTenant == null) throw new InvalidOperationException($"Tenant with ID {tenant.Id} not found");
 
     // Update properties
     existingTenant.Name = tenant.Name;
@@ -84,7 +84,7 @@ public class TenantService : ITenantService {
   public async Task<bool> SoftDeleteTenantAsync(Guid id) {
     var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
 
-    if (tenant == null) { return false; }
+    if (tenant == null) return false;
 
     tenant.SoftDelete();
     await _context.SaveChangesAsync();
@@ -101,7 +101,7 @@ public class TenantService : ITenantService {
     var tenant = await _context.Tenants.IgnoreQueryFilters()
                                .FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt != null);
 
-    if (tenant == null) { return false; }
+    if (tenant == null) return false;
 
     tenant.Restore();
     await _context.SaveChangesAsync();
@@ -117,7 +117,7 @@ public class TenantService : ITenantService {
   public async Task<bool> HardDeleteTenantAsync(Guid id) {
     var tenant = await _context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id);
 
-    if (tenant == null) { return false; }
+    if (tenant == null) return false;
 
     _context.Tenants.Remove(tenant);
     await _context.SaveChangesAsync();
@@ -133,7 +133,7 @@ public class TenantService : ITenantService {
   public async Task<bool> ActivateTenantAsync(Guid id) {
     var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
 
-    if (tenant == null) { return false; }
+    if (tenant == null) return false;
 
     tenant.Activate();
     await _context.SaveChangesAsync();
@@ -149,7 +149,7 @@ public class TenantService : ITenantService {
   public async Task<bool> DeactivateTenantAsync(Guid id) {
     var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
 
-    if (tenant == null) { return false; }
+    if (tenant == null) return false;
 
     tenant.Deactivate();
     await _context.SaveChangesAsync();

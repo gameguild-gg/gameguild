@@ -40,7 +40,7 @@ public class TenantsController : ControllerBase {
   public async Task<ActionResult<TenantResponseDto>> GetTenant(Guid id) {
     var tenant = await _tenantService.GetTenantByIdAsync(id);
 
-    if (tenant == null) { return NotFound($"Tenant with ID {id} not found"); }
+    if (tenant == null) return NotFound($"Tenant with ID {id} not found");
 
     return Ok(MapToResponseDto(tenant));
   }
@@ -54,7 +54,7 @@ public class TenantsController : ControllerBase {
   public async Task<ActionResult<TenantResponseDto>> GetTenantByName(string name) {
     var tenant = await _tenantService.GetTenantByNameAsync(name);
 
-    if (tenant == null) { return NotFound($"Tenant with name '{name}' not found"); }
+    if (tenant == null) return NotFound($"Tenant with name '{name}' not found");
 
     return Ok(MapToResponseDto(tenant));
   }
@@ -67,7 +67,7 @@ public class TenantsController : ControllerBase {
   [HttpPost]
   [RequireTenantPermission(PermissionType.Create)]
   public async Task<ActionResult<TenantResponseDto>> CreateTenant([FromBody] CreateTenantDto createDto) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var tenant = new Models.Tenant(new { createDto.Name, createDto.Description, createDto.IsActive });
 
@@ -85,11 +85,11 @@ public class TenantsController : ControllerBase {
   /// <returns>Updated tenant</returns>
   [HttpPut("{id:guid}")]
   public async Task<ActionResult<TenantResponseDto>> UpdateTenant(Guid id, [FromBody] UpdateTenantDto updateDto) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var existingTenant = await _tenantService.GetTenantByIdAsync(id);
 
-    if (existingTenant == null) { return NotFound($"Tenant with ID {id} not found"); }
+    if (existingTenant == null) return NotFound($"Tenant with ID {id} not found");
 
     // Update the tenant properties
     existingTenant.Name = updateDto.Name;
@@ -114,7 +114,7 @@ public class TenantsController : ControllerBase {
   public async Task<IActionResult> SoftDeleteTenant(Guid id) {
     var result = await _tenantService.SoftDeleteTenantAsync(id);
 
-    if (!result) { return NotFound($"Tenant with ID {id} not found"); }
+    if (!result) return NotFound($"Tenant with ID {id} not found");
 
     return NoContent();
   }
@@ -128,7 +128,7 @@ public class TenantsController : ControllerBase {
   public async Task<IActionResult> RestoreTenant(Guid id) {
     var result = await _tenantService.RestoreTenantAsync(id);
 
-    if (!result) { return NotFound($"Deleted tenant with ID {id} not found"); }
+    if (!result) return NotFound($"Deleted tenant with ID {id} not found");
 
     return NoContent();
   }
@@ -142,7 +142,7 @@ public class TenantsController : ControllerBase {
   public async Task<IActionResult> HardDeleteTenant(Guid id) {
     var result = await _tenantService.HardDeleteTenantAsync(id);
 
-    if (!result) { return NotFound($"Tenant with ID {id} not found"); }
+    if (!result) return NotFound($"Tenant with ID {id} not found");
 
     return NoContent();
   }
@@ -156,7 +156,7 @@ public class TenantsController : ControllerBase {
   public async Task<IActionResult> ActivateTenant(Guid id) {
     var result = await _tenantService.ActivateTenantAsync(id);
 
-    if (!result) { return NotFound($"Tenant with ID {id} not found"); }
+    if (!result) return NotFound($"Tenant with ID {id} not found");
 
     return NoContent();
   }
@@ -170,7 +170,7 @@ public class TenantsController : ControllerBase {
   public async Task<IActionResult> DeactivateTenant(Guid id) {
     var result = await _tenantService.DeactivateTenantAsync(id);
 
-    if (!result) { return NotFound($"Tenant with ID {id} not found"); }
+    if (!result) return NotFound($"Tenant with ID {id} not found");
 
     return NoContent();
   }
@@ -214,7 +214,7 @@ public class TenantsController : ControllerBase {
   public async Task<IActionResult> RemoveUserFromTenant(Guid id, Guid userId) {
     var result = await _tenantService.RemoveUserFromTenantAsync(userId, id);
 
-    if (!result) { return NotFound($"User {userId} not found in tenant {id}"); }
+    if (!result) return NotFound($"User {userId} not found in tenant {id}");
 
     return NoContent();
   }
@@ -248,7 +248,7 @@ public class TenantsController : ControllerBase {
       UpdatedAt = tenant.UpdatedAt,
       DeletedAt = tenant.DeletedAt,
       TenantPermissions = tenant.TenantPermissions?.Select(MapTenantPermissionToResponseDto).ToList() ??
-                          new List<TenantPermissionResponseDto>()
+                          new List<TenantPermissionResponseDto>(),
     };
   }
 
@@ -279,9 +279,9 @@ public class TenantsController : ControllerBase {
                  Version = tenantPermission.User.Version,
                  CreatedAt = tenantPermission.User.CreatedAt,
                  UpdatedAt = tenantPermission.User.UpdatedAt,
-                 DeletedAt = tenantPermission.User.DeletedAt
+                 DeletedAt = tenantPermission.User.DeletedAt,
                }
-               : null
+               : null,
     };
   }
 }
