@@ -10,7 +10,7 @@ namespace GameGuild.Tests.Common.Integration;
 public class BaseEntityIntegrationTests {
   private ApplicationDbContext GetInMemoryContext() {
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .UseInMemoryDatabase(Guid.NewGuid().ToString())
                   .Options;
 
     return new ApplicationDbContext(options);

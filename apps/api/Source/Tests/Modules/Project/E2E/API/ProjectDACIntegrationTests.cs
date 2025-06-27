@@ -20,7 +20,7 @@ public class ProjectDACIntegrationTests : IDisposable {
 
   public ProjectDACIntegrationTests() {
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                  .UseInMemoryDatabase(databaseName: $"DACTestDb_{Guid.NewGuid()}")
+                  .UseInMemoryDatabase($"DACTestDb_{Guid.NewGuid()}")
                   .Options;
 
     _context = new ApplicationDbContext(options);

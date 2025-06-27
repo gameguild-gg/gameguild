@@ -18,7 +18,7 @@ public class PermissionServiceTenantTests : IDisposable {
 
   public PermissionServiceTenantTests() {
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .UseInMemoryDatabase(Guid.NewGuid().ToString())
                   .Options;
 
     _context = new ApplicationDbContext(options);
@@ -77,7 +77,7 @@ public class PermissionServiceTenantTests : IDisposable {
 
     // Act
     var result =
-      await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, permissions);
+      await _permissionService.GrantTenantPermissionAsync(null, null, permissions);
 
     // Assert
     Assert.NotNull(result);
@@ -95,7 +95,7 @@ public class PermissionServiceTenantTests : IDisposable {
     var permissions = new[] { PermissionType.Read, PermissionType.Comment };
 
     // Act
-    var result = await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, permissions);
+    var result = await _permissionService.GrantTenantPermissionAsync(null, tenantId, permissions);
 
     // Assert
     Assert.NotNull(result);
@@ -168,7 +168,7 @@ public class PermissionServiceTenantTests : IDisposable {
     var tenantId = Guid.NewGuid();
 
     // Set tenant default permission
-    await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, [PermissionType.Read]);
+    await _permissionService.GrantTenantPermissionAsync(null, tenantId, [PermissionType.Read]);
 
     // Act
     var result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
@@ -184,7 +184,7 @@ public class PermissionServiceTenantTests : IDisposable {
     var tenantId = Guid.NewGuid();
 
     // Set global default permission
-    await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId: null, [PermissionType.Read]);
+    await _permissionService.GrantTenantPermissionAsync(null, null, [PermissionType.Read]);
 
     // Act
     var result = await _permissionService.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read);
@@ -200,7 +200,7 @@ public class PermissionServiceTenantTests : IDisposable {
     var tenantId = Guid.NewGuid();
 
     // Set tenant default with Read permission
-    await _permissionService.GrantTenantPermissionAsync(userId: null, tenantId, [PermissionType.Read]);
+    await _permissionService.GrantTenantPermissionAsync(null, tenantId, [PermissionType.Read]);
 
     // Grant user-specific permissions without Read
     await _permissionService.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Comment]);

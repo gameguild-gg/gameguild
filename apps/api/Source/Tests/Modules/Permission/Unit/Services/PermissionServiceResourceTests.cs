@@ -19,7 +19,7 @@ public class PermissionServiceResourceTests : IDisposable {
 
   public PermissionServiceResourceTests() {
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .UseInMemoryDatabase(Guid.NewGuid().ToString())
                   .Options;
 
     _context = new ApplicationDbContext(options);
@@ -102,7 +102,7 @@ public class PermissionServiceResourceTests : IDisposable {
 
     // Act
     await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
-      userId: null,
+      null,
       tenantId,
       resourceId,
       permissions
@@ -129,8 +129,8 @@ public class PermissionServiceResourceTests : IDisposable {
 
     // Act
     await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
-      userId: null,
-      tenantId: null,
+      null,
+      null,
       resourceId,
       permissions
     );

@@ -177,22 +177,22 @@ public class BaseEntityTests {
 
   [Fact]
   public async Task BaseEntity_SaveToDatabase_IncrementsVersion() {
-    // Arrange - Create in-memory database
+    // Arrange - Create the in-memory database
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .UseInMemoryDatabase(Guid.NewGuid().ToString())
                   .Options;
 
     await using var context = new ApplicationDbContext(options);
 
-    // Create new entity
+    // Create a new entity
     var user = new User { Name = "Test User", Email = "test@example.com" };
 
-    // Assert - Before saving to database
+    // Assert - Before saving to the database
     Assert.Equal(0, user.Version); // New entity starts with version 0
     Assert.True(user.IsNew); // Should be new
     Assert.NotEqual(Guid.Empty, user.Id); // Should have generated GUID
 
-    // Act - Save to database
+    // Act - Save to the database
     context.Users.Add(user);
     await context.SaveChangesAsync();
 
@@ -203,9 +203,9 @@ public class BaseEntityTests {
 
   [Fact]
   public async Task BaseEntity_UpdateEntity_IncrementsVersionAgain() {
-    // Arrange - Create in-memory database
+    // Arrange - Create the in-memory database
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .UseInMemoryDatabase(Guid.NewGuid().ToString())
                   .Options;
 
     await using var context = new ApplicationDbContext(options);
@@ -219,22 +219,22 @@ public class BaseEntityTests {
     context.Users.Add(user);
     await context.SaveChangesAsync();
 
-    var version = user.Version; // Capture initial version
-    Assert.NotEqual(0, user.Version); // After first save
+    var version = user.Version; // Capture the initial version
+    Assert.NotEqual(0, user.Version); // After the first save
 
     // Act - Update and save again
     user.Name = "Updated User";
     await context.SaveChangesAsync();
 
-    // Assert - Version should increment again
-    Assert.NotEqual(version, user.Version); // After second save
+    // Assert - Version should increase again
+    Assert.NotEqual(version, user.Version); // After the second save
   }
 
   [Fact]
   public async Task BaseEntity_MultipleEntities_EachHasOwnVersion() {
-    // Arrange - Create in-memory database
+    // Arrange - Create the in-memory database
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .UseInMemoryDatabase(Guid.NewGuid().ToString())
                   .Options;
 
     await using var context = new ApplicationDbContext(options);

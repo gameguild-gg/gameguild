@@ -18,7 +18,7 @@ public class Web3ServiceTests : IDisposable {
 
   public Web3ServiceTests() {
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .UseInMemoryDatabase(Guid.NewGuid().ToString())
                   .Options;
 
     _context = new ApplicationDbContext(options);
