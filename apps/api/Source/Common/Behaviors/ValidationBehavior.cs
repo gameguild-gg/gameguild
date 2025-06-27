@@ -14,12 +14,10 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 
     bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
-    if (!isValid) {
-      string errors = string.Join("; ", validationResults.Select(r => r.ErrorMessage));
+    if (isValid) return await next();
 
-      throw new ArgumentException($"Validation failed: {errors}");
-    }
+    string errors = string.Join("; ", validationResults.Select(r => r.ErrorMessage));
 
-    return await next();
+    throw new ArgumentException($"Validation failed: {errors}");
   }
 }
