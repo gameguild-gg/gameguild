@@ -2,20 +2,20 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef, useContext } from "react"
 import { Code, Play, Settings } from "lucide-react"
-import type { EditMenuOption } from "@/components/ui/content-edit-menu"
+import type { EditMenuOption } from "@/components/editor/ui/content-edit-menu"
 import type { CodeFile, LanguageType, ProgrammingLanguage } from "../ui/source-code/types"
 import { SourceCodeRenderer } from "../ui/source-code/source-code-renderer"
 import { EditorLoadingContext } from "../lexical-editor"
 
 // Import hooks
-import { useResize } from "../../hooks/use-resize"
-import { useTerminal } from "../../hooks/use-terminal"
-import { useCodeExecution } from "../../hooks/use-code-execution"
-import { useFileManagement } from "../../hooks/use-file-management"
-import { useFileState } from "../../hooks/use-file-state"
-import { useFileContent, insertSolutionTemplate } from "../../hooks/use-file-content"
-import { useLanguageSettings } from "../../hooks/use-language-settings"
-import { useEditorStyles } from "../../hooks/use-editor-styles"
+import { useResize } from "@/hooks/editor/use-resize"
+import { useTerminal } from "@/hooks/editor/use-terminal"
+import { useCodeExecution } from "@/hooks/editor/use-code-execution"
+import { useFileManagement } from "@/hooks/editor/use-file-management"
+import { useFileState } from "@/hooks/editor/use-file-state"
+import { useFileContent, insertSolutionTemplate } from "@/hooks/editor/use-file-content"
+import { useLanguageSettings } from "@/hooks/editor/use-language-settings"
+import { useEditorStyles } from "@/hooks/editor/use-editor-styles"
 
 // Update the SourceCodeNodeData interface to include the predicate test type
 export interface SourceCodeNodeData {

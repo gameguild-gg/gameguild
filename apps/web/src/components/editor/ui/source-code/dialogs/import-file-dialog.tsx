@@ -2,9 +2,9 @@
 
 import type React from "react"
 
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/editor/ui/button"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/editor/ui/dialog"
+import { Label } from "@/components/editor/ui/label"
 import { Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
 

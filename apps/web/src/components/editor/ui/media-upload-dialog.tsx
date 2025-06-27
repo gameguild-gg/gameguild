@@ -5,12 +5,12 @@ import type React from "react"
 import { useRef, useState } from "react"
 import { AlertCircle, Upload, X } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/editor/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/editor/ui/dialog"
+import { Input } from "@/components/editor/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/editor/ui/tabs"
+import { Label } from "@/components/editor/ui/label"
+import { Alert, AlertDescription } from "@/components/editor/ui/alert"
 
 export interface MediaUploadResult {
   type: "file" | "url"

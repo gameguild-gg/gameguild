@@ -39,7 +39,7 @@ import type { SerializedButtonNode } from "../nodes/button-node"
 import { cn } from "@/lib/utils"
 // Add this import at the top with the other imports
 import type { SerializedCalloutNode } from "../nodes/callout-node"
-import { Callout as UICallout } from "@/components/ui/callout"
+import { Callout as UICallout } from "@/components/editor/ui/callout"
 
 // Add the import for SerializedGalleryNode
 import type { SerializedGalleryNode } from "../nodes/gallery-node"
@@ -58,7 +58,7 @@ import type { SerializedSpotifyNode } from "../nodes/spotify-node"
 
 // Add this import at the top with the other imports
 import type { SerializedSourceCodeNode } from "../nodes/source-code-node"
-import { useQuizLogic } from "../../hooks/use-quiz-logic"
+import { useQuizLogic } from "@/hooks/editor/use-quiz-logic"
 import { QuizWrapper } from "../ui/quiz/quiz-wrapper"
 import { QuizDisplay } from "../ui/quiz/quiz-display"
 

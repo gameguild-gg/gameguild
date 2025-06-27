@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/editor/ui/button"
+import { Switch } from "@/components/editor/ui/switch"
+import { Label } from "@/components/editor/ui/label"
 import { cn } from "@/lib/utils"
 import type { CodeFile, ProgrammingLanguage } from "../types"
 import { FileTabs } from "../file-tabs"

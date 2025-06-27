@@ -1,9 +1,9 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/editor/ui/label"
+import { Input } from "@/components/editor/ui/input"
+import { Button } from "@/components/editor/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/editor/ui/select"
 import type { RenameFileDialogProps } from "../types"
 import { useEffect } from "react"
 

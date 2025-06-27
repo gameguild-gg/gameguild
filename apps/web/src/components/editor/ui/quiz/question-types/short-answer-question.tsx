@@ -1,6 +1,6 @@
 "use client"
 
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@/components/editor/ui/textarea"
 
 interface ShortAnswerQuestionProps {
   question: string

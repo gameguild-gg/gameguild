@@ -7,8 +7,8 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { ChevronDown, Pencil, Check } from "lucide-react"
 import type { JSX } from "react/jsx-runtime" // Import JSX to fix the undeclared variable error
 
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/editor/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/editor/ui/dropdown-menu"
 import { EditorLoadingContext } from "../lexical-editor"
 
 export type DividerStyle = "simple" | "double" | "dashed" | "dotted" | "gradient" | "icon"

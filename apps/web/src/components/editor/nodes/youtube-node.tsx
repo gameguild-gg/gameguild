@@ -7,10 +7,10 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { X, Move, Type, Play } from "lucide-react"
 import type { JSX } from "react/jsx-runtime" // Import JSX to fix the undeclared variable error
 
-import { ImageSizeControl } from "@/components/ui/image-size-control"
-import { CaptionInput } from "@/components/ui/caption-input"
+import { ImageSizeControl } from "@/components/editor/ui/image-size-control"
+import { CaptionInput } from "@/components/editor/ui/caption-input"
 import { Button } from "@/components/ui/button"
-import { ContentEditMenu, type EditMenuOption } from "@/components/ui/content-edit-menu"
+import { ContentEditMenu, type EditMenuOption } from "@/components/editor/ui/content-edit-menu"
 
 export interface YouTubeData {
   videoId: string
