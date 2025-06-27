@@ -1,7 +1,7 @@
 'use server';
 
 import { httpClientFactory } from '@/lib/core/http';
-import { TenantResponse, CreateTenantRequest, UpdateTenantRequest } from '@/types/tenant';
+import { TenantResponse, CreateTenantRequest, UpdateTenantRequest } from '@/lib/tenant/types';
 import { environment } from '@/configs/environment';
 import { auth } from '@/auth';
 
