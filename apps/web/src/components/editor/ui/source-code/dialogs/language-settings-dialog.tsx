@@ -1,8 +1,8 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/editor/ui/label"
+import { Button } from "@/components/editor/ui/button"
+import { Switch } from "@/components/editor/ui/switch"
 import { useState, useEffect, useCallback, useRef } from "react"
 
 export interface LanguageSettingsDialogProps {
