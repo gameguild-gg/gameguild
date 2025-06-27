@@ -8,7 +8,7 @@ import {
   deleteTenant,
   TenantActionState 
 } from '@/lib/auth/tenant-actions';
-import { TenantResponse } from '@/types/tenant';
+import { TenantResponse } from '@/lib/tenant/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

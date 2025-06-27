@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { useTenant } from '@/lib/context/TenantContext';
+import { useTenant } from '@/lib/tenant/tenant-provider';
 import { TenantSelector } from '@/components/auth/TenantSelector';
 import { getUserTenants } from '@/lib/auth/tenant-actions';
 import { Button } from '@/components/ui/button';

@@ -7,6 +7,7 @@ type Props = {
   reset: () => void;
 };
 
+// TODO: Improve error handling and display.
 export default function GlobalError({ error, reset }: Readonly<Props>): React.JSX.Element {
   return (
     <html>
