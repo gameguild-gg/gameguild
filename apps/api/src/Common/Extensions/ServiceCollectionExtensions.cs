@@ -46,6 +46,7 @@ public static class ServiceCollectionExtensions
     {
         // Register Program module services
         services.AddScoped<Modules.Program.Services.IProgramService, Modules.Program.Services.ProgramService>();
+        services.AddScoped<Modules.Program.Interfaces.IProgramContentService, Modules.Program.Services.ProgramContentService>();
 
         return services;
     }
