@@ -15,7 +15,7 @@ public static class MigrationExtensions {
   /// <returns>A task that represents the asynchronous migration operation</returns>
   public static async Task ApplyMigrationsAsync<TContext>(this IServiceProvider serviceProvider, ILogger? logger = null)
     where TContext : DbContext {
-    using IServiceScope scope = serviceProvider.CreateScope();
+    using var scope = serviceProvider.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<TContext>();
 
     try {

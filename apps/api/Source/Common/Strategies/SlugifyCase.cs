@@ -54,7 +54,7 @@ public static class SlugCase {
                entry.SlidingExpiration = TimeSpan.FromMinutes(30); // Expire after 30 minutes of inactivity
                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2); // Absolute expiration after 2 hours
 
-               string slug = SlugHelper.GenerateSlug(text);
+               var slug = SlugHelper.GenerateSlug(text);
 
                // Truncate if necessary
                if (slug.Length > maxLength) { slug = slug.Substring(0, maxLength).TrimEnd('-'); }
@@ -73,7 +73,7 @@ public static class SlugCase {
   /// <param name="maxLength">Maximum length of the resulting slug (default: 100).</param>
   /// <returns>A URL-friendly slug string with custom separator.</returns>
   public static string Convert(string text, string separator, int maxLength = 100) {
-    string slug = Convert(text, maxLength);
+    var slug = Convert(text, maxLength);
 
     if (!string.IsNullOrEmpty(separator) && separator != "-") { slug = slug.Replace("-", separator); }
 
@@ -103,7 +103,7 @@ public static class SlugCase {
   /// <param name="maxLength">Maximum length of the resulting slug (default: 100).</param>
   /// <returns>A unique slug string.</returns>
   public static string GenerateUnique(string text, IEnumerable<string> existingSlugs, int maxLength = 100) {
-    string baseSlug = Convert(text, maxLength);
+    var baseSlug = Convert(text, maxLength);
 
     if (existingSlugs == null || !existingSlugs.Contains(baseSlug)) { return baseSlug; }
 
@@ -113,13 +113,13 @@ public static class SlugCase {
 
     do {
       var suffix = $"-{counter}";
-      int availableLength = maxLength - suffix.Length;
+      var availableLength = maxLength - suffix.Length;
 
       if (availableLength <= 0) { uniqueSlug = counter.ToString(); }
       else {
-        string truncatedBase = baseSlug.Length > availableLength
-                                 ? baseSlug.Substring(0, availableLength).TrimEnd('-')
-                                 : baseSlug;
+        var truncatedBase = baseSlug.Length > availableLength
+                              ? baseSlug.Substring(0, availableLength).TrimEnd('-')
+                              : baseSlug;
         uniqueSlug = truncatedBase + suffix;
       }
 
@@ -174,7 +174,7 @@ public static class SlugCase {
 
     if (maxLength <= 0) { throw new ArgumentException("Max length must be greater than zero.", nameof(maxLength)); }
 
-    string slug = SlugHelper.GenerateSlug(text);
+    var slug = SlugHelper.GenerateSlug(text);
 
     // Truncate if necessary
     if (slug.Length > maxLength) { slug = slug.Substring(0, maxLength).TrimEnd('-'); }

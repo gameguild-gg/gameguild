@@ -17,11 +17,11 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     var validationContext = new ValidationContext(request);
     var validationResults = new List<ValidationResult>();
 
-    bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+    var isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
     if (isValid) return await next();
 
-    string errors = string.Join("; ", validationResults.Select(r => r.ErrorMessage));
+    var errors = string.Join("; ", validationResults.Select(r => r.ErrorMessage));
 
     throw new ArgumentException($"Validation failed: {errors}");
   }

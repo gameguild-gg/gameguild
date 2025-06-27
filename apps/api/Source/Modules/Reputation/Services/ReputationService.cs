@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
 using GameGuild.Modules.Reputation.Models;
-using GameGuild.Modules.Tenant.Models;
 
 
 namespace GameGuild.Modules.Reputation.Services;
@@ -17,7 +16,7 @@ public class ReputationService : IReputationService {
   public async Task<IReputation?> GetUserReputationAsync(Guid userId, Guid? tenantId = null) {
     if (tenantId.HasValue) {
       // Get tenant-specific reputation
-      TenantPermission? tenantPermission =
+      var tenantPermission =
         await _context.TenantPermissions.FirstOrDefaultAsync(tp =>
                                                                tp.UserId == userId && tp.TenantId == tenantId.Value && !tp.IsDeleted
         );
@@ -38,18 +37,18 @@ public class ReputationService : IReputationService {
     Guid userId, int scoreChange, Guid? tenantId = null,
     string? reason = null
   ) {
-    IReputation? reputation = await GetUserReputationAsync(userId, tenantId);
+    var reputation = await GetUserReputationAsync(userId, tenantId);
 
     if (reputation == null) {
       // Create new reputation record
-      User.Models.User? user = await _context.Users.FindAsync(userId);
+      var user = await _context.Users.FindAsync(userId);
 
       if (user == null) throw new ArgumentException("User not found", nameof(userId));
 
       if (tenantId.HasValue) {
         // Create tenant-specific reputation
-        TenantPermission? tenantPermission = await _context.TenantPermissions.Include(tp => tp.Tenant)
-                                                           .FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId.Value && !tp.IsDeleted);
+        var tenantPermission = await _context.TenantPermissions.Include(tp => tp.Tenant)
+                                             .FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId.Value && !tp.IsDeleted);
 
         if (tenantPermission == null) throw new ArgumentException("User is not a member of the specified tenant", nameof(tenantId));
 
@@ -95,14 +94,14 @@ public class ReputationService : IReputationService {
   }
 
   private async Task RecalculateReputationTierAsync(IReputation reputation, Guid? tenantId) {
-    ReputationTier? newLevel = await _context.ReputationTiers.Where(rl =>
-                                                                      rl.IsActive &&
-                                                                      !rl.IsDeleted &&
-                                                                      rl.MinimumScore <= reputation.Score &&
-                                                                      (rl.MaximumScore == null || rl.MaximumScore >= reputation.Score)
-                                             )
-                                             .OrderByDescending(rl => rl.MinimumScore)
-                                             .FirstOrDefaultAsync();
+    var newLevel = await _context.ReputationTiers.Where(rl =>
+                                                          rl.IsActive &&
+                                                          !rl.IsDeleted &&
+                                                          rl.MinimumScore <= reputation.Score &&
+                                                          (rl.MaximumScore == null || rl.MaximumScore >= reputation.Score)
+                                 )
+                                 .OrderByDescending(rl => rl.MinimumScore)
+                                 .FirstOrDefaultAsync();
 
     if (newLevel?.Id != reputation.CurrentLevelId) {
       reputation.CurrentLevel = newLevel;

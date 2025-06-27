@@ -1,12 +1,7 @@
-using System.Net;
-using System.Text;
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using GameGuild.Data;
 using GameGuild.Modules.Program.DTOs;
 using GameGuild.Modules.Program.Services;
-using GameGuild.Common.Enums;
 using GameGuild.Common.Entities;
 using Xunit;
 

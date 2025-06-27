@@ -53,7 +53,7 @@ public class CredentialsController : ControllerBase {
   /// <returns>Credential details</returns>
   [HttpGet("{id}")]
   public async Task<ActionResult<CredentialResponseDto>> GetCredential(Guid id) {
-    Credential? credential = await _credentialService.GetCredentialByIdAsync(id);
+    var credential = await _credentialService.GetCredentialByIdAsync(id);
 
     if (credential == null) { return NotFound($"Credential with ID {id} not found"); }
 
@@ -68,7 +68,7 @@ public class CredentialsController : ControllerBase {
   /// <returns>Credential details</returns>
   [HttpGet("user/{userId}/type/{type}")]
   public async Task<ActionResult<CredentialResponseDto>> GetCredentialByUserIdAndType(Guid userId, string type) {
-    Credential? credential = await _credentialService.GetCredentialByUserIdAndTypeAsync(userId, type);
+    var credential = await _credentialService.GetCredentialByUserIdAndTypeAsync(userId, type);
 
     if (credential == null) { return NotFound($"Credential of type '{type}' for user {userId} not found"); }
 
@@ -85,7 +85,7 @@ public class CredentialsController : ControllerBase {
     if (!ModelState.IsValid) { return BadRequest(ModelState); }
 
     // Verify that the user exists
-    Models.User? user = await _userService.GetUserByIdAsync(createDto.UserId);
+    var user = await _userService.GetUserByIdAsync(createDto.UserId);
 
     if (user == null) { return BadRequest($"User with ID {createDto.UserId} not found"); }
 
@@ -100,8 +100,8 @@ public class CredentialsController : ControllerBase {
       }
     );
 
-    Credential createdCredential = await _credentialService.CreateCredentialAsync(credential);
-    CredentialResponseDto response = MapToResponseDto(createdCredential);
+    var createdCredential = await _credentialService.CreateCredentialAsync(credential);
+    var response = MapToResponseDto(createdCredential);
 
     return CreatedAtAction(nameof(GetCredential), new { id = createdCredential.Id }, response);
   }
@@ -119,7 +119,7 @@ public class CredentialsController : ControllerBase {
   ) {
     if (!ModelState.IsValid) { return BadRequest(ModelState); }
 
-    Credential? existingCredential = await _credentialService.GetCredentialByIdAsync(id);
+    var existingCredential = await _credentialService.GetCredentialByIdAsync(id);
 
     if (existingCredential == null) { return NotFound($"Credential with ID {id} not found"); }
 
@@ -131,8 +131,8 @@ public class CredentialsController : ControllerBase {
     existingCredential.IsActive = updateDto.IsActive;
 
     try {
-      Credential updatedCredential = await _credentialService.UpdateCredentialAsync(existingCredential);
-      CredentialResponseDto response = MapToResponseDto(updatedCredential);
+      var updatedCredential = await _credentialService.UpdateCredentialAsync(existingCredential);
+      var response = MapToResponseDto(updatedCredential);
 
       return Ok(response);
     }
@@ -146,7 +146,7 @@ public class CredentialsController : ControllerBase {
   /// <returns>No content if successful</returns>
   [HttpDelete("{id}")]
   public async Task<IActionResult> SoftDeleteCredential(Guid id) {
-    bool result = await _credentialService.SoftDeleteCredentialAsync(id);
+    var result = await _credentialService.SoftDeleteCredentialAsync(id);
 
     if (!result) { return NotFound($"Credential with ID {id} not found"); }
 
@@ -160,7 +160,7 @@ public class CredentialsController : ControllerBase {
   /// <returns>No content if successful</returns>
   [HttpPost("{id}/restore")]
   public async Task<IActionResult> RestoreCredential(Guid id) {
-    bool result = await _credentialService.RestoreCredentialAsync(id);
+    var result = await _credentialService.RestoreCredentialAsync(id);
 
     if (!result) { return NotFound($"Deleted credential with ID {id} not found"); }
 
@@ -174,7 +174,7 @@ public class CredentialsController : ControllerBase {
   /// <returns>No content if successful</returns>
   [HttpDelete("{id}/hard")]
   public async Task<IActionResult> HardDeleteCredential(Guid id) {
-    bool result = await _credentialService.HardDeleteCredentialAsync(id);
+    var result = await _credentialService.HardDeleteCredentialAsync(id);
 
     if (!result) { return NotFound($"Credential with ID {id} not found"); }
 
@@ -188,7 +188,7 @@ public class CredentialsController : ControllerBase {
   /// <returns>No content if successful</returns>
   [HttpPost("{id}/mark-used")]
   public async Task<IActionResult> MarkCredentialAsUsed(Guid id) {
-    bool result = await _credentialService.MarkCredentialAsUsedAsync(id);
+    var result = await _credentialService.MarkCredentialAsUsedAsync(id);
 
     if (!result) { return NotFound($"Credential with ID {id} not found"); }
 
@@ -202,7 +202,7 @@ public class CredentialsController : ControllerBase {
   /// <returns>No content if successful</returns>
   [HttpPost("{id}/deactivate")]
   public async Task<IActionResult> DeactivateCredential(Guid id) {
-    bool result = await _credentialService.DeactivateCredentialAsync(id);
+    var result = await _credentialService.DeactivateCredentialAsync(id);
 
     if (!result) { return NotFound($"Credential with ID {id} not found"); }
 
@@ -216,7 +216,7 @@ public class CredentialsController : ControllerBase {
   /// <returns>No content if successful</returns>
   [HttpPost("{id}/activate")]
   public async Task<IActionResult> ActivateCredential(Guid id) {
-    bool result = await _credentialService.ActivateCredentialAsync(id);
+    var result = await _credentialService.ActivateCredentialAsync(id);
 
     if (!result) { return NotFound($"Credential with ID {id} not found"); }
 

@@ -3,8 +3,6 @@ using GameGuild.Common.Entities;
 using GameGuild.Modules.Program.Interfaces;
 using GameGuild.Common.Enums;
 using GameGuild.Modules.Program.Models;
-using HotChocolate;
-using HotChocolate.Types;
 using ProgramContentEntity = GameGuild.Modules.Program.Models.ProgramContent;
 
 

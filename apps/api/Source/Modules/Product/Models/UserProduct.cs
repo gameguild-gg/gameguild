@@ -187,7 +187,7 @@ public class UserProduct : BaseEntity {
   public bool HasActiveAccess() {
     if (AccessStatus != ProductAccessStatus.Active) return false;
 
-    DateTime now = DateTime.UtcNow;
+    var now = DateTime.UtcNow;
 
     return (AccessStartDate == null || AccessStartDate <= now) && (AccessEndDate == null || AccessEndDate > now);
   }

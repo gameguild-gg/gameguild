@@ -13,13 +13,13 @@ public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TReque
     TRequest request, RequestHandlerDelegate<TResponse> next,
     CancellationToken cancellationToken
   ) {
-    string requestName = typeof(TRequest).Name;
+    var requestName = typeof(TRequest).Name;
     var stopwatch = Stopwatch.StartNew();
 
     logger.LogInformation("Handling {RequestName}", requestName);
 
     try {
-      TResponse response = await next();
+      var response = await next();
 
       stopwatch.Stop();
       logger.LogInformation(

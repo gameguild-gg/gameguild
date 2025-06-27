@@ -48,7 +48,7 @@ public class LocalSignUpHandlerTests {
                     .ReturnsAsync(expectedResponse);
 
     // Act
-    SignInResponseDto result = await _handler.Handle(command, CancellationToken.None);
+    var result = await _handler.Handle(command, CancellationToken.None);
 
     // Assert
     Assert.NotNull(result);

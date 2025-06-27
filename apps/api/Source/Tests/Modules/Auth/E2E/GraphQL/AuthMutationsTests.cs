@@ -39,7 +39,7 @@ public class AuthMutationsTests {
                  .ReturnsAsync(expectedResponse);
 
     // Act
-    SignInResponseDto result = await _authMutations.LocalSignUp(input, _mockMediator.Object);
+    var result = await _authMutations.LocalSignUp(input, _mockMediator.Object);
 
     // Assert
     Assert.NotNull(capturedCommand);
@@ -81,7 +81,7 @@ public class AuthMutationsTests {
       .ReturnsAsync(expectedResponse);
 
     // Act
-    SignInResponseDto result = await _authMutations.LocalSignIn(input, _mockMediator.Object);
+    var result = await _authMutations.LocalSignIn(input, _mockMediator.Object);
 
     // Assert
     Assert.NotNull(result);

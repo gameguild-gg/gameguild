@@ -1,18 +1,11 @@
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using System.Net.Http.Json;
 using System.Net;
 using System.Text.Json;
 using System.Net.Http.Headers;
 using Xunit;
 using GameGuild.Data;
 using GameGuild.Common.Entities;
-using GameGuild.Common.Services;
 using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Modules.TestingLab.Controllers;
 using GameGuild.Modules.User.Models;
-using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Tests.Fixtures;
@@ -45,7 +38,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     }
 
     // Set up authentication
-    string token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
     // Act
@@ -78,7 +71,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     }
 
     // Set up authentication
-    string token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
     // Act
@@ -113,7 +106,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     var invalidId = Guid.NewGuid();
 
     // Set up authentication
-    string token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
     // Act
@@ -136,7 +129,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     }
 
     // Set up authentication
-    string token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
     // Act
@@ -169,7 +162,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     }
 
     // Set up authentication
-    string token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
     // Act

@@ -29,7 +29,7 @@ public class Mutation {
   /// Updates an existing user with partial data.
   /// </summary>
   public async Task<Models.User?> UpdateUser(UpdateUserInput input, [Service] IUserService userService) {
-    Models.User? existingUser = await userService.GetUserByIdAsync(input.Id);
+    var existingUser = await userService.GetUserByIdAsync(input.Id);
 
     if (existingUser == null) return null;
 

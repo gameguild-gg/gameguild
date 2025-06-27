@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Data;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Metadata;
 using System.Reflection;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Auth.Models;
@@ -499,8 +497,8 @@ public class ApplicationDbContext : DbContext {
                 .OnDelete(DeleteBehavior.Cascade);
 
     // Configure ITenantable entities (this logic needs to stay in OnModelCreating)
-    foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes()
-                                                          .Where(t => typeof(ITenantable).IsAssignableFrom(t.ClrType))) {
+    foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+                                           .Where(t => typeof(ITenantable).IsAssignableFrom(t.ClrType))) {
       modelBuilder.Entity(entityType.ClrType)
                   .HasOne(typeof(Tenant).Name)
                   .WithMany()
@@ -545,7 +543,7 @@ public class ApplicationDbContext : DbContext {
     var entries = ChangeTracker.Entries()
                                .Where(e => e.Entity is IEntity && e.State is EntityState.Added or EntityState.Modified);
 
-    foreach (EntityEntry entry in entries) {
+    foreach (var entry in entries) {
       var entity = (IEntity)entry.Entity;
 
       if (entry.State == EntityState.Added) {

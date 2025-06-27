@@ -2,8 +2,6 @@ using GameGuild.Common.GraphQL.Authorization;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Program.Interfaces;
 using GameGuild.Modules.Program.Models;
-using HotChocolate;
-using HotChocolate.Types;
 using ProgramContentTypeEnum = GameGuild.Common.Enums.ProgramContentType;
 using VisibilityEnum = GameGuild.Common.Enums.Visibility;
 using GradingMethodEnum = GameGuild.Common.Enums.GradingMethod;

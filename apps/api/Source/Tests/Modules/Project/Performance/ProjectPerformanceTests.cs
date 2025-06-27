@@ -5,7 +5,6 @@ using GameGuild.Data;
 using GameGuild.Modules.Project.Services;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
-using GameGuild.Modules.Project.Models;
 
 
 namespace GameGuild.Tests.Modules.Project.Performance;
@@ -37,7 +36,7 @@ public class ProjectPerformanceTests : IDisposable {
 
     // Act
     stopwatch.Start();
-    GameGuild.Modules.Project.Models.Project result = await _projectService.CreateProjectAsync(project);
+    var result = await _projectService.CreateProjectAsync(project);
     stopwatch.Stop();
 
     // Assert
@@ -53,7 +52,7 @@ public class ProjectPerformanceTests : IDisposable {
     // Arrange - Create 1000 test projects
     var projects = new List<GameGuild.Modules.Project.Models.Project>();
 
-    for (int i = 0; i < 1000; i++) {
+    for (var i = 0; i < 1000; i++) {
       projects.Add(
         new GameGuild.Modules.Project.Models.Project {
           Title = $"Performance Test Project {i}",
@@ -88,7 +87,7 @@ public class ProjectPerformanceTests : IDisposable {
     // Arrange - Create 1000 test projects with searchable content
     var projects = new List<GameGuild.Modules.Project.Models.Project>();
 
-    for (int i = 0; i < 1000; i++) {
+    for (var i = 0; i < 1000; i++) {
       projects.Add(
         new GameGuild.Modules.Project.Models.Project {
           Title = $"Searchable Project {i} {(i % 2 == 0 ? "Game" : "Tool")}",
@@ -105,7 +104,7 @@ public class ProjectPerformanceTests : IDisposable {
     await _context.SaveChangesAsync();
 
     // Debug: Check how many projects are in the DB
-    int dbCount = _context.Projects.Count();
+    var dbCount = _context.Projects.Count();
     Assert.Equal(1000, dbCount); // Ensure all projects are saved
 
     var stopwatch = new Stopwatch();
@@ -136,7 +135,7 @@ public class ProjectPerformanceTests : IDisposable {
     // Arrange
     var project = new GameGuild.Modules.Project.Models.Project { Title = "Original Title", Description = "Original Description", Type = ProjectType.Game };
 
-    GameGuild.Modules.Project.Models.Project created = await _projectService.CreateProjectAsync(project);
+    var created = await _projectService.CreateProjectAsync(project);
 
     // Modify for update
     created.Title = "Updated Title";
@@ -147,7 +146,7 @@ public class ProjectPerformanceTests : IDisposable {
 
     // Act
     stopwatch.Start();
-    GameGuild.Modules.Project.Models.Project result = await _projectService.UpdateProjectAsync(created);
+    var result = await _projectService.UpdateProjectAsync(created);
     stopwatch.Stop();
 
     // Assert
@@ -165,7 +164,7 @@ public class ProjectPerformanceTests : IDisposable {
     var projects = new List<GameGuild.Modules.Project.Models.Project>();
     var statuses = new[] { ContentStatus.Draft, ContentStatus.Published, ContentStatus.Archived };
 
-    for (int i = 0; i < 1000; i++) {
+    for (var i = 0; i < 1000; i++) {
       projects.Add(
         new GameGuild.Modules.Project.Models.Project {
           Title = $"Status Test Project {i}",
@@ -202,7 +201,7 @@ public class ProjectPerformanceTests : IDisposable {
     var projects = new List<GameGuild.Modules.Project.Models.Project>();
     var types = new[] { ProjectType.Game, ProjectType.Tool, ProjectType.Art, ProjectType.Music };
 
-    for (int i = 0; i < 1000; i++) {
+    for (var i = 0; i < 1000; i++) {
       projects.Add(
         new GameGuild.Modules.Project.Models.Project {
           Title = $"Type Test Project {i}",
@@ -238,12 +237,12 @@ public class ProjectPerformanceTests : IDisposable {
     // Arrange
     var project = new GameGuild.Modules.Project.Models.Project { Title = "Project to Delete", Description = "This project will be deleted for performance testing", Type = ProjectType.Game };
 
-    GameGuild.Modules.Project.Models.Project created = await _projectService.CreateProjectAsync(project);
+    var created = await _projectService.CreateProjectAsync(project);
     var stopwatch = new Stopwatch();
 
     // Act
     stopwatch.Start();
-    bool result = await _projectService.DeleteProjectAsync(created.Id);
+    var result = await _projectService.DeleteProjectAsync(created.Id);
     stopwatch.Stop();
 
     // Assert
@@ -259,7 +258,7 @@ public class ProjectPerformanceTests : IDisposable {
     // Arrange - Create 1000 projects but only request 50
     var projects = new List<GameGuild.Modules.Project.Models.Project>();
 
-    for (int i = 0; i < 1000; i++) {
+    for (var i = 0; i < 1000; i++) {
       projects.Add(
         new GameGuild.Modules.Project.Models.Project {
           Title = $"Pagination Test Project {i}",
@@ -297,7 +296,7 @@ public class ProjectPerformanceTests : IDisposable {
     // Arrange
     var projects = new List<GameGuild.Modules.Project.Models.Project>();
 
-    for (int i = 0; i < projectCount; i++) {
+    for (var i = 0; i < projectCount; i++) {
       projects.Add(
         new GameGuild.Modules.Project.Models.Project {
           Title = $"Bulk Test Project {i}",
@@ -317,21 +316,21 @@ public class ProjectPerformanceTests : IDisposable {
     await _context.SaveChangesAsync();
     stopwatch.Stop();
 
-    long insertTime = stopwatch.ElapsedMilliseconds;
+    var insertTime = stopwatch.ElapsedMilliseconds;
 
     // Act - Bulk read
     stopwatch.Restart();
     var result = await _projectService.GetAllProjectsAsync();
     stopwatch.Stop();
 
-    long readTime = stopwatch.ElapsedMilliseconds;
+    var readTime = stopwatch.ElapsedMilliseconds;
 
     // Assert
     Assert.Equal(projectCount, result.Count());
 
     // Performance expectations based on project count (much more realistic for EF + in-memory DB)
-    double expectedInsertTime = Math.Max(projectCount * 5.0, 5000); // ~5ms per project or minimum 5 seconds
-    double expectedReadTime = Math.Max(projectCount * 2.0, 2000); // ~2ms per project or minimum 2 seconds
+    var expectedInsertTime = Math.Max(projectCount * 5.0, 5000); // ~5ms per project or minimum 5 seconds
+    var expectedReadTime = Math.Max(projectCount * 2.0, 2000); // ~2ms per project or minimum 2 seconds
 
     Assert.True(
       insertTime < expectedInsertTime,
@@ -348,7 +347,7 @@ public class ProjectPerformanceTests : IDisposable {
     // Arrange - Create some test data
     var projects = new List<GameGuild.Modules.Project.Models.Project>();
 
-    for (int i = 0; i < 100; i++) {
+    for (var i = 0; i < 100; i++) {
       projects.Add(
         new GameGuild.Modules.Project.Models.Project {
           Title = $"Concurrent Test Project {i}",
@@ -369,7 +368,7 @@ public class ProjectPerformanceTests : IDisposable {
     var tasks = new List<Task>();
     stopwatch.Start();
 
-    for (int i = 0; i < 10; i++) { tasks.Add(_projectService.GetAllProjectsAsync()); }
+    for (var i = 0; i < 10; i++) { tasks.Add(_projectService.GetAllProjectsAsync()); }
 
     await Task.WhenAll(tasks);
     stopwatch.Stop();

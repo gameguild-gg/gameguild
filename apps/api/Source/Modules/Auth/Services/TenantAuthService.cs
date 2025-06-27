@@ -63,7 +63,7 @@ public class TenantAuthService(
     }
 
     // Validate tenant access
-    TenantPermission? tenantPermission =
+    var tenantPermission =
       availableTenants.FirstOrDefault(tp => tp.TenantId.HasValue && tp.TenantId.Value == selectedTenantId);
 
     if (tenantPermission == null) {
@@ -83,7 +83,7 @@ public class TenantAuthService(
     // Generate new token with tenant claims
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
     var roles = new[] { "User" }; // TODO: fetch actual tenant-specific roles
-    string accessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
+    var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
 
     // Update response with new token and tenant info
     authResult.AccessToken = accessToken;
@@ -102,7 +102,7 @@ public class TenantAuthService(
     var claims = new List<Claim> { new Claim(JwtClaimTypes.TenantId, tenantId.ToString()), };
 
     // Get tenant permission for additional claims
-    TenantPermission? tenantPermission = await tenantContextService.GetTenantPermissionAsync(user.Id, tenantId);
+    var tenantPermission = await tenantContextService.GetTenantPermissionAsync(user.Id, tenantId);
 
     // Add permission flags if available
     if (tenantPermission != null) {

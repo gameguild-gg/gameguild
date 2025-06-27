@@ -9,7 +9,6 @@ using GameGuild.Modules.Auth.Services;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Tenant.Dtos;
-using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.User.Models;
 using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;

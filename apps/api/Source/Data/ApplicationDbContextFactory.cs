@@ -13,7 +13,7 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
     Env.Load();
 
     // Get connection string from environment variable
-    string connectionString =
+    var connectionString =
       Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
       "Data Source=app.db"; // Fallback to SQLite for design-time
 

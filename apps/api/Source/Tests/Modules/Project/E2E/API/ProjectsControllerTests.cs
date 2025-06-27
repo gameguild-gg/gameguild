@@ -1,5 +1,4 @@
 using Xunit;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text;
@@ -7,12 +6,10 @@ using GameGuild.Data;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 using GameGuild.Common.Services;
-using GameGuild.Modules.Project.Models;
 using GameGuild.Tests.Fixtures;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.User.Models;
-using GameGuild.Modules.Tenant.Models;
 using System.Net.Http.Headers;
 using Xunit.Abstractions;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
@@ -63,10 +60,10 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
     var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token); // Act
-    HttpResponseMessage response = await _client.GetAsync("/projects");
+    var response = await _client.GetAsync("/projects");
 
     // Debug: Check what we actually got
-    string content = await response.Content.ReadAsStringAsync();
+    var content = await response.Content.ReadAsStringAsync();
     _output.WriteLine($"Response Status: {response.StatusCode}");
     _output.WriteLine($"Response Content: {content}");
     _output.WriteLine(
@@ -122,11 +119,11 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     await _context.SaveChangesAsync();
 
     // Act
-    HttpResponseMessage response = await _client.GetAsync("/projects");
+    var response = await _client.GetAsync("/projects");
 
     // Assert
     Assert.True(response.IsSuccessStatusCode);
-    string content = await response.Content.ReadAsStringAsync();
+    var content = await response.Content.ReadAsStringAsync();
     var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(
       content,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
@@ -165,15 +162,15 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       TenantId = tenant.Id
     };
 
-    string json = JsonSerializer.Serialize(project);
+    var json = JsonSerializer.Serialize(project);
     _output.WriteLine($"Request payload: {json}");
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/projects", content);
+    var response = await _client.PostAsync("/projects", content);
 
     // Debug the response
-    string responseContent = await response.Content.ReadAsStringAsync();
+    var responseContent = await response.Content.ReadAsStringAsync();
     _output.WriteLine($"Response Status: {response.StatusCode}");
     _output.WriteLine($"Response Content: {responseContent}");
 
@@ -194,7 +191,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     Assert.NotEqual(Guid.Empty, createdProject.Id);
 
     // Verify in database
-    GameGuild.Modules.Project.Models.Project? dbProject =
+    var dbProject =
       await _context.Projects.FirstOrDefaultAsync(p => p.Id == createdProject.Id);
     Assert.NotNull(dbProject);
     Assert.Equal("New Test Project", dbProject.Title);
@@ -215,11 +212,11 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     // Missing required Title
     var projectData = new { Description = "This is a test project without title" };
 
-    string json = JsonSerializer.Serialize(projectData);
+    var json = JsonSerializer.Serialize(projectData);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/projects", content);
+    var response = await _client.PostAsync("/projects", content);
 
     // Assert
     Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
@@ -250,12 +247,12 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     await _context.SaveChangesAsync();
 
     // Act
-    HttpResponseMessage response = await _client.GetAsync($"/projects/{project.Id}");
+    var response = await _client.GetAsync($"/projects/{project.Id}");
 
     // Assert
     Assert.True(response.IsSuccessStatusCode);
 
-    string content = await response.Content.ReadAsStringAsync();
+    var content = await response.Content.ReadAsStringAsync();
     var returnedProject = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project>(
       content,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
@@ -281,7 +278,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     var nonExistentId = Guid.NewGuid();
 
     // Act
-    HttpResponseMessage response = await _client.GetAsync($"/projects/{nonExistentId}");
+    var response = await _client.GetAsync($"/projects/{nonExistentId}");
 
     // Assert
     Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
@@ -316,14 +313,14 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     var allProjects = await _context.Projects.ToListAsync();
     _output.WriteLine($"Total projects in DB: {allProjects.Count}");
 
-    string expectedSlug = project.Slug; // This should be "slug-test-project"
+    var expectedSlug = project.Slug; // This should be "slug-test-project"
     _output.WriteLine($"Expected slug: {expectedSlug}");
 
     // Act
-    HttpResponseMessage response = await _client.GetAsync($"/projects/slug/{expectedSlug}");
+    var response = await _client.GetAsync($"/projects/slug/{expectedSlug}");
 
     // Debug the response
-    string responseContent = await response.Content.ReadAsStringAsync();
+    var responseContent = await response.Content.ReadAsStringAsync();
     _output.WriteLine($"Response Status: {response.StatusCode}");
     _output.WriteLine($"Response Content: {responseContent}");
 
@@ -348,7 +345,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     ClearDatabase();
 
     // Act
-    HttpResponseMessage response = await _client.GetAsync("/projects/slug/non-existent-slug");
+    var response = await _client.GetAsync("/projects/slug/non-existent-slug");
 
     // Assert
     Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
@@ -399,12 +396,12 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     await _context.SaveChangesAsync();
 
     // Act
-    HttpResponseMessage response = await _client.GetAsync($"/projects/category/{categoryId}");
+    var response = await _client.GetAsync($"/projects/category/{categoryId}");
 
     // Assert
     Assert.True(response.IsSuccessStatusCode);
 
-    string content = await response.Content.ReadAsStringAsync();
+    var content = await response.Content.ReadAsStringAsync();
     var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(
       content,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
@@ -449,12 +446,12 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     await _context.SaveChangesAsync();
 
     // Act
-    HttpResponseMessage response = await _client.GetAsync($"/projects/status/{ContentStatus.Published}");
+    var response = await _client.GetAsync($"/projects/status/{ContentStatus.Published}");
 
     // Assert
     Assert.True(response.IsSuccessStatusCode);
 
-    string content = await response.Content.ReadAsStringAsync();
+    var content = await response.Content.ReadAsStringAsync();
     var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(
       content,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
@@ -520,10 +517,10 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     }
 
     // Act
-    HttpResponseMessage response = await _client.GetAsync("/projects/public");
+    var response = await _client.GetAsync("/projects/public");
 
     // Debug: Check what we actually got
-    string content = await response.Content.ReadAsStringAsync();
+    var content = await response.Content.ReadAsStringAsync();
     Console.WriteLine($"Response Status: {response.StatusCode}");
     Console.WriteLine($"Response Content: {content}");
 

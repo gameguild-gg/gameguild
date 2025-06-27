@@ -40,16 +40,16 @@ namespace GameGuild.Tests.Helpers {
     /// </summary>
     public Task<Guid?> GetCurrentTenantIdAsync(ClaimsPrincipal? user = null, string? tenantHeader = null) {
       // Check header first (highest priority)
-      if (!string.IsNullOrEmpty(tenantHeader) && Guid.TryParse(tenantHeader, out Guid tenantHeaderId)) {
+      if (!string.IsNullOrEmpty(tenantHeader) && Guid.TryParse(tenantHeader, out var tenantHeaderId)) {
         // Verify tenant exists
         if (_tenants.ContainsKey(tenantHeaderId) && _tenants[tenantHeaderId].IsActive) { return Task.FromResult<Guid?>(tenantHeaderId); }
       }
 
       // Check user claims
       if (user?.Identity?.IsAuthenticated == true) {
-        Claim? tenantClaim = user.FindFirst(JwtClaimTypes.TenantId);
+        var tenantClaim = user.FindFirst(JwtClaimTypes.TenantId);
 
-        if (tenantClaim != null && Guid.TryParse(tenantClaim.Value, out Guid tenantClaimId)) {
+        if (tenantClaim != null && Guid.TryParse(tenantClaim.Value, out var tenantClaimId)) {
           // Verify tenant exists
           if (_tenants.ContainsKey(tenantClaimId) && _tenants[tenantClaimId].IsActive) { return Task.FromResult<Guid?>(tenantClaimId); }
         }
@@ -69,14 +69,14 @@ namespace GameGuild.Tests.Helpers {
 
       if (!tenantId.HasValue) { return null; }
 
-      return _tenants.TryGetValue(tenantId.Value, out Tenant? tenant) && tenant.IsActive ? tenant : null;
+      return _tenants.TryGetValue(tenantId.Value, out var tenant) && tenant.IsActive ? tenant : null;
     }
 
     /// <summary>
     /// Get permission data for user in the specified tenant
     /// </summary>
     public Task<TenantPermission?> GetTenantPermissionAsync(Guid userId, Guid tenantId) {
-      if (_permissions.TryGetValue((userId, tenantId), out TenantPermission? permission) && permission.IsValid) { return Task.FromResult<TenantPermission?>(permission); }
+      if (_permissions.TryGetValue((userId, tenantId), out var permission) && permission.IsValid) { return Task.FromResult<TenantPermission?>(permission); }
 
       // For testing, if a permission doesn't exist but the user and tenant do,
       // create a default permission with access
@@ -104,8 +104,8 @@ namespace GameGuild.Tests.Helpers {
       if (user.Identity?.IsAuthenticated != true ||
           string.IsNullOrEmpty(user.FindFirst(ClaimTypes.NameIdentifier)?.Value)) { return false; }
 
-      Guid userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-      TenantPermission? permission = await GetTenantPermissionAsync(userId, tenantId);
+      var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+      var permission = await GetTenantPermissionAsync(userId, tenantId);
 
       return permission != null;
     }

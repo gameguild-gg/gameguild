@@ -16,7 +16,7 @@ namespace GameGuild.Modules.Auth.Controllers {
       try {
         var command = new LocalSignInCommand { Email = request.Email, Password = request.Password, TenantId = request.TenantId };
 
-        SignInResponseDto result = await mediator.Send(command);
+        var result = await mediator.Send(command);
 
         return Ok(result);
       }
@@ -30,7 +30,7 @@ namespace GameGuild.Modules.Auth.Controllers {
       try {
         var command = new LocalSignUpCommand { Email = request.Email, Password = request.Password, Username = request.Username!, TenantId = request.TenantId };
 
-        SignInResponseDto result = await mediator.Send(command);
+        var result = await mediator.Send(command);
 
         return Ok(result);
       }
@@ -42,7 +42,7 @@ namespace GameGuild.Modules.Auth.Controllers {
     [Public]
     public async Task<ActionResult<RefreshTokenResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto request) {
       try {
-        RefreshTokenResponseDto result = await authService.RefreshTokenAsync(request);
+        var result = await authService.RefreshTokenAsync(request);
 
         return Ok(result);
       }
@@ -52,7 +52,7 @@ namespace GameGuild.Modules.Auth.Controllers {
 
     [HttpPost("revoke-token")]
     public async Task<IActionResult> RevokeToken([FromBody] RefreshTokenRequestDto request) {
-      string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
+      var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
       await authService.RevokeRefreshTokenAsync(request.RefreshToken, ipAddress);
 
       return Ok(new { message = "Token revoked successfully" });
@@ -61,7 +61,7 @@ namespace GameGuild.Modules.Auth.Controllers {
     [HttpGet("github/signin")]
     [Public]
     public async Task<IActionResult> GitHubSignIn(string redirectUri = "") {
-      string authUrl = await authService.GetGitHubAuthUrlAsync(redirectUri);
+      var authUrl = await authService.GetGitHubAuthUrlAsync(redirectUri);
 
       return Ok(new { AuthUrl = authUrl });
     }
@@ -70,7 +70,7 @@ namespace GameGuild.Modules.Auth.Controllers {
     [Public]
     public async Task<IActionResult> GitHubCallback([FromBody] OAuthSignInRequestDto request) {
       try {
-        SignInResponseDto result = await authService.GitHubSignInAsync(request);
+        var result = await authService.GitHubSignInAsync(request);
 
         return Ok(result);
       }
@@ -80,7 +80,7 @@ namespace GameGuild.Modules.Auth.Controllers {
     [HttpGet("google/signin")]
     [Public]
     public async Task<IActionResult> GoogleSignIn(string redirectUri = "") {
-      string authUrl = await authService.GetGoogleAuthUrlAsync(redirectUri);
+      var authUrl = await authService.GetGoogleAuthUrlAsync(redirectUri);
 
       return Ok(new { AuthUrl = authUrl });
     }
@@ -89,7 +89,7 @@ namespace GameGuild.Modules.Auth.Controllers {
     [Public]
     public async Task<IActionResult> GoogleCallback([FromBody] OAuthSignInRequestDto request) {
       try {
-        SignInResponseDto result = await authService.GoogleSignInAsync(request);
+        var result = await authService.GoogleSignInAsync(request);
 
         return Ok(result);
       }
@@ -106,7 +106,7 @@ namespace GameGuild.Modules.Auth.Controllers {
 
       try {
         Console.WriteLine("🚀 Calling authService.GoogleIdTokenSignInAsync...");
-        SignInResponseDto result = await authService.GoogleIdTokenSignInAsync(request);
+        var result = await authService.GoogleIdTokenSignInAsync(request);
 
         Console.WriteLine($"✅ GoogleIdTokenSignInAsync successful for user: {result.User?.Email}");
 
@@ -127,7 +127,7 @@ namespace GameGuild.Modules.Auth.Controllers {
       [FromBody] Web3ChallengeRequestDto request
     ) {
       try {
-        Web3ChallengeResponseDto result = await authService.GenerateWeb3ChallengeAsync(request);
+        var result = await authService.GenerateWeb3ChallengeAsync(request);
 
         return Ok(result);
       }
@@ -138,7 +138,7 @@ namespace GameGuild.Modules.Auth.Controllers {
     [Public]
     public async Task<ActionResult<SignInResponseDto>> VerifyWeb3Signature([FromBody] Web3VerifyRequestDto request) {
       try {
-        SignInResponseDto result = await authService.VerifyWeb3SignatureAsync(request);
+        var result = await authService.VerifyWeb3SignatureAsync(request);
 
         return Ok(result);
       }
@@ -150,7 +150,7 @@ namespace GameGuild.Modules.Auth.Controllers {
     public async Task<ActionResult<EmailOperationResponseDto>> SendEmailVerification(
       [FromBody] SendEmailVerificationRequestDto request
     ) {
-      EmailOperationResponseDto result = await authService.SendEmailVerificationAsync(request);
+      var result = await authService.SendEmailVerificationAsync(request);
 
       return Ok(result);
     }
@@ -158,7 +158,7 @@ namespace GameGuild.Modules.Auth.Controllers {
     [HttpPost("verify-email")]
     [Public]
     public async Task<ActionResult<EmailOperationResponseDto>> VerifyEmail([FromBody] VerifyEmailRequestDto request) {
-      EmailOperationResponseDto result = await authService.VerifyEmailAsync(request);
+      var result = await authService.VerifyEmailAsync(request);
 
       return Ok(result);
     }
@@ -168,7 +168,7 @@ namespace GameGuild.Modules.Auth.Controllers {
     public async Task<ActionResult<EmailOperationResponseDto>> ForgotPassword(
       [FromBody] ForgotPasswordRequestDto request
     ) {
-      EmailOperationResponseDto result = await authService.ForgotPasswordAsync(request);
+      var result = await authService.ForgotPasswordAsync(request);
 
       return Ok(result);
     }
@@ -176,7 +176,7 @@ namespace GameGuild.Modules.Auth.Controllers {
     [HttpPost("reset-password")]
     [Public]
     public async Task<ActionResult<EmailOperationResponseDto>> ResetPassword([FromBody] ResetPasswordRequestDto request) {
-      EmailOperationResponseDto result = await authService.ResetPasswordAsync(request);
+      var result = await authService.ResetPasswordAsync(request);
 
       return Ok(result);
     }
@@ -185,9 +185,9 @@ namespace GameGuild.Modules.Auth.Controllers {
     public async Task<ActionResult<EmailOperationResponseDto>> ChangePassword(
       [FromBody] ChangePasswordRequestDto request
     ) {
-      Guid userId =
+      var userId =
         Guid.Parse(User.FindFirst("sub")?.Value ?? throw new UnauthorizedAccessException("User ID not found"));
-      EmailOperationResponseDto result = await authService.ChangePasswordAsync(request, userId);
+      var result = await authService.ChangePasswordAsync(request, userId);
 
       return Ok(result);
     }
