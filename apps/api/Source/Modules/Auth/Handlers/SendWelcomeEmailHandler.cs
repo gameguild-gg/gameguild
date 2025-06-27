@@ -7,14 +7,10 @@ namespace GameGuild.Modules.Auth.Handlers;
 /// <summary>
 /// Handler for user signed up notifications - sends welcome email
 /// </summary>
-public class SendWelcomeEmailHandler : INotificationHandler<UserSignedUpNotification> {
-  private readonly ILogger<SendWelcomeEmailHandler> _logger;
-
-  public SendWelcomeEmailHandler(ILogger<SendWelcomeEmailHandler> logger) { _logger = logger; }
-
+public class SendWelcomeEmailHandler(ILogger<SendWelcomeEmailHandler> logger) : INotificationHandler<UserSignedUpNotification> {
   public async Task Handle(UserSignedUpNotification notification, CancellationToken cancellationToken) {
     // In a real application, you would send an actual email
-    _logger.LogInformation(
+    logger.LogInformation(
       "Sending welcome email to user {Email} (ID: {UserId})",
       notification.Email,
       notification.UserId
@@ -23,6 +19,6 @@ public class SendWelcomeEmailHandler : INotificationHandler<UserSignedUpNotifica
     // Simulate email sending delay
     await Task.Delay(100, cancellationToken);
 
-    _logger.LogInformation("Welcome email sent to {Email}", notification.Email);
+    logger.LogInformation("Welcome email sent to {Email}", notification.Email);
   }
 }

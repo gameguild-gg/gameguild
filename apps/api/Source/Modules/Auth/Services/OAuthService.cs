@@ -15,19 +15,10 @@ namespace GameGuild.Modules.Auth.Services {
     Task<string> ExchangeGoogleCodeAsync(string code, string redirectUri);
   }
 
-  public class OAuthService : IOAuthService {
-    private readonly HttpClient _httpClient;
-
-    private readonly IConfiguration _configuration;
-
-    public OAuthService(HttpClient httpClient, IConfiguration configuration) {
-      _httpClient = httpClient;
-      _configuration = configuration;
-    }
-
+  public class OAuthService(HttpClient httpClient, IConfiguration configuration) : IOAuthService {
     public async Task<string> ExchangeGitHubCodeAsync(string code, string redirectUri) {
-      var clientId = _configuration["OAuth:GitHub:ClientId"];
-      var clientSecret = _configuration["OAuth:GitHub:ClientSecret"];
+      var clientId = configuration["OAuth:GitHub:ClientId"];
+      var clientSecret = configuration["OAuth:GitHub:ClientSecret"];
 
       var tokenRequest = new { client_id = clientId, client_secret = clientSecret, code, redirect_uri = redirectUri };
 
@@ -37,13 +28,13 @@ namespace GameGuild.Modules.Auth.Services {
         "application/json"
       );
 
-      _httpClient.DefaultRequestHeaders.Accept.Clear();
-      _httpClient.DefaultRequestHeaders.Accept.Add(
+      httpClient.DefaultRequestHeaders.Accept.Clear();
+      httpClient.DefaultRequestHeaders.Accept.Add(
         new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json")
       );
 
       var response =
-        await _httpClient.PostAsync("https://github.com/login/oauth/access_token", content);
+        await httpClient.PostAsync("https://github.com/login/oauth/access_token", content);
       var responseContent = await response.Content.ReadAsStringAsync();
 
       var tokenResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
@@ -53,11 +44,11 @@ namespace GameGuild.Modules.Auth.Services {
     }
 
     public async Task<GitHubUserDto> GetGitHubUserAsync(string accessToken) {
-      _httpClient.DefaultRequestHeaders.Clear();
-      _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-      _httpClient.DefaultRequestHeaders.Add("User-Agent", "GameGuild-CMS");
+      httpClient.DefaultRequestHeaders.Clear();
+      httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+      httpClient.DefaultRequestHeaders.Add("User-Agent", "GameGuild-CMS");
 
-      var response = await _httpClient.GetAsync("https://api.github.com/user");
+      var response = await httpClient.GetAsync("https://api.github.com/user");
       var content = await response.Content.ReadAsStringAsync();
 
       var user =
@@ -69,7 +60,7 @@ namespace GameGuild.Modules.Auth.Services {
 
       // Get email if not public
       if (string.IsNullOrEmpty(user.Email)) {
-        var emailResponse = await _httpClient.GetAsync("https://api.github.com/user/emails");
+        var emailResponse = await httpClient.GetAsync("https://api.github.com/user/emails");
         var emailContent = await emailResponse.Content.ReadAsStringAsync();
         var emails = JsonSerializer.Deserialize<JsonElement[]>(emailContent);
 
@@ -87,8 +78,8 @@ namespace GameGuild.Modules.Auth.Services {
     }
 
     public async Task<string> ExchangeGoogleCodeAsync(string code, string redirectUri) {
-      var clientId = _configuration["OAuth:Google:ClientId"];
-      var clientSecret = _configuration["OAuth:Google:ClientSecret"];
+      var clientId = configuration["OAuth:Google:ClientId"];
+      var clientSecret = configuration["OAuth:Google:ClientSecret"];
 
       var tokenRequest = new Dictionary<string, string> {
         { "client_id", clientId! },
@@ -99,7 +90,7 @@ namespace GameGuild.Modules.Auth.Services {
       };
 
       var content = new FormUrlEncodedContent(tokenRequest);
-      var response = await _httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
+      var response = await httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
       var responseContent = await response.Content.ReadAsStringAsync();
 
       var tokenResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
@@ -109,10 +100,10 @@ namespace GameGuild.Modules.Auth.Services {
     }
 
     public async Task<GoogleUserDto> GetGoogleUserAsync(string accessToken) {
-      _httpClient.DefaultRequestHeaders.Clear();
-      _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+      httpClient.DefaultRequestHeaders.Clear();
+      httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
 
-      var response = await _httpClient.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
+      var response = await httpClient.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
       var content = await response.Content.ReadAsStringAsync();
 
       return JsonSerializer.Deserialize<GoogleUserDto>(
@@ -126,7 +117,7 @@ namespace GameGuild.Modules.Auth.Services {
       try {
         // Call Google's tokeninfo API to validate the ID token
         var response =
-          await _httpClient.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}");
+          await httpClient.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}");
 
         if (!response.IsSuccessStatusCode) throw new UnauthorizedAccessException($"Google tokeninfo API returned {response.StatusCode}");
 

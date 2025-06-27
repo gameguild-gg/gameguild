@@ -18,17 +18,9 @@ namespace GameGuild.Common.Attributes;
 /// <typeparam name="TPermission">The permission entity type (e.g., CommentPermission, ProductPermission)</typeparam>
 /// <typeparam name="TResource">The resource entity type (e.g., Comment, Product)</typeparam>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
-public class RequireResourcePermissionAttribute<TPermission, TResource> : Attribute, IAsyncAuthorizationFilter
-  where TPermission : ResourcePermission<TResource> where TResource : BaseEntity {
-  private readonly PermissionType _requiredPermission;
-
-  private readonly string _resourceIdParameterName;
-
-  public RequireResourcePermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id") {
-    _requiredPermission = requiredPermission;
-    _resourceIdParameterName = resourceIdParameterName;
-  }
-
+public class RequireResourcePermissionAttribute<TPermission, TResource>(PermissionType requiredPermission, string resourceIdParameterName = "id") : Attribute, IAsyncAuthorizationFilter
+  where TPermission : ResourcePermission<TResource>
+  where TResource : BaseEntity {
   public async Task OnAuthorizationAsync(AuthorizationFilterContext context) {
     var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
 
@@ -48,7 +40,7 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
     if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out var parsedTenantId)) { tenantId = parsedTenantId; }
 
     // Extract resource ID from route parameters
-    var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
+    var resourceIdValue = context.RouteData.Values[resourceIdParameterName]?.ToString();
 
     if (!Guid.TryParse(resourceIdValue, out var resourceId)) {
       context.Result = new BadRequestResult();
@@ -63,7 +55,7 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
           userId,
           tenantId,
           resourceId,
-          _requiredPermission
+          requiredPermission
         );
 
       if (hasResourcePermission) {
@@ -77,14 +69,14 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
     // Step 2 - Check content-type level permission (fallback)
     var contentTypeName = typeof(TResource).Name;
     var hasContentTypePermission =
-      await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
+      await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, requiredPermission);
 
     if (hasContentTypePermission) {
       return; // Permission granted at content-type level
     }
 
     // Step 3 - Check tenant-level permission (final fallback)
-    var hasTenantPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, _requiredPermission);
+    var hasTenantPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, requiredPermission);
 
     if (!hasTenantPermission) { context.Result = new ForbidResult(); }
 
@@ -98,17 +90,8 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
 /// </summary>
 /// <typeparam name="TResource">The resource entity type (e.g., Comment, Product)</typeparam>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
-public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAuthorizationFilter
+public class RequireResourcePermissionAttribute<TResource>(PermissionType requiredPermission, string resourceIdParameterName = "id") : Attribute, IAsyncAuthorizationFilter
   where TResource : BaseEntity {
-  private readonly PermissionType _requiredPermission;
-
-  private readonly string _resourceIdParameterName;
-
-  public RequireResourcePermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id") {
-    _requiredPermission = requiredPermission;
-    _resourceIdParameterName = resourceIdParameterName;
-  }
-
   public async Task OnAuthorizationAsync(AuthorizationFilterContext context) {
     try {
       var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
@@ -128,14 +111,14 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
 
       if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out var parsedTenantId)) { tenantId = parsedTenantId; } // Extract resource ID from route parameters
 
-      var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
+      var resourceIdValue = context.RouteData.Values[resourceIdParameterName]?.ToString();
       var resourceId = Guid.Empty;
       var hasResourceId = Guid.TryParse(resourceIdValue, out resourceId);
 
       // For CREATE operations or READ operations on collections, we typically don't have a resource ID yet
       // So we skip resource-level permission checks and go to content-type/tenant checks
       if (!hasResourceId &&
-          (_requiredPermission == PermissionType.Create || _requiredPermission == PermissionType.Read)) {
+          (requiredPermission == PermissionType.Create || requiredPermission == PermissionType.Read)) {
         // Skip resource-level check for CREATE operations or READ collection operations
       }
       else if (!hasResourceId) {
@@ -160,7 +143,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
                   userId,
                   tenantId,
                   resourceId,
-                  _requiredPermission
+                  requiredPermission
                 );
 
               if (hasCommentPermission) {
@@ -175,7 +158,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
                   userId,
                   tenantId,
                   resourceId,
-                  _requiredPermission
+                  requiredPermission
                 );
 
               if (hasProductPermission) {
@@ -191,7 +174,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
                     userId,
                     tenantId,
                     resourceId,
-                    _requiredPermission
+                    requiredPermission
                   );
 
               if (hasProjectPermission) {
@@ -204,7 +187,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
               var hasProgramPermission =
                 await permissionService
                   .HasResourcePermissionAsync<GameGuild.Modules.Program.Models.ProgramPermission,
-                    GameGuild.Modules.Program.Models.Program>(userId, tenantId, resourceId, _requiredPermission);
+                    GameGuild.Modules.Program.Models.Program>(userId, tenantId, resourceId, requiredPermission);
 
               if (hasProgramPermission) {
                 return; // Permission granted at resource level
@@ -225,7 +208,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
       // Step 2 - Check content-type level permission (fallback)
       var contentTypeName = typeof(TResource).Name;
       var hasContentTypePermission =
-        await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
+        await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, requiredPermission);
 
       if (hasContentTypePermission) {
         return; // Permission granted at content-type level
@@ -233,7 +216,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
 
       // Step 3 - Check tenant-level permission (final fallback)
       var hasTenantPermission =
-        await permissionService.HasTenantPermissionAsync(userId, tenantId, _requiredPermission);
+        await permissionService.HasTenantPermissionAsync(userId, tenantId, requiredPermission);
 
       if (!hasTenantPermission) { context.Result = new ForbidResult(); }
       // If we reach here with tenant permission, access is granted

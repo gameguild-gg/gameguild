@@ -22,24 +22,20 @@ public interface IUserService {
   Task<IEnumerable<Models.User>> GetDeletedUsersAsync();
 }
 
-public class UserService : IUserService {
-  private readonly ApplicationDbContext _context;
+public class UserService(ApplicationDbContext context) : IUserService {
+  public async Task<IEnumerable<Models.User>> GetAllUsersAsync() { return await context.Users.ToListAsync(); }
 
-  public UserService(ApplicationDbContext context) { _context = context; }
-
-  public async Task<IEnumerable<Models.User>> GetAllUsersAsync() { return await _context.Users.ToListAsync(); }
-
-  public async Task<Models.User?> GetUserByIdAsync(Guid id) { return await _context.Users.FindAsync(id); }
+  public async Task<Models.User?> GetUserByIdAsync(Guid id) { return await context.Users.FindAsync(id); }
 
   public async Task<Models.User> CreateUserAsync(Models.User user) {
-    _context.Users.Add(user);
-    await _context.SaveChangesAsync();
+    context.Users.Add(user);
+    await context.SaveChangesAsync();
 
     return user;
   }
 
   public async Task<Models.User?> UpdateUserAsync(Guid id, Models.User user) {
-    var existingUser = await _context.Users.FindAsync(id);
+    var existingUser = await context.Users.FindAsync(id);
 
     if (existingUser == null) return null;
 
@@ -47,44 +43,44 @@ public class UserService : IUserService {
     existingUser.Email = user.Email;
     existingUser.IsActive = user.IsActive;
 
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return existingUser;
   }
 
   public async Task<bool> DeleteUserAsync(Guid id) {
-    var user = await _context.Users.FindAsync(id);
+    var user = await context.Users.FindAsync(id);
 
     if (user == null) return false;
 
-    _context.Users.Remove(user);
-    await _context.SaveChangesAsync();
+    context.Users.Remove(user);
+    await context.SaveChangesAsync();
 
     return true;
   }
 
   public async Task<bool> SoftDeleteUserAsync(Guid id) {
-    var user = await _context.Users.FindAsync(id);
+    var user = await context.Users.FindAsync(id);
 
     if (user == null) return false;
 
     user.SoftDelete();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return true;
   }
 
   public async Task<bool> RestoreUserAsync(Guid id) {
     // Need to include deleted entities to find soft-deleted user
-    var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
+    var user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
 
     if (user == null || !user.IsDeleted) return false;
 
     user.Restore();
-    await _context.SaveChangesAsync();
+    await context.SaveChangesAsync();
 
     return true;
   }
 
-  public async Task<IEnumerable<Models.User>> GetDeletedUsersAsync() { return await _context.Users.IgnoreQueryFilters().Where(u => u.DeletedAt != null).ToListAsync(); }
+  public async Task<IEnumerable<Models.User>> GetDeletedUsersAsync() { return await context.Users.IgnoreQueryFilters().Where(u => u.DeletedAt != null).ToListAsync(); }
 }

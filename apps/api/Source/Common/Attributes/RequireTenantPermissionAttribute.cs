@@ -13,11 +13,7 @@ namespace GameGuild.Common.Attributes;
 /// permission at the tenant level based on their JWT token.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
-public class RequireTenantPermissionAttribute : Attribute, IAsyncAuthorizationFilter {
-  private readonly PermissionType _requiredPermission;
-
-  public RequireTenantPermissionAttribute(PermissionType requiredPermission) { _requiredPermission = requiredPermission; }
-
+public class RequireTenantPermissionAttribute(PermissionType requiredPermission) : Attribute, IAsyncAuthorizationFilter {
   public async Task OnAuthorizationAsync(AuthorizationFilterContext context) {
     var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
 
@@ -39,7 +35,7 @@ public class RequireTenantPermissionAttribute : Attribute, IAsyncAuthorizationFi
     }
 
     // Check tenant-level permission
-    var hasPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, _requiredPermission);
+    var hasPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, requiredPermission);
 
     if (!hasPermission) context.Result = new ForbidResult();
   }
