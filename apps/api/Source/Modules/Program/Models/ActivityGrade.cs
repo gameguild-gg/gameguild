@@ -86,9 +86,9 @@ public class ActivityGrade : BaseEntity {
     if (string.IsNullOrEmpty(GradingDetails)) return null;
 
     try {
-      JsonDocument json = JsonDocument.Parse(GradingDetails);
+      var json = JsonDocument.Parse(GradingDetails);
 
-      if (json.RootElement.TryGetProperty(key, out JsonElement element)) { return JsonSerializer.Deserialize<T>(element.GetRawText()); }
+      if (json.RootElement.TryGetProperty(key, out var element)) { return JsonSerializer.Deserialize<T>(element.GetRawText()); }
     }
     catch {
       // Handle JSON parsing errors gracefully

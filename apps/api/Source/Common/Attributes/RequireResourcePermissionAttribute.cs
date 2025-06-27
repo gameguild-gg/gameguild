@@ -33,24 +33,24 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
     var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
 
     // Extract user ID and tenant ID from JWT token
-    string? userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (!Guid.TryParse(userIdClaim, out Guid userId)) {
+    if (!Guid.TryParse(userIdClaim, out var userId)) {
       context.Result = new UnauthorizedResult();
 
       return;
     }
 
     // Extract tenant ID - this is optional for global users
-    string? tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
+    var tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
     Guid? tenantId = null;
 
-    if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out Guid parsedTenantId)) { tenantId = parsedTenantId; }
+    if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out var parsedTenantId)) { tenantId = parsedTenantId; }
 
     // Extract resource ID from route parameters
     var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
 
-    if (!Guid.TryParse(resourceIdValue, out Guid resourceId)) {
+    if (!Guid.TryParse(resourceIdValue, out var resourceId)) {
       context.Result = new BadRequestResult();
 
       return;
@@ -58,7 +58,7 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
 
     // Step 1 - Check resource-level permission using generic types
     try {
-      bool hasResourcePermission =
+      var hasResourcePermission =
         await permissionService.HasResourcePermissionAsync<TPermission, TResource>(
           userId,
           tenantId,
@@ -75,8 +75,8 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
     }
 
     // Step 2 - Check content-type level permission (fallback)
-    string contentTypeName = typeof(TResource).Name;
-    bool hasContentTypePermission =
+    var contentTypeName = typeof(TResource).Name;
+    var hasContentTypePermission =
       await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
 
     if (hasContentTypePermission) {
@@ -84,7 +84,7 @@ public class RequireResourcePermissionAttribute<TPermission, TResource> : Attrib
     }
 
     // Step 3 - Check tenant-level permission (final fallback)
-    bool hasTenantPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, _requiredPermission);
+    var hasTenantPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, _requiredPermission);
 
     if (!hasTenantPermission) { context.Result = new ForbidResult(); }
 
@@ -114,23 +114,23 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
       var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
 
       // Extract user ID and tenant ID from JWT token
-      string? userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (!Guid.TryParse(userIdClaim, out Guid userId)) {
+      if (!Guid.TryParse(userIdClaim, out var userId)) {
         context.Result = new UnauthorizedResult();
 
         return;
       }
 
       // Extract tenant ID - this is optional for global users
-      string? tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
+      var tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
       Guid? tenantId = null;
 
-      if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out Guid parsedTenantId)) { tenantId = parsedTenantId; } // Extract resource ID from route parameters
+      if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out var parsedTenantId)) { tenantId = parsedTenantId; } // Extract resource ID from route parameters
 
       var resourceIdValue = context.RouteData.Values[_resourceIdParameterName]?.ToString();
-      Guid resourceId = Guid.Empty;
-      bool hasResourceId = Guid.TryParse(resourceIdValue, out resourceId);
+      var resourceId = Guid.Empty;
+      var hasResourceId = Guid.TryParse(resourceIdValue, out resourceId);
 
       // For CREATE operations or READ operations on collections, we typically don't have a resource ID yet
       // So we skip resource-level permission checks and go to content-type/tenant checks
@@ -151,11 +151,11 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
       // Skip this step for CREATE operations without a resource ID
       if (hasResourceId) {
         try {
-          string resourceTypeName = typeof(TResource).Name;
+          var resourceTypeName = typeof(TResource).Name;
 
           switch (resourceTypeName) {
             case "Comment":
-              bool hasCommentPermission =
+              var hasCommentPermission =
                 await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
                   userId,
                   tenantId,
@@ -170,7 +170,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
               break;
 
             case "Product":
-              bool hasProductPermission =
+              var hasProductPermission =
                 await permissionService.HasResourcePermissionAsync<ProductPermission, Product>(
                   userId,
                   tenantId,
@@ -185,7 +185,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
               break;
 
             case "Project":
-              bool hasProjectPermission =
+              var hasProjectPermission =
                 await permissionService
                   .HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
                     userId,
@@ -223,8 +223,8 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
       } // End of hasResourceId check
 
       // Step 2 - Check content-type level permission (fallback)
-      string contentTypeName = typeof(TResource).Name;
-      bool hasContentTypePermission =
+      var contentTypeName = typeof(TResource).Name;
+      var hasContentTypePermission =
         await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, _requiredPermission);
 
       if (hasContentTypePermission) {
@@ -232,7 +232,7 @@ public class RequireResourcePermissionAttribute<TResource> : Attribute, IAsyncAu
       }
 
       // Step 3 - Check tenant-level permission (final fallback)
-      bool hasTenantPermission =
+      var hasTenantPermission =
         await permissionService.HasTenantPermissionAsync(userId, tenantId, _requiredPermission);
 
       if (!hasTenantPermission) { context.Result = new ForbidResult(); }

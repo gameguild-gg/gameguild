@@ -1,4 +1,3 @@
-using GameGuild.Modules.Product.Models;
 using GameGuild.Modules.Product.Services;
 using ProductEntity = GameGuild.Modules.Product.Models.Product;
 using PromoCodeTypeEnum = GameGuild.Common.Enums.PromoCodeType;
@@ -36,7 +35,7 @@ public class ProductMutations {
   /// Updates an existing product
   /// </summary>
   public async Task<ProductEntity?> UpdateProduct(UpdateProductInput input, [Service] IProductService productService) {
-    ProductEntity? product = await productService.GetProductByIdAsync(input.Id);
+    var product = await productService.GetProductByIdAsync(input.Id);
 
     if (product == null) return null;
 
@@ -190,7 +189,7 @@ public class ProductMutations {
     UpdatePromoCodeInput input,
     [Service] IProductService productService
   ) {
-    PromoCode? promoCode = await productService.GetPromoCodeAsync(input.Code ?? "");
+    var promoCode = await productService.GetPromoCodeAsync(input.Code ?? "");
 
     if (promoCode == null) return null;
 

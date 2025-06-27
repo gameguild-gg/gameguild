@@ -114,11 +114,11 @@ public class AuthControllerTests {
                     .Returns(Task.CompletedTask);
 
     // Act
-    IActionResult result = await _controller.RevokeToken(request);
+    var result = await _controller.RevokeToken(request);
 
     // Assert
     var okResult = Assert.IsType<OkObjectResult>(result);
-    object? response = okResult.Value;
+    var response = okResult.Value;
     Assert.NotNull(response);
   }
 
@@ -126,16 +126,16 @@ public class AuthControllerTests {
   public async Task GitHubSignIn_ValidRedirectUri_ReturnsOkWithAuthUrl() {
     // Arrange
     var redirectUri = "https://example.com/callback";
-    string expectedAuthUrl = "https://github.com/login/oauth/authorize?client_id=test&redirect_uri=" + redirectUri;
+    var expectedAuthUrl = "https://github.com/login/oauth/authorize?client_id=test&redirect_uri=" + redirectUri;
 
     _mockAuthService.Setup(x => x.GetGitHubAuthUrlAsync(redirectUri)).ReturnsAsync(expectedAuthUrl);
 
     // Act
-    IActionResult result = await _controller.GitHubSignIn(redirectUri);
+    var result = await _controller.GitHubSignIn(redirectUri);
 
     // Assert
     var okResult = Assert.IsType<OkObjectResult>(result);
-    object? response = okResult.Value;
+    var response = okResult.Value;
     Assert.NotNull(response);
   }
 
@@ -149,7 +149,7 @@ public class AuthControllerTests {
     _mockAuthService.Setup(x => x.GitHubSignInAsync(request)).ReturnsAsync(expectedResponse);
 
     // Act
-    IActionResult result = await _controller.GitHubCallback(request);
+    var result = await _controller.GitHubCallback(request);
 
     // Assert
     var okResult = Assert.IsType<OkObjectResult>(result);
@@ -165,7 +165,7 @@ public class AuthControllerTests {
     _mockAuthService.Setup(x => x.GitHubSignInAsync(request)).ThrowsAsync(new Exception("OAuth failed"));
 
     // Act
-    IActionResult result = await _controller.GitHubCallback(request);
+    var result = await _controller.GitHubCallback(request);
 
     // Assert
     var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);

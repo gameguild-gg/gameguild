@@ -1,9 +1,5 @@
-using GameGuild.Common.Services;
 using GameGuild.Common.Enums;
-using GameGuild.Common.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using GameGuild.Modules.Program.Models;
 using ProgramContentEntity = GameGuild.Modules.Program.Models.ProgramContent;
 
 

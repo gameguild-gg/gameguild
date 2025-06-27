@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using GameGuild.Common.Entities;
-using Microsoft.EntityFrameworkCore.Metadata;
 
 
 namespace GameGuild.Common.Data;
@@ -18,15 +17,15 @@ public static class ModelBuilderExtensions {
     // Find all entity types that inherit from BaseEntity or BaseEntity<T>
     var entityTypes = modelBuilder.Model.GetEntityTypes().Where(t => t.ClrType != null && IsBaseEntity(t.ClrType));
 
-    foreach (IMutableEntityType entityType in entityTypes) {
+    foreach (var entityType in entityTypes) {
       // Configure common properties
       modelBuilder.Entity(
         entityType.ClrType,
         builder => {
           // In TPC inheritance, each concrete type gets its own complete table
           // We need to configure base properties for all concrete types, not just root types
-          bool isAbstractType = entityType.ClrType.IsAbstract;
-          bool isTpcInheritanceType = IsTpcInheritanceEntity(entityType.ClrType);
+          var isAbstractType = entityType.ClrType.IsAbstract;
+          var isTpcInheritanceType = IsTpcInheritanceEntity(entityType.ClrType);
 
           if (!isAbstractType) {
             // Skip key configuration for TPC inheritance entities - EF handles it automatically
@@ -76,9 +75,9 @@ public static class ModelBuilderExtensions {
     // Find all entity types that inherit from BaseEntity or BaseEntity<T>
     var entityTypes = modelBuilder.Model.GetEntityTypes().Where(t => t.ClrType != null && IsBaseEntity(t.ClrType));
 
-    foreach (IMutableEntityType entityType in entityTypes) {
+    foreach (var entityType in entityTypes) {
       // Skip abstract types - they don't get tables in TPC inheritance
-      bool isAbstractType = entityType.ClrType.IsAbstract;
+      var isAbstractType = entityType.ClrType.IsAbstract;
 
       if (isAbstractType) continue;
 
@@ -88,10 +87,10 @@ public static class ModelBuilderExtensions {
 
       // Add global query filter to exclude soft-deleted entities for concrete types
       // that are NOT part of TPC inheritance hierarchies
-      ParameterExpression parameter = Expression.Parameter(entityType.ClrType, "e");
-      MemberExpression deletedAtProperty = Expression.Property(parameter, nameof(BaseEntity.DeletedAt));
-      BinaryExpression condition = Expression.Equal(deletedAtProperty, Expression.Constant(null, typeof(DateTime?)));
-      LambdaExpression lambda = Expression.Lambda(condition, parameter);
+      var parameter = Expression.Parameter(entityType.ClrType, "e");
+      var deletedAtProperty = Expression.Property(parameter, nameof(BaseEntity.DeletedAt));
+      var condition = Expression.Equal(deletedAtProperty, Expression.Constant(null, typeof(DateTime?)));
+      var lambda = Expression.Lambda(condition, parameter);
 
       modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
     }
@@ -107,7 +106,7 @@ public static class ModelBuilderExtensions {
     if (typeof(BaseEntity).IsAssignableFrom(type)) return true;
 
     // Check for inheritance from BaseEntity<T>
-    Type? baseType = type.BaseType;
+    var baseType = type.BaseType;
 
     while (baseType != null) {
       if (baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(BaseEntity<>)) return true;

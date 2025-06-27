@@ -94,7 +94,7 @@ public class WithPermissionTests {
     var entity = new TestPermissionEntity();
     var permissions = new Collection<PermissionType> { PermissionType.Read, PermissionType.Comment, PermissionType.Vote };
 
-    foreach (PermissionType permission in permissions) { entity.AddPermission(permission); }
+    foreach (var permission in permissions) { entity.AddPermission(permission); }
 
     // Act & Assert
     Assert.True(entity.HasAllPermissions(permissions));
@@ -144,7 +144,7 @@ public class WithPermissionTests {
     var permissions = new Collection<PermissionType> { PermissionType.Read, PermissionType.Comment, PermissionType.Vote };
 
     // Act
-    foreach (PermissionType permission in permissions) { entity.AddPermission(permission); }
+    foreach (var permission in permissions) { entity.AddPermission(permission); }
 
     // Assert
     Assert.True(entity.HasAllPermissions(permissions));
@@ -156,7 +156,7 @@ public class WithPermissionTests {
     var entity = new TestPermissionEntity();
     var permissions = new Collection<PermissionType> { PermissionType.Read, PermissionType.Comment, PermissionType.Vote };
 
-    foreach (PermissionType permission in permissions) { entity.AddPermission(permission); }
+    foreach (var permission in permissions) { entity.AddPermission(permission); }
 
     Assert.True(entity.HasAllPermissions(permissions));
 

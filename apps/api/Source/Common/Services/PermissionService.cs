@@ -32,7 +32,7 @@ public class PermissionService : IPermissionService {
       );
 
     // Find existing permission record or create new one
-    TenantPermission? existingPermission =
+    var existingPermission =
       await _context.TenantPermissions.FirstOrDefaultAsync(tp =>
                                                              tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null
       );
@@ -43,7 +43,7 @@ public class PermissionService : IPermissionService {
       // Update existing permission
       tenantPermission = existingPermission;
 
-      foreach (PermissionType permission in permissions!) { tenantPermission.AddPermission(permission); }
+      foreach (var permission in permissions!) { tenantPermission.AddPermission(permission); }
 
       tenantPermission.Touch();
     }
@@ -56,7 +56,7 @@ public class PermissionService : IPermissionService {
         // Status removed - using IsValid property instead
       };
 
-      foreach (PermissionType permission in permissions!) { tenantPermission.AddPermission(permission); }
+      foreach (var permission in permissions!) { tenantPermission.AddPermission(permission); }
 
       _context.TenantPermissions.Add(tenantPermission);
     }
@@ -70,49 +70,49 @@ public class PermissionService : IPermissionService {
     // For null user, only check default permissions
     if (!userId.HasValue) { return await CheckDefaultPermissionAsync(tenantId, permission); } // 1. Check user-specific permissions first
 
-    TenantPermission? userPermission = await _context.TenantPermissions.AsNoTracking()
-                                                     .FirstOrDefaultAsync(tp =>
-                                                                            tp.UserId == userId &&
-                                                                            tp.TenantId == tenantId &&
-                                                                            tp.DeletedAt == null &&
-                                                                            (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
-                                                     );
+    var userPermission = await _context.TenantPermissions.AsNoTracking()
+                                       .FirstOrDefaultAsync(tp =>
+                                                              tp.UserId == userId &&
+                                                              tp.TenantId == tenantId &&
+                                                              tp.DeletedAt == null &&
+                                                              (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
+                                       );
 
     if (userPermission?.IsValid == true && userPermission.HasPermission(permission)) { return true; }
 
     // 2. Check tenant default permissions
     if (tenantId.HasValue) {
-      TenantPermission? tenantDefault = await _context.TenantPermissions.AsNoTracking()
-                                                      .FirstOrDefaultAsync(tp =>
-                                                                             tp.UserId == null &&
-                                                                             tp.TenantId == tenantId &&
-                                                                             tp.DeletedAt == null &&
-                                                                             (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
-                                                      );
+      var tenantDefault = await _context.TenantPermissions.AsNoTracking()
+                                        .FirstOrDefaultAsync(tp =>
+                                                               tp.UserId == null &&
+                                                               tp.TenantId == tenantId &&
+                                                               tp.DeletedAt == null &&
+                                                               (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
+                                        );
 
       if (tenantDefault?.IsValid == true && tenantDefault.HasPermission(permission)) { return true; }
     }
 
     // 3. Check global default permissions
-    TenantPermission? globalDefault = await _context.TenantPermissions.AsNoTracking()
-                                                    .FirstOrDefaultAsync(tp =>
-                                                                           tp.UserId == null &&
-                                                                           tp.TenantId == null &&
-                                                                           tp.DeletedAt == null &&
-                                                                           (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
-                                                    );
+    var globalDefault = await _context.TenantPermissions.AsNoTracking()
+                                      .FirstOrDefaultAsync(tp =>
+                                                             tp.UserId == null &&
+                                                             tp.TenantId == null &&
+                                                             tp.DeletedAt == null &&
+                                                             (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
+                                      );
 
     return globalDefault?.IsValid == true && globalDefault.HasPermission(permission);
   }
 
   public async Task<IEnumerable<PermissionType>> GetTenantPermissionsAsync(Guid? userId, Guid? tenantId) {
-    TenantPermission? permission = await _context.TenantPermissions.AsNoTracking()
-                                                 .FirstOrDefaultAsync(tp =>
-                                                                        tp.UserId == userId &&
-                                                                        tp.TenantId == tenantId &&
-                                                                        tp.DeletedAt == null &&
-                                                                        (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
-                                                 );
+    var permission = await _context.TenantPermissions.AsNoTracking()
+                                   .FirstOrDefaultAsync(tp =>
+                                                          tp.UserId == userId &&
+                                                          tp.TenantId == tenantId &&
+                                                          tp.DeletedAt == null &&
+                                                          (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
+                                   );
 
     if (permission?.IsValid != true) return [];
 
@@ -120,14 +120,14 @@ public class PermissionService : IPermissionService {
   }
 
   public async Task RevokeTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions) {
-    TenantPermission? tenantPermission =
+    var tenantPermission =
       await _context.TenantPermissions.FirstOrDefaultAsync(tp =>
                                                              tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null
       );
 
     if (tenantPermission == null) return;
 
-    foreach (PermissionType permission in permissions) { tenantPermission.RemovePermission(permission); }
+    foreach (var permission in permissions) { tenantPermission.RemovePermission(permission); }
 
     tenantPermission.Touch();
     await _context.SaveChangesAsync();
@@ -149,19 +149,19 @@ public class PermissionService : IPermissionService {
     // 1. Start with global defaults
     var globalDefaults = await GetGlobalDefaultPermissionsAsync();
 
-    foreach (PermissionType permission in globalDefaults) { effectivePermissions.Add(permission); }
+    foreach (var permission in globalDefaults) { effectivePermissions.Add(permission); }
 
     // 2. Add tenant defaults (if applicable)
     if (tenantId.HasValue) {
       var tenantDefaults = await GetTenantDefaultPermissionsAsync(tenantId);
 
-      foreach (PermissionType permission in tenantDefaults) { effectivePermissions.Add(permission); }
+      foreach (var permission in tenantDefaults) { effectivePermissions.Add(permission); }
     }
 
     // 3. Add user-specific permissions (override/add to defaults)
     var userPermissions = await GetTenantPermissionsAsync(userId, tenantId);
 
-    foreach (PermissionType permission in userPermissions) { effectivePermissions.Add(permission); }
+    foreach (var permission in userPermissions) { effectivePermissions.Add(permission); }
 
     return effectivePermissions;
   }
@@ -182,7 +182,7 @@ public class PermissionService : IPermissionService {
 
   public async Task<TenantPermission> JoinTenantAsync(Guid userId, Guid tenantId) {
     // Check if user is already a member
-    TenantPermission? existingMembership =
+    var existingMembership =
       await _context.TenantPermissions.FirstOrDefaultAsync(tp =>
                                                              tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null
       );
@@ -196,7 +196,7 @@ public class PermissionService : IPermissionService {
         existingMembership.PermissionFlags1 = 0UL; // Clear all permissions
         existingMembership.PermissionFlags2 = 0UL; // Clear all permissions
 
-        foreach (PermissionType permission in TenantPermissionConstants.MinimalUserPermissions) { existingMembership.AddPermission(permission); }
+        foreach (var permission in TenantPermissionConstants.MinimalUserPermissions) { existingMembership.AddPermission(permission); }
 
         existingMembership.Touch();
         await _context.SaveChangesAsync();
@@ -214,7 +214,7 @@ public class PermissionService : IPermissionService {
     };
 
     // Grant minimal permissions
-    foreach (PermissionType permission in TenantPermissionConstants.MinimalUserPermissions) { membership.AddPermission(permission); }
+    foreach (var permission in TenantPermissionConstants.MinimalUserPermissions) { membership.AddPermission(permission); }
 
     _context.TenantPermissions.Add(membership);
     await _context.SaveChangesAsync();
@@ -223,9 +223,9 @@ public class PermissionService : IPermissionService {
   }
 
   public async Task LeaveTenantAsync(Guid userId, Guid tenantId) {
-    TenantPermission? membership = await _context.TenantPermissions.FirstOrDefaultAsync(tp =>
-                                                                                          tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null
-                                   );
+    var membership = await _context.TenantPermissions.FirstOrDefaultAsync(tp =>
+                                                                            tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null
+                     );
 
     if (membership != null) {
       // Instead of setting Status, we expire the membership or delete it
@@ -236,9 +236,9 @@ public class PermissionService : IPermissionService {
   }
 
   public async Task<bool> IsUserInTenantAsync(Guid userId, Guid tenantId) {
-    TenantPermission? membership = await _context.TenantPermissions.FirstOrDefaultAsync(tp =>
-                                                                                          tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null
-                                   );
+    var membership = await _context.TenantPermissions.FirstOrDefaultAsync(tp =>
+                                                                            tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null
+                     );
 
     return membership?.IsActiveMembership == true;
   }
@@ -247,9 +247,9 @@ public class PermissionService : IPermissionService {
     Guid userId, Guid tenantId,
     DateTime? expiresAt
   ) {
-    TenantPermission? membership = await _context.TenantPermissions.FirstOrDefaultAsync(tp =>
-                                                                                          tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null
-                                   );
+    var membership = await _context.TenantPermissions.FirstOrDefaultAsync(tp =>
+                                                                            tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null
+                     );
 
     if (membership == null) throw new InvalidOperationException("User is not a member of this tenant");
 
@@ -271,9 +271,9 @@ public class PermissionService : IPermissionService {
     if (permissions?.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
 
     // Find existing permission record or create new one
-    ContentTypePermission? existingPermission = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
-                                                                                                            ctp.UserId == userId && ctp.TenantId == tenantId && ctp.ContentType == contentTypeName && ctp.DeletedAt == null
-                                                );
+    var existingPermission = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
+                                                                                         ctp.UserId == userId && ctp.TenantId == tenantId && ctp.ContentType == contentTypeName && ctp.DeletedAt == null
+                             );
 
     ContentTypePermission contentTypePermission;
 
@@ -281,7 +281,7 @@ public class PermissionService : IPermissionService {
       // Update existing permission
       contentTypePermission = existingPermission;
 
-      foreach (PermissionType permission in permissions!) { contentTypePermission.AddPermission(permission); }
+      foreach (var permission in permissions!) { contentTypePermission.AddPermission(permission); }
 
       contentTypePermission.Touch();
     }
@@ -295,7 +295,7 @@ public class PermissionService : IPermissionService {
       };
 
       // Add permissions
-      foreach (PermissionType permission in permissions!) { contentTypePermission.AddPermission(permission); }
+      foreach (var permission in permissions!) { contentTypePermission.AddPermission(permission); }
 
       _context.ContentTypePermissions.Add(contentTypePermission);
     }
@@ -310,36 +310,36 @@ public class PermissionService : IPermissionService {
     if (string.IsNullOrWhiteSpace(contentTypeName)) return false;
 
     // Check user-specific content type permission
-    ContentTypePermission? userPermission = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
-                                                                                                        ctp.UserId == userId &&
-                                                                                                        ctp.TenantId == tenantId &&
-                                                                                                        ctp.ContentType == contentTypeName &&
-                                                                                                        ctp.DeletedAt == null &&
-                                                                                                        (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow)
-                                            );
+    var userPermission = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
+                                                                                     ctp.UserId == userId &&
+                                                                                     ctp.TenantId == tenantId &&
+                                                                                     ctp.ContentType == contentTypeName &&
+                                                                                     ctp.DeletedAt == null &&
+                                                                                     (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow)
+                         );
 
     if (userPermission?.HasPermission(permission) == true) return true; // Check tenant default for this content type
 
     if (tenantId.HasValue) {
-      ContentTypePermission? tenantDefault = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
-                                                                                                         ctp.UserId == null &&
-                                                                                                         ctp.TenantId == tenantId &&
-                                                                                                         ctp.ContentType == contentTypeName &&
-                                                                                                         ctp.DeletedAt == null &&
-                                                                                                         (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow)
-                                             );
+      var tenantDefault = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
+                                                                                      ctp.UserId == null &&
+                                                                                      ctp.TenantId == tenantId &&
+                                                                                      ctp.ContentType == contentTypeName &&
+                                                                                      ctp.DeletedAt == null &&
+                                                                                      (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow)
+                          );
 
       if (tenantDefault?.HasPermission(permission) == true) return true;
     }
 
     // Check global default for this content type
-    ContentTypePermission? globalDefault = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
-                                                                                                       ctp.UserId == null &&
-                                                                                                       ctp.TenantId == null &&
-                                                                                                       ctp.ContentType == contentTypeName &&
-                                                                                                       ctp.DeletedAt == null &&
-                                                                                                       (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow)
-                                           );
+    var globalDefault = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
+                                                                                    ctp.UserId == null &&
+                                                                                    ctp.TenantId == null &&
+                                                                                    ctp.ContentType == contentTypeName &&
+                                                                                    ctp.DeletedAt == null &&
+                                                                                    (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow)
+                        );
 
     if (globalDefault?.HasPermission(permission) == true) return true;
 
@@ -357,13 +357,13 @@ public class PermissionService : IPermissionService {
   ) {
     if (string.IsNullOrWhiteSpace(contentTypeName)) return [];
 
-    ContentTypePermission? contentTypePermission = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
-                                                                                                               ctp.UserId == userId &&
-                                                                                                               ctp.TenantId == tenantId &&
-                                                                                                               ctp.ContentType == contentTypeName &&
-                                                                                                               ctp.DeletedAt == null &&
-                                                                                                               (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow)
-                                                   );
+    var contentTypePermission = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
+                                                                                            ctp.UserId == userId &&
+                                                                                            ctp.TenantId == tenantId &&
+                                                                                            ctp.ContentType == contentTypeName &&
+                                                                                            ctp.DeletedAt == null &&
+                                                                                            (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow)
+                                );
 
     if (contentTypePermission == null) return [];
 
@@ -378,12 +378,12 @@ public class PermissionService : IPermissionService {
 
     if (permissions?.Length == 0) return; // Nothing to revoke
 
-    ContentTypePermission? existingPermission = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
-                                                                                                            ctp.UserId == userId && ctp.TenantId == tenantId && ctp.ContentType == contentTypeName && ctp.DeletedAt == null
-                                                );
+    var existingPermission = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
+                                                                                         ctp.UserId == userId && ctp.TenantId == tenantId && ctp.ContentType == contentTypeName && ctp.DeletedAt == null
+                             );
 
     if (existingPermission != null) {
-      foreach (PermissionType permission in permissions!) { existingPermission.RemovePermission(permission); }
+      foreach (var permission in permissions!) { existingPermission.RemovePermission(permission); }
 
       existingPermission.Touch();
       await _context.SaveChangesAsync();
@@ -394,7 +394,7 @@ public class PermissionService : IPermissionService {
     var permissions = new List<PermissionType>();
 
     // Check all possible permission types, using distinct values to avoid duplicates like Delete/SoftDelete
-    foreach (PermissionType permissionType in Enum.GetValues<PermissionType>().Distinct()) {
+    foreach (var permissionType in Enum.GetValues<PermissionType>().Distinct()) {
       if (permission.HasPermission(permissionType)) { permissions.Add(permissionType); }
     }
 
@@ -406,19 +406,19 @@ public class PermissionService : IPermissionService {
   private async Task<bool> CheckDefaultPermissionAsync(Guid? tenantId, PermissionType permission) {
     // Check tenant default
     if (tenantId.HasValue) {
-      TenantPermission? tenantDefault = await _context.TenantPermissions.AsNoTracking()
-                                                      .FirstOrDefaultAsync(tp =>
-                                                                             tp.UserId == null && tp.TenantId == tenantId && tp.ExpiresAt == null && tp.DeletedAt == null
-                                                      );
+      var tenantDefault = await _context.TenantPermissions.AsNoTracking()
+                                        .FirstOrDefaultAsync(tp =>
+                                                               tp.UserId == null && tp.TenantId == tenantId && tp.ExpiresAt == null && tp.DeletedAt == null
+                                        );
 
       if (tenantDefault?.IsValid == true && tenantDefault.HasPermission(permission)) { return true; }
     }
 
     // Check global default
-    TenantPermission? globalDefault = await _context.TenantPermissions.AsNoTracking()
-                                                    .FirstOrDefaultAsync(tp =>
-                                                                           tp.UserId == null && tp.TenantId == null && tp.ExpiresAt == null && tp.DeletedAt == null
-                                                    );
+    var globalDefault = await _context.TenantPermissions.AsNoTracking()
+                                      .FirstOrDefaultAsync(tp =>
+                                                             tp.UserId == null && tp.TenantId == null && tp.ExpiresAt == null && tp.DeletedAt == null
+                                      );
 
     return globalDefault?.IsValid == true && globalDefault.HasPermission(permission);
   }
@@ -427,7 +427,7 @@ public class PermissionService : IPermissionService {
     var permissions = new List<PermissionType>();
 
     // Check all possible permission types, using distinct values to avoid duplicates like Delete/SoftDelete
-    foreach (PermissionType permissionType in Enum.GetValues<PermissionType>().Distinct()) {
+    foreach (var permissionType in Enum.GetValues<PermissionType>().Distinct()) {
       if (permission.HasPermission(permissionType)) { permissions.Add(permissionType); }
     }
 
@@ -458,12 +458,12 @@ public class PermissionService : IPermissionService {
     Guid? userId, Guid? tenantId, Guid resourceId,
     PermissionType[] permissions
   ) where TPermission : ResourcePermission<TResource>, new() where TResource : BaseEntity {
-    TPermission? existingPermission = await _context.Set<TPermission>()
-                                                    .FirstOrDefaultAsync(p => p.UserId == userId && p.TenantId == tenantId && p.ResourceId == resourceId);
+    var existingPermission = await _context.Set<TPermission>()
+                                           .FirstOrDefaultAsync(p => p.UserId == userId && p.TenantId == tenantId && p.ResourceId == resourceId);
 
     if (existingPermission != null) {
       // Update existing permissions
-      foreach (PermissionType permission in permissions) { existingPermission.AddPermission(permission); }
+      foreach (var permission in permissions) { existingPermission.AddPermission(permission); }
 
       existingPermission.Touch();
     }
@@ -471,7 +471,7 @@ public class PermissionService : IPermissionService {
       // Create new permission record
       var newPermission = new TPermission { UserId = userId, TenantId = tenantId, ResourceId = resourceId };
 
-      foreach (PermissionType permission in permissions) { newPermission.AddPermission(permission); }
+      foreach (var permission in permissions) { newPermission.AddPermission(permission); }
 
       _context.Set<TPermission>().Add(newPermission);
     }
@@ -484,14 +484,14 @@ public class PermissionService : IPermissionService {
     Guid resourceId, PermissionType permission
   ) where TPermission : ResourcePermission<TResource>
     where TResource : BaseEntity {
-    TPermission? resourcePermission = await _context.Set<TPermission>()
-                                                    .FirstOrDefaultAsync(p =>
-                                                                           p.UserId == userId &&
-                                                                           p.TenantId == tenantId &&
-                                                                           p.ResourceId == resourceId &&
-                                                                           p.ExpiresAt == null &&
-                                                                           p.DeletedAt == null
-                                                    );
+    var resourcePermission = await _context.Set<TPermission>()
+                                           .FirstOrDefaultAsync(p =>
+                                                                  p.UserId == userId &&
+                                                                  p.TenantId == tenantId &&
+                                                                  p.ResourceId == resourceId &&
+                                                                  p.ExpiresAt == null &&
+                                                                  p.DeletedAt == null
+                                           );
 
     return resourcePermission?.HasPermission(permission) ?? false;
   }
@@ -500,20 +500,20 @@ public class PermissionService : IPermissionService {
     Guid? userId,
     Guid? tenantId, Guid resourceId
   ) where TPermission : ResourcePermission<TResource> where TResource : BaseEntity {
-    TPermission? resourcePermission = await _context.Set<TPermission>()
-                                                    .FirstOrDefaultAsync(p =>
-                                                                           p.UserId == userId &&
-                                                                           p.TenantId == tenantId &&
-                                                                           p.ResourceId == resourceId &&
-                                                                           p.ExpiresAt == null &&
-                                                                           p.DeletedAt == null
-                                                    );
+    var resourcePermission = await _context.Set<TPermission>()
+                                           .FirstOrDefaultAsync(p =>
+                                                                  p.UserId == userId &&
+                                                                  p.TenantId == tenantId &&
+                                                                  p.ResourceId == resourceId &&
+                                                                  p.ExpiresAt == null &&
+                                                                  p.DeletedAt == null
+                                           );
 
     if (resourcePermission == null) return [];
 
     var permissions = new HashSet<PermissionType>();
 
-    foreach (PermissionType permissionType in Enum.GetValues<PermissionType>()) {
+    foreach (var permissionType in Enum.GetValues<PermissionType>()) {
       if (resourcePermission.HasPermission(permissionType)) { permissions.Add(permissionType); }
     }
 
@@ -524,11 +524,11 @@ public class PermissionService : IPermissionService {
     Guid? userId, Guid? tenantId, Guid resourceId,
     PermissionType[] permissions
   ) where TPermission : ResourcePermission<TResource> where TResource : BaseEntity {
-    TPermission? existingPermission = await _context.Set<TPermission>()
-                                                    .FirstOrDefaultAsync(p => p.UserId == userId && p.TenantId == tenantId && p.ResourceId == resourceId);
+    var existingPermission = await _context.Set<TPermission>()
+                                           .FirstOrDefaultAsync(p => p.UserId == userId && p.TenantId == tenantId && p.ResourceId == resourceId);
 
     if (existingPermission != null) {
-      foreach (PermissionType permission in permissions) { existingPermission.RemovePermission(permission); }
+      foreach (var permission in permissions) { existingPermission.RemovePermission(permission); }
 
       existingPermission.Touch();
       await _context.SaveChangesAsync();
@@ -555,10 +555,10 @@ public class PermissionService : IPermissionService {
     // Pre-cache enum values to avoid repeated Enum.GetValues calls
     var allPermissionTypes = Enum.GetValues<PermissionType>();
 
-    foreach (TPermission permission in permissions) {
+    foreach (var permission in permissions) {
       var permissionTypes = new List<PermissionType>();
 
-      foreach (PermissionType permType in allPermissionTypes) {
+      foreach (var permType in allPermissionTypes) {
         if (permission.HasPermission(permType)) { permissionTypes.Add(permType); }
       }
 
@@ -582,10 +582,10 @@ public class PermissionService : IPermissionService {
 
     // Set expiration if provided
     if (expiresAt.HasValue) {
-      TPermission? permission = await _context.Set<TPermission>()
-                                              .FirstOrDefaultAsync(p =>
-                                                                     p.UserId == targetUserId && p.TenantId == tenantId && p.ResourceId == resourceId
-                                              );
+      var permission = await _context.Set<TPermission>()
+                                     .FirstOrDefaultAsync(p =>
+                                                            p.UserId == targetUserId && p.TenantId == tenantId && p.ResourceId == resourceId
+                                     );
 
       if (permission != null) {
         permission.ExpiresAt = expiresAt.Value;
@@ -619,14 +619,14 @@ public class PermissionService : IPermissionService {
     var existingPermissionLookup = existingPermissions.ToDictionary(ep => ep.UserId!.Value);
     var result = new List<TenantPermission>();
 
-    foreach (Guid userId in userIds) {
+    foreach (var userId in userIds) {
       TenantPermission tenantPermission;
 
-      if (existingPermissionLookup.TryGetValue(userId, out TenantPermission? existingPermission)) {
+      if (existingPermissionLookup.TryGetValue(userId, out var existingPermission)) {
         // Update existing permission
         tenantPermission = existingPermission;
 
-        foreach (PermissionType permission in permissions) { tenantPermission.AddPermission(permission); }
+        foreach (var permission in permissions) { tenantPermission.AddPermission(permission); }
 
         tenantPermission.Touch();
       }
@@ -634,7 +634,7 @@ public class PermissionService : IPermissionService {
         // Create new permission record
         tenantPermission = new TenantPermission { UserId = userId, TenantId = tenantId, };
 
-        foreach (PermissionType permission in permissions) { tenantPermission.AddPermission(permission); }
+        foreach (var permission in permissions) { tenantPermission.AddPermission(permission); }
 
         _context.TenantPermissions.Add(tenantPermission);
       }
@@ -666,8 +666,8 @@ public class PermissionService : IPermissionService {
     var newResourceIds = resourceIds.Except(existingResourceIds).ToArray();
 
     // Update existing permissions
-    foreach (TPermission existingPermission in existingPermissions) {
-      foreach (PermissionType permission in permissions) { existingPermission.AddPermission(permission); }
+    foreach (var existingPermission in existingPermissions) {
+      foreach (var permission in permissions) { existingPermission.AddPermission(permission); }
 
       existingPermission.Touch();
     }
@@ -675,10 +675,10 @@ public class PermissionService : IPermissionService {
     // Create new permissions for resources that don't have any
     var newPermissions = new List<TPermission>();
 
-    foreach (Guid resourceId in newResourceIds) {
+    foreach (var resourceId in newResourceIds) {
       var resourcePermission = new TPermission { UserId = userId, TenantId = tenantId, ResourceId = resourceId };
 
-      foreach (PermissionType permission in permissions) { resourcePermission.AddPermission(permission); }
+      foreach (var permission in permissions) { resourcePermission.AddPermission(permission); }
 
       newPermissions.Add(resourcePermission);
     }

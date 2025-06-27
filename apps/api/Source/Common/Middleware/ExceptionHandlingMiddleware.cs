@@ -23,14 +23,14 @@ public class ExceptionHandlingMiddleware {
   }
 
   private static async Task HandleExceptionAsync(HttpContext context, Exception exception) {
-    HttpResponse response = context.Response;
+    var response = context.Response;
     response.ContentType = "application/json";
 
     var errorResponse = new { message = exception.Message, statusCode = (int)HttpStatusCode.InternalServerError, timestamp = DateTime.UtcNow };
 
     response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-    string jsonResponse = JsonSerializer.Serialize(errorResponse);
+    var jsonResponse = JsonSerializer.Serialize(errorResponse);
     await response.WriteAsync(jsonResponse);
   }
 }

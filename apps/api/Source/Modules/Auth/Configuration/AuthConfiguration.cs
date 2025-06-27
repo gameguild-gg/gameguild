@@ -4,7 +4,6 @@ using System.Text;
 using GameGuild.Modules.Auth.Filters;
 using GameGuild.Modules.Auth.Middleware;
 using GameGuild.Modules.Auth.Services;
-using Microsoft.Extensions.Primitives;
 
 
 namespace GameGuild.Modules.Auth.Configuration {
@@ -32,10 +31,10 @@ namespace GameGuild.Modules.Auth.Configuration {
       // RoleAuthorizationFilter removed - using new three-layer DAC system
 
       // Configure JWT authentication
-      IConfigurationSection jwtSettings = configuration.GetSection("Jwt");
-      string secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is required");
-      string issuer = jwtSettings["Issuer"] ?? throw new InvalidOperationException("JWT Issuer is required");
-      string audience = jwtSettings["Audience"] ?? throw new InvalidOperationException("JWT Audience is required");
+      var jwtSettings = configuration.GetSection("Jwt");
+      var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is required");
+      var issuer = jwtSettings["Issuer"] ?? throw new InvalidOperationException("JWT Issuer is required");
+      var audience = jwtSettings["Audience"] ?? throw new InvalidOperationException("JWT Audience is required");
 
       services.AddAuthentication(options => {
                   options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -60,8 +59,8 @@ namespace GameGuild.Modules.Auth.Configuration {
                   options.Events = new JwtBearerEvents {
                     OnMessageReceived = context => {
                       // Allow token in query string for SignalR connections
-                      StringValues accessToken = context.Request.Query["access_token"];
-                      PathString path = context.HttpContext.Request.Path;
+                      var accessToken = context.Request.Query["access_token"];
+                      var path = context.HttpContext.Request.Path;
 
                       if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs")) { context.Token = accessToken; }
 
@@ -70,7 +69,7 @@ namespace GameGuild.Modules.Auth.Configuration {
                     OnAuthenticationFailed = context => {
                       // Log authentication failures
                       var loggerFactory = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>();
-                      ILogger logger = loggerFactory.CreateLogger("AuthConfiguration");
+                      var logger = loggerFactory.CreateLogger("AuthConfiguration");
                       logger.LogWarning("JWT authentication failed: {Exception}", context.Exception.Message);
 
                       return Task.CompletedTask;

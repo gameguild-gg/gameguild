@@ -26,8 +26,8 @@ namespace GameGuild.Modules.Auth.Services {
     }
 
     public async Task<string> ExchangeGitHubCodeAsync(string code, string redirectUri) {
-      string? clientId = _configuration["OAuth:GitHub:ClientId"];
-      string? clientSecret = _configuration["OAuth:GitHub:ClientSecret"];
+      var clientId = _configuration["OAuth:GitHub:ClientId"];
+      var clientSecret = _configuration["OAuth:GitHub:ClientSecret"];
 
       var tokenRequest = new { client_id = clientId, client_secret = clientSecret, code, redirect_uri = redirectUri };
 
@@ -42,9 +42,9 @@ namespace GameGuild.Modules.Auth.Services {
         new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json")
       );
 
-      HttpResponseMessage response =
+      var response =
         await _httpClient.PostAsync("https://github.com/login/oauth/access_token", content);
-      string responseContent = await response.Content.ReadAsStringAsync();
+      var responseContent = await response.Content.ReadAsStringAsync();
 
       var tokenResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
 
@@ -57,10 +57,10 @@ namespace GameGuild.Modules.Auth.Services {
       _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
       _httpClient.DefaultRequestHeaders.Add("User-Agent", "GameGuild-CMS");
 
-      HttpResponseMessage response = await _httpClient.GetAsync("https://api.github.com/user");
-      string content = await response.Content.ReadAsStringAsync();
+      var response = await _httpClient.GetAsync("https://api.github.com/user");
+      var content = await response.Content.ReadAsStringAsync();
 
-      GitHubUserDto user =
+      var user =
         JsonSerializer.Deserialize<GitHubUserDto>(
           content,
           new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }
@@ -69,12 +69,12 @@ namespace GameGuild.Modules.Auth.Services {
 
       // Get email if not public
       if (string.IsNullOrEmpty(user.Email)) {
-        HttpResponseMessage emailResponse = await _httpClient.GetAsync("https://api.github.com/user/emails");
-        string emailContent = await emailResponse.Content.ReadAsStringAsync();
+        var emailResponse = await _httpClient.GetAsync("https://api.github.com/user/emails");
+        var emailContent = await emailResponse.Content.ReadAsStringAsync();
         var emails = JsonSerializer.Deserialize<JsonElement[]>(emailContent);
 
         if (emails != null) {
-          foreach (JsonElement email in emails) {
+          foreach (var email in emails) {
             if (email.GetProperty("primary").GetBoolean()) {
               user.Email = email.GetProperty("email").GetString() ?? "";
 
@@ -88,8 +88,8 @@ namespace GameGuild.Modules.Auth.Services {
     }
 
     public async Task<string> ExchangeGoogleCodeAsync(string code, string redirectUri) {
-      string? clientId = _configuration["OAuth:Google:ClientId"];
-      string? clientSecret = _configuration["OAuth:Google:ClientSecret"];
+      var clientId = _configuration["OAuth:Google:ClientId"];
+      var clientSecret = _configuration["OAuth:Google:ClientSecret"];
 
       var tokenRequest = new Dictionary<string, string> {
         { "client_id", clientId! },
@@ -100,8 +100,8 @@ namespace GameGuild.Modules.Auth.Services {
       };
 
       var content = new FormUrlEncodedContent(tokenRequest);
-      HttpResponseMessage response = await _httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
-      string responseContent = await response.Content.ReadAsStringAsync();
+      var response = await _httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
+      var responseContent = await response.Content.ReadAsStringAsync();
 
       var tokenResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
 
@@ -113,8 +113,8 @@ namespace GameGuild.Modules.Auth.Services {
       _httpClient.DefaultRequestHeaders.Clear();
       _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
 
-      HttpResponseMessage response = await _httpClient.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
-      string content = await response.Content.ReadAsStringAsync();
+      var response = await _httpClient.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
+      var content = await response.Content.ReadAsStringAsync();
 
       return JsonSerializer.Deserialize<GoogleUserDto>(
                content,
@@ -126,12 +126,12 @@ namespace GameGuild.Modules.Auth.Services {
     public async Task<GoogleUserDto> ValidateGoogleIdTokenAsync(string idToken) {
       try {
         // Call Google's tokeninfo API to validate the ID token
-        HttpResponseMessage response =
+        var response =
           await _httpClient.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}");
 
         if (!response.IsSuccessStatusCode) { throw new UnauthorizedAccessException($"Google tokeninfo API returned {response.StatusCode}"); }
 
-        string content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync();
 
         // Parse the JSON response manually since Google's tokeninfo API uses different field names
         var tokenInfo = JsonSerializer.Deserialize<JsonElement>(content);
@@ -144,11 +144,11 @@ namespace GameGuild.Modules.Auth.Services {
           Id = tokenInfo.GetProperty("sub").GetString() ?? throw new InvalidOperationException("Missing sub claim"),
           Email = tokenInfo.GetProperty("email").GetString() ??
                   throw new InvalidOperationException("Missing email claim"),
-          Name = tokenInfo.TryGetProperty("name", out JsonElement nameElement) ? nameElement.GetString() ?? "" : "",
-          Picture = tokenInfo.TryGetProperty("picture", out JsonElement pictureElement)
+          Name = tokenInfo.TryGetProperty("name", out var nameElement) ? nameElement.GetString() ?? "" : "",
+          Picture = tokenInfo.TryGetProperty("picture", out var pictureElement)
                       ? pictureElement.GetString() ?? ""
                       : "",
-          EmailVerified = tokenInfo.TryGetProperty("email_verified", out JsonElement verifiedElement) &&
+          EmailVerified = tokenInfo.TryGetProperty("email_verified", out var verifiedElement) &&
                           (verifiedElement.GetString() == "true" || verifiedElement.ValueKind == JsonValueKind.True)
         };
 

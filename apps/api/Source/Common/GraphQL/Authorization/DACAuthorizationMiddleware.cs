@@ -2,8 +2,6 @@ using HotChocolate.Resolvers;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using System.Security.Claims;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Http;
 
 
 namespace GameGuild.Common.GraphQL.Authorization;

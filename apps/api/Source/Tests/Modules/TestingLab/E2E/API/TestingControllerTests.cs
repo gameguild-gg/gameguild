@@ -1,18 +1,15 @@
 using Xunit;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text;
 using GameGuild.Data;
 using GameGuild.Common.Entities;
-using GameGuild.Common.Enums;
 using GameGuild.Common.Services;
 using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Tests.Fixtures;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.User.Models;
-using GameGuild.Modules.Tenant.Models;
 using System.Net.Http.Headers;
 using Xunit.Abstractions;
 using ProjectModel = GameGuild.Modules.Project.Models.Project;
@@ -52,7 +49,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     var (user, tenant) = await SeedUserAndTenantAsync(_context);
     await SetupPermissionsAsync(_context, user.Id, tenant.Id);
 
-    string token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
     // Act
@@ -77,7 +74,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     // Arrange
     var (testingRequest, user, tenant) = await SeedTestDataAsync(_context);
 
-    string token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
     // Act
@@ -107,7 +104,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     var project = await CreateTestProjectAsync(_context, user.Id);
     var projectVersion = await CreateTestProjectVersionAsync(_context, project.Id, user.Id);
 
-    string token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
     var newRequest = new {
@@ -142,7 +139,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     var (user, tenant) = await SeedUserAndTenantAsync(_context);
     await SetupPermissionsAsync(_context, user.Id, tenant.Id);
 
-    string token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
     var invalidRequest = new {
@@ -165,7 +162,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     // Arrange
     var (testingRequest, user, tenant) = await SeedTestDataAsync(_context);
 
-    string token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
     // Act
@@ -191,7 +188,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     var (user, tenant) = await SeedUserAndTenantAsync(_context);
     await SetupPermissionsAsync(_context, user.Id, tenant.Id);
 
-    string token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
     var nonExistentId = Guid.NewGuid();
@@ -208,7 +205,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     // Arrange
     var (testingSession, user, tenant) = await SeedTestSessionDataAsync(_context);
 
-    string token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
     // Act
@@ -234,7 +231,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     // Arrange
     var (testingSession, user, tenant) = await SeedTestSessionDataAsync(_context);
 
-    string token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
     // Act

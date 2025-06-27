@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using GameGuild.Modules.Program.Services;
 using GameGuild.Modules.Program.Interfaces;
 using GameGuild.Modules.Program.Models;
 using GameGuild.Modules.Program.DTOs;

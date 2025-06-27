@@ -78,7 +78,7 @@ public class TenantAuthServiceTests : IDisposable {
     var authResult = new SignInResponseDto { AccessToken = "original-token", RefreshToken = "refresh-token", User = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email } };
 
     // Act
-    SignInResponseDto result = await _tenantAuthService.EnhanceWithTenantDataAsync(authResult, user, tenantId);
+    var result = await _tenantAuthService.EnhanceWithTenantDataAsync(authResult, user, tenantId);
 
     // Assert
     Assert.NotNull(result);
@@ -103,7 +103,7 @@ public class TenantAuthServiceTests : IDisposable {
     var authResult = new SignInResponseDto { AccessToken = "original-token", RefreshToken = "refresh-token", User = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email } };
 
     // Act
-    SignInResponseDto result = await _tenantAuthService.EnhanceWithTenantDataAsync(authResult, user, null);
+    var result = await _tenantAuthService.EnhanceWithTenantDataAsync(authResult, user);
 
     // Assert
     Assert.NotNull(result);

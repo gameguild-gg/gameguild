@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Attributes;
-using GameGuild.Modules.Auth.Attributes;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Tenant.Services;

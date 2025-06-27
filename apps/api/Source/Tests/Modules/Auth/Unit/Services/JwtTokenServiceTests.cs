@@ -33,7 +33,7 @@ public class JwtTokenServiceTests {
     var roles = new[] { "User", "Admin" };
 
     // Act
-    string token = _jwtTokenService.GenerateAccessToken(user, roles);
+    var token = _jwtTokenService.GenerateAccessToken(user, roles);
 
     // Assert
     Assert.NotNull(token);
@@ -41,7 +41,7 @@ public class JwtTokenServiceTests {
 
     // Verify token structure
     var handler = new JwtSecurityTokenHandler();
-    JwtSecurityToken? jsonToken = handler.ReadJwtToken(token);
+    var jsonToken = handler.ReadJwtToken(token);
 
     Assert.Equal("test-issuer", jsonToken.Issuer);
     Assert.Contains(jsonToken.Audiences, a => a == "test-audience");
@@ -55,10 +55,10 @@ public class JwtTokenServiceTests {
     // Arrange
     var user = new UserDto { Id = Guid.NewGuid(), Username = "testuser", Email = "test@example.com" };
     var roles = new[] { "User" };
-    string token = _jwtTokenService.GenerateAccessToken(user, roles);
+    var token = _jwtTokenService.GenerateAccessToken(user, roles);
 
     // Act
-    ClaimsPrincipal? principal = _jwtTokenService.ValidateToken(token);
+    var principal = _jwtTokenService.ValidateToken(token);
 
     // Assert
     Assert.NotNull(principal);
@@ -66,15 +66,15 @@ public class JwtTokenServiceTests {
 
     // Debug: Check all claims to understand what's available
     var allClaims = principal.Claims.ToList();
-    Claim? subClaim = allClaims.FirstOrDefault(c =>
-                                                 c.Type is JwtRegisteredClaimNames.Sub
-                                                           or "sub"
-                                                           or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+    var subClaim = allClaims.FirstOrDefault(c =>
+                                              c.Type is JwtRegisteredClaimNames.Sub
+                                                        or "sub"
+                                                        or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
     );
-    Claim? emailClaim = allClaims.FirstOrDefault(c =>
-                                                   c.Type is JwtRegisteredClaimNames.Email
-                                                             or "email"
-                                                             or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+    var emailClaim = allClaims.FirstOrDefault(c =>
+                                                c.Type is JwtRegisteredClaimNames.Email
+                                                          or "email"
+                                                          or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
     );
 
     // Debug output - remove after fixing
@@ -94,7 +94,7 @@ public class JwtTokenServiceTests {
     var invalidToken = "invalid-token";
 
     // Act
-    ClaimsPrincipal? principal = _jwtTokenService.ValidateToken(invalidToken);
+    var principal = _jwtTokenService.ValidateToken(invalidToken);
 
     // Assert
     Assert.Null(principal);
@@ -111,16 +111,16 @@ public class JwtTokenServiceTests {
       { "Jwt:RefreshTokenExpiryInDays", "7" }
     };
 
-    IConfigurationRoot expiredConfig = new ConfigurationBuilder().AddInMemoryCollection(expiredConfigData!).Build();
+    var expiredConfig = new ConfigurationBuilder().AddInMemoryCollection(expiredConfigData!).Build();
 
     var expiredTokenService = new JwtTokenService(expiredConfig);
 
     var user = new UserDto { Id = Guid.NewGuid(), Username = "testuser", Email = "test@example.com" };
     var roles = new[] { "User" };
-    string expiredToken = expiredTokenService.GenerateAccessToken(user, roles);
+    var expiredToken = expiredTokenService.GenerateAccessToken(user, roles);
 
     // Act
-    ClaimsPrincipal? principal = _jwtTokenService.ValidateToken(expiredToken);
+    var principal = _jwtTokenService.ValidateToken(expiredToken);
 
     // Assert
     Assert.Null(principal);
@@ -137,28 +137,28 @@ public class JwtTokenServiceTests {
       { "Jwt:RefreshTokenExpiryInDays", "7" }
     };
 
-    IConfigurationRoot expiredConfig = new ConfigurationBuilder().AddInMemoryCollection(expiredConfigData!).Build();
+    var expiredConfig = new ConfigurationBuilder().AddInMemoryCollection(expiredConfigData!).Build();
 
     var expiredTokenService = new JwtTokenService(expiredConfig);
 
     var user = new UserDto { Id = Guid.NewGuid(), Username = "testuser", Email = "test@example.com" };
     var roles = new[] { "User" };
-    string expiredToken = expiredTokenService.GenerateAccessToken(user, roles);
+    var expiredToken = expiredTokenService.GenerateAccessToken(user, roles);
 
     // Act
-    ClaimsPrincipal? principal = _jwtTokenService.GetPrincipalFromExpiredToken(expiredToken);
+    var principal = _jwtTokenService.GetPrincipalFromExpiredToken(expiredToken);
 
     // Assert
     Assert.NotNull(principal);
-    Claim? subClaim = principal.Claims.FirstOrDefault(c =>
-                                                        c.Type is JwtRegisteredClaimNames.Sub
-                                                                  or "sub"
-                                                                  or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+    var subClaim = principal.Claims.FirstOrDefault(c =>
+                                                     c.Type is JwtRegisteredClaimNames.Sub
+                                                               or "sub"
+                                                               or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
     );
-    Claim? emailClaim = principal.Claims.FirstOrDefault(c =>
-                                                          c.Type is JwtRegisteredClaimNames.Email
-                                                                    or "email"
-                                                                    or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+    var emailClaim = principal.Claims.FirstOrDefault(c =>
+                                                       c.Type is JwtRegisteredClaimNames.Email
+                                                                 or "email"
+                                                                 or "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
     );
 
     Assert.Equal(user.Id.ToString(), subClaim?.Value);
@@ -168,8 +168,8 @@ public class JwtTokenServiceTests {
   [Fact]
   public void GenerateRefreshToken_ReturnsSecureToken() {
     // Act
-    string refreshToken1 = _jwtTokenService.GenerateRefreshToken();
-    string refreshToken2 = _jwtTokenService.GenerateRefreshToken();
+    var refreshToken1 = _jwtTokenService.GenerateRefreshToken();
+    var refreshToken2 = _jwtTokenService.GenerateRefreshToken();
 
     // Assert
     Assert.NotNull(refreshToken1);
@@ -187,11 +187,11 @@ public class JwtTokenServiceTests {
     var roles = new[] { "User", "Admin", "Moderator" };
 
     // Act
-    string token = _jwtTokenService.GenerateAccessToken(user, roles);
+    var token = _jwtTokenService.GenerateAccessToken(user, roles);
 
     // Assert
     var handler = new JwtSecurityTokenHandler();
-    JwtSecurityToken? jsonToken = handler.ReadJwtToken(token);
+    var jsonToken = handler.ReadJwtToken(token);
 
     var roleClaims = jsonToken.Claims.Where(c => c.Type == ClaimTypes.Role).ToArray();
     Assert.Equal(3, roleClaims.Length);
@@ -207,12 +207,12 @@ public class JwtTokenServiceTests {
     string[] roles = [];
 
     // Act
-    string token = _jwtTokenService.GenerateAccessToken(user, roles);
+    var token = _jwtTokenService.GenerateAccessToken(user, roles);
 
     // Assert
     Assert.NotNull(token);
     var handler = new JwtSecurityTokenHandler();
-    JwtSecurityToken? jsonToken = handler.ReadJwtToken(token);
+    var jsonToken = handler.ReadJwtToken(token);
 
     var roleClaims = jsonToken.Claims.Where(c => c.Type == ClaimTypes.Role);
     Assert.Empty(roleClaims);
@@ -229,23 +229,23 @@ public class JwtTokenServiceTests {
     var tenantClaims = new List<Claim> { new Claim("tenant_id", tenantId.ToString()), new Claim("tenant_permission_flags1", "42"), new Claim("tenant_permission_flags2", "24") };
 
     // Act
-    string token = _jwtTokenService.GenerateAccessToken(user, roles, tenantClaims);
+    var token = _jwtTokenService.GenerateAccessToken(user, roles, tenantClaims);
 
     // Assert
     Assert.NotNull(token);
     var handler = new JwtSecurityTokenHandler();
-    JwtSecurityToken? jsonToken = handler.ReadJwtToken(token);
+    var jsonToken = handler.ReadJwtToken(token);
 
     // Verify tenant claims are present
-    Claim? tenantIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "tenant_id");
+    var tenantIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "tenant_id");
     Assert.NotNull(tenantIdClaim);
     Assert.Equal(tenantId.ToString(), tenantIdClaim.Value);
 
-    Claim? permissionFlags1Claim = jsonToken.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags1");
+    var permissionFlags1Claim = jsonToken.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags1");
     Assert.NotNull(permissionFlags1Claim);
     Assert.Equal("42", permissionFlags1Claim.Value);
 
-    Claim? permissionFlags2Claim = jsonToken.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags2");
+    var permissionFlags2Claim = jsonToken.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags2");
     Assert.NotNull(permissionFlags2Claim);
     Assert.Equal("24", permissionFlags2Claim.Value);
   }
@@ -261,7 +261,7 @@ public class JwtTokenServiceTests {
       { "Jwt:RefreshTokenExpiryInDays", "7" }
     };
 
-    IConfigurationRoot expiredConfig = new ConfigurationBuilder().AddInMemoryCollection(expiredConfigData!).Build();
+    var expiredConfig = new ConfigurationBuilder().AddInMemoryCollection(expiredConfigData!).Build();
 
     var expiredTokenService = new JwtTokenService(expiredConfig);
 
@@ -272,24 +272,24 @@ public class JwtTokenServiceTests {
     var tenantId = Guid.NewGuid();
     var tenantClaims = new List<Claim> { new Claim("tenant_id", tenantId.ToString()), new Claim("tenant_permission_flags1", "42"), new Claim("tenant_permission_flags2", "24") };
 
-    string expiredToken = expiredTokenService.GenerateAccessToken(user, roles, tenantClaims);
+    var expiredToken = expiredTokenService.GenerateAccessToken(user, roles, tenantClaims);
 
     // Act
-    ClaimsPrincipal? principal = _jwtTokenService.GetPrincipalFromExpiredToken(expiredToken);
+    var principal = _jwtTokenService.GetPrincipalFromExpiredToken(expiredToken);
 
     // Assert
     Assert.NotNull(principal);
 
     // Verify tenant claims are preserved
-    Claim? tenantIdClaim = principal.Claims.FirstOrDefault(c => c.Type == "tenant_id");
+    var tenantIdClaim = principal.Claims.FirstOrDefault(c => c.Type == "tenant_id");
     Assert.NotNull(tenantIdClaim);
     Assert.Equal(tenantId.ToString(), tenantIdClaim.Value);
 
-    Claim? permissionFlags1Claim = principal.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags1");
+    var permissionFlags1Claim = principal.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags1");
     Assert.NotNull(permissionFlags1Claim);
     Assert.Equal("42", permissionFlags1Claim.Value);
 
-    Claim? permissionFlags2Claim = principal.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags2");
+    var permissionFlags2Claim = principal.Claims.FirstOrDefault(c => c.Type == "tenant_permission_flags2");
     Assert.NotNull(permissionFlags2Claim);
     Assert.Equal("24", permissionFlags2Claim.Value);
   }

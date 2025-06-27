@@ -56,7 +56,7 @@ public class UserProfileService : IUserProfileService {
   }
 
   public async Task<Models.UserProfile?> UpdateUserProfileAsync(Guid id, Models.UserProfile userProfile) {
-    Models.UserProfile? existingProfile =
+    var existingProfile =
       await _context.Resources.OfType<Models.UserProfile>().FirstOrDefaultAsync(up => up.Id == id);
 
     if (existingProfile == null || existingProfile.DeletedAt != null) return null;
@@ -73,7 +73,7 @@ public class UserProfileService : IUserProfileService {
   }
 
   public async Task<bool> DeleteUserProfileAsync(Guid id) {
-    Models.UserProfile? userProfile =
+    var userProfile =
       await _context.Resources.OfType<Models.UserProfile>().FirstOrDefaultAsync(up => up.Id == id);
 
     if (userProfile == null) return false;
@@ -85,7 +85,7 @@ public class UserProfileService : IUserProfileService {
   }
 
   public async Task<bool> SoftDeleteUserProfileAsync(Guid id) {
-    Models.UserProfile? userProfile =
+    var userProfile =
       await _context.Resources.OfType<Models.UserProfile>().FirstOrDefaultAsync(up => up.Id == id);
 
     if (userProfile == null || userProfile.DeletedAt != null) return false;
@@ -97,9 +97,9 @@ public class UserProfileService : IUserProfileService {
   }
 
   public async Task<bool> RestoreUserProfileAsync(Guid id) {
-    Models.UserProfile? userProfile = await _context.Resources.OfType<Models.UserProfile>()
-                                                    .IgnoreQueryFilters()
-                                                    .FirstOrDefaultAsync(up => up.Id == id);
+    var userProfile = await _context.Resources.OfType<Models.UserProfile>()
+                                    .IgnoreQueryFilters()
+                                    .FirstOrDefaultAsync(up => up.Id == id);
 
     if (userProfile == null || userProfile.DeletedAt == null) return false;
 

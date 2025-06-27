@@ -7,7 +7,6 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Models;
 using GameGuild.Modules.User.Models;
 using GameGuild.Modules.Tenant.Services;
-using UserModel = GameGuild.Modules.User.Models.User;
 
 
 namespace GameGuild.Modules.Auth.Services {
@@ -22,20 +21,20 @@ namespace GameGuild.Modules.Auth.Services {
     ITenantService tenantService
   ) : IAuthService {
     public async Task<SignInResponseDto> LocalSignInAsync(LocalSignInRequestDto request) {
-      UserModel? user = await context.Users.Include(u => u.Credentials)
-                                     .FirstOrDefaultAsync(u => u.Email == request.Email);
+      var user = await context.Users.Include(u => u.Credentials)
+                              .FirstOrDefaultAsync(u => u.Email == request.Email);
 
       if (user == null) throw new UnauthorizedAccessException("Invalid credentials");
 
-      Credential? passwordCredential = user.Credentials.FirstOrDefault(c => c.Type == "password" && c.IsActive);
+      var passwordCredential = user.Credentials.FirstOrDefault(c => c.Type == "password" && c.IsActive);
 
       if (passwordCredential == null || !VerifyPassword(request.Password, passwordCredential.Value)) throw new UnauthorizedAccessException("Invalid credentials");
 
       var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
       var roles = new[] { "User" }; // TODO: fetch actual roles if available
 
-      string accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
-      string refreshToken = jwtTokenService.GenerateRefreshToken();
+      var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
+      var refreshToken = jwtTokenService.GenerateRefreshToken();
 
       // Save refresh token
       await SaveRefreshTokenAsync(user.Id, refreshToken);
@@ -87,8 +86,8 @@ namespace GameGuild.Modules.Auth.Services {
       var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
       var roles = new[] { "User" }; // TODO: fetch actual roles if available
 
-      string accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
-      string refreshToken = jwtTokenService.GenerateRefreshToken();
+      var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
+      var refreshToken = jwtTokenService.GenerateRefreshToken();
 
       // Save refresh token
       await SaveRefreshTokenAsync(user.Id, refreshToken);
@@ -103,7 +102,7 @@ namespace GameGuild.Modules.Auth.Services {
     private static string HashPassword(string password) {
       // Simple SHA256 hash for demonstration (replace with a secure hash in production)
       using var sha = SHA256.Create();
-      byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+      var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
 
       return Convert.ToBase64String(bytes);
     }
@@ -111,14 +110,14 @@ namespace GameGuild.Modules.Auth.Services {
     private static bool VerifyPassword(string password, string hash) { return HashPassword(password) == hash; }
 
     public async Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request) {
-      RefreshToken? refreshToken = await context.RefreshTokens.Where(rt => rt.Token == request.RefreshToken)
-                                                .Where(rt => !rt.IsRevoked)
-                                                .Where(rt => rt.ExpiresAt > DateTime.UtcNow)
-                                                .FirstOrDefaultAsync();
+      var refreshToken = await context.RefreshTokens.Where(rt => rt.Token == request.RefreshToken)
+                                      .Where(rt => !rt.IsRevoked)
+                                      .Where(rt => rt.ExpiresAt > DateTime.UtcNow)
+                                      .FirstOrDefaultAsync();
 
       if (refreshToken == null) throw new UnauthorizedAccessException("Invalid refresh token");
 
-      User.Models.User? user = await context.Users.FindAsync(refreshToken.UserId);
+      var user = await context.Users.FindAsync(refreshToken.UserId);
 
       if (user == null) throw new UnauthorizedAccessException("User not found");
 
@@ -139,8 +138,8 @@ namespace GameGuild.Modules.Auth.Services {
       }
 
       // Generate token with tenant claims if available
-      string newAccessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
-      string newRefreshToken = jwtTokenService.GenerateRefreshToken();
+      var newAccessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
+      var newRefreshToken = jwtTokenService.GenerateRefreshToken();
 
       // Revoke old refresh token
       refreshToken.IsRevoked = true;
@@ -161,7 +160,7 @@ namespace GameGuild.Modules.Auth.Services {
     }
 
     public async Task RevokeRefreshTokenAsync(string token, string ipAddress) {
-      RefreshToken? refreshToken = await context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
+      var refreshToken = await context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
 
       if (refreshToken == null || !refreshToken.IsActive) throw new ArgumentException("Invalid token");
 
@@ -174,20 +173,20 @@ namespace GameGuild.Modules.Auth.Services {
 
     public async Task<SignInResponseDto> GitHubSignInAsync(OAuthSignInRequestDto request) {
       // Exchange code for access token
-      string accessToken = await oauthService.ExchangeGitHubCodeAsync(request.Code, request.RedirectUri);
+      var accessToken = await oauthService.ExchangeGitHubCodeAsync(request.Code, request.RedirectUri);
 
       // Get user info from GitHub
-      GitHubUserDto githubUser = await oauthService.GetGitHubUserAsync(accessToken);
+      var githubUser = await oauthService.GetGitHubUserAsync(accessToken);
 
       // Find or create user
-      User.Models.User user =
+      var user =
         await FindOrCreateOAuthUserAsync(githubUser.Email, githubUser.Name, "github", githubUser.Id.ToString());
 
       // Generate tokens
       var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
       var roles = new[] { "User" }; // TODO: fetch actual roles
-      string jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
-      string refreshToken = jwtTokenService.GenerateRefreshToken();
+      var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
+      var refreshToken = jwtTokenService.GenerateRefreshToken();
 
       // Save refresh token
       await SaveRefreshTokenAsync(user.Id, refreshToken);
@@ -201,20 +200,20 @@ namespace GameGuild.Modules.Auth.Services {
 
     public async Task<SignInResponseDto> GoogleSignInAsync(OAuthSignInRequestDto request) {
       // Exchange code for access token
-      string accessToken = await oauthService.ExchangeGoogleCodeAsync(request.Code, request.RedirectUri);
+      var accessToken = await oauthService.ExchangeGoogleCodeAsync(request.Code, request.RedirectUri);
 
       // Get user info from Google
-      GoogleUserDto googleUser = await oauthService.GetGoogleUserAsync(accessToken);
+      var googleUser = await oauthService.GetGoogleUserAsync(accessToken);
 
       // Find or create user
-      User.Models.User user =
+      var user =
         await FindOrCreateOAuthUserAsync(googleUser.Email, googleUser.Name, "google", googleUser.Id);
 
       // Generate tokens
       var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
       var roles = new[] { "User" }; // TODO: fetch actual roles
-      string jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
-      string refreshToken = jwtTokenService.GenerateRefreshToken();
+      var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
+      var refreshToken = jwtTokenService.GenerateRefreshToken();
 
       // Save refresh token
       await SaveRefreshTokenAsync(user.Id, refreshToken);
@@ -235,17 +234,17 @@ namespace GameGuild.Modules.Auth.Services {
         if (string.IsNullOrEmpty(request.IdToken)) { throw new ArgumentException("ID token is required"); }
 
         // Validate Google ID Token
-        GoogleUserDto googleUser = await oauthService.ValidateGoogleIdTokenAsync(request.IdToken);
+        var googleUser = await oauthService.ValidateGoogleIdTokenAsync(request.IdToken);
 
         // Find or create user
-        User.Models.User user =
+        var user =
           await FindOrCreateOAuthUserAsync(googleUser.Email, googleUser.Name, "google", googleUser.Id);
 
         // Generate tokens
         var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
         var roles = new[] { "User" }; // TODO: fetch actual roles
-        string jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
-        string refreshToken = jwtTokenService.GenerateRefreshToken();
+        var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
+        var refreshToken = jwtTokenService.GenerateRefreshToken();
 
         // Save refresh token
         await SaveRefreshTokenAsync(user.Id, refreshToken);
@@ -254,7 +253,7 @@ namespace GameGuild.Modules.Auth.Services {
         var response = new SignInResponseDto { AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto };
 
         // Enhance with tenant data
-        SignInResponseDto finalResponse =
+        var finalResponse =
           await tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
 
         return finalResponse;
@@ -263,7 +262,7 @@ namespace GameGuild.Modules.Auth.Services {
     }
 
     public Task<string> GetGitHubAuthUrlAsync(string redirectUri) {
-      string? clientId = configuration["OAuth:GitHub:ClientId"];
+      var clientId = configuration["OAuth:GitHub:ClientId"];
       var scopes = "user:email";
       var state = Guid.NewGuid().ToString(); // In production, store this for validation
 
@@ -274,7 +273,7 @@ namespace GameGuild.Modules.Auth.Services {
     }
 
     public Task<string> GetGoogleAuthUrlAsync(string redirectUri) {
-      string? clientId = configuration["OAuth:Google:ClientId"];
+      var clientId = configuration["OAuth:Google:ClientId"];
       var scopes = "openid email profile";
       var state = Guid.NewGuid().ToString(); // In production, store this for validation
 
@@ -289,7 +288,7 @@ namespace GameGuild.Modules.Auth.Services {
       string providerId
     ) {
       // First try to find user by email
-      User.Models.User? user =
+      var user =
         await context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.Email == email);
 
       if (user == null) {
@@ -306,11 +305,11 @@ namespace GameGuild.Modules.Auth.Services {
       }
 
       // Check if OAuth credential exists (using Type field to store provider info)
-      Credential? credential = user.Credentials?.FirstOrDefault(c => c.Type == $"oauth_{provider}");
+      var credential = user.Credentials?.FirstOrDefault(c => c.Type == $"oauth_{provider}");
 
       if (credential == null) {
         // Add OAuth credential - store provider info in Type and provider ID in Metadata
-        string metadata =
+        var metadata =
           System.Text.Json.JsonSerializer.Serialize(new { ProviderId = providerId, Provider = provider });
 
         credential = new Credential {
@@ -350,19 +349,19 @@ namespace GameGuild.Modules.Auth.Services {
 
     public async Task<SignInResponseDto> VerifyWeb3SignatureAsync(Web3VerifyRequestDto request) {
       // Verify the signature
-      bool isValid = await web3Service.VerifySignatureAsync(request);
+      var isValid = await web3Service.VerifySignatureAsync(request);
 
       if (!isValid) { throw new UnauthorizedAccessException("Invalid Web3 signature"); }
 
       // Find or create user
-      User.Models.User user =
+      var user =
         await web3Service.FindOrCreateWeb3UserAsync(request.WalletAddress, request.ChainId ?? "1");
 
       // Generate tokens
       var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
       var roles = new[] { "User" }; // TODO: fetch actual roles
-      string jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
-      string refreshToken = jwtTokenService.GenerateRefreshToken();
+      var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
+      var refreshToken = jwtTokenService.GenerateRefreshToken();
 
       // Save refresh token
       await SaveRefreshTokenAsync(user.Id, refreshToken);
@@ -384,17 +383,17 @@ namespace GameGuild.Modules.Auth.Services {
 
     public async Task<EmailOperationResponseDto> ChangePasswordAsync(ChangePasswordRequestDto request, Guid userId) {
       try {
-        User.Models.User? user =
+        var user =
           await context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.Id == userId);
 
         if (user == null) { return new EmailOperationResponseDto { Success = false, Message = "User not found" }; }
 
-        Credential? passwordCredential = user.Credentials?.FirstOrDefault(c => c.Type == "password");
+        var passwordCredential = user.Credentials?.FirstOrDefault(c => c.Type == "password");
 
         if (passwordCredential == null) { return new EmailOperationResponseDto { Success = false, Message = "No password set for this account" }; }
 
         // Verify current password
-        string hashedCurrentPassword = HashPassword(request.CurrentPassword);
+        var hashedCurrentPassword = HashPassword(request.CurrentPassword);
 
         if (passwordCredential.Value != hashedCurrentPassword) { return new EmailOperationResponseDto { Success = false, Message = "Current password is incorrect" }; }
 

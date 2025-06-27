@@ -1,5 +1,4 @@
 using Xunit;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text;
@@ -7,12 +6,10 @@ using GameGuild.Data;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
 using GameGuild.Common.Services;
-using GameGuild.Modules.Project.Models;
 using GameGuild.Tests.Fixtures;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.User.Models;
-using GameGuild.Modules.Tenant.Models;
 using System.Net.Http.Headers;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 using Xunit.Abstractions;
@@ -99,15 +96,15 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
 
     var request = new { query = query };
 
-    string json = JsonSerializer.Serialize(request);
+    var json = JsonSerializer.Serialize(request);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/graphql", content);
+    var response = await _client.PostAsync("/graphql", content);
 
     // Debug output
     _output.WriteLine($"Response Status: {response.StatusCode}");
-    string responseContent = await response.Content.ReadAsStringAsync();
+    var responseContent = await response.Content.ReadAsStringAsync();
     _output.WriteLine($"Response Content: {responseContent}");
 
     // Assert
@@ -160,15 +157,15 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
 
     var request = new { query = query };
 
-    string json = JsonSerializer.Serialize(request);
+    var json = JsonSerializer.Serialize(request);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/graphql", content);
+    var response = await _client.PostAsync("/graphql", content);
 
     // Debug output
     _output.WriteLine($"Response Status: {response.StatusCode}");
-    string responseContent = await response.Content.ReadAsStringAsync();
+    var responseContent = await response.Content.ReadAsStringAsync();
     _output.WriteLine($"Response Content: {responseContent}");
 
     // Assert
@@ -215,15 +212,15 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
 
     var request = new { query = query };
 
-    string json = JsonSerializer.Serialize(request);
+    var json = JsonSerializer.Serialize(request);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/graphql", content);
+    var response = await _client.PostAsync("/graphql", content);
 
     // Debug output
     _output.WriteLine($"Response Status: {response.StatusCode}");
-    string responseContent = await response.Content.ReadAsStringAsync();
+    var responseContent = await response.Content.ReadAsStringAsync();
     _output.WriteLine($"Response Content: {responseContent}");
 
     // Assert
@@ -275,15 +272,15 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
 
     var request = new { query = mutation };
 
-    string json = JsonSerializer.Serialize(request);
+    var json = JsonSerializer.Serialize(request);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/graphql", content);
+    var response = await _client.PostAsync("/graphql", content);
 
     // Debug output
     _output.WriteLine($"Response Status: {response.StatusCode}");
-    string responseContent = await response.Content.ReadAsStringAsync();
+    var responseContent = await response.Content.ReadAsStringAsync();
     _output.WriteLine($"Response Content: {responseContent}");
 
     // Assert
@@ -295,7 +292,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     Assert.Contains("new-graphql-project", responseContent);
 
     // Verify in database
-    GameGuild.Modules.Project.Models.Project? createdProject =
+    var createdProject =
       await _context.Projects.FirstOrDefaultAsync(p => p.Title == "New GraphQL Project");
 
     Assert.NotNull(createdProject);
@@ -339,15 +336,15 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
 
     var request = new { query = mutation };
 
-    string json = JsonSerializer.Serialize(request);
+    var json = JsonSerializer.Serialize(request);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/graphql", content);
+    var response = await _client.PostAsync("/graphql", content);
 
     // Debug output
     _output.WriteLine($"Response Status: {response.StatusCode}");
-    string responseContent = await response.Content.ReadAsStringAsync();
+    var responseContent = await response.Content.ReadAsStringAsync();
     _output.WriteLine($"Response Content: {responseContent}");
 
     // Assert
@@ -359,7 +356,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
 
     // Verify in database - refresh the context to get latest changes
     _context.ChangeTracker.Clear();
-    GameGuild.Modules.Project.Models.Project? updatedProject =
+    var updatedProject =
       await _context.Projects.FirstOrDefaultAsync(p => p.Id == project.Id);
     Assert.NotNull(updatedProject);
     Assert.Equal("Updated Project Title", updatedProject.Title);
@@ -394,15 +391,15 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
 
     var request = new { query = mutation };
 
-    string json = JsonSerializer.Serialize(request);
+    var json = JsonSerializer.Serialize(request);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/graphql", content);
+    var response = await _client.PostAsync("/graphql", content);
 
     // Debug output
     _output.WriteLine($"Response Status: {response.StatusCode}");
-    string responseContent = await response.Content.ReadAsStringAsync();
+    var responseContent = await response.Content.ReadAsStringAsync();
     _output.WriteLine($"Response Content: {responseContent}");
 
     // Assert
@@ -412,7 +409,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
 
     // Verify soft delete in database (need to ignore query filters to find soft-deleted items)
     _context.ChangeTracker.Clear(); // Clear change tracker to ensure fresh data
-    GameGuild.Modules.Project.Models.Project? deletedProject =
+    var deletedProject =
       await _context.Projects.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == project.Id);
     Assert.NotNull(deletedProject);
     Assert.True(deletedProject.IsDeleted);
@@ -456,15 +453,15 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
 
     var request = new { query = query };
 
-    string json = JsonSerializer.Serialize(request);
+    var json = JsonSerializer.Serialize(request);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/graphql", content);
+    var response = await _client.PostAsync("/graphql", content);
 
     // Debug output
     _output.WriteLine($"Response Status: {response.StatusCode}");
-    string responseContent = await response.Content.ReadAsStringAsync();
+    var responseContent = await response.Content.ReadAsStringAsync();
     _output.WriteLine($"Response Content: {responseContent}");
 
     // Assert
@@ -497,16 +494,16 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
 
     var request = new { query = introspectionQuery };
 
-    string json = JsonSerializer.Serialize(request);
+    var json = JsonSerializer.Serialize(request);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    HttpResponseMessage response = await _client.PostAsync("/graphql", content);
+    var response = await _client.PostAsync("/graphql", content);
 
     // Assert
     Assert.True(response.IsSuccessStatusCode);
 
-    string responseContent = await response.Content.ReadAsStringAsync();
+    var responseContent = await response.Content.ReadAsStringAsync();
     Assert.Contains("Project", responseContent); // Project type should be in schema
     Assert.Contains("ProjectType", responseContent); // Enum should be in schema
     Assert.Contains("DevelopmentStatus", responseContent); // Enum should be in schema

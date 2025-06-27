@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using GameGuild.Modules.Tenant.Services;
 
 
@@ -19,18 +18,18 @@ public class TenantContextMiddleware {
     string? tenantHeader = context.Request.Headers[TenantHeader];
 
     // Get authenticated user (if any)
-    ClaimsPrincipal? user = context.User.Identity?.IsAuthenticated == true ? context.User : null;
+    var user = context.User.Identity?.IsAuthenticated == true ? context.User : null;
 
     // Get current tenant
-    Models.Tenant? tenant = await tenantContextService.GetCurrentTenantAsync(user, tenantHeader);
+    var tenant = await tenantContextService.GetCurrentTenantAsync(user, tenantHeader);
 
     // Check tenant access if tenant was specified
     if (tenant != null && user != null) {
       // Get tenant ID
-      Guid tenantId = tenant.Id;
+      var tenantId = tenant.Id;
 
       // Check if user can access this tenant
-      bool canAccess = await tenantContextService.CanAccessTenantAsync(user, tenantId);
+      var canAccess = await tenantContextService.CanAccessTenantAsync(user, tenantId);
 
       if (!canAccess) {
         context.Response.StatusCode = StatusCodes.Status403Forbidden;

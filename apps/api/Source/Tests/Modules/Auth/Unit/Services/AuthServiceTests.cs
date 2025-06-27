@@ -8,7 +8,6 @@ using GameGuild.Modules.User.Models;
 using GameGuild.Modules.Tenant.Services;
 using GameGuild.Modules.Tenant.Models;
 using System.Security.Claims;
-using GameGuild.Modules.Auth.Models;
 
 
 namespace GameGuild.Tests.Modules.Auth.Unit.Services;
@@ -87,7 +86,7 @@ public class AuthServiceTests : IDisposable {
       .ReturnsAsync(enhancedResponse);
 
     // Act
-    SignInResponseDto result = await _authService.LocalSignUpAsync(request);
+    var result = await _authService.LocalSignUpAsync(request);
 
     // Assert
     Assert.NotNull(result);
@@ -95,10 +94,10 @@ public class AuthServiceTests : IDisposable {
     Assert.Equal("test@example.com", result.User.Email);
     Assert.Equal(tenantId, result.TenantId);
 
-    User? user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
     Assert.NotNull(user);
 
-    Credential? credential = await _context.Credentials.FirstOrDefaultAsync(c => c.UserId == user.Id);
+    var credential = await _context.Credentials.FirstOrDefaultAsync(c => c.UserId == user.Id);
     Assert.NotNull(credential);
     Assert.Equal("password", credential.Type);
 
@@ -126,7 +125,7 @@ public class AuthServiceTests : IDisposable {
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
 
-    string hashedPassword =
+    var hashedPassword =
       Convert.ToBase64String(
         System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("P455W0RD"))
       );
@@ -153,7 +152,7 @@ public class AuthServiceTests : IDisposable {
       .ReturnsAsync(enhancedResponse);
 
     // Act
-    SignInResponseDto result = await _authService.LocalSignInAsync(request);
+    var result = await _authService.LocalSignInAsync(request);
 
     // Assert
     Assert.NotNull(result);
@@ -180,7 +179,7 @@ public class AuthServiceTests : IDisposable {
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
 
-    string hashedPassword =
+    var hashedPassword =
       Convert.ToBase64String(
         System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("correctpassword"))
       );
@@ -204,7 +203,7 @@ public class AuthServiceTests : IDisposable {
     _mockWeb3Service.Setup(x => x.GenerateChallengeAsync(request)).ReturnsAsync(expectedResponse);
 
     // Act
-    Web3ChallengeResponseDto result = await _authService.GenerateWeb3ChallengeAsync(request);
+    var result = await _authService.GenerateWeb3ChallengeAsync(request);
 
     // Assert
     Assert.NotNull(result);
@@ -249,7 +248,7 @@ public class AuthServiceTests : IDisposable {
       .ReturnsAsync(enhancedResponse);
 
     // Act
-    SignInResponseDto result = await _authService.VerifyWeb3SignatureAsync(request);
+    var result = await _authService.VerifyWeb3SignatureAsync(request);
 
     // Assert
     Assert.NotNull(result);
@@ -309,7 +308,7 @@ public class AuthServiceTests : IDisposable {
       .ReturnsAsync(enhancedResponse);
 
     // Act
-    SignInResponseDto result = await _authService.VerifyWeb3SignatureAsync(request);
+    var result = await _authService.VerifyWeb3SignatureAsync(request);
 
     // Assert
     Assert.NotNull(result);
@@ -360,7 +359,7 @@ public class AuthServiceTests : IDisposable {
     _mockTenantAuthService.Setup(x => x.GetTenantClaimsAsync(It.IsAny<User>(), tenantId)).ReturnsAsync(tenantClaims);
 
     // Act
-    RefreshTokenResponseDto result = await _authService.RefreshTokenAsync(request);
+    var result = await _authService.RefreshTokenAsync(request);
 
     // Assert
     Assert.NotNull(result);
@@ -369,7 +368,7 @@ public class AuthServiceTests : IDisposable {
     Assert.Equal(tenantId, result.TenantId);
 
     // Verify old refresh token is invalidated
-    RefreshToken? oldToken = await _context.RefreshTokens.FindAsync(refreshToken.Id);
+    var oldToken = await _context.RefreshTokens.FindAsync(refreshToken.Id);
     Assert.NotNull(oldToken);
     Assert.True(oldToken.IsRevoked); // Check that the token has been revoked instead of checking IsActive
 

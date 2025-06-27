@@ -1,9 +1,3 @@
-using HotChocolate.Types;
-using HotChocolate.Types.Descriptors;
-using HotChocolate.Resolvers;
-using GameGuild.Common.Entities;
-
-
 namespace GameGuild.Common.GraphQL.Authorization;
 
 /// <summary>

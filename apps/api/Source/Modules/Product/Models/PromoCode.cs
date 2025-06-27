@@ -238,7 +238,7 @@ public class PromoCode : BaseEntity {
   public bool IsCurrentlyValid() {
     if (!IsActive) return false;
 
-    DateTime now = DateTime.UtcNow;
+    var now = DateTime.UtcNow;
 
     return (ValidFrom == null || ValidFrom <= now) && (ValidUntil == null || ValidUntil > now);
   }

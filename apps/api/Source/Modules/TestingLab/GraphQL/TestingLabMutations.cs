@@ -19,9 +19,9 @@ public class TestingLabMutations {
     ClaimsPrincipal claimsPrincipal, CreateTestingRequestDto input
   ) {
     // Get the current authenticated user's ID
-    string? userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)) { throw new UnauthorizedAccessException("User ID not found in token"); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { throw new UnauthorizedAccessException("User ID not found in token"); }
 
     var request = input.ToTestingRequest(userId);
 
@@ -58,9 +58,9 @@ public class TestingLabMutations {
     ClaimsPrincipal claimsPrincipal, CreateTestingSessionDto input
   ) {
     // Get the current authenticated user's ID
-    string? userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)) { throw new UnauthorizedAccessException("User ID not found in token"); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { throw new UnauthorizedAccessException("User ID not found in token"); }
 
     var session = input.ToTestingSession(userId);
 
