@@ -13,4 +13,6 @@ public interface IDatabaseSeeder {
   /// Seeds global default permissions that apply to all users
   /// </summary>
   Task SeedGlobalDefaultPermissionsAsync();
+
+  Task SeedGlobalProjectDefaultPermissionsAsync();
 }
