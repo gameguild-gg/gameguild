@@ -16,17 +16,22 @@ public class ProgramContentQueries {
   /// <summary>
   /// Gets a program content by its unique identifier (Resource Level: Read permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Read permission on the parent Program that contains this content
-  /// Note: The programId will be resolved from the content's ProgramId property
   /// </summary>
   [RequireResourcePermission<ProgramPermission, GameGuild.Modules.Program.Models.Program>(
     PermissionType.Read,
     "programId"
   )]
   public async Task<ProgramContentEntity?> GetProgramContentById(
+    Guid programId,
     Guid id,
     [Service] IProgramContentService programContentService
   ) {
-    return await programContentService.GetContentByIdAsync(id);
+    var content = await programContentService.GetContentByIdAsync(id);
+    // Verify the content belongs to the specified program
+    if (content != null && content.ProgramId != programId) {
+      return null; // Content doesn't belong to the specified program
+    }
+    return content;
   }
 
   /// <summary>
@@ -45,15 +50,21 @@ public class ProgramContentQueries {
   }
 
   /// <summary>
-  /// Gets content by parent content ID (Content-Type Level: Read permission required for ProgramContent type)
-  /// Layer 2: Content-Type Level - User needs Read permission on ProgramContent entity type
+  /// Gets content by parent content ID (Resource Level: Read permission required for the parent Program)
+  /// Layer 3: Resource Level - User needs Read permission on the parent Program that contains this content
   /// </summary>
-  [RequireContentTypePermission<ProgramContent>(PermissionType.Read)]
+  [RequireResourcePermission<ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+    PermissionType.Read,
+    "programId"
+  )]
   public async Task<IEnumerable<ProgramContentEntity>> GetContentByParent(
+    Guid programId,
     Guid parentContentId,
     [Service] IProgramContentService programContentService
   ) {
-    return await programContentService.GetContentByParentAsync(parentContentId);
+    var content = await programContentService.GetContentByParentAsync(parentContentId);
+    // Filter to only return content that belongs to the specified program
+    return content.Where(c => c.ProgramId == programId);
   }
 
   /// <summary>
