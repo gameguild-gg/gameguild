@@ -47,6 +47,10 @@ public static class ServiceCollectionExtensions {
     services.AddScoped<Modules.Program.Services.IProgramService, Modules.Program.Services.ProgramService>();
     services
       .AddScoped<Modules.Program.Interfaces.IProgramContentService, Modules.Program.Services.ProgramContentService>();
+    services
+      .AddScoped<Modules.Program.Interfaces.IContentInteractionService, Modules.Program.Services.ContentInteractionService>();
+    services
+      .AddScoped<Modules.Program.Interfaces.IActivityGradeService, Modules.Program.Services.ActivityGradeService>();
 
     return services;
   }
