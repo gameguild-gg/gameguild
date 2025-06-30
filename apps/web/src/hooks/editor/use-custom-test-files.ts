@@ -1,9 +1,9 @@
-import type { CodeFile, ProgrammingLanguage } from "../components/ui/source-code/types"
+import type { CodeFile, ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
 import {
   DEFAULT_FIRST_CODE_TEMPLATES,
   FUNCTION_FIRST_CODE_TEMPLATES,
   getExtensionForSelectedLanguage,
-} from "../components/ui/source-code/templates/code-templates"
+} from "@/components/editor/ui/source-code/templates/code-templates"
 
 interface UseCustomTestFilesProps {
   files: CodeFile[]

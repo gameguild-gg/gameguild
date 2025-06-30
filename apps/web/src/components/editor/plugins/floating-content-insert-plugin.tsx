@@ -35,10 +35,10 @@ import {
   Youtube,
 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Separator } from "@/components/ui/separator"
-import { MediaUploadDialog, type MediaUploadResult } from "@/components/ui/media-upload-dialog"
+import { Button } from "@/components/editor/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/editor/ui/popover"
+import { Separator } from "@/components/editor/ui/separator"
+import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/ui/media-upload-dialog"
 import type { ImageData } from "../nodes/image-node"
 import type { VideoData } from "../nodes/video-node"
 import type { AudioData } from "../nodes/audio-node" // Import type for AudioData
@@ -54,10 +54,10 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "@/components/editor/ui/dialog"
+import { Label } from "@/components/editor/ui/label"
+import { Input } from "@/components/editor/ui/input"
+import { Checkbox } from "@/components/editor/ui/checkbox"
 import { extractYouTubeVideoId } from "../nodes/youtube-node"
 import type { SpotifyData } from "../nodes/spotify-node"
 import { extractSpotifyInfo } from "../nodes/spotify-node"
@@ -181,32 +181,41 @@ export function FloatingContentInsertPlugin() {
     )
   }, [editor, checkEmpty])
 
-  const handleImageSelected = (result: MediaUploadResult) => {
-    editor.dispatchCommand(INSERT_IMAGE_COMMAND, {
-      src: result.data,
-      alt: result.name || "Image",
-      caption: "",
-      size: 100,
+  const handleImageSelected = (result: MediaUploadResult | MediaUploadResult[]) => {
+    const results = Array.isArray(result) ? result : [result]
+    results.forEach((item) => {
+      editor.dispatchCommand(INSERT_IMAGE_COMMAND, {
+        src: item.data,
+        alt: item.name || "Image",
+        caption: "",
+        size: 100,
+      })
     })
     setShowMenu(false)
   }
 
-  const handleVideoSelected = (result: MediaUploadResult) => {
-    editor.dispatchCommand(INSERT_VIDEO_COMMAND, {
-      src: result.data,
-      alt: result.name || "Video",
-      caption: "",
-      size: 100,
+  const handleVideoSelected = (result: MediaUploadResult | MediaUploadResult[]) => {
+    const results = Array.isArray(result) ? result : [result]
+    results.forEach((item) => {
+      editor.dispatchCommand(INSERT_VIDEO_COMMAND, {
+        src: item.data,
+        alt: item.name || "Video",
+        caption: "",
+        size: 100,
+      })
     })
     setShowMenu(false)
   }
 
-  const handleAudioSelected = (result: MediaUploadResult) => {
-    editor.dispatchCommand(INSERT_AUDIO_COMMAND, {
-      src: result.data,
-      title: result.name || "Audio",
-      caption: "",
-      size: 100,
+  const handleAudioSelected = (result: MediaUploadResult | MediaUploadResult[]) => {
+    const results = Array.isArray(result) ? result : [result]
+    results.forEach((item) => {
+      editor.dispatchCommand(INSERT_AUDIO_COMMAND, {
+        src: item.data,
+        title: item.name || "Audio",
+        caption: "",
+        size: 100,
+      })
     })
     setShowMenu(false)
   }
