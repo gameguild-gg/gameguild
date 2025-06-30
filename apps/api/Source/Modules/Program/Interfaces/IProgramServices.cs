@@ -92,37 +92,49 @@ public interface IProgramUserService {
 /// Interface for content interaction tracking services
 /// </summary>
 public interface IContentInteractionService {
-  Task<Models.ContentInteraction> StartContentAsync(int programUserId, int contentId);
+  Task<Models.ContentInteraction> StartContentAsync(Guid programUserId, Guid contentId);
 
-  Task<Models.ContentInteraction> UpdateProgressAsync(int interactionId, decimal completionPercentage);
+  Task<Models.ContentInteraction> UpdateProgressAsync(Guid interactionId, decimal completionPercentage);
 
-  Task<Models.ContentInteraction> SubmitContentAsync(int interactionId, string submissionData);
+  Task<Models.ContentInteraction> SubmitContentAsync(Guid interactionId, string submissionData);
 
-  Task<Models.ContentInteraction> CompleteContentAsync(int interactionId);
+  Task<Models.ContentInteraction> CompleteContentAsync(Guid interactionId);
 
-  Task<Models.ContentInteraction?> GetInteractionAsync(int programUserId, int contentId);
+  Task<Models.ContentInteraction?> GetInteractionAsync(Guid programUserId, Guid contentId);
 
-  Task<IEnumerable<Models.ContentInteraction>> GetUserInteractionsAsync(int programUserId);
+  Task<IEnumerable<Models.ContentInteraction>> GetUserInteractionsAsync(Guid programUserId);
 
-  Task<Models.ContentInteraction> UpdateTimeSpentAsync(int interactionId, int additionalMinutes);
+  Task<Models.ContentInteraction> UpdateTimeSpentAsync(Guid interactionId, int additionalMinutes);
 }
 
 /// <summary>
 /// Interface for activity grading services
 /// </summary>
-public interface IActivityGradeService {
+public interface IActivityGradeService
+{
   Task<Models.ActivityGrade> GradeActivityAsync(
-    int contentInteractionId, int graderProgramUserId, decimal grade,
-    string? feedback = null
+    Guid contentInteractionId, 
+    Guid graderProgramUserId, 
+    decimal grade,
+    string? feedback = null,
+    string? gradingDetails = null
   );
 
-  Task<Models.ActivityGrade?> GetGradeAsync(int contentInteractionId);
+  Task<Models.ActivityGrade?> GetGradeAsync(Guid contentInteractionId);
 
-  Task<IEnumerable<Models.ActivityGrade>> GetGradesByGraderAsync(int graderProgramUserId);
+  Task<Models.ActivityGrade?> GetGradeByIdAsync(Guid gradeId);
 
-  Task<Models.ActivityGrade> UpdateGradeAsync(int gradeId, decimal newGrade, string? newFeedback = null);
+  Task<IEnumerable<Models.ActivityGrade>> GetGradesByGraderAsync(Guid graderProgramUserId);
 
-  Task<bool> DeleteGradeAsync(int gradeId);
+  Task<IEnumerable<Models.ActivityGrade>> GetGradesByStudentAsync(Guid programUserId);
 
-  Task<IEnumerable<Models.ActivityGrade>> GetPendingGradesAsync(int programId);
+  Task<Models.ActivityGrade?> UpdateGradeAsync(Guid gradeId, decimal? newGrade = null, string? newFeedback = null, string? newGradingDetails = null);
+
+  Task<bool> DeleteGradeAsync(Guid gradeId);
+
+  Task<IEnumerable<Models.ContentInteraction>> GetPendingGradesAsync(Guid programId);
+
+  Task<Services.GradeStatistics> GetGradeStatisticsAsync(Guid programId);
+
+  Task<IEnumerable<Models.ActivityGrade>> GetGradesByContentAsync(Guid contentId);
 }

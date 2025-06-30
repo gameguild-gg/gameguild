@@ -14,23 +14,27 @@ export type PropsWithLocaleSlugParams<P = unknown> = P & {
   params: Promise<ParamsWithLocale<ParamsWithSlug>>;
 };
 
+export type BaseIdentifier = number | string;
+
+export type Identifiable<T = unknown, TIdentifier extends BaseIdentifier = string> = T & { id: TIdentifier };
+
 export type InvertRecord<T extends Record<string, PropertyKey>> = { [V in T[keyof T]]: { [K in keyof T]: T[K] extends V ? K : never }[keyof T] };
 
 export const invertRecord = <T extends Record<string, PropertyKey>>(object: T): InvertRecord<T> => {
-  return Object.fromEntries(Object.entries(object).map(([ key, value ]) => [ value, key ])) as InvertRecord<T>;
+  return Object.fromEntries(Object.entries(object).map(([key, value]) => [value, key])) as InvertRecord<T>;
 };
 
 export type ActionCompleteResult<T> = T extends object
   ? { status: HttpStatusCode; data?: T }
   : {
-    success: HttpStatusCode;
-  };
+      success: HttpStatusCode;
+    };
 export type ActionErrorResult = { success: false; error: Error };
 export type ActionValidationErrorResult<T> = T extends object
   ? {
-    success: false;
-    fieldErrors: Partial<Record<keyof T, Error>>;
-  }
+      success: false;
+      fieldErrors: Partial<Record<keyof T, Error>>;
+    }
   : never;
 
 export type ActionResult<T = unknown> = ActionCompleteResult<T> | ActionErrorResult | ActionValidationErrorResult<T>;
@@ -104,7 +108,7 @@ export type HttpStatusCode = (typeof HttpStatus)[keyof typeof HttpStatus];
 
 export const HttpStatusName = invertRecord(HttpStatus) as Record<HttpStatusCode, keyof typeof HttpStatus>;
 
-export type ExtractHttpStatusCode<Prefix extends string, S extends HttpStatusCode = HttpStatusCode> = S extends `${ Prefix }${ string }` ? S : never;
+export type ExtractHttpStatusCode<Prefix extends string, S extends HttpStatusCode = HttpStatusCode> = S extends `${Prefix}${string}` ? S : never;
 
 // Informational responses (100 – 199)
 export type HTTP_STATUS_CODES_1XX = ExtractHttpStatusCode<'1'>;

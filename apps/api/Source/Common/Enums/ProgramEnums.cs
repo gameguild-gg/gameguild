@@ -114,16 +114,20 @@ public enum ModerationStatus {
 
 public enum ProgressStatus {
   [Description("User has not started this content yet")]
-  NotStarted,
+  NotStarted = 0,
 
   [Description("User has started but not completed this content")]
-  InProgress,
+  InProgress = 1,
 
   [Description("User has successfully completed this content")]
-  Completed,
+  Completed = 2,
+
+  // alias for Completed
+  [Description("User has submitted their work for evaluation, alias for Completed")]
+  Submitted = 2,
 
   [Description("User has opted to skip this optional content")]
-  Skipped,
+  Skipped = 3,
 }
 
 public enum ProgramCategory {
