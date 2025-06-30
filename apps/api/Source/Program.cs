@@ -11,6 +11,7 @@ using DotNetEnv;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using MediatR;
+using GameGuild.Modules.Program.GraphQL;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -156,6 +157,10 @@ builder.Services.AddGraphQLServer()
        .AddTypeExtension<GameGuild.Modules.TestingLab.GraphQL.TestingLabMutations>()
        .AddTypeExtension<GameGuild.Modules.Program.GraphQL.ProgramContentQueries>()
        .AddTypeExtension<GameGuild.Modules.Program.GraphQL.ProgramContentMutations>()
+       .AddTypeExtension<GameGuild.Modules.Program.GraphQL.ContentInteractionQueries>()
+       .AddTypeExtension<GameGuild.Modules.Program.GraphQL.ContentInteractionMutations>()
+       .AddTypeExtension<GameGuild.Modules.Program.GraphQL.ActivityGradeQueries>()
+       .AddTypeExtension<GameGuild.Modules.Program.GraphQL.ActivityGradeMutations>()
        .AddType<UserType>()
        .AddType<CredentialType>()
        .AddType<GameGuild.Modules.Tenant.GraphQL.TenantType>()
@@ -163,11 +168,12 @@ builder.Services.AddGraphQLServer()
        .AddType<GameGuild.Modules.UserProfile.GraphQL.UserProfileType>()
        .AddType<GameGuild.Modules.Project.GraphQL.ProjectType>()
        .AddType<GameGuild.Modules.Program.GraphQL.ProgramContentType>()
+       .AddType<GameGuild.Modules.Program.GraphQL.ContentInteractionType>()
+       .AddType<GameGuild.Modules.Program.GraphQL.ActivityGradeType>()
        .AddType<GameGuild.Modules.TestingLab.GraphQL.TestingRequestType>()
        .AddType<GameGuild.Modules.TestingLab.GraphQL.TestingSessionType>()
        .AddType<GameGuild.Modules.TestingLab.GraphQL.TestingParticipantType>()
        .AddType<GameGuild.Modules.TestingLab.GraphQL.TestingLocationType>()
-       .AddType<GameGuild.Modules.Program.GraphQL.ProgramContentType>()
        .ModifyOptions(opt => { opt.RemoveUnreachableTypes = true; })
        .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment());
 
