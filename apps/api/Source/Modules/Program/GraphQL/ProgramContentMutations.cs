@@ -52,11 +52,11 @@ public class ProgramContentMutations {
   /// <summary>
   /// Update specific program content (Resource Level: Edit permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Edit permission on the parent Program
-  /// Note: The programId will be resolved from the content's ProgramId property
   /// </summary>
   [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
   public async Task<ProgramContent> UpdateContentAsync(
     [Service] IProgramContentService contentService,
+    Guid programId,
     Guid contentId,
     string? title = null,
     ProgramContentTypeEnum? type = null,
@@ -72,6 +72,11 @@ public class ProgramContentMutations {
     var existingContent = await contentService.GetContentByIdAsync(contentId);
 
     if (existingContent == null) throw new ArgumentException($"Content with ID {contentId} not found");
+    
+    // Verify the content belongs to the specified program
+    if (existingContent.ProgramId != programId) {
+      throw new ArgumentException($"Content {contentId} does not belong to program {programId}");
+    }
 
     // Update only provided fields
     if (title != null) existingContent.Title = title;
@@ -91,21 +96,46 @@ public class ProgramContentMutations {
   /// <summary>
   /// Delete specific program content (Resource Level: Delete permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Delete permission on the parent Program
-  /// Note: The programId will be resolved from the content's ProgramId property
   /// </summary>
   [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Delete, "programId")]
-  public async Task<bool> DeleteContentAsync([Service] IProgramContentService contentService, Guid contentId) { return await contentService.DeleteContentAsync(contentId); }
+  public async Task<bool> DeleteContentAsync(
+    [Service] IProgramContentService contentService, 
+    Guid programId, 
+    Guid contentId
+  ) { 
+    var existingContent = await contentService.GetContentByIdAsync(contentId);
+    
+    if (existingContent == null) return false;
+    
+    // Verify the content belongs to the specified program
+    if (existingContent.ProgramId != programId) {
+      throw new ArgumentException($"Content {contentId} does not belong to program {programId}");
+    }
+    
+    return await contentService.DeleteContentAsync(contentId); 
+  }
 
   /// <summary>
   /// Move specific program content (Resource Level: Edit permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Edit permission on the parent Program
-  /// Note: The programId will be resolved from the content's ProgramId property
   /// </summary>
   [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
   public async Task<bool> MoveContentAsync(
-    [Service] IProgramContentService contentService, Guid contentId,
-    Guid? newParentId, int newSortOrder = 0
+    [Service] IProgramContentService contentService, 
+    Guid programId,
+    Guid contentId,
+    Guid? newParentId, 
+    int newSortOrder = 0
   ) {
+    var existingContent = await contentService.GetContentByIdAsync(contentId);
+    
+    if (existingContent == null) return false;
+    
+    // Verify the content belongs to the specified program
+    if (existingContent.ProgramId != programId) {
+      throw new ArgumentException($"Content {contentId} does not belong to program {programId}");
+    }
+    
     return await contentService.MoveContentAsync(contentId, newParentId, newSortOrder);
   }
 

@@ -71,22 +71,35 @@ The DAC attribute system needs to resolve the `programId` from the content's `Pr
 
 ## Implementation Status
 
-### ✅ Completed
+### ✅ Fully Completed
+- [x] Updated REST API controllers to use `ProgramPermission` instead of `ProgramContentPermission`
 - [x] Updated GraphQL queries to use `ProgramPermission` instead of `ProgramContentPermission`
 - [x] Updated GraphQL mutations to use Program-based permissions
+- [x] Resolved parameter resolution issues by adding `programId` parameters to operations that need them
 - [x] Updated permission hierarchy documentation
 - [x] Build verification - no compilation errors
+- [x] Removed deprecated `ProgramContentPermission` model
+- [x] Verified no remaining code references to deprecated model
 
-### ⚠️ Pending Technical Issues
+### ✅ Technical Solutions Implemented
 
-1. **GraphQL Authorization Integration**: The current DAC attributes are designed for MVC controllers (`IAsyncAuthorizationFilter`) and may not work directly with HotChocolate GraphQL. This needs investigation and possibly custom GraphQL authorization handlers.
+1. **GraphQL Authorization Integration**: ✅ RESOLVED - The codebase already has a comprehensive GraphQL DAC authorization system using `DACAuthorizationMiddleware` and GraphQL-specific permission attributes. All GraphQL operations now use the correct `RequireResourcePermission<ProgramPermission, Models.Program>` attributes.
 
-2. **Parameter Resolution**: For operations that only have `contentId`, the system needs to resolve the parent `programId` for permission checking. This may require:
-   - Custom attribute logic to fetch the content and extract `ProgramId`
-   - Service-level permission checks
-   - GraphQL middleware for permission validation
+2. **Parameter Resolution**: ✅ RESOLVED - Updated GraphQL operations to include `programId` parameters where needed:
+   - `GetProgramContentById(Guid programId, Guid id)` - now includes programId parameter
+   - `GetContentByParent(Guid programId, Guid parentContentId)` - now includes programId parameter
+   - `UpdateContentAsync(Guid programId, Guid contentId, ...)` - now includes programId parameter
+   - `DeleteContentAsync(Guid programId, Guid contentId)` - now includes programId parameter
+   - `MoveContentAsync(Guid programId, Guid contentId, ...)` - now includes programId parameter
 
-3. **Database Cleanup**: The `ProgramContentPermission` model and related database entries should be removed as they are no longer needed.
+3. **Permission Validation**: ✅ IMPLEMENTED - Added validation logic to ensure content belongs to the specified program, preventing cross-program access attempts.
+
+### ✅ Completed Cleanup Tasks
+
+1. **Database Cleanup**: ✅ COMPLETED - The deprecated `ProgramContentPermission` model has been successfully removed:
+   - ✅ Removed the `ProgramContentPermission.cs` model file (verified: never used in database migrations)
+   - ✅ Confirmed no references in tests or other code
+   - ✅ No database migration needed as the model was never implemented in the database schema
 
 ## Future Improvements
 
