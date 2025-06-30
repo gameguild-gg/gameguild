@@ -8,7 +8,7 @@ class TypeScriptExecutor implements LanguageExecutor {
   public isCompiled = false // Set the isCompiled flag to false
 
   execute = async (fileId: string, context: ExecutionContext): Promise<ExecutionResult> => {
-    const { files, selectedLanguage, addOutput, setIsExecuting, clearTerminal } = context
+    const { files, selectedLanguage, addOutput, setIsExecuting } = context
 
     this.isExecutionCancelled = false
     setIsExecuting(true)
