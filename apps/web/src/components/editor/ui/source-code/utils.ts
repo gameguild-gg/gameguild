@@ -1,4 +1,5 @@
-import type { CodeFile, LanguageType, ProgrammingLanguage } from "./types"
+import React from "react";
+import type { CodeFile, LanguageType, ProgrammingLanguage } from "./types";
 
 // Get the base name of a file (without extension)
 export const getBaseName = (fileName: string): string => {
@@ -37,7 +38,7 @@ export const getExtensionForSelectedLanguage = (selectedLanguage: ProgrammingLan
 }
 
 // Get the content for a file
-export const getFileContent = (file: CodeFile): string => {
+export const getFileContent = (file: CodeFile, selectedLanguage?: any): string => {
   return file?.content || ""
 }
 
@@ -70,8 +71,6 @@ export const getExtensionForLanguage = (lang: LanguageType): string => {
       return "css"
     case "json":
       return "json"
-    case "bash":
-      return "sh"
     case "xml":
       return "xml"
     case "yaml":
@@ -106,8 +105,6 @@ export const getLanguageFromExtension = (ext: string): LanguageType => {
       return "css"
     case "json":
       return "json"
-    case "sh":
-      return "bash"
     case "xml":
       return "xml"
     case "yaml":
@@ -146,8 +143,6 @@ export const getLanguageLabel = (lang: LanguageType): string => {
       return ".css (CSS)"
     case "json":
       return ".json (JSON)"
-    case "bash":
-      return ".sh (Bash)"
     case "text":
       return ".txt (Plain Text)"
     case "xml":
@@ -166,37 +161,37 @@ export const getFileIcon = (file: CodeFile, selectedLanguage?: ProgrammingLangua
 
   switch (extension) {
     case "js":
-      return <span className="text-yellow-500">JS</span>
+      return React.createElement("span", { className: "text-yellow-500" }, "JS")
     case "ts":
-      return <span className="text-blue-500">TS</span>
+      return React.createElement("span", { className: "text-blue-500" }, "TS")
     case "py":
-      return <span className="text-green-500">PY</span>
+      return React.createElement("span", { className: "text-green-500" }, "PY")
     case "lua":
-      return <span className="text-indigo-500">LUA</span>
+      return React.createElement("span", { className: "text-indigo-500" }, "LUA")
     case "c":
-      return <span className="text-blue-700">C</span>
+      return React.createElement("span", { className: "text-blue-700" }, "C")
     case "h":
-      return <span className="text-blue-700">H</span>
+      return React.createElement("span", { className: "text-blue-700" }, "H")
     case "cpp":
     case "cc":
     case "cxx":
-      return <span className="text-blue-600">C++</span>
+      return React.createElement("span", { className: "text-blue-600" }, "C++")
     case "hpp":
-      return <span className="text-blue-600">HPP</span>
+      return React.createElement("span", { className: "text-blue-600" }, "HPP")
     case "html":
-      return <span className="text-orange-500">HTML</span>
+      return React.createElement("span", { className: "text-orange-500" }, "HTML")
     case "css":
-      return <span className="text-purple-500">CSS</span>
+      return React.createElement("span", { className: "text-purple-500" }, "CSS")
     case "json":
-      return <span className="text-gray-500">JSON</span>
+      return React.createElement("span", { className: "text-gray-500" }, "JSON")
     case "sh":
-      return <span className="text-gray-500">SH</span>
+      return React.createElement("span", { className: "text-gray-500" }, "SH")
     case "xml":
-      return <span className="text-red-500">XML</span>
+      return React.createElement("span", { className: "text-red-500" }, "XML")
     case "yaml":
-      return <span className="text-amber-500">YAML</span>
+      return React.createElement("span", { className: "text-amber-500" }, "YAML")
     default:
-      return <span className="text-gray-500">TXT</span>
+      return React.createElement("span", { className: "text-gray-500" }, "TXT")
   }
 }
 

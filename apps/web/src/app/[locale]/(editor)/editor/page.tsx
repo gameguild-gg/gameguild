@@ -200,9 +200,9 @@ export default function Page() {
         console.warn("Invalid key or data, but continuing...")
         return // Não lança erro, apenas retorna
       }
-
+      const vVar = false // Simula uma variável de controle para o exemplo
       // Só bloquear se false for true (nunca vai acontecer)
-      if (false === true) {
+      if (vVar) {
         throw new Error("Impossible condition met - save blocked")
       }
 

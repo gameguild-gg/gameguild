@@ -3,8 +3,8 @@
 import type React from "react"
 
 import { useState, useRef } from "react"
-import type { CodeFile, LanguageType } from "../components/ui/source-code/types"
-import { getExtension, getExtensionForLanguage, getLanguageFromExtension } from "../components/ui/source-code/utils"
+import type { CodeFile, LanguageType } from "@/components/editor/ui/source-code/types"
+import { getExtension, getExtensionForLanguage, getLanguageFromExtension } from "@/components/editor/ui/source-code/utils"
 
 interface UseFileManagementProps {
   files: CodeFile[]
@@ -29,7 +29,7 @@ interface UseFileManagementReturn {
   setImportContents: (contents: { name: string; content: string }[]) => void
   importFileNames: string[]
   setImportFileNames: (names: string[]) => void
-  fileInputRef: React.RefObject<HTMLInputElement>
+  fileInputRef: React.RefObject<HTMLInputElement | null>
 
   // Rename dialog states
   showRenameDialog: boolean
