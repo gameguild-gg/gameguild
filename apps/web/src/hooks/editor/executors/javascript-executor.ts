@@ -1,6 +1,6 @@
-import type { ProgrammingLanguage } from "../../components/ui/source-code/types"
+import type { ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
 import type { ExecutionResult, ExecutionContext, LanguageExecutor } from "./types"
-import { getFileContent } from "../../components/ui/source-code/utils"
+import { getFileContent } from "@/components/editor/ui/source-code/utils"
 
 class JavaScriptExecutor implements LanguageExecutor {
   private isExecutionCancelled = false
@@ -46,17 +46,17 @@ class JavaScriptExecutor implements LanguageExecutor {
       const consoleOutput: string[] = []
       const mockConsole = {
         log: (...args: any) => {
-          const output = args.map((arg) => String(arg)).join(" ")
+          const output = args.map((arg: any) => String(arg)).join(" ")
           consoleOutput.push(output)
           addOutput(output)
         },
         error: (...args: any) => {
-          const output = `Error: ${args.map((arg) => String(arg)).join(" ")}`
+          const output = `Error: ${args.map((arg: any) => String(arg)).join(" ")}`
           consoleOutput.push(output)
           addOutput(output)
         },
         warn: (...args: any) => {
-          const output = `Warning: ${args.map((arg) => String(arg)).join(" ")}`
+          const output = `Warning: ${args.map((arg: any) => String(arg)).join(" ")}`
           consoleOutput.push(output)
           addOutput(output)
         },

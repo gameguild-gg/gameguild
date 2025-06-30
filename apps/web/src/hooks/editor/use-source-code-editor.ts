@@ -2,12 +2,14 @@
 
 import { useState } from "react"
 import { Play, Settings, Pencil } from "lucide-react"
-import type { EditMenuOption } from "../components/ui/content-edit-menu"
-import type { CodeFile, ProgrammingLanguage, SourceCodeData } from "../components/ui/source-code/types"
+import type { EditMenuOption } from "@/components/editor/ui/content-edit-menu"
+import type { ReactElement } from "react"
+import type { CodeFile, ProgrammingLanguage, SourceCodeData } from "@/components/editor/ui/source-code/types"
 import { useCodeExecution } from "./use-code-execution"
+import React from "react"
 
 interface UseSourceCodeEditorProps {
-  data: SourceCodeData & { hasConfiguredSettings?: boolean }
+  data: SourceCodeData & { hasConfiguredSettings?: boolean; activeEnvironments?: Record<string, boolean> }
   isEditing: boolean
   setIsEditing: (isEditing: boolean) => void
   files: CodeFile[]
@@ -104,7 +106,7 @@ export function useSourceCodeEditor({
   const editMenuOptions: EditMenuOption[] = [
     {
       id: "edit",
-      icon: <Pencil className="h-4 w-4" />,
+      icon: React.createElement(Pencil, { className: "h-4 w-4" }),
       label: "Edit Code",
       action: () => {
         // Reset to original data from the node when entering edit mode
@@ -122,7 +124,11 @@ export function useSourceCodeEditor({
                 },
               ],
         )
-        setActiveFileId(data.activeFileId || data.files?.[0]?.id)
+        setActiveFileId(
+          data.activeFileId ??
+            data.files?.[0]?.id ??
+            crypto.randomUUID()
+        )
         setReadonly(data.readonly ?? false)
         setShowExecution(data.showExecution ?? false)
         setIsDarkTheme(data.isDarkTheme ?? false)
@@ -146,21 +152,25 @@ export function useSourceCodeEditor({
     },
     {
       id: "settings",
-      icon: <Settings className="h-4 w-4" />,
+      icon: React.createElement(Settings, { className: "h-4 w-4" }),
       label: "Settings",
       action: () => setShowSettings(!showSettings),
     },
     {
       id: "execute",
-      icon: <Play className="h-4 w-4" />,
+      icon: React.createElement(Play, { className: "h-4 w-4" }),
       label: "Run Code",
       action: handleExecute,
     },
   ]
 
   // Terminal management
-  const addOutput = (newOutput: string) => {
-    setOutput((prevOutput) => [...prevOutput, newOutput])
+  const addOutput = (output: string | string[]) => {
+    setOutput((prevOutput) =>
+      Array.isArray(output)
+        ? [...prevOutput, ...output]
+        : [...prevOutput, output]
+    )
   }
 
   const clearTerminal = () => {
