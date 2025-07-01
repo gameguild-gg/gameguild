@@ -27,7 +27,7 @@ export class API {
   public ready: Promise<void>;
   private currentStage: 'init' | 'compile' | 'link' | 'execute' = 'init';
   private memfs: MemFS;
-  private sysroot: Uint8Array;
+  private sysroot!: Uint8Array;
   private hostWrite: (message: string) => void;
   private clangCommonArgs: string[];
   private stdin: string = '';

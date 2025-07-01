@@ -20,17 +20,11 @@ export function TenantSelector({ className }: TenantSelectorProps) {
   const {
     currentTenant,
     availableTenants,
-    switchTenant,
-    isLoading,
-    error,
+    switchCurrentTenant,
   } = useTenant();
 
-  if (availableTenants.length === 0) {
+  if (availableTenants.size === 0) {
     return null;
-  }
-
-  if (isLoading) {
-    return <Skeleton className={`h-10 w-48 ${className}`} />;
   }
 
   return (
@@ -39,50 +33,34 @@ export function TenantSelector({ className }: TenantSelectorProps) {
         Tenant:
       </span>
       <Select
-        value={currentTenant?.id || ''}
-        onValueChange={switchTenant}
-        disabled={isLoading}
+        value={typeof currentTenant === 'object' && currentTenant && 'id' in currentTenant ? String((currentTenant as any).id) : ''}
+        onValueChange={(value) => switchCurrentTenant(value)}
       >
         <SelectTrigger className="w-48">
           <SelectValue placeholder="Select tenant">
-            {currentTenant && (
+            {currentTenant && typeof currentTenant === 'object' && 'name' in currentTenant ? (
               <div className="flex items-center gap-2">
-                <span>{currentTenant.name}</span>
-                {currentTenant.isActive ? (
-                  <Badge variant="secondary" className="text-xs">
-                    Active
-                  </Badge>
-                ) : (
-                  <Badge variant="destructive" className="text-xs">
-                    Inactive
-                  </Badge>
-                )}
+                <span>{String((currentTenant as any).name)}</span>
+                <Badge variant="secondary" className="text-xs">
+                  Active
+                </Badge>
               </div>
-            )}
+            ) : null}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {availableTenants.map((tenant) => (
-            <SelectItem key={tenant.id} value={tenant.id}>
+          {Array.from(availableTenants).map((tenant: any, index) => (
+            <SelectItem key={tenant?.id || index} value={tenant?.id || String(index)}>
               <div className="flex items-center gap-2">
-                <span>{tenant.name}</span>
-                {tenant.isActive ? (
-                  <Badge variant="secondary" className="text-xs">
-                    Active
-                  </Badge>
-                ) : (
-                  <Badge variant="destructive" className="text-xs">
-                    Inactive
-                  </Badge>
-                )}
+                <span>{tenant?.name || 'Unknown Tenant'}</span>
+                <Badge variant="secondary" className="text-xs">
+                  Active
+                </Badge>
               </div>
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      {error && (
-        <span className="text-sm text-destructive">{error}</span>
-      )}
     </div>
   );
 }

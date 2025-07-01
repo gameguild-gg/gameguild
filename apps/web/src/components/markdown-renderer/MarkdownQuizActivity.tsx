@@ -38,7 +38,6 @@ export function MarkdownQuizActivity({
     <div className="border rounded-lg p-4 my-4 bg-gray-50">
       <h3 className="text-lg font-semibold mb-2">{title}</h3>
       <MarkdownRenderer
-        renderer={Api.LectureEntity.Renderer.Enum.Markdown}
         content={question}
       />
       <div className="space-y-2">

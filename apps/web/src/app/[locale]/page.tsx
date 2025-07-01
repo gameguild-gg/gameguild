@@ -62,7 +62,9 @@ export default function Page(): React.JSX.Element {
         headers: {
           'Authorization': `Bearer ${session.accessToken}`,
           'Content-Type': 'application/json',
-          ...(currentTenant && { 'X-Tenant-Id': currentTenant.id })
+          ...(currentTenant && typeof currentTenant === 'object' && currentTenant !== null && 'id' in currentTenant 
+            ? { 'X-Tenant-Id': (currentTenant as any).id } 
+            : {})
         }
       });
 
@@ -330,25 +332,25 @@ export default function Page(): React.JSX.Element {
               
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <p><strong>Current Tenant:</strong> {currentTenant?.name || 'None'}</p>
-                  {currentTenant && (
+                  <p><strong>Current Tenant:</strong> {(currentTenant && typeof currentTenant === 'object' && currentTenant !== null && 'name' in currentTenant) ? (currentTenant as any).name : 'None'}</p>
+                  {(currentTenant && typeof currentTenant === 'object' && currentTenant !== null) ? (
                     <>
-                      <p><strong>Tenant ID:</strong> {currentTenant.id}</p>
+                      <p><strong>Tenant ID:</strong> {'id' in currentTenant ? (currentTenant as any).id : 'Unknown'}</p>
                       <p><strong>Active:</strong> 
-                        <Badge variant={currentTenant.isActive ? "default" : "secondary"}>
-                          {currentTenant.isActive ? 'Yes' : 'No'}
+                        <Badge variant={('isActive' in currentTenant && (currentTenant as any).isActive) ? "default" : "secondary"}>
+                          {('isActive' in currentTenant && (currentTenant as any).isActive) ? 'Yes' : 'No'}
                         </Badge>
                       </p>
                     </>
-                  )}
+                  ) : null}
                 </div>
                 <div className="space-y-2">
-                  <p><strong>Available Tenants:</strong> {availableTenants.length}</p>
-                  {availableTenants.length > 0 && (
+                  <p><strong>Available Tenants:</strong> {availableTenants.size}</p>
+                  {availableTenants.size > 0 && (
                     <div className="space-y-1">
-                      {availableTenants.map(tenant => (
-                        <div key={tenant.id} className="text-sm">
-                          • {tenant.name} ({tenant.isActive ? 'Active' : 'Inactive'})
+                      {Array.from(availableTenants).map((tenant: any, index) => (
+                        <div key={tenant?.id || index} className="text-sm">
+                          • {tenant?.name || 'Unknown'} ({tenant?.isActive ? 'Active' : 'Inactive'})
                         </div>
                       ))}
                     </div>

@@ -1,4 +1,4 @@
-import type { Auth, AuthToken } from './auth.js';
+import type { Auth, AuthToken } from './auth';
 import type {
   BodySerializer,
   QuerySerializer,

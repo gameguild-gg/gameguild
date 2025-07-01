@@ -99,18 +99,20 @@ export function ExampleIntegrationComponent() {
             <div>
               <Label>Current Tenant Details</Label>
               <div className="text-sm text-muted-foreground space-y-1">
-                <p>ID: {currentTenant.id}</p>
-                <p>Name: {currentTenant.name}</p>
-                <p>Status: {currentTenant.isActive ? 'Active' : 'Inactive'}</p>
+                <p>ID: {typeof currentTenant === 'object' && currentTenant && 'id' in currentTenant ? String(currentTenant.id) : 'N/A'}</p>
+                <p>Name: {typeof currentTenant === 'object' && currentTenant && 'name' in currentTenant ? String(currentTenant.name) : 'N/A'}</p>
+                <p>Status: {typeof currentTenant === 'object' && currentTenant && 'isActive' in currentTenant ? (currentTenant.isActive ? 'Active' : 'Inactive') : 'N/A'}</p>
               </div>
             </div>
           )}
 
           <div>
-            <Label>Available Tenants ({availableTenants.length})</Label>
+            <Label>Available Tenants ({availableTenants.size})</Label>
             <div className="text-sm text-muted-foreground">
-              {availableTenants.map(tenant => (
-                <p key={tenant.id}>{tenant.name}</p>
+              {Array.from(availableTenants).map((tenant: any, index) => (
+                <p key={index}>
+                  {typeof tenant === 'object' && tenant && 'name' in tenant ? String(tenant.name) : 'Unknown Tenant'}
+                </p>
               ))}
             </div>
           </div>
