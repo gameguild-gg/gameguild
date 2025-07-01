@@ -1,7 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Api } from '@game-guild/apiclient';
-import ProjectEntity = Api.ProjectEntity;
 
 type Props = {
   game: ProjectEntity;
