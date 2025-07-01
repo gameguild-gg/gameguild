@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useRouter } from 'next/navigation';
-import { Api, ProjectApi } from '@game-guild/apiclient';
+//import { Api, ProjectApi } from '@game-guild/apiclient';
 import slugify from 'slugify';
 import { useToast } from '@/components/ui/use-toast';
 import { getSession } from 'next-auth/react';

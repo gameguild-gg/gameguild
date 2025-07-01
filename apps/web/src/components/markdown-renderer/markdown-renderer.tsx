@@ -12,10 +12,8 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Admonition } from './Admonition';
 import Mermaid from './Mermaid';
 import RevealJS from './RevealJS';
-import { Api } from '@game-guild/apiclient';
 import { MarkdownQuizActivity } from './MarkdownQuizActivity';
 import { MarkdownCodeActivity } from './MarkdownCodeActivity';
-import LectureEntity = Api.LectureEntity;
 
 export interface MarkdownRendererProps {
   content: string;
