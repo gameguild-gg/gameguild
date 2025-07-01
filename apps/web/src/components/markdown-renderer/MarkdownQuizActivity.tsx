@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import MarkdownRenderer from '@/components/markdown-renderer/markdown-renderer';
-import { Api } from '@game-guild/apiclient';
 
 interface QuizProps {
   title: string;
