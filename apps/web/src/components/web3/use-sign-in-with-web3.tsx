@@ -5,6 +5,7 @@ import { useConnectToWallet } from '@/components/web3/use-connect-to-wallet';
 import { useCallback, useEffect } from 'react';
 import { signInWithWeb3 } from '@/lib/auth/sign-in-with-web3';
 import { getSession } from 'next-auth/react';
+import { postAuthWeb3Challenge } from '@/lib/api/generated';
 
 export enum Web3ProviderChoice {
   METAMASK = 'METAMASK',
@@ -12,11 +13,7 @@ export enum Web3ProviderChoice {
 }
 
 export function useSignInWithWeb3(choice: Web3ProviderChoice) {
-  const api = new AuthApi({
-    basePath: process.env.NEXT_PUBLIC_API_URL,
-  });
-
-  const { state, dispatch } = useWeb3();
+  const { state } = useWeb3();
   const [connectToWallet] = useConnectToWallet();
 
   const signIn = useCallback(async () => {
@@ -30,36 +27,47 @@ export function useSignInWithWeb3(choice: Web3ProviderChoice) {
 
     const tryToSignInMetamask = async () => {
       if (state.provider && state.accountAddress) {
-        // TODO: validate the chain id.
-        const chain = await state.provider.getNetwork();
+        try {
+          // TODO: validate the chain id.
+          const chain = await state.provider.getNetwork();
 
-        const response = await api.authControllerGetWeb3SignInChallenge({
-          address: state.accountAddress,
-        });
+          const response = await postAuthWeb3Challenge({
+            body: {
+              walletAddress: state.accountAddress,
+              chainId: chain.chainId.toString(),
+            },
+          });
 
-        if (response.status >= 400) {
-          // todo: communicate this to the user
-          console.error('Error while trying to sign in with web3');
-        }
+          if (!response.data) {
+            console.error('Error while trying to sign in with web3: no response data');
+            return;
+          }
 
-        const message = response.body.message;
+          const message = response.data.challenge;
+          if (!message) {
+            console.error('Error while trying to sign in with web3: no challenge message');
+            return;
+          }
 
-        // Eip1193Provider.
-        const signature = await state.provider.send('personal_sign', [message, state.accountAddress]);
+          // Eip1193Provider.
+          const signature = await state.provider.send('personal_sign', [message, state.accountAddress]);
 
-        await signInWithWeb3(signature, state.accountAddress);
+          await signInWithWeb3(signature, state.accountAddress);
 
-        // todo: move this elsewhere!!
-        // the await on the signInAndRedirectIfSucceed on metamask-sign-in-button.tsx is not working
-        const session = await getSession();
-        if (session) {
-          window.location.href = '/chess';
+          // todo: move this elsewhere!!
+          // the await on the signInAndRedirectIfSucceed on metamask-sign-in-button.tsx is not working
+          const session = await getSession();
+          if (session) {
+            window.location.href = '/chess';
+          }
+        } catch (error) {
+          console.error('Error while trying to sign in with web3:', error);
         }
       }
     };
     if (choice === Web3ProviderChoice.METAMASK) tryToSignInMetamask();
     else tryToSignInTorus();
-  }, [state, dispatch]);
+  }, [state, choice]);
 
   return [signIn];
 }

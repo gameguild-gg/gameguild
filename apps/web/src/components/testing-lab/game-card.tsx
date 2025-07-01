@@ -1,12 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import type { ProjectReadable } from '@/lib/api/generated';
 
 type Props = {
-  game: ProjectEntity;
+  game: ProjectReadable;
 };
 
 export function GameCard({ game }: Readonly<Props>) {
-  const { title, summary } = game;
+  const { title, shortDescription } = game;
 
   return (
     <Card
@@ -27,7 +28,7 @@ export function GameCard({ game }: Readonly<Props>) {
       <CardContent className="p-4">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
-          <CardDescription>{summary}</CardDescription>
+          <CardDescription>{shortDescription}</CardDescription>
         </CardHeader>
       </CardContent>
     </Card>

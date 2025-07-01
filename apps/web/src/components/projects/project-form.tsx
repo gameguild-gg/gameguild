@@ -6,17 +6,26 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useRouter } from 'next/navigation';
-//import { Api, ProjectApi } from '@game-guild/apiclient';
 import slugify from 'slugify';
 import { useToast } from '@/components/ui/use-toast';
 import { getSession } from 'next-auth/react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
-import { TextArea } from '@/components/ui/textArea';
+import { Textarea } from '@/components/ui/textarea';
 import { Plus, X } from 'lucide-react';
 import { FileUploader } from '@/components/ui/file-uploader';
-import ApiErrorResponseDto = Api.ApiErrorResponseDto;
+
+// Import types from the generated API
+import type { ProjectReadable, ProjectWritable } from '@/lib/api/generated';
+import { getProjectsSlugBySlug, postProjects, putProjectsById } from '@/lib/api/generated';
+
+// Define a simple error response type for generic error handling
+interface ApiErrorResponse {
+  msg?: string;
+  message?: string | { [key: string]: any };
+  statusCode?: number;
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -25,24 +34,23 @@ export interface ProjectFormProps {
   slug?: string;
 }
 
-export type ImageOrFile = File | Api.ImageEntity;
+export type ImageOrFile = File | { url: string; name: string };
 
 // converts an ImageOrFile to an url
 const imageOrFileToUrl = (imageOrFile: ImageOrFile) => {
   if (imageOrFile instanceof File) {
     return URL.createObjectURL(imageOrFile as File);
   }
-  const image = imageOrFile as Api.ImageEntity;
-  // todo: add the full path to the image using the api url
-  return `${image.path}/${image.filename}`;
+  // For URL-based images, return the URL directly
+  return imageOrFile.url;
 };
 
 // reference: https://itch.io/game/new
 
 // receive params to specify if the form is for creating or updating a project
 export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>) {
-  const [project, setProject] = React.useState<Api.ProjectEntity | null>();
-  const [errorApi, setErrorApi] = React.useState<ApiErrorResponseDto | null>();
+  const [project, setProject] = React.useState<ProjectReadable | null>();
+  const [errorApi, setErrorApi] = React.useState<ApiErrorResponse | null>();
   const router = useRouter();
   const toast = useToast();
 
@@ -69,41 +77,42 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
     if (!slug) {
       return;
     }
-    const session = await getSession();
-    const api = new ProjectApi({
-      basePath: process.env.NEXT_PUBLIC_API_URL,
-    });
-    const response = await api.getOneBaseProjectControllerProjectEntity(
-      { slug: slug },
-      {
-        headers: { Authorization: `Bearer ${session?.user?.accessToken}` },
-      },
-    );
-    if (response.status === 200) {
-      setProject(response.body as Api.ProjectEntity);
-      setBannerImage(response.body.thumbnail as ImageOrFile);
-    } else if (response.status === 401) {
-      router.push(`/disconnect`);
-    } else {
-      const error = response.body as ApiErrorResponseDto;
-      let message = '';
-      if (error.msg) {
-        message = error.msg + `;\n`;
-      }
-      if (error.message && typeof error.message === 'string') {
-        message += error.message + `;\n`;
-      }
-      if (error.message && typeof error.message === 'object') {
-        for (const key in error.message) {
-          message += `${key}: ${error.message[key]};\n`;
+    try {
+      const session = await getSession();
+      const response = await getProjectsSlugBySlug({
+        path: { slug: slug },
+        headers: { Authorization: `Bearer ${(session?.user as any)?.accessToken}` },
+      });
+      
+      if (response.data) {
+        setProject(response.data);
+        if (response.data.imageUrl) {
+          setBannerImage({ url: response.data.imageUrl, name: 'banner' });
         }
       }
+    } catch (error: any) {
+      if (error.status === 401) {
+        router.push(`/disconnect`);
+      } else {
+        const errorResponse = error as ApiErrorResponse;
+        let message = '';
+        if (errorResponse.msg) {
+          message = errorResponse.msg + `;\n`;
+        }
+        if (errorResponse.message && typeof errorResponse.message === 'string') {
+          message += errorResponse.message + `;\n`;
+        }
+        if (errorResponse.message && typeof errorResponse.message === 'object') {
+          for (const key in errorResponse.message) {
+            message += `${key}: ${errorResponse.message[key]};\n`;
+          }
+        }
 
-      toast.toast({
-        title: 'Error',
-        description: message,
-      });
-      //setErrors(response.body as ApiErrorResponseDto);
+        toast.toast({
+          title: 'Error',
+          description: message,
+        });
+      }
     }
   };
 
@@ -115,39 +124,41 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
 
   const createProject = async () => {
     toast.toast({ title: 'Creating project' });
-    const session = await getSession();
-    const api = new ProjectApi({
-      basePath: process.env.NEXT_PUBLIC_API_URL,
-    });
-
-    const response = await api.createOneBaseProjectControllerProjectEntity(project as Api.CreateProjectDto, {
-      headers: { Authorization: `Bearer ${session?.user?.accessToken}` },
-    });
-    if (response.status === 201 || response.status === 200) {
-      setProject(response.body as Api.ProjectEntity);
-    } else if (response.status === 401) {
-      toast.toast({ title: 'Error', description: 'Unauthorized' });
-      // wait for the toast to show
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      router.push(`/disconnect`);
-    } else {
-      const error = response.body as ApiErrorResponseDto;
-      let message = '';
-      if (error.msg) {
-        message = error.msg + `;\n`;
-      }
-      if (error.message && typeof error.message === 'string') {
-        message += error.message + `;\n`;
-      }
-      if (error.message && typeof error.message === 'object') {
-        for (const key in error.message) {
-          message += `${key}: ${error.message[key]};\n`;
-        }
-      }
-      toast.toast({
-        title: 'Error',
-        description: message,
+    try {
+      const session = await getSession();
+      const response = await postProjects({
+        body: project as ProjectWritable,
+        headers: { Authorization: `Bearer ${(session?.user as any)?.accessToken}` },
       });
+      
+      if (response.data) {
+        setProject(response.data);
+        toast.toast({ title: 'Success', description: 'Project created successfully' });
+      }
+    } catch (error: any) {
+      if (error.status === 401) {
+        toast.toast({ title: 'Error', description: 'Unauthorized' });
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        router.push(`/disconnect`);
+      } else {
+        const errorResponse = error as ApiErrorResponse;
+        let message = '';
+        if (errorResponse.msg) {
+          message = errorResponse.msg + `;\n`;
+        }
+        if (errorResponse.message && typeof errorResponse.message === 'string') {
+          message += errorResponse.message + `;\n`;
+        }
+        if (errorResponse.message && typeof errorResponse.message === 'object') {
+          for (const key in errorResponse.message) {
+            message += `${key}: ${errorResponse.message[key]};\n`;
+          }
+        }
+        toast.toast({
+          title: 'Error',
+          description: message,
+        });
+      }
     }
   };
   const updateProject = async () => {};
@@ -310,7 +321,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
                     id="title"
                     name="title"
                     placeholder="Enter project name"
-                    value={project?.title}
+                    value={project?.title || ''}
                     onChange={(e) => {
                       // clamp the title length to 60 characters max
                       const title = e.target.value.slice(0, 60);
@@ -323,7 +334,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
                           locale: 'en',
                           trim: true,
                         }),
-                      } as Api.ProjectEntity);
+                      } as ProjectReadable);
                     }}
                     required
                   />
@@ -339,7 +350,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
                     id="slug"
                     name="slug"
                     placeholder="Slugify your title"
-                    value={project?.slug}
+                    value={project?.slug || ''}
                     onChange={(e) =>
                       setProject({
                         ...project,
@@ -349,7 +360,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
                           strict: true,
                           locale: 'en',
                         }),
-                      } as Api.ProjectEntity)
+                      } as ProjectReadable)
                     }
                     required
                   />
@@ -446,16 +457,16 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
                   <Input
                     id="short-description"
                     placeholder="Optional"
-                    value={project?.summary}
+                    value={project?.shortDescription || ''}
                     onChange={(e) => {
-                      const summary = e.target.value.slice(0, 140);
+                      const shortDescription = e.target.value.slice(0, 140);
                       setProject({
                         ...project,
-                        summary: summary,
-                      } as Api.ProjectEntity);
+                        shortDescription: shortDescription,
+                      } as ProjectReadable);
                     }}
                   />
-                  <span>{project?.summary?.length || 0}/140</span>
+                  <span>{project?.shortDescription?.length || 0}/140</span>
                 </div>
                 <p className="text-sm text-gray-500 mt-1">Shown when share to your project on social medias. Maximum length: 140 characters.</p>
               </div>
@@ -533,15 +544,16 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
               {/*  </p>*/}
               {/*</div>*/}
               <div>
-                <Label htmlFor="body">Body</Label>
-                <TextArea
-                  id="body"
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
                   rows={6}
+                  value={project?.description || ''}
                   onChange={(e) =>
                     setProject({
                       ...project,
-                      body: e.target.value,
-                    } as Api.ProjectEntity)
+                      description: e.target.value,
+                    } as ProjectReadable)
                   }
                 />
                 <p className="text-sm text-gray-500 mt-1">This will make up the content of your game page.</p>

@@ -35,7 +35,7 @@ interface MemFSExports extends WebAssembly.Exports {
 
 export class MemFS {
   public ready: Promise<void>;
-  private outputHandler: OutputHandler;
+  private outputHandler!: OutputHandler;
   private stdinStr: string;
   private stdinStrPos: number;
   private hostMem_: Memory | null;

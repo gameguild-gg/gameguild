@@ -1,7 +1,7 @@
 "use client"
 
 import React, { FunctionComponent, PropsWithChildren } from "react";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ResetPasswordFormProps {
   email: string;
@@ -18,7 +18,7 @@ interface ResetPasswordFormProps {
 export const ResetPasswordForm: FunctionComponent<ResetPasswordFormProps> = (): React.JSX.Element => {
   return (
     <AuthForm>
-      <AuthFormHeader>
+      <AuthFormHeader title="Reset Password" description="Enter your details to reset your password">
 
       </AuthFormHeader>
       <AuthFormFooter>
@@ -47,7 +47,13 @@ export const AuthForm: FunctionComponent<PropsWithChildren> = ({ children }): Re
   );
 };
 
-export const AuthFormHeader: FunctionComponent<PropsWithChildren> = ({ children }): React.JSX.Element => {
+interface AuthFormHeaderProps {
+  title: string;
+  description: string;
+  children?: React.ReactNode;
+}
+
+export const AuthFormHeader: FunctionComponent<AuthFormHeaderProps> = ({ title, description, children }): React.JSX.Element => {
   return (
     <CardHeader className="pb-0 pt-8">
       <CardTitle className="text-3xl font-bold text-center text-slate-800">
@@ -56,6 +62,7 @@ export const AuthFormHeader: FunctionComponent<PropsWithChildren> = ({ children 
       <CardDescription className="text-center text-slate-500 mt-2 text-base">
         { description }
       </CardDescription>
+      { children }
     </CardHeader>
   );
 }
