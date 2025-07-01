@@ -30,6 +30,9 @@ export function usePyodide() {
       }
 
       // Load Pyodide
+      if (!pyodideApiRef.current) {
+        throw new Error('Failed to initialize Pyodide worker API');
+      }
       const loaded = await pyodideApiRef.current.loadPyodideInstance();
       setPyodideLoaded(loaded);
       setLoading(false);

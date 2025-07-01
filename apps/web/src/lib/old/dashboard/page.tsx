@@ -74,32 +74,32 @@ export default function DashboardPage() {
           <CardContent className="space-y-4">
             <TenantSelector />
             
-            {currentTenant && (
+            {!!(currentTenant && typeof currentTenant === 'object' && currentTenant !== null) && (
               <div className="space-y-2">
                 <div>
-                  <strong>Current Tenant:</strong> {currentTenant.name}
+                  <strong>Current Tenant:</strong> {(currentTenant as any).name || 'Unknown'}
                 </div>
                 <div>
-                  <strong>Tenant ID:</strong> {currentTenant.id}
+                  <strong>Tenant ID:</strong> {(currentTenant as any).id || 'Unknown'}
                 </div>
                 <div>
-                  <strong>Status:</strong> {currentTenant.isActive ? 'Active' : 'Inactive'}
+                  <strong>Status:</strong> {(currentTenant as any).isActive ? 'Active' : 'Inactive'}
                 </div>
               </div>
             )}
 
-            {availableTenants.length > 0 && (
+            {availableTenants.size > 0 ? (
               <div>
                 <strong>Available Tenants:</strong>
                 <ul className="list-disc list-inside mt-2 space-y-1">
-                  {availableTenants.map((tenant) => (
-                    <li key={tenant.id} className="text-sm">
-                      {tenant.name} ({tenant.isActive ? 'Active' : 'Inactive'})
+                  {Array.from(availableTenants).map((tenant: any, index) => (
+                    <li key={tenant?.id || index} className="text-sm">
+                      {tenant?.name || 'Unknown'} ({tenant?.isActive ? 'Active' : 'Inactive'})
                     </li>
                   ))}
                 </ul>
               </div>
-            )}
+            ) : null}
           </CardContent>
         </Card>
 

@@ -5,6 +5,7 @@ import { PyodideInterface } from 'pyodide';
 // Declare the global loadPyodide function that will be available after importScripts
 declare global {
   function loadPyodide(): Promise<PyodideInterface>;
+  function importScripts(...urls: string[]): void;
 }
 
 let pyodide: PyodideInterface | null = null;
@@ -36,6 +37,10 @@ const loadPyodideInstance = async () => {
 const executePython = async (code: string, onOutput: (output: string) => void, onError: (error: string) => void) => {
   try {
     await loadPyodideInstance();
+
+    if (!pyodide) {
+      throw new Error('Pyodide not initialized');
+    }
 
     pyodide.setStdout({
       batched: (output: string) => {

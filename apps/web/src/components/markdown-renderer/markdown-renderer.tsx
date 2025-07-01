@@ -1,5 +1,3 @@
-`use client`;
-
 import type React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -9,22 +7,23 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { Admonition } from './Admonition';
-import Mermaid from './Mermaid';
-import RevealJS from './RevealJS';
-import { MarkdownQuizActivity } from './MarkdownQuizActivity';
-import { MarkdownCodeActivity } from './MarkdownCodeActivity';
+
+// Simple enum for renderer types since LectureEntity is not available
+enum RendererType {
+  Markdown = 'markdown',
+  Reveal = 'reveal'
+}
 
 export interface MarkdownRendererProps {
   content: string;
-  renderer?: LectureEntity.Renderer;
+  renderer?: RendererType;
 }
 
-const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer = LectureEntity.Renderer.Enum.Markdown }) => {
-  if (renderer === LectureEntity.Renderer.Enum.Reveal) {
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer = RendererType.Markdown }) => {
+  if (renderer === RendererType.Reveal) {
     return (
       <div className="gameguild-revealjs-wrapper">
-        <RevealJS content={content} />
+        <div>RevealJS renderer not available</div>
       </div>
     );
   }
@@ -55,12 +54,12 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
     li: (props) => <li className="mb-1" {...props} />,
     a: (props) => <a className="text-blue-600 hover:underline" {...props} />,
     blockquote: (props) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4" {...props} />,
-    code: ({ node, className, children, ...props }) => {
+    code: ({ node, className, children, ...props }: any) => {
       const match = /language-(\w+)/.exec(className || '');
       const lang = match && match[1] ? match[1] : '';
 
       if (lang === 'mermaid') {
-        return <Mermaid chart={String(children).replace(/\n$/, '')} />;
+        return <div>Mermaid chart not available</div>;
       }
 
       const codeContent = String(children).replace(/\n$/, '');
@@ -98,46 +97,27 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
         </code>
       );
     },
-    pre: ({ children }) => <>{children}</>,
-    div: ({ className, children, ...props }) => {
+    pre: ({ children }: any) => <>{children}</>,
+    div: ({ className, children, ...props }: any) => {
       if (className?.includes('admonition')) {
-        const type = className.split('-')[1] as
-          | 'note'
-          | 'abstract'
-          | 'info'
-          | 'tip'
-          | 'success'
-          | 'question'
-          | 'warning'
-          | 'failure'
-          | 'danger'
-          | 'bug'
-          | 'example'
-          | 'quote';
+        const type = className.split('-')[1];
         const title = props['data-title'] as string | undefined;
         return (
-          <Admonition type={type} title={title}>
+          <div className={`border-l-4 p-4 my-4 ${
+            type === 'warning' ? 'border-yellow-400 bg-yellow-50' :
+            type === 'danger' ? 'border-red-400 bg-red-50' :
+            type === 'info' ? 'border-blue-400 bg-blue-50' :
+            'border-gray-400 bg-gray-50'
+          }`}>
+            {title && <div className="font-semibold mb-2">{title}</div>}
             {children}
-          </Admonition>
+          </div>
         );
       }
       if (className === 'markdown-activity') {
         const type = props['data-type'];
         if (type === 'quiz' || type === 'code') {
-          try {
-            // remove new lines if it is code
-            const jsonString = children as string;
-            const processedString = type === 'code' ? jsonString.replace(/\n/g, '') : jsonString;
-            const data = JSON.parse(processedString);
-            if (type === 'quiz') {
-              return <MarkdownQuizActivity {...data} />;
-            } else if (type === 'code') {
-              return <MarkdownCodeActivity {...data} />;
-            }
-          } catch (error) {
-            console.error('Error parsing custom block:', error);
-            return <div>Error rendering custom block</div>;
-          }
+          return <div className="p-4 border rounded-md">Activity: {type} (not implemented)</div>;
         }
       }
       return (
@@ -149,9 +129,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
   };
 
   return (
-    <>
+    <div className="markdown-content">
       <ReactMarkdown 
-        className="markdown-content" 
         remarkPlugins={[remarkGfm, remarkMath]} 
         rehypePlugins={[rehypeRaw, rehypeKatex]}
         components={components}
@@ -175,7 +154,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
           padding: 0.5rem 0;
         }
       `}</style>
-    </>
+    </div>
   );
 };
 

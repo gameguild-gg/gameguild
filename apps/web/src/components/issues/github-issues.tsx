@@ -122,7 +122,7 @@ export default function GitHubIssues() {
       // Extract unique users and labels
       const uniqueUsers = Array.from(
         new Set(
-          data.issues.flatMap((issue) => [
+          data.issues.flatMap((issue: Issue) => [
             issue.user.login,
             ...(issue.assignees?.map((assignee) => assignee.login) || []),
             ...(issue.reviewers?.map((reviewer) => reviewer.login) || []),
@@ -134,8 +134,8 @@ export default function GitHubIssues() {
       const uniqueLabels = Array.from(
         new Set(
           data.issues
-          .flatMap((issue) => issue.labels || [])
-          .map((label) => JSON.stringify(label)),
+          .flatMap((issue: Issue) => issue.labels || [])
+          .map((label: Label) => JSON.stringify(label)),
         ),
       )
       .map((labelString) => {

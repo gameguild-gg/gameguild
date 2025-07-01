@@ -15,7 +15,7 @@ async function fetchAllIssues(state: 'open' | 'closed' | 'all') {
     return cachedIssues;
   }
 
-  let allIssues = [];
+  let allIssues: any[] = [];
   let page = 1;
   let hasNextPage = true;
 
@@ -115,19 +115,19 @@ export async function GET(request: NextRequest) {
 
     if (user && user !== 'all') {
       filteredIssues = filteredIssues.filter(
-        (issue) =>
+        (issue: any) =>
           (issue.user && issue.user.login === user) ||
-          (issue.assignees && issue.assignees.some((a) => a.login === user)) ||
-          (issue.reviewers && issue.reviewers.some((r) => r.login === user)) ||
+          (issue.assignees && issue.assignees.some((a: any) => a.login === user)) ||
+          (issue.reviewers && issue.reviewers.some((r: any) => r.login === user)) ||
           (issue.requested_reviewers &&
-            issue.requested_reviewers.some((r) => r.login === user)),
+            issue.requested_reviewers.some((r: any) => r.login === user)),
       );
     }
 
     if (labels.length > 0) {
-      filteredIssues = filteredIssues.filter((issue) =>
+      filteredIssues = filteredIssues.filter((issue: any) =>
         labels.every(
-          (label) => issue.labels && issue.labels.some((l) => l.name === label),
+          (label: string) => issue.labels && issue.labels.some((l: any) => l.name === label),
         ),
       );
     }

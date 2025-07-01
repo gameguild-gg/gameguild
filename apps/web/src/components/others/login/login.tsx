@@ -1,79 +1,81 @@
-import React from 'react';
-
-import { Button, Checkbox, Form, Input } from 'antd';
-import { LockOutlined, UserOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Lock, User } from 'lucide-react';
 
 const Login = () => {
-  const onFinish = (values: any) => {
-    console.log('Received values of form: ', values);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(false);
+
+  const onFinish = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Received values of form: ', { username, password, remember });
   };
 
   return (
     <div className="flex justify-center items-center h-screen">
-      <Form
-        name="normal_login"
-        className="login-form"
-        initialValues={{
-          remember: true,
-        }}
-        onFinish={onFinish}
-        style={{ width: 300 }}
-      >
-        <Form.Item
-          name="username"
-          rules={[
-            {
-              required: true,
-              message: 'Please input your Username!',
-              whitespace: true,
-            },
-          ]}
-        >
-          <Input
-            prefix={<UserOutlined className="site-form-item-icon" />}
-            placeholder="Username"
-            size="large"
-          />
-        </Form.Item>
-        <Form.Item
-          name="password"
-          rules={[
-            {
-              required: true,
-              message: 'Please input your Password!',
-              whitespace: true,
-            },
-          ]}
-        >
-          <Input.Password
-            prefix={<LockOutlined className="site-form-item-icon" />}
-            type="password"
-            placeholder="Password"
-            size="large"
-          />
-        </Form.Item>
-        <Form.Item>
-          <Form.Item name="remember" valuePropName="checked" noStyle>
-            <Checkbox className="text-gray-600">Remember me</Checkbox>
-          </Form.Item>
-
-          <a className="login-form-forgot float-right" href="">
+      <form onSubmit={onFinish} className="w-[300px] space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="username">Username</Label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              id="username"
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="pl-10"
+              required
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              id="password"
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pl-10"
+              required
+            />
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="remember"
+              checked={remember}
+              onCheckedChange={(checked) => setRemember(checked === true)}
+            />
+            <Label htmlFor="remember" className="text-sm text-gray-600">
+              Remember me
+            </Label>
+          </div>
+          <a href="#" className="text-sm text-blue-600 hover:underline">
             Forgot password
           </a>
-        </Form.Item>
-
-        <Form.Item>
-          <Button
-            type="primary"
-            htmlType="submit"
-            className="w-full"
-            size="large"
-          >
-            Log in
-          </Button>
-          Or <a href="">register now!</a>
-        </Form.Item>
-      </Form>
+        </div>
+        
+        <Button type="submit" className="w-full">
+          Log in
+        </Button>
+        
+        <div className="text-center">
+          Or <a href="#" className="text-blue-600 hover:underline">register now!</a>
+        </div>
+      </form>
     </div>
   );
 };
+
+export default Login;

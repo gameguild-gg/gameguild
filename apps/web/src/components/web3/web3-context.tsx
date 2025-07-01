@@ -140,7 +140,9 @@ export function Web3Provider({ children }: Web3ProviderProps) {
       window.ethereum.on('accountsChanged', handleAccountsChanged);
       
       return () => {
-        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        if (window.ethereum) {
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        }
       };
     } else {
       dispatch({ 

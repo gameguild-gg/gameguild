@@ -1,7 +1,7 @@
 "use client"
 
 import React, { FunctionComponent, PropsWithChildren } from "react";
-import { Card, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ResetPasswordFormProps {
   email: string;
@@ -31,7 +31,7 @@ interface AuthCardProps {
   footer?: React.ReactNode;
 }
 
-export const AuthCard: FunctionComponent<PropsWithChildren> = ({ children }): React.JSX.Element => {
+export const AuthCard: FunctionComponent<PropsWithChildren<AuthCardProps>> = ({ title, description, children, footer }): React.JSX.Element => {
   return (
     <Card className="border-0 shadow-2xl overflow-hidden backdrop-blur-sm bg-white/95 animate-fade-in-up">
       <div className="h-1.5 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600"/>
