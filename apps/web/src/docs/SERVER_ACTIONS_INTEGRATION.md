@@ -1,16 +1,19 @@
 # Server Actions Integration with CMS Backend
 
-This document explains how to use the server actions integration with your CMS backend for authentication and tenant management.
+This document explains how to use the server actions integration with your CMS backend for authentication and tenant
+management.
 
 ## Overview
 
-The integration uses Next.js server actions following your existing pattern with the HTTP client factory. All server actions automatically include authentication headers and tenant context when making requests to your CMS backend.
+The integration uses Next.js server actions following your existing pattern with the HTTP client factory. All server
+actions automatically include authentication headers and tenant context when making requests to your CMS backend.
 
 ## Server Actions
 
 ### Authentication Actions
 
 #### Email/Password Authentication
+
 ```typescript
 import { signInWithEmailAndPassword, signUpWithEmailAndPassword } from '@/lib/auth/email-password-actions';
 
@@ -19,25 +22,15 @@ const [state, formAction, isPending] = useActionState(signInWithEmailAndPassword
 ```
 
 #### Other Authentication Operations
+
 ```typescript
-import { 
-  sendEmailVerification,
-  verifyEmail,
-  forgotPassword,
-  resetPassword,
-  changePassword 
-} from '@/lib/auth/auth-actions';
+import { sendEmailVerification, verifyEmail, forgotPassword, resetPassword, changePassword } from '@/lib/auth/auth-actions';
 ```
 
 ### Tenant Management Actions
+
 ```typescript
-import { 
-  getUserTenants,
-  getTenantById,
-  createTenant,
-  updateTenant,
-  deleteTenant 
-} from '@/lib/auth/tenant-actions';
+import { getUserTenants, getTenantById, createTenant, updateTenant, deleteTenant } from '@/lib/auth/tenant-actions';
 
 // Get user's tenants (server-side)
 const result = await getUserTenants();
@@ -80,11 +73,11 @@ export function SignInForm() {
     <form action={formAction}>
       {state.error && <div className="error">{state.error}</div>}
       {state.success && <div className="success">Welcome {state.data?.user.email}!</div>}
-      
+
       <input name="email" type="email" required />
       <input name="password" type="password" required />
       <input name="tenantId" type="text" placeholder="Tenant ID (optional)" />
-      
+
       <button type="submit" disabled={isPending}>
         {isPending ? 'Signing in...' : 'Sign In'}
       </button>
@@ -116,7 +109,7 @@ export function TenantManager() {
 
   return (
     <div>
-      {tenants.map(tenant => (
+      {tenants.map((tenant) => (
         <div key={tenant.id}>{tenant.name}</div>
       ))}
     </div>
@@ -140,9 +133,11 @@ export function ForgotPasswordForm() {
     <form action={formAction}>
       {state.error && <div>{state.error}</div>}
       {state.success && <div>{state.message}</div>}
-      
+
       <input name="email" type="email" placeholder="Your email" required />
-      <button type="submit" disabled={isPending}>Send Reset Email</button>
+      <button type="submit" disabled={isPending}>
+        Send Reset Email
+      </button>
     </form>
   );
 }
@@ -155,11 +150,13 @@ export function ResetPasswordForm() {
     <form action={formAction}>
       {state.error && <div>{state.error}</div>}
       {state.success && <div>{state.message}</div>}
-      
+
       <input name="token" type="hidden" value="reset-token-from-url" />
       <input name="newPassword" type="password" placeholder="New password" required />
       <input name="confirmPassword" type="password" placeholder="Confirm password" required />
-      <button type="submit" disabled={isPending}>Reset Password</button>
+      <button type="submit" disabled={isPending}>
+        Reset Password
+      </button>
     </form>
   );
 }
@@ -171,10 +168,10 @@ All server actions return a consistent state structure:
 
 ```typescript
 type ActionState = {
-  error?: string;      // Error message if action failed
-  success?: boolean;   // True if action succeeded
-  message?: string;    // Success message (for some actions)
-  data?: any;         // Response data (varies by action)
+  error?: string; // Error message if action failed
+  success?: boolean; // True if action succeeded
+  message?: string; // Success message (for some actions)
+  data?: any; // Response data (varies by action)
 };
 ```
 
@@ -247,4 +244,5 @@ const result = await signInWithEmailAndPassword({}, formData);
 console.log(result); // { success: true, data: { ... } }
 ```
 
-This server actions integration provides a robust, type-safe way to interact with your CMS backend while following Next.js best practices and your existing architecture patterns.
+This server actions integration provides a robust, type-safe way to interact with your CMS backend while following
+Next.js best practices and your existing architecture patterns.

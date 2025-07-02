@@ -1,10 +1,5 @@
 import { environment } from '@/configs/environment';
-import {
-  SignInResponse,
-  RefreshTokenRequest,
-  RefreshTokenResponse,
-  OAuthSignInRequest,
-} from '@/types/auth';
+import { OAuthSignInRequest, RefreshTokenRequest, RefreshTokenResponse, SignInResponse } from '@/types/auth';
 
 class ApiClient {
   private baseUrl: string;
@@ -13,10 +8,7 @@ class ApiClient {
     this.baseUrl = environment.apiBaseUrl;
   }
 
-  async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const config: RequestInit = {
       headers: {
@@ -67,11 +59,7 @@ class ApiClient {
   }
 
   // Authenticated requests
-  async authenticatedRequest<T>(
-    endpoint: string,
-    accessToken: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  async authenticatedRequest<T>(endpoint: string, accessToken: string, options: RequestInit = {}): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       headers: {

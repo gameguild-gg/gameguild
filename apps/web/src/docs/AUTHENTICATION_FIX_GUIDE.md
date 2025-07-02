@@ -1,15 +1,18 @@
 # 🚨 **Authentication Error: CMS Backend Connection Failed**
 
 ## ❌ **Current Error**
+
 ```
 ECONNREFUSED - Cannot connect to CMS backend on http://localhost:5001
 ```
 
-The authentication is failing because the **CMS backend is not running**. Since we removed the development fallback, the CMS backend is **required** for authentication.
+The authentication is failing because the **CMS backend is not running**. Since we removed the development fallback, the
+CMS backend is **required** for authentication.
 
 ## 🛠️ **How to Fix**
 
 ### **Step 1: Start CMS Backend**
+
 Open a **new terminal** in the CMS directory and start the backend:
 
 ```bash
@@ -21,6 +24,7 @@ dotnet run
 ```
 
 **Expected Output:**
+
 ```
 Building...
 info: Microsoft.Hosting.Lifetime[14]
@@ -30,9 +34,11 @@ info: Microsoft.Hosting.Lifetime[0]
 ```
 
 ### **Step 2: Verify CMS is Running**
+
 Open your browser and visit: **http://localhost:5001/health**
 
 **Expected Response:**
+
 ```json
 {
   "status": "healthy",
@@ -43,6 +49,7 @@ Open your browser and visit: **http://localhost:5001/health**
 ```
 
 ### **Step 3: Test Authentication**
+
 1. Go back to your web app: **http://localhost:3000**
 2. Check the "CMS Backend Status" - should show **"Connected"**
 3. Click **"Fazer Login com Google"**
@@ -51,6 +58,7 @@ Open your browser and visit: **http://localhost:5001/health**
 ## 🔍 **Troubleshooting**
 
 ### **If CMS Won't Start**
+
 ```bash
 # Make sure you have .NET 9.0 SDK
 dotnet --version
@@ -63,6 +71,7 @@ dotnet run
 ```
 
 ### **If Port 5001 is Busy**
+
 ```bash
 # Check what's using port 5001
 netstat -ano | findstr :5001
@@ -72,6 +81,7 @@ taskkill /PID [PID] /F
 ```
 
 ### **If Database Issues**
+
 ```bash
 # Reset database (delete and recreate)
 cd apps/cms
@@ -82,12 +92,14 @@ dotnet run
 ## ✅ **What Should Happen**
 
 ### **Console Output (Frontend)**
+
 ```
 Attempting Google ID token validation with CMS backend: http://localhost:5001
 CMS backend authentication successful: { userId: ..., tenantId: ..., availableTenants: ... }
 ```
 
 ### **Authentication Flow**
+
 1. ✅ Google OAuth completes
 2. ✅ Frontend sends ID token to CMS `/auth/google/id-token`
 3. ✅ CMS validates token with Google
@@ -100,13 +112,15 @@ CMS backend authentication successful: { userId: ..., tenantId: ..., availableTe
 For the application to work, you need **both** services running:
 
 ### **Terminal 1: CMS Backend**
+
 ```bash
 cd apps/cms
 dotnet run
 # Should show: Now listening on: http://localhost:5001
 ```
 
-### **Terminal 2: Web Frontend** 
+### **Terminal 2: Web Frontend**
+
 ```bash
 cd apps/web
 npm run dev
@@ -116,7 +130,7 @@ npm run dev
 ## 📋 **Quick Checklist**
 
 - [ ] CMS backend running on localhost:5001
-- [ ] Web frontend running on localhost:3000  
+- [ ] Web frontend running on localhost:3000
 - [ ] Environment variable `NEXT_PUBLIC_API_URL=http://localhost:5001`
 - [ ] Google OAuth credentials configured
 - [ ] No other service using port 5001

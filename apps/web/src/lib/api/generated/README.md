@@ -1,6 +1,7 @@
 # Generated API Types & SDK
 
-This directory contains automatically generated TypeScript types and SDK from the backend API's OpenAPI/Swagger specification.
+This directory contains automatically generated TypeScript types and SDK from the backend API's OpenAPI/Swagger
+specification.
 
 ## ⚠️ IMPORTANT: These files should be committed to Git
 
@@ -26,10 +27,7 @@ Unlike typical generated code, these files **should be committed** to the reposi
 ### Using the Generated SDK (Recommended)
 
 ```typescript
-import { 
-  postApiProgramsByProgramIdActivityGrades, 
-  getApiProgramsByProgramIdActivityGradesStudentByProgramUserId 
-} from '@/lib/api';
+import { postApiProgramsByProgramIdActivityGrades, getApiProgramsByProgramIdActivityGradesStudentByProgramUserId } from '@/lib/api';
 
 // Grade an activity
 const gradeResult = await postApiProgramsByProgramIdActivityGrades({
@@ -39,16 +37,16 @@ const gradeResult = await postApiProgramsByProgramIdActivityGrades({
     programUserId: 'student-789',
     contentInteractionId: 'interaction-101',
     score: 95,
-    feedback: 'Excellent work!'
-  }
+    feedback: 'Excellent work!',
+  },
 });
 
 // Get student grades
 const studentGrades = await getApiProgramsByProgramIdActivityGradesStudentByProgramUserId({
   path: {
     programId: 'program-123',
-    programUserId: 'student-789'
-  }
+    programUserId: 'student-789',
+  },
 });
 ```
 
@@ -68,7 +66,7 @@ function StudentGrades({ programId, studentId }: { programId: string; studentId:
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
-  
+
   return (
     <div>
       {data?.data?.map(grade => (
@@ -88,7 +86,7 @@ const gradeData: PostApiProgramsByProgramIdActivityGradesData = {
   path: { programId: 'program-123' },
   body: {
     // ... fully typed request body
-  }
+  },
 };
 ```
 
@@ -117,6 +115,7 @@ npm run types:check
 ## Authentication
 
 The generated client is configured to work with:
+
 - JWT Bearer tokens
 - Tenant-aware requests
 - Next.js environment (SSR compatible)

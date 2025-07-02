@@ -1,25 +1,25 @@
 import createMiddleware from 'next-intl/middleware';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { auth } from '@/auth';
 import { routing } from '@/i18n/routing';
 
 const intlMiddleware = createMiddleware(routing);
 
 export default auth((request) => {
-  // Get tenant ID from auth session  
+  // Get tenant ID from auth session
   const tenantId = request.auth?.tenantId || (request.auth as any)?.currentTenant?.id;
-  
+
   // Add tenant ID to request headers if available
   if (tenantId) {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('x-tenant-id', tenantId);
-    
-    // Create new request with tenant headers
+
+    // Create a new request with tenant headers
     const requestWithTenant = new NextRequest(request.url, {
       headers: requestHeaders,
     });
-    
-    // Handle internationalization with tenant-aware request
+
+    // Handle internationalization with a tenant-aware request
     return intlMiddleware(requestWithTenant);
   }
 

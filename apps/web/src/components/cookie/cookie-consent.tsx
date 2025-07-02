@@ -32,10 +32,7 @@ export default function CookieConsent({}: Readonly<CookieConsentProps>) {
                 By continuing to use our site, you agree to our cookies.
               </h4>
             </div>
-            <button
-              onClick={AcceptCookies}
-              className="border p-1 rounded hover:text-gray-950 hover:bg-white"
-            >
+            <button onClick={AcceptCookies} className="border p-1 rounded hover:text-gray-950 hover:bg-white">
               Accept
             </button>
           </div>

@@ -16,13 +16,10 @@ export type SignUpFormState = {
   data?: SignInResponse;
 };
 
-export async function signInWithEmailAndPassword(
-  previousState: SignInFormState,
-  formData: FormData,
-): Promise<SignInFormState> {
+export async function signInWithEmailAndPassword(previousState: SignInFormState, formData: FormData): Promise<SignInFormState> {
   try {
     const httpClient = httpClientFactory();
-    
+
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const tenantId = formData.get('tenantId') as string | undefined;
@@ -66,13 +63,10 @@ export async function signInWithEmailAndPassword(
   }
 }
 
-export async function signUpWithEmailAndPassword(
-  previousState: SignUpFormState,
-  formData: FormData,
-): Promise<SignUpFormState> {
+export async function signUpWithEmailAndPassword(previousState: SignUpFormState, formData: FormData): Promise<SignUpFormState> {
   try {
     const httpClient = httpClientFactory();
-    
+
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const username = formData.get('username') as string;

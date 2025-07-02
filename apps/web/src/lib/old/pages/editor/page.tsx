@@ -13,11 +13,7 @@ export default function Home() {
         <h2>Other Examples</h2>
         <ul>
           <li>
-            <a
-              href="https://codesandbox.io/s/lexical-plain-text-example-g932e"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href="https://codesandbox.io/s/lexical-plain-text-example-g932e" target="_blank" rel="noreferrer">
               Plain text example
             </a>
           </li>

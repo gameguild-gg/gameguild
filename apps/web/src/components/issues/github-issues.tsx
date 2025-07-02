@@ -45,27 +45,15 @@ export default function GitHubIssues() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [users, setUsers] = useState<string[]>([]);
   const [labels, setLabels] = useState<Label[]>([]);
-  const [selectedUser, setSelectedUser] = useState(
-    searchParams.get('user') || 'all',
-  );
-  const [selectedLabels, setSelectedLabels] = useState<string[]>(
-    searchParams.get('labels')?.split(',').filter(Boolean) || [],
-  );
+  const [selectedUser, setSelectedUser] = useState(searchParams.get('user') || 'all');
+  const [selectedLabels, setSelectedLabels] = useState<string[]>(searchParams.get('labels')?.split(',').filter(Boolean) || []);
   const [sort, setSort] = useState(searchParams.get('sort') || 'newest');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pageSize, setPageSize] = useState(
-    Number(searchParams.get('pageSize')) || 25,
-  );
-  const [currentPage, setCurrentPage] = useState(
-    Number(searchParams.get('page')) || 1,
-  );
-  const [issueType, setIssueType] = useState(
-    searchParams.get('issueType') || 'issue',
-  );
-  const [issueState, setIssueState] = useState(
-    searchParams.get('state') || 'open',
-  );
+  const [pageSize, setPageSize] = useState(Number(searchParams.get('pageSize')) || 25);
+  const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
+  const [issueType, setIssueType] = useState(searchParams.get('issueType') || 'issue');
+  const [issueState, setIssueState] = useState(searchParams.get('state') || 'open');
   const [totalPages, setTotalPages] = useState(1);
   const [totalIssues, setTotalIssues] = useState(0);
 
@@ -73,24 +61,14 @@ export default function GitHubIssues() {
     const params = new URLSearchParams();
     if (issueType !== 'issue') params.set('issueType', issueType);
     if (selectedUser !== 'all') params.set('user', selectedUser);
-    if (selectedLabels.length > 0)
-      params.set('labels', selectedLabels.join(','));
+    if (selectedLabels.length > 0) params.set('labels', selectedLabels.join(','));
     if (sort !== 'newest') params.set('sort', sort);
     if (pageSize !== 25) params.set('pageSize', pageSize.toString());
     if (currentPage !== 1) params.set('page', currentPage.toString());
     if (issueState !== 'open') params.set('state', issueState);
 
     router.push(`?${params.toString()}`, { scroll: false });
-  }, [
-    issueType,
-    selectedUser,
-    selectedLabels,
-    sort,
-    pageSize,
-    currentPage,
-    issueState,
-    router,
-  ]);
+  }, [issueType, selectedUser, selectedLabels, sort, pageSize, currentPage, issueState, router]);
 
   const fetchIssues = useCallback(async () => {
     setIsLoading(true);
@@ -126,31 +104,24 @@ export default function GitHubIssues() {
             issue.user.login,
             ...(issue.assignees?.map((assignee) => assignee.login) || []),
             ...(issue.reviewers?.map((reviewer) => reviewer.login) || []),
-            ...(issue.requested_reviewers?.map((reviewer) => reviewer.login) ||
-              []),
+            ...(issue.requested_reviewers?.map((reviewer) => reviewer.login) || []),
           ]),
         ),
       );
-      const uniqueLabels = Array.from(
-        new Set(
-          data.issues
-          .flatMap((issue: Issue) => issue.labels || [])
-          .map((label: Label) => JSON.stringify(label)),
-        ),
-      )
-      .map((labelString) => {
-        if (typeof labelString !== 'string') {
-          console.error('Unexpected non-string label:', labelString);
-          return null;
-        }
-        try {
-          return JSON.parse(labelString) as Label;
-        } catch {
-          console.error('Failed to parse label:', labelString);
-          return null;
-        }
-      })
-      .filter((label): label is Label => label !== null);
+      const uniqueLabels = Array.from(new Set(data.issues.flatMap((issue: Issue) => issue.labels || []).map((label: Label) => JSON.stringify(label))))
+        .map((labelString) => {
+          if (typeof labelString !== 'string') {
+            console.error('Unexpected non-string label:', labelString);
+            return null;
+          }
+          try {
+            return JSON.parse(labelString) as Label;
+          } catch {
+            console.error('Failed to parse label:', labelString);
+            return null;
+          }
+        })
+        .filter((label): label is Label => label !== null);
 
       setUsers(uniqueUsers as string[]);
       setLabels(uniqueLabels);
@@ -162,16 +133,7 @@ export default function GitHubIssues() {
     } finally {
       setIsLoading(false);
     }
-  }, [
-    issueType,
-    selectedUser,
-    selectedLabels,
-    sort,
-    currentPage,
-    pageSize,
-    issueState,
-    updateURL,
-  ]);
+  }, [issueType, selectedUser, selectedLabels, sort, currentPage, pageSize, issueState, updateURL]);
 
   useEffect(() => {
     fetchIssues();
@@ -179,11 +141,7 @@ export default function GitHubIssues() {
 
   const handleLabelClick = useCallback(
     (labelName: string) => {
-      setSelectedLabels((prev) =>
-        prev.includes(labelName)
-          ? prev.filter((l) => l !== labelName)
-          : [...prev, labelName],
-      );
+      setSelectedLabels((prev) => (prev.includes(labelName) ? prev.filter((l) => l !== labelName) : [...prev, labelName]));
       setCurrentPage(1);
       fetchIssues();
     },
@@ -234,21 +192,13 @@ export default function GitHubIssues() {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">GitHub Issues</h1>
       <div className="mb-4 flex flex-wrap gap-2">
-        <Button
-          onClick={() => window.open(createIssueUrl('bug_report'), '_blank')}
-        >
+        <Button onClick={() => window.open(createIssueUrl('bug_report'), '_blank')}>
           <Bug className="mr-2 h-4 w-4" /> Open Bug Report
         </Button>
-        <Button
-          onClick={() =>
-            window.open(createIssueUrl('feature_request'), '_blank')
-          }
-        >
+        <Button onClick={() => window.open(createIssueUrl('feature_request'), '_blank')}>
           <Lightbulb className="mr-2 h-4 w-4" /> Create Feature Request
         </Button>
-        <Button
-          onClick={() => window.open(createIssueUrl('question'), '_blank')}
-        >
+        <Button onClick={() => window.open(createIssueUrl('question'), '_blank')}>
           <HelpCircle className="mr-2 h-4 w-4" /> Ask a Question
         </Button>
       </div>
@@ -300,13 +250,8 @@ export default function GitHubIssues() {
               {selectedUser !== 'all' ? (
                 <div className="flex items-center gap-2">
                   <Avatar className="h-6 w-6">
-                    <AvatarImage
-                      src={`https://github.com/${selectedUser}.png`}
-                      alt={selectedUser}
-                    />
-                    <AvatarFallback>
-                      {selectedUser.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
+                    <AvatarImage src={`https://github.com/${selectedUser}.png`} alt={selectedUser} />
+                    <AvatarFallback>{selectedUser.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <span>{selectedUser}</span>
                 </div>
@@ -321,13 +266,8 @@ export default function GitHubIssues() {
               <SelectItem key={user} value={user}>
                 <div className="flex items-center gap-2">
                   <Avatar className="h-6 w-6">
-                    <AvatarImage
-                      src={`https://github.com/${user}.png`}
-                      alt={user}
-                    />
-                    <AvatarFallback>
-                      {user.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
+                    <AvatarImage src={`https://github.com/${user}.png`} alt={user} />
+                    <AvatarFallback>{user.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <span>{user}</span>
                 </div>
@@ -361,15 +301,10 @@ export default function GitHubIssues() {
             <button
               key={`filter-${label.name}`}
               onClick={() => handleLabelClick(label.name)}
-              className={`px-2 py-1 rounded-full text-sm font-semibold ${
-                selectedLabels.includes(label.name)
-                  ? 'ring-2 ring-offset-2 ring-blue-500'
-                  : ''
-              }`}
+              className={`px-2 py-1 rounded-full text-sm font-semibold ${selectedLabels.includes(label.name) ? 'ring-2 ring-offset-2 ring-blue-500' : ''}`}
               style={{
                 backgroundColor: `#${label.color}`,
-                color:
-                  parseInt(label.color, 16) > 0xffffff / 2 ? '#000' : '#fff',
+                color: parseInt(label.color, 16) > 0xffffff / 2 ? '#000' : '#fff',
               }}
             >
               {label.name}
@@ -384,27 +319,16 @@ export default function GitHubIssues() {
             <TableHead>Title</TableHead>
             <TableHead className="w-[100px] md:w-[120px]">People</TableHead>
             <TableHead className="hidden sm:table-cell">Labels</TableHead>
-            <TableHead className="hidden xl:table-cell w-[60px]">
-              Reactions
-            </TableHead>
+            <TableHead className="hidden xl:table-cell w-[60px]">Reactions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {issues.map((issue) => (
             <TableRow key={issue.number} className="align-top">
-              <TableCell className="py-4 hidden sm:table-cell">
-                {issue.number}
-              </TableCell>
+              <TableCell className="py-4 hidden sm:table-cell">{issue.number}</TableCell>
               <TableCell className="py-4">
-                <Link
-                  href={issue.html_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  {issue.title.length > 128
-                    ? `${issue.title.substring(0, 125)}...`
-                    : issue.title}
+                <Link href={issue.html_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                  {issue.title.length > 128 ? `${issue.title.substring(0, 125)}...` : issue.title}
                 </Link>
               </TableCell>
               <TableCell className="py-4">
@@ -424,40 +348,29 @@ export default function GitHubIssues() {
                       role: 'Requested Reviewer',
                     })) || []),
                   ]
-                  .filter(
-                    (person, index, self) =>
-                      index ===
-                      self.findIndex(
-                        (t) => t.user.login === person.user.login,
-                      ),
-                  )
-                  .map(({ user, role }) => (
-                    <TooltipProvider key={`${issue.number}-${user.login}`}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={() => handleUserClick(user.login)}
-                            className={`relative ${selectedUser === user.login ? 'ring-2 ring-blue-500 rounded-full' : ''}`}
-                          >
-                            <Avatar className="h-6 w-6 cursor-pointer">
-                              <AvatarImage
-                                src={user.avatar_url}
-                                alt={user.login}
-                              />
-                              <AvatarFallback>
-                                {user.login.slice(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>
-                            {role}: {user.login}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ))}
+                    .filter((person, index, self) => index === self.findIndex((t) => t.user.login === person.user.login))
+                    .map(({ user, role }) => (
+                      <TooltipProvider key={`${issue.number}-${user.login}`}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => handleUserClick(user.login)}
+                              className={`relative ${selectedUser === user.login ? 'ring-2 ring-blue-500 rounded-full' : ''}`}
+                            >
+                              <Avatar className="h-6 w-6 cursor-pointer">
+                                <AvatarImage src={user.avatar_url} alt={user.login} />
+                                <AvatarFallback>{user.login.slice(0, 2).toUpperCase()}</AvatarFallback>
+                              </Avatar>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>
+                              {role}: {user.login}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ))}
                 </div>
               </TableCell>
               <TableCell className="hidden sm:table-cell py-4">
@@ -467,16 +380,11 @@ export default function GitHubIssues() {
                       key={`${issue.number}-${label.name}`}
                       onClick={() => handleLabelClick(label.name)}
                       className={`px-2 py-1 rounded-full text-xs font-semibold cursor-pointer ${
-                        selectedLabels.includes(label.name)
-                          ? 'ring-2 ring-offset-2 ring-blue-500'
-                          : ''
+                        selectedLabels.includes(label.name) ? 'ring-2 ring-offset-2 ring-blue-500' : ''
                       }`}
                       style={{
                         backgroundColor: `#${label.color}`,
-                        color:
-                          parseInt(label.color, 16) > 0xffffff / 2
-                            ? '#000'
-                            : '#fff',
+                        color: parseInt(label.color, 16) > 0xffffff / 2 ? '#000' : '#fff',
                       }}
                     >
                       {label.name}
@@ -484,18 +392,14 @@ export default function GitHubIssues() {
                   ))}
                 </div>
               </TableCell>
-              <TableCell className="hidden xl:table-cell py-4">
-                {issue.reactions.total_count}
-              </TableCell>
+              <TableCell className="hidden xl:table-cell py-4">{issue.reactions.total_count}</TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
         <div className="text-sm text-gray-700 dark:text-gray-300">
-          Showing {(currentPage - 1) * pageSize + 1} to{' '}
-          {Math.min(currentPage * pageSize, totalIssues)} of {totalIssues}{' '}
-          issues
+          Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalIssues)} of {totalIssues} issues
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Select

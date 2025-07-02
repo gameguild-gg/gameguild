@@ -22,18 +22,10 @@ const Login = () => {
           <Label htmlFor="username">Username</Label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              id="username"
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="pl-10"
-              required
-            />
+            <Input id="username" type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} className="pl-10" required />
           </div>
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
           <div className="relative">
@@ -49,14 +41,10 @@ const Login = () => {
             />
           </div>
         </div>
-        
+
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Checkbox
-              id="remember"
-              checked={remember}
-              onCheckedChange={(checked) => setRemember(checked === true)}
-            />
+            <Checkbox id="remember" checked={remember} onCheckedChange={(checked) => setRemember(checked === true)} />
             <Label htmlFor="remember" className="text-sm text-gray-600">
               Remember me
             </Label>
@@ -65,13 +53,16 @@ const Login = () => {
             Forgot password
           </a>
         </div>
-        
+
         <Button type="submit" className="w-full">
           Log in
         </Button>
-        
+
         <div className="text-center">
-          Or <a href="#" className="text-blue-600 hover:underline">register now!</a>
+          Or{' '}
+          <a href="#" className="text-blue-600 hover:underline">
+            register now!
+          </a>
         </div>
       </form>
     </div>

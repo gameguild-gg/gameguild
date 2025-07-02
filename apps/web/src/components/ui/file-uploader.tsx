@@ -9,12 +9,7 @@ interface FileUploaderProps {
   onFileSelect: (file: File) => void;
 }
 
-export function FileUploader({
-                               accept,
-                               multiple,
-                               id,
-                               onFileSelect,
-                             }: FileUploaderProps) {
+export function FileUploader({ accept, multiple, id, onFileSelect }: FileUploaderProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       onFileSelect(e.target.files[0]);
@@ -23,14 +18,7 @@ export function FileUploader({
 
   return (
     <div>
-      <input
-        type="file"
-        id={id}
-        accept={accept}
-        multiple={multiple}
-        onChange={handleFileChange}
-        className="hidden"
-      />
+      <input type="file" id={id} accept={accept} multiple={multiple} onChange={handleFileChange} className="hidden" />
       <label htmlFor={id}>
         <Button variant="outline" className="cursor-pointer" asChild>
           <span>

@@ -48,10 +48,7 @@ function MetamaskSignIn() {
       ) : (
         <div>
           <p>Please connect your Metamask wallet to continue.</p>
-          <button
-            onClick={connectToMetamask}
-            className="w-full bg-blue-500 text-white p-2 rounded-md mt-2"
-          >
+          <button onClick={connectToMetamask} className="w-full bg-blue-500 text-white p-2 rounded-md mt-2">
             Connect with Metamask
           </button>
         </div>

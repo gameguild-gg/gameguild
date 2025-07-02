@@ -23,10 +23,7 @@ const Mermaid: React.FC<MermaidProps> = ({ chart }) => {
 
       try {
         containerRef.current.innerHTML = '';
-        const { svg } = await mermaid.render(
-          `mermaid-${Math.random().toString(36).substr(2, 9)}`,
-          chart,
-        );
+        const { svg } = await mermaid.render(`mermaid-${Math.random().toString(36).substr(2, 9)}`, chart);
         containerRef.current.innerHTML = svg;
         setError(null);
       } catch (err) {

@@ -11,9 +11,7 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <SessionProvider>
-      <TenantProvider>
-        {children}
-      </TenantProvider>
+      <TenantProvider>{children}</TenantProvider>
     </SessionProvider>
   );
 }

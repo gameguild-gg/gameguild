@@ -4,7 +4,7 @@ const { createHash } = require('crypto');
 const { join } = require('path');
 
 // Use require instead of import for node-fetch in CommonJS
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const projectRoot = process.cwd();
 const generatedDir = join(projectRoot, 'src', 'lib', 'api', 'generated');
@@ -34,15 +34,15 @@ async function fetchSwaggerSpec() {
 
     const response = await fetch(SWAGGER_ENDPOINT, {
       signal: controller.signal,
-      headers: { 'Accept': 'application/json' }
+      headers: { Accept: 'application/json' },
     });
-    
+
     clearTimeout(timeoutId);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     const spec = await response.json();
     console.log('✅ Successfully fetched API specification');
     return spec;
@@ -55,14 +55,16 @@ async function fetchSwaggerSpec() {
 }
 
 function calculateHash(content) {
-  return createHash('sha256').update(JSON.stringify(content, null, 0)).digest('hex');
+  return createHash('sha256')
+    .update(JSON.stringify(content, null, 0))
+    .digest('hex');
 }
 
 function loadMetadata() {
   if (!existsSync(metadataFile)) {
     return { hash: null, timestamp: null };
   }
-  
+
   try {
     const metadata = JSON.parse(readFileSync(metadataFile, 'utf8'));
     return metadata;
@@ -76,15 +78,15 @@ function saveMetadata(hash, apiVersion) {
   if (!existsSync(generatedDir)) {
     mkdirSync(generatedDir, { recursive: true });
   }
-  
+
   const metadata = {
     hash,
     timestamp: new Date().toISOString(),
     apiUrl: API_URL,
     apiVersion: apiVersion || 'unknown',
-    generator: '@hey-api/openapi-ts'
+    generator: '@hey-api/openapi-ts',
   };
-  
+
   writeFileSync(metadataFile, JSON.stringify(metadata, null, 2));
 }
 
@@ -98,7 +100,7 @@ function hasGeneratedTypes() {
 
 async function generateTypes(swaggerSpec) {
   console.log('🔄 Generating TypeScript types...');
-  
+
   if (!existsSync(generatedDir)) {
     mkdirSync(generatedDir, { recursive: true });
   }
@@ -110,16 +112,15 @@ async function generateTypes(swaggerSpec) {
   try {
     // Generate types using @hey-api/openapi-ts
     const command = `npx @hey-api/openapi-ts -i "${tempSwaggerFile}" -o "${generatedDir}" --client @hey-api/client-next`;
-    
+
     console.log('Running:', command);
-    execSync(command, { 
+    execSync(command, {
       cwd: projectRoot,
       stdio: 'inherit',
-      timeout: 60000 // 60 second timeout
+      timeout: 60000, // 60 second timeout
     });
-    
+
     console.log('✅ Types generated successfully');
-    
   } catch (error) {
     console.error('❌ Failed to generate types:', error.message);
     throw error;
@@ -140,38 +141,37 @@ async function main() {
     // Fetch current swagger spec
     const currentSpec = await fetchSwaggerSpec();
     const currentHash = calculateHash(currentSpec);
-    
+
     // Load existing metadata
     const metadata = loadMetadata();
-    
+
     // Check if regeneration is needed
     const needsRegeneration = !hasGeneratedTypes() || metadata.hash !== currentHash;
-    
+
     if (needsRegeneration) {
       if (metadata.hash === null) {
         console.log('🆕 No previous API types found, generating...');
       } else {
         console.log('🔄 API changes detected, regenerating types...');
       }
-      
+
       await generateTypes(currentSpec);
       saveMetadata(currentHash, currentSpec.info?.version);
-      
+
       console.log('✅ API types are up to date');
     } else {
       console.log('✅ API types are already up to date');
     }
-
   } catch (error) {
     console.error('❌ Type check failed:', error.message);
-    
+
     // In development, if we have existing types, warn but don't fail
     if (hasGeneratedTypes()) {
       console.log('⚠️  Using existing types, but they may be outdated');
       console.log('💡 To fix this, ensure API is running: cd apps/api && dotnet run');
       return;
     }
-    
+
     console.log('💡 Please start the API server: cd apps/api && dotnet run');
     process.exit(1);
   }

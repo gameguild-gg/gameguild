@@ -1,6 +1,7 @@
 # Generated API Types & SDK
 
-This directory contains automatically generated TypeScript types and SDK from the backend API's OpenAPI/Swagger specification.
+This directory contains automatically generated TypeScript types and SDK from the backend API's OpenAPI/Swagger
+specification.
 
 ## ⚠️ IMPORTANT: These files should be committed to Git
 
@@ -87,6 +88,7 @@ npm run types:check
 ## Authentication
 
 The generated client is configured to work with:
+
 - JWT Bearer tokens
 - Tenant-aware requests
 - Next.js environment (SSR compatible)
