@@ -156,4 +156,39 @@ public class UsersController(IUserService userService) : ControllerBase {
 
     return NoContent();
   }
+
+  // GET: users/me
+  [HttpGet("me")]
+  public async Task<ActionResult<UserResponseDto>> GetCurrentUser() {
+    // Extract user ID from JWT token claims
+    var userIdClaim = User.FindFirst("sub")?.Value;
+    
+    if (string.IsNullOrEmpty(userIdClaim)) {
+      return Unauthorized(new { message = "User ID not found in token" });
+    }
+
+    if (!Guid.TryParse(userIdClaim, out var userId)) {
+      return BadRequest(new { message = "Invalid user ID format" });
+    }
+
+    var user = await userService.GetUserByIdAsync(userId);
+
+    if (user == null) {
+      return NotFound(new { message = "User not found" });
+    }
+
+    var userDto = new UserResponseDto {
+      Id = user.Id,
+      Version = user.Version,
+      Name = user.Name,
+      Email = user.Email,
+      IsActive = user.IsActive,
+      CreatedAt = user.CreatedAt,
+      UpdatedAt = user.UpdatedAt,
+      DeletedAt = user.DeletedAt,
+      IsDeleted = user.IsDeleted,
+    };
+
+    return Ok(userDto);
+  }
 }
