@@ -1,6 +1,6 @@
-import type { Auth } from '../core/auth';
+import type { Auth } from '../core/auth.js';
 import type { Client as CoreClient, Config as CoreConfig } from '../core/types.js';
-import type { Middleware } from './utils';
+import type { Middleware } from './utils.js';
 
 export interface Config<T extends ClientOptions = ClientOptions> extends Omit<RequestInit, 'body' | 'headers' | 'method'>, CoreConfig {
   /**

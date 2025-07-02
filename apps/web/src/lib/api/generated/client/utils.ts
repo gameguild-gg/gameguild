@@ -1,8 +1,8 @@
-import { getAuthToken } from '../core/auth';
-import type { QuerySerializer, QuerySerializerOptions } from '../core/bodySerializer';
-import { jsonBodySerializer } from '../core/bodySerializer';
-import { serializeArrayParam, serializeObjectParam, serializePrimitiveParam } from '../core/pathSerializer';
-import type { Client, ClientOptions, Config, RequestOptions } from './types';
+import { getAuthToken } from '../core/auth.js';
+import type { QuerySerializer, QuerySerializerOptions } from '../core/bodySerializer.js';
+import { jsonBodySerializer } from '../core/bodySerializer.js';
+import { serializeArrayParam, serializeObjectParam, serializePrimitiveParam } from '../core/pathSerializer.js';
+import type { Client, ClientOptions, Config, RequestOptions } from './types.js';
 
 interface PathSerializer {
   path: Record<string, unknown>;
@@ -295,7 +295,6 @@ class Interceptors<Interceptor> {
       return this._fns.indexOf(id);
     }
   }
-
   exists(id: number | Interceptor) {
     const index = this.getInterceptorIndex(id);
     return !!this._fns[index];
