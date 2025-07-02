@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useSession, signIn, signOut } from 'next-auth/react';
+import React, { useEffect, useState } from 'react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import { useTenant } from '@/lib/tenant/tenant-provider';
 import { TenantSelector } from '@/components/auth/TenantSelector';
 import { getUserTenants } from '@/lib/auth/tenant-actions';
@@ -37,14 +37,14 @@ export default function Page(): React.JSX.Element {
       const result = await getUserTenants();
       setTestResults((prev: Record<string, any>) => ({
         ...prev,
-        getUserTenants: result
+        getUserTenants: result,
       }));
       console.log('Server action result:', result);
     } catch (error) {
       console.error('Server action error:', error);
       setTestResults((prev: Record<string, any>) => ({
         ...prev,
-        getUserTenants: { error: error instanceof Error ? error.message : 'Unknown error' }
+        getUserTenants: { error: error instanceof Error ? error.message : 'Unknown error' },
       }));
     } finally {
       setLoading(false);
@@ -60,25 +60,25 @@ export default function Page(): React.JSX.Element {
       const response = await fetch('/api/test-cms', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.accessToken}`,
           'Content-Type': 'application/json',
-          ...(currentTenant && typeof currentTenant === 'object' && currentTenant !== null && 'id' in currentTenant 
-            ? { 'X-Tenant-Id': (currentTenant as any).id } 
-            : {})
-        }
+          ...(currentTenant && typeof currentTenant === 'object' && currentTenant !== null && 'id' in currentTenant
+            ? { 'X-Tenant-Id': (currentTenant as any).id }
+            : {}),
+        },
       });
 
       const result = await response.json();
       setTestResults((prev: Record<string, any>) => ({
         ...prev,
-        directApi: { status: response.status, data: result }
+        directApi: { status: response.status, data: result },
       }));
       console.log('Direct API result:', result);
     } catch (error) {
       console.error('Direct API error:', error);
       setTestResults((prev: Record<string, any>) => ({
         ...prev,
-        directApi: { error: error instanceof Error ? error.message : 'Unknown error' }
+        directApi: { error: error instanceof Error ? error.message : 'Unknown error' },
       }));
     } finally {
       setLoading(false);
@@ -87,14 +87,14 @@ export default function Page(): React.JSX.Element {
   // Test CMS connectivity
   const testCmsConnectivity = async () => {
     setCmsConnectivity({ status: 'testing' });
-    
+
     try {
       console.log('Testing CMS connectivity to:', environment.apiBaseUrl);
-      
+
       // Try multiple endpoints to test connectivity
       let response;
       let endpoint = '';
-      
+
       try {
         // First try the health endpoint
         endpoint = '/health';
@@ -125,35 +125,35 @@ export default function Page(): React.JSX.Element {
         setCmsConnectivity({
           status: 'success',
           message: `CMS backend is reachable (${response.status}) on ${endpoint}`,
-          details: data
+          details: data,
         });
       } else if (response.status === 401 && endpoint === '/health') {
         // 401 on health endpoint means server is running but endpoint requires auth
         setCmsConnectivity({
           status: 'success',
           message: 'CMS backend is running (health endpoint requires auth)',
-          details: { 
-            status: response.status, 
+          details: {
+            status: response.status,
             statusText: response.statusText,
-            note: 'Server is responding correctly'
-          }
+            note: 'Server is responding correctly',
+          },
         });
       } else if (response.status === 405 && endpoint === '/auth/sign-in') {
         // 405 Method Not Allowed on OPTIONS means server is running
         setCmsConnectivity({
           status: 'success',
           message: 'CMS backend is running (detected via auth endpoint)',
-          details: { 
-            status: response.status, 
+          details: {
+            status: response.status,
             statusText: response.statusText,
-            note: 'Server is responding correctly'
-          }
+            note: 'Server is responding correctly',
+          },
         });
       } else {
         setCmsConnectivity({
           status: 'error',
           message: `CMS backend returned ${response.status} on ${endpoint}`,
-          details: { status: response.status, statusText: response.statusText }
+          details: { status: response.status, statusText: response.statusText },
         });
       }
     } catch (error) {
@@ -163,8 +163,8 @@ export default function Page(): React.JSX.Element {
         message: 'Cannot reach CMS backend',
         details: {
           error: error instanceof Error ? error.message : 'Unknown error',
-          url: environment.apiBaseUrl
-        }
+          url: environment.apiBaseUrl,
+        },
       });
     }
   };
@@ -192,58 +192,52 @@ export default function Page(): React.JSX.Element {
         <Card>
           <CardHeader>
             <CardTitle>CMS Backend Integration Test</CardTitle>
-            <CardDescription>
-              Teste da integração com o backend CMS - Faça login para continuar
-            </CardDescription>
-          </CardHeader>          <CardContent className="space-y-4">
+            <CardDescription>Teste da integração com o backend CMS - Faça login para continuar</CardDescription>
+          </CardHeader>{' '}
+          <CardContent className="space-y-4">
             {/* CMS Connectivity Status */}
             <div className="space-y-2">
               <h4 className="font-semibold">CMS Backend Status</h4>
               <div className="flex items-center gap-2">
-                <Badge variant={
-                  cmsConnectivity.status === 'success' ? 'default' :
-                  cmsConnectivity.status === 'error' ? 'destructive' :
-                  cmsConnectivity.status === 'testing' ? 'secondary' : 'outline'
-                }>
-                  {cmsConnectivity.status === 'testing' ? 'Testing...' :
-                   cmsConnectivity.status === 'success' ? 'Connected' :
-                   cmsConnectivity.status === 'error' ? 'Disconnected' : 'Unknown'}
-                </Badge>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={testCmsConnectivity}
-                  disabled={cmsConnectivity.status === 'testing'}
+                <Badge
+                  variant={
+                    cmsConnectivity.status === 'success'
+                      ? 'default'
+                      : cmsConnectivity.status === 'error'
+                        ? 'destructive'
+                        : cmsConnectivity.status === 'testing'
+                          ? 'secondary'
+                          : 'outline'
+                  }
                 >
+                  {cmsConnectivity.status === 'testing'
+                    ? 'Testing...'
+                    : cmsConnectivity.status === 'success'
+                      ? 'Connected'
+                      : cmsConnectivity.status === 'error'
+                        ? 'Disconnected'
+                        : 'Unknown'}
+                </Badge>
+                <Button size="sm" variant="outline" onClick={testCmsConnectivity} disabled={cmsConnectivity.status === 'testing'}>
                   Test Connection
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground">
-                API URL: {environment.apiBaseUrl}
-              </p>
-              {cmsConnectivity.message && (
-                <p className="text-sm">{cmsConnectivity.message}</p>
-              )}
+              <p className="text-sm text-muted-foreground">API URL: {environment.apiBaseUrl}</p>
+              {cmsConnectivity.message && <p className="text-sm">{cmsConnectivity.message}</p>}
               {cmsConnectivity.details && (
-                <pre className="text-xs bg-muted p-2 rounded-md overflow-auto">
-                  {JSON.stringify(cmsConnectivity.details, null, 2)}
-                </pre>
+                <pre className="text-xs bg-muted p-2 rounded-md overflow-auto">{JSON.stringify(cmsConnectivity.details, null, 2)}</pre>
               )}
             </div>
-            
+
             <Alert>
-              <AlertDescription>
-                Você não está logado. Faça login para testar a integração.
-              </AlertDescription>
+              <AlertDescription>Você não está logado. Faça login para testar a integração.</AlertDescription>
             </Alert>
-            
+
             <div className="space-y-2">
               <Button onClick={() => signIn('google')} className="w-full">
                 Fazer Login com Google
               </Button>
-              <p className="text-sm text-muted-foreground text-center">
-                Isso testará a integração NextAuth + CMS Backend
-              </p>
+              <p className="text-sm text-muted-foreground text-center">Isso testará a integração NextAuth + CMS Backend</p>
             </div>
           </CardContent>
         </Card>
@@ -256,43 +250,39 @@ export default function Page(): React.JSX.Element {
       <Card>
         <CardHeader>
           <CardTitle>🧪 CMS Backend Integration Test</CardTitle>
-          <CardDescription>
-            Página de teste para integração NextAuth.js + CMS Backend
-          </CardDescription>
-        </CardHeader>        <CardContent className="space-y-6">
+          <CardDescription>Página de teste para integração NextAuth.js + CMS Backend</CardDescription>
+        </CardHeader>{' '}
+        <CardContent className="space-y-6">
           {/* CMS Backend Status */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">CMS Backend Status</h3>
             <div className="flex items-center gap-2">
-              <Badge variant={
-                cmsConnectivity.status === 'success' ? 'default' :
-                cmsConnectivity.status === 'error' ? 'destructive' :
-                cmsConnectivity.status === 'testing' ? 'secondary' : 'outline'
-              }>
-                {cmsConnectivity.status === 'testing' ? 'Testing...' :
-                 cmsConnectivity.status === 'success' ? 'Connected' :
-                 cmsConnectivity.status === 'error' ? 'Disconnected' : 'Unknown'}
-              </Badge>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={testCmsConnectivity}
-                disabled={cmsConnectivity.status === 'testing'}
+              <Badge
+                variant={
+                  cmsConnectivity.status === 'success'
+                    ? 'default'
+                    : cmsConnectivity.status === 'error'
+                      ? 'destructive'
+                      : cmsConnectivity.status === 'testing'
+                        ? 'secondary'
+                        : 'outline'
+                }
               >
+                {cmsConnectivity.status === 'testing'
+                  ? 'Testing...'
+                  : cmsConnectivity.status === 'success'
+                    ? 'Connected'
+                    : cmsConnectivity.status === 'error'
+                      ? 'Disconnected'
+                      : 'Unknown'}
+              </Badge>
+              <Button size="sm" variant="outline" onClick={testCmsConnectivity} disabled={cmsConnectivity.status === 'testing'}>
                 Test Connection
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground">
-              API URL: {environment.apiBaseUrl}
-            </p>
-            {cmsConnectivity.message && (
-              <p className="text-sm">{cmsConnectivity.message}</p>
-            )}
-            {cmsConnectivity.details && (
-              <pre className="text-xs bg-muted p-2 rounded-md overflow-auto">
-                {JSON.stringify(cmsConnectivity.details, null, 2)}
-              </pre>
-            )}
+            <p className="text-sm text-muted-foreground">API URL: {environment.apiBaseUrl}</p>
+            {cmsConnectivity.message && <p className="text-sm">{cmsConnectivity.message}</p>}
+            {cmsConnectivity.details && <pre className="text-xs bg-muted p-2 rounded-md overflow-auto">{JSON.stringify(cmsConnectivity.details, null, 2)}</pre>}
           </div>
 
           <Separator />
@@ -302,21 +292,27 @@ export default function Page(): React.JSX.Element {
             <h3 className="text-lg font-semibold">Session Information</h3>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <p><strong>User:</strong> {session.user?.name || 'N/A'}</p>
-                <p><strong>Email:</strong> {session.user?.email || 'N/A'}</p>
-                <p><strong>User ID:</strong> {session.user?.id || 'N/A'}</p>
-                <p><strong>Username:</strong> {session.user?.username || 'N/A'}</p>
+                <p>
+                  <strong>User:</strong> {session.user?.name || 'N/A'}
+                </p>
+                <p>
+                  <strong>Email:</strong> {session.user?.email || 'N/A'}
+                </p>
+                <p>
+                  <strong>User ID:</strong> {session.user?.id || 'N/A'}
+                </p>
+                <p>
+                  <strong>Username:</strong> {session.user?.username || 'N/A'}
+                </p>
               </div>
               <div className="space-y-2">
-                <p><strong>Access Token:</strong> 
-                  <Badge variant={session.accessToken ? "default" : "destructive"}>
-                    {session.accessToken ? 'Present' : 'Missing'}
-                  </Badge>
+                <p>
+                  <strong>Access Token:</strong>
+                  <Badge variant={session.accessToken ? 'default' : 'destructive'}>{session.accessToken ? 'Present' : 'Missing'}</Badge>
                 </p>
-                <p><strong>Session Error:</strong> 
-                  <Badge variant={(session as any).error ? "destructive" : "default"}>
-                    {(session as any).error || 'None'}
-                  </Badge>
+                <p>
+                  <strong>Session Error:</strong>
+                  <Badge variant={(session as any).error ? 'destructive' : 'default'}>{(session as any).error || 'None'}</Badge>
                 </p>
               </div>
             </div>
@@ -329,23 +325,33 @@ export default function Page(): React.JSX.Element {
             <h3 className="text-lg font-semibold">Tenant Context</h3>
             <div className="space-y-4">
               <TenantSelector />
-              
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <p><strong>Current Tenant:</strong> {(currentTenant && typeof currentTenant === 'object' && currentTenant !== null && 'name' in currentTenant) ? (currentTenant as any).name : 'None'}</p>
-                  {(currentTenant && typeof currentTenant === 'object' && currentTenant !== null) ? (
+                  <p>
+                    <strong>Current Tenant:</strong>{' '}
+                    {currentTenant && typeof currentTenant === 'object' && currentTenant !== null && 'name' in currentTenant
+                      ? (currentTenant as any).name
+                      : 'None'}
+                  </p>
+                  {currentTenant && typeof currentTenant === 'object' && currentTenant !== null ? (
                     <>
-                      <p><strong>Tenant ID:</strong> {'id' in currentTenant ? (currentTenant as any).id : 'Unknown'}</p>
-                      <p><strong>Active:</strong> 
-                        <Badge variant={('isActive' in currentTenant && (currentTenant as any).isActive) ? "default" : "secondary"}>
-                          {('isActive' in currentTenant && (currentTenant as any).isActive) ? 'Yes' : 'No'}
+                      <p>
+                        <strong>Tenant ID:</strong> {'id' in currentTenant ? (currentTenant as any).id : 'Unknown'}
+                      </p>
+                      <p>
+                        <strong>Active:</strong>
+                        <Badge variant={'isActive' in currentTenant && (currentTenant as any).isActive ? 'default' : 'secondary'}>
+                          {'isActive' in currentTenant && (currentTenant as any).isActive ? 'Yes' : 'No'}
                         </Badge>
                       </p>
                     </>
                   ) : null}
                 </div>
                 <div className="space-y-2">
-                  <p><strong>Available Tenants:</strong> {availableTenants.size}</p>
+                  <p>
+                    <strong>Available Tenants:</strong> {availableTenants.size}
+                  </p>
                   {availableTenants.size > 0 && (
                     <div className="space-y-1">
                       {Array.from(availableTenants).map((tenant: any, index) => (
@@ -366,18 +372,10 @@ export default function Page(): React.JSX.Element {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Backend Integration Tests</h3>
             <div className="flex gap-2 flex-wrap">
-              <Button 
-                onClick={runServerActionTest} 
-                disabled={loading}
-                variant="outline"
-              >
+              <Button onClick={runServerActionTest} disabled={loading} variant="outline">
                 {loading ? 'Testing...' : 'Test Server Action'}
               </Button>
-              <Button 
-                onClick={runApiTest} 
-                disabled={loading || !session.accessToken}
-                variant="outline"
-              >
+              <Button onClick={runApiTest} disabled={loading || !session.accessToken} variant="outline">
                 {loading ? 'Testing...' : 'Test Direct API'}
               </Button>
               <Button onClick={() => signOut()} variant="destructive">
@@ -395,9 +393,7 @@ export default function Page(): React.JSX.Element {
                       <CardTitle className="text-sm">{key}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <pre className="text-xs bg-muted p-3 rounded-md overflow-auto">
-                        {JSON.stringify(result, null, 2)}
-                      </pre>
+                      <pre className="text-xs bg-muted p-3 rounded-md overflow-auto">{JSON.stringify(result, null, 2)}</pre>
                     </CardContent>
                   </Card>
                 ))}
@@ -411,11 +407,7 @@ export default function Page(): React.JSX.Element {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">CMS Connectivity Test</h3>
             <div>
-              <Button 
-                onClick={testCmsConnectivity} 
-                disabled={cmsConnectivity.status === 'testing'}
-                variant="outline"
-              >
+              <Button onClick={testCmsConnectivity} disabled={cmsConnectivity.status === 'testing'} variant="outline">
                 {cmsConnectivity.status === 'testing' ? 'Testing...' : 'Test CMS Connectivity'}
               </Button>
             </div>
@@ -424,25 +416,15 @@ export default function Page(): React.JSX.Element {
             <div className="text-sm">
               {cmsConnectivity.status === 'unknown' && <p>O teste de conectividade ainda não foi executado.</p>}
               {cmsConnectivity.status === 'testing' && <p>Testando a conectividade com o CMS backend...</p>}
-              {cmsConnectivity.status === 'success' && (
-                <p className="text-green-600">
-                  ✔️ {cmsConnectivity.message}
-                </p>
-              )}
-              {cmsConnectivity.status === 'error' && (
-                <p className="text-red-600">
-                  ❌ {cmsConnectivity.message}
-                </p>
-              )}
+              {cmsConnectivity.status === 'success' && <p className="text-green-600">✔️ {cmsConnectivity.message}</p>}
+              {cmsConnectivity.status === 'error' && <p className="text-red-600">❌ {cmsConnectivity.message}</p>}
             </div>
 
             {/* Connectivity Details */}
             {cmsConnectivity.details && (
               <Card>
                 <CardContent>
-                  <pre className="text-xs bg-muted p-3 rounded-md overflow-auto">
-                    {JSON.stringify(cmsConnectivity.details, null, 2)}
-                  </pre>
+                  <pre className="text-xs bg-muted p-3 rounded-md overflow-auto">{JSON.stringify(cmsConnectivity.details, null, 2)}</pre>
                 </CardContent>
               </Card>
             )}
@@ -453,23 +435,15 @@ export default function Page(): React.JSX.Element {
           {/* Raw Session Data */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Raw Session Data (Debug)</h3>
-            <pre className="text-xs bg-muted p-4 rounded-md overflow-auto">
-              {JSON.stringify(session, null, 2)}
-            </pre>
+            <pre className="text-xs bg-muted p-4 rounded-md overflow-auto">{JSON.stringify(session, null, 2)}</pre>
           </div>
 
           {/* Action Buttons */}
           <div className="flex gap-2">
-            <Button 
-              onClick={() => window.location.href = '/dashboard'}
-              disabled={!session.accessToken}
-            >
+            <Button onClick={() => (window.location.href = '/dashboard')} disabled={!session.accessToken}>
               Go to Dashboard
             </Button>
-            <Button 
-              onClick={() => window.location.href = '/sign-in'}
-              variant="outline"
-            >
+            <Button onClick={() => (window.location.href = '/sign-in')} variant="outline">
               Go to Sign In
             </Button>
           </div>

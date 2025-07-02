@@ -3,7 +3,7 @@
  * @type {import('syncpack').RcFile}
  */
 const config = {
-  sortFirst: ['name', 'description', 'version', 'author', 'license', 'private', 'type', 'workspaces', 'scripts', 'dependencies', 'devDependencies'],
+  sortFirst: ['name', 'description', 'type', 'version', 'author', 'license', 'private', 'workspaces', 'scripts', 'dependencies', 'devDependencies'],
   sortPackages: true,
 };
 
