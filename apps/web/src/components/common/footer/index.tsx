@@ -7,8 +7,7 @@ const footerVariants = cva('', {
   defaultVariants: {},
 });
 
-type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>> &
-  VariantProps<typeof footerVariants>;
+type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>> & VariantProps<typeof footerVariants>;
 
 const Footer: React.FunctionComponent<Readonly<Props>> & {
   //

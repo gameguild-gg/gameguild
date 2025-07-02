@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ComponentPropsWithoutRef, useEffect, useState } from 'react';
+import React, { ComponentPropsWithoutRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -15,7 +15,7 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
   const { hasError, error } = useAuthError();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
-  
+
   // Check for authentication errors from URL params
   const authError = searchParams.get('error');
 
@@ -75,12 +75,7 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
               <span className="relative z-10 bg-card rounded-full px-2 text-muted-foreground">Or continue with</span>
             </div>
             <div className="flex flex-col gap-4">
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={handleGoogleSignIn}
-                disabled={loading}
-              >
+              <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
                 {loading ? (
                   <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                 ) : (

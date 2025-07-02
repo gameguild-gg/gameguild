@@ -2,7 +2,7 @@ export interface QuestionBasev1_0_0 {
   inputs: any;
   outputs: any;
   id: number;
-  format_ver: "1.0.0";
+  format_ver: '1.0.0';
   type: string;
   rules: string[];
   status: QuestionStatus;
@@ -57,8 +57,7 @@ export enum QuestionStatus {
   Available = 1,
   Submitted = 2,
   Corrected = 3,
-  NotStarted
+  NotStarted,
 }
 
 export type QuestionTypev1_0_0 = QuestionBasev1_0_0 | CodeQuestionv1_0_0 | AnswerQuestionv1_0_0 | MultipleChoiceQuestionv1_0_0 | EssayQuestionv1_0_0;
-

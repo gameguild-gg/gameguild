@@ -9,14 +9,7 @@ async function UserProfile() {
       >
         <span className="absolute -inset-1.5"></span>
         <span className="sr-only">View notifications</span>
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth="1.5"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
+        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -50,31 +43,13 @@ async function UserProfile() {
           aria-labelledby="user-menu-button"
           tabIndex={-1}
         >
-          <a
-            href="#"
-            className="block px-4 py-2 text-sm text-gray-700"
-            role="menuitem"
-            tabIndex={-1}
-            id="user-menu-item-0"
-          >
+          <a href="#" className="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabIndex={-1} id="user-menu-item-0">
             Your Profile
           </a>
-          <a
-            href="#"
-            className="block px-4 py-2 text-sm text-gray-700"
-            role="menuitem"
-            tabIndex={-1}
-            id="user-menu-item-1"
-          >
+          <a href="#" className="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabIndex={-1} id="user-menu-item-1">
             Settings
           </a>
-          <a
-            href="#"
-            className="block px-4 py-2 text-sm text-gray-700"
-            role="menuitem"
-            tabIndex={-1}
-            id="user-menu-item-2"
-          >
+          <a href="#" className="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabIndex={-1} id="user-menu-item-2">
             Sign out
           </a>
         </div>

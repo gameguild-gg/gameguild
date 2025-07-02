@@ -27,7 +27,7 @@ export function useCode() {
     compileAndRun: compileAndRunClang,
     status: clangStatus,
     initOutput: clangInitOutput,
-    compilerOutput: clangCompilerOutput, 
+    compilerOutput: clangCompilerOutput,
     linkerOutput: clangLinkerOutput,
     executionOutput: clangExecutionOutput,
     error: clangError,
@@ -39,7 +39,7 @@ export function useCode() {
   const [status, setStatus] = useState<RunnerStatus>(RunnerStatus.UNINITIALIZED);
   const [output, setOutput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  
+
   // Add separate output stages
   const [initOutput, setInitOutput] = useState<string>('');
   const [compileOutput, setCompileOutput] = useState<string>('');
@@ -65,11 +65,7 @@ export function useCode() {
   useEffect(() => {
     // For combined output
     if (clangExecutionOutput) {
-      setOutput(
-        [clangInitOutput, clangCompilerOutput, clangLinkerOutput, clangExecutionOutput]
-          .filter(Boolean)
-          .join('\n---\n')
-      );
+      setOutput([clangInitOutput, clangCompilerOutput, clangLinkerOutput, clangExecutionOutput].filter(Boolean).join('\n---\n'));
     }
     // For separate output stages
     setInitOutput(clangInitOutput);
@@ -115,7 +111,7 @@ export function useCode() {
           return mainFile[1];
         }
       }
-      
+
       // If no main file, just look for any file with the right extension
       for (const ext of preferredExtensions) {
         const anyFile = Object.entries(data).find(([key]) => key.endsWith(ext));
@@ -151,7 +147,7 @@ export function useCode() {
       setCompileOutput('');
       setLinkOutput('');
       setExecuteOutput('');
-      
+
       setStatus(RunnerStatus.RUNNING);
 
       try {
@@ -192,9 +188,7 @@ export function useCode() {
           const result = await compileAndRunClang(code, stdin);
           success = result.success;
           // Combined output is already set via effects
-          outputValue = [clangInitOutput, clangCompilerOutput, clangLinkerOutput, clangExecutionOutput]
-            .filter(Boolean)
-            .join('\n---\n');
+          outputValue = [clangInitOutput, clangCompilerOutput, clangLinkerOutput, clangExecutionOutput].filter(Boolean).join('\n---\n');
           errorValue = clangError;
         } else {
           throw new Error(`Language '${language}' not yet supported`);
@@ -219,17 +213,7 @@ export function useCode() {
         };
       }
     },
-    [
-      compileAndRunClang, 
-      runPython, 
-      pyodideError, 
-      pyodideOutput, 
-      clangInitOutput,
-      clangCompilerOutput,
-      clangLinkerOutput,
-      clangExecutionOutput,
-      clangError
-    ],
+    [compileAndRunClang, runPython, pyodideError, pyodideOutput, clangInitOutput, clangCompilerOutput, clangLinkerOutput, clangExecutionOutput, clangError],
   );
 
   // More complex function to run code challenges with tests

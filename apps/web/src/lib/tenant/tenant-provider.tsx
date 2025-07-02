@@ -29,7 +29,7 @@ export type OnSessionUpdate = (session: unknown) => Promise<void>;
 // TODO: Replace with actual TenantInfo type
 export type UpdateAvailableTenants = (availableTenants: Set<unknown>) => Promise<Set<unknown>>;
 export type SetLoading = (loading: boolean) => void;
-export type TenantReducer = (initialState: Partial<TenantState>) => [ TenantState, Dispatch<TenantAction> ];
+export type TenantReducer = (initialState: Partial<TenantState>) => [TenantState, Dispatch<TenantAction>];
 
 interface TenantContextValue {
   currentTenant: unknown | null; // TODO: Replace with actual TenantInfo type
@@ -139,10 +139,10 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
 
         // Update the session with new tenant
         await updateSession({ ...session, currentTenant: tenant });
-        
+
         // Update local state
         dispatch({ type: 'SET_CURRENT_TENANT', payload: tenant });
-        
+
         return tenant;
       } catch (error) {
         console.error('Failed to switch tenant:', error);
@@ -198,31 +198,34 @@ export function useAuthenticatedApi() {
   const { data: session } = useSession();
   const { currentTenant } = useTenant();
 
-  const makeRequest = useCallback(async (endpoint: string, options: RequestInit = {}) => {
-    if (!session?.accessToken) {
-      throw new Error('No authentication token available');
-    }
+  const makeRequest = useCallback(
+    async (endpoint: string, options: RequestInit = {}) => {
+      if (!session?.accessToken) {
+        throw new Error('No authentication token available');
+      }
 
-    const headers = {
-      'Authorization': `Bearer ${session.accessToken}`,
-      'Content-Type': 'application/json',
-      ...(currentTenant && typeof currentTenant === 'object' && currentTenant !== null && 'id' in currentTenant 
-        ? { 'X-Tenant-Id': (currentTenant as any).id } 
-        : {}),
-      ...options.headers,
-    };
+      const headers = {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json',
+        ...(currentTenant && typeof currentTenant === 'object' && currentTenant !== null && 'id' in currentTenant
+          ? { 'X-Tenant-Id': (currentTenant as any).id }
+          : {}),
+        ...options.headers,
+      };
 
-    const response = await fetch(endpoint, {
-      ...options,
-      headers,
-    });
+      const response = await fetch(endpoint, {
+        ...options,
+        headers,
+      });
 
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-    }
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
 
-    return response.json();
-  }, [session, currentTenant]);
+      return response.json();
+    },
+    [session, currentTenant],
+  );
 
   const isAuthenticated = !!session?.accessToken;
 

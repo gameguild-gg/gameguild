@@ -90,13 +90,13 @@ export function usePyodide() {
     }
   }, []);
 
-  return { 
-    pyodideLoaded, 
-    loading, 
-    error, 
-    runPython, 
+  return {
+    pyodideLoaded,
+    loading,
+    error,
+    runPython,
     output,
     initPyodide, // Expose initialization function
-    cleanup 
+    cleanup,
   };
 }

@@ -51,7 +51,7 @@ function MyComponent() {
   const { data: session, status } = useSession();
 
   if (status === 'loading') return <p>Loading...</p>;
-  
+
   if (session) {
     return (
       <>
@@ -60,7 +60,7 @@ function MyComponent() {
       </>
     );
   }
-  
+
   return (
     <>
       <p>Not signed in</p>
@@ -83,7 +83,7 @@ function Dashboard() {
     <div>
       <h1>Current Tenant: {currentTenant?.name}</h1>
       <TenantSelector />
-      
+
       {/* Your tenant-specific content */}
     </div>
   );
@@ -108,9 +108,7 @@ function DataComponent() {
     }
   };
 
-  return (
-    <button onClick={fetchData}>Fetch Data</button>
-  );
+  return <button onClick={fetchData}>Fetch Data</button>;
 }
 ```
 
@@ -128,21 +126,22 @@ function AdminPanel() {
     if (!session?.accessToken) return;
 
     try {
-      const newTenant = await TenantService.createTenant({
-        name: 'New Tenant',
-        description: 'A new tenant',
-        isActive: true,
-      }, session.accessToken);
-      
+      const newTenant = await TenantService.createTenant(
+        {
+          name: 'New Tenant',
+          description: 'A new tenant',
+          isActive: true,
+        },
+        session.accessToken,
+      );
+
       console.log('Created tenant:', newTenant);
     } catch (error) {
       console.error('Failed to create tenant:', error);
     }
   };
 
-  return (
-    <button onClick={createTenant}>Create Tenant</button>
-  );
+  return <button onClick={createTenant}>Create Tenant</button>;
 }
 ```
 
@@ -221,8 +220,12 @@ import GitHub from 'next-auth/providers/github';
 
 export const authConfig: NextAuthConfig = {
   providers: [
-    Google({ /* config */ }),
-    GitHub({ /* config */ }),
+    Google({
+      /* config */
+    }),
+    GitHub({
+      /* config */
+    }),
     // Add more providers
   ],
   // ...

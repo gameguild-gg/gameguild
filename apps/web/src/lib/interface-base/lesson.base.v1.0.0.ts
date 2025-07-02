@@ -4,4 +4,3 @@ export interface LessonBasev1_0_0 {
   description: string;
   content: (string | { content: string } | { title: string; content: string }[])[];
 }
-

@@ -6,12 +6,9 @@ export async function GET(request: NextRequest) {
   try {
     // Get the session to extract the access token
     const session = await auth();
-    
+
     if (!session?.accessToken) {
-      return NextResponse.json(
-        { error: 'No access token found in session' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'No access token found in session' }, { status: 401 });
     }
 
     // Get tenant ID from headers
@@ -19,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     // Make a test call to the CMS backend
     const headers: Record<string, string> = {
-      'Authorization': `Bearer ${session.accessToken}`,
+      Authorization: `Bearer ${session.accessToken}`,
       'Content-Type': 'application/json',
     };
 
@@ -45,16 +42,18 @@ export async function GET(request: NextRequest) {
       headers: {
         authorization: `Bearer ${session.accessToken?.substring(0, 20)}...`,
         tenantId: tenantId || null,
-      }
+      },
     });
-
   } catch (error) {
     console.error('Direct CMS API test error:', error);
-    
-    return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      cmsBackendUrl: environment.apiBaseUrl,
-    }, { status: 500 });
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        cmsBackendUrl: environment.apiBaseUrl,
+      },
+      { status: 500 },
+    );
   }
 }

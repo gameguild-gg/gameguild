@@ -8,4 +8,3 @@ export interface ModuleBasev1_0_0 {
   type: string; // New attribute
   thumbnail: string;
 }
-

@@ -1,11 +1,11 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useEffect, useReducer } from 'react';
+import React, { createContext, useCallback, useEffect, useReducer } from 'react';
 import { BrowserProvider } from 'ethers';
 
 export const Web3ActionTypes = {
   CHECK_PROVIDER: 'CHECK_PROVIDER',
-  PROVIDER_AVAILABLE: 'PROVIDER_AVAILABLE',  
+  PROVIDER_AVAILABLE: 'PROVIDER_AVAILABLE',
   PROVIDER_UNAVAILABLE: 'PROVIDER_UNAVAILABLE',
   CONNECT_START: 'CONNECT_START',
   CONNECT_SUCCESS: 'CONNECT_SUCCESS',
@@ -119,10 +119,10 @@ export function Web3Provider({ children }: Web3ProviderProps) {
   // Check if provider is available without connecting
   useEffect(() => {
     dispatch({ type: Web3ActionTypes.CHECK_PROVIDER });
-    
+
     if (window.ethereum) {
       dispatch({ type: Web3ActionTypes.PROVIDER_AVAILABLE });
-      
+
       // Set up account change listener
       const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length === 0) {
@@ -136,18 +136,18 @@ export function Web3Provider({ children }: Web3ProviderProps) {
           });
         }
       };
-      
+
       window.ethereum.on('accountsChanged', handleAccountsChanged);
-      
+
       return () => {
         if (window.ethereum) {
           window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
         }
       };
     } else {
-      dispatch({ 
+      dispatch({
         type: Web3ActionTypes.PROVIDER_UNAVAILABLE,
-        payload: { error: 'No Ethereum provider found. Please install MetaMask.' }
+        payload: { error: 'No Ethereum provider found. Please install MetaMask.' },
       });
     }
   }, []);
@@ -165,7 +165,7 @@ export function Web3Provider({ children }: Web3ProviderProps) {
       dispatch({ type: Web3ActionTypes.CONNECT_START });
 
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      
+
       const provider = new BrowserProvider(window.ethereum);
 
       dispatch({

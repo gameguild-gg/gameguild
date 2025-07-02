@@ -10,10 +10,7 @@ export type AuthActionState = {
   message?: string;
 };
 
-export async function sendEmailVerification(
-  previousState: AuthActionState,
-  formData: FormData,
-): Promise<AuthActionState> {
+export async function sendEmailVerification(previousState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   try {
     const email = formData.get('email') as string;
     const tenantId = formData.get('tenantId') as string | undefined;
@@ -56,10 +53,7 @@ export async function sendEmailVerification(
   }
 }
 
-export async function verifyEmail(
-  previousState: AuthActionState,
-  formData: FormData,
-): Promise<AuthActionState> {
+export async function verifyEmail(previousState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   try {
     const token = formData.get('token') as string;
 
@@ -98,10 +92,7 @@ export async function verifyEmail(
   }
 }
 
-export async function forgotPassword(
-  previousState: AuthActionState,
-  formData: FormData,
-): Promise<AuthActionState> {
+export async function forgotPassword(previousState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   try {
     const email = formData.get('email') as string;
     const tenantId = formData.get('tenantId') as string | undefined;
@@ -144,10 +135,7 @@ export async function forgotPassword(
   }
 }
 
-export async function resetPassword(
-  previousState: AuthActionState,
-  formData: FormData,
-): Promise<AuthActionState> {
+export async function resetPassword(previousState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   try {
     const token = formData.get('token') as string;
     const newPassword = formData.get('newPassword') as string;
@@ -198,10 +186,7 @@ export async function resetPassword(
   }
 }
 
-export async function changePassword(
-  previousState: AuthActionState,
-  formData: FormData,
-): Promise<AuthActionState> {
+export async function changePassword(previousState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   try {
     const session = await auth();
     if (!session?.accessToken) {

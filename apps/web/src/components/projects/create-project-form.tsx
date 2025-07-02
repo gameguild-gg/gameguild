@@ -54,7 +54,8 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
       shortDescription: formData.tagline,
       websiteUrl: formData.projectUrl,
       status: 'not-started',
-      visibility: formData.visibility === 'public' ? 'Public' : 'Private',    });
+      visibility: formData.visibility === 'public' ? 'Public' : 'Private',
+    });
     onProjectCreated(newProject);
     setIsOpen(false);
     router.push(`/dashboard/projects/${encodeURIComponent(newProject.slug || newProject.id)}`);

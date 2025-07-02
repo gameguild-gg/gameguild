@@ -11,21 +11,21 @@ export class ApiClient {
       return {
         message: error.statusText || 'Request failed',
         status: error.status,
-        details: error
+        details: error,
       };
     }
-    
+
     if (error?.message) {
       return {
         message: error.message,
         status: error.status,
-        details: error
+        details: error,
       };
     }
-    
+
     return {
       message: 'Unknown error occurred',
-      details: error
+      details: error,
     };
   }
 }

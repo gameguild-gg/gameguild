@@ -44,7 +44,8 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
       setSortField(field);
       setSortDirection('asc');
     }
-  };  const handleProjectCreated = (newProject: Project) => {
+  };
+  const handleProjectCreated = (newProject: Project) => {
     const projectListItem: ProjectListItem = {
       id: newProject.id,
       name: newProject.title,
@@ -91,7 +92,8 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
           </div>
           <CreateProjectForm onProjectCreated={handleProjectCreated} />
         </div>
-      </header>      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 auto-rows-fr gap-4">
+      </header>{' '}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 auto-rows-fr gap-4">
         {paginatedProjects.map((project) => (
           <div key={project.id} className="h-full">
             <ProjectCard

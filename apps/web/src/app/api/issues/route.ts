@@ -9,15 +9,12 @@ export async function GET(request: Request) {
   const sort = searchParams.get('sort');
 
   try {
-    const response = await fetch(
-      `https://api.github.com/repos/gameguild-gg/website/issues?${searchParams.toString()}`,
-      {
-        headers: {
-          Accept: 'application/vnd.github.v3+json',
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        },
+    const response = await fetch(`https://api.github.com/repos/gameguild-gg/website/issues?${searchParams.toString()}`, {
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
       },
-    );
+    });
 
     if (!response.ok) {
       throw new Error('Failed to fetch issues');
@@ -26,9 +23,6 @@ export async function GET(request: Request) {
     const issues = await response.json();
     return NextResponse.json(issues);
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch issues' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to fetch issues' }, { status: 500 });
   }
 }

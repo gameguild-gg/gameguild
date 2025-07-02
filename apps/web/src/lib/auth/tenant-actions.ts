@@ -1,7 +1,7 @@
 'use server';
 
 import { httpClientFactory } from '@/lib/core/http';
-import { TenantResponse, CreateTenantRequest, UpdateTenantRequest } from '@/lib/tenant/types';
+import { CreateTenantRequest, TenantResponse, UpdateTenantRequest } from '@/lib/tenant/types';
 import { environment } from '@/configs/environment';
 import { auth } from '@/auth';
 
@@ -85,10 +85,7 @@ export async function getTenantById(tenantId: string): Promise<TenantActionState
   }
 }
 
-export async function createTenant(
-  previousState: TenantActionState,
-  formData: FormData,
-): Promise<TenantActionState> {
+export async function createTenant(previousState: TenantActionState, formData: FormData): Promise<TenantActionState> {
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -143,11 +140,7 @@ export async function createTenant(
   }
 }
 
-export async function updateTenant(
-  tenantId: string,
-  previousState: TenantActionState,
-  formData: FormData,
-): Promise<TenantActionState> {
+export async function updateTenant(tenantId: string, previousState: TenantActionState, formData: FormData): Promise<TenantActionState> {
   try {
     const session = await auth();
     if (!session?.accessToken) {

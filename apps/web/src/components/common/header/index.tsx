@@ -25,8 +25,7 @@ const headerVariants = cva('', {
   defaultVariants: {},
 });
 
-type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>> &
-  VariantProps<typeof headerVariants>;
+type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>> & VariantProps<typeof headerVariants>;
 
 const Header: React.FunctionComponent<Readonly<Props>> & {
   //
@@ -36,10 +35,7 @@ const Header: React.FunctionComponent<Readonly<Props>> & {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           <div className="flex space-x-8">
-            <img
-              src="/assets/images/logo-text-2.png"
-              className="w-[135px] h-46px my-auto mx-[10px]"
-            />
+            <img src="/assets/images/logo-text-2.png" className="w-[135px] h-46px my-auto mx-[10px]" />
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
@@ -53,28 +49,20 @@ const Header: React.FunctionComponent<Readonly<Props>> & {
                             href="/"
                           >
                             {/*<Icons.logo className="h-6 w-6"/>*/}
-                            <div className="mb-2 mt-4 text-lg font-medium">
-                              shadcn/ui
-                            </div>
+                            <div className="mb-2 mt-4 text-lg font-medium">shadcn/ui</div>
                             <p className="text-sm leading-tight text-muted-foreground">
-                              Beautifully designed components that you can copy
-                              and paste into your apps. Accessible.
-                              Customizable. Open Source.
+                              Beautifully designed components that you can copy and paste into your apps. Accessible. Customizable. Open Source.
                             </p>
                           </a>
                         </NavigationMenuLink>
                       </li>
                       <ListItem href="/docs" title="Introduction">
-                        Re-usable components built using Radix UI and Tailwind
-                        CSS.
+                        Re-usable components built using Radix UI and Tailwind CSS.
                       </ListItem>
                       <ListItem href="/docs/installation" title="Installation">
                         How to install dependencies and structure your app.
                       </ListItem>
-                      <ListItem
-                        href="/docs/primitives/typography"
-                        title="Typography"
-                      >
+                      <ListItem href="/docs/primitives/typography" title="Typography">
                         Styles for headings, paragraphs, lists...etc
                       </ListItem>
                     </ul>
@@ -91,28 +79,20 @@ const Header: React.FunctionComponent<Readonly<Props>> & {
                             href="/"
                           >
                             {/*<Icons.logo className="h-6 w-6"/>*/}
-                            <div className="mb-2 mt-4 text-lg font-medium">
-                              shadcn/ui
-                            </div>
+                            <div className="mb-2 mt-4 text-lg font-medium">shadcn/ui</div>
                             <p className="text-sm leading-tight text-muted-foreground">
-                              Beautifully designed components that you can copy
-                              and paste into your apps. Accessible.
-                              Customizable. Open Source.
+                              Beautifully designed components that you can copy and paste into your apps. Accessible. Customizable. Open Source.
                             </p>
                           </a>
                         </NavigationMenuLink>
                       </li>
                       <ListItem href="/docs" title="Introduction">
-                        Re-usable components built using Radix UI and Tailwind
-                        CSS.
+                        Re-usable components built using Radix UI and Tailwind CSS.
                       </ListItem>
                       <ListItem href="/docs/installation" title="Installation">
                         How to install dependencies and structure your app.
                       </ListItem>
-                      <ListItem
-                        href="/docs/primitives/typography"
-                        title="Typography"
-                      >
+                      <ListItem href="/docs/primitives/typography" title="Typography">
                         Styles for headings, paragraphs, lists...etc
                       </ListItem>
                     </ul>
@@ -129,28 +109,20 @@ const Header: React.FunctionComponent<Readonly<Props>> & {
                             href="/"
                           >
                             {/*<Icons.logo className="h-6 w-6"/>*/}
-                            <div className="mb-2 mt-4 text-lg font-medium">
-                              shadcn/ui
-                            </div>
+                            <div className="mb-2 mt-4 text-lg font-medium">shadcn/ui</div>
                             <p className="text-sm leading-tight text-muted-foreground">
-                              Beautifully designed components that you can copy
-                              and paste into your apps. Accessible.
-                              Customizable. Open Source.
+                              Beautifully designed components that you can copy and paste into your apps. Accessible. Customizable. Open Source.
                             </p>
                           </a>
                         </NavigationMenuLink>
                       </li>
                       <ListItem href="/docs" title="Introduction">
-                        Re-usable components built using Radix UI and Tailwind
-                        CSS.
+                        Re-usable components built using Radix UI and Tailwind CSS.
                       </ListItem>
                       <ListItem href="/docs/installation" title="Installation">
                         How to install dependencies and structure your app.
                       </ListItem>
-                      <ListItem
-                        href="/docs/primitives/typography"
-                        title="Typography"
-                      >
+                      <ListItem href="/docs/primitives/typography" title="Typography">
                         Styles for headings, paragraphs, lists...etc
                       </ListItem>
                     </ul>
@@ -167,28 +139,20 @@ const Header: React.FunctionComponent<Readonly<Props>> & {
                             href="/"
                           >
                             {/*<Icons.logo className="h-6 w-6"/>*/}
-                            <div className="mb-2 mt-4 text-lg font-medium">
-                              shadcn/ui
-                            </div>
+                            <div className="mb-2 mt-4 text-lg font-medium">shadcn/ui</div>
                             <p className="text-sm leading-tight text-muted-foreground">
-                              Beautifully designed components that you can copy
-                              and paste into your apps. Accessible.
-                              Customizable. Open Source.
+                              Beautifully designed components that you can copy and paste into your apps. Accessible. Customizable. Open Source.
                             </p>
                           </a>
                         </NavigationMenuLink>
                       </li>
                       <ListItem href="/docs" title="Introduction">
-                        Re-usable components built using Radix UI and Tailwind
-                        CSS.
+                        Re-usable components built using Radix UI and Tailwind CSS.
                       </ListItem>
                       <ListItem href="/docs/installation" title="Installation">
                         How to install dependencies and structure your app.
                       </ListItem>
-                      <ListItem
-                        href="/docs/primitives/typography"
-                        title="Typography"
-                      >
+                      <ListItem href="/docs/primitives/typography" title="Typography">
                         Styles for headings, paragraphs, lists...etc
                       </ListItem>
                     </ul>
@@ -196,7 +160,6 @@ const Header: React.FunctionComponent<Readonly<Props>> & {
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
-
           </div>
           {/*Right Side*/}
           <div className="flex">
@@ -211,10 +174,7 @@ const Header: React.FunctionComponent<Readonly<Props>> & {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar>
-                  <AvatarImage
-                    src="https://github.com/shadcn.png"
-                    alt="@shadcn"
-                  />
+                  <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
@@ -228,7 +188,6 @@ const Header: React.FunctionComponent<Readonly<Props>> & {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-
         </div>
 
         {children}
@@ -236,10 +195,7 @@ const Header: React.FunctionComponent<Readonly<Props>> & {
     </div>
   );
 };
-const ListItem = React.forwardRef<
-  React.ElementRef<'a'>,
-  React.ComponentPropsWithoutRef<'a'>
->(({ className, title, children, ...props }, ref) => {
+const ListItem = React.forwardRef<React.ElementRef<'a'>, React.ComponentPropsWithoutRef<'a'>>(({ className, title, children, ...props }, ref) => {
   return (
     <li>
       <NavigationMenuLink asChild>
@@ -252,9 +208,7 @@ const ListItem = React.forwardRef<
           {...props}
         >
           <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
+          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">{children}</p>
         </a>
       </NavigationMenuLink>
     </li>

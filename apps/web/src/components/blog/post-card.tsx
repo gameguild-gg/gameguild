@@ -16,25 +16,12 @@ export function PostCard({ post }: Readonly<Props>) {
   };
 
   return (
-    <div
-      className="p-[10px] align-top overflow-hidden text-white text-left cursor-pointer"
-      key={post.id}
-      onClick={() => onClick()}
-    >
-      {post.feature_image && post.title && (
-        <img
-          src={post.feature_image}
-          alt={post.title}
-          className="object-cover w-full md:w-[380px] h-[253px]"
-        />
-      )}
+    <div className="p-[10px] align-top overflow-hidden text-white text-left cursor-pointer" key={post.id} onClick={() => onClick()}>
+      {post.feature_image && post.title && <img src={post.feature_image} alt={post.title} className="object-cover w-full md:w-[380px] h-[253px]" />}
 
       {post.tags &&
         post.tags.map((tag: Tag) => (
-          <span
-            className="text-neutral-500 p-1 py-0 mr-1 mt-2 ml-[-4px]"
-            key={tag.id}
-          >
+          <span className="text-neutral-500 p-1 py-0 mr-1 mt-2 ml-[-4px]" key={tag.id}>
             {tag.name}
           </span>
         ))}

@@ -5,6 +5,7 @@ import { PyodideInterface } from 'pyodide';
 // Declare the global loadPyodide function that will be available after importScripts
 declare global {
   function loadPyodide(): Promise<PyodideInterface>;
+
   function importScripts(...urls: string[]): void;
 }
 

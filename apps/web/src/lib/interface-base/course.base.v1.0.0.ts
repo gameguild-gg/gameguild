@@ -5,4 +5,3 @@ export interface CourseBasev1_0_0 {
   title: string;
   thumbnail: string;
 }
-

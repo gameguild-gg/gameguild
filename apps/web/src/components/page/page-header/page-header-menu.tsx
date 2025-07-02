@@ -24,9 +24,7 @@ function PageHeaderMenu() {
         <div className="flex h-20 items-center justify-between">
           {/* <!-- Header Navigation --> */}
           <div className="flex items-center">
-            <div className="flex-shrink-0">
-              {/*TODO Add logo component here*/}
-            </div>
+            <div className="flex-shrink-0">{/*TODO Add logo component here*/}</div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
                 <Link className="px-3 py-2 text-sm font-medium" href="/about">
@@ -48,9 +46,7 @@ function PageHeaderMenu() {
             {/*<UserProfile />*/}
           </div>
           {/* <!-- Mobile Menu Toggle --> */}
-          <div className="-mr-2 flex md:hidden">
-            {/*TODO Add mobile menu toggle here*/}
-          </div>
+          <div className="-mr-2 flex md:hidden">{/*TODO Add mobile menu toggle here*/}</div>
         </div>
       </div>
       {/* <!-- Mobile Menu --> */}
@@ -72,12 +68,8 @@ function PageHeaderMenu() {
         </div>
         {/* <!-- User Profile --> */}
         <div className="border-t border-gray-700 pb-3 pt-4">
-          <div className="flex items-center px-5">
-            {/* TODO add user profile here */}
-          </div>
-          <div className="mt-3 space-y-1 px-2">
-            {/* TODO add user profile menu here */}
-          </div>
+          <div className="flex items-center px-5">{/* TODO add user profile here */}</div>
+          <div className="mt-3 space-y-1 px-2">{/* TODO add user profile menu here */}</div>
         </div>
       </div>
     </nav>

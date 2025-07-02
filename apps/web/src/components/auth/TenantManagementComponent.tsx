@@ -1,13 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useActionState } from 'react';
-import { 
-  createTenant, 
-  getUserTenants, 
-  deleteTenant,
-  TenantActionState 
-} from '@/lib/auth/tenant-actions';
+import React, { useActionState, useEffect, useState } from 'react';
+import { createTenant, deleteTenant, getUserTenants, TenantActionState } from '@/lib/auth/tenant-actions';
 import { TenantResponse } from '@/lib/tenant/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,9 +76,7 @@ export function TenantManagementComponent() {
       <Card>
         <CardHeader>
           <CardTitle>Create New Tenant</CardTitle>
-          <CardDescription>
-            Create a new tenant for your organization
-          </CardDescription>
+          <CardDescription>Create a new tenant for your organization</CardDescription>
         </CardHeader>
         <CardContent>
           <form action={createFormAction} className="space-y-4">
@@ -96,42 +88,22 @@ export function TenantManagementComponent() {
 
             {createState.success && createState.data && (
               <Alert>
-                <AlertDescription>
-                  Tenant "{(createState.data as TenantResponse).name}" created successfully!
-                </AlertDescription>
+                <AlertDescription>Tenant "{(createState.data as TenantResponse).name}" created successfully!</AlertDescription>
               </Alert>
             )}
 
             <div className="space-y-2">
               <Label htmlFor="name">Tenant Name</Label>
-              <Input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Enter tenant name"
-                required
-                disabled={isCreating}
-              />
+              <Input id="name" name="name" type="text" placeholder="Enter tenant name" required disabled={isCreating} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-                id="description"
-                name="description"
-                placeholder="Enter tenant description"
-                disabled={isCreating}
-              />
+              <Textarea id="description" name="description" placeholder="Enter tenant description" disabled={isCreating} />
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="isActive" 
-                name="isActive" 
-                value="true"
-                defaultChecked
-                disabled={isCreating}
-              />
+              <Checkbox id="isActive" name="isActive" value="true" defaultChecked disabled={isCreating} />
               <Label htmlFor="isActive">Active</Label>
             </div>
 
@@ -146,56 +118,35 @@ export function TenantManagementComponent() {
       <Card>
         <CardHeader>
           <CardTitle>Your Tenants</CardTitle>
-          <CardDescription>
-            Manage your existing tenants
-          </CardDescription>
+          <CardDescription>Manage your existing tenants</CardDescription>
         </CardHeader>
         <CardContent>
           {loading && <p>Loading tenants...</p>}
-          
+
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          {!loading && tenants.length === 0 && (
-            <p className="text-muted-foreground">No tenants found.</p>
-          )}
+          {!loading && tenants.length === 0 && <p className="text-muted-foreground">No tenants found.</p>}
 
           {!loading && tenants.length > 0 && (
             <div className="space-y-4">
               {tenants.map((tenant) => (
-                <div
-                  key={tenant.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
+                <div key={tenant.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium">{tenant.name}</h3>
-                      <Badge variant={tenant.isActive ? "default" : "secondary"}>
-                        {tenant.isActive ? 'Active' : 'Inactive'}
-                      </Badge>
+                      <Badge variant={tenant.isActive ? 'default' : 'secondary'}>{tenant.isActive ? 'Active' : 'Inactive'}</Badge>
                     </div>
-                    {tenant.description && (
-                      <p className="text-sm text-muted-foreground">
-                        {tenant.description}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      ID: {tenant.id}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Created: {new Date(tenant.createdAt).toLocaleDateString()}
-                    </p>
+                    {tenant.description && <p className="text-sm text-muted-foreground">{tenant.description}</p>}
+                    <p className="text-xs text-muted-foreground">ID: {tenant.id}</p>
+                    <p className="text-xs text-muted-foreground">Created: {new Date(tenant.createdAt).toLocaleDateString()}</p>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteTenant(tenant.id)}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => handleDeleteTenant(tenant.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
