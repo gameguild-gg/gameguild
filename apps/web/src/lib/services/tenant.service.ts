@@ -1,5 +1,5 @@
 import { apiClient } from '../api-client';
-import { TenantResponse, CreateTenantRequest, UpdateTenantRequest } from '@/lib/tenant/types';
+import { CreateTenantRequest, TenantResponse, UpdateTenantRequest } from '@/lib/tenant/types';
 
 export class TenantService {
   // Get all tenants (admin function)
@@ -18,10 +18,7 @@ export class TenantService {
   }
 
   // Create a new tenant (admin function)
-  static async createTenant(
-    tenantData: CreateTenantRequest, 
-    accessToken: string
-  ): Promise<TenantResponse> {
+  static async createTenant(tenantData: CreateTenantRequest, accessToken: string): Promise<TenantResponse> {
     return apiClient.authenticatedRequest<TenantResponse>('/tenants', accessToken, {
       method: 'POST',
       body: JSON.stringify(tenantData),
@@ -29,11 +26,7 @@ export class TenantService {
   }
 
   // Update a tenant (admin function)
-  static async updateTenant(
-    tenantId: string,
-    tenantData: UpdateTenantRequest,
-    accessToken: string
-  ): Promise<TenantResponse> {
+  static async updateTenant(tenantId: string, tenantData: UpdateTenantRequest, accessToken: string): Promise<TenantResponse> {
     return apiClient.authenticatedRequest<TenantResponse>(`/tenants/${tenantId}`, accessToken, {
       method: 'PUT',
       body: JSON.stringify(tenantData),

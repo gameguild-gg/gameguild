@@ -1,12 +1,11 @@
 'use client';
 
 import React from 'react';
-import { useSession } from 'next-auth/react';
-import { useTenant, useAuthenticatedApi } from '@/lib/tenant/tenant-provider';
+import { signOut, useSession } from 'next-auth/react';
+import { useAuthenticatedApi, useTenant } from '@/lib/tenant/tenant-provider';
 import { TenantSelector } from '@/components/auth/TenantSelector';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { signOut } from 'next-auth/react';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -73,7 +72,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <TenantSelector />
-            
+
             {!!(currentTenant && typeof currentTenant === 'object' && currentTenant !== null) && (
               <div className="space-y-2">
                 <div>

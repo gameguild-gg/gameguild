@@ -11,7 +11,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 // Simple enum for renderer types since LectureEntity is not available
 enum RendererType {
   Markdown = 'markdown',
-  Reveal = 'reveal'
+  Reveal = 'reveal',
 }
 
 export interface MarkdownRendererProps {
@@ -103,12 +103,17 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
         const type = className.split('-')[1];
         const title = props['data-title'] as string | undefined;
         return (
-          <div className={`border-l-4 p-4 my-4 ${
-            type === 'warning' ? 'border-yellow-400 bg-yellow-50' :
-            type === 'danger' ? 'border-red-400 bg-red-50' :
-            type === 'info' ? 'border-blue-400 bg-blue-50' :
-            'border-gray-400 bg-gray-50'
-          }`}>
+          <div
+            className={`border-l-4 p-4 my-4 ${
+              type === 'warning'
+                ? 'border-yellow-400 bg-yellow-50'
+                : type === 'danger'
+                  ? 'border-red-400 bg-red-50'
+                  : type === 'info'
+                    ? 'border-blue-400 bg-blue-50'
+                    : 'border-gray-400 bg-gray-50'
+            }`}
+          >
             {title && <div className="font-semibold mb-2">{title}</div>}
             {children}
           </div>
@@ -130,11 +135,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
 
   return (
     <div className="markdown-content">
-      <ReactMarkdown 
-        remarkPlugins={[remarkGfm, remarkMath]} 
-        rehypePlugins={[rehypeRaw, rehypeKatex]}
-        components={components}
-      >
+      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={components}>
         {processedContent}
       </ReactMarkdown>
       <style jsx global>{`

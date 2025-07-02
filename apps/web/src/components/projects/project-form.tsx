@@ -18,7 +18,7 @@ import { FileUploader } from '@/components/ui/file-uploader';
 
 // Import types from the generated API
 import type { ProjectReadable, ProjectWritable } from '@/lib/api/generated';
-import { getProjectsSlugBySlug, postProjects, putProjectsById } from '@/lib/api/generated';
+import { getProjectsSlugBySlug, postProjects } from '@/lib/api/generated';
 
 // Define a simple error response type for generic error handling
 interface ApiErrorResponse {
@@ -83,7 +83,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
         path: { slug: slug },
         headers: { Authorization: `Bearer ${(session?.user as any)?.accessToken}` },
       });
-      
+
       if (response.data) {
         setProject(response.data);
         if (response.data.imageUrl) {
@@ -130,7 +130,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
         body: project as ProjectWritable,
         headers: { Authorization: `Bearer ${(session?.user as any)?.accessToken}` },
       });
-      
+
       if (response.data) {
         setProject(response.data);
         toast.toast({ title: 'Success', description: 'Project created successfully' });

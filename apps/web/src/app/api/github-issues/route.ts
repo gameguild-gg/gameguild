@@ -55,10 +55,7 @@ async function fetchAllIssues(state: 'open' | 'closed' | 'all') {
           ]);
 
           // Get unique reviewers from both requested and completed reviews
-          const allReviewers = [
-            ...requestedReviewers.data.users,
-            ...reviews.data.map((review) => review.user),
-          ].filter(
+          const allReviewers = [...requestedReviewers.data.users, ...reviews.data.map((review) => review.user)].filter(
             (reviewer, index, self) =>
               reviewer && // ensure reviewer exists
               index === self.findIndex((r) => r && r.login === reviewer.login), // deduplicate
@@ -98,10 +95,7 @@ export async function GET(request: NextRequest) {
 
     if (!Array.isArray(allIssues)) {
       console.error('fetchAllIssues did not return an array:', allIssues);
-      return NextResponse.json(
-        { error: 'Invalid data format' },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: 'Invalid data format' }, { status: 500 });
     }
 
     let filteredIssues = allIssues;
@@ -119,38 +113,25 @@ export async function GET(request: NextRequest) {
           (issue.user && issue.user.login === user) ||
           (issue.assignees && issue.assignees.some((a: any) => a.login === user)) ||
           (issue.reviewers && issue.reviewers.some((r: any) => r.login === user)) ||
-          (issue.requested_reviewers &&
-            issue.requested_reviewers.some((r: any) => r.login === user)),
+          (issue.requested_reviewers && issue.requested_reviewers.some((r: any) => r.login === user)),
       );
     }
 
     if (labels.length > 0) {
-      filteredIssues = filteredIssues.filter((issue: any) =>
-        labels.every(
-          (label: string) => issue.labels && issue.labels.some((l: any) => l.name === label),
-        ),
-      );
+      filteredIssues = filteredIssues.filter((issue: any) => labels.every((label: string) => issue.labels && issue.labels.some((l: any) => l.name === label)));
     }
 
     // Apply sorting
     filteredIssues.sort((a, b) => {
       switch (sort) {
         case 'oldest':
-          return (
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         case 'newest':
-          return (
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          );
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         case 'most-reactions':
-          return (
-            (b.reactions?.total_count || 0) - (a.reactions?.total_count || 0)
-          );
+          return (b.reactions?.total_count || 0) - (a.reactions?.total_count || 0);
         case 'least-reactions':
-          return (
-            (a.reactions?.total_count || 0) - (b.reactions?.total_count || 0)
-          );
+          return (a.reactions?.total_count || 0) - (b.reactions?.total_count || 0);
         default:
           return 0;
       }
@@ -159,10 +140,7 @@ export async function GET(request: NextRequest) {
     // Apply pagination
     const totalIssues = filteredIssues.length;
     const totalPages = Math.ceil(totalIssues / pageSize);
-    const paginatedIssues = filteredIssues.slice(
-      (page - 1) * pageSize,
-      page * pageSize,
-    );
+    const paginatedIssues = filteredIssues.slice((page - 1) * pageSize, page * pageSize);
 
     return NextResponse.json({
       issues: paginatedIssues,
@@ -172,9 +150,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching issues:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch issues' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to fetch issues' }, { status: 500 });
   }
 }

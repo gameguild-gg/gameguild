@@ -16,13 +16,13 @@ export function decodeJwt(token: string): any {
 
     // Decode the payload (second part)
     const payload = parts[1];
-    
+
     // Add padding if needed for base64 decoding
-    const paddedPayload = payload + '='.repeat((4 - payload.length % 4) % 4);
-    
+    const paddedPayload = payload + '='.repeat((4 - (payload.length % 4)) % 4);
+
     // Decode from base64url
     const decoded = atob(paddedPayload.replace(/-/g, '+').replace(/_/g, '/'));
-    
+
     return JSON.parse(decoded);
   } catch (error) {
     console.error('Failed to decode JWT:', error);

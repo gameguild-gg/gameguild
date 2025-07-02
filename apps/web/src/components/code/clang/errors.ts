@@ -1,6 +1,6 @@
 export class ProcExit extends Error {
   code: number;
-  
+
   constructor(code: number) {
     super(`process exited with code ${code}.`);
     this.code = code;

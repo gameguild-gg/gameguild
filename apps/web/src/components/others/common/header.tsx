@@ -6,11 +6,7 @@ function Header() {
     <header className="bg-[#18181c] text-white h-16 px-12 py-0.5">
       <div className="flex items-center justify-between h-full w-full">
         <div className="flex min-w-[150px] items-center">
-          <img
-            className="w-[135px] h-[46px] m-1.5"
-            src="/assets/images/logo-text.png"
-            alt="Logo"
-          />
+          <img className="w-[135px] h-[46px] m-1.5" src="/assets/images/logo-text.png" alt="Logo" />
           &nbsp;
           {/*<a href="/">*/}
           {/*  <span*/}
@@ -57,9 +53,7 @@ function Header() {
           {/*  </span>*/}
           {/*</a>*/}
           <a href="/competition">
-            <span className="px-[15px] text-white">
-              Competition
-            </span>
+            <span className="px-[15px] text-white">Competition</span>
           </a>
         </div>
         <div className="flex items-center">
@@ -68,12 +62,7 @@ function Header() {
               <User className="w-4 h-4" /> Login
             </span>
           </a>
-          <img
-            width={25}
-            src="/assets/images/language.svg"
-            className="m-1.5"
-            alt="Language"
-          />
+          <img width={25} src="/assets/images/language.svg" className="m-1.5" alt="Language" />
         </div>
       </div>
     </header>

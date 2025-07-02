@@ -28,20 +28,6 @@ export class Tar {
     this.offset = 0;
   }
 
-  private readStr(len: number): string {
-    const result = readStr(this.u8, this.offset, len);
-    this.offset += len;
-    return result;
-  }
-
-  private readOctal(len: number): number {
-    return parseInt(this.readStr(len), 8);
-  }
-
-  private alignUp(): void {
-    this.offset = (this.offset + 511) & ~511;
-  }
-
   readEntry(): TarEntry | null {
     if (this.offset + 512 > this.u8.length) {
       return null;
@@ -61,7 +47,7 @@ export class Tar {
       groupName: '',
       devMajor: '',
       devMinor: '',
-      filenamePrefix: ''
+      filenamePrefix: '',
     };
 
     if (this.readStr(8) !== 'ustar  ') {
@@ -100,5 +86,19 @@ export class Tar {
           break;
       }
     }
+  }
+
+  private readStr(len: number): string {
+    const result = readStr(this.u8, this.offset, len);
+    this.offset += len;
+    return result;
+  }
+
+  private readOctal(len: number): number {
+    return parseInt(this.readStr(len), 8);
+  }
+
+  private alignUp(): void {
+    this.offset = (this.offset + 511) & ~511;
   }
 }

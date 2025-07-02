@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { getProjects, ProjectListItem, revalidateProjects, clearProjectCache } from '@/components/projects/actions';
+import { useEffect, useState } from 'react';
+import { signIn, signOut, useSession } from 'next-auth/react';
+import { clearProjectCache, getProjects, ProjectListItem, revalidateProjects } from '@/components/projects/actions';
 import { ProjectList } from '@/components/projects/project-list';
 import { useRouter } from 'next/navigation';
 
@@ -10,11 +10,12 @@ import { useRouter } from 'next/navigation';
 const forceReAuthentication = async () => {
   console.log('🔄 Forcing fresh authentication...');
   await signOut({ redirect: false });
-  await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for signOut to complete
+  await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for signOut to complete
   await signIn();
 };
 
-export default function ProjectsPage() {  const [projects, setProjects] = useState<ProjectListItem[]>([]);
+export default function ProjectsPage() {
+  const [projects, setProjects] = useState<ProjectListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -25,7 +26,7 @@ export default function ProjectsPage() {  const [projects, setProjects] = useSta
     try {
       setCreating(true);
       console.log('Creating test project...');
-      
+
       const response = await fetch('/api/test-create-project', {
         method: 'POST',
         headers: {
@@ -41,21 +42,21 @@ export default function ProjectsPage() {  const [projects, setProjects] = useSta
           repositoryUrl: 'https://github.com/example/test',
         }),
       });
-        if (response.ok) {
+      if (response.ok) {
         const project = await response.json();
         console.log('Project created successfully:', project);
-          // Clear all project-related cache
+        // Clear all project-related cache
         await clearProjectCache();
-        
+
         // Revalidate Next.js cache
         await revalidateProjects();
-        
+
         // Force router refresh to clear any cached data
         router.refresh();
-        
+
         // Add a small delay to ensure cache clearing takes effect
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
         // Refresh the projects list
         const projectsData = await getProjects();
         setProjects(projectsData);
@@ -66,7 +67,8 @@ export default function ProjectsPage() {  const [projects, setProjects] = useSta
       }
     } catch (err) {
       console.error('Error creating project:', err);
-      setError('Error creating test project');    } finally {
+      setError('Error creating test project');
+    } finally {
       setCreating(false);
     }
   };
@@ -74,19 +76,19 @@ export default function ProjectsPage() {  const [projects, setProjects] = useSta
     try {
       setLoading(true);
       setError(null);
-      
+
       // Clear all project-related cache
       await clearProjectCache();
-      
+
       // Revalidate Next.js cache
       await revalidateProjects();
-      
+
       // Force router refresh
       router.refresh();
-      
+
       // Add a small delay to ensure cache clearing takes effect
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       // Fetch fresh data
       const projectsData = await getProjects();
       setProjects(projectsData);
@@ -102,35 +104,35 @@ export default function ProjectsPage() {  const [projects, setProjects] = useSta
       try {
         setLoading(true);
         setError(null);
-        
+
         // Wait for session to load
         if (status === 'loading') {
           return;
         }
-        
+
         // Check if user is authenticated
         if (status === 'unauthenticated') {
           setError('Please sign in to view projects');
           return;
         }
-          // Check for token refresh errors
+        // Check for token refresh errors
         if ((session as any)?.error === 'RefreshTokenError') {
           console.log('🔄 Token refresh error detected, forcing fresh authentication...');
           setError('Your session has expired. Signing you out and redirecting to login...');
           await forceReAuthentication();
           return;
         }
-        
+
         console.log('Fetching projects for authenticated user...');
         const projectsData = await getProjects();
         setProjects(projectsData);
       } catch (err) {
         console.error('Error fetching projects:', err);
-          // Check if it's an authentication error
-        if (err instanceof Error && 
-            (err.message.includes('Authentication token expired') || 
-             err.message.includes('401') || 
-             err.message.includes('Unauthorized'))) {
+        // Check if it's an authentication error
+        if (
+          err instanceof Error &&
+          (err.message.includes('Authentication token expired') || err.message.includes('401') || err.message.includes('Unauthorized'))
+        ) {
           console.log('🔄 Authentication error, forcing fresh authentication...');
           setError('Your session has expired. Signing you out and redirecting to login...');
           await forceReAuthentication();
@@ -164,15 +166,12 @@ export default function ProjectsPage() {  const [projects, setProjects] = useSta
           <p className="text-muted-foreground mb-2">User: {session?.user?.email || 'Not authenticated'}</p>
           <p className="text-muted-foreground mb-4">Has Access Token: {session?.accessToken ? 'Yes' : 'No'}</p>
           <p className="text-muted-foreground mb-4">Session Error: {(session as any)?.error || 'None'}</p>
-          
-          {(status === 'unauthenticated' || 
+
+          {(status === 'unauthenticated' ||
             (session as any)?.error === 'RefreshTokenError' ||
             error.includes('session has expired') ||
             error.includes('sign in again')) && (
-            <button 
-              onClick={() => signIn()}
-              className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
+            <button onClick={() => signIn()} className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
               Sign In Again
             </button>
           )}
@@ -183,7 +182,9 @@ export default function ProjectsPage() {  const [projects, setProjects] = useSta
 
   return (
     <div className="flex flex-col flex-1 items-center justify-center">
-      <div className="flex flex-col flex-1 container">        <div className="mb-4 p-4 bg-muted rounded-lg">
+      <div className="flex flex-col flex-1 container">
+        {' '}
+        <div className="mb-4 p-4 bg-muted rounded-lg">
           <div className="flex justify-between items-center">
             <div className="text-sm text-muted-foreground">
               <p>Session Status: {status}</p>
@@ -193,23 +194,17 @@ export default function ProjectsPage() {  const [projects, setProjects] = useSta
               <p>Last Fetch: {new Date().toLocaleTimeString()}</p>
             </div>
             <div className="flex gap-2">
-              <button 
+              <button
                 onClick={createTestProject}
                 disabled={creating || status !== 'authenticated'}
                 className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
               >
                 {creating ? 'Creating...' : 'Create Test Project'}
-              </button>              <button 
-                onClick={handleRefreshProjects}
-                disabled={loading}
-                className="px-4 py-2 bg-gray-500 text-white rounded disabled:opacity-50"
-              >
+              </button>{' '}
+              <button onClick={handleRefreshProjects} disabled={loading} className="px-4 py-2 bg-gray-500 text-white rounded disabled:opacity-50">
                 {loading ? 'Refreshing...' : 'Force Refresh & Revalidate'}
               </button>
-              <button 
-                onClick={forceReAuthentication}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-              >
+              <button onClick={forceReAuthentication} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
                 Force Re-Auth
               </button>
             </div>

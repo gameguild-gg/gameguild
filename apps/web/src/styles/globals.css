@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -142,10 +142,13 @@
         @apply flex flex-1;
     }
 
-    html, body {
+    html,
+    body {
         @apply w-full h-full;
         @apply antialiased;
-    }    html body[data-scroll-locked] {
+    }
+
+    html body[data-scroll-locked] {
         overflow: visible !important;
         margin-right: 0 !important;
     }

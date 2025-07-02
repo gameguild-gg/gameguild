@@ -7,4 +7,3 @@ export interface UserBasev1_0_0 {
   lastName: string;
   idCourses: number[];
 }
-

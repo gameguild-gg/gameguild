@@ -5,10 +5,12 @@ import { MemFS } from './memfs';
 
 interface AppExports extends WebAssembly.Exports {
   memory: WebAssembly.Memory;
+
   _start(): void;
 }
 
 export class App {
+  public ready: Promise<void>;
   private argv: string[];
   private environ: { [key: string]: string };
   private memfs: MemFS;
@@ -17,7 +19,6 @@ export class App {
   private nextHandle: number;
   private exports!: AppExports;
   private mem!: Memory;
-  public ready: Promise<void>;
 
   constructor(module: WebAssembly.Module, memfs: MemFS, name: string, ...args: string[]) {
     this.argv = [name, ...args];

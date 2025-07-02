@@ -9,9 +9,7 @@ type Props = {
 export function CourseDescription({ body }: Readonly<Props>) {
   return (
     <>
-      <h3 className="text-xl font-semibold mb-2 text-center">
-        Course Description:
-      </h3>
+      <h3 className="text-xl font-semibold mb-2 text-center">Course Description:</h3>
       <MarkdownRenderer content={body} />;
     </>
   );

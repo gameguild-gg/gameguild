@@ -1,11 +1,5 @@
 import { apiClient } from '../api-client';
-import { 
-  SignInResponse, 
-  LocalSignInRequest, 
-  LocalSignUpRequest, 
-  RefreshTokenRequest,
-  RefreshTokenResponse 
-} from '@/types/auth';
+import { LocalSignInRequest, LocalSignUpRequest, RefreshTokenRequest, RefreshTokenResponse, SignInResponse } from '@/types/auth';
 
 export class AuthService {
   // Local sign in (email/password)
@@ -67,11 +61,7 @@ export class AuthService {
   }
 
   // Change password (authenticated)
-  static async changePassword(
-    oldPassword: string, 
-    newPassword: string, 
-    accessToken: string
-  ): Promise<void> {
+  static async changePassword(oldPassword: string, newPassword: string, accessToken: string): Promise<void> {
     await apiClient.authenticatedRequest('/auth/change-password', accessToken, {
       method: 'POST',
       body: JSON.stringify({ oldPassword, newPassword }),

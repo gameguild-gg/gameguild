@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useSession, signOut } from 'next-auth/react';
-import { useTenant, useAuthenticatedApi } from '@/lib/tenant/tenant-provider';
+import { signOut, useSession } from 'next-auth/react';
+import { useAuthenticatedApi, useTenant } from '@/lib/tenant/tenant-provider';
 import { TenantSelector } from '@/components/auth/TenantSelector';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,11 +38,14 @@ export function ExampleIntegrationComponent() {
 
     setLoading(true);
     try {
-      const newTenant = await TenantService.createTenant({
-        name: newTenantName,
-        isActive: true,
-      }, session.accessToken);
-      
+      const newTenant = await TenantService.createTenant(
+        {
+          name: newTenantName,
+          isActive: true,
+        },
+        session.accessToken,
+      );
+
       setResult({ created: newTenant });
       setNewTenantName('');
     } catch (error) {
@@ -68,16 +71,10 @@ export function ExampleIntegrationComponent() {
       <Card>
         <CardHeader>
           <CardTitle>Authentication Integration Example</CardTitle>
-          <CardDescription>
-            This component demonstrates the NextAuth.js + CMS integration
-          </CardDescription>
+          <CardDescription>This component demonstrates the NextAuth.js + CMS integration</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {hasError && (
-            <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
-              Authentication Error: {error}
-            </div>
-          )}
+          {hasError && <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">Authentication Error: {error}</div>}
 
           <div>
             <Label>Current User</Label>
@@ -88,9 +85,7 @@ export function ExampleIntegrationComponent() {
 
           <div>
             <Label>Access Token</Label>
-            <p className="text-sm text-muted-foreground">
-              {session.accessToken ? 'Present ✓' : 'Missing ✗'}
-            </p>
+            <p className="text-sm text-muted-foreground">{session.accessToken ? 'Present ✓' : 'Missing ✗'}</p>
           </div>
 
           <TenantSelector />
@@ -101,7 +96,10 @@ export function ExampleIntegrationComponent() {
               <div className="text-sm text-muted-foreground space-y-1">
                 <p>ID: {typeof currentTenant === 'object' && currentTenant && 'id' in currentTenant ? String(currentTenant.id) : 'N/A'}</p>
                 <p>Name: {typeof currentTenant === 'object' && currentTenant && 'name' in currentTenant ? String(currentTenant.name) : 'N/A'}</p>
-                <p>Status: {typeof currentTenant === 'object' && currentTenant && 'isActive' in currentTenant ? (currentTenant.isActive ? 'Active' : 'Inactive') : 'N/A'}</p>
+                <p>
+                  Status:{' '}
+                  {typeof currentTenant === 'object' && currentTenant && 'isActive' in currentTenant ? (currentTenant.isActive ? 'Active' : 'Inactive') : 'N/A'}
+                </p>
               </div>
             </div>
           )}
@@ -110,9 +108,7 @@ export function ExampleIntegrationComponent() {
             <Label>Available Tenants ({availableTenants.size})</Label>
             <div className="text-sm text-muted-foreground">
               {Array.from(availableTenants).map((tenant: any, index) => (
-                <p key={index}>
-                  {typeof tenant === 'object' && tenant && 'name' in tenant ? String(tenant.name) : 'Unknown Tenant'}
-                </p>
+                <p key={index}>{typeof tenant === 'object' && tenant && 'name' in tenant ? String(tenant.name) : 'Unknown Tenant'}</p>
               ))}
             </div>
           </div>
@@ -129,17 +125,8 @@ export function ExampleIntegrationComponent() {
           <div className="space-y-2">
             <Label htmlFor="tenantName">Create New Tenant (Admin Only)</Label>
             <div className="flex gap-2">
-              <Input
-                id="tenantName"
-                value={newTenantName}
-                onChange={(e) => setNewTenantName(e.target.value)}
-                placeholder="Enter tenant name"
-              />
-              <Button 
-                onClick={createNewTenant} 
-                disabled={loading || !newTenantName.trim()}
-                size="sm"
-              >
+              <Input id="tenantName" value={newTenantName} onChange={(e) => setNewTenantName(e.target.value)} placeholder="Enter tenant name" />
+              <Button onClick={createNewTenant} disabled={loading || !newTenantName.trim()} size="sm">
                 Create
               </Button>
             </div>
@@ -148,9 +135,7 @@ export function ExampleIntegrationComponent() {
           {result && (
             <div>
               <Label>API Result</Label>
-              <pre className="text-xs bg-muted p-3 rounded-md overflow-auto">
-                {JSON.stringify(result, null, 2)}
-              </pre>
+              <pre className="text-xs bg-muted p-3 rounded-md overflow-auto">{JSON.stringify(result, null, 2)}</pre>
             </div>
           )}
         </CardContent>

@@ -2,20 +2,24 @@
 
 ## 🚨 Current Issue
 
-The authentication integration is failing with an `AccessDenied` error because there's a **mismatch between NextAuth.js and CMS backend authentication flows**:
+The authentication integration is failing with an `AccessDenied` error because there's a **mismatch between NextAuth.js
+and CMS backend authentication flows**:
 
 ### The Problem
+
 1. **NextAuth.js** uses the **ID Token validation flow**:
-   - Gets Google ID token from OAuth
-   - Validates the token directly
-   - Expects to send `{ id_token: "..." }` to the backend
+
+    - Gets Google ID token from OAuth
+    - Validates the token directly
+    - Expects to send `{ id_token: "..." }` to the backend
 
 2. **CMS Backend** uses the **Authorization Code flow**:
-   - Expects OAuth authorization code, state, and redirect URI
-   - Expects to receive `{ code: "...", state: "...", redirectUri: "..." }`
-   - The endpoint `/auth/google/callback` expects `OAuthSignInRequestDto`
+    - Expects OAuth authorization code, state, and redirect URI
+    - Expects to receive `{ code: "...", state: "...", redirectUri: "..." }`
+    - The endpoint `/auth/google/callback` expects `OAuthSignInRequestDto`
 
 ### Why This Happens
+
 - **NextAuth.js** is designed to handle OAuth flows internally and provide verified user data
 - **CMS Backend** is designed to handle the full OAuth flow from scratch
 - These two approaches are incompatible without additional configuration
@@ -23,6 +27,7 @@ The authentication integration is failing with an `AccessDenied` error because t
 ## ✅ Solutions
 
 ### Option 1: Development Mode (Temporary)
+
 For immediate testing, we can bypass CMS authentication:
 
 ```typescript
@@ -42,7 +47,7 @@ async signIn({ user, account, profile }) {
       tenantId: null,
       availableTenants: []
     };
-    
+
     // Store in user object for JWT callback
     (user as any).cmsData = tempUserData;
     return true;
@@ -52,6 +57,7 @@ async signIn({ user, account, profile }) {
 ```
 
 ### Option 2: Create ID Token Validation Endpoint (Recommended)
+
 Add a new endpoint to the CMS backend:
 
 ```csharp
@@ -72,6 +78,7 @@ public async Task<IActionResult> GoogleIdTokenValidation([FromBody] GoogleIdToke
 ```
 
 ### Option 3: Switch to Authorization Code Flow
+
 Modify NextAuth.js to use authorization code flow:
 
 ```typescript
@@ -114,4 +121,5 @@ For **production implementation**, recommend **Option 2**:
 - `apps/web/.env.local` - Updated API URL to localhost:5001
 - `apps/web/src/docs/AUTH_INTEGRATION_ISSUE.md` - This documentation
 
-The integration now works for **development and testing purposes**. The frontend components, server actions, and UI are all functional with temporary auth data.
+The integration now works for **development and testing purposes**. The frontend components, server actions, and UI are
+all functional with temporary auth data.

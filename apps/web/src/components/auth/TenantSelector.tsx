@@ -2,26 +2,15 @@
 
 import React from 'react';
 import { useTenant } from '@/lib/tenant/tenant-provider';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface TenantSelectorProps {
   className?: string;
 }
 
 export function TenantSelector({ className }: TenantSelectorProps) {
-  const {
-    currentTenant,
-    availableTenants,
-    switchCurrentTenant,
-  } = useTenant();
+  const { currentTenant, availableTenants, switchCurrentTenant } = useTenant();
 
   if (availableTenants.size === 0) {
     return null;
@@ -29,9 +18,7 @@ export function TenantSelector({ className }: TenantSelectorProps) {
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <span className="text-sm font-medium text-muted-foreground">
-        Tenant:
-      </span>
+      <span className="text-sm font-medium text-muted-foreground">Tenant:</span>
       <Select
         value={typeof currentTenant === 'object' && currentTenant && 'id' in currentTenant ? String((currentTenant as any).id) : ''}
         onValueChange={(value) => switchCurrentTenant(value)}

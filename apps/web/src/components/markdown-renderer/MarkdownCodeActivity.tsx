@@ -159,9 +159,7 @@ export function MarkdownCodeActivity(params: MarkdownCodeActivityProps) {
               variant="secondary"
               className="bg-[#2d2d2d] text-white hover:bg-[#3d3d3d]"
               onClick={handleRunCode}
-              disabled={
-                status === RunnerStatus.RUNNING || status === RunnerStatus.LOADING || status === RunnerStatus.FAILED_LOADING
-              }
+              disabled={status === RunnerStatus.RUNNING || status === RunnerStatus.LOADING || status === RunnerStatus.FAILED_LOADING}
             >
               <Play className="w-4 h-4 mr-2" />
               {status === RunnerStatus.RUNNING ? 'Running...' : 'Run'}
