@@ -4,6 +4,15 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
+  webpack: (config) => {
+    // Allow importing .js files from TypeScript files
+    // the api client generation requires this
+    config.resolve.extensionAlias = {
+      '.js': ['.js', '.ts'],
+      '.jsx': ['.jsx', '.tsx'],
+    };
+    return config;
+  },
 };
 
 const withNextIntl = createNextIntlPlugin();
