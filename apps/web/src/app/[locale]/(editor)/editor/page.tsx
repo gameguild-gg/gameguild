@@ -8,6 +8,7 @@ import { Label } from "@/components/editor/ui/label"
 import { Save, SaveAll, FolderOpen, Trash2, HardDrive } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
+import { Sun, Moon } from "lucide-react"
 import type { LexicalEditor } from "lexical"
 
 // Função para comprimir dados usando LZ-based compression
@@ -97,6 +98,41 @@ export default function Page() {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
+
+  // Estado para modo escuro
+  const [isDark, setIsDark] = useState(
+    typeof window !== "undefined"
+      ? document.documentElement.classList.contains("dark")
+      : false
+  )
+
+  // Alternar tema
+  const toggleTheme = () => {
+    if (typeof window === "undefined") return
+    const root = document.documentElement
+    if (root.classList.contains("dark")) {
+      root.classList.remove("dark")
+      setIsDark(false)
+      localStorage.setItem("theme", "light")
+    } else {
+      root.classList.add("dark")
+      setIsDark(true)
+      localStorage.setItem("theme", "dark")
+    }
+  }
+
+  // Sincronizar com localStorage (opcional)
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const saved = localStorage.getItem("theme")
+    if (saved === "dark") {
+      document.documentElement.classList.add("dark")
+      setIsDark(true)
+    } else if (saved === "light") {
+      document.documentElement.classList.remove("dark")
+      setIsDark(false)
+    }
+  }, [])
 
   // Storage limit system
   const [storageLimit, setStorageLimit] = useState<number | null>(100) // null = unlimited, number = MB limit
@@ -669,402 +705,412 @@ export default function Page() {
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="mx-auto max-w-4xl space-y-8">
-        {/* Header Section */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Rich Text Editor
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight">Create Your Content</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Use our powerful editor to create engaging content with rich formatting, media, quizzes, and more
-          </p>
-        </div>
+    <>
+      {/* Botão de alternância no topo direito */}
+      <button
+        onClick={toggleTheme}
+        className="fixed top-4 right-4 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-2 shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        aria-label="Alternar modo claro/escuro"
+        type="button"
+      >
+        {isDark ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-300" />}
+      </button>
 
-        {/* Project Management Toolbar */}
-        <div className="bg-white rounded-xl border shadow-sm">
-          <div className="flex items-center justify-between p-6">
-            {/* Left Section - Project Info */}
-            <div className="flex items-center gap-8">
-              <div className="flex flex-col">
-                <div className="flex items-center gap-3 mb-1">
-                  <button
-                    onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
-                    className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-100 transition-colors cursor-pointer"
-                  >
-                    <div
-                      className={`w-3 h-3 rounded-full ${autoSaveEnabled ? "bg-green-500 animate-pulse" : "bg-gray-400"}`}
-                    ></div>
-                    <span className={`text-sm font-medium ${autoSaveEnabled ? "text-green-700" : "text-gray-500"}`}>
-                      {autoSaveEnabled ? "Auto-save" : "Manual"}
-                    </span>
-                  </button>
-                  <div className="h-4 w-px bg-gray-300"></div>
-                  <h2 className="text-lg font-semibold text-gray-900">{currentProjectName || "Untitled Project"}</h2>
-                </div>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <div className="flex items-center gap-2">
-                    <HardDrive className="w-4 h-4" />
-                    <span className={getSizeIndicatorColor()}>{formatSize(currentProjectSize)}</span>
-                    <span className="text-gray-400">/</span>
-                    <span className="text-gray-400">{formatSize(RECOMMENDED_SIZE_KB)} recommended</span>
-                  
+      <div className="container mx-auto py-10">
+        <div className="mx-auto max-w-4xl space-y-8">
+          {/* Header Section */}
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200 text-sm font-medium">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Rich Text Editor
+            </div>
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Create Your Content</h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto dark:text-gray-300">
+              Use our powerful editor to create engaging content with rich formatting, media, quizzes, and more
+            </p>
+          </div>
+
+          {/* Project Management Toolbar */}
+          <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 shadow-sm">
+            <div className="flex items-center justify-between p-6">
+              {/* Left Section - Project Info */}
+              <div className="flex items-center gap-8">
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-3 mb-1">
+                    <button
+                      onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
+                      className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                    >
+                      <div
+                        className={`w-3 h-3 rounded-full ${autoSaveEnabled ? "bg-green-500 animate-pulse" : "bg-gray-400 dark:bg-gray-600"}`}
+                      ></div>
+                      <span className={`text-sm font-medium ${autoSaveEnabled ? "text-green-700 dark:text-green-400" : "text-gray-500 dark:text-gray-300"}`}>
+                        {autoSaveEnabled ? "Auto-save" : "Manual"}
+                      </span>
+                    </button>
+                    <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{currentProjectName || "Untitled Project"}</h2>
                   </div>
-                  {memoryCache.current.size > 0 && (
+                  <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-300">
+                    <div className="flex items-center gap-2">
+                      <HardDrive className="w-4 h-4" />
+                      <span className={getSizeIndicatorColor()}>{formatSize(currentProjectSize)}</span>
+                      <span className="text-gray-400 dark:text-gray-500">/</span>
+                      <span className="text-gray-400 dark:text-gray-500">{formatSize(RECOMMENDED_SIZE_KB)} recommended</span>
+                    </div>
+                    {memoryCache.current.size > 0 && (
+                      <>
+                        <div className="h-3 w-px bg-gray-300 dark:bg-gray-700"></div>
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100">
+                          {memoryCache.current.size} in memory
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Section - Actions */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <span className="text-xs text-gray-500 dark:text-gray-300">Storage:</span>
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-100">{formatStorageSize(totalStorageUsed)}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">/</span>
+                  <button
+                    onClick={() => setShowStorageLimitDialog(true)}
+                    className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer"
+                  >
+                    {getStorageLimitDisplay()}
+                  </button>
+                  {storageLimit && (
                     <>
-                      <div className="h-3 w-px bg-gray-300"></div>
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                        {memoryCache.current.size} in memory
+                      <span className="text-xs text-gray-400 dark:text-gray-500">•</span>
+                      <span
+                        className={`text-xs font-medium ${
+                          getStorageUsagePercentage() >= 90
+                            ? "text-red-600"
+                            : getStorageUsagePercentage() >= 70
+                              ? "text-amber-600"
+                              : "text-green-600"
+                        }`}
+                      >
+                        {getStorageUsagePercentage().toFixed(1)}%
                       </span>
                     </>
                   )}
                 </div>
-              </div>
-            </div>
+                <div className="h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
 
-            {/* Right Section - Actions */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
-                <span className="text-xs text-gray-500">Storage:</span>
-                <span className="text-xs font-medium text-gray-700">{formatStorageSize(totalStorageUsed)}</span>
-                <span className="text-xs text-gray-400">/</span>
-                <button
-                  onClick={() => setShowStorageLimitDialog(true)}
-                  className="text-xs font-medium text-blue-600 hover:text-blue-700 cursor-pointer"
+                <Button variant="outline" size="sm" onClick={handleSave} className="gap-2">
+                  <Save className="w-4 h-4" />
+                  Save
+                </Button>
+
+                <Dialog open={saveAsDialogOpen} onOpenChange={setSaveAsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <SaveAll className="w-4 h-4" />
+                      Save As
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Save Project As</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="project-name">Project Name</Label>
+                        <Input
+                          id="project-name"
+                          value={newProjectName}
+                          onChange={(e) => setNewProjectName(e.target.value)}
+                          placeholder="Enter project name..."
+                          onKeyDown={(e) => e.key === "Enter" && handleSaveAs()}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm text-gray-600">Project size:</span>
+                        <span className={`text-sm font-medium ${getSizeIndicatorColor()}`}>
+                          {formatSize(currentProjectSize)}
+                        </span>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setSaveAsDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleSaveAs}>Save Project</Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog
+                  open={openDialogOpen}
+                  onOpenChange={(open) => {
+                    setOpenDialogOpen(open)
+                  }}
                 >
-                  {getStorageLimitDisplay()}
-                </button>
-                {storageLimit && (
-                  <>
-                    <span className="text-xs text-gray-400">•</span>
-                    <span
-                      className={`text-xs font-medium ${
-                        getStorageUsagePercentage() >= 90
-                          ? "text-red-600"
-                          : getStorageUsagePercentage() >= 70
-                            ? "text-amber-600"
-                            : "text-green-600"
-                      }`}
-                    >
-                      {getStorageUsagePercentage().toFixed(1)}%
-                    </span>
-                  </>
-                )}
-              </div>
-
-              <div className="h-8 w-px bg-gray-200"></div>
-
-              <Button variant="outline" size="sm" onClick={handleSave} className="gap-2">
-                <Save className="w-4 h-4" />
-                Save
-              </Button>
-
-              <Dialog open={saveAsDialogOpen} onOpenChange={setSaveAsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <SaveAll className="w-4 h-4" />
-                    Save As
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Save Project As</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="project-name">Project Name</Label>
-                      <Input
-                        id="project-name"
-                        value={newProjectName}
-                        onChange={(e) => setNewProjectName(e.target.value)}
-                        placeholder="Enter project name..."
-                        onKeyDown={(e) => e.key === "Enter" && handleSaveAs()}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm text-gray-600">Project size:</span>
-                      <span className={`text-sm font-medium ${getSizeIndicatorColor()}`}>
-                        {formatSize(currentProjectSize)}
-                      </span>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setSaveAsDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleSaveAs}>Save Project</Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              <Dialog
-                open={openDialogOpen}
-                onOpenChange={(open) => {
-                  setOpenDialogOpen(open)
-                }}
-              >
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <FolderOpen className="w-4 h-4" />
-                    Open
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-lg" onInteractOutside={(e) => e.preventDefault()}>
-                  <DialogHeader>
-                    <DialogTitle>{isFirstTime ? "Welcome! Choose an Option" : "Open Project"}</DialogTitle>
-                    {isFirstTime && (
-                      <p className="text-sm text-muted-foreground">
-                        To get started, please open an existing project or create a new one.
-                      </p>
-                    )}
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    {isStorageNearLimit() && (
-                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
-                        <div className="flex items-center gap-2 mb-1">
-                          <svg className="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          <span className="text-sm font-medium text-amber-800">Armazenamento quase cheio</span>
-                        </div>
-                        <p className="text-xs text-amber-700">
-                          Uso: {getStorageUsagePercentage().toFixed(1)}% ({formatStorageSize(totalStorageUsed)} de{" "}
-                          {storageLimit}MB). Criação de novos projetos bloqueada para preservar margem de salvamento.
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <FolderOpen className="w-4 h-4" />
+                      Open
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-lg" onInteractOutside={(e) => e.preventDefault()}>
+                    <DialogHeader>
+                      <DialogTitle>{isFirstTime ? "Welcome! Choose an Option" : "Open Project"}</DialogTitle>
+                      {isFirstTime && (
+                        <p className="text-sm text-muted-foreground">
+                          To get started, please open an existing project or create a new one.
                         </p>
-                      </div>
-                    )}
-                    {savedProjects.length === 0 ? (
-                      <div className="text-center py-8">
-                        <FolderOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-sm text-gray-500">No saved projects found</p>
-                        <p className="text-xs text-gray-400 mt-1">Create your first project to get started</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2 max-h-80 overflow-y-auto">
-                        {savedProjects.map((projectName) => {
-                          const projectData = storageAdapter.load(projectName)
-                          const projectSize = projectData ? estimateSize(projectData) : 0
-                          const isInMemory = memoryCache.current.has(projectName)
+                      )}
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      {isStorageNearLimit() && (
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                          <div className="flex items-center gap-2 mb-1">
+                            <svg className="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            <span className="text-sm font-medium text-amber-800">Armazenamento quase cheio</span>
+                          </div>
+                          <p className="text-xs text-amber-700">
+                            Uso: {getStorageUsagePercentage().toFixed(1)}% ({formatStorageSize(totalStorageUsed)} de{" "}
+                            {storageLimit}MB). Criação de novos projetos bloqueada para preservar margem de salvamento.
+                          </p>
+                        </div>
+                      )}
+                      {savedProjects.length === 0 ? (
+                        <div className="text-center py-8">
+                          <FolderOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                          <p className="text-sm text-gray-500">No saved projects found</p>
+                          <p className="text-xs text-gray-400 mt-1">Create your first project to get started</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2 max-h-80 overflow-y-auto">
+                          {savedProjects.map((projectName) => {
+                            const projectData = storageAdapter.load(projectName)
+                            const projectSize = projectData ? estimateSize(projectData) : 0
+                            const isInMemory = memoryCache.current.has(projectName)
 
-                          return (
-                            <div
-                              key={projectName}
-                              className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className="flex flex-col flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-sm font-medium text-gray-900 truncate">{projectName}</span>
-                                  {isInMemory && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-800 flex-shrink-0">
-                                      Memory
-                                    </span>
-                                  )}
+                            return (
+                              <div
+                                key={projectName}
+                                className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                              >
+                                <div className="flex flex-col flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-sm font-medium text-gray-900 truncate">{projectName}</span>
+                                    {isInMemory && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-800 flex-shrink-0">
+                                        Memory
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                                    <span>{formatSize(projectSize)}</span>
+                                    <span>•</span>
+                                    <span>Last modified recently</span>
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-3 text-xs text-gray-500">
-                                  <span>{formatSize(projectSize)}</span>
-                                  <span>•</span>
-                                  <span>Last modified recently</span>
+                                <div className="flex gap-1 ml-3">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleOpen(projectName)}
+                                    className="text-blue-600 hover:text-blue-700"
+                                  >
+                                    Open
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleConfirmDelete(projectName)}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
                                 </div>
                               </div>
-                              <div className="flex gap-1 ml-3">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleOpen(projectName)}
-                                  className="text-blue-600 hover:text-blue-700"
-                                >
-                                  Open
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleConfirmDelete(projectName)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center pt-4 border-t">
-                      {isStorageNearLimit() ? (
-                        <div className="flex flex-col">
-                          <Button variant="ghost" disabled className="gap-2 opacity-50 cursor-not-allowed">
+                            )
+                          })}
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center pt-4 border-t">
+                        {isStorageNearLimit() ? (
+                          <div className="flex flex-col">
+                            <Button variant="ghost" disabled className="gap-2 opacity-50 cursor-not-allowed">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                              </svg>
+                              Novo Projeto
+                            </Button>
+                            <span className="text-xs text-red-600 mt-1">
+                              Armazenamento quase cheio ({getStorageUsagePercentage().toFixed(1)}%)
+                            </span>
+                          </div>
+                        ) : (
+                          <Button variant="ghost" onClick={() => setSaveAsDialogOpen(true)} className="gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
                             Novo Projeto
                           </Button>
-                          <span className="text-xs text-red-600 mt-1">
-                            Armazenamento quase cheio ({getStorageUsagePercentage().toFixed(1)}%)
-                          </span>
-                        </div>
-                      ) : (
-                        <Button variant="ghost" onClick={() => setSaveAsDialogOpen(true)} className="gap-2">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                          Novo Projeto
+                        )}
+                        <Button variant="outline" onClick={() => setOpenDialogOpen(false)} disabled={!currentProjectName}>
+                          Fechar
                         </Button>
-                      )}
-                      <Button variant="outline" onClick={() => setOpenDialogOpen(false)} disabled={!currentProjectName}>
-                        Fechar
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <DialogContent className="max-w-sm">
-                  <DialogHeader>
-                    <DialogTitle className="text-center">Confirmar Exclusão</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-3">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <div className="p-3 bg-red-100 rounded-full mb-3">
-                        <Trash2 className="w-6 h-6 text-red-600" />
                       </div>
-                      <h3 className="text-lg font-medium">Excluir projeto?</h3>
-                      <p className="text-sm text-gray-500 mt-2 mb-3">
-                        Você está prestes a excluir <span className="font-semibold">{projectToDelete}</span>. Esta ação
-                        não pode ser desfeita.
-                      </p>
                     </div>
-                    <div className="flex justify-between gap-3 pt-2">
-                      <Button variant="outline" className="flex-1" onClick={() => setDeleteDialogOpen(false)}>
-                        Cancelar
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        className="flex-1"
-                        onClick={() => {
-                          if (projectToDelete) {
-                            handleDelete(projectToDelete)
-                            setDeleteDialogOpen(false)
-                            setProjectToDelete(null)
-                          }
-                        }}
-                      >
-                        Excluir
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                  </DialogContent>
+                </Dialog>
 
-              <Dialog open={showStorageLimitDialog} onOpenChange={setShowStorageLimitDialog}>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Configurar Limite de Armazenamento</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="storage-limit">Limite em MB (deixe vazio para ilimitado)</Label>
-                      <Input
-                        id="storage-limit"
-                        type="number"
-                        value={newStorageLimit}
-                        onChange={(e) => setNewStorageLimit(e.target.value)}
-                        placeholder="Ex: 100 (para 100MB)"
-                        onKeyDown={(e) => e.key === "Enter" && handleSetStorageLimit()}
-                        className="mt-1"
-                      />
-                    </div>
-
-                    <div className="p-3 bg-gray-50 rounded-lg space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Uso atual:</span>
-                        <span className="font-medium">{formatStorageSize(totalStorageUsed)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Limite atual:</span>
-                        <span className="font-medium">{getStorageLimitDisplay()}</span>
-                      </div>
-                      {storageLimit && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Uso:</span>
-                          <span
-                            className={`font-medium ${
-                              getStorageUsagePercentage() >= 90
-                                ? "text-red-600"
-                                : getStorageUsagePercentage() >= 70
-                                  ? "text-amber-600"
-                                  : "text-green-600"
-                            }`}
-                          >
-                            {getStorageUsagePercentage().toFixed(1)}%
-                          </span>
+                <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                  <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                      <DialogTitle className="text-center">Confirmar Exclusão</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-3">
+                      <div className="flex flex-col items-center justify-center text-center">
+                        <div className="p-3 bg-red-100 rounded-full mb-3">
+                          <Trash2 className="w-6 h-6 text-red-600" />
                         </div>
-                      )}
+                        <h3 className="text-lg font-medium">Excluir projeto?</h3>
+                        <p className="text-sm text-gray-500 mt-2 mb-3">
+                          Você está prestes a excluir <span className="font-semibold">{projectToDelete}</span>. Esta ação
+                          não pode ser desfeita.
+                        </p>
+                      </div>
+                      <div className="flex justify-between gap-3 pt-2">
+                        <Button variant="outline" className="flex-1" onClick={() => setDeleteDialogOpen(false)}>
+                          Cancelar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="flex-1"
+                          onClick={() => {
+                            if (projectToDelete) {
+                              handleDelete(projectToDelete)
+                              setDeleteDialogOpen(false)
+                              setProjectToDelete(null)
+                            }
+                          }}
+                        >
+                          Excluir
+                        </Button>
+                      </div>
                     </div>
+                  </DialogContent>
+                </Dialog>
 
-                    <div className="text-xs text-gray-500 space-y-1">
-                      <p>• Deixe vazio ou digite 0 para armazenamento ilimitado</p>
-                      <p>• Valores em MB (1024 KB = 1 MB)</p>
-                      <p>• Ao atingir 90%, criação de novos projetos será bloqueada</p>
-                      <p>• Ao atingir 100%, salvamento será bloqueado</p>
-                    </div>
+                <Dialog open={showStorageLimitDialog} onOpenChange={setShowStorageLimitDialog}>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Configurar Limite de Armazenamento</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="storage-limit">Limite em MB (deixe vazio para ilimitado)</Label>
+                        <Input
+                          id="storage-limit"
+                          type="number"
+                          value={newStorageLimit}
+                          onChange={(e) => setNewStorageLimit(e.target.value)}
+                          placeholder="Ex: 100 (para 100MB)"
+                          onKeyDown={(e) => e.key === "Enter" && handleSetStorageLimit()}
+                          className="mt-1"
+                        />
+                      </div>
 
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setShowStorageLimitDialog(false)}>
-                        Cancelar
-                      </Button>
-                      <Button onClick={handleSetStorageLimit}>Configurar</Button>
+                      <div className="p-3 bg-gray-50 rounded-lg space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Uso atual:</span>
+                          <span className="font-medium">{formatStorageSize(totalStorageUsed)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Limite atual:</span>
+                          <span className="font-medium">{getStorageLimitDisplay()}</span>
+                        </div>
+                        {storageLimit && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Uso:</span>
+                            <span
+                              className={`font-medium ${
+                                getStorageUsagePercentage() >= 90
+                                  ? "text-red-600"
+                                  : getStorageUsagePercentage() >= 70
+                                    ? "text-amber-600"
+                                    : "text-green-600"
+                              }`}
+                            >
+                              {getStorageUsagePercentage().toFixed(1)}%
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="text-xs text-gray-500 space-y-1">
+                        <p>• Deixe vazio ou digite 0 para armazenamento ilimitado</p>
+                        <p>• Valores em MB (1024 KB = 1 MB)</p>
+                        <p>• Ao atingir 90%, criação de novos projetos será bloqueada</p>
+                        <p>• Ao atingir 100%, salvamento será bloqueado</p>
+                      </div>
+
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setShowStorageLimitDialog(false)}>
+                          Cancelar
+                        </Button>
+                        <Button onClick={handleSetStorageLimit}>Configurar</Button>
+                      </div>
                     </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          </div>
+
+          {/* Editor Container */}
+          <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 shadow-sm">
+            <div className="p-6 px-12 py-12">
+              <Editor
+                editorRef={editorRef}
+                initialState={editorState}
+                onChange={setEditorState}
+                onLoadingChange={(setLoading) => {
+                  setLoadingRef.current = setLoading
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Help Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Rich Formatting</h3>
+              <p className="text-sm text-blue-700 dark:text-blue-200">Add headings, lists, links, and text formatting</p>
+            </div>
+            <div className="p-4 bg-green-50 dark:bg-green-900 rounded-lg">
+              <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">Media & Content</h3>
+              <p className="text-sm text-green-700 dark:text-green-200">Insert images, videos, code blocks, and more</p>
+            </div>
+            <div className="p-4 bg-purple-50 dark:bg-purple-900 rounded-lg">
+              <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Interactive Elements</h3>
+              <p className="text-sm text-purple-700 dark:text-purple-200">Create quizzes, callouts, and interactive content</p>
             </div>
           </div>
         </div>
-
-        {/* Editor Container */}
-        <div className="bg-white rounded-xl border shadow-sm">
-          <div className="p-6 px-12 py-12">
-            <Editor
-              editorRef={editorRef}
-              initialState={editorState}
-              onChange={setEditorState}
-              onLoadingChange={(setLoading) => {
-                setLoadingRef.current = setLoading
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Help Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <h3 className="font-semibold text-blue-900 mb-2">Rich Formatting</h3>
-            <p className="text-sm text-blue-700">Add headings, lists, links, and text formatting</p>
-          </div>
-          <div className="p-4 bg-green-50 rounded-lg">
-            <h3 className="font-semibold text-green-900 mb-2">Media & Content</h3>
-            <p className="text-sm text-green-700">Insert images, videos, code blocks, and more</p>
-          </div>
-          <div className="p-4 bg-purple-50 rounded-lg">
-            <h3 className="font-semibold text-purple-900 mb-2">Interactive Elements</h3>
-            <p className="text-sm text-purple-700">Create quizzes, callouts, and interactive content</p>
-          </div>
-        </div>
       </div>
-    </div>
+    </>
   )
 }
