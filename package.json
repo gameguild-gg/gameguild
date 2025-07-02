@@ -51,7 +51,7 @@
     "eslint": "^9",
     "prettier": "^3.5.2",
     "rimraf": "^6",
-    "syncpack": "^13.0.0",
+    "syncpack": "^13.0.3",
     "typescript": "^5"
   }
 }
