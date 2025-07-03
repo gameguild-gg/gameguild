@@ -3,6 +3,7 @@ using GameGuild.Data;
 using GameGuild.Modules.User.Models;
 using GameGuild.Modules.User.Services;
 using Xunit;
+using UserModel = GameGuild.Modules.User.Models.User;
 
 
 namespace GameGuild.Tests.Common.Integration;
@@ -23,7 +24,7 @@ public class BaseEntityIntegrationTests {
     var userService = new UserService(context);
 
     // Act - Create user using BaseEntity constructor pattern
-    var user = new User(new { Name = "Test User", Email = "test@example.com" });
+    var user = new UserModel(new { Name = "Test User", Email = "test@example.com" });
     var createdUser = await userService.CreateUserAsync(user);
 
     // Assert
@@ -45,7 +46,7 @@ public class BaseEntityIntegrationTests {
     using var context = GetInMemoryContext();
     var userService = new UserService(context);
 
-    var user = new User(new { Name = "Delete Test", Email = "delete@example.com" });
+    var user = new UserModel(new { Name = "Delete Test", Email = "delete@example.com" });
     var createdUser = await userService.CreateUserAsync(user);
 
     // Act
@@ -69,7 +70,7 @@ public class BaseEntityIntegrationTests {
     using var context = GetInMemoryContext();
     var userService = new UserService(context);
 
-    var user = new User(new { Name = "Restore Test", Email = "restore@example.com" });
+    var user = new UserModel(new { Name = "Restore Test", Email = "restore@example.com" });
     var createdUser = await userService.CreateUserAsync(user);
 
     // Act

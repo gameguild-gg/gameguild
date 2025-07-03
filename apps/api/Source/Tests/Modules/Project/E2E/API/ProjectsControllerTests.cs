@@ -539,8 +539,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
   #region Helper Methods
 
-  private async Task<User> CreateTestUserAsync() {
-    var user = new User { Id = Guid.NewGuid(), Name = "Test User", Email = "test@example.com", IsActive = true };
+  private async Task<GameGuild.Modules.User.Models.User> CreateTestUserAsync() {
+    var user = new GameGuild.Modules.User.Models.User { Id = Guid.NewGuid(), Name = "Test User", Email = "test@example.com", IsActive = true };
 
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -557,7 +557,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     return tenant;
   }
 
-  private Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant) {
+  private Task<string> CreateJwtTokenForUserAsync(GameGuild.Modules.User.Models.User user, TenantModel tenant) {
     var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
@@ -570,7 +570,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
   }
 
   private async Task GrantProjectPermissions(
-    User user, TenantModel tenant,
+    GameGuild.Modules.User.Models.User user, TenantModel tenant,
     GameGuild.Modules.Project.Models.Project project, PermissionType[] permissions
   ) {
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
@@ -580,7 +580,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
   }
 
   private async Task GrantContentTypePermissions(
-    User user, TenantModel tenant, string contentTypeName,
+    GameGuild.Modules.User.Models.User user, TenantModel tenant, string contentTypeName,
     PermissionType[] permissions
   ) {
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();

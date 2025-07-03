@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
+using UserModel = GameGuild.Modules.User.Models.User;
 
 
 namespace GameGuild.Tests.Modules.Auth.E2E.API;
@@ -38,7 +39,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
     if (await db.Users.AnyAsync()) return;
 
     // Create test user
-    var user = new User {
+    var user = new UserModel {
       Id = Guid.Parse("12345678-1234-1234-1234-123456789012"),
       Name = "tenant-test",
       Email = "tenant@example.com",

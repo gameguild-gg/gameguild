@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
+using UserModel = GameGuild.Modules.User.Models.User;
 using GameGuild.Modules.User.Models;
 using GameGuild.Modules.Tenant.Services;
 using GameGuild.Modules.Tenant.Models;
@@ -82,7 +83,7 @@ public class AuthServiceTests : IDisposable {
     };
 
     _mockTenantAuthService
-      .Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<User>(), tenantId))
+      .Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<UserModel>(), tenantId))
       .ReturnsAsync(enhancedResponse);
 
     // Act
@@ -108,7 +109,7 @@ public class AuthServiceTests : IDisposable {
   [Fact]
   public async Task LocalSignUpAsync_DuplicateEmail_ThrowsInvalidOperationException() {
     // Arrange
-    var existingUser = new User { Email = "test@example.com", Name = "Existing User" };
+    var existingUser = new UserModel { Email = "test@example.com", Name = "Existing User" };
     _context.Users.Add(existingUser);
     await _context.SaveChangesAsync();
 
@@ -121,7 +122,7 @@ public class AuthServiceTests : IDisposable {
   [Fact]
   public async Task LocalSignInAsync_ValidCredentials_ReturnsSignInResponse() {
     // Arrange
-    var user = new User { Email = "test@example.com", Name = "Test User" };
+    var user = new UserModel { Email = "test@example.com", Name = "Test User" };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
 
@@ -148,7 +149,7 @@ public class AuthServiceTests : IDisposable {
     };
 
     _mockTenantAuthService
-      .Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<User>(), tenantId))
+      .Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<UserModel>(), tenantId))
       .ReturnsAsync(enhancedResponse);
 
     // Act
@@ -175,7 +176,7 @@ public class AuthServiceTests : IDisposable {
   [Fact]
   public async Task LocalSignInAsync_InvalidPassword_ThrowsUnauthorizedAccessException() {
     // Arrange
-    var user = new User { Email = "test@example.com", Name = "Test User" };
+    var user = new UserModel { Email = "test@example.com", Name = "Test User" };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
 
@@ -224,7 +225,7 @@ public class AuthServiceTests : IDisposable {
       TenantId = tenantId,
     };
 
-    var user = new User { Email = "web3user@example.com", Name = "Web3 User" };
+    var user = new UserModel { Email = "web3user@example.com", Name = "Web3 User" };
 
     _mockWeb3Service.Setup(x => x.VerifySignatureAsync(request)).ReturnsAsync(true);
 
@@ -244,7 +245,7 @@ public class AuthServiceTests : IDisposable {
     };
 
     _mockTenantAuthService
-      .Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<User>(), tenantId))
+      .Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<UserModel>(), tenantId))
       .ReturnsAsync(enhancedResponse);
 
     // Act
@@ -283,7 +284,7 @@ public class AuthServiceTests : IDisposable {
       TenantId = invalidTenantId,
     };
 
-    var user = new User { Email = "web3user@example.com", Name = "Web3 User" };
+    var user = new GameGuild.Modules.User.Models.User { Email = "web3user@example.com", Name = "Web3 User" };
 
     _mockWeb3Service.Setup(x => x.VerifySignatureAsync(request)).ReturnsAsync(true);
 
@@ -304,7 +305,7 @@ public class AuthServiceTests : IDisposable {
     };
 
     _mockTenantAuthService
-      .Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<User>(), invalidTenantId))
+      .Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<UserModel>(), invalidTenantId))
       .ReturnsAsync(enhancedResponse);
 
     // Act
@@ -323,7 +324,7 @@ public class AuthServiceTests : IDisposable {
   [Fact]
   public async Task RefreshTokenAsync_WithTenantId_IncludesTenantClaims() {
     // Arrange
-    var user = new User { Id = Guid.NewGuid(), Email = "test@example.com", Name = "Test User" };
+    var user = new UserModel { Id = Guid.NewGuid(), Email = "test@example.com", Name = "Test User" };
     _context.Users.Add(user);
 
     var refreshToken = new GameGuild.Modules.Auth.Models.RefreshToken {
@@ -354,9 +355,9 @@ public class AuthServiceTests : IDisposable {
       },
     };
 
-    _mockTenantAuthService.Setup(x => x.GetUserTenantsAsync(It.IsAny<User>())).ReturnsAsync(tenantPermissions);
+    _mockTenantAuthService.Setup(x => x.GetUserTenantsAsync(It.IsAny<UserModel>())).ReturnsAsync(tenantPermissions);
 
-    _mockTenantAuthService.Setup(x => x.GetTenantClaimsAsync(It.IsAny<User>(), tenantId)).ReturnsAsync(tenantClaims);
+    _mockTenantAuthService.Setup(x => x.GetTenantClaimsAsync(It.IsAny<UserModel>(), tenantId)).ReturnsAsync(tenantClaims);
 
     // Act
     var result = await _authService.RefreshTokenAsync(request);
@@ -373,8 +374,8 @@ public class AuthServiceTests : IDisposable {
     Assert.True(oldToken.IsRevoked); // Check that the token has been revoked instead of checking IsActive
 
     // Verify tenant claims were requested
-    _mockTenantAuthService.Verify(x => x.GetUserTenantsAsync(It.IsAny<User>()), Times.Once);
-    _mockTenantAuthService.Verify(x => x.GetTenantClaimsAsync(It.IsAny<User>(), tenantId), Times.Once);
+    _mockTenantAuthService.Verify(x => x.GetUserTenantsAsync(It.IsAny<UserModel>()), Times.Once);
+    _mockTenantAuthService.Verify(x => x.GetTenantClaimsAsync(It.IsAny<UserModel>(), tenantId), Times.Once);
 
     // Verify token service was called with tenant claims
     _mockJwtService.Verify(
