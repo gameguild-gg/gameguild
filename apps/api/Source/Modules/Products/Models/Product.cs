@@ -15,130 +15,50 @@ namespace GameGuild.Modules.Product.Models;
 [Index(nameof(Visibility))]
 [Index(nameof(CreatorId))]
 public class Product : Content {
-  private string _name = string.Empty;
-
-  private string? _shortDescription;
-
-  private string? _imageUrl;
-
-  private ProductType _type = ProductType.Program;
-
-  private bool _isBundle = false;
-
-  private Guid _creatorId;
-
-  private User.Models.User _creator = null!;
-
-  private string? _bundleItems;
-
-  private decimal _referralCommissionPercentage = 30m;
-
-  private decimal _maxAffiliateDiscount = 0m;
-
-  private decimal _affiliateCommissionPercentage = 30m;
-
-  private ICollection<ProductProgram> _productPrograms = new List<ProductProgram>();
-
-  private ICollection<ProductPricing> _productPricings = new List<ProductPricing>();
-
-  private ICollection<ProductSubscriptionPlan> _subscriptionPlans = new List<ProductSubscriptionPlan>();
-
-  private ICollection<UserProduct> _userProducts = new List<UserProduct>();
-
-  private ICollection<PromoCode> _promoCodes = new List<PromoCode>();
-
   [Required]
   [MaxLength(200)]
-  public string Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string Name { get; set; } = string.Empty;
 
   [MaxLength(500)]
-  public string? ShortDescription {
-    get => _shortDescription;
-    set => _shortDescription = value;
-  }
+  public string? ShortDescription { get; set; }
 
   [MaxLength(500)]
-  public string? ImageUrl {
-    get => _imageUrl;
-    set => _imageUrl = value;
-  }
+  public string? ImageUrl { get; set; }
 
-  public ProductType Type {
-    get => _type;
-    set => _type = value;
-  }
+  public ProductType Type { get; set; } = ProductType.Program;
 
-  public bool IsBundle {
-    get => _isBundle;
-    set => _isBundle = value;
-  }
+  public bool IsBundle { get; set; } = false;
 
   // Creator relationship
-  public Guid CreatorId {
-    get => _creatorId;
-    set => _creatorId = value;
-  }
+  public Guid CreatorId { get; set; }
 
-  public virtual Modules.User.Models.User Creator {
-    get => _creator;
-    set => _creator = value;
-  }
+  public virtual Modules.User.Models.User Creator { get; set; } = null!;
 
   /// <summary>
   /// JSON array of product IDs included in the bundle
   /// </summary>
   [Column(TypeName = "jsonb")]
-  public string? BundleItems {
-    get => _bundleItems;
-    set => _bundleItems = value;
-  }
+  public string? BundleItems { get; set; }
 
   [Column(TypeName = "decimal(5,2)")]
-  public decimal ReferralCommissionPercentage {
-    get => _referralCommissionPercentage;
-    set => _referralCommissionPercentage = value;
-  }
+  public decimal ReferralCommissionPercentage { get; set; } = 30m;
 
   [Column(TypeName = "decimal(5,2)")]
-  public decimal MaxAffiliateDiscount {
-    get => _maxAffiliateDiscount;
-    set => _maxAffiliateDiscount = value;
-  }
+  public decimal MaxAffiliateDiscount { get; set; } = 0m;
 
   [Column(TypeName = "decimal(5,2)")]
-  public decimal AffiliateCommissionPercentage {
-    get => _affiliateCommissionPercentage;
-    set => _affiliateCommissionPercentage = value;
-  }
+  public decimal AffiliateCommissionPercentage { get; set; } = 30m;
 
   // Navigation properties
-  public virtual ICollection<ProductProgram> ProductPrograms {
-    get => _productPrograms;
-    set => _productPrograms = value;
-  }
+  public virtual ICollection<ProductProgram> ProductPrograms { get; set; } = new List<ProductProgram>();
 
-  public virtual ICollection<ProductPricing> ProductPricings {
-    get => _productPricings;
-    set => _productPricings = value;
-  }
+  public virtual ICollection<ProductPricing> ProductPricings { get; set; } = new List<ProductPricing>();
 
-  public virtual ICollection<ProductSubscriptionPlan> SubscriptionPlans {
-    get => _subscriptionPlans;
-    set => _subscriptionPlans = value;
-  }
+  public virtual ICollection<ProductSubscriptionPlan> SubscriptionPlans { get; set; } = new List<ProductSubscriptionPlan>();
 
-  public virtual ICollection<UserProduct> UserProducts {
-    get => _userProducts;
-    set => _userProducts = value;
-  }
+  public virtual ICollection<UserProduct> UserProducts { get; set; } = new List<UserProduct>();
 
-  public virtual ICollection<PromoCode> PromoCodes {
-    get => _promoCodes;
-    set => _promoCodes = value;
-  }
+  public virtual ICollection<PromoCode> PromoCodes { get; set; } = new List<PromoCode>();
 
   // Helper methods for JSON metadata
   public T? GetBundleMetadata<T>(string key) where T : class {

@@ -4,215 +4,75 @@ using System.ComponentModel.DataAnnotations;
 namespace GameGuild.Modules.UserProfile.Dtos;
 
 public class CreateUserProfileDto {
-  private string? _givenName;
-
-  private string? _familyName;
-
-  private string? _displayName;
-
-  private string? _title;
-
-  private string? _description;
-
-  private string? _slug;
-
-  private Guid? _tenantId;
+  [StringLength(100)]
+  public string? GivenName { get; set; }
 
   [StringLength(100)]
-  public string? GivenName {
-    get => _givenName;
-    set => _givenName = value;
-  }
+  public string? FamilyName { get; set; }
 
   [StringLength(100)]
-  public string? FamilyName {
-    get => _familyName;
-    set => _familyName = value;
-  }
-
-  [StringLength(100)]
-  public string? DisplayName {
-    get => _displayName;
-    set => _displayName = value;
-  }
+  public string? DisplayName { get; set; }
 
   [StringLength(200)]
-  public string? Title {
-    get => _title;
-    set => _title = value;
-  }
+  public string? Title { get; set; }
 
   [StringLength(1000)]
-  public string? Description {
-    get => _description;
-    set => _description = value;
-  }
+  public string? Description { get; set; }
 
   [StringLength(100)]
-  public string? Slug {
-    get => _slug;
-    set => _slug = value;
-  }
+  public string? Slug { get; set; }
 
-  public Guid? TenantId {
-    get => _tenantId;
-    set => _tenantId = value;
-  }
+  public Guid? TenantId { get; set; }
 }
 
 public class UpdateUserProfileDto {
-  private string? _givenName;
-
-  private string? _familyName;
-
-  private string? _displayName;
-
-  private string? _title;
-
-  private string? _description;
-
-  private string? _slug;
-
-  private Guid? _tenantId;
+  [StringLength(100)]
+  public string? GivenName { get; set; }
 
   [StringLength(100)]
-  public string? GivenName {
-    get => _givenName;
-    set => _givenName = value;
-  }
+  public string? FamilyName { get; set; }
 
   [StringLength(100)]
-  public string? FamilyName {
-    get => _familyName;
-    set => _familyName = value;
-  }
-
-  [StringLength(100)]
-  public string? DisplayName {
-    get => _displayName;
-    set => _displayName = value;
-  }
+  public string? DisplayName { get; set; }
 
   [StringLength(200)]
-  public string? Title {
-    get => _title;
-    set => _title = value;
-  }
+  public string? Title { get; set; }
 
   [StringLength(1000)]
-  public string? Description {
-    get => _description;
-    set => _description = value;
-  }
+  public string? Description { get; set; }
 
   [StringLength(100)]
-  public string? Slug {
-    get => _slug;
-    set => _slug = value;
-  }
+  public string? Slug { get; set; }
 
-  public Guid? TenantId {
-    get => _tenantId;
-    set => _tenantId = value;
-  }
+  public Guid? TenantId { get; set; }
 }
 
 public class UserProfileResponseDto {
-  private Guid _id;
+  public Guid Id { get; set; }
 
-  private int _version;
+  public int Version { get; set; }
 
-  private string? _givenName;
+  public string? GivenName { get; set; }
 
-  private string? _familyName;
+  public string? FamilyName { get; set; }
 
-  private string? _displayName;
+  public string? DisplayName { get; set; }
 
-  private string? _title;
+  public string? Title { get; set; }
 
-  private string? _description;
+  public string? Description { get; set; }
 
-  private string? _slug;
+  public string? Slug { get; set; }
 
-  private Guid? _tenantId;
+  public Guid? TenantId { get; set; }
 
-  private Guid? _createdBy;
+  public Guid? CreatedBy { get; set; }
 
-  private DateTime _createdAt;
+  public DateTime CreatedAt { get; set; }
 
-  private DateTime _updatedAt;
+  public DateTime UpdatedAt { get; set; }
 
-  private DateTime? _deletedAt;
+  public DateTime? DeletedAt { get; set; }
 
-  private bool _isDeleted;
-
-  public Guid Id {
-    get => _id;
-    set => _id = value;
-  }
-
-  public int Version {
-    get => _version;
-    set => _version = value;
-  }
-
-  public string? GivenName {
-    get => _givenName;
-    set => _givenName = value;
-  }
-
-  public string? FamilyName {
-    get => _familyName;
-    set => _familyName = value;
-  }
-
-  public string? DisplayName {
-    get => _displayName;
-    set => _displayName = value;
-  }
-
-  public string? Title {
-    get => _title;
-    set => _title = value;
-  }
-
-  public string? Description {
-    get => _description;
-    set => _description = value;
-  }
-
-  public string? Slug {
-    get => _slug;
-    set => _slug = value;
-  }
-
-  public Guid? TenantId {
-    get => _tenantId;
-    set => _tenantId = value;
-  }
-
-  public Guid? CreatedBy {
-    get => _createdBy;
-    set => _createdBy = value;
-  }
-
-  public DateTime CreatedAt {
-    get => _createdAt;
-    set => _createdAt = value;
-  }
-
-  public DateTime UpdatedAt {
-    get => _updatedAt;
-    set => _updatedAt = value;
-  }
-
-  public DateTime? DeletedAt {
-    get => _deletedAt;
-    set => _deletedAt = value;
-  }
-
-  public bool IsDeleted {
-    get => _isDeleted;
-    set => _isDeleted = value;
-  }
+  public bool IsDeleted { get; set; }
 }

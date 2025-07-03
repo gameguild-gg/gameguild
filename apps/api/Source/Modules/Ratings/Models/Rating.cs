@@ -8,58 +8,33 @@ namespace GameGuild.Modules.Rating.Models;
 /// Represents a rating (e.g., 1-5 stars) on a rateable entity.
 /// </summary>
 public class Rating : BaseEntity {
-  private int _value;
-
-  private User.Models.User _user = null!;
-
-  private Guid _entityId;
-
-  private string _entityType = string.Empty;
-
-  private string? _comment;
-
   /// <summary>
   /// The rating value (e.g., 1-5 stars)
   /// </summary>
   [Range(1, 5)]
-  public int Value {
-    get => _value;
-    set => _value = value;
-  }
+  public int Value { get; set; }
 
   /// <summary>
   /// Navigation property to the user who provided this rating
   /// Entity Framework will automatically create the UserId foreign key
   /// </summary>
   [Required]
-  public virtual User.Models.User User {
-    get => _user;
-    set => _user = value;
-  }
+  public virtual User.Models.User User { get; set; } = null!;
 
   /// <summary>
   /// Foreign key for the entity being rated
   /// </summary>
-  public Guid EntityId {
-    get => _entityId;
-    set => _entityId = value;
-  }
+  public Guid EntityId { get; set; }
 
   /// <summary>
   /// The type of entity being rated (for polymorphic relationships)
   /// </summary>
   [MaxLength(255)]
-  public string EntityType {
-    get => _entityType;
-    set => _entityType = value;
-  }
+  public string EntityType { get; set; } = string.Empty;
 
   /// <summary>
   /// Optional comment/review text associated with the rating
   /// </summary>
   [MaxLength(1000)]
-  public string? Comment {
-    get => _comment;
-    set => _comment = value;
-  }
+  public string? Comment { get; set; }
 }

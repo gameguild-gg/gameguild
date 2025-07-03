@@ -4,43 +4,18 @@ using GameGuild.Common.Entities;
 
 namespace GameGuild.Modules.Jam.Models {
   public class JamScore : BaseEntity {
-    private Guid _submissionId;
-
-    private Guid _criteriaId;
-
-    private Guid _judgeUserId;
-
-    private int _score;
-
-    private string? _feedback;
+    [Required]
+    public Guid SubmissionId { get; set; }
 
     [Required]
-    public Guid SubmissionId {
-      get => _submissionId;
-      set => _submissionId = value;
-    }
+    public Guid CriteriaId { get; set; }
 
     [Required]
-    public Guid CriteriaId {
-      get => _criteriaId;
-      set => _criteriaId = value;
-    }
+    public Guid JudgeUserId { get; set; }
 
     [Required]
-    public Guid JudgeUserId {
-      get => _judgeUserId;
-      set => _judgeUserId = value;
-    }
+    public int Score { get; set; }
 
-    [Required]
-    public int Score {
-      get => _score;
-      set => _score = value;
-    }
-
-    public string? Feedback {
-      get => _feedback;
-      set => _feedback = value;
-    }
+    public string? Feedback { get; set; }
   }
 }

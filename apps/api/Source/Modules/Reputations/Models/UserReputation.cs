@@ -16,103 +16,53 @@ namespace GameGuild.Modules.Reputation.Models;
 [Index(nameof(Score))]
 [Index(nameof(CurrentLevelId))]
 public class UserReputation : ResourceBase, IReputation {
-  private User.Models.User _user;
-
-  private Guid _userId;
-
-  private int _score = 0;
-
-  private ReputationTier? _currentLevel;
-
-  private Guid? _currentLevelId;
-
-  private DateTime _lastUpdated = DateTime.UtcNow;
-
-  private DateTime? _lastLevelCalculation;
-
-  private int _positiveChanges = 0;
-
-  private int _negativeChanges = 0;
-
-  private ICollection<UserReputationHistory> _history = new List<UserReputationHistory>();
-
   /// <summary>
   /// The user this reputation belongs to
   /// </summary>
   [Required]
   [ForeignKey(nameof(UserId))]
-  public required Modules.User.Models.User User {
-    get => _user;
-    [MemberNotNull(nameof(_user))] set => _user = value;
-  }
+  public required Modules.User.Models.User User { get; set; }
 
   [Required]
-  public Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
+  public Guid UserId { get; set; }
 
   /// <summary>
   /// Current reputation score
   /// </summary>
-  public int Score {
-    get => _score;
-    set => _score = value;
-  }
+  public int Score { get; set; } = 0;
 
   /// <summary>
   /// Current reputation tier (linked to configurable tier)
   /// </summary>
   [ForeignKey(nameof(CurrentLevelId))]
-  public ReputationTier? CurrentLevel {
-    get => _currentLevel;
-    set => _currentLevel = value;
-  }
+  public ReputationTier? CurrentLevel { get; set; }
 
-  public Guid? CurrentLevelId {
-    get => _currentLevelId;
-    set => _currentLevelId = value;
-  }
+  public Guid? CurrentLevelId { get; set; }
 
   /// <summary>
   /// When the reputation was last updated
   /// </summary>
-  public DateTime LastUpdated {
-    get => _lastUpdated;
-    set => _lastUpdated = value;
-  }
+  public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
 
   /// <summary>
   /// When the user's reputation tier was last recalculated
   /// </summary>
-  public DateTime? LastLevelCalculation {
-    get => _lastLevelCalculation;
-    set => _lastLevelCalculation = value;
-  }
+  public DateTime? LastLevelCalculation { get; set; }
 
   /// <summary>
   /// Number of positive reputation changes
   /// </summary>
-  public int PositiveChanges {
-    get => _positiveChanges;
-    set => _positiveChanges = value;
-  }
+  public int PositiveChanges { get; set; } = 0;
 
   /// <summary>
   /// Number of negative reputation changes
   /// </summary>
-  public int NegativeChanges {
-    get => _negativeChanges;
-    set => _negativeChanges = value;
-  }
+  public int NegativeChanges { get; set; } = 0;
 
   /// <summary>
   /// History of reputation changes for this user
   /// </summary>
-  public ICollection<UserReputationHistory> History {
-    get => _history;
-    set => _history = value;
-  }
+  public ICollection<UserReputationHistory> History { get; set; } = new List<UserReputationHistory>();
 }
 
 public class UserReputationConfiguration : IEntityTypeConfiguration<UserReputation> {

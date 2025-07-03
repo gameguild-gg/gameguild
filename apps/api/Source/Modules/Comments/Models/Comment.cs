@@ -7,20 +7,10 @@ namespace GameGuild.Common.Entities;
 /// Represents a comment on a commentable entity.
 /// </summary>
 public class Comment : ResourceBase {
-  private string _content = string.Empty;
-
-  private ICollection<CommentPermission> _permissions = new List<CommentPermission>();
-
-  public string Content {
-    get => _content;
-    set => _content = value;
-  }
+  public string Content { get; set; } = string.Empty;
 
   /// <summary>
   /// Navigation to comment permissions
   /// </summary>
-  public virtual ICollection<CommentPermission> Permissions {
-    get => _permissions;
-    set => _permissions = value;
-  }
+  public virtual ICollection<CommentPermission> Permissions { get; set; } = new List<CommentPermission>();
 }

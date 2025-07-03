@@ -22,153 +22,83 @@ namespace GameGuild.Modules.Product.Models;
 [Index(nameof(AccessEndDate))]
 [Index(nameof(SubscriptionId))]
 public class UserProduct : BaseEntity {
-  private Guid _userId;
-
-  private User.Models.User _user = null!;
-
-  private Guid _productId;
-
-  private Product _product = null!;
-
-  private Guid? _subscriptionId;
-
-  private UserSubscription? _subscription;
-
-  private ProductAcquisitionType _acquisitionType;
-
-  private ProductAccessStatus _accessStatus = ProductAccessStatus.Active;
-
-  private decimal _pricePaid;
-
-  private string _currency = "USD";
-
-  private DateTime? _accessStartDate;
-
-  private DateTime? _accessEndDate;
-
-  private Guid? _giftedByUserId;
-
-  private User.Models.User? _giftedByUser;
-
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>
   [Required]
-  public Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
+  public Guid UserId { get; set; }
 
   /// <summary>
   /// Navigation property to the User entity
   /// </summary>
   [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User {
-    get => _user;
-    set => _user = value;
-  }
+  public virtual User.Models.User User { get; set; } = null!;
 
   /// <summary>
   /// Foreign key to the Product entity
   /// </summary>
   [Required]
-  public Guid ProductId {
-    get => _productId;
-    set => _productId = value;
-  }
+  public Guid ProductId { get; set; }
 
   /// <summary>
   /// Navigation property to the Product entity
   /// </summary>
   [ForeignKey(nameof(ProductId))]
-  public virtual Product Product {
-    get => _product;
-    set => _product = value;
-  }
+  public virtual Product Product { get; set; } = null!;
 
   /// <summary>
   /// Foreign key to the Subscription entity (optional)
   /// </summary>
-  public Guid? SubscriptionId {
-    get => _subscriptionId;
-    set => _subscriptionId = value;
-  }
+  public Guid? SubscriptionId { get; set; }
 
   /// <summary>
   /// Navigation property to the Subscription entity
   /// </summary>
   [ForeignKey(nameof(SubscriptionId))]
-  public virtual Subscription.Models.UserSubscription? Subscription {
-    get => _subscription;
-    set => _subscription = value;
-  }
+  public virtual Subscription.Models.UserSubscription? Subscription { get; set; }
 
   /// <summary>
   /// How the user acquired this product
   /// </summary>
-  public ProductAcquisitionType AcquisitionType {
-    get => _acquisitionType;
-    set => _acquisitionType = value;
-  }
+  public ProductAcquisitionType AcquisitionType { get; set; }
 
   /// <summary>
   /// Current access status for this product
   /// </summary>
-  public ProductAccessStatus AccessStatus {
-    get => _accessStatus;
-    set => _accessStatus = value;
-  }
+  public ProductAccessStatus AccessStatus { get; set; } = ProductAccessStatus.Active;
 
   /// <summary>
   /// Amount the user paid for this product
   /// </summary>
   [Column(TypeName = "decimal(10,2)")]
-  public decimal PricePaid {
-    get => _pricePaid;
-    set => _pricePaid = value;
-  }
+  public decimal PricePaid { get; set; }
 
   /// <summary>
   /// Currency code for the price paid
   /// </summary>
   [MaxLength(3)]
-  public string Currency {
-    get => _currency;
-    set => _currency = value;
-  }
+  public string Currency { get; set; } = "USD";
 
   /// <summary>
   /// When the user's access to this product starts
   /// </summary>
-  public DateTime? AccessStartDate {
-    get => _accessStartDate;
-    set => _accessStartDate = value;
-  }
+  public DateTime? AccessStartDate { get; set; }
 
   /// <summary>
   /// When the user's access to this product ends
   /// </summary>
-  public DateTime? AccessEndDate {
-    get => _accessEndDate;
-    set => _accessEndDate = value;
-  }
+  public DateTime? AccessEndDate { get; set; }
 
   /// <summary>
   /// User who gifted this product (if acquisition type is Gift)
   /// </summary>
-  public Guid? GiftedByUserId {
-    get => _giftedByUserId;
-    set => _giftedByUserId = value;
-  }
+  public Guid? GiftedByUserId { get; set; }
 
   /// <summary>
   /// Navigation property to the user who gifted this product
   /// </summary>
   [ForeignKey(nameof(GiftedByUserId))]
-  public virtual User.Models.User? GiftedByUser {
-    get => _giftedByUser;
-    set => _giftedByUser = value;
-  }
+  public virtual User.Models.User? GiftedByUser { get; set; }
 
   /// <summary>
   /// Default constructor

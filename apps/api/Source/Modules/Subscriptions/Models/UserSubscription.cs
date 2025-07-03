@@ -18,131 +18,61 @@ namespace GameGuild.Modules.Subscription.Models;
 [Index(nameof(NextBillingAt))]
 [Index(nameof(ExternalSubscriptionId))]
 public class UserSubscription : BaseEntity {
-  private Guid _userId;
+  public Guid UserId { get; set; }
 
-  private Guid _subscriptionPlanId;
+  public Guid SubscriptionPlanId { get; set; }
 
-  private SubscriptionStatus _status = SubscriptionStatus.Active;
-
-  private string? _externalSubscriptionId;
-
-  private DateTime _currentPeriodStart;
-
-  private DateTime _currentPeriodEnd;
-
-  private DateTime? _canceledAt;
-
-  private DateTime? _endsAt;
-
-  private DateTime? _trialEndsAt;
-
-  private DateTime? _lastPaymentAt;
-
-  private DateTime? _nextBillingAt;
-
-  private User.Models.User _user = null!;
-
-  private ProductSubscriptionPlan _subscriptionPlan = null!;
-
-  private ICollection<UserProduct> _userProducts = new List<Product.Models.UserProduct>();
-
-  public Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
-
-  public Guid SubscriptionPlanId {
-    get => _subscriptionPlanId;
-    set => _subscriptionPlanId = value;
-  }
-
-  public SubscriptionStatus Status {
-    get => _status;
-    set => _status = value;
-  }
+  public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Active;
 
   /// <summary>
   /// External subscription ID from payment provider (Stripe, PayPal, etc.)
   /// </summary>
   [MaxLength(255)]
-  public string? ExternalSubscriptionId {
-    get => _externalSubscriptionId;
-    set => _externalSubscriptionId = value;
-  }
+  public string? ExternalSubscriptionId { get; set; }
 
   /// <summary>
   /// Current billing period start date
   /// </summary>
-  public DateTime CurrentPeriodStart {
-    get => _currentPeriodStart;
-    set => _currentPeriodStart = value;
-  }
+  public DateTime CurrentPeriodStart { get; set; }
 
   /// <summary>
   /// Current billing period end date
   /// </summary>
-  public DateTime CurrentPeriodEnd {
-    get => _currentPeriodEnd;
-    set => _currentPeriodEnd = value;
-  }
+  public DateTime CurrentPeriodEnd { get; set; }
 
   /// <summary>
   /// Date when the subscription was canceled (null if not canceled)
   /// </summary>
-  public DateTime? CanceledAt {
-    get => _canceledAt;
-    set => _canceledAt = value;
-  }
+  public DateTime? CanceledAt { get; set; }
 
   /// <summary>
   /// Date when the subscription will end (null if indefinite)
   /// </summary>
-  public DateTime? EndsAt {
-    get => _endsAt;
-    set => _endsAt = value;
-  }
+  public DateTime? EndsAt { get; set; }
 
   /// <summary>
   /// Date when the trial period ends (null if no trial)
   /// </summary>
-  public DateTime? TrialEndsAt {
-    get => _trialEndsAt;
-    set => _trialEndsAt = value;
-  }
+  public DateTime? TrialEndsAt { get; set; }
 
   /// <summary>
   /// Last successful payment date
   /// </summary>
-  public DateTime? LastPaymentAt {
-    get => _lastPaymentAt;
-    set => _lastPaymentAt = value;
-  }
+  public DateTime? LastPaymentAt { get; set; }
 
   /// <summary>
   /// Next scheduled billing date
   /// </summary>
-  public DateTime? NextBillingAt {
-    get => _nextBillingAt;
-    set => _nextBillingAt = value;
-  }
+  public DateTime? NextBillingAt { get; set; }
 
   // Navigation properties
   [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User {
-    get => _user;
-    set => _user = value;
-  }
+  public virtual User.Models.User User { get; set; } = null!;
 
   [ForeignKey(nameof(SubscriptionPlanId))]
-  public virtual Product.Models.ProductSubscriptionPlan SubscriptionPlan {
-    get => _subscriptionPlan;
-    set => _subscriptionPlan = value;
-  }
+  public virtual Product.Models.ProductSubscriptionPlan SubscriptionPlan { get; set; } = null!;
 
-  public virtual ICollection<Product.Models.UserProduct> UserProducts {
-    get => _userProducts;
-    set => _userProducts = value;
-  }
+  public virtual ICollection<Product.Models.UserProduct> UserProducts { get; set; } = new List<Product.Models.UserProduct>();
 }
 
 public class UserSubscriptionConfiguration : IEntityTypeConfiguration<UserSubscription> {

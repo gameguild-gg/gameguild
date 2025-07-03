@@ -8,163 +8,91 @@ namespace GameGuild.Modules.Tenant.Dtos;
 /// DTO for creating a new tenant
 /// </summary>
 public class CreateTenantDto {
-  private string _name = string.Empty;
-
-  private string? _description;
-
-  private bool _isActive = true;
-
   /// <summary>
   /// Name of the tenant
   /// </summary>
   [Required]
   [MaxLength(100)]
-  public string Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string Name { get; set; } = string.Empty;
 
   /// <summary>
   /// Description of the tenant
   /// </summary>
   [MaxLength(500)]
-  public string? Description {
-    get => _description;
-    set => _description = value;
-  }
+  public string? Description { get; set; }
 
   /// <summary>
   /// Whether this tenant is currently active
   /// </summary>
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; } = true;
 }
 
 /// <summary>
 /// DTO for updating an existing tenant
 /// </summary>
 public class UpdateTenantDto {
-  private string _name = string.Empty;
-
-  private string? _description;
-
-  private bool _isActive = true;
-
   /// <summary>
   /// Name of the tenant
   /// </summary>
   [Required]
   [MaxLength(100)]
-  public string Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string Name { get; set; } = string.Empty;
 
   /// <summary>
   /// Description of the tenant
   /// </summary>
   [MaxLength(500)]
-  public string? Description {
-    get => _description;
-    set => _description = value;
-  }
+  public string? Description { get; set; }
 
   /// <summary>
   /// Whether this tenant is currently active
   /// </summary>
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; } = true;
 }
 
 /// <summary>
 /// DTO for tenant response
 /// </summary>
 public class TenantResponseDto {
-  private Guid _id;
-
-  private string _name = string.Empty;
-
-  private string? _description;
-
-  private bool _isActive;
-
-  private int _version;
-
-  private DateTime _createdAt;
-
-  private DateTime _updatedAt;
-
-  private DateTime? _deletedAt;
-
-  private ICollection<TenantPermissionResponseDto> _tenantPermissions = new List<TenantPermissionResponseDto>();
-
   /// <summary>
   /// Unique identifier for the tenant
   /// </summary>
-  public Guid Id {
-    get => _id;
-    set => _id = value;
-  }
+  public Guid Id { get; set; }
 
   /// <summary>
   /// Name of the tenant
   /// </summary>
-  public string Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string Name { get; set; } = string.Empty;
 
   /// <summary>
   /// Description of the tenant
   /// </summary>
-  public string? Description {
-    get => _description;
-    set => _description = value;
-  }
+  public string? Description { get; set; }
 
   /// <summary>
   /// Whether this tenant is currently active
   /// </summary>
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; }
 
   /// <summary>
   /// Version number for optimistic concurrency control
   /// </summary>
-  public int Version {
-    get => _version;
-    set => _version = value;
-  }
+  public int Version { get; set; }
 
   /// <summary>
   /// When the tenant was created
   /// </summary>
-  public DateTime CreatedAt {
-    get => _createdAt;
-    set => _createdAt = value;
-  }
+  public DateTime CreatedAt { get; set; }
 
   /// <summary>
   /// When the tenant was last updated
   /// </summary>
-  public DateTime UpdatedAt {
-    get => _updatedAt;
-    set => _updatedAt = value;
-  }
+  public DateTime UpdatedAt { get; set; }
 
   /// <summary>
   /// When the tenant was soft deleted (null if not deleted)
   /// </summary>
-  public DateTime? DeletedAt {
-    get => _deletedAt;
-    set => _deletedAt = value;
-  }
+  public DateTime? DeletedAt { get; set; }
 
   /// <summary>
   /// Whether the tenant is soft deleted
@@ -176,129 +104,67 @@ public class TenantResponseDto {
   /// <summary>
   /// Permissions and users in this tenant
   /// </summary>
-  public ICollection<TenantPermissionResponseDto> TenantPermissions {
-    get => _tenantPermissions;
-    set => _tenantPermissions = value;
-  }
+  public ICollection<TenantPermissionResponseDto> TenantPermissions { get; set; } = new List<TenantPermissionResponseDto>();
 }
 
 /// <summary>
 /// DTO for tenant permission response
 /// </summary>
 public class TenantPermissionResponseDto {
-  private Guid _id;
-
-  private Guid? _userId;
-
-  private Guid? _tenantId;
-
-  private bool _isValid;
-
-  private DateTime? _expiresAt;
-
-  private ulong _permissionFlags1;
-
-  private ulong _permissionFlags2;
-
-  private int _version;
-
-  private DateTime _createdAt;
-
-  private DateTime _updatedAt;
-
-  private DateTime? _deletedAt;
-
-  private UserResponseDto? _user;
-
-  private TenantResponseDto? _tenant;
-
   /// <summary>
   /// Unique identifier for the tenant permission
   /// </summary>
-  public Guid Id {
-    get => _id;
-    set => _id = value;
-  }
+  public Guid Id { get; set; }
 
   /// <summary>
   /// Foreign key to the User entity (null for default permissions)
   /// </summary>
-  public Guid? UserId {
-    get => _userId;
-    set => _userId = value;
-  }
+  public Guid? UserId { get; set; }
 
   /// <summary>
   /// Foreign key to the Tenant entity (null for global defaults)
   /// </summary>
-  public Guid? TenantId {
-    get => _tenantId;
-    set => _tenantId = value;
-  }
+  public Guid? TenantId { get; set; }
 
   /// <summary>
   /// Whether this tenant permission is currently valid (not expired and not deleted)
   /// </summary>
-  public bool IsValid {
-    get => _isValid;
-    set => _isValid = value;
-  }
+  public bool IsValid { get; set; }
 
   /// <summary>
   /// Permission expiry date
   /// </summary>
-  public DateTime? ExpiresAt {
-    get => _expiresAt;
-    set => _expiresAt = value;
-  }
+  public DateTime? ExpiresAt { get; set; }
 
   /// <summary>
   /// Permission flags for bits 0-63
   /// </summary>
-  public ulong PermissionFlags1 {
-    get => _permissionFlags1;
-    set => _permissionFlags1 = value;
-  }
+  public ulong PermissionFlags1 { get; set; }
 
   /// <summary>
   /// Permission flags for bits 64-127
   /// </summary>
-  public ulong PermissionFlags2 {
-    get => _permissionFlags2;
-    set => _permissionFlags2 = value;
-  }
+  public ulong PermissionFlags2 { get; set; }
 
   /// <summary>
   /// Version number for optimistic concurrency control
   /// </summary>
-  public int Version {
-    get => _version;
-    set => _version = value;
-  }
+  public int Version { get; set; }
 
   /// <summary>
   /// When the permission was created
   /// </summary>
-  public DateTime CreatedAt {
-    get => _createdAt;
-    set => _createdAt = value;
-  }
+  public DateTime CreatedAt { get; set; }
 
   /// <summary>
   /// When the permission was last updated
   /// </summary>
-  public DateTime UpdatedAt {
-    get => _updatedAt;
-    set => _updatedAt = value;
-  }
+  public DateTime UpdatedAt { get; set; }
 
   /// <summary>
   /// When the permission was soft deleted (null if not deleted)
   /// </summary>
-  public DateTime? DeletedAt {
-    get => _deletedAt;
-    set => _deletedAt = value;
-  }
+  public DateTime? DeletedAt { get; set; }
 
   /// <summary>
   /// Whether the permission is soft deleted
@@ -310,16 +176,10 @@ public class TenantPermissionResponseDto {
   /// <summary>
   /// Associated user information
   /// </summary>
-  public UserResponseDto? User {
-    get => _user;
-    set => _user = value;
-  }
+  public UserResponseDto? User { get; set; }
 
   /// <summary>
   /// Associated tenant information
   /// </summary>
-  public TenantResponseDto? Tenant {
-    get => _tenant;
-    set => _tenant = value;
-  }
+  public TenantResponseDto? Tenant { get; set; }
 }

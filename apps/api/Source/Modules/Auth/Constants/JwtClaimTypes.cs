@@ -25,7 +25,7 @@ public static class JwtClaimTypes {
 
   /// <summary>
   /// Claim type for username.
-  /// Used for display purposes and user identification.
+  /// Used for display and user identification.
   /// </summary>
   public const string Username = "username";
 }

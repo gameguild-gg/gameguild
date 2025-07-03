@@ -10,46 +10,11 @@ namespace GameGuild.Modules.Program.Models;
 
 [Table("content_interactions")]
 public class ContentInteraction : BaseEntity {
-  private Guid _programUserId;
+  public Guid ProgramUserId { get; set; }
 
-  private Guid _contentId;
+  public Guid ContentId { get; set; }
 
-  private ProgressStatus _status = ProgressStatus.NotStarted;
-
-  private string? _submissionData;
-
-  private decimal _completionPercentage = 0;
-
-  private int? _timeSpentMinutes;
-
-  private DateTime? _firstAccessedAt;
-
-  private DateTime? _lastAccessedAt;
-
-  private DateTime? _completedAt;
-
-  private DateTime? _submittedAt;
-
-  private ProgramUser _programUser = null!;
-
-  private ProgramContent _content = null!;
-
-  private ICollection<ActivityGrade> _activityGrades = new List<ActivityGrade>();
-
-  public Guid ProgramUserId {
-    get => _programUserId;
-    set => _programUserId = value;
-  }
-
-  public Guid ContentId {
-    get => _contentId;
-    set => _contentId = value;
-  }
-
-  public ProgressStatus Status {
-    get => _status;
-    set => _status = value;
-  }
+  public ProgressStatus Status { get; set; } = ProgressStatus.NotStarted;
 
   /// <summary>
   /// User's submission or response to the content
@@ -59,75 +24,45 @@ public class ContentInteraction : BaseEntity {
   /// - Discussion: {posts: [], lastParticipated: ""}
   /// </summary>
   [Column(TypeName = "jsonb")]
-  public string? SubmissionData {
-    get => _submissionData;
-    set => _submissionData = value;
-  }
+  public string? SubmissionData { get; set; }
 
   /// <summary>
   /// Completion percentage for this specific content (0-100)
   /// </summary>
   [Column(TypeName = "decimal(5,2)")]
-  public decimal CompletionPercentage {
-    get => _completionPercentage;
-    set => _completionPercentage = value;
-  }
+  public decimal CompletionPercentage { get; set; } = 0;
 
   /// <summary>
   /// Time spent on this content in minutes
   /// </summary>
-  public int? TimeSpentMinutes {
-    get => _timeSpentMinutes;
-    set => _timeSpentMinutes = value;
-  }
+  public int? TimeSpentMinutes { get; set; }
 
   /// <summary>
   /// Date when user first accessed this content
   /// </summary>
-  public DateTime? FirstAccessedAt {
-    get => _firstAccessedAt;
-    set => _firstAccessedAt = value;
-  }
+  public DateTime? FirstAccessedAt { get; set; }
 
   /// <summary>
   /// Date when user last accessed this content
   /// </summary>
-  public DateTime? LastAccessedAt {
-    get => _lastAccessedAt;
-    set => _lastAccessedAt = value;
-  }
+  public DateTime? LastAccessedAt { get; set; }
 
   /// <summary>
   /// Date when user completed this content
   /// </summary>
-  public DateTime? CompletedAt {
-    get => _completedAt;
-    set => _completedAt = value;
-  }
+  public DateTime? CompletedAt { get; set; }
 
   /// <summary>
   /// Date when user submitted their work (for gradeable content)
   /// </summary>
-  public DateTime? SubmittedAt {
-    get => _submittedAt;
-    set => _submittedAt = value;
-  }
+  public DateTime? SubmittedAt { get; set; }
 
   // Navigation properties
-  public virtual ProgramUser ProgramUser {
-    get => _programUser;
-    set => _programUser = value;
-  }
+  public virtual ProgramUser ProgramUser { get; set; } = null!;
 
-  public virtual ProgramContent Content {
-    get => _content;
-    set => _content = value;
-  }
+  public virtual ProgramContent Content { get; set; } = null!;
 
-  public virtual ICollection<ActivityGrade> ActivityGrades {
-    get => _activityGrades;
-    set => _activityGrades = value;
-  }
+  public virtual ICollection<ActivityGrade> ActivityGrades { get; set; } = new List<ActivityGrade>();
 
   // Helper methods for JSON submission data
   public T? GetSubmissionData<T>(string key) where T : class {

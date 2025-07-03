@@ -14,65 +14,30 @@ namespace GameGuild.Modules.Tag.Models;
 [Index(nameof(TargetId))]
 [Index(nameof(Type))]
 public class TagRelationship : BaseEntity {
-  private Guid _sourceId;
+  public Guid SourceId { get; set; }
 
-  private Guid _targetId;
+  public Guid TargetId { get; set; }
 
-  private TagRelationshipType _type;
-
-  private decimal? _weight;
-
-  private string? _metadata;
-
-  private Tag _source = null!;
-
-  private Tag _target = null!;
-
-  public Guid SourceId {
-    get => _sourceId;
-    set => _sourceId = value;
-  }
-
-  public Guid TargetId {
-    get => _targetId;
-    set => _targetId = value;
-  }
-
-  public TagRelationshipType Type {
-    get => _type;
-    set => _type = value;
-  }
+  public TagRelationshipType Type { get; set; }
 
   /// <summary>
   /// Weight or strength of the relationship (optional)
   /// </summary>
   [Column(TypeName = "decimal(3,2)")]
-  public decimal? Weight {
-    get => _weight;
-    set => _weight = value;
-  }
+  public decimal? Weight { get; set; }
 
   /// <summary>
   /// Additional metadata about the relationship
   /// </summary>
   [MaxLength(500)]
-  public string? Metadata {
-    get => _metadata;
-    set => _metadata = value;
-  }
+  public string? Metadata { get; set; }
 
   // Navigation properties
   [ForeignKey(nameof(SourceId))]
-  public virtual Tag Source {
-    get => _source;
-    set => _source = value;
-  }
+  public virtual Tag Source { get; set; } = null!;
 
   [ForeignKey(nameof(TargetId))]
-  public virtual Tag Target {
-    get => _target;
-    set => _target = value;
-  }
+  public virtual Tag Target { get; set; } = null!;
 }
 
 public class TagRelationshipConfiguration : IEntityTypeConfiguration<TagRelationship> {

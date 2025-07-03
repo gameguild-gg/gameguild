@@ -155,75 +155,43 @@ public enum PermissionType {
 // this is a base permission model that can be used to store permissions for any entity
 [ObjectType]
 public class WithPermissions : BaseEntity {
-  private ulong _permissionFlags1 = 0;
-
-  private ulong _permissionFlags2 = 0;
-
-  private Guid? _userId;
-
-  private User? _user;
-
-  private Guid? _tenantId;
-
-  private Tenant? _tenant;
-
-  private DateTime? _expiresAt;
-
   [GraphQLType(typeof(NonNullType<LongType>))]
   [GraphQLDescription("Permission flags for bits 0-63")]
   [Column(TypeName = "bigint")]
-  public ulong PermissionFlags1 {
-    get => _permissionFlags1;
-    set => _permissionFlags1 = value;
-  }
+  public ulong PermissionFlags1 { get; set; } = 0;
 
   [GraphQLType(typeof(NonNullType<LongType>))]
   [GraphQLDescription("Permission flags for bits 64-127")]
   [Column(TypeName = "bigint")]
-  public ulong PermissionFlags2 {
-    get => _permissionFlags2;
-    set => _permissionFlags2 = value;
-  }
+  public ulong PermissionFlags2 { get; set; } = 0;
 
   /// <summary>
   /// User relationship - NULL means default permissions
   /// </summary>
   [GraphQLType(typeof(UuidType))]
   [GraphQLDescription("The user ID this permission applies to (null for default permissions)")]
-  public Guid? UserId {
-    get => _userId;
-    set => _userId = value;
-  }
+  public Guid? UserId { get; set; }
 
   /// <summary>
   /// Navigation property to the User entity
   /// </summary>
   [GraphQLIgnore]
   [ForeignKey(nameof(UserId))]
-  public virtual Modules.User.Models.User? User {
-    get => _user;
-    set => _user = value;
-  }
+  public virtual Modules.User.Models.User? User { get; set; }
 
   /// <summary>
   /// Tenant relationship - NULL means global defaults
   /// </summary>
   [GraphQLType(typeof(UuidType))]
   [GraphQLDescription("The tenant ID this permission applies to (null for global defaults)")]
-  public Guid? TenantId {
-    get => _tenantId;
-    set => _tenantId = value;
-  }
+  public Guid? TenantId { get; set; }
 
   /// <summary>
   /// Navigation property to the Tenant entity
   /// </summary>
   [GraphQLIgnore]
   [ForeignKey(nameof(TenantId))]
-  public virtual new Modules.Tenant.Models.Tenant? Tenant {
-    get => _tenant;
-    set => _tenant = value;
-  }
+  public virtual new Modules.Tenant.Models.Tenant? Tenant { get; set; }
 
   /// <summary>
   /// Optional expiration date for this permission
@@ -232,10 +200,7 @@ public class WithPermissions : BaseEntity {
   /// </summary>
   [GraphQLType(typeof(DateTimeType))]
   [GraphQLDescription("When this permission expires (null if it never expires)")]
-  public DateTime? ExpiresAt {
-    get => _expiresAt;
-    set => _expiresAt = value;
-  }
+  public DateTime? ExpiresAt { get; set; }
 
   // Computed properties
 

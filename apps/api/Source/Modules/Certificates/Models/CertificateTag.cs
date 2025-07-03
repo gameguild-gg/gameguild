@@ -14,43 +14,18 @@ namespace GameGuild.Modules.Certificate.Models;
 [Index(nameof(TagId))]
 [Index(nameof(RelationshipType))]
 public class CertificateTag : BaseEntity {
-  private Guid _certificateId;
+  public Guid CertificateId { get; set; }
 
-  private Guid _tagId;
+  public Guid TagId { get; set; }
 
-  private CertificateTagRelationshipType _relationshipType;
-
-  private Certificate _certificate = null!;
-
-  private TagProficiency _tag = null!;
-
-  public Guid CertificateId {
-    get => _certificateId;
-    set => _certificateId = value;
-  }
-
-  public Guid TagId {
-    get => _tagId;
-    set => _tagId = value;
-  }
-
-  public CertificateTagRelationshipType RelationshipType {
-    get => _relationshipType;
-    set => _relationshipType = value;
-  }
+  public CertificateTagRelationshipType RelationshipType { get; set; }
 
   // Navigation properties
   [ForeignKey(nameof(CertificateId))]
-  public virtual Certificate Certificate {
-    get => _certificate;
-    set => _certificate = value;
-  }
+  public virtual Certificate Certificate { get; set; } = null!;
 
   [ForeignKey(nameof(TagId))]
-  public virtual Tag.Models.TagProficiency Tag {
-    get => _tag;
-    set => _tag = value;
-  }
+  public virtual Tag.Models.TagProficiency Tag { get; set; } = null!;
 }
 
 public class CertificateTagConfiguration : IEntityTypeConfiguration<CertificateTag> {

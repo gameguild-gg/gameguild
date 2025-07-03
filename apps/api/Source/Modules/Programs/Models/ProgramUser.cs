@@ -21,164 +21,78 @@ namespace GameGuild.Modules.Program.Models;
 [Index(nameof(IsActive))]
 [Index(nameof(CompletionPercentage))]
 public class ProgramUser : BaseEntity {
-  private Guid _userId;
-
-  private User.Models.User _user = null!;
-
-  private Guid _programId;
-
-  private Program _program = null!;
-
-  private bool _isActive = true;
-
-  private DateTime _joinedAt = DateTime.UtcNow;
-
-  private decimal _completionPercentage = 0;
-
-  private decimal? _finalGrade;
-
-  private DateTime? _startedAt;
-
-  private DateTime? _completedAt;
-
-  private DateTime? _lastAccessedAt;
-
-  private ICollection<ContentInteraction> _contentInteractions = new List<ContentInteraction>();
-
-  private ICollection<ActivityGrade> _receivedGrades = new List<ActivityGrade>();
-
-  private ICollection<ActivityGrade> _givenGrades = new List<ActivityGrade>();
-
-  private ICollection<UserCertificate> _userCertificates = new List<Certificate.Models.UserCertificate>();
-
-  private ICollection<ProgramFeedbackSubmission> _feedbackSubmissions =
-    new List<Feedback.Models.ProgramFeedbackSubmission>();
-
-  private ICollection<ProgramRating> _programRatings = new List<Feedback.Models.ProgramRating>();
-
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>
   [Required]
-  public Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
+  public Guid UserId { get; set; }
 
   /// <summary>
   /// Navigation property to the User entity
   /// </summary>
   [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User {
-    get => _user;
-    set => _user = value;
-  }
+  public virtual User.Models.User User { get; set; } = null!;
 
   /// <summary>
   /// Foreign key to the Program entity
   /// </summary>
   [Required]
-  public Guid ProgramId {
-    get => _programId;
-    set => _programId = value;
-  }
+  public Guid ProgramId { get; set; }
 
   /// <summary>
   /// Navigation property to the Program entity
   /// </summary>
   [ForeignKey(nameof(ProgramId))]
-  public virtual Program Program {
-    get => _program;
-    set => _program = value;
-  }
+  public virtual Program Program { get; set; } = null!;
 
   /// <summary>
   /// Whether this user-program relationship is currently active
   /// </summary>
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; } = true;
 
   /// <summary>
   /// When the user joined this program
   /// </summary>
-  public DateTime JoinedAt {
-    get => _joinedAt;
-    set => _joinedAt = value;
-  }
+  public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
 
   /// <summary>
   /// Overall completion percentage for the program (0-100)
   /// </summary>
   [Column(TypeName = "decimal(5,2)")]
-  public decimal CompletionPercentage {
-    get => _completionPercentage;
-    set => _completionPercentage = value;
-  }
+  public decimal CompletionPercentage { get; set; } = 0;
 
   /// <summary>
   /// Overall grade for the program (0-100)
   /// </summary>
   [Column(TypeName = "decimal(5,2)")]
-  public decimal? FinalGrade {
-    get => _finalGrade;
-    set => _finalGrade = value;
-  }
+  public decimal? FinalGrade { get; set; }
 
   /// <summary>
   /// Date when user started this program
   /// </summary>
-  public DateTime? StartedAt {
-    get => _startedAt;
-    set => _startedAt = value;
-  }
+  public DateTime? StartedAt { get; set; }
 
   /// <summary>
   /// Date when user completed this program
   /// </summary>
-  public DateTime? CompletedAt {
-    get => _completedAt;
-    set => _completedAt = value;
-  }
+  public DateTime? CompletedAt { get; set; }
 
   /// <summary>
   /// Last date user accessed any content in this program
   /// </summary>
-  public DateTime? LastAccessedAt {
-    get => _lastAccessedAt;
-    set => _lastAccessedAt = value;
-  }
+  public DateTime? LastAccessedAt { get; set; }
 
-  public virtual ICollection<ContentInteraction> ContentInteractions {
-    get => _contentInteractions;
-    set => _contentInteractions = value;
-  }
+  public virtual ICollection<ContentInteraction> ContentInteractions { get; set; } = new List<ContentInteraction>();
 
-  public virtual ICollection<ActivityGrade> ReceivedGrades {
-    get => _receivedGrades;
-    set => _receivedGrades = value;
-  }
+  public virtual ICollection<ActivityGrade> ReceivedGrades { get; set; } = new List<ActivityGrade>();
 
-  public virtual ICollection<ActivityGrade> GivenGrades {
-    get => _givenGrades;
-    set => _givenGrades = value;
-  }
+  public virtual ICollection<ActivityGrade> GivenGrades { get; set; } = new List<ActivityGrade>();
 
-  public virtual ICollection<Certificate.Models.UserCertificate> UserCertificates {
-    get => _userCertificates;
-    set => _userCertificates = value;
-  }
+  public virtual ICollection<Certificate.Models.UserCertificate> UserCertificates { get; set; } = new List<Certificate.Models.UserCertificate>();
 
-  public virtual ICollection<Feedback.Models.ProgramFeedbackSubmission> FeedbackSubmissions {
-    get => _feedbackSubmissions;
-    set => _feedbackSubmissions = value;
-  }
+  public virtual ICollection<Feedback.Models.ProgramFeedbackSubmission> FeedbackSubmissions { get; set; } = new List<Feedback.Models.ProgramFeedbackSubmission>();
 
-  public virtual ICollection<Feedback.Models.ProgramRating> ProgramRatings {
-    get => _programRatings;
-    set => _programRatings = value;
-  }
+  public virtual ICollection<Feedback.Models.ProgramRating> ProgramRatings { get; set; } = new List<Feedback.Models.ProgramRating>();
 
   /// <summary>
   /// Default constructor

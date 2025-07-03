@@ -17,12 +17,6 @@ namespace GameGuild.Modules.Tenant.Models;
 public class TenantDomain : BaseEntity {
   private string _topLevelDomain = string.Empty;
   private string? _subdomain;
-  private bool _isMainDomain = false;
-  private bool _isSecondaryDomain = false;
-  private Guid _tenantId;
-  private Guid? _userGroupId;
-  private Tenant? _tenant;
-  private TenantUserGroup? _userGroup;
 
   /// <summary>
   /// The top-level domain name (e.g., "champlain.edu", "university.edu")
@@ -46,53 +40,35 @@ public class TenantDomain : BaseEntity {
   /// <summary>
   /// Whether this is the main/principal domain for the tenant (only one per tenant)
   /// </summary>
-  public bool IsMainDomain {
-    get => _isMainDomain;
-    set => _isMainDomain = value;
-  }
+  public bool IsMainDomain { get; set; } = false;
 
   /// <summary>
   /// Whether this is a secondary domain for the tenant (can have multiple per tenant)
   /// </summary>
-  public bool IsSecondaryDomain {
-    get => _isSecondaryDomain;
-    set => _isSecondaryDomain = value;
-  }
+  public bool IsSecondaryDomain { get; set; } = false;
 
   /// <summary>
   /// ID of the tenant this domain belongs to
   /// </summary>
   [Required]
-  public Guid TenantId {
-    get => _tenantId;
-    set => _tenantId = value;
-  }
+  public Guid TenantId { get; set; }
 
   /// <summary>
   /// ID of the user group that users with this domain should be automatically added to
   /// </summary>
-  public Guid? UserGroupId {
-    get => _userGroupId;
-    set => _userGroupId = value;
-  }
+  public Guid? UserGroupId { get; set; }
 
   /// <summary>
   /// Navigation property to the tenant
   /// </summary>
   [ForeignKey(nameof(TenantId))]
-  public override Tenant? Tenant {
-    get => _tenant;
-    set => _tenant = value;
-  }
+  public override Tenant? Tenant { get; set; }
 
   /// <summary>
   /// Navigation property to the user group
   /// </summary>
   [ForeignKey(nameof(UserGroupId))]
-  public virtual TenantUserGroup? UserGroup {
-    get => _userGroup;
-    set => _userGroup = value;
-  }
+  public virtual TenantUserGroup? UserGroup { get; set; }
 
   /// <summary>
   /// Gets the full domain string including subdomain if present

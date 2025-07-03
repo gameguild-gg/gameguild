@@ -4,63 +4,28 @@ using System.ComponentModel.DataAnnotations;
 namespace GameGuild.Modules.User.GraphQL;
 
 public class CreateUserInput {
-  private string _name = string.Empty;
-
-  private string _email = string.Empty;
-
-  private bool _isActive = true;
-
   [Required]
   [StringLength(100)]
-  public string Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string Name { get; set; } = string.Empty;
 
   [Required]
   [EmailAddress]
   [StringLength(255)]
-  public string Email {
-    get => _email;
-    set => _email = value;
-  }
+  public string Email { get; set; } = string.Empty;
 
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; } = true;
 }
 
 public class UpdateUserInput {
-  private Guid _id;
-
-  private string? _name;
-
-  private string? _email;
-
-  private bool? _isActive;
-
   [Required]
-  public Guid Id {
-    get => _id;
-    set => _id = value;
-  }
+  public Guid Id { get; set; }
 
   [StringLength(100)]
-  public string? Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string? Name { get; set; }
 
   [EmailAddress]
   [StringLength(255)]
-  public string? Email {
-    get => _email;
-    set => _email = value;
-  }
+  public string? Email { get; set; }
 
-  public bool? IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool? IsActive { get; set; }
 }
