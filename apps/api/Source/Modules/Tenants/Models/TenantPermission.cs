@@ -15,15 +15,10 @@ namespace GameGuild.Modules.Tenant.Models;
 [Index(nameof(UserId), Name = "IX_TenantPermissions_UserId")]
 [Index(nameof(ExpiresAt), Name = "IX_TenantPermissions_ExpiresAt")]
 public class TenantPermission : WithPermissions {
-  private ICollection<ContentTypePermission> _contentTypePermissions = new List<ContentTypePermission>();
-
   /// <summary>
   /// Navigation property to content type permissions for this user within this tenant (Layer 2 of permission system)
   /// </summary>
-  public virtual ICollection<ContentTypePermission> ContentTypePermissions {
-    get => _contentTypePermissions;
-    set => _contentTypePermissions = value;
-  }
+  public virtual ICollection<ContentTypePermission> ContentTypePermissions { get; set; } = new List<ContentTypePermission>();
 
   // Computed properties specific to tenant permissions
 

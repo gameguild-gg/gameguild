@@ -21,124 +21,67 @@ namespace GameGuild.Modules.Product.Models;
 [Index(nameof(Price))]
 [Index(nameof(BillingInterval))]
 public class ProductSubscriptionPlan : BaseEntity {
-  private Guid _productId;
-
-  private Product _product = null!;
-
-  private string _name = string.Empty;
-
-  private string? _description;
-
-  private decimal _price;
-
-  private string _currency = "USD";
-
-  private SubscriptionBillingInterval _billingInterval;
-
-  private int _intervalCount = 1;
-
-  private int? _trialPeriodDays;
-
-  private bool _isActive = true;
-
-  private bool _isDefault = false;
-
-  private ICollection<UserSubscription> _userSubscriptions = new List<Subscription.Models.UserSubscription>();
-
   /// <summary>
   /// Foreign key to the Product entity
   /// </summary>
   [Required]
-  public Guid ProductId {
-    get => _productId;
-    set => _productId = value;
-  }
+  public Guid ProductId { get; set; }
 
   /// <summary>
   /// Navigation property to the Product entity
   /// </summary>
   [ForeignKey(nameof(ProductId))]
-  public virtual Product Product {
-    get => _product;
-    set => _product = value;
-  }
+  public virtual Product Product { get; set; } = null!;
 
   /// <summary>
   /// Name of the subscription plan
   /// </summary>
   [Required]
   [MaxLength(255)]
-  public string Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string Name { get; set; } = string.Empty;
 
   /// <summary>
   /// Description of what's included in this plan
   /// </summary>
   [MaxLength(1000)]
-  public string? Description {
-    get => _description;
-    set => _description = value;
-  }
+  public string? Description { get; set; }
 
   /// <summary>
   /// Price for each billing cycle
   /// </summary>
   [Column(TypeName = "decimal(10,2)")]
-  public decimal Price {
-    get => _price;
-    set => _price = value;
-  }
+  public decimal Price { get; set; }
 
   /// <summary>
   /// Currency code for the price
   /// </summary>
   [MaxLength(3)]
-  public string Currency {
-    get => _currency;
-    set => _currency = value;
-  }
+  public string Currency { get; set; } = "USD";
 
   /// <summary>
   /// How often the subscription is billed
   /// </summary>
-  public SubscriptionBillingInterval BillingInterval {
-    get => _billingInterval;
-    set => _billingInterval = value;
-  }
+  public SubscriptionBillingInterval BillingInterval { get; set; }
 
   /// <summary>
   /// Number of billing intervals between charges (e.g., 3 months = interval_count: 3, billing_interval: Month)
   /// </summary>
-  public int IntervalCount {
-    get => _intervalCount;
-    set => _intervalCount = value;
-  }
+  public int IntervalCount { get; set; } = 1;
 
   /// <summary>
   /// Free trial period in days
   /// </summary>
-  public int? TrialPeriodDays {
-    get => _trialPeriodDays;
-    set => _trialPeriodDays = value;
-  }
+  public int? TrialPeriodDays { get; set; }
 
   /// <summary>
   /// Whether this plan is currently available for new subscriptions
   /// </summary>
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; } = true;
 
   /// <summary>
   /// Whether this is the default plan for the product
   /// </summary>
-  public bool IsDefault {
-    get => _isDefault;
-    set => _isDefault = value;
-  }
+  public bool IsDefault { get; set; } = false;
 
   /// <summary>
   /// Default constructor
@@ -151,10 +94,7 @@ public class ProductSubscriptionPlan : BaseEntity {
   /// <param name="partial">Partial product subscription plan data</param>
   public ProductSubscriptionPlan(object partial) : base(partial) { }
 
-  public virtual ICollection<Subscription.Models.UserSubscription> UserSubscriptions {
-    get => _userSubscriptions;
-    set => _userSubscriptions = value;
-  }
+  public virtual ICollection<Subscription.Models.UserSubscription> UserSubscriptions { get; set; } = new List<Subscription.Models.UserSubscription>();
 }
 
 /// <summary>

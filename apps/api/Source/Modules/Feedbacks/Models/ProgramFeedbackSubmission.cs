@@ -17,119 +17,54 @@ namespace GameGuild.Modules.Feedback.Models;
 [Index(nameof(OverallRating))]
 [Index(nameof(SubmittedAt))]
 public class ProgramFeedbackSubmission : BaseEntity {
-  private Guid _userId;
+  public Guid UserId { get; set; }
 
-  private Guid _programId;
+  public Guid ProgramId { get; set; }
 
-  private Guid? _productId;
+  public Guid? ProductId { get; set; }
 
-  private Guid _programUserId;
-
-  private string _feedbackData = "{}";
-
-  private decimal? _overallRating;
-
-  private string? _comments;
-
-  private bool? _wouldRecommend;
-
-  private DateTime _submittedAt;
-
-  private User.Models.User _user = null!;
-
-  private Program.Models.Program _program = null!;
-
-  private Product.Models.Product? _product;
-
-  private ProgramUser _programUser = null!;
-
-  public Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
-
-  public Guid ProgramId {
-    get => _programId;
-    set => _programId = value;
-  }
-
-  public Guid? ProductId {
-    get => _productId;
-    set => _productId = value;
-  }
-
-  public Guid ProgramUserId {
-    get => _programUserId;
-    set => _programUserId = value;
-  }
+  public Guid ProgramUserId { get; set; }
 
   /// <summary>
   /// Feedback responses stored as JSON
   /// Structure: {questionId: response, questionId: response, ...}
   /// </summary>
   [Column(TypeName = "jsonb")]
-  public string FeedbackData {
-    get => _feedbackData;
-    set => _feedbackData = value;
-  }
+  public string FeedbackData { get; set; } = "{}";
 
   /// <summary>
   /// Overall satisfaction rating (1-5)
   /// </summary>
   [Column(TypeName = "decimal(2,1)")]
-  public decimal? OverallRating {
-    get => _overallRating;
-    set => _overallRating = value;
-  }
+  public decimal? OverallRating { get; set; }
 
   /// <summary>
   /// General comments about the program
   /// </summary>
-  public string? Comments {
-    get => _comments;
-    set => _comments = value;
-  }
+  public string? Comments { get; set; }
 
   /// <summary>
   /// Whether the user would recommend this program
   /// </summary>
-  public bool? WouldRecommend {
-    get => _wouldRecommend;
-    set => _wouldRecommend = value;
-  }
+  public bool? WouldRecommend { get; set; }
 
   /// <summary>
   /// Date when feedback was submitted
   /// </summary>
-  public DateTime SubmittedAt {
-    get => _submittedAt;
-    set => _submittedAt = value;
-  }
+  public DateTime SubmittedAt { get; set; }
 
   // Navigation properties
   [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User {
-    get => _user;
-    set => _user = value;
-  }
+  public virtual User.Models.User User { get; set; } = null!;
 
   [ForeignKey(nameof(ProgramId))]
-  public virtual Program.Models.Program Program {
-    get => _program;
-    set => _program = value;
-  }
+  public virtual Program.Models.Program Program { get; set; } = null!;
 
   [ForeignKey(nameof(ProductId))]
-  public virtual Product.Models.Product? Product {
-    get => _product;
-    set => _product = value;
-  }
+  public virtual Product.Models.Product? Product { get; set; }
 
   [ForeignKey(nameof(ProgramUserId))]
-  public virtual Program.Models.ProgramUser ProgramUser {
-    get => _programUser;
-    set => _programUser = value;
-  }
+  public virtual Program.Models.ProgramUser ProgramUser { get; set; } = null!;
 
   // Helper methods for JSON feedback data
   public T? GetFeedbackResponse<T>(string questionId) where T : class {

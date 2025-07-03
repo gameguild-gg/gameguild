@@ -14,82 +14,47 @@ namespace GameGuild.Modules.Product.Models;
 /// </summary>
 [Table("promo_code_uses")]
 public class PromoCodeUse : BaseEntity {
-  private Guid _promoCodeId;
-
-  private PromoCode _promoCode = null!;
-
-  private Guid _userId;
-
-  private User.Models.User _user = null!;
-
-  private Guid _financialTransactionId;
-
-  private FinancialTransaction _financialTransaction = null!;
-
-  private decimal _discountApplied;
-
   /// <summary>
   /// Foreign key to the PromoCode entity
   /// </summary>
   [Required]
-  public Guid PromoCodeId {
-    get => _promoCodeId;
-    set => _promoCodeId = value;
-  }
+  public Guid PromoCodeId { get; set; }
 
   /// <summary>
   /// Navigation property to the PromoCode entity
   /// </summary>
   [ForeignKey(nameof(PromoCodeId))]
-  public virtual PromoCode PromoCode {
-    get => _promoCode;
-    set => _promoCode = value;
-  }
+  public virtual PromoCode PromoCode { get; set; } = null!;
 
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>
   [Required]
-  public Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
+  public Guid UserId { get; set; }
 
   /// <summary>
   /// Navigation property to the User entity
   /// </summary>
   [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User {
-    get => _user;
-    set => _user = value;
-  }
+  public virtual User.Models.User User { get; set; } = null!;
 
   /// <summary>
   /// Foreign key to the FinancialTransaction entity
   /// </summary>
   [Required]
-  public Guid FinancialTransactionId {
-    get => _financialTransactionId;
-    set => _financialTransactionId = value;
-  }
+  public Guid FinancialTransactionId { get; set; }
 
   /// <summary>
   /// Navigation property to the FinancialTransaction entity
   /// </summary>
   [ForeignKey(nameof(FinancialTransactionId))]
-  public virtual Payment.Models.FinancialTransaction FinancialTransaction {
-    get => _financialTransaction;
-    set => _financialTransaction = value;
-  }
+  public virtual Payment.Models.FinancialTransaction FinancialTransaction { get; set; } = null!;
 
   /// <summary>
   /// The actual discount amount that was applied
   /// </summary>
   [Column(TypeName = "decimal(10,2)")]
-  public decimal DiscountApplied {
-    get => _discountApplied;
-    set => _discountApplied = value;
-  }
+  public decimal DiscountApplied { get; set; }
 
   /// <summary>
   /// Default constructor

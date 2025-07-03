@@ -18,186 +18,86 @@ namespace GameGuild.Modules.Feedback.Models;
 [Index(nameof(ModerationStatus))]
 [Index(nameof(SubmittedAt))]
 public class ProgramRating : BaseEntity {
-  private Guid _userId;
+  public Guid UserId { get; set; }
 
-  private Guid _programId;
+  public Guid ProgramId { get; set; }
 
-  private Guid? _productId;
+  public Guid? ProductId { get; set; }
 
-  private Guid _programUserId;
-
-  private decimal _rating;
-
-  private string? _review;
-
-  private decimal? _contentQualityRating;
-
-  private decimal? _instructorRating;
-
-  private decimal? _difficultyRating;
-
-  private decimal? _valueRating;
-
-  private bool? _wouldRecommend;
-
-  private ModerationStatus _moderationStatus = ModerationStatus.Pending;
-
-  private Guid? _moderatedBy;
-
-  private DateTime? _moderatedAt;
-
-  private DateTime _submittedAt;
-
-  private User.Models.User _user = null!;
-
-  private Program.Models.Program _program = null!;
-
-  private Product.Models.Product? _product;
-
-  private ProgramUser _programUser = null!;
-
-  private User.Models.User? _moderator;
-
-  public Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
-
-  public Guid ProgramId {
-    get => _programId;
-    set => _programId = value;
-  }
-
-  public Guid? ProductId {
-    get => _productId;
-    set => _productId = value;
-  }
-
-  public Guid ProgramUserId {
-    get => _programUserId;
-    set => _programUserId = value;
-  }
+  public Guid ProgramUserId { get; set; }
 
   /// <summary>
   /// Overall rating for the program (1-5)
   /// </summary>
   [Column(TypeName = "decimal(2,1)")]
-  public decimal Rating {
-    get => _rating;
-    set => _rating = value;
-  }
+  public decimal Rating { get; set; }
 
   /// <summary>
   /// Written review of the program
   /// </summary>
-  public string? Review {
-    get => _review;
-    set => _review = value;
-  }
+  public string? Review { get; set; }
 
   /// <summary>
   /// Rating for content quality (1-5)
   /// </summary>
   [Column(TypeName = "decimal(2,1)")]
-  public decimal? ContentQualityRating {
-    get => _contentQualityRating;
-    set => _contentQualityRating = value;
-  }
+  public decimal? ContentQualityRating { get; set; }
 
   /// <summary>
   /// Rating for instructor effectiveness (1-5)
   /// </summary>
   [Column(TypeName = "decimal(2,1)")]
-  public decimal? InstructorRating {
-    get => _instructorRating;
-    set => _instructorRating = value;
-  }
+  public decimal? InstructorRating { get; set; }
 
   /// <summary>
   /// Rating for program difficulty (1-5)
   /// </summary>
   [Column(TypeName = "decimal(2,1)")]
-  public decimal? DifficultyRating {
-    get => _difficultyRating;
-    set => _difficultyRating = value;
-  }
+  public decimal? DifficultyRating { get; set; }
 
   /// <summary>
   /// Rating for value for money (1-5)
   /// </summary>
   [Column(TypeName = "decimal(2,1)")]
-  public decimal? ValueRating {
-    get => _valueRating;
-    set => _valueRating = value;
-  }
+  public decimal? ValueRating { get; set; }
 
   /// <summary>
   /// Whether the user would recommend this program
   /// </summary>
-  public bool? WouldRecommend {
-    get => _wouldRecommend;
-    set => _wouldRecommend = value;
-  }
+  public bool? WouldRecommend { get; set; }
 
-  public ModerationStatus ModerationStatus {
-    get => _moderationStatus;
-    set => _moderationStatus = value;
-  }
+  public ModerationStatus ModerationStatus { get; set; } = ModerationStatus.Pending;
 
   /// <summary>
   /// User who moderated this rating (approved/rejected)
   /// </summary>
-  public Guid? ModeratedBy {
-    get => _moderatedBy;
-    set => _moderatedBy = value;
-  }
+  public Guid? ModeratedBy { get; set; }
 
   /// <summary>
   /// Date when rating was moderated
   /// </summary>
-  public DateTime? ModeratedAt {
-    get => _moderatedAt;
-    set => _moderatedAt = value;
-  }
+  public DateTime? ModeratedAt { get; set; }
 
   /// <summary>
   /// Date when rating was submitted
   /// </summary>
-  public DateTime SubmittedAt {
-    get => _submittedAt;
-    set => _submittedAt = value;
-  }
+  public DateTime SubmittedAt { get; set; }
 
   // Navigation properties
   [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User {
-    get => _user;
-    set => _user = value;
-  }
+  public virtual User.Models.User User { get; set; } = null!;
 
   [ForeignKey(nameof(ProgramId))]
-  public virtual Program.Models.Program Program {
-    get => _program;
-    set => _program = value;
-  }
+  public virtual Program.Models.Program Program { get; set; } = null!;
 
   [ForeignKey(nameof(ProductId))]
-  public virtual Product.Models.Product? Product {
-    get => _product;
-    set => _product = value;
-  }
+  public virtual Product.Models.Product? Product { get; set; }
 
   [ForeignKey(nameof(ProgramUserId))]
-  public virtual Program.Models.ProgramUser ProgramUser {
-    get => _programUser;
-    set => _programUser = value;
-  }
+  public virtual Program.Models.ProgramUser ProgramUser { get; set; } = null!;
 
   [ForeignKey(nameof(ModeratedBy))]
-  public virtual User.Models.User? Moderator {
-    get => _moderator;
-    set => _moderator = value;
-  }
+  public virtual User.Models.User? Moderator { get; set; }
 }
 
 public class ProgramRatingConfiguration : IEntityTypeConfiguration<ProgramRating> {

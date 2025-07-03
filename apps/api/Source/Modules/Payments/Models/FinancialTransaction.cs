@@ -19,212 +19,102 @@ namespace GameGuild.Modules.Payment.Models;
 [Index(nameof(ProcessedAt))]
 [Index(nameof(Amount))]
 public class FinancialTransaction : BaseEntity {
-  private Guid? _fromUserId;
-
-  private Guid? _toUserId;
-
-  private TransactionType _type;
-
-  private decimal _amount;
-
-  private string _currency = "USD";
-
-  private TransactionStatus _status = TransactionStatus.Pending;
-
-  private string? _externalTransactionId;
-
-  private Guid? _paymentMethodId;
-
-  private Guid? _promoCodeId;
-
-  private decimal? _platformFee;
-
-  private decimal? _processorFee;
-
-  private decimal? _netAmount;
-
-  private string? _description;
-
-  private string? _metadata;
-
-  private DateTime? _processedAt;
-
-  private DateTime? _failedAt;
-
-  private string? _errorMessage;
-
-  private User.Models.User? _fromUser;
-
-  private User.Models.User? _toUser;
-
-  private UserFinancialMethod? _paymentMethod;
-
-  private PromoCode? _promoCode;
-
-  private ICollection<PromoCodeUse> _promoCodeUses = new List<Product.Models.PromoCodeUse>();
-
   /// <summary>
   /// User who initiated the transaction (payer)
   /// </summary>
-  public Guid? FromUserId {
-    get => _fromUserId;
-    set => _fromUserId = value;
-  }
+  public Guid? FromUserId { get; set; }
 
   /// <summary>
   /// User who receives the transaction (payee)
   /// </summary>
-  public Guid? ToUserId {
-    get => _toUserId;
-    set => _toUserId = value;
-  }
+  public Guid? ToUserId { get; set; }
 
-  public TransactionType Type {
-    get => _type;
-    set => _type = value;
-  }
+  public TransactionType Type { get; set; }
 
   [Column(TypeName = "decimal(10,2)")]
-  public decimal Amount {
-    get => _amount;
-    set => _amount = value;
-  }
+  public decimal Amount { get; set; }
 
   [MaxLength(3)]
-  public string Currency {
-    get => _currency;
-    set => _currency = value;
-  }
+  public string Currency { get; set; } = "USD";
 
-  public TransactionStatus Status {
-    get => _status;
-    set => _status = value;
-  }
+  public TransactionStatus Status { get; set; } = TransactionStatus.Pending;
 
   /// <summary>
   /// External transaction ID from payment provider
   /// </summary>
   [MaxLength(255)]
-  public string? ExternalTransactionId {
-    get => _externalTransactionId;
-    set => _externalTransactionId = value;
-  }
+  public string? ExternalTransactionId { get; set; }
 
   /// <summary>
   /// Payment method used for this transaction
   /// </summary>
-  public Guid? PaymentMethodId {
-    get => _paymentMethodId;
-    set => _paymentMethodId = value;
-  }
+  public Guid? PaymentMethodId { get; set; }
 
   /// <summary>
   /// Promo code applied to this transaction
   /// </summary>
-  public Guid? PromoCodeId {
-    get => _promoCodeId;
-    set => _promoCodeId = value;
-  }
+  public Guid? PromoCodeId { get; set; }
 
   /// <summary>
   /// Platform fee charged for this transaction
   /// </summary>
   [Column(TypeName = "decimal(10,2)")]
-  public decimal? PlatformFee {
-    get => _platformFee;
-    set => _platformFee = value;
-  }
+  public decimal? PlatformFee { get; set; }
 
   /// <summary>
   /// Payment processor fee for this transaction
   /// </summary>
   [Column(TypeName = "decimal(10,2)")]
-  public decimal? ProcessorFee {
-    get => _processorFee;
-    set => _processorFee = value;
-  }
+  public decimal? ProcessorFee { get; set; }
 
   /// <summary>
   /// Net amount after fees
   /// </summary>
   [Column(TypeName = "decimal(10,2)")]
-  public decimal? NetAmount {
-    get => _netAmount;
-    set => _netAmount = value;
-  }
+  public decimal? NetAmount { get; set; }
 
   /// <summary>
   /// Description or memo for the transaction
   /// </summary>
   [MaxLength(500)]
-  public string? Description {
-    get => _description;
-    set => _description = value;
-  }
+  public string? Description { get; set; }
 
   /// <summary>
   /// Additional metadata about the transaction
   /// </summary>
   [MaxLength(1000)]
-  public string? Metadata {
-    get => _metadata;
-    set => _metadata = value;
-  }
+  public string? Metadata { get; set; }
 
   /// <summary>
   /// Date when the transaction was processed
   /// </summary>
-  public DateTime? ProcessedAt {
-    get => _processedAt;
-    set => _processedAt = value;
-  }
+  public DateTime? ProcessedAt { get; set; }
 
   /// <summary>
   /// Date when the transaction failed (if applicable)
   /// </summary>
-  public DateTime? FailedAt {
-    get => _failedAt;
-    set => _failedAt = value;
-  }
+  public DateTime? FailedAt { get; set; }
 
   /// <summary>
   /// Error message if transaction failed
   /// </summary>
   [MaxLength(500)]
-  public string? ErrorMessage {
-    get => _errorMessage;
-    set => _errorMessage = value;
-  }
+  public string? ErrorMessage { get; set; }
 
   // Navigation properties
   [ForeignKey(nameof(FromUserId))]
-  public virtual User.Models.User? FromUser {
-    get => _fromUser;
-    set => _fromUser = value;
-  }
+  public virtual User.Models.User? FromUser { get; set; }
 
   [ForeignKey(nameof(ToUserId))]
-  public virtual User.Models.User? ToUser {
-    get => _toUser;
-    set => _toUser = value;
-  }
+  public virtual User.Models.User? ToUser { get; set; }
 
   [ForeignKey(nameof(PaymentMethodId))]
-  public virtual UserFinancialMethod? PaymentMethod {
-    get => _paymentMethod;
-    set => _paymentMethod = value;
-  }
+  public virtual UserFinancialMethod? PaymentMethod { get; set; }
 
   [ForeignKey(nameof(PromoCodeId))]
-  public virtual Product.Models.PromoCode? PromoCode {
-    get => _promoCode;
-    set => _promoCode = value;
-  }
+  public virtual Product.Models.PromoCode? PromoCode { get; set; }
 
-  public virtual ICollection<Product.Models.PromoCodeUse> PromoCodeUses {
-    get => _promoCodeUses;
-    set => _promoCodeUses = value;
-  }
+  public virtual ICollection<Product.Models.PromoCodeUse> PromoCodeUses { get; set; } = new List<Product.Models.PromoCodeUse>();
 }
 
 public class FinancialTransactionConfiguration : IEntityTypeConfiguration<FinancialTransaction> {

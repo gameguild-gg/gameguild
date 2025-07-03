@@ -7,226 +7,121 @@ namespace GameGuild.Modules.User.Dtos;
 /// DTO for creating a new credential
 /// </summary>
 public class CreateCredentialDto {
-  private Guid _userId;
-
-  private string _type = string.Empty;
-
-  private string _value = string.Empty;
-
-  private string? _metadata;
-
-  private DateTime? _expiresAt;
-
-  private bool _isActive = true;
-
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>
   [Required]
-  public Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
+  public Guid UserId { get; set; }
 
   /// <summary>
   /// Type of credential (e.g., "password", "api_key", "oauth_token", "2fa_secret")
   /// </summary>
   [Required]
   [MaxLength(50)]
-  public string Type {
-    get => _type;
-    set => _type = value;
-  }
+  public string Type { get; set; } = string.Empty;
 
   /// <summary>
   /// The credential value (hashed password, encrypted token, etc.)
   /// </summary>
   [Required]
   [MaxLength(1000)]
-  public string Value {
-    get => _value;
-    set => _value = value;
-  }
+  public string Value { get; set; } = string.Empty;
 
   /// <summary>
   /// Additional metadata for the credential (JSON format)
   /// </summary>
   [MaxLength(2000)]
-  public string? Metadata {
-    get => _metadata;
-    set => _metadata = value;
-  }
+  public string? Metadata { get; set; }
 
   /// <summary>
   /// When this credential expires (optional)
   /// </summary>
-  public DateTime? ExpiresAt {
-    get => _expiresAt;
-    set => _expiresAt = value;
-  }
+  public DateTime? ExpiresAt { get; set; }
 
   /// <summary>
   /// Whether this credential is currently active
   /// </summary>
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; } = true;
 }
 
 /// <summary>
 /// DTO for updating an existing credential
 /// </summary>
 public class UpdateCredentialDto {
-  private string _type = string.Empty;
-
-  private string _value = string.Empty;
-
-  private string? _metadata;
-
-  private DateTime? _expiresAt;
-
-  private bool _isActive = true;
-
   /// <summary>
   /// Type of credential (e.g., "password", "api_key", "oauth_token", "2fa_secret")
   /// </summary>
   [Required]
   [MaxLength(50)]
-  public string Type {
-    get => _type;
-    set => _type = value;
-  }
+  public string Type { get; set; } = string.Empty;
 
   /// <summary>
   /// The credential value (hashed password, encrypted token, etc.)
   /// </summary>
   [Required]
   [MaxLength(1000)]
-  public string Value {
-    get => _value;
-    set => _value = value;
-  }
+  public string Value { get; set; } = string.Empty;
 
   /// <summary>
   /// Additional metadata for the credential (JSON format)
   /// </summary>
   [MaxLength(2000)]
-  public string? Metadata {
-    get => _metadata;
-    set => _metadata = value;
-  }
+  public string? Metadata { get; set; }
 
   /// <summary>
   /// When this credential expires (optional)
   /// </summary>
-  public DateTime? ExpiresAt {
-    get => _expiresAt;
-    set => _expiresAt = value;
-  }
+  public DateTime? ExpiresAt { get; set; }
 
   /// <summary>
   /// Whether this credential is currently active
   /// </summary>
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; } = true;
 }
 
 /// <summary>
 /// DTO for credential response
 /// </summary>
 public class CredentialResponseDto {
-  private Guid _id;
-
-  private Guid _userId;
-
-  private string _type = string.Empty;
-
-  private string _value = string.Empty;
-
-  private string? _metadata;
-
-  private DateTime? _expiresAt;
-
-  private bool _isActive;
-
-  private DateTime? _lastUsedAt;
-
-  private int _version;
-
-  private DateTime _createdAt;
-
-  private DateTime _updatedAt;
-
-  private DateTime? _deletedAt;
-
-  private UserResponseDto? _user;
-
   /// <summary>
   /// Unique identifier for the credential
   /// </summary>
-  public Guid Id {
-    get => _id;
-    set => _id = value;
-  }
+  public Guid Id { get; set; }
 
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>
-  public Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
+  public Guid UserId { get; set; }
 
   /// <summary>
   /// Type of credential
   /// </summary>
-  public string Type {
-    get => _type;
-    set => _type = value;
-  }
+  public string Type { get; set; } = string.Empty;
 
   /// <summary>
   /// The credential value (should be masked/redacted in responses)
   /// </summary>
-  public string Value {
-    get => _value;
-    set => _value = value;
-  }
+  public string Value { get; set; } = string.Empty;
 
   /// <summary>
   /// Additional metadata for the credential
   /// </summary>
-  public string? Metadata {
-    get => _metadata;
-    set => _metadata = value;
-  }
+  public string? Metadata { get; set; }
 
   /// <summary>
   /// When this credential expires
   /// </summary>
-  public DateTime? ExpiresAt {
-    get => _expiresAt;
-    set => _expiresAt = value;
-  }
+  public DateTime? ExpiresAt { get; set; }
 
   /// <summary>
   /// Whether this credential is currently active
   /// </summary>
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; }
 
   /// <summary>
   /// When this credential was last used
   /// </summary>
-  public DateTime? LastUsedAt {
-    get => _lastUsedAt;
-    set => _lastUsedAt = value;
-  }
+  public DateTime? LastUsedAt { get; set; }
 
   /// <summary>
   /// Check if the credential is expired
@@ -245,34 +140,22 @@ public class CredentialResponseDto {
   /// <summary>
   /// Version number for optimistic concurrency control
   /// </summary>
-  public int Version {
-    get => _version;
-    set => _version = value;
-  }
+  public int Version { get; set; }
 
   /// <summary>
   /// When the credential was created
   /// </summary>
-  public DateTime CreatedAt {
-    get => _createdAt;
-    set => _createdAt = value;
-  }
+  public DateTime CreatedAt { get; set; }
 
   /// <summary>
   /// When the credential was last updated
   /// </summary>
-  public DateTime UpdatedAt {
-    get => _updatedAt;
-    set => _updatedAt = value;
-  }
+  public DateTime UpdatedAt { get; set; }
 
   /// <summary>
   /// When the credential was soft deleted (null if not deleted)
   /// </summary>
-  public DateTime? DeletedAt {
-    get => _deletedAt;
-    set => _deletedAt = value;
-  }
+  public DateTime? DeletedAt { get; set; }
 
   /// <summary>
   /// Whether the credential is soft deleted
@@ -284,8 +167,5 @@ public class CredentialResponseDto {
   /// <summary>
   /// Associated user information
   /// </summary>
-  public UserResponseDto? User {
-    get => _user;
-    set => _user = value;
-  }
+  public UserResponseDto? User { get; set; }
 }

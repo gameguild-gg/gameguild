@@ -17,102 +17,57 @@ namespace GameGuild.Modules.Product.Models;
 [Index(nameof(SaleStartDate))]
 [Index(nameof(SaleEndDate))]
 public class ProductPricing : BaseEntity {
-  private Guid _productId;
-
-  private Product _product = null!;
-
-  private string _name = string.Empty;
-
-  private decimal _basePrice;
-
-  private decimal? _salePrice;
-
-  private string _currency = "USD";
-
-  private DateTime? _saleStartDate;
-
-  private DateTime? _saleEndDate;
-
-  private bool _isDefault = false;
-
   /// <summary>
   /// Foreign key to the Product entity
   /// </summary>
   [Required]
-  public Guid ProductId {
-    get => _productId;
-    set => _productId = value;
-  }
+  public Guid ProductId { get; set; }
 
   /// <summary>
   /// Navigation property to the Product entity
   /// </summary>
   [ForeignKey(nameof(ProductId))]
-  public virtual Product Product {
-    get => _product;
-    set => _product = value;
-  }
+  public virtual Product Product { get; set; } = null!;
 
   /// <summary>
   /// Name of this pricing option (e.g., "Standard", "Premium", "Early Bird")
   /// </summary>
   [Required]
   [MaxLength(100)]
-  public string Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string Name { get; set; } = string.Empty;
 
   /// <summary>
   /// Regular price for this product
   /// </summary>
   [Column(TypeName = "decimal(10,2)")]
-  public decimal BasePrice {
-    get => _basePrice;
-    set => _basePrice = value;
-  }
+  public decimal BasePrice { get; set; }
 
   /// <summary>
   /// Sale price (if on sale)
   /// </summary>
   [Column(TypeName = "decimal(10,2)")]
-  public decimal? SalePrice {
-    get => _salePrice;
-    set => _salePrice = value;
-  }
+  public decimal? SalePrice { get; set; }
 
   /// <summary>
   /// Currency code for prices
   /// </summary>
   [MaxLength(3)]
-  public string Currency {
-    get => _currency;
-    set => _currency = value;
-  }
+  public string Currency { get; set; } = "USD";
 
   /// <summary>
   /// When the sale price becomes active
   /// </summary>
-  public DateTime? SaleStartDate {
-    get => _saleStartDate;
-    set => _saleStartDate = value;
-  }
+  public DateTime? SaleStartDate { get; set; }
 
   /// <summary>
   /// When the sale price expires
   /// </summary>
-  public DateTime? SaleEndDate {
-    get => _saleEndDate;
-    set => _saleEndDate = value;
-  }
+  public DateTime? SaleEndDate { get; set; }
 
   /// <summary>
   /// Whether this is the default pricing option for the product
   /// </summary>
-  public bool IsDefault {
-    get => _isDefault;
-    set => _isDefault = value;
-  }
+  public bool IsDefault { get; set; } = false;
 
   /// <summary>
   /// Default constructor

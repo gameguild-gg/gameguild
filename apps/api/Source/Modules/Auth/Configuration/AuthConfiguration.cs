@@ -28,7 +28,7 @@ namespace GameGuild.Modules.Auth.Configuration {
 
       // Register authentication filters
       services.AddScoped<JwtAuthenticationFilter>();
-      // RoleAuthorizationFilter removed - using new three-layer DAC system
+      // RoleAuthorizationFilter removed - using a new three-layer DAC system
 
       // Configure JWT authentication
       var jwtSettings = configuration.GetSection("Jwt");

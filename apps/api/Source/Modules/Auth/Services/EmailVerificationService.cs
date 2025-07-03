@@ -214,26 +214,11 @@ namespace GameGuild.Modules.Auth.Services {
     }
 
     private class TokenInfo {
-      private Guid _userId;
+      public Guid UserId { get; set; }
 
-      private string _type = string.Empty;
+      public string Type { get; set; } = string.Empty;
 
-      private DateTime _expiresAt;
-
-      public Guid UserId {
-        get => _userId;
-        set => _userId = value;
-      }
-
-      public string Type {
-        get => _type;
-        set => _type = value;
-      }
-
-      public DateTime ExpiresAt {
-        get => _expiresAt;
-        set => _expiresAt = value;
-      }
+      public DateTime ExpiresAt { get; set; }
     }
   }
 }

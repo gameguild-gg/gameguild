@@ -3,38 +3,18 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GameGuild.Modules.Auth.Dtos {
   public class LocalSignUpRequestDto {
-    private string? _username;
-
-    private string _email = string.Empty;
-
-    private string _password = string.Empty;
-
-    private Guid? _tenantId;
-
-    public string? Username {
-      get => _username;
-      set => _username = value;
-    }
+    public string? Username { get; set; }
 
     [Required, EmailAddress]
-    public string Email {
-      get => _email;
-      set => _email = value;
-    }
+    public string Email { get; set; } = string.Empty;
 
     [Required]
-    public string Password {
-      get => _password;
-      set => _password = value;
-    }
+    public string Password { get; set; } = string.Empty;
 
     /// <summary>
     /// Optional tenant ID to use for the sign-up
     /// If not provided, a default tenant may be assigned
     /// </summary>
-    public Guid? TenantId {
-      get => _tenantId;
-      set => _tenantId = value;
-    }
+    public Guid? TenantId { get; set; }
   }
 }

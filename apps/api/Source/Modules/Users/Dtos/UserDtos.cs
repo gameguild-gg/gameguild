@@ -4,106 +4,41 @@ using System.ComponentModel.DataAnnotations;
 namespace GameGuild.Modules.User.Dtos;
 
 public class CreateUserDto {
-  private string _name = string.Empty;
-
-  private string _email = string.Empty;
-
   [Required]
   [StringLength(100)]
-  public string Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string Name { get; set; } = string.Empty;
 
   [Required]
   [EmailAddress]
   [StringLength(255)]
-  public string Email {
-    get => _email;
-    set => _email = value;
-  }
+  public string Email { get; set; } = string.Empty;
 }
 
 public class UpdateUserDto {
-  private string? _name;
-
-  private string? _email;
-
   [StringLength(100)]
-  public string? Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string? Name { get; set; }
 
   [EmailAddress]
   [StringLength(255)]
-  public string? Email {
-    get => _email;
-    set => _email = value;
-  }
+  public string? Email { get; set; }
 }
 
 public class UserResponseDto {
-  private Guid _id;
+  public Guid Id { get; set; }
 
-  private int _version;
+  public int Version { get; set; }
 
-  private string _name = string.Empty;
+  public string Name { get; set; } = string.Empty;
 
-  private string _email = string.Empty;
+  public string Email { get; set; } = string.Empty;
 
-  private bool _isActive;
+  public bool IsActive { get; set; }
 
-  private DateTime _createdAt;
+  public DateTime CreatedAt { get; set; }
 
-  private DateTime _updatedAt;
+  public DateTime UpdatedAt { get; set; }
 
-  private DateTime? _deletedAt;
+  public DateTime? DeletedAt { get; set; }
 
-  private bool _isDeleted;
-
-  public Guid Id {
-    get => _id;
-    set => _id = value;
-  }
-
-  public int Version {
-    get => _version;
-    set => _version = value;
-  }
-
-  public string Name {
-    get => _name;
-    set => _name = value;
-  }
-
-  public string Email {
-    get => _email;
-    set => _email = value;
-  }
-
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
-
-  public DateTime CreatedAt {
-    get => _createdAt;
-    set => _createdAt = value;
-  }
-
-  public DateTime UpdatedAt {
-    get => _updatedAt;
-    set => _updatedAt = value;
-  }
-
-  public DateTime? DeletedAt {
-    get => _deletedAt;
-    set => _deletedAt = value;
-  }
-
-  public bool IsDeleted {
-    get => _isDeleted;
-    set => _isDeleted = value;
-  }
+  public bool IsDeleted { get; set; }
 }

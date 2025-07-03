@@ -92,75 +92,25 @@ public record CreateProjectInput(
   ContentStatus? Status,
   AccessLevel? Visibility
 ) {
-  private readonly string _title = Title;
+  public string Title { get; init; } = Title;
 
-  private readonly string? _description = Description;
+  public string? Description { get; init; } = Description;
 
-  private readonly string? _shortDescription = ShortDescription;
+  public string? ShortDescription { get; init; } = ShortDescription;
 
-  private readonly string? _websiteUrl = WebsiteUrl;
+  public string? WebsiteUrl { get; init; } = WebsiteUrl;
 
-  private readonly string? _repositoryUrl = RepositoryUrl;
+  public string? RepositoryUrl { get; init; } = RepositoryUrl;
 
-  private readonly string? _socialLinks = SocialLinks;
+  public string? SocialLinks { get; init; } = SocialLinks;
 
-  private readonly Guid _categoryId = CategoryId;
+  public Guid CategoryId { get; init; } = CategoryId;
 
-  private readonly string? _slug = Slug;
+  public string? Slug { get; init; } = Slug;
 
-  private readonly ContentStatus? _status = Status;
+  public ContentStatus? Status { get; init; } = Status;
 
-  private readonly AccessLevel? _visibility = Visibility;
-
-  public string Title {
-    get => _title;
-    init => _title = value;
-  }
-
-  public string? Description {
-    get => _description;
-    init => _description = value;
-  }
-
-  public string? ShortDescription {
-    get => _shortDescription;
-    init => _shortDescription = value;
-  }
-
-  public string? WebsiteUrl {
-    get => _websiteUrl;
-    init => _websiteUrl = value;
-  }
-
-  public string? RepositoryUrl {
-    get => _repositoryUrl;
-    init => _repositoryUrl = value;
-  }
-
-  public string? SocialLinks {
-    get => _socialLinks;
-    init => _socialLinks = value;
-  }
-
-  public Guid CategoryId {
-    get => _categoryId;
-    init => _categoryId = value;
-  }
-
-  public string? Slug {
-    get => _slug;
-    init => _slug = value;
-  }
-
-  public ContentStatus? Status {
-    get => _status;
-    init => _status = value;
-  }
-
-  public AccessLevel? Visibility {
-    get => _visibility;
-    init => _visibility = value;
-  }
+  public AccessLevel? Visibility { get; init; } = Visibility;
 }
 
 /// <summary>
@@ -177,66 +127,21 @@ public record UpdateProjectInput(
   ContentStatus? Status,
   AccessLevel? Visibility
 ) {
-  private readonly string? _title = Title;
+  public string? Title { get; init; } = Title;
 
-  private readonly string? _description = Description;
+  public string? Description { get; init; } = Description;
 
-  private readonly string? _shortDescription = ShortDescription;
+  public string? ShortDescription { get; init; } = ShortDescription;
 
-  private readonly string? _websiteUrl = WebsiteUrl;
+  public string? WebsiteUrl { get; init; } = WebsiteUrl;
 
-  private readonly string? _repositoryUrl = RepositoryUrl;
+  public string? RepositoryUrl { get; init; } = RepositoryUrl;
 
-  private readonly string? _socialLinks = SocialLinks;
+  public string? SocialLinks { get; init; } = SocialLinks;
 
-  private readonly Guid? _categoryId = CategoryId;
+  public Guid? CategoryId { get; init; } = CategoryId;
 
-  private readonly ContentStatus? _status = Status;
+  public ContentStatus? Status { get; init; } = Status;
 
-  private readonly AccessLevel? _visibility = Visibility;
-
-  public string? Title {
-    get => _title;
-    init => _title = value;
-  }
-
-  public string? Description {
-    get => _description;
-    init => _description = value;
-  }
-
-  public string? ShortDescription {
-    get => _shortDescription;
-    init => _shortDescription = value;
-  }
-
-  public string? WebsiteUrl {
-    get => _websiteUrl;
-    init => _websiteUrl = value;
-  }
-
-  public string? RepositoryUrl {
-    get => _repositoryUrl;
-    init => _repositoryUrl = value;
-  }
-
-  public string? SocialLinks {
-    get => _socialLinks;
-    init => _socialLinks = value;
-  }
-
-  public Guid? CategoryId {
-    get => _categoryId;
-    init => _categoryId = value;
-  }
-
-  public ContentStatus? Status {
-    get => _status;
-    init => _status = value;
-  }
-
-  public AccessLevel? Visibility {
-    get => _visibility;
-    init => _visibility = value;
-  }
+  public AccessLevel? Visibility { get; init; } = Visibility;
 }

@@ -102,13 +102,13 @@ namespace GameGuild.Modules.Auth.Controllers {
     [HttpPost("google/id-token")]
     [Public]
     public async Task<IActionResult> GoogleIdTokenValidation([FromBody] GoogleIdTokenRequestDto request) {
-      Console.WriteLine($"🔍 GoogleIdTokenValidation called with IdToken length: {request.IdToken?.Length ?? 0}");
+      Console.WriteLine($"🔍 GoogleIdTokenValidation called with IdToken length: {request.IdToken.Length}");
 
       try {
         Console.WriteLine("🚀 Calling authService.GoogleIdTokenSignInAsync...");
         var result = await authService.GoogleIdTokenSignInAsync(request);
 
-        Console.WriteLine($"✅ GoogleIdTokenSignInAsync successful for user: {result.User?.Email}");
+        Console.WriteLine($"✅ GoogleIdTokenSignInAsync successful for user: {result.User.Email}");
 
         return Ok(result);
       }

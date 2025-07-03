@@ -5,81 +5,36 @@ using GameGuild.Common.Entities;
 
 namespace GameGuild.Modules.TestingLab.Models {
   public class SessionRegistration : BaseEntity {
-    private Guid _sessionId;
-
-    private TestingSession _session = null!;
-
-    private Guid _userId;
-
-    private User.Models.User _user = null!;
-
-    private RegistrationType _registrationType;
-
-    private TeamRole? _projectRole;
-
-    private string? _registrationNotes;
-
-    private AttendanceStatus _attendanceStatus = AttendanceStatus.Registered;
-
-    private DateTime? _attendedAt;
-
     /// <summary>
     /// Foreign key to the session
     /// </summary>
-    public Guid SessionId {
-      get => _sessionId;
-      set => _sessionId = value;
-    }
+    public Guid SessionId { get; set; }
 
     /// <summary>
     /// Navigation property to the session
     /// </summary>
-    public virtual TestingSession Session {
-      get => _session;
-      set => _session = value;
-    }
+    public virtual TestingSession Session { get; set; } = null!;
 
     /// <summary>
     /// Foreign key to the user
     /// </summary>
-    public Guid UserId {
-      get => _userId;
-      set => _userId = value;
-    }
+    public Guid UserId { get; set; }
 
     /// <summary>
     /// Navigation property to the user
     /// </summary>
-    public virtual Modules.User.Models.User User {
-      get => _user;
-      set => _user = value;
-    }
+    public virtual Modules.User.Models.User User { get; set; } = null!;
 
     [Required]
-    public RegistrationType RegistrationType {
-      get => _registrationType;
-      set => _registrationType = value;
-    }
+    public RegistrationType RegistrationType { get; set; }
 
-    public TeamRole? ProjectRole {
-      get => _projectRole;
-      set => _projectRole = value;
-    }
+    public TeamRole? ProjectRole { get; set; }
 
-    public string? RegistrationNotes {
-      get => _registrationNotes;
-      set => _registrationNotes = value;
-    }
+    public string? RegistrationNotes { get; set; }
 
     [Required]
-    public AttendanceStatus AttendanceStatus {
-      get => _attendanceStatus;
-      set => _attendanceStatus = value;
-    }
+    public AttendanceStatus AttendanceStatus { get; set; } = AttendanceStatus.Registered;
 
-    public DateTime? AttendedAt {
-      get => _attendedAt;
-      set => _attendedAt = value;
-    }
+    public DateTime? AttendedAt { get; set; }
   }
 }

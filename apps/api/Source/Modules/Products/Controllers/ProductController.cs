@@ -464,47 +464,17 @@ public class ProductController(IProductService productService) : ControllerBase 
 // ===== DTOs FOR REQUEST BODIES =====
 
 public class SetPricingRequest {
-  private decimal _basePrice;
+  public decimal BasePrice { get; set; }
 
-  private string _currency = "USD";
-
-  public decimal BasePrice {
-    get => _basePrice;
-    set => _basePrice = value;
-  }
-
-  public string Currency {
-    get => _currency;
-    set => _currency = value;
-  }
+  public string Currency { get; set; } = "USD";
 }
 
 public class GrantAccessRequest {
-  private ProductAcquisitionType _acquisitionType;
+  public ProductAcquisitionType AcquisitionType { get; set; }
 
-  private decimal _purchasePrice = 0;
+  public decimal PurchasePrice { get; set; } = 0;
 
-  private string _currency = "USD";
+  public string Currency { get; set; } = "USD";
 
-  private DateTime? _expiresAt;
-
-  public ProductAcquisitionType AcquisitionType {
-    get => _acquisitionType;
-    set => _acquisitionType = value;
-  }
-
-  public decimal PurchasePrice {
-    get => _purchasePrice;
-    set => _purchasePrice = value;
-  }
-
-  public string Currency {
-    get => _currency;
-    set => _currency = value;
-  }
-
-  public DateTime? ExpiresAt {
-    get => _expiresAt;
-    set => _expiresAt = value;
-  }
+  public DateTime? ExpiresAt { get; set; }
 }

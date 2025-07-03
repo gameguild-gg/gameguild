@@ -7,332 +7,107 @@ using PromoCodeTypeEnum = GameGuild.Common.Enums.PromoCodeType;
 namespace GameGuild.Modules.Product.GraphQL;
 
 public class CreateProductInput {
-  private string _name;
+  public required string Name { get; set; }
 
-  private string? _shortDescription;
+  public string? ShortDescription { get; set; }
 
-  private Common.Enums.ProductType _type;
+  public required GameGuild.Common.Enums.ProductType Type { get; set; }
 
-  private bool _isBundle = false;
+  public bool IsBundle { get; set; } = false;
 
-  private Guid? _tenantId;
-
-  public required string Name {
-    get => _name;
-    [MemberNotNull(nameof(_name))] set => _name = value;
-  }
-
-  public string? ShortDescription {
-    get => _shortDescription;
-    set => _shortDescription = value;
-  }
-
-  public required GameGuild.Common.Enums.ProductType Type {
-    get => _type;
-    set => _type = value;
-  }
-
-  public bool IsBundle {
-    get => _isBundle;
-    set => _isBundle = value;
-  }
-
-  public Guid? TenantId {
-    get => _tenantId;
-    set => _tenantId = value;
-  }
+  public Guid? TenantId { get; set; }
 }
 
 public class UpdateProductInput {
-  private Guid _id;
+  public required Guid Id { get; set; }
 
-  private string? _name;
+  public string? Name { get; set; }
 
-  private string? _shortDescription;
+  public string? ShortDescription { get; set; }
 
-  private string? _description;
+  public string? Description { get; set; }
 
-  private Common.Enums.ProductType? _type;
+  public GameGuild.Common.Enums.ProductType? Type { get; set; }
 
-  private bool? _isBundle;
+  public bool? IsBundle { get; set; }
 
-  private ContentStatus? _status;
+  public ContentStatus? Status { get; set; }
 
-  private AccessLevel? _visibility;
-
-  public required Guid Id {
-    get => _id;
-    set => _id = value;
-  }
-
-  public string? Name {
-    get => _name;
-    set => _name = value;
-  }
-
-  public string? ShortDescription {
-    get => _shortDescription;
-    set => _shortDescription = value;
-  }
-
-  public string? Description {
-    get => _description;
-    set => _description = value;
-  }
-
-  public GameGuild.Common.Enums.ProductType? Type {
-    get => _type;
-    set => _type = value;
-  }
-
-  public bool? IsBundle {
-    get => _isBundle;
-    set => _isBundle = value;
-  }
-
-  public ContentStatus? Status {
-    get => _status;
-    set => _status = value;
-  }
-
-  public Common.Entities.AccessLevel? Visibility {
-    get => _visibility;
-    set => _visibility = value;
-  }
+  public Common.Entities.AccessLevel? Visibility { get; set; }
 }
 
 public class BundleManagementInput {
-  private Guid _bundleId;
+  public Guid BundleId { get; set; }
 
-  private Guid _productId;
-
-  public Guid BundleId {
-    get => _bundleId;
-    set => _bundleId = value;
-  }
-
-  public Guid ProductId {
-    get => _productId;
-    set => _productId = value;
-  }
+  public Guid ProductId { get; set; }
 }
 
 public class SetProductPricingInput {
-  private Guid _productId;
+  public required Guid ProductId { get; set; }
 
-  private decimal _basePrice;
+  public required decimal BasePrice { get; set; }
 
-  private string _currency = "USD";
-
-  public required Guid ProductId {
-    get => _productId;
-    set => _productId = value;
-  }
-
-  public required decimal BasePrice {
-    get => _basePrice;
-    set => _basePrice = value;
-  }
-
-  public required string Currency {
-    get => _currency;
-    [MemberNotNull(nameof(_currency))] set => _currency = value;
-  }
+  public required string Currency { get; set; } = "USD";
 }
 
 public class UpdateProductPricingInput {
-  private Guid _pricingId;
+  public required Guid PricingId { get; set; }
 
-  private decimal? _basePrice;
+  public decimal? BasePrice { get; set; }
 
-  private string? _currency;
-
-  public required Guid PricingId {
-    get => _pricingId;
-    set => _pricingId = value;
-  }
-
-  public decimal? BasePrice {
-    get => _basePrice;
-    set => _basePrice = value;
-  }
-
-  public string? Currency {
-    get => _currency;
-    set => _currency = value;
-  }
+  public string? Currency { get; set; }
 }
 
 public class GrantProductAccessInput {
-  private Guid _productId;
+  public required Guid ProductId { get; set; }
 
-  private Guid _userId;
+  public required Guid UserId { get; set; }
 
-  private ProductAcquisitionType _acquisitionType;
+  public required ProductAcquisitionType AcquisitionType { get; set; }
 
-  private decimal _purchasePrice;
+  public required decimal PurchasePrice { get; set; }
 
-  private string? _currency;
+  public string? Currency { get; set; }
 
-  private DateTime? _expiresAt;
-
-  public required Guid ProductId {
-    get => _productId;
-    set => _productId = value;
-  }
-
-  public required Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
-
-  public required ProductAcquisitionType AcquisitionType {
-    get => _acquisitionType;
-    set => _acquisitionType = value;
-  }
-
-  public required decimal PurchasePrice {
-    get => _purchasePrice;
-    set => _purchasePrice = value;
-  }
-
-  public string? Currency {
-    get => _currency;
-    set => _currency = value;
-  }
-
-  public DateTime? ExpiresAt {
-    get => _expiresAt;
-    set => _expiresAt = value;
-  }
+  public DateTime? ExpiresAt { get; set; }
 }
 
 public class CreatePromoCodeInput {
-  private Guid _productId;
+  public required Guid ProductId { get; set; }
 
-  private string _code;
+  public required string Code { get; set; }
 
-  private decimal _discountPercentage;
+  public required decimal DiscountPercentage { get; set; }
 
-  private DateTime? _expiryDate;
+  public DateTime? ExpiryDate { get; set; }
 
-  private PromoCodeTypeEnum _discountType;
+  public required PromoCodeTypeEnum DiscountType { get; set; }
 
-  private DateTime? _validFrom;
+  public DateTime? ValidFrom { get; set; }
 
-  private DateTime? _validUntil;
+  public DateTime? ValidUntil { get; set; }
 
-  private int? _maxUses;
+  public int? MaxUses { get; set; }
 
-  private decimal _discountValue;
-
-  public required Guid ProductId {
-    get => _productId;
-    set => _productId = value;
-  }
-
-  public required string Code {
-    get => _code;
-    [MemberNotNull(nameof(_code))] set => _code = value;
-  }
-
-  public required decimal DiscountPercentage {
-    get => _discountPercentage;
-    set => _discountPercentage = value;
-  }
-
-  public DateTime? ExpiryDate {
-    get => _expiryDate;
-    set => _expiryDate = value;
-  }
-
-  public required PromoCodeTypeEnum DiscountType {
-    get => _discountType;
-    set => _discountType = value;
-  }
-
-  public DateTime? ValidFrom {
-    get => _validFrom;
-    set => _validFrom = value;
-  }
-
-  public DateTime? ValidUntil {
-    get => _validUntil;
-    set => _validUntil = value;
-  }
-
-  public int? MaxUses {
-    get => _maxUses;
-    set => _maxUses = value;
-  }
-
-  public required decimal DiscountValue {
-    get => _discountValue;
-    set => _discountValue = value;
-  }
+  public required decimal DiscountValue { get; set; }
 }
 
 public class UpdatePromoCodeInput {
-  private Guid _id;
+  public required Guid Id { get; set; }
 
-  private string? _code;
+  public string? Code { get; set; }
 
-  private decimal? _discountPercentage;
+  public decimal? DiscountPercentage { get; set; }
 
-  private DateTime? _expiryDate;
+  public DateTime? ExpiryDate { get; set; }
 
-  private PromoCodeTypeEnum? _discountType;
+  public PromoCodeTypeEnum? DiscountType { get; set; }
 
-  private DateTime? _validFrom;
+  public DateTime? ValidFrom { get; set; }
 
-  private DateTime? _validUntil;
+  public DateTime? ValidUntil { get; set; }
 
-  private int? _maxUses;
+  public int? MaxUses { get; set; }
 
-  private decimal? _discountValue;
-
-  public required Guid Id {
-    get => _id;
-    set => _id = value;
-  }
-
-  public string? Code {
-    get => _code;
-    set => _code = value;
-  }
-
-  public decimal? DiscountPercentage {
-    get => _discountPercentage;
-    set => _discountPercentage = value;
-  }
-
-  public DateTime? ExpiryDate {
-    get => _expiryDate;
-    set => _expiryDate = value;
-  }
-
-  public PromoCodeTypeEnum? DiscountType {
-    get => _discountType;
-    set => _discountType = value;
-  }
-
-  public DateTime? ValidFrom {
-    get => _validFrom;
-    set => _validFrom = value;
-  }
-
-  public DateTime? ValidUntil {
-    get => _validUntil;
-    set => _validUntil = value;
-  }
-
-  public int? MaxUses {
-    get => _maxUses;
-    set => _maxUses = value;
-  }
-
-  public decimal? DiscountValue {
-    get => _discountValue;
-    set => _discountValue = value;
-  }
+  public decimal? DiscountValue { get; set; }
 }

@@ -6,33 +6,18 @@ namespace GameGuild.Common.Entities;
 /// Mirrors the TypeScript LocalizableResourceBase functionality
 /// </summary>
 public abstract class LocalizableResource : BaseEntity {
-  private ICollection<ResourceLocalization> _localizations = new List<ResourceLocalization>();
-
-  private string? _defaultLanguageCode = "en-US";
-
-  private bool _isLocalizationEnabled = true;
-
   /// <summary>
   /// Collection of localizations for this resource
   /// </summary>
-  public virtual ICollection<ResourceLocalization> Localizations {
-    get => _localizations;
-    set => _localizations = value;
-  }
+  public virtual ICollection<ResourceLocalization> Localizations { get; set; } = new List<ResourceLocalization>();
 
   /// <summary>
   /// Default language code for this resource
   /// </summary>
-  public string? DefaultLanguageCode {
-    get => _defaultLanguageCode;
-    set => _defaultLanguageCode = value;
-  }
+  public string? DefaultLanguageCode { get; set; } = "en-US";
 
   /// <summary>
   /// Whether this resource supports localization
   /// </summary>
-  public bool IsLocalizationEnabled {
-    get => _isLocalizationEnabled;
-    set => _isLocalizationEnabled = value;
-  }
+  public bool IsLocalizationEnabled { get; set; } = true;
 }

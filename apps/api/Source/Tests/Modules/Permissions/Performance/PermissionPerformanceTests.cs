@@ -331,8 +331,8 @@ public class PermissionPerformanceTests : IDisposable {
     _context.Tenants.Add(tenant);
     await _context.SaveChangesAsync();
 
-    var userCount = 5;
-    var operationsPerUser = 3;
+    const int userCount = 5;
+    const int operationsPerUser = 3;
     var users = new List<UserModel>();
 
     for (var i = 0; i < userCount; i++) {

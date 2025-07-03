@@ -4,57 +4,22 @@ using GameGuild.Common.Entities;
 
 namespace GameGuild.Modules.TestingLab.Models {
   public class TestingLocation : BaseEntity {
-    private string _name = string.Empty;
-
-    private string? _description;
-
-    private string? _address;
-
-    private int _maxTestersCapacity;
-
-    private int _maxProjectsCapacity;
-
-    private string? _equipmentAvailable;
-
-    private LocationStatus _status = LocationStatus.Active;
-
     [Required, MaxLength(255)]
-    public string Name {
-      get => _name;
-      set => _name = value;
-    }
+    public string Name { get; set; } = string.Empty;
 
-    public string? Description {
-      get => _description;
-      set => _description = value;
-    }
+    public string? Description { get; set; }
 
-    public string? Address {
-      get => _address;
-      set => _address = value;
-    }
+    public string? Address { get; set; }
 
     [Required]
-    public int MaxTestersCapacity {
-      get => _maxTestersCapacity;
-      set => _maxTestersCapacity = value;
-    }
+    public int MaxTestersCapacity { get; set; }
 
     [Required]
-    public int MaxProjectsCapacity {
-      get => _maxProjectsCapacity;
-      set => _maxProjectsCapacity = value;
-    }
+    public int MaxProjectsCapacity { get; set; }
 
-    public string? EquipmentAvailable {
-      get => _equipmentAvailable;
-      set => _equipmentAvailable = value;
-    }
+    public string? EquipmentAvailable { get; set; }
 
     [Required]
-    public LocationStatus Status {
-      get => _status;
-      set => _status = value;
-    }
+    public LocationStatus Status { get; set; } = LocationStatus.Active;
   }
 }

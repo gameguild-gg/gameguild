@@ -3,34 +3,19 @@ namespace GameGuild.Modules.Auth.Dtos {
   /// DTO for user information
   /// </summary>
   public class UserDto {
-    private Guid _id;
-
-    private string _username = string.Empty;
-
-    private string _email = string.Empty;
-
     /// <summary>
     /// User ID
     /// </summary>
-    public Guid Id {
-      get => _id;
-      set => _id = value;
-    }
+    public Guid Id { get; set; }
 
     /// <summary>
     /// Username
     /// </summary>
-    public string Username {
-      get => _username;
-      set => _username = value;
-    }
+    public string Username { get; set; } = string.Empty;
 
     /// <summary>
     /// Email address
     /// </summary>
-    public string Email {
-      get => _email;
-      set => _email = value;
-    }
+    public string Email { get; set; } = string.Empty;
   }
 }

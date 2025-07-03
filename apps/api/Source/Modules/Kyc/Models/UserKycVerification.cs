@@ -15,134 +15,69 @@ namespace GameGuild.Modules.Kyc.Models;
 [Index(nameof(SubmittedAt))]
 [Index(nameof(ExternalVerificationId))]
 public class UserKycVerification : BaseEntity {
-  private Guid _userId;
-
-  private KycProvider _provider;
-
-  private KycVerificationStatus _status = KycVerificationStatus.Pending;
-
-  private string? _externalVerificationId;
-
-  private string? _verificationLevel;
-
-  private string? _documentTypes;
-
-  private string? _documentCountry;
-
-  private DateTime _submittedAt;
-
-  private DateTime? _completedAt;
-
-  private DateTime? _expiresAt;
-
-  private string? _notes;
-
-  private string? _providerData;
-
-  private User.Models.User _user = null!;
+  [Required]
+  public Guid UserId { get; set; }
 
   [Required]
-  public Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
+  public KycProvider Provider { get; set; }
 
   [Required]
-  public KycProvider Provider {
-    get => _provider;
-    set => _provider = value;
-  }
-
-  [Required]
-  public KycVerificationStatus Status {
-    get => _status;
-    set => _status = value;
-  }
+  public KycVerificationStatus Status { get; set; } = KycVerificationStatus.Pending;
 
   /// <summary>
   /// External verification ID from the KYC provider
   /// </summary>
   [MaxLength(255)]
-  public string? ExternalVerificationId {
-    get => _externalVerificationId;
-    set => _externalVerificationId = value;
-  }
+  public string? ExternalVerificationId { get; set; }
 
   /// <summary>
   /// Verification level (basic, enhanced, full)
   /// </summary>
   [MaxLength(50)]
-  public string? VerificationLevel {
-    get => _verificationLevel;
-    set => _verificationLevel = value;
-  }
+  public string? VerificationLevel { get; set; }
 
   /// <summary>
   /// Document types submitted for verification
   /// </summary>
   [MaxLength(500)]
-  public string? DocumentTypes {
-    get => _documentTypes;
-    set => _documentTypes = value;
-  }
+  public string? DocumentTypes { get; set; }
 
   /// <summary>
   /// Country of the submitted documents
   /// </summary>
   [MaxLength(2)]
-  public string? DocumentCountry {
-    get => _documentCountry;
-    set => _documentCountry = value;
-  }
+  public string? DocumentCountry { get; set; }
 
   /// <summary>
   /// Date when verification was submitted
   /// </summary>
-  public DateTime SubmittedAt {
-    get => _submittedAt;
-    set => _submittedAt = value;
-  }
+  public DateTime SubmittedAt { get; set; }
 
   /// <summary>
   /// Date when verification was completed (approved/rejected)
   /// </summary>
-  public DateTime? CompletedAt {
-    get => _completedAt;
-    set => _completedAt = value;
-  }
+  public DateTime? CompletedAt { get; set; }
 
   /// <summary>
   /// Date when verification expires and needs renewal
   /// </summary>
-  public DateTime? ExpiresAt {
-    get => _expiresAt;
-    set => _expiresAt = value;
-  }
+  public DateTime? ExpiresAt { get; set; }
 
   /// <summary>
   /// Reason for rejection or additional notes
   /// </summary>
   [MaxLength(1000)]
-  public string? Notes {
-    get => _notes;
-    set => _notes = value;
-  }
+  public string? Notes { get; set; }
 
   /// <summary>
   /// Additional metadata from the KYC provider
   /// </summary>
   [Column(TypeName = "jsonb")]
-  public string? ProviderData {
-    get => _providerData;
-    set => _providerData = value;
-  }
+  public string? ProviderData { get; set; }
 
   // Navigation properties
   [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User {
-    get => _user;
-    set => _user = value;
-  }
+  public virtual User.Models.User User { get; set; } = null!;
 }
 
 public class UserKycVerificationConfiguration : IEntityTypeConfiguration<UserKycVerification> {

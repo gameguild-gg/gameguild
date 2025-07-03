@@ -11,52 +11,27 @@ namespace GameGuild.Modules.Program.Models;
 [Index(nameof(ProgramId))]
 [Index(nameof(AddedAt))]
 public class ProgramWishlist : BaseEntity {
-    private Guid _userId;
-    private Guid _programId;
-    private DateTime _addedAt = DateTime.UtcNow;
-    private string? _notes;
-    private User.Models.User _user = null!;
-    private Program _program = null!;
+  public Guid UserId { get; set; }
 
-    public Guid UserId {
-        get => _userId;
-        set => _userId = value;
-    }
-
-    public Guid ProgramId {
-        get => _programId;
-        set => _programId = value;
-    }
+    public Guid ProgramId { get; set; }
 
     /// <summary>
     /// When the program was added to wishlist
     /// </summary>
-    public DateTime AddedAt {
-        get => _addedAt;
-        set => _addedAt = value;
-    }
+    public DateTime AddedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Optional notes about why the user saved this program
     /// </summary>
     [Column(TypeName = "text")]
-    public string? Notes {
-        get => _notes;
-        set => _notes = value;
-    }
+    public string? Notes { get; set; }
 
     // Navigation properties
     [ForeignKey(nameof(UserId))]
-    public virtual User.Models.User User {
-        get => _user;
-        set => _user = value;
-    }
+    public virtual User.Models.User User { get; set; } = null!;
 
     [ForeignKey(nameof(ProgramId))]
-    public virtual Program Program {
-        get => _program;
-        set => _program = value;
-    }
+    public virtual Program Program { get; set; } = null!;
 }
 
 /// <summary>

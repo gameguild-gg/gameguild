@@ -10,64 +10,37 @@ namespace GameGuild.Common.Entities;
 /// Mirrors the TypeScript ResourceBase functionality from the API.
 /// </summary>
 public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable {
-  private string _title = string.Empty;
-
-  private string? _description;
-
-  private AccessLevel _visibility = AccessLevel.Private;
-
-  private ResourceMetadata? _metadata;
-
-  private Tenant? _tenant;
-
-  private ICollection<ResourceLocalization> _localizations = new List<ResourceLocalization>();
-
   /// <summary>
   /// The title/name of this resource
   /// </summary>
   [Required]
   [MaxLength(255)]
-  public string Title {
-    get => _title;
-    set => _title = value;
-  }
+  public string Title { get; set; } = string.Empty;
 
   /// <summary>
   /// Optional description of this resource
   /// </summary>
   [MaxLength(2000)]
-  public string? Description {
-    get => _description;
-    set => _description = value;
-  }
+  public string? Description { get; set; }
 
   /// <summary>
   /// Access level of the resource (Public, Private, Restricted, etc.)
   /// </summary>
   [Required]
-  public AccessLevel Visibility {
-    get => _visibility;
-    set => _visibility = value;
-  }
+  public AccessLevel Visibility { get; set; } = AccessLevel.Private;
 
   /// <summary>
   /// Navigation property to resource metadata
   /// Entity Framework will automatically create the MetadataId foreign key
   /// </summary>
-  public virtual ResourceMetadata? Metadata {
-    get => _metadata;
-    set => _metadata = value;
-  }
+  public virtual ResourceMetadata? Metadata { get; set; }
 
   /// <summary>
   /// Navigation property to the tenant this resource belongs to (implements ITenantable)
   /// Entity Framework will automatically create the TenantId foreign key
   /// Null means the resource is global and accessible across all tenants
   /// </summary>
-  public override Modules.Tenant.Models.Tenant? Tenant {
-    get => _tenant;
-    set => _tenant = value;
-  }
+  public override Modules.Tenant.Models.Tenant? Tenant { get; set; }
 
   /// <summary>
   /// Indicates whether this resource is accessible across all tenants (when Tenant is null)
@@ -82,10 +55,7 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable {
   /// <summary>
   /// Collection of localizations for this resource
   /// </summary>
-  public virtual ICollection<ResourceLocalization> Localizations {
-    get => _localizations;
-    set => _localizations = value;
-  }
+  public virtual ICollection<ResourceLocalization> Localizations { get; set; } = new List<ResourceLocalization>();
 
   /// <summary>
   /// Adds a localization for a specific field in the given language

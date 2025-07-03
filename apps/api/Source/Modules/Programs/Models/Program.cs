@@ -20,28 +20,8 @@ namespace GameGuild.Modules.Program.Models;
 [Index(nameof(Category))]
 [Index(nameof(Difficulty))]
 public class Program : Content {
-  private string? _thumbnail;
-
-  private ICollection<ProgramContent> _programContents = new List<ProgramContent>();
-
-  private ICollection<ProgramUser> _programUsers = new List<ProgramUser>();
-
-  private ICollection<ProductProgram> _productPrograms = new List<Product.Models.ProductProgram>();
-
-  private ICollection<Certificate.Models.Certificate> _certificates = new List<Certificate.Models.Certificate>();
-
-  private ICollection<ProgramFeedbackSubmission> _feedbackSubmissions =
-    new List<Feedback.Models.ProgramFeedbackSubmission>();
-
-  private ICollection<ProgramRating> _programRatings = new List<Feedback.Models.ProgramRating>();
-
-  private ICollection<ProgramWishlist> _programWishlists = new List<ProgramWishlist>();
-
   [MaxLength(500)]
-  public string? Thumbnail {
-    get => _thumbnail;
-    set => _thumbnail = value;
-  }
+  public string? Thumbnail { get; set; }
 
   /// <summary>
   /// Video showcase URL for program preview
@@ -86,40 +66,19 @@ public class Program : Content {
   public ProgramDifficulty Difficulty { get; set; } = ProgramDifficulty.Beginner;
 
   // Navigation properties
-  public virtual ICollection<ProgramContent> ProgramContents {
-    get => _programContents;
-    set => _programContents = value;
-  }
+  public virtual ICollection<ProgramContent> ProgramContents { get; set; } = new List<ProgramContent>();
 
-  public virtual ICollection<ProgramUser> ProgramUsers {
-    get => _programUsers;
-    set => _programUsers = value;
-  }
+  public virtual ICollection<ProgramUser> ProgramUsers { get; set; } = new List<ProgramUser>();
 
-  public virtual ICollection<Product.Models.ProductProgram> ProductPrograms {
-    get => _productPrograms;
-    set => _productPrograms = value;
-  }
+  public virtual ICollection<Product.Models.ProductProgram> ProductPrograms { get; set; } = new List<Product.Models.ProductProgram>();
 
-  public virtual ICollection<Certificate.Models.Certificate> Certificates {
-    get => _certificates;
-    set => _certificates = value;
-  }
+  public virtual ICollection<Certificate.Models.Certificate> Certificates { get; set; } = new List<Certificate.Models.Certificate>();
 
-  public virtual ICollection<Feedback.Models.ProgramFeedbackSubmission> FeedbackSubmissions {
-    get => _feedbackSubmissions;
-    set => _feedbackSubmissions = value;
-  }
+  public virtual ICollection<Feedback.Models.ProgramFeedbackSubmission> FeedbackSubmissions { get; set; } = new List<Feedback.Models.ProgramFeedbackSubmission>();
 
-  public virtual ICollection<Feedback.Models.ProgramRating> ProgramRatings {
-    get => _programRatings;
-    set => _programRatings = value;
-  }
+  public virtual ICollection<Feedback.Models.ProgramRating> ProgramRatings { get; set; } = new List<Feedback.Models.ProgramRating>();
 
-  public virtual ICollection<ProgramWishlist> ProgramWishlists {
-    get => _programWishlists;
-    set => _programWishlists = value;
-  }
+  public virtual ICollection<ProgramWishlist> ProgramWishlists { get; set; } = new List<ProgramWishlist>();
 
   // Computed properties for skills via Certificates
   /// <summary>

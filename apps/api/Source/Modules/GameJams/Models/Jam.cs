@@ -4,102 +4,37 @@ using GameGuild.Common.Entities;
 
 namespace GameGuild.Modules.Jam.Models {
   public class Jam : BaseEntity {
-    private string _name = string.Empty;
-
-    private string _slug = string.Empty;
-
-    private string? _theme;
-
-    private string? _description;
-
-    private string? _rules;
-
-    private string? _submissionCriteria;
-
-    private DateTime _startDate;
-
-    private DateTime _endDate;
-
-    private DateTime? _votingEndDate;
-
-    private int? _maxParticipants;
-
-    private int _participantCount = 0;
-
-    private JamStatus _status = JamStatus.Upcoming;
-
-    private Guid _createdBy;
+    [Required, MaxLength(255)]
+    public string Name { get; set; } = string.Empty;
 
     [Required, MaxLength(255)]
-    public string Name {
-      get => _name;
-      set => _name = value;
-    }
-
-    [Required, MaxLength(255)]
-    public string Slug {
-      get => _slug;
-      set => _slug = value;
-    }
+    public string Slug { get; set; } = string.Empty;
 
     [MaxLength(500)]
-    public string? Theme {
-      get => _theme;
-      set => _theme = value;
-    }
+    public string? Theme { get; set; }
 
-    public string? Description {
-      get => _description;
-      set => _description = value;
-    }
+    public string? Description { get; set; }
 
-    public string? Rules {
-      get => _rules;
-      set => _rules = value;
-    }
+    public string? Rules { get; set; }
 
-    public string? SubmissionCriteria {
-      get => _submissionCriteria;
-      set => _submissionCriteria = value;
-    }
+    public string? SubmissionCriteria { get; set; }
 
     [Required]
-    public DateTime StartDate {
-      get => _startDate;
-      set => _startDate = value;
-    }
+    public DateTime StartDate { get; set; }
 
     [Required]
-    public DateTime EndDate {
-      get => _endDate;
-      set => _endDate = value;
-    }
+    public DateTime EndDate { get; set; }
 
-    public DateTime? VotingEndDate {
-      get => _votingEndDate;
-      set => _votingEndDate = value;
-    }
+    public DateTime? VotingEndDate { get; set; }
 
-    public int? MaxParticipants {
-      get => _maxParticipants;
-      set => _maxParticipants = value;
-    }
+    public int? MaxParticipants { get; set; }
 
-    public int ParticipantCount {
-      get => _participantCount;
-      set => _participantCount = value;
-    }
+    public int ParticipantCount { get; set; } = 0;
 
     [Required]
-    public JamStatus Status {
-      get => _status;
-      set => _status = value;
-    }
+    public JamStatus Status { get; set; } = JamStatus.Upcoming;
 
     [Required]
-    public Guid CreatedBy {
-      get => _createdBy;
-      set => _createdBy = value;
-    }
+    public Guid CreatedBy { get; set; }
   }
 }
