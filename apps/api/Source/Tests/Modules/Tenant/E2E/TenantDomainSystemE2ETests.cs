@@ -14,6 +14,7 @@ using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+using UserModel = GameGuild.Modules.User.Models.User;
 
 
 namespace GameGuild.Tests.Modules.Tenant.E2E;
@@ -58,7 +59,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     db.Tenants.Add(tenant);
 
     // Create test users
-    var studentUser = new User {
+    var studentUser = new UserModel {
       Id = Guid.NewGuid(),
       Name = "John Student",
       Email = "john@university.edu",
@@ -66,7 +67,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       UpdatedAt = DateTime.UtcNow,
     };
 
-    var csStudentUser = new User {
+    var csStudentUser = new UserModel {
       Id = Guid.NewGuid(),
       Name = "Jane CS Student",
       Email = "jane@cs.university.edu",
@@ -74,7 +75,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       UpdatedAt = DateTime.UtcNow,
     };
 
-    var professorUser = new User {
+    var professorUser = new UserModel {
       Id = Guid.NewGuid(),
       Name = "Dr. Professor",
       Email = "prof@faculty.university.edu",
@@ -82,7 +83,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       UpdatedAt = DateTime.UtcNow,
     };
 
-    var outsideUser = new User {
+    var outsideUser = new UserModel {
       Id = Guid.NewGuid(),
       Name = "Outside User",
       Email = "outside@external.com",
@@ -437,7 +438,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     db.Tenants.Add(tenant);
 
     // Create test users
-    var devUser = new User {
+    var devUser = new UserModel {
       Id = Guid.NewGuid(),
       Name = "Dev User",
       Email = "dev@techcorp.com",
@@ -445,7 +446,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       UpdatedAt = DateTime.UtcNow,
     };
 
-    var hrUser = new User {
+    var hrUser = new UserModel {
       Id = Guid.NewGuid(),
       Name = "HR User",
       Email = "hr@techcorp.com",
@@ -453,7 +454,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       UpdatedAt = DateTime.UtcNow,
     };
 
-    var contractorUser = new User {
+    var contractorUser = new UserModel {
       Id = Guid.NewGuid(),
       Name = "Contractor User",
       Email = "contractor@partners.techcorp.com",
@@ -640,7 +641,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     SetAuthorizationHeader(token);
   }
 
-  private string CreateJwtTokenForUser(User user, GameGuild.Modules.Tenant.Models.Tenant tenant, IServiceScope scope) {
+  private string CreateJwtTokenForUser(GameGuild.Modules.User.Models.User user, GameGuild.Modules.Tenant.Models.Tenant tenant, IServiceScope scope) {
     var jwtService = scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };

@@ -541,8 +541,8 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   /// <summary>
   /// Creates a test user for authentication purposes
   /// </summary>
-  private async Task<User> CreateTestUserAsync() {
-    var user = new User {
+  private async Task<GameGuild.Modules.User.Models.User> CreateTestUserAsync() {
+    var user = new GameGuild.Modules.User.Models.User {
       Id = Guid.NewGuid(),
       Name = "Test User",
       Email = "test@example.com",
@@ -580,7 +580,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   /// Grants content-type permissions for a user to perform operations on projects
   /// </summary>
   private async Task GrantContentTypePermissions(
-    User user, TenantModel tenant, string contentTypeName,
+    GameGuild.Modules.User.Models.User user, TenantModel tenant, string contentTypeName,
     PermissionType[] permissions
   ) {
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
@@ -590,7 +590,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   /// <summary>
   /// Generates a JWT token for test authentication
   /// </summary>
-  private Task<string> GenerateJwtTokenAsync(User user, GameGuild.Modules.Tenant.Models.Tenant tenant) {
+  private Task<string> GenerateJwtTokenAsync(GameGuild.Modules.User.Models.User user, GameGuild.Modules.Tenant.Models.Tenant tenant) {
     var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };

@@ -321,8 +321,8 @@ public class TestingLabPerformanceTests : IDisposable {
   }
 
   // Helper methods for creating test data
-  private async Task<User> CreateTestUserAsync() {
-    var user = new User { Id = Guid.NewGuid(), Name = "Performance Test User", Email = "performance@test.com", CreatedAt = DateTime.UtcNow };
+  private async Task<GameGuild.Modules.User.Models.User> CreateTestUserAsync() {
+    var user = new GameGuild.Modules.User.Models.User { Id = Guid.NewGuid(), Name = "Performance Test User", Email = "performance@test.com", CreatedAt = DateTime.UtcNow };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
 

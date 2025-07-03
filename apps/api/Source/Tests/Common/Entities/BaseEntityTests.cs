@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 using GameGuild.Data;
 using GameGuild.Modules.User.Models;
+using UserModel = GameGuild.Modules.User.Models.User;
 
 
 namespace GameGuild.Tests.Common.Entities;
@@ -11,7 +12,7 @@ public class BaseEntityTests {
   [Fact]
   public void BaseEntity_Constructor_SetsTimestampsAndGuid() {
     // Arrange & Act
-    var user = new User();
+    var user = new UserModel();
     Assert.NotEqual(Guid.Empty, user.Id);
     Assert.Equal(0, user.Version);
     Assert.True(user.IsNew);
@@ -25,7 +26,7 @@ public class BaseEntityTests {
   [Fact]
   public void BaseEntity_PartialConstructor_SetsPropertiesCorrectly() {
     // Arrange & Act
-    var user = new User(new { Name = "John Doe", Email = "john@example.com", IsActive = false });
+    var user = new UserModel(new { Name = "John Doe", Email = "john@example.com", IsActive = false });
 
     // Assert
     Assert.NotEqual(Guid.Empty, user.Id);
@@ -39,7 +40,7 @@ public class BaseEntityTests {
   [Fact]
   public void BaseEntity_Touch_UpdatesTimestamp() {
     // Arrange
-    var user = new User();
+    var user = new UserModel();
     var originalUpdatedAt = user.UpdatedAt;
 
     // Wait a bit to ensure timestamp difference
@@ -60,11 +61,11 @@ public class BaseEntityTests {
   [Fact]
   public void BaseEntity_SetProperties_UpdatesPropertiesAndTimestamp() {
     // Arrange
-    var user = new User();
+    var user = new UserModel();
     var originalUpdatedAt = user.UpdatedAt;
     Thread.Sleep(10);
 
-    var properties = new Dictionary<string, object?> { { nameof(User.Name), "John Doe" }, { nameof(User.Email), "john@example.com" }, { nameof(User.IsActive), false } };
+    var properties = new Dictionary<string, object?> { { nameof(UserModel.Name), "John Doe" }, { nameof(UserModel.Email), "john@example.com" }, { nameof(UserModel.IsActive), false } };
 
     // Act
     user.SetProperties(properties);
@@ -79,10 +80,10 @@ public class BaseEntityTests {
   [Fact]
   public void BaseEntity_Create_WithProperties_CreatesInstanceCorrectly() {
     // Arrange
-    var properties = new Dictionary<string, object?> { { nameof(User.Name), "Jane Doe" }, { nameof(User.Email), "jane@example.com" } };
+    var properties = new Dictionary<string, object?> { { nameof(UserModel.Name), "Jane Doe" }, { nameof(UserModel.Email), "jane@example.com" } };
 
     // Act
-    var user = BaseEntity.Create<User>(properties);
+    var user = BaseEntity.Create<UserModel>(properties);
 
     // Assert
     Assert.Equal("Jane Doe", user.Name);
@@ -94,7 +95,7 @@ public class BaseEntityTests {
   [Fact]
   public void BaseEntity_Create_WithoutProperties_CreatesInstanceWithDefaults() {
     // Act
-    var user = BaseEntity.Create<User>();
+    var user = BaseEntity.Create<UserModel>();
 
     // Assert
     Assert.Equal(string.Empty, user.Name);
@@ -105,7 +106,7 @@ public class BaseEntityTests {
   [Fact]
   public void BaseEntity_SoftDelete_SetsDeletedAtAndIsDeleted() {
     // Arrange
-    var user = new User();
+    var user = new UserModel();
 
     // Act
     user.SoftDelete();
@@ -119,7 +120,7 @@ public class BaseEntityTests {
   [Fact]
   public void BaseEntity_Restore_ClearsDeletedAtAndIsDeleted() {
     // Arrange
-    var user = new User();
+    var user = new UserModel();
     user.SoftDelete();
 
     // Act
@@ -133,25 +134,25 @@ public class BaseEntityTests {
   [Fact]
   public void BaseEntity_ToDictionary_ReturnsAllProperties() {
     // Arrange
-    var user = new User { Name = "Test User", Email = "test@example.com", IsActive = false };
+    var user = new UserModel { Name = "Test User", Email = "test@example.com", IsActive = false };
 
     // Act
     var dictionary = user.ToDictionary();
 
     // Assert
     Assert.True(dictionary.Count >= 8); // Id, Name, Email, IsActive, CreatedAt, UpdatedAt, DeletedAt, Version
-    Assert.NotNull(dictionary[nameof(User.Id)]);
-    Assert.Equal("Test User", dictionary[nameof(User.Name)]);
-    Assert.Equal("test@example.com", dictionary[nameof(User.Email)]);
-    Assert.Equal(false, dictionary[nameof(User.IsActive)]);
-    Assert.NotNull(dictionary[nameof(User.CreatedAt)]);
-    Assert.NotNull(dictionary[nameof(User.UpdatedAt)]);
+    Assert.NotNull(dictionary[nameof(UserModel.Id)]);
+    Assert.Equal("Test User", dictionary[nameof(UserModel.Name)]);
+    Assert.Equal("test@example.com", dictionary[nameof(UserModel.Email)]);
+    Assert.Equal(false, dictionary[nameof(UserModel.IsActive)]);
+    Assert.NotNull(dictionary[nameof(UserModel.CreatedAt)]);
+    Assert.NotNull(dictionary[nameof(UserModel.UpdatedAt)]);
   }
 
   [Fact]
   public void BaseEntity_ToString_ReturnsFormattedString() {
     // Arrange
-    var user = new User();
+    var user = new UserModel();
 
     // Act
     var result = user.ToString();
@@ -166,7 +167,7 @@ public class BaseEntityTests {
   [Fact]
   public void BaseEntity_IsNew_ReturnsTrueForEmptyGuid() {
     // Arrange
-    var user = new User {
+    var user = new UserModel {
       // Manually set to empty GUID to test the IsNew logic
       Id = Guid.Empty,
     };
@@ -185,7 +186,7 @@ public class BaseEntityTests {
     await using var context = new ApplicationDbContext(options);
 
     // Create a new entity
-    var user = new User { Name = "Test User", Email = "test@example.com" };
+    var user = new UserModel { Name = "Test User", Email = "test@example.com" };
 
     // Assert - Before saving to the database
     Assert.Equal(0, user.Version); // New entity starts with version 0
@@ -211,7 +212,7 @@ public class BaseEntityTests {
     await using var context = new ApplicationDbContext(options);
 
     // Create and save entity
-    var user = new User { Name = "Test User", Email = "test@example.com" };
+    var user = new UserModel { Name = "Test User", Email = "test@example.com" };
 
     // should be new
     Assert.True(user.IsNew);
@@ -240,8 +241,8 @@ public class BaseEntityTests {
     await using var context = new ApplicationDbContext(options);
 
     // Create multiple entities
-    var user1 = new User { Name = "User 1", Email = "user1@example.com" };
-    var user2 = new User { Name = "User 2", Email = "user2@example.com" };
+    var user1 = new UserModel { Name = "User 1", Email = "user1@example.com" };
+    var user2 = new UserModel { Name = "User 2", Email = "user2@example.com" };
 
     // Both start with version 0
     Assert.Equal(0, user1.Version);

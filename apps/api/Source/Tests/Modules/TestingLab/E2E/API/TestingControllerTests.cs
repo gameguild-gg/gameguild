@@ -15,6 +15,7 @@ using Xunit.Abstractions;
 using ProjectModel = GameGuild.Modules.Project.Models.Project;
 using ProjectVersionModel = GameGuild.Modules.Project.Models.ProjectVersion;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
+using UserModel = GameGuild.Modules.User.Models.User;
 
 
 namespace GameGuild.Tests.Modules.TestingLab.E2E;
@@ -258,7 +259,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
   }
 
   // Helper Methods
-  private async Task<(TestingRequest, User, TenantModel)> SeedTestDataAsync(ApplicationDbContext context) {
+  private async Task<(TestingRequest, GameGuild.Modules.User.Models.User, TenantModel)> SeedTestDataAsync(ApplicationDbContext context) {
     var (user, tenant) = await SeedUserAndTenantAsync(context);
     await SetupPermissionsAsync(context, user.Id, tenant.Id);
 
@@ -286,7 +287,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     return (testingRequest, user, tenant);
   }
 
-  private async Task<(TestingSession, User, TenantModel)> SeedTestSessionDataAsync(ApplicationDbContext context) {
+  private async Task<(TestingSession, GameGuild.Modules.User.Models.User, TenantModel)> SeedTestSessionDataAsync(ApplicationDbContext context) {
     var (testingRequest, user, tenant) = await SeedTestDataAsync(context);
 
     var location = new TestingLocation {
@@ -321,7 +322,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     return (testingSession, user, tenant);
   }
 
-  private async Task<(User, TenantModel)> SeedUserAndTenantAsync(ApplicationDbContext context) {
+  private async Task<(GameGuild.Modules.User.Models.User, TenantModel)> SeedUserAndTenantAsync(ApplicationDbContext context) {
     var tenant = new TenantModel {
       Id = Guid.NewGuid(),
       Name = "Test Tenant",
@@ -332,7 +333,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
 
     context.Tenants.Add(tenant);
 
-    var user = new User {
+    var user = new UserModel {
       Id = Guid.NewGuid(),
       Name = "testuser",
       Email = "test@example.com",
@@ -401,7 +402,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     );
   }
 
-  private Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant) {
+  private Task<string> CreateJwtTokenForUserAsync(UserModel user, TenantModel tenant) {
     using var scope = _factory.Services.CreateScope();
     var jwtService = scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 

@@ -1,12 +1,17 @@
 using Xunit;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Data;
-using GameGuild.Common.Services;
+using System.Diagnostics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using GameGuild.Common.Entities;
+using GameGuild.Common.Services;
+using GameGuild.Data;
 using GameGuild.Modules.Comment.Models;
 using GameGuild.Modules.User.Models;
-using System.Diagnostics;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
+using UserModel = GameGuild.Modules.User.Models.User;
 
 
 namespace GameGuild.Tests.Modules.Permission.Performance;
@@ -17,9 +22,7 @@ namespace GameGuild.Tests.Modules.Permission.Performance;
 /// </summary>
 public class PermissionPerformanceTests : IDisposable {
   private readonly ApplicationDbContext _context;
-
   private readonly PermissionService _permissionService;
-
   private readonly string _databaseName;
 
   public PermissionPerformanceTests() {
@@ -42,11 +45,11 @@ public class PermissionPerformanceTests : IDisposable {
     const int maxAcceptableTimeMs = 5000; // 5 seconds
 
     var tenant = await CreateTestTenantAsync();
-    var users = new List<User>();
+    var users = new List<UserModel>();
 
     // Create test users in bulk (more efficient)
     for (var i = 0; i < userCount; i++) {
-      var user = new User { Id = Guid.NewGuid(), Name = $"Test User user{i}@test.com", Email = $"user{i}@test.com", IsActive = true };
+      var user = new UserModel { Id = Guid.NewGuid(), Name = $"Test User {i}", Email = $"user{i}@test.com", IsActive = true };
       users.Add(user);
       _context.Users.Add(user);
     }
@@ -85,7 +88,7 @@ public class PermissionPerformanceTests : IDisposable {
     const int maxAcceptableTimeMs = 3000; // 3 seconds
 
     var tenant = await CreateTestTenantAsync();
-    var users = new List<User>();
+    var users = new List<UserModel>();
 
     // Create and grant permissions to test users
     for (var i = 0; i < userCount; i++) {
@@ -280,7 +283,7 @@ public class PermissionPerformanceTests : IDisposable {
     const int maxAcceptableTimeMs = 3000; // 3 seconds
 
     var tenants = new List<TenantModel>();
-    var users = new List<User>();
+    var users = new List<UserModel>();
 
     // Create tenants
     for (var i = 0; i < tenantCount; i++) tenants.Add(await CreateTestTenantAsync($"Tenant {i}"));
@@ -335,10 +338,10 @@ public class PermissionPerformanceTests : IDisposable {
 
     var userCount = 5;
     var operationsPerUser = 3;
-    var users = new List<User>();
+    var users = new List<UserModel>();
 
     for (var i = 0; i < userCount; i++) {
-      var user = new User { Id = Guid.NewGuid(), Name = $"User{i}", Email = $"user{i}@test.com" };
+      var user = new UserModel { Id = Guid.NewGuid(), Name = $"User{i}", Email = $"user{i}@test.com", IsActive = true };
       _context.Users.Add(user);
       users.Add(user);
     }
@@ -403,8 +406,8 @@ public class PermissionPerformanceTests : IDisposable {
 
   #region Helper Methods
 
-  private async Task<User> CreateTestUserAsync(string email = "test@example.com") {
-    var user = new User { Id = Guid.NewGuid(), Name = $"Test User {email}", Email = email, IsActive = true };
+  private async Task<UserModel> CreateTestUserAsync(string email = "test@example.com") {
+    var user = new UserModel { Id = Guid.NewGuid(), Name = $"Test User {email}", Email = email, IsActive = true };
 
     _context.Users.Add(user);
     await _context.SaveChangesAsync();

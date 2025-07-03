@@ -9,6 +9,8 @@ public interface IUserService {
 
   Task<Models.User?> GetUserByIdAsync(Guid id);
 
+  Task<Models.User?> GetByEmailAsync(string email);
+
   Task<Models.User> CreateUserAsync(Models.User user);
 
   Task<Models.User?> UpdateUserAsync(Guid id, Models.User user);
@@ -27,7 +29,17 @@ public class UserService(ApplicationDbContext context) : IUserService {
 
   public async Task<Models.User?> GetUserByIdAsync(Guid id) { return await context.Users.FindAsync(id); }
 
+  public async Task<Models.User?> GetByEmailAsync(string email) { 
+    return await context.Users.FirstOrDefaultAsync(u => u.Email == email); 
+  }
+
   public async Task<Models.User> CreateUserAsync(Models.User user) {
+    // Check if email already exists
+    var existingUser = await GetByEmailAsync(user.Email);
+    if (existingUser != null) {
+      throw new InvalidOperationException($"A user with email '{user.Email}' already exists.");
+    }
+
     context.Users.Add(user);
     await context.SaveChangesAsync();
 

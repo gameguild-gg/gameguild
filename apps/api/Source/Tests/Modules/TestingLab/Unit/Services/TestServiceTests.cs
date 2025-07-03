@@ -238,8 +238,8 @@ public class TestServiceTests : IDisposable {
   }
 
   // Helper methods
-  private async Task<User> CreateTestUserAsync(string email = "test@example.com") {
-    var user = new User { Id = Guid.NewGuid(), Name = email.Split('@')[0], Email = email, CreatedAt = DateTime.UtcNow };
+  private async Task<GameGuild.Modules.User.Models.User> CreateTestUserAsync(string email = "test@example.com") {
+    var user = new GameGuild.Modules.User.Models.User { Id = Guid.NewGuid(), Name = email.Split('@')[0], Email = email, CreatedAt = DateTime.UtcNow };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
 

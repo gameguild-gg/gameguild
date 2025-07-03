@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
 using GameGuild.Modules.Auth.Constants;
+using UserModel = GameGuild.Modules.User.Models.User;
 
 
 namespace GameGuild.Tests.Modules.Auth.Unit.Services;
@@ -48,7 +49,7 @@ public class TenantAuthServiceTests : IDisposable {
   [Fact]
   public async Task EnhanceWithTenantDataAsync_WithValidTenant_AddsTenantInfoToResponse() {
     // Arrange
-    var user = new User { Id = Guid.NewGuid(), Name = "testuser", Email = "test@example.com" };
+    var user = new UserModel { Id = Guid.NewGuid(), Name = "testuser", Email = "test@example.com" };
 
     var tenantId = Guid.NewGuid();
 
@@ -95,7 +96,7 @@ public class TenantAuthServiceTests : IDisposable {
   [Fact]
   public async Task EnhanceWithTenantDataAsync_WithNoAvailableTenants_ReturnsOriginalResponse() {
     // Arrange
-    var user = new User { Id = Guid.NewGuid(), Name = "testuser", Email = "test@example.com" };
+    var user = new UserModel { Id = Guid.NewGuid(), Name = "testuser", Email = "test@example.com" };
 
     // Empty tenant list
     _mockTenantService.Setup(x => x.GetTenantsForUserAsync(user.Id)).ReturnsAsync(new List<TenantPermission>());
@@ -129,7 +130,7 @@ public class TenantAuthServiceTests : IDisposable {
 
     _mockTenantContextService.Setup(x => x.GetTenantPermissionAsync(userId, tenantId)).ReturnsAsync(tenantPermission);
 
-    var user = new User { Id = userId };
+    var user = new UserModel { Id = userId };
 
     // Act
     var claims = await _tenantAuthService.GetTenantClaimsAsync(user, tenantId);
