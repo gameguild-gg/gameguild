@@ -121,6 +121,21 @@ async function generateTypes(swaggerSpec) {
     });
 
     console.log('✅ Types generated successfully');
+
+    // Run ESLint fix on the generated folder
+    console.log('🔧 Running ESLint fix on generated files...');
+    try {
+      const lintCommand = `npx eslint "src/lib/api/generated/**/*.{ts,js}" --fix`;
+      execSync(lintCommand, {
+        cwd: projectRoot,
+        stdio: 'inherit',
+        timeout: 30000, // 30 second timeout
+      });
+      console.log('✅ ESLint fix completed successfully');
+    } catch (lintError) {
+      console.warn('⚠️  ESLint fix failed (non-critical):', lintError.message);
+      // Don't fail the entire process if lint fix fails
+    }
   } catch (error) {
     console.error('❌ Failed to generate types:', error.message);
     throw error;

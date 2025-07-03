@@ -1,17 +1,17 @@
-using GameGuild.Data;
-using GameGuild.Modules.User.GraphQL;
+using DotNetEnv;
 using GameGuild.Common.Extensions;
+using GameGuild.Common.GraphQL.Extensions;
 using GameGuild.Common.Middleware;
 using GameGuild.Common.Transformers;
-using GameGuild.Modules.Auth.Configuration;
 using GameGuild.Config;
-using GameGuild.Common.GraphQL.Extensions;
-using Microsoft.EntityFrameworkCore;
-using DotNetEnv;
-using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Mvc.ApplicationModels;
-using MediatR;
+using GameGuild.Data;
+using GameGuild.Modules.Auth.Configuration;
 using GameGuild.Modules.Program.GraphQL;
+using GameGuild.Modules.User.GraphQL;
+using MediatR;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,25 +34,13 @@ var corsOptions =
 
 // Add CORS services
 builder.Services.AddCors(options => {
-    if (builder.Environment.IsDevelopment())
-      // Allow all origins in development for easier testing
-      options.AddPolicy("Development", policy => { policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(); });
-    else
-      // Use configured origins in production
-      options.AddPolicy(
-        "Production",
-        policy => {
-          policy.WithOrigins(corsOptions.AllowedOrigins)
-                .WithMethods(corsOptions.AllowedMethods)
-                .WithHeaders(corsOptions.AllowedHeaders);
-
-          if (corsOptions.AllowCredentials) policy.AllowCredentials();
-        }
-      );
-
-    // Default policy for specific origins (can be used in development too)
+  if (builder.Environment.IsDevelopment())
+    // Allow all origins in development for easier testing
+    options.AddPolicy("Development", policy => { policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(); });
+  else
+    // Use configured origins in production
     options.AddPolicy(
-      "Configured",
+      "Production",
       policy => {
         policy.WithOrigins(corsOptions.AllowedOrigins)
               .WithMethods(corsOptions.AllowedMethods)
@@ -61,7 +49,19 @@ builder.Services.AddCors(options => {
         if (corsOptions.AllowCredentials) policy.AllowCredentials();
       }
     );
-  }
+
+  // Default policy for specific origins (can be used in development too)
+  options.AddPolicy(
+    "Configured",
+    policy => {
+      policy.WithOrigins(corsOptions.AllowedOrigins)
+            .WithMethods(corsOptions.AllowedMethods)
+            .WithHeaders(corsOptions.AllowedHeaders);
+
+      if (corsOptions.AllowCredentials) policy.AllowCredentials();
+    }
+  );
+}
 );
 
 // Add services to the container.
@@ -73,11 +73,24 @@ builder.Services
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
-    c.SwaggerDoc(
-      "v1",
-      new OpenApiInfo { Title = "GameGuild CMS API", Version = "v1", Description = "A Content Management System API for GameGuild" }
-    );
-  }
+  c.SwaggerDoc(
+    "v1",
+    new OpenApiInfo { Title = "GameGuild CMS API", Version = "v1", Description = "A Content Management System API for GameGuild" }
+  );
+
+  // Add JWT authentication support to Swagger
+  c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
+    Name = "Authorization",
+    Type = SecuritySchemeType.Http,
+    Scheme = "bearer",
+    BearerFormat = "JWT",
+    In = ParameterLocation.Header,
+    Description = "Enter your JWT token in the format: Bearer {your token}"
+  });
+
+  // Configure security requirements based on [Public] attribute
+  c.OperationFilter<GameGuild.Common.Swagger.AuthOperationFilter>();
+}
 );
 
 // Add common services and modules
@@ -117,24 +130,24 @@ var useInMemoryDb = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("US
 
 // Add Entity Framework with the appropriate provider
 builder.Services.AddDbContext<ApplicationDbContext>(options => {
-    if (useInMemoryDb)
-      // Use InMemory for tests
-      options.UseInMemoryDatabase("TestDatabase_" + Guid.NewGuid().ToString());
-    else
-      // Use SQLite for regular development
-      options.UseSqlite(connectionString);
+  if (useInMemoryDb)
+    // Use InMemory for tests
+    options.UseInMemoryDatabase("TestDatabase_" + Guid.NewGuid().ToString());
+  else
+    // Use SQLite for regular development
+    options.UseSqlite(connectionString);
 
-    // Suppress SQLite pragma warnings
-    options.ConfigureWarnings(warnings =>
-                                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
-    );
+  // Suppress SQLite pragma warnings
+  options.ConfigureWarnings(warnings =>
+                              warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+  );
 
-    // Enable sensitive data logging in development
-    if (!builder.Environment.IsDevelopment()) return;
+  // Enable sensitive data logging in development
+  if (!builder.Environment.IsDevelopment()) return;
 
-    options.EnableSensitiveDataLogging();
-    options.EnableDetailedErrors();
-  }
+  options.EnableSensitiveDataLogging();
+  options.EnableDetailedErrors();
+}
 );
 
 // Add DAC authorization services for GraphQL
@@ -217,9 +230,9 @@ if (app.Environment.IsDevelopment()) {
   app.UseSwagger();
 
   app.UseSwaggerUI(c => {
-      c.SwaggerEndpoint("/swagger/v1/swagger.json", "GameGuild CMS API v1");
-      c.RoutePrefix = "swagger"; // Serve Swagger UI at /swagger
-    }
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "GameGuild CMS API v1");
+    c.RoutePrefix = "swagger"; // Serve Swagger UI at /swagger
+  }
   );
 }
 
