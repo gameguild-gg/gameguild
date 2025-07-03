@@ -1,15 +1,10 @@
 using Xunit;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Services;
 using GameGuild.Data;
 using GameGuild.Modules.Comment.Models;
-using GameGuild.Modules.User.Models;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 using UserModel = GameGuild.Modules.User.Models.User;
 
@@ -321,7 +316,7 @@ public class PermissionPerformanceTests : IDisposable {
       $"Tenant membership queries took {stopwatch.ElapsedMilliseconds}ms, expected under {maxAcceptableTimeMs}ms"
     );
 
-    Assert.True(membershipCounts.All(count => count >= 2 && count <= 3));
+    Assert.True(membershipCounts.All(count => count is >= 2 and <= 3));
     Assert.Equal(userCount, membershipCounts.Length);
   }
 

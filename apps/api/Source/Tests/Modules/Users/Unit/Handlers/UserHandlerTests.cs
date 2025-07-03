@@ -1,10 +1,5 @@
 using Xunit;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Moq;
-using GameGuild.Tests.Modules.Fixtures;
-using GameGuild.Modules.User.Models;
 using UserServiceInterface = GameGuild.Modules.User.Services.IUserService;
 using UserModel = GameGuild.Modules.User.Models.User;
 

@@ -1,12 +1,7 @@
 using Xunit;
-using System;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.DependencyInjection;
 using GameGuild.Tests.Modules.Fixtures;
 
 namespace GameGuild.Tests.Modules.UserProfile.E2E.API

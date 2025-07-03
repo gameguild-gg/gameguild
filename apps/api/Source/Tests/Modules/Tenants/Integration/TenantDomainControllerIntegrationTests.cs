@@ -10,7 +10,6 @@ using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Tenant.Dtos;
 using GameGuild.Modules.Tenant.Models;
-using GameGuild.Modules.User.Models;
 using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -198,7 +197,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.NotNull(result);
     Assert.Equal(2, result.Count);
     Assert.Contains(result, d => d.TopLevelDomain == "example.com");
-    Assert.Contains(result, d => d.TopLevelDomain == "university.edu" && d.Subdomain == "cs");
+    Assert.Contains(result, d => d is { TopLevelDomain: "university.edu", Subdomain: "cs" });
   }
 
   [Fact]

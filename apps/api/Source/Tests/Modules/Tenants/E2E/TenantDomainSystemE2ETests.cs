@@ -9,7 +9,6 @@ using GameGuild.Modules.Auth.Services;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Tenant.Dtos;
-using GameGuild.Modules.User.Models;
 using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -391,9 +390,9 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     );
     Assert.NotNull(tenantDomains);
     Assert.Equal(3, tenantDomains.Count);
-    Assert.Contains(tenantDomains, d => d.TopLevelDomain == "university.edu" && d.Subdomain == null);
-    Assert.Contains(tenantDomains, d => d.TopLevelDomain == "university.edu" && d.Subdomain == "cs");
-    Assert.Contains(tenantDomains, d => d.TopLevelDomain == "university.edu" && d.Subdomain == "faculty");
+    Assert.Contains(tenantDomains, d => d is { TopLevelDomain: "university.edu", Subdomain: null });
+    Assert.Contains(tenantDomains, d => d is { TopLevelDomain: "university.edu", Subdomain: "cs" });
+    Assert.Contains(tenantDomains, d => d is { TopLevelDomain: "university.edu", Subdomain: "faculty" });
 
     // Step 14: Test getting all groups for tenant
     response = await _client.GetAsync($"/api/tenant-domains/user-groups/tenant/{tenantId}");

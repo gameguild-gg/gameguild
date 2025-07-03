@@ -335,7 +335,7 @@ public class ProductService(ApplicationDbContext context) : IProductService {
     // Check if user already has access
     var existingAccess = await GetUserProductAsync(userId, productId);
 
-    if (existingAccess != null && existingAccess.AccessStatus == ProductAccessStatus.Active) return existingAccess;
+    if (existingAccess is { AccessStatus: ProductAccessStatus.Active }) return existingAccess;
 
     var userProduct = new UserProduct {
       UserId = userId,

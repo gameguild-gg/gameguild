@@ -527,7 +527,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
 
     programUser.CompletionPercentage = (decimal)completedContent / totalContent * 100;
 
-    if (programUser.CompletionPercentage >= 100 && programUser.CompletedAt == null) programUser.CompletedAt = DateTime.UtcNow;
+    if (programUser is { CompletionPercentage: >= 100, CompletedAt: null }) programUser.CompletedAt = DateTime.UtcNow;
 
     programUser.Touch();
   }

@@ -5,7 +5,6 @@ using GameGuild.Modules.User.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
-using System.Linq;
 
 
 namespace GameGuild.Common.Services;
@@ -130,7 +129,7 @@ public class DatabaseSeeder(
       
       // Check if password credential exists
       var existingPasswordCredential = existingSuperAdmin.Credentials
-        .FirstOrDefault(c => c.Type == "password" && c.IsActive);
+        .FirstOrDefault(c => c is { Type: "password", IsActive: true });
         
       if (existingPasswordCredential == null) {
         logger.LogInformation("Creating password credential for existing super admin");

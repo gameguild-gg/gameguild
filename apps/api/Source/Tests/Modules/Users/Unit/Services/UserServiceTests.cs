@@ -1,6 +1,4 @@
 using Xunit;
-using System;
-using System.Threading.Tasks;
 using Moq;
 using GameGuild.Modules.User.Services;
 using UserModel = GameGuild.Modules.User.Models.User;

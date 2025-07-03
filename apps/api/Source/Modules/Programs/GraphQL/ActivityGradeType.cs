@@ -1,5 +1,5 @@
 using GameGuild.Modules.Program.Models;
-using HotChocolate.Types;
+
 
 namespace GameGuild.Modules.Program.GraphQL;
 

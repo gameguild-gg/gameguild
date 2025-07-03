@@ -4,7 +4,6 @@ using System.Diagnostics;
 using GameGuild.Data;
 using GameGuild.Modules.TestingLab.Services;
 using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Modules.User.Models;
 using ProjectModel = GameGuild.Modules.Project.Models.Project;
 using ProjectVersionModel = GameGuild.Modules.Project.Models.ProjectVersion;
 

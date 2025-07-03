@@ -166,7 +166,7 @@ namespace GameGuild.Modules.Auth.Services {
       if (string.IsNullOrEmpty(address) || !address.StartsWith("0x") || address.Length != 42) return false;
 
       // Check if it's a valid hex string
-      return address[2..].All(c => char.IsDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'));
+      return address[2..].All(c => char.IsDigit(c) || c is >= 'a' and <= 'f' || c is >= 'A' and <= 'F');
     }
   }
 }

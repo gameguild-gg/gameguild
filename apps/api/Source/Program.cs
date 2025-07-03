@@ -6,7 +6,6 @@ using GameGuild.Common.Transformers;
 using GameGuild.Config;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Configuration;
-using GameGuild.Modules.Program.GraphQL;
 using GameGuild.Modules.User.GraphQL;
 using MediatR;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;

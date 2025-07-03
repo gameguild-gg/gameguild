@@ -5,7 +5,6 @@ using Xunit;
 using GameGuild.Data;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Modules.User.Models;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Tests.Fixtures;

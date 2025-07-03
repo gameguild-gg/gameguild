@@ -9,7 +9,6 @@ using GameGuild.Common.Services;
 using GameGuild.Tests.Fixtures;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.User.Models;
 using System.Net.Http.Headers;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
 using Xunit.Abstractions;
