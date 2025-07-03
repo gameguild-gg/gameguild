@@ -25,8 +25,8 @@ namespace GameGuild.Modules.Auth.Middleware {
       await next(context);
     }
 
-    private string? ExtractTokenFromHeader(HttpRequest request) {
-      var authHeader = request.Headers["Authorization"].FirstOrDefault();
+    private static string? ExtractTokenFromHeader(HttpRequest request) {
+      var authHeader = request.Headers.Authorization.FirstOrDefault();
 
       if (authHeader != null && authHeader.StartsWith("Bearer ")) { return authHeader.Substring("Bearer ".Length).Trim(); }
 
