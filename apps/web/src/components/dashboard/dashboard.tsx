@@ -14,7 +14,7 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Package, Send, Settings } from 'lucide-react';
+import { Package, Send, Settings, Building2 } from 'lucide-react';
 import { cookies } from 'next/headers';
 
 const data = {
@@ -24,6 +24,11 @@ const data = {
         title: 'Projects',
         url: '/dashboard/projects',
         icon: Package,
+      },
+      {
+        title: 'Tenant Management',
+        url: '/dashboard/tenant',
+        icon: Building2,
       },
     ],
     secondary: [

@@ -302,4 +302,27 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   }
 
   #endregion
+
+  #region Test Membership Endpoint
+
+  // POST: api/tenant-domains/memberships
+  [HttpPost("memberships")]
+  [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Create)]
+  public async Task<ActionResult<TenantUserGroupMembershipDto>> AddUserToGroupMembership([FromBody] AddUserToGroupDto request) {
+    try {
+      var membership =
+        await tenantDomainService.AddUserToGroupAsync(request.UserId, request.UserGroupId, request.IsAutoAssigned);
+      var membershipDto = new TenantUserGroupMembershipDto {
+        Id = membership.Id,
+        UserId = membership.UserId,
+        GroupId = membership.UserGroupId,
+        IsAutoAssigned = membership.IsAutoAssigned,
+        CreatedAt = membership.CreatedAt,
+      };
+      return CreatedAtAction(nameof(GetUserGroups), new { userId = membership.UserId }, membershipDto);
+    }
+    catch (Exception ex) { return BadRequest($"Error adding user to group: {ex.Message}"); }
+  }
+
+  #endregion
 }
