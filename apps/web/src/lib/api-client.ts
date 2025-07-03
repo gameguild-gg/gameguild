@@ -51,6 +51,18 @@ class ApiClient {
     });
   }
 
+  // Admin login for development/testing (uses regular sign-in endpoint)
+  async adminLogin(credentials: { email: string; password: string }): Promise<SignInResponse> {
+    return this.request<SignInResponse>('/auth/sign-in', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: credentials.email,
+        password: credentials.password,
+        tenantId: null, // Let backend choose the tenant
+      }),
+    });
+  }
+
   async revokeToken(refreshToken: string): Promise<void> {
     await this.request('/auth/revoke-token', {
       method: 'POST',

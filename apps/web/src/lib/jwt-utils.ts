@@ -8,10 +8,15 @@
  */
 export function decodeJwt(token: string): any {
   try {
+    // Handle non-JWT tokens (like admin placeholders)
+    if (!token || typeof token !== 'string' || !token.includes('.')) {
+      return null;
+    }
+
     // JWT tokens have 3 parts separated by dots: header.payload.signature
     const parts = token.split('.');
     if (parts.length !== 3) {
-      throw new Error('Invalid JWT format');
+      return null;
     }
 
     // Decode the payload (second part)
@@ -25,7 +30,7 @@ export function decodeJwt(token: string): any {
 
     return JSON.parse(decoded);
   } catch (error) {
-    console.error('Failed to decode JWT:', error);
+    // Silent fail for invalid tokens
     return null;
   }
 }
@@ -35,6 +40,12 @@ export function decodeJwt(token: string): any {
  */
 export function getJwtExpiryDate(token: string): Date | null {
   try {
+    // Handle non-JWT tokens gracefully
+    if (!token || typeof token !== 'string' || !token.includes('.')) {
+      console.warn('Token is not a valid JWT format, skipping expiry check');
+      return null;
+    }
+
     const payload = decodeJwt(token);
     if (!payload || !payload.exp) {
       return null;
@@ -53,8 +64,9 @@ export function getJwtExpiryDate(token: string): Date | null {
  */
 export function isJwtExpired(token: string): boolean {
   const expiryDate = getJwtExpiryDate(token);
+  // Assume expired if we can't read the expiry
   if (!expiryDate) {
-    return true; // Assume expired if we can't read the expiry
+    return true;
   }
 
   return new Date() > expiryDate;
