@@ -7656,6 +7656,22 @@ export type PostUsersByIdRestoreResponses = {
   200: unknown;
 };
 
+export type GetUsersMeData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/users/me';
+};
+
+export type GetUsersMeResponses = {
+  /**
+   * OK
+   */
+  200: UserResponseDto;
+};
+
+export type GetUsersMeResponse = GetUsersMeResponses[keyof GetUsersMeResponses];
+
 export type ClientOptions = {
   baseUrl: `${string}://${string}` | (string & {});
 };
