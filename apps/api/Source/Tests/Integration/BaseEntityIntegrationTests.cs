@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
-using GameGuild.Modules.User.Models;
 using GameGuild.Modules.User.Services;
 using Xunit;
 using UserModel = GameGuild.Modules.User.Models.User;

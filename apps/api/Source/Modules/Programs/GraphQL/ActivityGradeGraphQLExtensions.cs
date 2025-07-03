@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 namespace GameGuild.Modules.Program.GraphQL;
 
 /// <summary>

@@ -2,7 +2,6 @@ using Xunit;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 using GameGuild.Data;
-using GameGuild.Modules.User.Models;
 using UserModel = GameGuild.Modules.User.Models.User;
 
 

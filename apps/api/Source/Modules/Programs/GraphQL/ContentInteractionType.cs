@@ -1,6 +1,5 @@
-using GameGuild.Common.Enums;
 using GameGuild.Modules.Program.Models;
-using HotChocolate.Types;
+
 
 namespace GameGuild.Modules.Program.GraphQL;
 
@@ -73,7 +72,7 @@ public class ContentInteractionType : ObjectType<ContentInteraction>
             .Resolve(context =>
             {
                 var interaction = context.Parent<ContentInteraction>();
-                if (interaction.FirstAccessedAt.HasValue && interaction.LastAccessedAt.HasValue)
+                if (interaction is { FirstAccessedAt: not null, LastAccessedAt: not null })
                 {
                     return (int)(interaction.LastAccessedAt.Value - interaction.FirstAccessedAt.Value).TotalMinutes;
                 }
