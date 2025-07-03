@@ -94,23 +94,41 @@ public class ContentInteractionType : ObjectType<ContentInteraction>
 public record StartContentInput(
     Guid ProgramUserId,
     Guid ContentId
-);
+) {
+  public Guid ProgramUserId { get; init; } = ProgramUserId;
+
+  public Guid ContentId { get; init; } = ContentId;
+}
 
 public record UpdateProgressInput(
     Guid InteractionId,
     decimal CompletionPercentage
-);
+) {
+  public Guid InteractionId { get; init; } = InteractionId;
+
+  public decimal CompletionPercentage { get; init; } = CompletionPercentage;
+}
 
 public record SubmitContentInput(
     Guid InteractionId,
     string SubmissionData
-);
+) {
+  public Guid InteractionId { get; init; } = InteractionId;
+
+  public string SubmissionData { get; init; } = SubmissionData;
+}
 
 public record CompleteContentInput(
     Guid InteractionId
-);
+) {
+  public Guid InteractionId { get; init; } = InteractionId;
+}
 
 public record UpdateTimeSpentInput(
     Guid InteractionId,
     int AdditionalMinutes
-);
+) {
+  public Guid InteractionId { get; init; } = InteractionId;
+
+  public int AdditionalMinutes { get; init; } = AdditionalMinutes;
+}

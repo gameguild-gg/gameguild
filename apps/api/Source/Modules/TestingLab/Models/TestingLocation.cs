@@ -4,7 +4,7 @@ using GameGuild.Common.Entities;
 
 namespace GameGuild.Modules.TestingLab.Models {
   public class TestingLocation : BaseEntity {
-    [Required, MaxLength(255)]
+    [Required][MaxLength(255)]
     public string Name { get; set; } = string.Empty;
 
     public string? Description { get; set; }

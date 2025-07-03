@@ -24,7 +24,7 @@ namespace GameGuild.Modules.TestingLab.Models {
     /// </summary>
     public virtual TestingLocation Location { get; set; } = null!;
 
-    [Required, MaxLength(255)]
+    [Required][MaxLength(255)]
     public string SessionName { get; set; } = string.Empty;
 
     [Required]

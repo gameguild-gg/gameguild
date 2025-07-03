@@ -285,7 +285,9 @@ public class ContentInteractionMutations
 /// </summary>
 public class ContentInteractionResult
 {
-    public bool Success { get; set; }
-    public string? ErrorMessage { get; set; }
-    public ContentInteraction? Interaction { get; set; }
+  public bool Success { get; set; }
+
+  public string? ErrorMessage { get; set; }
+
+  public ContentInteraction? Interaction { get; set; }
 }

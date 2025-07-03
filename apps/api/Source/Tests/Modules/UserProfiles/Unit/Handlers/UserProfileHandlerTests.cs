@@ -126,33 +126,44 @@ namespace GameGuild.Tests.Modules.UserProfile.Unit.Handlers
     // Mock classes for testing purposes
     public class UserProfile
     {
-        public Guid Id { get; set; }
-        public Guid UserId { get; set; }
-        public string Bio { get; set; }
-        public string AvatarUrl { get; set; }
-        public string Location { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+      public Guid Id { get; set; }
+
+      public Guid UserId { get; set; }
+
+      public string Bio { get; set; }
+
+      public string AvatarUrl { get; set; }
+
+      public string Location { get; set; }
+
+      public DateTime CreatedAt { get; set; }
+
+      public DateTime UpdatedAt { get; set; }
     }
 
     public class CreateUserProfileCommand // : IRequest<UserProfile>
     {
-        public Guid UserId { get; set; }
-        public string Bio { get; set; }
-        public string AvatarUrl { get; set; }
+      public Guid UserId { get; set; }
+
+      public string Bio { get; set; }
+
+      public string AvatarUrl { get; set; }
     }
 
     public class UpdateUserProfileCommand // : IRequest<UserProfile>
     {
-        public Guid Id { get; set; }
-        public string Bio { get; set; }
-        public string AvatarUrl { get; set; }
-        public string Location { get; set; }
+      public Guid Id { get; set; }
+
+      public string Bio { get; set; }
+
+      public string AvatarUrl { get; set; }
+
+      public string Location { get; set; }
     }
 
     public class DeleteUserProfileCommand // : IRequest<bool>
     {
-        public Guid Id { get; set; }
+      public Guid Id { get; set; }
     }
 
     public interface IUserProfileService

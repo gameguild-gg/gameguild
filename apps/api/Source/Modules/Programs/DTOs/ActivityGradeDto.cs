@@ -7,22 +7,31 @@ namespace GameGuild.Modules.Program.DTOs;
 /// </summary>
 public class ActivityGradeDto
 {
-    public Guid Id { get; set; }
-    public Guid ContentInteractionId { get; set; }
-    public Guid GraderProgramUserId { get; set; }
-    public decimal Grade { get; set; }
-    public string? Feedback { get; set; }
-    public string? GradingDetails { get; set; }
-    public DateTime GradedAt { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+  public Guid Id { get; set; }
 
-    // Simplified nested objects to avoid circular references
-    public ContentInteractionSummaryDto? ContentInteraction { get; set; }
-    public GraderSummaryDto? Grader { get; set; }
+  public Guid ContentInteractionId { get; set; }
 
-    // Computed properties for convenience
-    public bool IsPassingGrade => Grade >= 70; // Assuming 70% is passing
+  public Guid GraderProgramUserId { get; set; }
+
+  public decimal Grade { get; set; }
+
+  public string? Feedback { get; set; }
+
+  public string? GradingDetails { get; set; }
+
+  public DateTime GradedAt { get; set; }
+
+  public DateTime CreatedAt { get; set; }
+
+  public DateTime UpdatedAt { get; set; }
+
+  // Simplified nested objects to avoid circular references
+  public ContentInteractionSummaryDto? ContentInteraction { get; set; }
+
+  public GraderSummaryDto? Grader { get; set; }
+
+  // Computed properties for convenience
+  public bool IsPassingGrade => Grade >= 70; // Assuming 70% is passing
     public string GradePercentage => $"{Grade:F1}%";
     public bool HasFeedback => !string.IsNullOrEmpty(Feedback);
     public bool HasGradingDetails => !string.IsNullOrEmpty(GradingDetails);
@@ -33,13 +42,19 @@ public class ActivityGradeDto
 /// </summary>
 public class ContentInteractionSummaryDto
 {
-    public Guid Id { get; set; }
-    public Guid ProgramUserId { get; set; }
-    public Guid ContentId { get; set; }
-    public string Status { get; set; } = string.Empty;
-    public DateTime? SubmittedAt { get; set; }
-    public ContentSummaryDto? Content { get; set; }
-    public StudentSummaryDto? Student { get; set; }
+  public Guid Id { get; set; }
+
+  public Guid ProgramUserId { get; set; }
+
+  public Guid ContentId { get; set; }
+
+  public string Status { get; set; } = string.Empty;
+
+  public DateTime? SubmittedAt { get; set; }
+
+  public ContentSummaryDto? Content { get; set; }
+
+  public StudentSummaryDto? Student { get; set; }
 }
 
 /// <summary>
@@ -47,9 +62,11 @@ public class ContentInteractionSummaryDto
 /// </summary>
 public class StudentSummaryDto
 {
-    public Guid Id { get; set; }
-    public string UserDisplayName { get; set; } = string.Empty;
-    public string UserEmail { get; set; } = string.Empty;
+  public Guid Id { get; set; }
+
+  public string UserDisplayName { get; set; } = string.Empty;
+
+  public string UserEmail { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -57,10 +74,13 @@ public class StudentSummaryDto
 /// </summary>
 public class GraderSummaryDto
 {
-    public Guid Id { get; set; }
-    public string UserDisplayName { get; set; } = string.Empty;
-    public string UserEmail { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty;
+  public Guid Id { get; set; }
+
+  public string UserDisplayName { get; set; } = string.Empty;
+
+  public string UserEmail { get; set; } = string.Empty;
+
+  public string Role { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -72,7 +92,17 @@ public record CreateActivityGradeDto(
     [Required] [Range(0, 100)] decimal Grade,
     string? Feedback = null,
     string? GradingDetails = null
-);
+) {
+  public Guid ContentInteractionId { get; init; } = ContentInteractionId;
+
+  public Guid GraderProgramUserId { get; init; } = GraderProgramUserId;
+
+  public decimal Grade { get; init; } = Grade;
+
+  public string? Feedback { get; init; } = Feedback;
+
+  public string? GradingDetails { get; init; } = GradingDetails;
+}
 
 /// <summary>
 /// DTO for updating existing activity grades
@@ -81,21 +111,31 @@ public record UpdateActivityGradeDto(
     [Range(0, 100)] decimal? Grade = null,
     string? Feedback = null,
     string? GradingDetails = null
-);
+) {
+  public decimal? Grade { get; init; } = Grade;
+
+  public string? Feedback { get; init; } = Feedback;
+
+  public string? GradingDetails { get; init; } = GradingDetails;
+}
 
 /// <summary>
 /// DTO for grade statistics responses
 /// </summary>
 public class GradeStatisticsDto
 {
-    public int TotalGrades { get; set; }
-    public decimal AverageGrade { get; set; }
-    public decimal MinGrade { get; set; }
-    public decimal MaxGrade { get; set; }
-    public decimal PassingRate { get; set; }
-    
-    // Additional computed properties for better UX
-    public string AverageGradeFormatted => $"{AverageGrade:F1}%";
+  public int TotalGrades { get; set; }
+
+  public decimal AverageGrade { get; set; }
+
+  public decimal MinGrade { get; set; }
+
+  public decimal MaxGrade { get; set; }
+
+  public decimal PassingRate { get; set; }
+
+  // Additional computed properties for better UX
+  public string AverageGradeFormatted => $"{AverageGrade:F1}%";
     public string PassingRateFormatted => $"{PassingRate:F1}%";
     public bool HasGrades => TotalGrades > 0;
 }
