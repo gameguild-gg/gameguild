@@ -4,7 +4,6 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.Tenant.Models;
 using GameGuild.Modules.Tenant.Services;
-using GameGuild.Modules.User.Models;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;

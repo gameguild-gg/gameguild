@@ -1,22 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Routing;
 using GameGuild.Data;
-using GameGuild.Modules.Auth.Configuration;
-using Microsoft.Extensions.Configuration;
 using MediatR;
 
 namespace GameGuild.Tests.Modules.Fixtures

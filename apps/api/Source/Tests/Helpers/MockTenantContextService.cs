@@ -32,7 +32,7 @@ namespace GameGuild.Tests.Helpers {
     /// Add a test tenant permission to the mock service
     /// </summary>
     public void AddTenantPermission(TenantPermission permission) {
-      if (permission.UserId.HasValue && permission.TenantId.HasValue) _permissions[(permission.UserId.Value, permission.TenantId.Value)] = permission;
+      if (permission is { UserId: not null, TenantId: not null }) _permissions[(permission.UserId.Value, permission.TenantId.Value)] = permission;
     }
 
     /// <summary>

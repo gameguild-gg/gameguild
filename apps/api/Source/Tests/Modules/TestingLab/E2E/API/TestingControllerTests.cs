@@ -9,7 +9,6 @@ using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Tests.Fixtures;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.User.Models;
 using System.Net.Http.Headers;
 using Xunit.Abstractions;
 using ProjectModel = GameGuild.Modules.Project.Models.Project;

@@ -4,7 +4,6 @@ using System.Text.Json;
 using GameGuild.Data;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Services;
-using GameGuild.Modules.User.Models;
 using GameGuild.Modules.Comment.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;

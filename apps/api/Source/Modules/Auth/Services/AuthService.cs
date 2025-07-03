@@ -26,7 +26,7 @@ namespace GameGuild.Modules.Auth.Services {
 
       if (user == null) throw new UnauthorizedAccessException("Invalid credentials");
 
-      var passwordCredential = user.Credentials.FirstOrDefault(c => c.Type == "password" && c.IsActive);
+      var passwordCredential = user.Credentials.FirstOrDefault(c => c is { Type: "password", IsActive: true });
 
       if (passwordCredential == null || !VerifyPassword(request.Password, passwordCredential.Value)) throw new UnauthorizedAccessException("Invalid credentials");
 
