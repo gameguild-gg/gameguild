@@ -43,7 +43,7 @@ public class ProductProgram : BaseEntity {
   /// <summary>
   /// Display order of programs within the product
   /// </summary>
-  public int SortOrder { get; set; } = 0;
+  public int SortOrder { get; set; }
 
   /// <summary>
   /// Default constructor

@@ -14,14 +14,14 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// Get all tenants
   /// </summary>
   /// <returns>List of tenants</returns>
-  public async Task<IEnumerable<Models.Tenant>> GetAllTenantsAsync() { return await context.Tenants.Include(t => t.TenantPermissions).ToListAsync(); }
+  public async Task<IEnumerable<Tenant>> GetAllTenantsAsync() { return await context.Tenants.Include(t => t.TenantPermissions).ToListAsync(); }
 
   /// <summary>
   /// Get a specific tenant by ID
   /// </summary>
   /// <param name="id">Tenant ID</param>
   /// <returns>Tenant or null if not found</returns>
-  public async Task<Models.Tenant?> GetTenantByIdAsync(Guid id) {
+  public async Task<Tenant?> GetTenantByIdAsync(Guid id) {
     return await context.Tenants.Include(t => t.TenantPermissions)
                         .ThenInclude(tp => tp.User)
                         .FirstOrDefaultAsync(t => t.Id == id);
@@ -32,14 +32,14 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="name">Tenant name</param>
   /// <returns>Tenant or null if not found</returns>
-  public async Task<Models.Tenant?> GetTenantByNameAsync(string name) { return await context.Tenants.Include(t => t.TenantPermissions).FirstOrDefaultAsync(t => t.Name == name); }
+  public async Task<Tenant?> GetTenantByNameAsync(string name) { return await context.Tenants.Include(t => t.TenantPermissions).FirstOrDefaultAsync(t => t.Name == name); }
 
   /// <summary>
   /// Create a new tenant
   /// </summary>
   /// <param name="tenant">Tenant to create</param>
   /// <returns>Created tenant</returns>
-  public async Task<Models.Tenant> CreateTenantAsync(Models.Tenant tenant) {
+  public async Task<Tenant> CreateTenantAsync(Tenant tenant) {
     context.Tenants.Add(tenant);
     await context.SaveChangesAsync();
 
@@ -51,7 +51,7 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="tenant">Tenant to update</param>
   /// <returns>Updated tenant</returns>
-  public async Task<Models.Tenant> UpdateTenantAsync(Models.Tenant tenant) {
+  public async Task<Tenant> UpdateTenantAsync(Tenant tenant) {
     var existingTenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenant.Id);
 
     if (existingTenant == null) throw new InvalidOperationException($"Tenant with ID {tenant.Id} not found");
@@ -152,7 +152,7 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// Get soft-deleted tenants
   /// </summary>
   /// <returns>List of soft-deleted tenants</returns>
-  public async Task<IEnumerable<Models.Tenant>> GetDeletedTenantsAsync() {
+  public async Task<IEnumerable<Tenant>> GetDeletedTenantsAsync() {
     return await context.Tenants.IgnoreQueryFilters()
                         .Where(t => t.DeletedAt != null)
                         .Include(t => t.TenantPermissions)

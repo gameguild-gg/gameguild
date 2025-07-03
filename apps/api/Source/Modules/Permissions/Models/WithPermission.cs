@@ -159,12 +159,12 @@ public class WithPermissions : BaseEntity {
   [GraphQLType(typeof(NonNullType<LongType>))]
   [GraphQLDescription("Permission flags for bits 0-63")]
   [Column(TypeName = "bigint")]
-  public ulong PermissionFlags1 { get; set; } = 0;
+  public ulong PermissionFlags1 { get; set; }
 
   [GraphQLType(typeof(NonNullType<LongType>))]
   [GraphQLDescription("Permission flags for bits 64-127")]
   [Column(TypeName = "bigint")]
-  public ulong PermissionFlags2 { get; set; } = 0;
+  public ulong PermissionFlags2 { get; set; }
 
   /// <summary>
   /// User relationship - NULL means default permissions

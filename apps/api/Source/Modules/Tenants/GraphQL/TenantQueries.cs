@@ -13,7 +13,7 @@ public class TenantQueries {
   /// <summary>
   /// Get all tenants (non-deleted only)
   /// </summary>
-  public async Task<IEnumerable<Models.Tenant>> GetTenants(
+  public async Task<IEnumerable<Tenant>> GetTenants(
     [Service] ITenantService tenantService,
     [Service] IHttpContextAccessor httpContextAccessor
   ) {
@@ -28,7 +28,7 @@ public class TenantQueries {
   /// <summary>
   /// Get a tenant by ID
   /// </summary>
-  public async Task<Models.Tenant?> GetTenantById(
+  public async Task<Tenant?> GetTenantById(
     [Service] ITenantService tenantService,
     [Service] IHttpContextAccessor httpContextAccessor, Guid id
   ) {
@@ -43,7 +43,7 @@ public class TenantQueries {
   /// <summary>
   /// Get soft-deleted tenants
   /// </summary>
-  public async Task<IEnumerable<Models.Tenant>> GetDeletedTenants(
+  public async Task<IEnumerable<Tenant>> GetDeletedTenants(
     [Service] ITenantService tenantService,
     [Service] IHttpContextAccessor httpContextAccessor
   ) {

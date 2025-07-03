@@ -17,7 +17,7 @@ public class TenantMutations {
   /// <summary>
   /// Create a new tenant
   /// </summary>
-  public async Task<Models.Tenant> CreateTenant(
+  public async Task<Tenant> CreateTenant(
     [Service] ITenantService tenantService,
     [Service] IPermissionService permissionService, [Service] IHttpContextAccessor httpContextAccessor,
     CreateTenantInput input
@@ -40,7 +40,7 @@ public class TenantMutations {
 
     if (!hasPermission) throw new UnauthorizedAccessException("Insufficient permissions to create tenant");
 
-    var tenant = new Models.Tenant { Name = input.Name, Description = input.Description, IsActive = input.IsActive };
+    var tenant = new Tenant { Name = input.Name, Description = input.Description, IsActive = input.IsActive };
 
     return await tenantService.CreateTenantAsync(tenant);
   }
@@ -48,8 +48,8 @@ public class TenantMutations {
   /// <summary>
   /// Update an existing tenant
   /// </summary>
-  public async Task<Models.Tenant?> UpdateTenant([Service] ITenantService tenantService, UpdateTenantInput input) {
-    var tenant = new Models.Tenant { Id = input.Id, Name = input.Name ?? string.Empty, Description = input.Description, IsActive = input.IsActive ?? true };
+  public async Task<Tenant?> UpdateTenant([Service] ITenantService tenantService, UpdateTenantInput input) {
+    var tenant = new Tenant { Id = input.Id, Name = input.Name ?? string.Empty, Description = input.Description, IsActive = input.IsActive ?? true };
 
     return await tenantService.UpdateTenantAsync(tenant);
   }

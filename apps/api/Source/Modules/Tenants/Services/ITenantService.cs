@@ -11,35 +11,35 @@ public interface ITenantService {
   /// Get all tenants
   /// </summary>
   /// <returns>List of tenants</returns>
-  Task<IEnumerable<Models.Tenant>> GetAllTenantsAsync();
+  Task<IEnumerable<Tenant>> GetAllTenantsAsync();
 
   /// <summary>
   /// Get a specific tenant by ID
   /// </summary>
   /// <param name="id">Tenant ID</param>
   /// <returns>Tenant or null if not found</returns>
-  Task<Models.Tenant?> GetTenantByIdAsync(Guid id);
+  Task<Tenant?> GetTenantByIdAsync(Guid id);
 
   /// <summary>
   /// Get a tenant by name
   /// </summary>
   /// <param name="name">Tenant name</param>
   /// <returns>Tenant or null if not found</returns>
-  Task<Models.Tenant?> GetTenantByNameAsync(string name);
+  Task<Tenant?> GetTenantByNameAsync(string name);
 
   /// <summary>
   /// Create a new tenant
   /// </summary>
   /// <param name="tenant">Tenant to create</param>
   /// <returns>Created tenant</returns>
-  Task<Models.Tenant> CreateTenantAsync(Models.Tenant tenant);
+  Task<Tenant> CreateTenantAsync(Tenant tenant);
 
   /// <summary>
   /// Update an existing tenant
   /// </summary>
   /// <param name="tenant">Tenant to update</param>
   /// <returns>Updated tenant</returns>
-  Task<Models.Tenant> UpdateTenantAsync(Models.Tenant tenant);
+  Task<Tenant> UpdateTenantAsync(Tenant tenant);
 
   /// <summary>
   /// Soft delete a tenant
@@ -80,7 +80,7 @@ public interface ITenantService {
   /// Get soft-deleted tenants
   /// </summary>
   /// <returns>List of soft-deleted tenants</returns>
-  Task<IEnumerable<Models.Tenant>> GetDeletedTenantsAsync();
+  Task<IEnumerable<Tenant>> GetDeletedTenantsAsync();
 
   /// <summary>
   /// Add a user to a tenant

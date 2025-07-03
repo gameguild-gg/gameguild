@@ -257,22 +257,23 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
     try {
       var membership = await tenantDomainService.AutoAssignUserToGroupsAsync(request.Email);
 
-      if (membership != null && membership.Any()) {
-        // Return the first membership created (there should typically be only one for single user)
-        var firstMembership = membership.First();
+      var tenantUserGroupMemberships = membership as TenantUserGroupMembership[] ?? membership.ToArray();
 
-        var membershipDto = new TenantUserGroupMembershipDto {
-          Id = firstMembership.Id,
-          UserId = firstMembership.UserId,
-          GroupId = firstMembership.UserGroupId,
-          IsAutoAssigned = firstMembership.IsAutoAssigned,
-          CreatedAt = firstMembership.CreatedAt,
-        };
+      if (tenantUserGroupMemberships.Length == 0) return NotFound("No matching domain found for user's email");
 
-        return CreatedAtAction(nameof(GetUserGroups), new { userId = firstMembership.UserId }, membershipDto);
-      }
+      // Return the first membership created (there should typically be only one for a single user)
+      var firstMembership = tenantUserGroupMemberships.First();
 
-      return NotFound("No matching domain found for user's email");
+      var membershipDto = new TenantUserGroupMembershipDto {
+        Id = firstMembership.Id,
+        UserId = firstMembership.UserId,
+        GroupId = firstMembership.UserGroupId,
+        IsAutoAssigned = firstMembership.IsAutoAssigned,
+        CreatedAt = firstMembership.CreatedAt,
+      };
+
+      return CreatedAtAction(nameof(GetUserGroups), new { userId = firstMembership.UserId }, membershipDto);
+
     }
     catch (Exception ex) { return BadRequest($"Error during auto-assignment: {ex.Message}"); }
   }

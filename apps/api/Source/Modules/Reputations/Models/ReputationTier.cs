@@ -23,7 +23,7 @@ public class ReputationTier : ResourceBase, ITenantable {
   public required string Name { get; set; }
 
   /// <summary>
-  /// Display name for this reputation tier
+  /// Display the name for this reputation tier
   /// </summary>
   [Required]
   [MaxLength(200)]

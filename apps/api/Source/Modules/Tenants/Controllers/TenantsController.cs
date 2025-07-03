@@ -65,7 +65,7 @@ public class TenantsController(ITenantService tenantService) : ControllerBase {
   public async Task<ActionResult<TenantResponseDto>> CreateTenant([FromBody] CreateTenantDto createDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var tenant = new Models.Tenant(new { createDto.Name, createDto.Description, createDto.IsActive });
+    var tenant = new Tenant(new { createDto.Name, createDto.Description, createDto.IsActive });
 
     var createdTenant = await tenantService.CreateTenantAsync(tenant);
     var response = MapToResponseDto(createdTenant);
@@ -233,7 +233,7 @@ public class TenantsController(ITenantService tenantService) : ControllerBase {
   /// </summary>
   /// <param name="tenant">Tenant entity</param>
   /// <returns>Tenant response DTO</returns>
-  private static TenantResponseDto MapToResponseDto(Models.Tenant tenant) {
+  private static TenantResponseDto MapToResponseDto(Tenant tenant) {
     return new TenantResponseDto {
       Id = tenant.Id,
       Name = tenant.Name,
@@ -243,8 +243,7 @@ public class TenantsController(ITenantService tenantService) : ControllerBase {
       CreatedAt = tenant.CreatedAt,
       UpdatedAt = tenant.UpdatedAt,
       DeletedAt = tenant.DeletedAt,
-      TenantPermissions = tenant.TenantPermissions?.Select(MapTenantPermissionToResponseDto).ToList() ??
-                          new List<TenantPermissionResponseDto>(),
+      TenantPermissions = tenant.TenantPermissions.Select(MapTenantPermissionToResponseDto).ToList(),
     };
   }
 

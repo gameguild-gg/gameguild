@@ -82,7 +82,7 @@ public class ContentInteractionQueries {
   /// Requires Read permission on the parent Program
   /// </summary>
   [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
-  public async Task<IEnumerable<ContentInteraction>> GetContentInteractionsByStatus(
+  public Task<IEnumerable<ContentInteraction>> GetContentInteractionsByStatus(
     Guid programId,
     ProgressStatus status,
     [Service] IContentInteractionService contentInteractionService
@@ -94,7 +94,7 @@ public class ContentInteractionQueries {
 
     // Note: This is a simplified implementation. In practice, you'd want a service method
     // that can efficiently query interactions by program and status
-    return allInteractions.Where(i => i.Content.ProgramId == programId && i.Status == status);
+    return Task.FromResult(allInteractions.Where(i => i.Content.ProgramId == programId && i.Status == status));
   }
 
   /// <summary>
@@ -102,13 +102,13 @@ public class ContentInteractionQueries {
   /// Requires Read permission on the parent Program
   /// </summary>
   [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
-  public async Task<ContentInteractionStats> GetContentInteractionStats(
+  public Task<ContentInteractionStats> GetContentInteractionStats(
     Guid programId,
     [Service] IContentInteractionService contentInteractionService
   ) {
     // This would require extending the service to support statistics
     // For now, return a placeholder implementation
-    return new ContentInteractionStats {
+    return Task.FromResult(new ContentInteractionStats {
       ProgramId = programId,
       TotalInteractions = 0,
       CompletedInteractions = 0,
@@ -116,7 +116,7 @@ public class ContentInteractionQueries {
       InProgressInteractions = 0,
       AverageCompletionPercentage = 0,
       AverageTimeSpentMinutes = 0
-    };
+    });
   }
 }
 
