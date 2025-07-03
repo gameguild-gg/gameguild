@@ -153,9 +153,9 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task GetDomainsByTenant_WithExistingDomains_ReturnsCorrectDomains() {
     // Arrange
+    await SetupAuthentication(); // Add authentication setup
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await SetupTestData();
 
     var domain1 = new TenantDomain {
       Id = Guid.NewGuid(),
@@ -183,7 +183,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     await db.SaveChangesAsync();
 
     // Act
-    var response = await _client.GetAsync($"/api/tenant-domains/tenant/{_tenantId}");
+    var response = await _client.GetAsync($"/api/tenant-domains?tenantId={_tenantId}");
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -203,9 +203,9 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task UpdateDomain_WithValidData_ReturnsUpdatedDomain() {
     // Arrange
+    await SetupAuthentication(); // Add authentication setup
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await SetupTestData();
 
     var domain = new TenantDomain {
       Id = Guid.NewGuid(),
@@ -242,8 +242,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.False(result.IsMainDomain);
     Assert.True(result.IsSecondaryDomain);
 
-    // Verify it was updated in database
-    var updatedDomain = await db.TenantDomains.FirstOrDefaultAsync(d => d.Id == domain.Id);
+    // Verify it was updated in database using a fresh context
+    using var verifyScope = _factory.Services.CreateScope();
+    var verifyDb = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var updatedDomain = await verifyDb.TenantDomains.FirstOrDefaultAsync(d => d.Id == domain.Id);
     Assert.NotNull(updatedDomain);
     Assert.False(updatedDomain.IsMainDomain);
     Assert.True(updatedDomain.IsSecondaryDomain);
@@ -252,9 +254,9 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task DeleteDomain_WithValidId_ReturnsNoContent() {
     // Arrange
+    await SetupAuthentication(); // Add authentication setup
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await SetupTestData();
 
     var domain = new TenantDomain {
       Id = Guid.NewGuid(),
@@ -288,9 +290,9 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task CreateUserGroup_WithValidData_ReturnsCreatedGroup() {
     // Arrange
+    await SetupAuthentication(); // Add authentication setup
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await SetupTestData();
 
     var createDto = new CreateTenantUserGroupDto {
       TenantId = _tenantId,
@@ -329,9 +331,9 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task GetUserGroupsByTenant_WithExistingGroups_ReturnsCorrectGroups() {
     // Arrange
+    await SetupAuthentication(); // Add authentication setup
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await SetupTestData();
 
     var group1 = new TenantUserGroup {
       Id = Guid.NewGuid(),
@@ -359,7 +361,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     await db.SaveChangesAsync();
 
     // Act
-    var response = await _client.GetAsync($"/api/tenant-domains/user-groups/tenant/{_tenantId}");
+    var response = await _client.GetAsync($"/api/tenant-domains/user-groups?tenantId={_tenantId}");
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -435,9 +437,9 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task GetUserGroupMemberships_WithExistingMemberships_ReturnsCorrectMemberships() {
     // Arrange
+    await SetupAuthentication(); // Add authentication setup
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await SetupTestData();
 
     var group1 = new TenantUserGroup {
       Id = Guid.NewGuid(),
@@ -512,6 +514,12 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     await SetupAuthentication(); // Only call this, as it calls SetupTestData internally
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    // Update the test user's email to match the domain we're testing
+    var testUser = await db.Users.FirstAsync(u => u.Id == _userId);
+    testUser.Email = "test@university.edu";
+    db.Update(testUser);
+    await db.SaveChangesAsync();
 
     var domain = new TenantDomain {
       Id = Guid.NewGuid(),
@@ -603,9 +611,9 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task GetUsersByGroup_WithExistingMemberships_ReturnsCorrectUsers() {
     // Arrange
+    await SetupAuthentication(); // Add authentication setup
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await SetupTestData();
 
     var user2 = new User {
       Id = Guid.NewGuid(),
@@ -672,9 +680,9 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task GetGroupsByUser_WithExistingMemberships_ReturnsCorrectGroups() {
     // Arrange
+    await SetupAuthentication(); // Add authentication setup
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await SetupTestData();
 
     var group1 = new TenantUserGroup {
       Id = Guid.NewGuid(),
@@ -757,14 +765,21 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       user.Id,
       tenant.Id,
       "TenantDomain",
-      new[] { PermissionType.Read, PermissionType.Create, PermissionType.Delete }
+      new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete }
+    );
+    // Grant permissions for TenantUserGroup operations
+    await permissionService.GrantContentTypePermissionAsync(
+      user.Id,
+      tenant.Id,
+      "TenantUserGroup",
+      new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete }
     );
     // Grant permissions for TenantUserGroupMembership operations
     await permissionService.GrantContentTypePermissionAsync(
       user.Id,
       tenant.Id,
       "TenantUserGroupMembership",
-      new[] { PermissionType.Read, PermissionType.Create, PermissionType.Delete }
+      new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete }
     );
 
     // Generate JWT token

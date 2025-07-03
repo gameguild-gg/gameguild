@@ -175,6 +175,22 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
 
   #region User Group Membership Management
 
+  // GET: api/tenant-domains/memberships/user/{userId}
+  [HttpGet("memberships/user/{userId}")]
+  [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Read)]
+  public async Task<ActionResult<IEnumerable<TenantUserGroupMembershipDto>>> GetUserMemberships(Guid userId) {
+    var memberships = await tenantDomainService.GetUserGroupMembershipsAsync(userId);
+    var dtos = memberships.Select(m => new TenantUserGroupMembershipDto {
+      Id = m.Id,
+      UserId = m.UserId,
+      GroupId = m.UserGroupId,
+      IsAutoAssigned = m.IsAutoAssigned,
+      CreatedAt = m.CreatedAt
+    });
+
+    return Ok(dtos);
+  }
+
   // POST: api/tenant-domains/user-groups/memberships
   [HttpPost("user-groups/memberships")]
   [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Create)]
