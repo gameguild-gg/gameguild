@@ -1,18 +1,21 @@
-using GameGuild.Common.Services;
-using GameGuild.Common.Enums;
-using GameGuild.Common.Entities;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using GameGuild.Modules.Product.Models;
-using ProductEntity = GameGuild.Modules.Product.Models.Product;
+using GameGuild.Common.Enums;
+using GameGuild.Common.Services;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Users.Models;
+using Microsoft.EntityFrameworkCore;
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 
 
-namespace GameGuild.Modules.Product.GraphQL;
+namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary>
 /// GraphQL type definition for Product entity with DAC permission integration
 /// </summary>
-public class ProductType : ObjectType<ProductEntity> {
+public class ProductType : ObjectType<Product> {
   protected override void Configure(IObjectTypeDescriptor<ProductEntity> descriptor) {
     descriptor.Name("Product");
     descriptor.Description("Represents a product in the CMS system with full EntityBase support and DAC permissions.");
@@ -66,11 +69,11 @@ public class ProductType : ObjectType<ProductEntity> {
               .Description("The name of the product (product-specific field).");
 
     descriptor.Field(p => p.Creator)
-              .Type<ObjectType<GameGuild.Modules.User.Models.User>>()
+              .Type<ObjectType<User>>()
               .Description("The user who created this product.");
 
     descriptor.Field(p => p.Tenant)
-              .Type<ObjectType<GameGuild.Modules.Tenant.Models.Tenant>>()
+              .Type<ObjectType<Tenant>>()
               .Description("The tenant this product belongs to.");
 
     // Related entities
@@ -331,7 +334,7 @@ public class UserProductType : ObjectType<UserProduct> {
               .Description("When the access expires (null for permanent access)");
 
     descriptor.Field(up => up.User)
-              .Type<ObjectType<GameGuild.Modules.User.Models.User>>()
+              .Type<ObjectType<User>>()
               .Description("The user who has access");
 
     descriptor.Field(up => up.Product).Type<ProductType>().Description("The product being accessed");

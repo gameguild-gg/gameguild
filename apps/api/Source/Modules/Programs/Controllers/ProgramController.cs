@@ -1,14 +1,14 @@
-using Microsoft.AspNetCore.Mvc;
-using GameGuild.Common.Enums;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Program.Models;
 using GameGuild.Common.Attributes;
-using GameGuild.Modules.Program.Services;
-using GameGuild.Modules.Program.DTOs;
-using ProgramEntity = GameGuild.Modules.Program.Models.Program;
+using GameGuild.Common.Enums;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Programs.Services;
+using Microsoft.AspNetCore.Mvc;
+using ProgramEntity = GameGuild.Modules.Programs.Models.Program;
 
 
-namespace GameGuild.Modules.Program.Controllers;
+namespace GameGuild.Modules.Programs.Controllers;
 
 /// <summary>
 /// REST API controller for managing programs

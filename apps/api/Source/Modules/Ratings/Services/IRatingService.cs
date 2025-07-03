@@ -1,4 +1,7 @@
-namespace GameGuild.Modules.Rating.Services;
+using GameGuild.Modules.Users.Models;
+
+
+namespace GameGuild.Modules.Ratings.Services;
 
 /// <summary>
 /// Interface for rating-related operations
@@ -14,7 +17,7 @@ public interface IRatingService {
   /// <param name="comment">Optional comment with the rating</param>
   /// <returns>The created rating</returns>
   Task<Models.Rating> AddRatingAsync(
-    Guid entityId, string entityType, int value, User.Models.User user,
+    Guid entityId, string entityType, int value, User user,
     string? comment = null
   );
 
@@ -26,7 +29,7 @@ public interface IRatingService {
   /// <param name="user">The user updating the rating (must be the original rater)</param>
   /// <param name="comment">Optional updated comment</param>
   /// <returns>The updated rating</returns>
-  Task<Models.Rating> UpdateRatingAsync(Guid ratingId, int value, User.Models.User user, string? comment = null);
+  Task<Models.Rating> UpdateRatingAsync(Guid ratingId, int value, User user, string? comment = null);
 
   /// <summary>
   /// Deletes a rating
@@ -34,7 +37,7 @@ public interface IRatingService {
   /// <param name="ratingId">The ID of the rating to delete</param>
   /// <param name="user">The user deleting the rating (must be the original rater or have admin permissions)</param>
   /// <returns>True if deletion was successful</returns>
-  Task<bool> DeleteRatingAsync(Guid ratingId, User.Models.User user);
+  Task<bool> DeleteRatingAsync(Guid ratingId, User user);
 
   /// <summary>
   /// Gets ratings for a specific entity

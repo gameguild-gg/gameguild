@@ -1,14 +1,16 @@
-using GameGuild.Modules.Product.Services;
-using ProductEntity = GameGuild.Modules.Product.Models.Product;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Products.Services;
+using GameGuild.Modules.Users.GraphQL;
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 using ProductTypeEnum = GameGuild.Common.Enums.ProductType;
 
 
-namespace GameGuild.Modules.Product.GraphQL;
+namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary>
 /// GraphQL queries for Product module
 /// </summary>
-[ExtendObjectType<GameGuild.Modules.User.GraphQL.Query>]
+[ExtendObjectType<Query>]
 public class ProductQueries {
   /// <summary>
   /// Gets all products accessible to the current user
@@ -150,7 +152,7 @@ public class ProductQueries {
   /// </summary>
   public async Task<int> GetProductCount(
     [Service] IProductService productService, ProductTypeEnum? type = null,
-    Common.Entities.AccessLevel? visibility = null
+    AccessLevel? visibility = null
   ) {
     return await productService.GetProductCountAsync(type, visibility);
   }

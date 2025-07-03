@@ -1,15 +1,15 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using GameGuild.Modules.Program.Interfaces;
-using GameGuild.Modules.Program.Models;
-using GameGuild.Modules.Program.DTOs;
-using GameGuild.Modules.Program.Extensions;
 using GameGuild.Common.Attributes;
-using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.Modules.Programs.Extensions;
+using GameGuild.Modules.Programs.Interfaces;
+using GameGuild.Modules.Programs.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Modules.Program.Controllers;
+namespace GameGuild.Modules.Programs.Controllers;
 
 /// <summary>
 /// Controller for managing program content with 3-layer DAC permissions

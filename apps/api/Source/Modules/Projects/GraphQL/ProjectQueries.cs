@@ -1,13 +1,14 @@
-using GameGuild.Modules.Project.Services;
-using GameGuild.Common.Entities;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Projects.Services;
+using GameGuild.Modules.Users.GraphQL;
 
 
-namespace GameGuild.Modules.Project.GraphQL;
+namespace GameGuild.Modules.Projects.GraphQL;
 
 /// <summary>
 /// GraphQL queries for Project module
 /// </summary>
-[ExtendObjectType<GameGuild.Modules.User.GraphQL.Query>]
+[ExtendObjectType<Query>]
 public class ProjectQueries {
   /// <summary>
   /// Gets all projects accessible to the current user

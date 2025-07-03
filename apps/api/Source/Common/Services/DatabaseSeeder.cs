@@ -1,10 +1,11 @@
 using GameGuild.Data;
 using GameGuild.Common.Entities;
-using GameGuild.Modules.User.Models;
-using GameGuild.Modules.User.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users.Services;
 
 
 namespace GameGuild.Common.Services;
@@ -91,24 +92,16 @@ public class DatabaseSeeder(
     logger.LogInformation("Seeding tenant domain content-type default permissions...");
 
     // Grant default permissions for TenantDomain, TenantUserGroup, and TenantUserGroupMembership
-    var tenantResourceTypes = new[] {
-      "TenantDomain",
-      "TenantUserGroup", 
-      "TenantUserGroupMembership"
-    };
+    var tenantResourceTypes = new[] { "TenantDomain", "TenantUserGroup", "TenantUserGroupMembership" };
 
     foreach (var resourceType in tenantResourceTypes) {
-      var permissions = new[] {
-        PermissionType.Read,
-        PermissionType.Create,
-        PermissionType.Edit,
-        PermissionType.Delete,
-      };
+      var permissions = new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete, };
 
       await permissionService.GrantContentTypePermissionAsync(null, null, resourceType, permissions);
       logger.LogInformation(
         "Content-type default permissions seeded for {ResourceType} with {PermissionsLength} permissions",
-        resourceType, permissions.Length
+        resourceType,
+        permissions.Length
       );
     }
   }
@@ -118,22 +111,22 @@ public class DatabaseSeeder(
 
     // Check if super admin already exists
     var existingSuperAdmin = await context.Users
-      .Include(u => u.Credentials)
-      .FirstOrDefaultAsync(u => u.Email == "admin@gameguild.local");
+                                          .Include(u => u.Credentials)
+                                          .FirstOrDefaultAsync(u => u.Email == "admin@gameguild.local");
 
     User createdUser;
 
     if (existingSuperAdmin != null) {
       logger.LogInformation("Super admin user already exists");
       createdUser = existingSuperAdmin;
-      
+
       // Check if password credential exists
       var existingPasswordCredential = existingSuperAdmin.Credentials
-        .FirstOrDefault(c => c is { Type: "password", IsActive: true });
-        
+                                                         .FirstOrDefault(c => c is { Type: "password", IsActive: true });
+
       if (existingPasswordCredential == null) {
         logger.LogInformation("Creating password credential for existing super admin");
-        
+
         // Create password credential for existing super admin
         var passwordCredential = new Credential {
           UserId = existingSuperAdmin.Id,
@@ -146,12 +139,12 @@ public class DatabaseSeeder(
 
         context.Credentials.Add(passwordCredential);
         await context.SaveChangesAsync();
-        
+
         logger.LogInformation("Password credential created for existing super admin");
-      } else {
-        logger.LogInformation("Password credential already exists for super admin");
       }
-    } else {
+      else { logger.LogInformation("Password credential already exists for super admin"); }
+    }
+    else {
       // Create super admin user
       var superAdmin = new User {
         Name = "Super Admin",
@@ -175,32 +168,28 @@ public class DatabaseSeeder(
 
       context.Credentials.Add(passwordCredential);
       await context.SaveChangesAsync();
-      
+
       logger.LogInformation("Super admin user created successfully with email: {Email} and password credential", createdUser.Email);
     }
 
     // Grant super admin essential permissions globally
-    var globalPermissions = new PermissionType[] {
-      PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete,
-      PermissionType.Publish, PermissionType.Approve, PermissionType.Review
-    };
-    
+    var globalPermissions = new PermissionType[] { PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete, PermissionType.Publish, PermissionType.Approve, PermissionType.Review };
+
     await permissionService.GrantTenantPermissionAsync(createdUser.Id, null, globalPermissions);
     logger.LogInformation("Granted {PermissionCount} global tenant permissions to super admin", globalPermissions.Length);
 
     // Grant essential content type permissions
-    var contentTypes = new[] {
-      "Project", "TenantDomain", "TenantUserGroup", "TenantUserGroupMembership",
-      "User", "Tenant", "Comment", "Product", "Program"
-    };
+    var contentTypes = new[] { "Project", "TenantDomain", "TenantUserGroup", "TenantUserGroupMembership", "User", "Tenant", "Comment", "Product", "Program" };
 
-    var contentPermissions = new PermissionType[] {
-      PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete
-    };
+    var contentPermissions = new PermissionType[] { PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete };
 
     foreach (var contentType in contentTypes) {
       await permissionService.GrantContentTypePermissionAsync(
-        createdUser.Id, null, contentType, contentPermissions);
+        createdUser.Id,
+        null,
+        contentType,
+        contentPermissions
+      );
       logger.LogInformation("Granted permissions for content type {ContentType} to super admin", contentType);
     }
 
@@ -213,6 +202,7 @@ public class DatabaseSeeder(
   private static string HashPassword(string password) {
     using var sha = SHA256.Create();
     var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+
     return Convert.ToBase64String(bytes);
   }
 }

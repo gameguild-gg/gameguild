@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Users.Models;
 
 
 namespace GameGuild.Modules.Kyc.Models;
@@ -15,14 +16,11 @@ namespace GameGuild.Modules.Kyc.Models;
 [Index(nameof(SubmittedAt))]
 [Index(nameof(ExternalVerificationId))]
 public class UserKycVerification : BaseEntity {
-  [Required]
-  public Guid UserId { get; set; }
+  [Required] public Guid UserId { get; set; }
 
-  [Required]
-  public KycProvider Provider { get; set; }
+  [Required] public KycProvider Provider { get; set; }
 
-  [Required]
-  public KycVerificationStatus Status { get; set; } = KycVerificationStatus.Pending;
+  [Required] public KycVerificationStatus Status { get; set; } = KycVerificationStatus.Pending;
 
   /// <summary>
   /// External verification ID from the KYC provider
@@ -76,8 +74,7 @@ public class UserKycVerification : BaseEntity {
   public string? ProviderData { get; set; }
 
   // Navigation properties
-  [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User { get; set; } = null!;
+  [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;
 }
 
 public class UserKycVerificationConfiguration : IEntityTypeConfiguration<UserKycVerification> {

@@ -1,8 +1,9 @@
 using System.Security.Claims;
 using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.Tenant.Models;
-using GameGuild.Modules.Tenant.Services;
 using GameGuild.Modules.Auth.Constants;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Tenants.Services;
+using GameGuild.Modules.Users.Models;
 
 
 namespace GameGuild.Modules.Auth.Services;
@@ -16,18 +17,18 @@ public interface ITenantAuthService {
   /// </summary>
   Task<SignInResponseDto> EnhanceWithTenantDataAsync(
     SignInResponseDto authResult,
-    GameGuild.Modules.User.Models.User user, Guid? tenantId = null
+    User user, Guid? tenantId = null
   );
 
   /// <summary>
   /// Get tenant-specific claims for a user
   /// </summary>
-  Task<IEnumerable<Claim>> GetTenantClaimsAsync(GameGuild.Modules.User.Models.User user, Guid tenantId);
+  Task<IEnumerable<Claim>> GetTenantClaimsAsync(User user, Guid tenantId);
 
   /// <summary>
   /// Get all available tenants for a user
   /// </summary>
-  Task<IEnumerable<TenantPermission>> GetUserTenantsAsync(GameGuild.Modules.User.Models.User user);
+  Task<IEnumerable<TenantPermission>> GetUserTenantsAsync(User user);
 }
 
 /// <summary>
@@ -43,7 +44,7 @@ public class TenantAuthService(
   /// </summary>
   public async Task<SignInResponseDto> EnhanceWithTenantDataAsync(
     SignInResponseDto authResult,
-    GameGuild.Modules.User.Models.User user, Guid? tenantId = null
+    User user, Guid? tenantId = null
   ) {
     // Get available tenants for the user
     var tenantPermissions = await tenantService.GetTenantsForUserAsync(user.Id);
@@ -99,7 +100,7 @@ public class TenantAuthService(
   /// <summary>
   /// Get tenant-specific claims for a user
   /// </summary>
-  public async Task<IEnumerable<Claim>> GetTenantClaimsAsync(GameGuild.Modules.User.Models.User user, Guid tenantId) {
+  public async Task<IEnumerable<Claim>> GetTenantClaimsAsync(User user, Guid tenantId) {
     var claims = new List<Claim> { new Claim(JwtClaimTypes.TenantId, tenantId.ToString()), };
 
     // Get tenant permission for additional claims
@@ -117,5 +118,5 @@ public class TenantAuthService(
   /// <summary>
   /// Get all available tenants for a user
   /// </summary>
-  public async Task<IEnumerable<TenantPermission>> GetUserTenantsAsync(GameGuild.Modules.User.Models.User user) { return await tenantService.GetTenantsForUserAsync(user.Id); }
+  public async Task<IEnumerable<TenantPermission>> GetUserTenantsAsync(User user) { return await tenantService.GetTenantsForUserAsync(user.Id); }
 }

@@ -1,12 +1,14 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Text.Json;
 using GameGuild.Common.Entities;
-using GameGuild.Modules.Program.Models;
+using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Users.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Feedback.Models;
+namespace GameGuild.Modules.Feedbacks.Models;
 
 [Table("program_feedback_submissions")]
 [Index(nameof(UserId), nameof(ProgramId), IsUnique = true)]
@@ -54,17 +56,13 @@ public class ProgramFeedbackSubmission : BaseEntity {
   public DateTime SubmittedAt { get; set; }
 
   // Navigation properties
-  [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User { get; set; } = null!;
+  [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;
 
-  [ForeignKey(nameof(ProgramId))]
-  public virtual Program.Models.Program Program { get; set; } = null!;
+  [ForeignKey(nameof(ProgramId))] public virtual Programs.Models.Program Program { get; set; } = null!;
 
-  [ForeignKey(nameof(ProductId))]
-  public virtual Product.Models.Product? Product { get; set; }
+  [ForeignKey(nameof(ProductId))] public virtual Product? Product { get; set; }
 
-  [ForeignKey(nameof(ProgramUserId))]
-  public virtual ProgramUser ProgramUser { get; set; } = null!;
+  [ForeignKey(nameof(ProgramUserId))] public virtual ProgramUser ProgramUser { get; set; } = null!;
 
   // Helper methods for JSON feedback data
   public T? GetFeedbackResponse<T>(string questionId) where T : class {

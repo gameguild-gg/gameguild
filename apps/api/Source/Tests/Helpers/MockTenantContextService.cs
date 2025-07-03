@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using GameGuild.Modules.Tenant.Models;
-using GameGuild.Modules.Tenant.Services;
 using GameGuild.Modules.Auth.Constants;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Tenants.Services;
 
 
 namespace GameGuild.Tests.Helpers {

@@ -1,12 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
-using GameGuild.Modules.Project.Services;
-using GameGuild.Common.Entities;
+using System.Security.Claims;
 using GameGuild.Common.Attributes;
 using GameGuild.Modules.Auth.Attributes;
-using System.Security.Claims;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Projects.Services;
+using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Modules.Project.Controllers;
+namespace GameGuild.Modules.Projects.Controllers;
 
 [ApiController]
 [Route("[controller]")]

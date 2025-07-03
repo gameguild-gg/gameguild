@@ -4,8 +4,8 @@ using Moq;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
-using GameGuild.Modules.User.Models;
-using UserModel = GameGuild.Modules.User.Models.User;
+using GameGuild.Modules.Users.Models;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
 
 namespace GameGuild.Tests.Modules.Auth.Unit.Services;

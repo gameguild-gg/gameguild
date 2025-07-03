@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common.Entities;
+﻿namespace GameGuild.Modules.Tenants.Models;
 
 /// <summary>
 /// Interface for resources that can belong to a specific tenant
@@ -8,7 +8,7 @@ public interface ITenantable {
   /// Navigation property to the tenant
   /// Entity Framework will automatically create the TenantId foreign key
   /// </summary>
-  Modules.Tenant.Models.Tenant? Tenant { get; set; }
+  Tenant? Tenant { get; set; }
 
   /// <summary>
   /// Indicates whether this resource is accessible across all tenants (when Tenant is null)

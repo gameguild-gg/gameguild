@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Resources.Models;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Common.Entities;
 
 
-namespace GameGuild.Modules.Project.Models;
+namespace GameGuild.Modules.Projects.Models;
 
 /// <summary>
 /// Represents a release/version of a project

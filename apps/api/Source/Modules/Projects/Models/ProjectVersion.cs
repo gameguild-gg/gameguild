@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Users.Models;
 
 
-namespace GameGuild.Modules.Project.Models;
+namespace GameGuild.Modules.Projects.Models;
 
 /// <summary>
 /// Represents a version/release of a project
@@ -44,7 +45,7 @@ public class ProjectVersion : BaseEntity {
   /// User who created this version
   /// </summary>
   [Required]
-  public virtual User.Models.User CreatedBy { get; set; } = null!;
+  public virtual User CreatedBy { get; set; } = null!;
 
   public Guid CreatedById { get; set; }
 }

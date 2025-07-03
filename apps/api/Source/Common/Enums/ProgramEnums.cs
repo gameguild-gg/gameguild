@@ -142,9 +142,7 @@ public enum ProgramCategory {
 
   [Description("Mobile app development")]
   MobileDevelopment,
-
-  [Description("Game development")]
-  GameDevelopment,
+  [Description("Game development")] GameDevelopment,
 
   [Description("Artificial intelligence and machine learning")]
   AI,
@@ -176,9 +174,7 @@ public enum ProgramCategory {
 
   [Description("Science and mathematics")]
   Science,
-
   [Description("Language learning")] Language,
-
   [Description("Other categories")] Other,
 }
 
@@ -212,15 +208,8 @@ public enum ProgramDifficulty {
 
 // todo: EnrollmentStatus should use permission system instead of this enum
 public enum EnrollmentStatus {
-  [Description("Open for enrollment")]
-  Open,
-
-  [Description("Closed for enrollment")]
-  Closed,
-
-  [Description("Invite only")]
-  InviteOnly,
-
-  [Description("Waitlist available")]
-  Waitlist
+  [Description("Open for enrollment")] Open,
+  [Description("Closed for enrollment")] Closed,
+  [Description("Invite only")] InviteOnly,
+  [Description("Waitlist available")] Waitlist
 }

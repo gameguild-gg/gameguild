@@ -1,8 +1,8 @@
-using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Contents.Models;
 
 
-namespace GameGuild.Modules.Program.DTOs;
+namespace GameGuild.Modules.Programs.DTOs;
 
 // Program Management DTOs
 public record CreateProgramDto(string Title, string? Description, string Slug, string? Thumbnail = null) {

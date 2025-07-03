@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Common.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using GameGuild.Common.Entities;
 
 
-namespace GameGuild.Modules.Certificate.Models;
+namespace GameGuild.Modules.Certificates.Models;
 
 [Table("certificate_blockchain_anchors")]
 [Index(nameof(CertificateId))]
@@ -16,24 +16,17 @@ namespace GameGuild.Modules.Certificate.Models;
 public class CertificateBlockchainAnchor : BaseEntity {
   public Guid CertificateId { get; set; }
 
-  [Required]
-  [MaxLength(100)]
-  public string BlockchainNetwork { get; set; } = string.Empty;
+  [Required] [MaxLength(100)] public string BlockchainNetwork { get; set; } = string.Empty;
 
-  [Required]
-  [MaxLength(200)]
-  public string TransactionHash { get; set; } = string.Empty;
+  [Required] [MaxLength(200)] public string TransactionHash { get; set; } = string.Empty;
 
-  [MaxLength(200)]
-  public string? BlockHash { get; set; }
+  [MaxLength(200)] public string? BlockHash { get; set; }
 
   public long? BlockNumber { get; set; }
 
-  [MaxLength(500)]
-  public string? ContractAddress { get; set; }
+  [MaxLength(500)] public string? ContractAddress { get; set; }
 
-  [MaxLength(100)]
-  public string? TokenId { get; set; }
+  [MaxLength(100)] public string? TokenId { get; set; }
 
   /// <summary>
   /// Status of the blockchain anchoring
@@ -52,8 +45,7 @@ public class CertificateBlockchainAnchor : BaseEntity {
   public DateTime? ConfirmedAt { get; set; }
 
   // Navigation properties
-  [ForeignKey(nameof(CertificateId))]
-  public virtual UserCertificate Certificate { get; set; } = null!;
+  [ForeignKey(nameof(CertificateId))] public virtual UserCertificate Certificate { get; set; } = null!;
 }
 
 public class CertificateBlockchainAnchorConfiguration : IEntityTypeConfiguration<CertificateBlockchainAnchor> {

@@ -1,13 +1,15 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
-using GameGuild.Modules.Program.Models;
+using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Users.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Certificate.Models;
+namespace GameGuild.Modules.Certificates.Models;
 
 [Table("user_certificates")]
 [Index(nameof(UserId))]
@@ -19,9 +21,7 @@ namespace GameGuild.Modules.Certificate.Models;
 [Index(nameof(Status))]
 [Index(nameof(IssuedAt))]
 public class UserCertificate : BaseEntity {
-  [Required]
-  [ForeignKey(nameof(User))]
-  public Guid UserId { get; set; }
+  [Required] [ForeignKey(nameof(User))] public Guid UserId { get; set; }
 
   [Required]
   [ForeignKey(nameof(Certificate))]
@@ -85,13 +85,13 @@ public class UserCertificate : BaseEntity {
   public string? RevocationReason { get; set; }
 
   // Navigation properties
-  public virtual User.Models.User User { get; set; } = null!;
+  public virtual User User { get; set; } = null!;
 
   public virtual Certificate Certificate { get; set; } = null!;
 
-  public virtual Program.Models.Program? Program { get; set; }
+  public virtual Programs.Models.Program? Program { get; set; }
 
-  public virtual Product.Models.Product? Product { get; set; }
+  public virtual Product? Product { get; set; }
 
   public virtual ProgramUser? ProgramUser { get; set; }
 

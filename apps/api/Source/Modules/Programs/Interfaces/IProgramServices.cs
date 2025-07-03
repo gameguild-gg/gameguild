@@ -1,7 +1,7 @@
 using GameGuild.Common.Enums;
 
 
-namespace GameGuild.Modules.Program.Interfaces;
+namespace GameGuild.Modules.Programs.Interfaces;
 
 /// <summary>
 /// Interface for program management services
@@ -110,11 +110,10 @@ public interface IContentInteractionService {
 /// <summary>
 /// Interface for activity grading services
 /// </summary>
-public interface IActivityGradeService
-{
+public interface IActivityGradeService {
   Task<Models.ActivityGrade> GradeActivityAsync(
-    Guid contentInteractionId, 
-    Guid graderProgramUserId, 
+    Guid contentInteractionId,
+    Guid graderProgramUserId,
     decimal grade,
     string? feedback = null,
     string? gradingDetails = null

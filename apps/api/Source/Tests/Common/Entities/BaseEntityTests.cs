@@ -2,7 +2,7 @@ using Xunit;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 using GameGuild.Data;
-using UserModel = GameGuild.Modules.User.Models.User;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
 
 namespace GameGuild.Tests.Common.Entities;

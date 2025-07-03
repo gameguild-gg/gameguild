@@ -1,11 +1,13 @@
-using GameGuild.Common.Services;
-using GameGuild.Common.Entities;
 using System.Security.Claims;
-using GameGuild.Modules.Project.Models;
+using GameGuild.Common.Services;
 using GameGuild.Modules.Auth.Constants;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Projects.Models;
+using GameGuild.Modules.Users.Models;
 
 
-namespace GameGuild.Modules.Project.GraphQL;
+namespace GameGuild.Modules.Projects.GraphQL;
 
 /// <summary>
 /// GraphQL type definition for Project entity with DAC permission integration
@@ -71,7 +73,7 @@ public class ProjectType : ObjectType<Models.Project> {
     descriptor.Field(p => p.Category).Type<NonNullType<ObjectType<ProjectCategory>>>().Description("Project category.");
 
     descriptor.Field(p => p.CreatedBy)
-              .Type<ObjectType<GameGuild.Modules.User.Models.User>>()
+              .Type<ObjectType<User>>()
               .Description("User who created this project.");
 
     descriptor.Field(p => p.ProjectMetadata)

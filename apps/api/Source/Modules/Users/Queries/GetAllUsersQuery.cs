@@ -1,7 +1,7 @@
 using MediatR;
 
 
-namespace GameGuild.Modules.User.Queries;
+namespace GameGuild.Modules.Users.Queries;
 
 /// <summary>
 /// Query to get all active users

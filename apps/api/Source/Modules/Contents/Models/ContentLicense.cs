@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using GameGuild.Modules.Resources.Models;
 
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Modules.Contents.Models;
 
 /// <summary>
 /// Represents a license that can be assigned to content.

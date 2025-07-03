@@ -6,7 +6,11 @@ using GameGuild.Common.Transformers;
 using GameGuild.Config;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Configuration;
-using GameGuild.Modules.User.GraphQL;
+using GameGuild.Modules.Programs.GraphQL;
+using GameGuild.Modules.Projects.GraphQL;
+using GameGuild.Modules.Tenants.GraphQL;
+using GameGuild.Modules.UserProfiles.GraphQL;
+using GameGuild.Modules.Users.GraphQL;
 using MediatR;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
@@ -87,7 +91,7 @@ builder.Services.AddSwaggerGen(c => {
     Description = "Enter your JWT token in the format: Bearer {your token}"
   });
 
-  // Configure security requirements based on [Public] attribute
+  // Configure security requirements based on the [Public] attribute
   c.OperationFilter<GameGuild.Common.Swagger.AuthOperationFilter>();
 }
 );
@@ -109,7 +113,7 @@ builder.Services.AddScoped<GameGuild.Common.Services.IDatabaseSeeder, GameGuild.
 builder.Services.AddHttpContextAccessor();
 
 // Add MediatR for CQRS
-builder.Services.AddMediatR(typeof(Program));
+builder.Services.AddMediatR(typeof(GameGuild.Program));
 
 // Add MediatR pipeline behaviors
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(GameGuild.Common.Behaviors.LoggingBehavior<,>));
@@ -157,31 +161,31 @@ builder.Services.AddGraphQLServer()
        .AddQueryType<Query>()
        .AddMutationType<Mutation>()
        .AddDACAuthorization() // Add 3-layer DAC authorization
-       .AddTypeExtension<GameGuild.Modules.Tenant.GraphQL.TenantQueries>()
-       .AddTypeExtension<GameGuild.Modules.Tenant.GraphQL.TenantMutations>()
-       .AddTypeExtension<GameGuild.Modules.UserProfile.GraphQL.UserProfileQueries>()
-       .AddTypeExtension<GameGuild.Modules.UserProfile.GraphQL.UserProfileMutations>()
+       .AddTypeExtension<TenantQueries>()
+       .AddTypeExtension<TenantMutations>()
+       .AddTypeExtension<UserProfileQueries>()
+       .AddTypeExtension<UserProfileMutations>()
        .AddTypeExtension<GameGuild.Modules.Auth.GraphQL.AuthQueries>()
        .AddTypeExtension<GameGuild.Modules.Auth.GraphQL.AuthMutations>()
-       .AddTypeExtension<GameGuild.Modules.Project.GraphQL.ProjectQueries>()
-       .AddTypeExtension<GameGuild.Modules.Project.GraphQL.ProjectMutations>()
+       .AddTypeExtension<ProjectQueries>()
+       .AddTypeExtension<ProjectMutations>()
        .AddTypeExtension<GameGuild.Modules.TestingLab.GraphQL.TestingLabQueries>()
        .AddTypeExtension<GameGuild.Modules.TestingLab.GraphQL.TestingLabMutations>()
-       .AddTypeExtension<GameGuild.Modules.Program.GraphQL.ProgramContentQueries>()
-       .AddTypeExtension<GameGuild.Modules.Program.GraphQL.ProgramContentMutations>()
-       .AddTypeExtension<GameGuild.Modules.Program.GraphQL.ContentInteractionQueries>()
-       .AddTypeExtension<GameGuild.Modules.Program.GraphQL.ContentInteractionMutations>()
-       .AddTypeExtension<GameGuild.Modules.Program.GraphQL.ActivityGradeQueries>()
-       .AddTypeExtension<GameGuild.Modules.Program.GraphQL.ActivityGradeMutations>()
+       .AddTypeExtension<ProgramContentQueries>()
+       .AddTypeExtension<ProgramContentMutations>()
+       .AddTypeExtension<ContentInteractionQueries>()
+       .AddTypeExtension<ContentInteractionMutations>()
+       .AddTypeExtension<ActivityGradeQueries>()
+       .AddTypeExtension<ActivityGradeMutations>()
        .AddType<UserType>()
        .AddType<CredentialType>()
-       .AddType<GameGuild.Modules.Tenant.GraphQL.TenantType>()
-       .AddType<GameGuild.Modules.Tenant.GraphQL.TenantPermissionType>()
-       .AddType<GameGuild.Modules.UserProfile.GraphQL.UserProfileType>()
-       .AddType<GameGuild.Modules.Project.GraphQL.ProjectType>()
-       .AddType<GameGuild.Modules.Program.GraphQL.ProgramContentType>()
-       .AddType<GameGuild.Modules.Program.GraphQL.ContentInteractionType>()
-       .AddType<GameGuild.Modules.Program.GraphQL.ActivityGradeType>()
+       .AddType<TenantType>()
+       .AddType<TenantPermissionType>()
+       .AddType<UserProfileType>()
+       .AddType<ProjectType>()
+       .AddType<ProgramContentType>()
+       .AddType<ContentInteractionType>()
+       .AddType<ActivityGradeType>()
        .AddType<GameGuild.Modules.TestingLab.GraphQL.TestingRequestType>()
        .AddType<GameGuild.Modules.TestingLab.GraphQL.TestingSessionType>()
        .AddType<GameGuild.Modules.TestingLab.GraphQL.TestingParticipantType>()
@@ -197,7 +201,7 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 // Automatically apply pending migrations and create a database if it doesn't exist
 using (var scope = app.Services.CreateScope()) {
   var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-  var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+  var logger = scope.ServiceProvider.GetRequiredService<ILogger<GameGuild.Program>>();
 
   try {
     // Only run migrations on relational databases (not on InMemory)
@@ -251,4 +255,6 @@ app.MapControllers();
 app.Run();
 
 // Make Program class accessible for testing
-public partial class Program { }
+namespace GameGuild {
+  public partial class Program { }
+}

@@ -1,4 +1,4 @@
-using GameGuild.Modules.Tenant.Models;
+using GameGuild.Modules.Tenants.Models;
 
 
 namespace GameGuild.Common.Entities;
@@ -10,37 +10,43 @@ public class BaseEntity : BaseEntity<Guid> {
   /// <summary>
   /// Unique identifier for the entity
   /// </summary>
-  [GraphQLType(typeof(NonNullType<UuidType>))][GraphQLDescription("The unique identifier for the entity (UUID).")]
+  [GraphQLType(typeof(NonNullType<UuidType>))]
+  [GraphQLDescription("The unique identifier for the entity (UUID).")]
   public sealed override Guid Id { get; set; }
 
   /// <summary>
   /// Version number for optimistic concurrency control
   /// </summary>
-  [GraphQLType(typeof(NonNullType<IntType>))][GraphQLDescription("Version number for optimistic concurrency control.")]
+  [GraphQLType(typeof(NonNullType<IntType>))]
+  [GraphQLDescription("Version number for optimistic concurrency control.")]
   public override int Version { get; set; }
 
   /// <summary>
   /// Timestamp when the entity was created
   /// </summary>
-  [GraphQLType(typeof(NonNullType<DateTimeType>))][GraphQLDescription("The date and time when the entity was created.")]
+  [GraphQLType(typeof(NonNullType<DateTimeType>))]
+  [GraphQLDescription("The date and time when the entity was created.")]
   public sealed override DateTime CreatedAt { get; set; }
 
   /// <summary>
   /// Timestamp when the entity was last updated
   /// </summary>
-  [GraphQLType(typeof(NonNullType<DateTimeType>))][GraphQLDescription("The date and time when the entity was last updated.")]
+  [GraphQLType(typeof(NonNullType<DateTimeType>))]
+  [GraphQLDescription("The date and time when the entity was last updated.")]
   public sealed override DateTime UpdatedAt { get; set; }
 
   /// <summary>
   /// Timestamp when the entity was soft-deleted (null if not deleted)
   /// </summary>
-  [GraphQLType(typeof(DateTimeType))][GraphQLDescription("The date and time when the entity was soft deleted (null if not deleted).")]
+  [GraphQLType(typeof(DateTimeType))]
+  [GraphQLDescription("The date and time when the entity was soft deleted (null if not deleted).")]
   public sealed override DateTime? DeletedAt { get; set; }
 
   /// <summary>
   /// Whether the entity is soft-deleted
   /// </summary>
-  [GraphQLType(typeof(NonNullType<BooleanType>))][GraphQLDescription("Indicates whether the entity has been soft deleted.")]
+  [GraphQLType(typeof(NonNullType<BooleanType>))]
+  [GraphQLDescription("Indicates whether the entity has been soft deleted.")]
   public override bool IsDeleted {
     get => DeletedAt.HasValue;
   }

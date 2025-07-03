@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Project.Models;
+namespace GameGuild.Modules.Projects.Models;
 
 /// <summary>
 /// Statistics and analytics data for a project

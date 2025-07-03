@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
-using GameGuild.Modules.Tag.Models;
+using GameGuild.Modules.Tags.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Certificate.Models;
+namespace GameGuild.Modules.Certificates.Models;
 
 [Table("certificate_tags")]
 [Index(nameof(CertificateId), nameof(TagId), IsUnique = true)]
@@ -21,11 +21,9 @@ public class CertificateTag : BaseEntity {
   public CertificateTagRelationshipType RelationshipType { get; set; }
 
   // Navigation properties
-  [ForeignKey(nameof(CertificateId))]
-  public virtual Certificate Certificate { get; set; } = null!;
+  [ForeignKey(nameof(CertificateId))] public virtual Certificate Certificate { get; set; } = null!;
 
-  [ForeignKey(nameof(TagId))]
-  public virtual TagProficiency Tag { get; set; } = null!;
+  [ForeignKey(nameof(TagId))] public virtual TagProficiency Tag { get; set; } = null!;
 }
 
 public class CertificateTagConfiguration : IEntityTypeConfiguration<CertificateTag> {

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Resources.Models;
 
 
 namespace GameGuild.Common.Data;

@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Voting.Models;
+namespace GameGuild.Modules.Votes.Models;
 
 /// <summary>
 /// Interface for entities that support voting (upvote/downvote).

@@ -1,11 +1,11 @@
-using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
-using GameGuild.Modules.Program.Models;
-using GameGuild.Modules.Program.DTOs;
-using ProgramEntity = GameGuild.Modules.Program.Models.Program;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.Modules.Programs.Models;
+using ProgramEntity = GameGuild.Modules.Programs.Models.Program;
 
 
-namespace GameGuild.Modules.Program.Services;
+namespace GameGuild.Modules.Programs.Services;
 
 /// <summary>
 /// Service interface for Program business logic

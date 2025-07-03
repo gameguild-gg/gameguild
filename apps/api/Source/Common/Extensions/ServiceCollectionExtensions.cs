@@ -1,4 +1,11 @@
 using GameGuild.Common.Services;
+using GameGuild.Modules.Programs.Interfaces;
+using GameGuild.Modules.Programs.Services;
+using GameGuild.Modules.Projects.Services;
+using GameGuild.Modules.Tenants.Services;
+using GameGuild.Modules.UserProfiles.Services;
+using GameGuild.Modules.Users.Services;
+using IProgramService = GameGuild.Modules.Programs.Services.IProgramService;
 
 
 namespace GameGuild.Common.Extensions;
@@ -6,16 +13,16 @@ namespace GameGuild.Common.Extensions;
 public static class ServiceCollectionExtensions {
   public static IServiceCollection AddUserModule(this IServiceCollection services) {
     // Register User module services
-    services.AddScoped<Modules.User.Services.IUserService, Modules.User.Services.UserService>();
+    services.AddScoped<IUserService, UserService>();
 
     return services;
   }
 
   public static IServiceCollection AddTenantModule(this IServiceCollection services) {
     // Register Tenant module services
-    services.AddScoped<Modules.Tenant.Services.ITenantService, Modules.Tenant.Services.TenantService>();
-    services.AddScoped<Modules.Tenant.Services.ITenantContextService, Modules.Tenant.Services.TenantContextService>();
-    services.AddScoped<Modules.Tenant.Services.ITenantDomainService, Modules.Tenant.Services.TenantDomainService>();
+    services.AddScoped<ITenantService, TenantService>();
+    services.AddScoped<ITenantContextService, TenantContextService>();
+    services.AddScoped<ITenantDomainService, TenantDomainService>();
 
     return services;
   }
@@ -23,14 +30,14 @@ public static class ServiceCollectionExtensions {
   public static IServiceCollection AddUserProfileModule(this IServiceCollection services) {
     // Register UserProfile module services
     services
-      .AddScoped<Modules.UserProfile.Services.IUserProfileService, Modules.UserProfile.Services.UserProfileService>();
+      .AddScoped<IUserProfileService, UserProfileService>();
 
     return services;
   }
 
   public static IServiceCollection AddProjectModule(this IServiceCollection services) {
     // Register Project module services
-    services.AddScoped<Modules.Project.Services.IProjectService, Modules.Project.Services.ProjectService>();
+    services.AddScoped<IProjectService, ProjectService>();
 
     return services;
   }
@@ -44,13 +51,13 @@ public static class ServiceCollectionExtensions {
 
   public static IServiceCollection AddProgramModule(this IServiceCollection services) {
     // Register Program module services
-    services.AddScoped<Modules.Program.Services.IProgramService, Modules.Program.Services.ProgramService>();
+    services.AddScoped<IProgramService, ProgramService>();
     services
-      .AddScoped<Modules.Program.Interfaces.IProgramContentService, Modules.Program.Services.ProgramContentService>();
+      .AddScoped<IProgramContentService, ProgramContentService>();
     services
-      .AddScoped<Modules.Program.Interfaces.IContentInteractionService, Modules.Program.Services.ContentInteractionService>();
+      .AddScoped<IContentInteractionService, ContentInteractionService>();
     services
-      .AddScoped<Modules.Program.Interfaces.IActivityGradeService, Modules.Program.Services.ActivityGradeService>();
+      .AddScoped<IActivityGradeService, ActivityGradeService>();
 
     return services;
   }

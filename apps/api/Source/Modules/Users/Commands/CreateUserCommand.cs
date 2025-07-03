@@ -1,7 +1,7 @@
 using MediatR;
 
 
-namespace GameGuild.Modules.User.Commands;
+namespace GameGuild.Modules.Users.Commands;
 
 /// <summary>
 /// Command to create a new user

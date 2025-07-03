@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Users.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Payment.Models;
+namespace GameGuild.Modules.Payments.Models;
 
 [Table("user_financial_methods")]
 [Index(nameof(UserId))]
@@ -19,9 +20,7 @@ public class UserFinancialMethod : BaseEntity {
 
   public PaymentMethodType Type { get; set; }
 
-  [Required]
-  [MaxLength(255)]
-  public string Name { get; set; } = string.Empty;
+  [Required] [MaxLength(255)] public string Name { get; set; } = string.Empty;
 
   /// <summary>
   /// External ID from payment provider (Stripe, PayPal, etc.)
@@ -61,8 +60,7 @@ public class UserFinancialMethod : BaseEntity {
   public bool IsDefault { get; set; } = false;
 
   // Navigation properties
-  [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User { get; set; } = null!;
+  [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;
 }
 
 public class UserFinancialMethodConfiguration : IEntityTypeConfiguration<UserFinancialMethod> {

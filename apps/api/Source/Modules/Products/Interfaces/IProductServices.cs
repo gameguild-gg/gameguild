@@ -1,7 +1,7 @@
 using GameGuild.Common.Enums;
 
 
-namespace GameGuild.Modules.Product.Interfaces;
+namespace GameGuild.Modules.Products.Interfaces;
 
 /// <summary>
 /// Interface for product-related services

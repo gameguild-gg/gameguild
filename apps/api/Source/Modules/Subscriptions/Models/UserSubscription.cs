@@ -1,13 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
-using GameGuild.Modules.Product.Models;
+using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Users.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Subscription.Models;
+namespace GameGuild.Modules.Subscriptions.Models;
 
 [Table("user_subscriptions")]
 [Index(nameof(UserId))]
@@ -66,8 +67,7 @@ public class UserSubscription : BaseEntity {
   public DateTime? NextBillingAt { get; set; }
 
   // Navigation properties
-  [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User { get; set; } = null!;
+  [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;
 
   [ForeignKey(nameof(SubscriptionPlanId))]
   public virtual ProductSubscriptionPlan SubscriptionPlan { get; set; } = null!;

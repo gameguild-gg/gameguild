@@ -1,9 +1,9 @@
-using GameGuild.Modules.Tenant.Models;
-using GameGuild.Modules.Tenant.Services;
-using GameGuild.Modules.User.GraphQL;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Tenants.Services;
+using GameGuild.Modules.Users.GraphQL;
 
 
-namespace GameGuild.Modules.Tenant.GraphQL;
+namespace GameGuild.Modules.Tenants.GraphQL;
 
 /// <summary>
 /// GraphQL queries for Tenant module

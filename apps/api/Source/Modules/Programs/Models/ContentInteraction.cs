@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Text.Json;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Program.Models;
+namespace GameGuild.Modules.Programs.Models;
 
 [Table("content_interactions")]
 public class ContentInteraction : BaseEntity {

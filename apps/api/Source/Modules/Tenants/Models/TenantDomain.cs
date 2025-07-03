@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenant.Models;
+namespace GameGuild.Modules.Tenants.Models;
 
 /// <summary>
 /// Represents a domain (top-level or subdomain) associated with a tenant for automatic user grouping.

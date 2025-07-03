@@ -1,4 +1,7 @@
-﻿namespace GameGuild.Common.Entities;
+﻿using GameGuild.Modules.Resources.Models;
+
+
+namespace GameGuild.Modules.Localizations.Models;
 
 /// <summary>
 /// Interface for entities that can be localized

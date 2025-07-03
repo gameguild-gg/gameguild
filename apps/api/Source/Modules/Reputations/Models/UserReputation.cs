@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Diagnostics.CodeAnalysis;
+using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Users.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using GameGuild.Common.Entities;
 
 
-namespace GameGuild.Modules.Reputation.Models;
+namespace GameGuild.Modules.Reputations.Models;
 
 /// <summary>
 /// Tracks a user's reputation score and tier
@@ -21,10 +21,9 @@ public class UserReputation : ResourceBase, IReputation {
   /// </summary>
   [Required]
   [ForeignKey(nameof(UserId))]
-  public required Modules.User.Models.User User { get; set; }
+  public required User User { get; set; }
 
-  [Required]
-  public Guid UserId { get; set; }
+  [Required] public Guid UserId { get; set; }
 
   /// <summary>
   /// Current reputation score
