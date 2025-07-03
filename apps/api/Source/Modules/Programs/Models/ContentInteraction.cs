@@ -30,7 +30,7 @@ public class ContentInteraction : BaseEntity {
   /// Completion percentage for this specific content (0-100)
   /// </summary>
   [Column(TypeName = "decimal(5,2)")]
-  public decimal CompletionPercentage { get; set; } = 0;
+  public decimal CompletionPercentage { get; set; }
 
   /// <summary>
   /// Time spent on this content in minutes

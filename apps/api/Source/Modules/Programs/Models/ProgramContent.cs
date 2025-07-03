@@ -48,7 +48,7 @@ public class ProgramContent : BaseEntity {
   /// <summary>
   /// Display order within the program or parent content
   /// </summary>
-  public int SortOrder { get; set; } = 0;
+  public int SortOrder { get; set; }
 
   /// <summary>
   /// Whether this content is required for program completion

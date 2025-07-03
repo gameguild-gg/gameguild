@@ -7,8 +7,8 @@ namespace GameGuild.Modules.Tenants.GraphQL;
 /// <summary>
 /// GraphQL type for Tenant entity
 /// </summary>
-public class TenantType : ObjectType<Models.Tenant> {
-  protected override void Configure(IObjectTypeDescriptor<Models.Tenant> descriptor) {
+public class TenantType : ObjectType<Tenant> {
+  protected override void Configure(IObjectTypeDescriptor<Tenant> descriptor) {
     descriptor.Name("Tenant");
     descriptor.Description("A tenant represents an organization or group within the system");
 

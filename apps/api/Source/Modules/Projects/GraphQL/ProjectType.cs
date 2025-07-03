@@ -12,8 +12,8 @@ namespace GameGuild.Modules.Projects.GraphQL;
 /// <summary>
 /// GraphQL type definition for Project entity with DAC permission integration
 /// </summary>
-public class ProjectType : ObjectType<Models.Project> {
-  protected override void Configure(IObjectTypeDescriptor<Models.Project> descriptor) {
+public class ProjectType : ObjectType<Project> {
+  protected override void Configure(IObjectTypeDescriptor<Project> descriptor) {
     descriptor.Name("Project");
     descriptor.Description(
       "Represents a project in the CMS system with full ResourceBase support and DAC permissions."
@@ -90,7 +90,7 @@ public class ProjectType : ObjectType<Models.Project> {
               .Description("Whether the current user can edit this project.")
               .Resolve(async context => {
                   var permissionService = context.Service<IPermissionService>();
-                  var project = context.Parent<Models.Project>();
+                  var project = context.Parent<Project>();
                   var user = context.GetUser();
 
                   if (user?.Identity?.IsAuthenticated != true) return false;
@@ -99,7 +99,7 @@ public class ProjectType : ObjectType<Models.Project> {
                   var tenantIdClaim = user.FindFirst(JwtClaimTypes.TenantId)?.Value;
                   var tenantId = tenantIdClaim != null ? Guid.Parse(tenantIdClaim) : (Guid?)null;
 
-                  return await permissionService.HasResourcePermissionAsync<ProjectPermission, Models.Project>(
+                  return await permissionService.HasResourcePermissionAsync<ProjectPermission, Project>(
                            userId,
                            tenantId,
                            project.Id,
@@ -113,7 +113,7 @@ public class ProjectType : ObjectType<Models.Project> {
               .Description("Whether the current user can delete this project.")
               .Resolve(async context => {
                   var permissionService = context.Service<IPermissionService>();
-                  var project = context.Parent<Models.Project>();
+                  var project = context.Parent<Project>();
                   var user = context.GetUser();
 
                   if (user?.Identity?.IsAuthenticated != true) return false;
@@ -122,7 +122,7 @@ public class ProjectType : ObjectType<Models.Project> {
                   var tenantIdClaim = user.FindFirst(JwtClaimTypes.TenantId)?.Value;
                   var tenantId = tenantIdClaim != null ? Guid.Parse(tenantIdClaim) : (Guid?)null;
 
-                  return await permissionService.HasResourcePermissionAsync<ProjectPermission, Models.Project>(
+                  return await permissionService.HasResourcePermissionAsync<ProjectPermission, Project>(
                            userId,
                            tenantId,
                            project.Id,

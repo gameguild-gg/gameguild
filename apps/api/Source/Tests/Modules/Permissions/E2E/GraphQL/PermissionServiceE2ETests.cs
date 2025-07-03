@@ -594,7 +594,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     return comment;
   }
 
-  private async Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant) {
+  private Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant) {
     var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
@@ -603,7 +603,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
 
     var additionalClaims = new[] { new System.Security.Claims.Claim("tenant_id", tenant.Id.ToString()) };
 
-    return jwtService.GenerateAccessToken(userDto, roles, additionalClaims);
+    return Task.FromResult(jwtService.GenerateAccessToken(userDto, roles, additionalClaims));
   }
 
   private void SetAuthorizationHeader(string token) { _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token); }

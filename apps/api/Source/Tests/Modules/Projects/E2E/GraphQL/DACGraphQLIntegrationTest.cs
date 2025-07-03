@@ -13,7 +13,7 @@ namespace GameGuild.Tests.Modules.Projects.E2E.GraphQL;
 /// </summary>
 public class DACGraphQLIntegrationTests {
   [Fact]
-  public async Task GraphQL_Schema_Contains_Comment_Operations() {
+  public Task GraphQL_Schema_Contains_Comment_Operations() {
     // This is a simplified test that verifies our GraphQL schema registration
     // In a full implementation, you would set up a proper test server
 
@@ -22,6 +22,8 @@ public class DACGraphQLIntegrationTests {
 
     // Assert
     Assert.True(isTestWorking, "Integration test framework is set up correctly");
+
+    return Task.CompletedTask;
   }
 }
 

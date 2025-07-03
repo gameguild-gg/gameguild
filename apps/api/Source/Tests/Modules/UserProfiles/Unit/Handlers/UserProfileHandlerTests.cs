@@ -10,20 +10,17 @@ using Xunit;
 
 namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
   public class UserProfileHandlerTests {
-    private readonly Mock<IUserProfileService> _mockProfileService;
+    private readonly Mock<IUserProfileService> _mockProfileService = new();
     // private readonly CreateUserProfileCommandHandler _createHandler;
     // private readonly UpdateUserProfileCommandHandler _updateHandler;
     // private readonly DeleteUserProfileCommandHandler _deleteHandler;
 
-    public UserProfileHandlerTests() {
-      _mockProfileService = new Mock<IUserProfileService>();
-      // _createHandler = new CreateUserProfileCommandHandler(_mockProfileService.Object);
-      // _updateHandler = new UpdateUserProfileCommandHandler(_mockProfileService.Object);
-      // _deleteHandler = new DeleteUserProfileCommandHandler(_mockProfileService.Object);
-    }
+    // _createHandler = new CreateUserProfileCommandHandler(_mockProfileService.Object);
+    // _updateHandler = new UpdateUserProfileCommandHandler(_mockProfileService.Object);
+    // _deleteHandler = new DeleteUserProfileCommandHandler(_mockProfileService.Object);
 
     [Fact]
-    public async Task Should_Handle_UserProfile_Update_Command() {
+    public Task Should_Handle_UserProfile_Update_Command() {
       // Arrange
       var profileId = Guid.NewGuid();
       var command = new UpdateUserProfileCommand { Id = profileId, Bio = "Updated bio", AvatarUrl = "https://example.com/new-avatar.jpg", Location = "New Location" };
@@ -53,10 +50,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
 
       // Verify service call
       _mockProfileService.Verify(s => s.UpdateUserProfileAsync(It.IsAny<UserProfile>()), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Handle_UserProfile_Creation_Command() {
+    public Task Should_Handle_UserProfile_Creation_Command() {
       // Arrange
       var userId = Guid.NewGuid();
       var command = new CreateUserProfileCommand { UserId = userId, Bio = "New bio", AvatarUrl = "https://example.com/avatar.jpg" };
@@ -83,10 +82,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
 
       // Verify service call
       _mockProfileService.Verify(s => s.CreateUserProfileAsync(It.IsAny<UserProfile>()), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Handle_UserProfile_Delete_Command() {
+    public Task Should_Handle_UserProfile_Delete_Command() {
       // Arrange
       var profileId = Guid.NewGuid();
       var command = new DeleteUserProfileCommand { Id = profileId };
@@ -103,6 +104,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
 
       // Verify service call
       _mockProfileService.Verify(s => s.DeleteUserProfileAsync(profileId), Times.Once);
+
+      return Task.CompletedTask;
     }
   }
 

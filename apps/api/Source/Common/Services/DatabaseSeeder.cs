@@ -1,5 +1,4 @@
 using GameGuild.Data;
-using GameGuild.Common.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;

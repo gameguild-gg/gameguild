@@ -18,7 +18,7 @@ public interface ITenantContextService {
   /// <summary>
   /// Get the current tenant entity 
   /// </summary>
-  Task<Models.Tenant?> GetCurrentTenantAsync(ClaimsPrincipal? user = null, string? tenantHeader = null);
+  Task<Tenant?> GetCurrentTenantAsync(ClaimsPrincipal? user = null, string? tenantHeader = null);
 
   /// <summary>
   /// Get permission data for user in the specified tenant
@@ -65,7 +65,7 @@ public class TenantContextService(ApplicationDbContext context) : ITenantContext
   /// <summary>
   /// Get the current tenant entity 
   /// </summary>
-  public async Task<Models.Tenant?> GetCurrentTenantAsync(ClaimsPrincipal? user = null, string? tenantHeader = null) {
+  public async Task<Tenant?> GetCurrentTenantAsync(ClaimsPrincipal? user = null, string? tenantHeader = null) {
     var tenantId = await GetCurrentTenantIdAsync(user, tenantHeader);
 
     if (!tenantId.HasValue) return null;

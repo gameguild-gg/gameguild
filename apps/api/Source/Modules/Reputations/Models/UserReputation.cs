@@ -28,7 +28,7 @@ public class UserReputation : ResourceBase, IReputation {
   /// <summary>
   /// Current reputation score
   /// </summary>
-  public int Score { get; set; } = 0;
+  public int Score { get; set; }
 
   /// <summary>
   /// Current reputation tier (linked to configurable tier)
@@ -51,12 +51,12 @@ public class UserReputation : ResourceBase, IReputation {
   /// <summary>
   /// Number of positive reputation changes
   /// </summary>
-  public int PositiveChanges { get; set; } = 0;
+  public int PositiveChanges { get; set; }
 
   /// <summary>
   /// Number of negative reputation changes
   /// </summary>
-  public int NegativeChanges { get; set; } = 0;
+  public int NegativeChanges { get; set; }
 
   /// <summary>
   /// History of reputation changes for this user
@@ -66,10 +66,10 @@ public class UserReputation : ResourceBase, IReputation {
 
 public class UserReputationConfiguration : IEntityTypeConfiguration<UserReputation> {
   public void Configure(EntityTypeBuilder<UserReputation> builder) {
-    // Configure relationship with User (can't be done with annotations)
+    // Configure a relationship with User (can't be done with annotations)
     builder.HasOne(ur => ur.User).WithMany().HasForeignKey(ur => ur.UserId).OnDelete(DeleteBehavior.Cascade);
 
-    // Configure relationship with CurrentLevel (can't be done with annotations)
+    // Configure a relationship with CurrentLevel (can't be done with annotations)
     builder.HasOne(ur => ur.CurrentLevel)
            .WithMany()
            .HasForeignKey(ur => ur.CurrentLevelId)
