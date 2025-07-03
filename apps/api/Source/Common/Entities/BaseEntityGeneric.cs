@@ -14,7 +14,8 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
   /// <summary>
   /// Unique identifier for the entity
   /// </summary>
-  [Key][DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+  [Key]
+  [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
   public virtual TKey Id { get; set; } = default!;
 
   /// <summary>
@@ -35,13 +36,15 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
   /// <summary>
   /// Timestamp when the entity was created
   /// </summary>
-  [Required][DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+  [Required]
+  [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
   public virtual DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
   /// <summary>
   /// Timestamp when the entity was last updated
   /// </summary>
-  [Required][DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+  [Required]
+  [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
   public virtual DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
   /// <summary>
@@ -102,26 +105,26 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
     foreach (var property in properties) {
       var propertyInfo = entityType.GetProperty(property.Key);
 
-      if (propertyInfo != null && propertyInfo.CanWrite) {
-        try {
-          // Handle type conversion if necessary
-          var value = property.Value;
+      if (propertyInfo == null || !propertyInfo.CanWrite) continue;
 
-          if (value != null && value.GetType() != propertyInfo.PropertyType) {
-            // Handle nullable types
-            var targetType = Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType;
-            value = Convert.ChangeType(value, targetType);
-          }
+      try {
+        // Handle type conversion if necessary
+        var value = property.Value;
 
-          propertyInfo.SetValue(this, value);
-
-          // Don't auto-update UpdatedAt for CreatedAt changes
-          if (property.Key != nameof(CreatedAt)) { Touch(); }
+        if (value != null && value.GetType() != propertyInfo.PropertyType) {
+          // Handle nullable types
+          var targetType = Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType;
+          value = Convert.ChangeType(value, targetType);
         }
-        catch (Exception) {
-          // Silently ignore conversion errors for now
-          // In a production app, you might want to log these or handle them differently
-        }
+
+        propertyInfo.SetValue(this, value);
+
+        // Don't auto-update UpdatedAt for CreatedAt changes
+        if (property.Key != nameof(CreatedAt)) { Touch(); }
+      }
+      catch (Exception) {
+        // Silently ignore conversion errors for now
+        // In a production app, you might want to log these or handle them differently
       }
     }
   }
@@ -144,20 +147,20 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
   /// Soft-delete the entity by setting DeletedAt timestamp
   /// </summary>
   public virtual void SoftDelete() {
-    if (!IsDeleted) {
-      DeletedAt = DateTime.UtcNow;
-      Touch();
-    }
+    if (IsDeleted) return;
+
+    DeletedAt = DateTime.UtcNow;
+    Touch();
   }
 
   /// <summary>
   /// Restore a soft-deleted entity by clearing DeletedAt timestamp
   /// </summary>
   public virtual void Restore() {
-    if (IsDeleted) {
-      DeletedAt = null;
-      Touch();
-    }
+    if (!IsDeleted) return;
+
+    DeletedAt = null;
+    Touch();
   }
 
   /// <summary>
@@ -186,7 +189,7 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
   }
 
   // Tenant logic for ITenantable
-  public virtual Modules.Tenant.Models.Tenant? Tenant { get; set; }
+  public virtual Tenant? Tenant { get; set; }
 
   public virtual bool IsGlobal {
     get => Tenant == null;

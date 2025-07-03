@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace GameGuild.Common.Entities;
 
 /// <summary>
-/// Base class for resource-specific permissions (Layer 3 of DAC permission system)
+/// Base class for resource-specific permissions (Layer 3 of the DAC permission system)
 /// Generic implementation allows strong typing for each content type
 /// </summary>
 public abstract class ResourcePermission<T> : WithPermissions where T : BaseEntity {

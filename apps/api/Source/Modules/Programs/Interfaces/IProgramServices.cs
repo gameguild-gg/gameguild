@@ -48,12 +48,12 @@ public interface IProgramContentService {
 
   Task<IEnumerable<Models.ProgramContent>> GetContentByTypeAsync(
     Guid programId,
-    GameGuild.Common.Enums.ProgramContentType type
+    ProgramContentType type
   );
 
   Task<IEnumerable<Models.ProgramContent>> GetContentByVisibilityAsync(
     Guid programId,
-    GameGuild.Common.Enums.Visibility visibility
+    Visibility visibility
   );
 
   Task<bool> MoveContentAsync(Guid contentId, Guid? newParentId, int newSortOrder);

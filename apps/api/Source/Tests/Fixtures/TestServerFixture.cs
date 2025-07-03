@@ -65,7 +65,7 @@ namespace GameGuild.Tests.Modules.Fixtures
                 options.UseInMemoryDatabase("GameGuildTestDb"));
 
             // Configure real ApplicationDbContext for the services
-            services.AddDbContext<GameGuild.Data.ApplicationDbContext>(options =>
+            services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseInMemoryDatabase("GameGuildTestDb"));
 
             // Configure JWT authentication for testing
@@ -100,7 +100,7 @@ namespace GameGuild.Tests.Modules.Fixtures
 
             // Register Tenant module services - using existing mock implementations for test simplicity
             services.AddScoped<GameGuild.Modules.Tenant.Services.ITenantService, MockTenantService>();
-            services.AddScoped<GameGuild.Modules.Tenant.Services.ITenantContextService, GameGuild.Tests.Helpers.MockTenantContextService>();
+            services.AddScoped<GameGuild.Modules.Tenant.Services.ITenantContextService, Helpers.MockTenantContextService>();
 
             // Add controllers
             services.AddControllers();

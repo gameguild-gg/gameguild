@@ -73,7 +73,7 @@ public class ProgramContent : BaseEntity {
   /// </summary>
   public int? EstimatedMinutes { get; set; }
 
-  public Common.Enums.Visibility Visibility { get; set; } = GameGuild.Common.Enums.Visibility.Published;
+  public Visibility Visibility { get; set; } = Visibility.Published;
 
   // Navigation properties
   public virtual Program Program { get; set; } = null!;

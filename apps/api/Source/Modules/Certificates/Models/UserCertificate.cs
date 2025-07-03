@@ -93,7 +93,7 @@ public class UserCertificate : BaseEntity {
 
   public virtual Product.Models.Product? Product { get; set; }
 
-  public virtual Program.Models.ProgramUser? ProgramUser { get; set; }
+  public virtual ProgramUser? ProgramUser { get; set; }
 
   public virtual ICollection<CertificateBlockchainAnchor> BlockchainAnchors { get; set; } = new List<CertificateBlockchainAnchor>();
 }

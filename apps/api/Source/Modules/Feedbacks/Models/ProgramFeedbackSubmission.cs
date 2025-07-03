@@ -64,7 +64,7 @@ public class ProgramFeedbackSubmission : BaseEntity {
   public virtual Product.Models.Product? Product { get; set; }
 
   [ForeignKey(nameof(ProgramUserId))]
-  public virtual Program.Models.ProgramUser ProgramUser { get; set; } = null!;
+  public virtual ProgramUser ProgramUser { get; set; } = null!;
 
   // Helper methods for JSON feedback data
   public T? GetFeedbackResponse<T>(string questionId) where T : class {

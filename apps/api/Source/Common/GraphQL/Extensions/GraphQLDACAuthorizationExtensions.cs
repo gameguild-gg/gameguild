@@ -24,7 +24,7 @@ public static class GraphQLDACAuthorizationExtensions {
 
            // Add enum types for authorization
            .AddType<EnumType<DACPermissionLevel>>()
-           .AddType<EnumType<GameGuild.Common.Entities.PermissionType>>();
+           .AddType<EnumType<Entities.PermissionType>>();
   }
 
   /// <summary>
@@ -51,7 +51,7 @@ public static class GraphQLFieldDACExtensions {
   /// <returns>The field descriptor for method chaining</returns>
   public static IObjectFieldDescriptor RequireTenantPermission(
     this IObjectFieldDescriptor descriptor,
-    GameGuild.Common.Entities.PermissionType permission
+    Entities.PermissionType permission
   ) {
     return descriptor.Directive(
       "dacAuthorize",
@@ -69,7 +69,7 @@ public static class GraphQLFieldDACExtensions {
   /// <returns>The field descriptor for method chaining</returns>
   public static IObjectFieldDescriptor RequireContentTypePermission<TEntity>(
     this IObjectFieldDescriptor descriptor,
-    GameGuild.Common.Entities.PermissionType permission
+    Entities.PermissionType permission
   ) where TEntity : class {
     return descriptor.Directive(
       "dacAuthorize",
@@ -89,11 +89,11 @@ public static class GraphQLFieldDACExtensions {
   /// <param name="resourceIdParameter">The parameter name containing the resource ID</param>
   /// <returns>The field descriptor for method chaining</returns>
   public static IObjectFieldDescriptor RequireResourcePermission<TPermission, TEntity>(
-    this IObjectFieldDescriptor descriptor, GameGuild.Common.Entities.PermissionType permission,
+    this IObjectFieldDescriptor descriptor, Entities.PermissionType permission,
     string resourceIdParameter = "id"
   )
-    where TPermission : GameGuild.Common.Entities.ResourcePermission<TEntity>
-    where TEntity : GameGuild.Common.Entities.BaseEntity {
+    where TPermission : Entities.ResourcePermission<TEntity>
+    where TEntity : Entities.BaseEntity {
     return descriptor.Directive(
       "dacAuthorize",
       new ArgumentNode("level", new StringValueNode(DACPermissionLevel.Resource.ToString())),
@@ -114,9 +114,9 @@ public static class GraphQLFieldDACExtensions {
   /// <returns>The field descriptor for method chaining</returns>
   public static IObjectFieldDescriptor RequireResourcePermission<TEntity>(
     this IObjectFieldDescriptor descriptor,
-    GameGuild.Common.Entities.PermissionType permission, string resourceIdParameter = "id"
+    Entities.PermissionType permission, string resourceIdParameter = "id"
   )
-    where TEntity : GameGuild.Common.Entities.BaseEntity {
+    where TEntity : Entities.BaseEntity {
     return descriptor.Directive(
       "dacAuthorize",
       new ArgumentNode("level", new StringValueNode(DACPermissionLevel.Resource.ToString())),

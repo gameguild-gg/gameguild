@@ -39,7 +39,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
     // Ensure clean database
-    if (Microsoft.EntityFrameworkCore.InMemoryDatabaseFacadeExtensions.IsInMemory(db.Database)) {
+    if (InMemoryDatabaseFacadeExtensions.IsInMemory(db.Database)) {
       await db.Database.EnsureDeletedAsync();
       await db.Database.EnsureCreatedAsync();
     }
@@ -418,7 +418,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
     // Ensure clean database
-    if (Microsoft.EntityFrameworkCore.InMemoryDatabaseFacadeExtensions.IsInMemory(db.Database)) {
+    if (InMemoryDatabaseFacadeExtensions.IsInMemory(db.Database)) {
       await db.Database.EnsureDeletedAsync();
       await db.Database.EnsureCreatedAsync();
     }

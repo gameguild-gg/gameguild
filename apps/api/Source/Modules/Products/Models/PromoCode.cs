@@ -124,7 +124,7 @@ public class PromoCode : BaseEntity {
   /// <summary>
   /// Navigation property to financial transactions that used this promo code
   /// </summary>
-  public virtual ICollection<Payment.Models.FinancialTransaction> FinancialTransactions { get; set; } = new List<Payment.Models.FinancialTransaction>();
+  public virtual ICollection<FinancialTransaction> FinancialTransactions { get; set; } = new List<FinancialTransaction>();
 
   /// <summary>
   /// Default constructor
