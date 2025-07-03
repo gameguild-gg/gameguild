@@ -13,25 +13,25 @@ namespace GameGuild.Modules.Program.Models;
 public class ProgramWishlist : BaseEntity {
   public Guid UserId { get; set; }
 
-    public Guid ProgramId { get; set; }
+  public Guid ProgramId { get; set; }
 
-    /// <summary>
-    /// When the program was added to wishlist
-    /// </summary>
-    public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+  /// <summary>
+  /// When the program was added to wishlist
+  /// </summary>
+  public DateTime AddedAt { get; set; } = DateTime.UtcNow;
 
-    /// <summary>
-    /// Optional notes about why the user saved this program
-    /// </summary>
-    [Column(TypeName = "text")]
-    public string? Notes { get; set; }
+  /// <summary>
+  /// Optional notes about why the user saved this program
+  /// </summary>
+  [Column(TypeName = "text")]
+  public string? Notes { get; set; }
 
-    // Navigation properties
-    [ForeignKey(nameof(UserId))]
-    public virtual User.Models.User User { get; set; } = null!;
+  // Navigation properties
+  [ForeignKey(nameof(UserId))]
+  public virtual User.Models.User User { get; set; } = null!;
 
-    [ForeignKey(nameof(ProgramId))]
-    public virtual Program Program { get; set; } = null!;
+  [ForeignKey(nameof(ProgramId))]
+  public virtual Program Program { get; set; } = null!;
 }
 
 /// <summary>

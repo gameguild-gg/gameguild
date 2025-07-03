@@ -79,33 +79,58 @@ public record CreateActivityGradeInput(
     decimal Grade,
     string? Feedback = null,
     string? GradingDetails = null
-);
+) {
+  public Guid ContentInteractionId { get; init; } = ContentInteractionId;
+
+  public Guid GraderProgramUserId { get; init; } = GraderProgramUserId;
+
+  public decimal Grade { get; init; } = Grade;
+
+  public string? Feedback { get; init; } = Feedback;
+
+  public string? GradingDetails { get; init; } = GradingDetails;
+}
 
 public record UpdateActivityGradeInput(
     Guid GradeId,
     decimal? Grade = null,
     string? Feedback = null,
     string? GradingDetails = null
-);
+) {
+  public Guid GradeId { get; init; } = GradeId;
+
+  public decimal? Grade { get; init; } = Grade;
+
+  public string? Feedback { get; init; } = Feedback;
+
+  public string? GradingDetails { get; init; } = GradingDetails;
+}
 
 /// <summary>
 /// Result types for ActivityGrade operations
 /// </summary>
 public class ActivityGradeResult
 {
-    public bool Success { get; set; }
-    public string? ErrorMessage { get; set; }
-    public ActivityGrade? Grade { get; set; }
+  public bool Success { get; set; }
+
+  public string? ErrorMessage { get; set; }
+
+  public ActivityGrade? Grade { get; set; }
 }
 
 public class ActivityGradeStatistics
 {
-    public int TotalGrades { get; set; }
-    public decimal AverageGrade { get; set; }
-    public decimal MinGrade { get; set; }
-    public decimal MaxGrade { get; set; }
-    public decimal PassingRate { get; set; }
-    public bool HasGrades => TotalGrades > 0;
+  public int TotalGrades { get; set; }
+
+  public decimal AverageGrade { get; set; }
+
+  public decimal MinGrade { get; set; }
+
+  public decimal MaxGrade { get; set; }
+
+  public decimal PassingRate { get; set; }
+
+  public bool HasGrades => TotalGrades > 0;
     public string AverageGradeFormatted => $"{AverageGrade:F1}%";
     public string PassingRateFormatted => $"{PassingRate:F1}%";
 }

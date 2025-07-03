@@ -221,30 +221,38 @@ namespace GameGuild.Tests.Modules.UserProfile.Unit.Controllers
     // Mock classes for testing purposes
     public class UserProfile
     {
-        public Guid Id { get; set; }
-        public Guid UserId { get; set; }
-        public string Bio { get; set; }
-        public string AvatarUrl { get; set; }
+      public Guid Id { get; set; }
+
+      public Guid UserId { get; set; }
+
+      public string Bio { get; set; }
+
+      public string AvatarUrl { get; set; }
     }
 
     public class CreateUserProfileDto
     {
-        public string Bio { get; set; }
-        public string AvatarUrl { get; set; }
+      public string Bio { get; set; }
+
+      public string AvatarUrl { get; set; }
     }
 
     public class UpdateUserProfileDto
     {
-        public string Bio { get; set; }
-        public string AvatarUrl { get; set; }
+      public string Bio { get; set; }
+
+      public string AvatarUrl { get; set; }
     }
 
     public class UserProfileDto
     {
-        public Guid Id { get; set; }
-        public Guid UserId { get; set; }
-        public string Bio { get; set; }
-        public string AvatarUrl { get; set; }
+      public Guid Id { get; set; }
+
+      public Guid UserId { get; set; }
+
+      public string Bio { get; set; }
+
+      public string AvatarUrl { get; set; }
     }
 
     public interface IUserProfileService

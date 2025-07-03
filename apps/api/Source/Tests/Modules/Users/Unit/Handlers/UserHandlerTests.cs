@@ -110,19 +110,22 @@ namespace GameGuild.Tests.Modules.User.Unit.Handlers
     // Mock classes for testing purposes
     public class CreateUserCommand
     {
-        public string Name { get; set; } = "";
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
+      public string Name { get; set; } = "";
+
+      public string Email { get; set; } = "";
+
+      public string Password { get; set; } = "";
     }
 
     public class UpdateUserCommand
     {
-        public Guid Id { get; set; }
-        public string Name { get; set; } = "";
+      public Guid Id { get; set; }
+
+      public string Name { get; set; } = "";
     }
 
     public class DeleteUserCommand
     {
-        public Guid Id { get; set; }
+      public Guid Id { get; set; }
     }
 }

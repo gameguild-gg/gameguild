@@ -263,12 +263,38 @@ public class ContentInteractionController : ControllerBase
 /// <summary>
 /// Request DTOs for ContentInteraction endpoints
 /// </summary>
-public record StartContentRequest(Guid ProgramUserId, Guid ContentId);
+public record StartContentRequest(Guid ProgramUserId, Guid ContentId) {
+  public Guid ProgramUserId { get; init; } = ProgramUserId;
 
-public record UpdateProgressRequest(Guid ProgramUserId, Guid ContentId, decimal CompletionPercentage);
+  public Guid ContentId { get; init; } = ContentId;
+}
 
-public record SubmitContentRequest(Guid ProgramUserId, Guid ContentId, string SubmissionData);
+public record UpdateProgressRequest(Guid ProgramUserId, Guid ContentId, decimal CompletionPercentage) {
+  public Guid ProgramUserId { get; init; } = ProgramUserId;
 
-public record CompleteContentRequest(Guid ProgramUserId, Guid ContentId);
+  public Guid ContentId { get; init; } = ContentId;
 
-public record UpdateTimeSpentRequest(Guid ProgramUserId, Guid ContentId, int AdditionalMinutes);
+  public decimal CompletionPercentage { get; init; } = CompletionPercentage;
+}
+
+public record SubmitContentRequest(Guid ProgramUserId, Guid ContentId, string SubmissionData) {
+  public Guid ProgramUserId { get; init; } = ProgramUserId;
+
+  public Guid ContentId { get; init; } = ContentId;
+
+  public string SubmissionData { get; init; } = SubmissionData;
+}
+
+public record CompleteContentRequest(Guid ProgramUserId, Guid ContentId) {
+  public Guid ProgramUserId { get; init; } = ProgramUserId;
+
+  public Guid ContentId { get; init; } = ContentId;
+}
+
+public record UpdateTimeSpentRequest(Guid ProgramUserId, Guid ContentId, int AdditionalMinutes) {
+  public Guid ProgramUserId { get; init; } = ProgramUserId;
+
+  public Guid ContentId { get; init; } = ContentId;
+
+  public int AdditionalMinutes { get; init; } = AdditionalMinutes;
+}

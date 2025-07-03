@@ -15,8 +15,9 @@ namespace GameGuild.Tests.Modules.Fixtures
     /// </summary>
     public class TestServerFixture : IDisposable
     {
-        public TestServer Server { get; }
-        private readonly IHost _host;
+      public TestServer Server { get; }
+
+      private readonly IHost _host;
         private readonly string _testSecret = "THIS_IS_A_TEST_SECRET_DO_NOT_USE_IN_PRODUCTION_ENVIRONMENT";
 
         public TestServerFixture()
@@ -52,21 +53,21 @@ namespace GameGuild.Tests.Modules.Fixtures
                 {"OAuth:Google:ClientId", "test-google-client"},
                 {"OAuth:Google:ClientSecret", "test-google-secret"}
             };
-            
+
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configData)
                 .Build();
-            
+
             services.AddSingleton<IConfiguration>(configuration);
-            
+
             // Configure in-memory database
             services.AddDbContext<TestDbContext>(options =>
                 options.UseInMemoryDatabase("GameGuildTestDb"));
-            
+
             // Configure real ApplicationDbContext for the services
             services.AddDbContext<GameGuild.Data.ApplicationDbContext>(options =>
                 options.UseInMemoryDatabase("GameGuildTestDb"));
-            
+
             // Configure JWT authentication for testing
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -82,13 +83,13 @@ namespace GameGuild.Tests.Modules.Fixtures
 
             // Register User module services
             services.AddScoped<GameGuild.Modules.User.Services.IUserService, GameGuild.Modules.User.Services.UserService>();
-            
+
             // Register HttpClient for OAuth service
             services.AddHttpClient();
-            
+
             // Register MediatR for CQRS pattern
             services.AddMediatR(typeof(GameGuild.Modules.Auth.Services.AuthService));
-            
+
             // Register Auth module services
             services.AddScoped<GameGuild.Modules.Auth.Services.IAuthService, GameGuild.Modules.Auth.Services.AuthService>();
             services.AddScoped<GameGuild.Modules.Auth.Services.IJwtTokenService, GameGuild.Modules.Auth.Services.JwtTokenService>();
@@ -96,11 +97,11 @@ namespace GameGuild.Tests.Modules.Fixtures
             services.AddScoped<GameGuild.Modules.Auth.Services.IWeb3Service, GameGuild.Modules.Auth.Services.Web3Service>();
             services.AddScoped<GameGuild.Modules.Auth.Services.IEmailVerificationService, GameGuild.Modules.Auth.Services.EmailVerificationService>();
             services.AddScoped<GameGuild.Modules.Auth.Services.ITenantAuthService, GameGuild.Modules.Auth.Services.TenantAuthService>();
-            
+
             // Register Tenant module services - using existing mock implementations for test simplicity
             services.AddScoped<GameGuild.Modules.Tenant.Services.ITenantService, MockTenantService>();
             services.AddScoped<GameGuild.Modules.Tenant.Services.ITenantContextService, GameGuild.Tests.Helpers.MockTenantContextService>();
-            
+
             // Add controllers
             services.AddControllers();
         }
@@ -119,8 +120,8 @@ namespace GameGuild.Tests.Modules.Fixtures
             var key = Encoding.ASCII.GetBytes(_testSecret);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[] 
-                { 
+                Subject = new ClaimsIdentity(new[]
+                {
                     new Claim(ClaimTypes.NameIdentifier, userId),
                     new Claim(ClaimTypes.Email, "test@example.com")
                 }),
@@ -135,7 +136,7 @@ namespace GameGuild.Tests.Modules.Fixtures
         {
             using var scope = Server.Services.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            
+
             // Create a user entity for testing using the real User model
             var user = new GameGuild.Modules.User.Models.User
             {
@@ -146,7 +147,7 @@ namespace GameGuild.Tests.Modules.Fixtures
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
-            
+
             dbContext.Users.Add(user);
             await dbContext.SaveChangesAsync();
         }
@@ -155,7 +156,7 @@ namespace GameGuild.Tests.Modules.Fixtures
         {
             using var scope = Server.Services.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            
+
             // Create a user entity with profile for testing using real models
             var user = new GameGuild.Modules.User.Models.User
             {
@@ -166,7 +167,7 @@ namespace GameGuild.Tests.Modules.Fixtures
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
-            
+
             dbContext.Users.Add(user);
             await dbContext.SaveChangesAsync();
         }
@@ -187,7 +188,7 @@ namespace GameGuild.Tests.Modules.Fixtures
         {
             // Add controllers and other services
             services.AddControllers();
-            
+
             // Configure GraphQL - commented out to avoid dependency issues
             // services.AddGraphQLServer()
             //     .AddQueryType<TestQuery>()
@@ -199,7 +200,7 @@ namespace GameGuild.Tests.Modules.Fixtures
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-            
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
@@ -211,36 +212,51 @@ namespace GameGuild.Tests.Modules.Fixtures
     // Test models, interfaces, and implementations
     public class TestDbContext : DbContext
     {
-        public TestDbContext(DbContextOptions<TestDbContext> options) : base(options) { }
+      public TestDbContext(DbContextOptions<TestDbContext> options) : base(options) { }
 
-        public DbSet<TestUserEntity> Users { get; set; }
-        public DbSet<TestUserProfileEntity> UserProfiles { get; set; }
+      public DbSet<TestUserEntity> Users { get; set; }
+
+      public DbSet<TestUserProfileEntity> UserProfiles { get; set; }
     }
 
     public class TestUserEntity
     {
-        public string Id { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string PasswordHash { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        // Navigation property for test only (not used by EF Core)
-        public TestUserProfileEntity? Profile { get; set; }
+      public string Id { get; set; } = string.Empty;
+
+      public string Name { get; set; } = string.Empty;
+
+      public string Email { get; set; } = string.Empty;
+
+      public string PasswordHash { get; set; } = string.Empty;
+
+      public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+      public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+      // Navigation property for test only (not used by EF Core)
+      public TestUserProfileEntity? Profile { get; set; }
     }
 
     public class TestUserProfileEntity
     {
-        public string Id { get; set; } = string.Empty;
-        public string UserId { get; set; } = string.Empty;
-        public string Bio { get; set; } = string.Empty;
-        public string AvatarUrl { get; set; } = string.Empty;
-        public string Location { get; set; } = string.Empty;
-        public string WebsiteUrl { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        // Navigation property for test only (not used by EF Core)
-        public TestUserEntity? User { get; set; }
+      public string Id { get; set; } = string.Empty;
+
+      public string UserId { get; set; } = string.Empty;
+
+      public string Bio { get; set; } = string.Empty;
+
+      public string AvatarUrl { get; set; } = string.Empty;
+
+      public string Location { get; set; } = string.Empty;
+
+      public string WebsiteUrl { get; set; } = string.Empty;
+
+      public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+      public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+      // Navigation property for test only (not used by EF Core)
+      public TestUserEntity? User { get; set; }
     }
 
     // Service interfaces and implementations
