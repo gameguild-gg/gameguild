@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
+using UserModel = GameGuild.Modules.User.Models.User;
 
 
 namespace GameGuild.Tests.Modules.Tenant.Integration;
@@ -61,7 +62,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     _context.Tenants.Add(tenant);
 
     // Create test user
-    var user = new User {
+    var user = new UserModel {
       Id = _userId,
       Name = "Test User",
       Email = "test@example.com",
@@ -615,7 +616,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    var user2 = new User {
+    var user2 = new UserModel {
       Id = Guid.NewGuid(),
       Name = "Test User 2",
       Email = "test2@example.com",
@@ -789,7 +790,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     SetAuthorizationHeader(token);
   }
 
-  private string CreateJwtTokenForUserAsync(User user, TenantModel tenant) {
+  private string CreateJwtTokenForUserAsync(GameGuild.Modules.User.Models.User user, TenantModel tenant) {
     var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };

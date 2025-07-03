@@ -12,6 +12,7 @@ using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Tests.Fixtures;
 using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
+using UserModel = GameGuild.Modules.User.Models.User;
 
 
 namespace GameGuild.Tests.Modules.Permission.E2E;
@@ -415,8 +416,8 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
 
   #region Helper Methods
 
-  private async Task<User> CreateTestUserAsync(string email = "test@example.com") {
-    var user = new User { Id = Guid.NewGuid(), Name = "Test User", Email = email, IsActive = true };
+  private async Task<UserModel> CreateTestUserAsync(string email = "test@example.com") {
+    var user = new UserModel { Id = Guid.NewGuid(), Name = "Test User", Email = email, IsActive = true };
 
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -481,7 +482,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     await _context.SaveChangesAsync();
   }
 
-  private Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant) {
+  private Task<string> CreateJwtTokenForUserAsync(UserModel user, TenantModel tenant) {
     // In a real implementation, you would use the actual JWT service
     // For E2E tests, we'll create a mock token or use the real service
     var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();

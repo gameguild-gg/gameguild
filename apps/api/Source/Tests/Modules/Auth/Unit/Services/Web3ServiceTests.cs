@@ -5,6 +5,7 @@ using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.User.Models;
+using UserModel = GameGuild.Modules.User.Models.User;
 
 
 namespace GameGuild.Tests.Modules.Auth.Unit.Services;
@@ -140,7 +141,7 @@ public class Web3ServiceTests : IDisposable {
     var chainId = "1";
 
     // Create existing user first
-    var existingUser = new User { Name = "Existing Web3 User", Email = $"{walletAddress}@web3.local" };
+    var existingUser = new UserModel { Name = "Existing Web3 User", Email = $"{walletAddress}@web3.local" };
     _context.Users.Add(existingUser);
     await _context.SaveChangesAsync();
 
