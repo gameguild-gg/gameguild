@@ -14,81 +14,36 @@ namespace GameGuild.Modules.Tag.Models;
 [Index(nameof(TenantId))]
 [Index(nameof(Name), nameof(TenantId), IsUnique = true)]
 public class Tag : BaseEntity, ITenantable {
-  private string _name = string.Empty;
-
-  private string? _description;
-
-  private TagType _type;
-
-  private string? _color;
-
-  private string? _icon;
-
-  private bool _isActive = true;
-
-  private Guid? _tenantId;
-
-  private ICollection<TagRelationship> _sourceRelationships = new List<TagRelationship>();
-
-  private ICollection<TagRelationship> _targetRelationships = new List<TagRelationship>();
-
   [Required]
   [MaxLength(100)]
-  public string Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string Name { get; set; } = string.Empty;
 
   [MaxLength(500)]
-  public string? Description {
-    get => _description;
-    set => _description = value;
-  }
+  public string? Description { get; set; }
 
-  public TagType Type {
-    get => _type;
-    set => _type = value;
-  }
+  public TagType Type { get; set; }
 
   /// <summary>
   /// Hexadecimal color code for UI display
   /// </summary>
   [MaxLength(7)]
-  public string? Color {
-    get => _color;
-    set => _color = value;
-  }
+  public string? Color { get; set; }
 
   /// <summary>
   /// Icon identifier for UI display
   /// </summary>
   [MaxLength(100)]
-  public string? Icon {
-    get => _icon;
-    set => _icon = value;
-  }
+  public string? Icon { get; set; }
 
   /// <summary>
   /// Whether this tag is available for use
   /// </summary>
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; } = true;
 
-  public Guid? TenantId {
-    get => _tenantId;
-    set => _tenantId = value;
-  }
+  public Guid? TenantId { get; set; }
 
   // Navigation properties
-  public virtual ICollection<TagRelationship> SourceRelationships {
-    get => _sourceRelationships;
-    set => _sourceRelationships = value;
-  }
+  public virtual ICollection<TagRelationship> SourceRelationships { get; set; } = new List<TagRelationship>();
 
-  public virtual ICollection<TagRelationship> TargetRelationships {
-    get => _targetRelationships;
-    set => _targetRelationships = value;
-  }
+  public virtual ICollection<TagRelationship> TargetRelationships { get; set; } = new List<TagRelationship>();
 }

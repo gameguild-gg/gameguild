@@ -15,172 +15,77 @@ namespace GameGuild.Modules.Certificate.Models;
 [Index(nameof(CompletionPercentage))]
 [Index(nameof(TenantId))]
 public class Certificate : BaseEntity, ITenantable {
-  private string _name = string.Empty;
-
-  private string _description = string.Empty;
-
-  private CertificateType _type;
-
-  private Guid? _programId;
-
-  private Guid? _productId;
-
-  private decimal _completionPercentage = 100;
-
-  private decimal? _minimumGrade;
-
-  private bool _requiresFeedback = false;
-
-  private bool _requiresRating = false;
-
-  private decimal? _minimumRating;
-
-  private int? _validityDays;
-
-  private VerificationMethod _verificationMethod = VerificationMethod.Code;
-
-  private string? _certificateTemplate;
-
-  private bool _isActive = true;
-
-  private Guid? _tenantId;
-
-  private Program.Models.Program? _program;
-
-  private Product.Models.Product? _product;
-
-  private ICollection<UserCertificate> _userCertificates = new List<UserCertificate>();
-
-  private ICollection<CertificateTag> _certificateTags = new List<CertificateTag>();
-
   [Required]
   [MaxLength(255)]
-  public string Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string Name { get; set; } = string.Empty;
 
-  public string Description {
-    get => _description;
-    set => _description = value;
-  }
+  public string Description { get; set; } = string.Empty;
 
-  public CertificateType Type {
-    get => _type;
-    set => _type = value;
-  }
+  public CertificateType Type { get; set; }
 
   /// <summary>
   /// Program that this certificate is associated with (null for non-program certificates)
   /// </summary>
-  public Guid? ProgramId {
-    get => _programId;
-    set => _programId = value;
-  }
+  public Guid? ProgramId { get; set; }
 
   /// <summary>
   /// Product that this certificate is associated with (null for non-product certificates)
   /// </summary>
-  public Guid? ProductId {
-    get => _productId;
-    set => _productId = value;
-  }
+  public Guid? ProductId { get; set; }
 
   /// <summary>
   /// Required completion percentage for program-based certificates (0-100)
   /// </summary>
   [Column(TypeName = "decimal(5,2)")]
-  public decimal CompletionPercentage {
-    get => _completionPercentage;
-    set => _completionPercentage = value;
-  }
+  public decimal CompletionPercentage { get; set; } = 100;
 
   /// <summary>
   /// Minimum grade required for certificate issuance (0-100, null = no minimum)
   /// </summary>
   [Column(TypeName = "decimal(5,2)")]
-  public decimal? MinimumGrade {
-    get => _minimumGrade;
-    set => _minimumGrade = value;
-  }
+  public decimal? MinimumGrade { get; set; }
 
   /// <summary>
   /// Whether feedback submission is required for certificate issuance
   /// </summary>
-  public bool RequiresFeedback {
-    get => _requiresFeedback;
-    set => _requiresFeedback = value;
-  }
+  public bool RequiresFeedback { get; set; } = false;
 
   /// <summary>
   /// Whether rating submission is required for certificate issuance
   /// </summary>
-  public bool RequiresRating {
-    get => _requiresRating;
-    set => _requiresRating = value;
-  }
+  public bool RequiresRating { get; set; } = false;
 
   /// <summary>
   /// Minimum rating required if rating is required (1-5, null = any rating accepted)
   /// </summary>
   [Column(TypeName = "decimal(2,1)")]
-  public decimal? MinimumRating {
-    get => _minimumRating;
-    set => _minimumRating = value;
-  }
+  public decimal? MinimumRating { get; set; }
 
   /// <summary>
   /// How long the certificate remains valid (in days, null = never expires)
   /// </summary>
-  public int? ValidityDays {
-    get => _validityDays;
-    set => _validityDays = value;
-  }
+  public int? ValidityDays { get; set; }
 
-  public VerificationMethod VerificationMethod {
-    get => _verificationMethod;
-    set => _verificationMethod = value;
-  }
+  public VerificationMethod VerificationMethod { get; set; } = VerificationMethod.Code;
 
   /// <summary>
   /// Template for certificate design/layout
   /// </summary>
   [MaxLength(500)]
-  public string? CertificateTemplate {
-    get => _certificateTemplate;
-    set => _certificateTemplate = value;
-  }
+  public string? CertificateTemplate { get; set; }
 
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; } = true;
 
-  public Guid? TenantId {
-    get => _tenantId;
-    set => _tenantId = value;
-  }
+  public Guid? TenantId { get; set; }
 
   // Navigation properties
-  public virtual Program.Models.Program? Program {
-    get => _program;
-    set => _program = value;
-  }
+  public virtual Program.Models.Program? Program { get; set; }
 
-  public virtual Product.Models.Product? Product {
-    get => _product;
-    set => _product = value;
-  }
+  public virtual Product.Models.Product? Product { get; set; }
 
-  public virtual ICollection<UserCertificate> UserCertificates {
-    get => _userCertificates;
-    set => _userCertificates = value;
-  }
+  public virtual ICollection<UserCertificate> UserCertificates { get; set; } = new List<UserCertificate>();
 
-  public virtual ICollection<CertificateTag> CertificateTags {
-    get => _certificateTags;
-    set => _certificateTags = value;
-  }
+  public virtual ICollection<CertificateTag> CertificateTags { get; set; } = new List<CertificateTag>();
 }
 
 public class CertificateConfiguration : IEntityTypeConfiguration<Certificate> {

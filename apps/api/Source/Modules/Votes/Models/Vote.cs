@@ -8,44 +8,25 @@ namespace GameGuild.Modules.Voting.Models;
 /// Represents a vote (upvote/downvote) on a voteable entity.
 /// </summary>
 public class Vote : BaseEntity {
-  private User.Models.User _user = null!;
-
-  private VoteType _type;
-
-  private int _weight = 1;
-
-  private Guid _entityId;
-
-  private string _entityType = string.Empty;
-
   /// <summary>
   /// Navigation property to the user who cast this vote
   /// Entity Framework will automatically create the UserId foreign key
   /// </summary>
   [Required]
-  public virtual User.Models.User User {
-    get => _user;
-    set => _user = value;
-  }
+  public virtual User.Models.User User { get; set; } = null!;
 
   /// <summary>
   /// Type of the vote (Upvote or Downvote)
   /// </summary>
   [Required]
-  public VoteType Type {
-    get => _type;
-    set => _type = value;
-  }
+  public VoteType Type { get; set; }
 
   /// <summary>
   /// Weight of the vote (allows for weighted voting systems)
   /// Default is 1 (standard weight)
   /// </summary>
   [Required]
-  public int Weight {
-    get => _weight;
-    set => _weight = value;
-  }
+  public int Weight { get; set; } = 1;
 
   /// <summary>
   /// Calculated value of the vote based on type and weight
@@ -58,17 +39,11 @@ public class Vote : BaseEntity {
   /// <summary>
   /// Foreign key for the entity being voted on
   /// </summary>
-  public Guid EntityId {
-    get => _entityId;
-    set => _entityId = value;
-  }
+  public Guid EntityId { get; set; }
 
   /// <summary>
   /// The type of entity being voted on (for polymorphic relationships)
   /// </summary>
   [MaxLength(255)]
-  public string EntityType {
-    get => _entityType;
-    set => _entityType = value;
-  }
+  public string EntityType { get; set; } = string.Empty;
 }

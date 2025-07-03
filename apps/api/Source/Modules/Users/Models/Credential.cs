@@ -13,60 +13,28 @@ namespace GameGuild.Modules.User.Models;
 [Table("Credentials")]
 [Index(nameof(UserId), nameof(Type))]
 public class Credential : BaseEntity, ITenantable {
-  private Guid _userId;
-
-  private User _user = null!;
-
-  private Guid? _tenantId;
-
-  private Tenant.Models.Tenant? _tenant;
-
-  private string _type = string.Empty;
-
-  private string _value = string.Empty;
-
-  private string? _metadata;
-
-  private DateTime? _expiresAt;
-
-  private bool _isActive = true;
-
-  private DateTime? _lastUsedAt;
-
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>
   [Required]
-  public Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
+  public Guid UserId { get; set; }
 
   /// <summary>
   /// Navigation property to the User entity
   /// </summary>
   [ForeignKey(nameof(UserId))]
-  public virtual User User {
-    get => _user;
-    set => _user = value;
-  }
+  public virtual User User { get; set; } = null!;
 
   /// <summary>
   /// Foreign key to the Tenant entity (optional - for tenant-specific credentials)
   /// </summary>
-  public Guid? TenantId {
-    get => _tenantId;
-    set => _tenantId = value;
-  }
+  public Guid? TenantId { get; set; }
 
   /// <summary>
   /// Navigation property to the Tenant entity (hide base implementation)
   /// </summary>
   [ForeignKey(nameof(TenantId))]
-  public new virtual Tenant.Models.Tenant? Tenant {
-    get => _tenant;
-    set => _tenant = value;
-  }
+  public new virtual Tenant.Models.Tenant? Tenant { get; set; }
 
   /// <summary>
   /// Indicates whether this credential is accessible across all tenants
@@ -81,54 +49,36 @@ public class Credential : BaseEntity, ITenantable {
   /// </summary>
   [Required]
   [MaxLength(50)]
-  public string Type {
-    get => _type;
-    set => _type = value;
-  }
+  public string Type { get; set; } = string.Empty;
 
   /// <summary>
   /// The credential value (hashed password, encrypted token, etc.)
   /// </summary>
   [Required]
   [MaxLength(1000)]
-  public string Value {
-    get => _value;
-    set => _value = value;
-  }
+  public string Value { get; set; } = string.Empty;
 
   /// <summary>
   /// Additional metadata for the credential (JSON format)
   /// Can store salt, algorithm, expiration, etc.
   /// </summary>
   [MaxLength(2000)]
-  public string? Metadata {
-    get => _metadata;
-    set => _metadata = value;
-  }
+  public string? Metadata { get; set; }
 
   /// <summary>
   /// When this credential expires (optional)
   /// </summary>
-  public DateTime? ExpiresAt {
-    get => _expiresAt;
-    set => _expiresAt = value;
-  }
+  public DateTime? ExpiresAt { get; set; }
 
   /// <summary>
   /// Whether this credential is currently active
   /// </summary>
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; } = true;
 
   /// <summary>
   /// When this credential was last used
   /// </summary>
-  public DateTime? LastUsedAt {
-    get => _lastUsedAt;
-    set => _lastUsedAt = value;
-  }
+  public DateTime? LastUsedAt { get; set; }
 
   /// <summary>
   /// Default constructor

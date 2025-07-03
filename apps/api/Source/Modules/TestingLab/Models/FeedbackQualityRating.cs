@@ -4,36 +4,16 @@ using GameGuild.Common.Entities;
 
 namespace GameGuild.Modules.TestingLab.Models {
   public class FeedbackQualityRating : BaseEntity {
-    private Guid _feedbackId;
-
-    private Guid _ratedByUserId;
-
-    private int _qualityRating;
-
-    private string? _reason;
+    [Required]
+    public Guid FeedbackId { get; set; }
 
     [Required]
-    public Guid FeedbackId {
-      get => _feedbackId;
-      set => _feedbackId = value;
-    }
-
-    [Required]
-    public Guid RatedByUserId {
-      get => _ratedByUserId;
-      set => _ratedByUserId = value;
-    }
+    public Guid RatedByUserId { get; set; }
 
     [Required]
     [Range(1, 5)]
-    public int QualityRating {
-      get => _qualityRating;
-      set => _qualityRating = value;
-    }
+    public int QualityRating { get; set; }
 
-    public string? Reason {
-      get => _reason;
-      set => _reason = value;
-    }
+    public string? Reason { get; set; }
   }
 }

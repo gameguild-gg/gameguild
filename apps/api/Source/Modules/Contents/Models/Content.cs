@@ -7,35 +7,21 @@ namespace GameGuild.Common.Entities;
 /// Represents a content item that is a specialized resource.
 /// </summary>
 public abstract class Content : ResourceBase {
-  private ICollection<ContentLicense> _licenses = new List<ContentLicense>();
-
-  private string _slug = string.Empty;
-
-  private ContentStatus _status = ContentStatus.Draft;
   // Content-specific properties can be added here if needed
 
   /// <summary>
   /// Licenses associated with this content (many-to-many)
   /// </summary>
-  public virtual ICollection<ContentLicense> Licenses {
-    get => _licenses;
-    set => _licenses = value;
-  }
+  public virtual ICollection<ContentLicense> Licenses { get; set; } = new List<ContentLicense>();
 
   /// <summary>
   /// Slug for the content (URL-friendly unique identifier)
   /// </summary>
   [MaxLength(255)]
-  public string Slug {
-    get => _slug;
-    set => _slug = value;
-  }
+  public string Slug { get; set; } = string.Empty;
 
   /// <summary>
   /// Status of the content (draft, published, etc.)
   /// </summary>
-  public ContentStatus Status {
-    get => _status;
-    set => _status = value;
-  }
+  public ContentStatus Status { get; set; } = ContentStatus.Draft;
 }

@@ -17,110 +17,60 @@ namespace GameGuild.Modules.Reputation.Models;
 [Index(nameof(Points))]
 [Index(nameof(IsActive))]
 public class ReputationAction : ResourceBase {
-  private string _actionType;
-
-  private string _displayName;
-
-  private string? _description;
-
-  private int _points;
-
-  private int? _dailyLimit;
-
-  private int? _totalLimit;
-
-  private bool _isActive = true;
-
-  private ReputationTier? _requiredLevel;
-
-  private Guid? _requiredLevelId;
-
-  private ICollection<UserReputationHistory> _reputationHistory = new List<UserReputationHistory>();
-
   /// <summary>
   /// Unique identifier for this action type
   /// </summary>
   [Required]
   [MaxLength(100)]
-  public required string ActionType {
-    get => _actionType;
-    [MemberNotNull(nameof(_actionType))] set => _actionType = value;
-  }
+  public required string ActionType { get; set; }
 
   /// <summary>
   /// Display name for this action
   /// </summary>
   [Required]
   [MaxLength(200)]
-  public required string DisplayName {
-    get => _displayName;
-    [MemberNotNull(nameof(_displayName))] set => _displayName = value;
-  }
+  public required string DisplayName { get; set; }
 
   /// <summary>
   /// Description of what this action represents
   /// </summary>
-  public new string? Description {
-    get => _description;
-    set => _description = value;
-  }
+  public new string? Description { get; set; }
 
   /// <summary>
   /// Points gained/lost when this action is performed
   /// </summary>
-  public int Points {
-    get => _points;
-    set => _points = value;
-  }
+  public int Points { get; set; }
 
   /// <summary>
   /// Maximum number of times this action can award points per day
   /// (null for no limit)
   /// </summary>
-  public int? DailyLimit {
-    get => _dailyLimit;
-    set => _dailyLimit = value;
-  }
+  public int? DailyLimit { get; set; }
 
   /// <summary>
   /// Maximum number of times this action can award points total
   /// (null for no limit)
   /// </summary>
-  public int? TotalLimit {
-    get => _totalLimit;
-    set => _totalLimit = value;
-  }
+  public int? TotalLimit { get; set; }
 
   /// <summary>
   /// Whether this action is currently active
   /// </summary>
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; } = true;
 
   /// <summary>
   /// Minimum reputation tier required to perform this action
   /// (null for no requirement)
   /// </summary>
   [ForeignKey(nameof(RequiredLevelId))]
-  public ReputationTier? RequiredLevel {
-    get => _requiredLevel;
-    set => _requiredLevel = value;
-  }
+  public ReputationTier? RequiredLevel { get; set; }
 
-  public Guid? RequiredLevelId {
-    get => _requiredLevelId;
-    set => _requiredLevelId = value;
-  }
+  public Guid? RequiredLevelId { get; set; }
 
   /// <summary>
   /// History of when this action was performed
   /// </summary>
-  public ICollection<UserReputationHistory> ReputationHistory {
-    get => _reputationHistory;
-    set => _reputationHistory = value;
-  }
+  public ICollection<UserReputationHistory> ReputationHistory { get; set; } = new List<UserReputationHistory>();
 }
 
 public class ReputationActionConfiguration : IEntityTypeConfiguration<ReputationAction> {

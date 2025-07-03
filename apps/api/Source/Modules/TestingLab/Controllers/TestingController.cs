@@ -508,54 +508,19 @@ public class TestingController(ITestService testService) : ControllerBase {
 
 // DTOs for request bodies
 public class SessionRegistrationRequest {
-  private RegistrationType _registrationType;
+  public RegistrationType RegistrationType { get; set; }
 
-  private string? _notes;
-
-  public RegistrationType RegistrationType {
-    get => _registrationType;
-    set => _registrationType = value;
-  }
-
-  public string? Notes {
-    get => _notes;
-    set => _notes = value;
-  }
+  public string? Notes { get; set; }
 }
 
 public class FeedbackRequest {
-  private Guid _feedbackFormId;
+  public Guid FeedbackFormId { get; set; }
 
-  private string _feedbackData = string.Empty;
+  public string FeedbackData { get; set; } = string.Empty;
 
-  private TestingContext _testingContext;
+  public TestingContext TestingContext { get; set; }
 
-  private Guid? _sessionId;
+  public Guid? SessionId { get; set; }
 
-  private string? _additionalNotes;
-
-  public Guid FeedbackFormId {
-    get => _feedbackFormId;
-    set => _feedbackFormId = value;
-  }
-
-  public string FeedbackData {
-    get => _feedbackData;
-    set => _feedbackData = value;
-  }
-
-  public TestingContext TestingContext {
-    get => _testingContext;
-    set => _testingContext = value;
-  }
-
-  public Guid? SessionId {
-    get => _sessionId;
-    set => _sessionId = value;
-  }
-
-  public string? AdditionalNotes {
-    get => _additionalNotes;
-    set => _additionalNotes = value;
-  }
+  public string? AdditionalNotes { get; set; }
 }

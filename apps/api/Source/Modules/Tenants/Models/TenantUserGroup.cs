@@ -12,112 +12,67 @@ namespace GameGuild.Modules.Tenant.Models;
 [Table("TenantUserGroups")]
 [Index(nameof(TenantId), nameof(Name), IsUnique = true)]
 public class TenantUserGroup : BaseEntity {
-  private string _name = string.Empty;
-  private string? _description;
-  private Guid _tenantId;
-  private Guid? _parentGroupId;
-  private bool _isActive = true;
-  private bool _isDefault = false;
-  private Tenant? _tenant;
-  private TenantUserGroup? _parentGroup;
-  private ICollection<TenantUserGroup> _subGroups = new List<TenantUserGroup>();
-  private ICollection<TenantUserGroupMembership> _memberships = new List<TenantUserGroupMembership>();
-  private ICollection<TenantDomain> _domains = new List<TenantDomain>();
-
   /// <summary>
   /// Name of the user group (e.g., "Students", "Professors", "Administrators")
   /// </summary>
   [Required]
   [MaxLength(100)]
-  public string Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string Name { get; set; } = string.Empty;
 
   /// <summary>
   /// Description of what this group represents
   /// </summary>
   [MaxLength(500)]
-  public string? Description {
-    get => _description;
-    set => _description = value;
-  }
+  public string? Description { get; set; }
 
   /// <summary>
   /// ID of the tenant this group belongs to
   /// </summary>
   [Required]
-  public Guid TenantId {
-    get => _tenantId;
-    set => _tenantId = value;
-  }
+  public Guid TenantId { get; set; }
 
   /// <summary>
   /// ID of the parent group (for nested group hierarchy)
   /// </summary>
-  public Guid? ParentGroupId {
-    get => _parentGroupId;
-    set => _parentGroupId = value;
-  }
+  public Guid? ParentGroupId { get; set; }
 
   /// <summary>
   /// Whether this group is currently active
   /// </summary>
-  public bool IsActive {
-    get => _isActive;
-    set => _isActive = value;
-  }
+  public bool IsActive { get; set; } = true;
 
   /// <summary>
   /// Whether this is the default group for auto-assignment in this tenant
   /// </summary>
-  public bool IsDefault {
-    get => _isDefault;
-    set => _isDefault = value;
-  }
+  public bool IsDefault { get; set; } = false;
 
   /// <summary>
   /// Navigation property to the tenant
   /// </summary>
   [ForeignKey(nameof(TenantId))]
-  public override Tenant? Tenant {
-    get => _tenant;
-    set => _tenant = value;
-  }
+  public override Tenant? Tenant { get; set; }
 
   /// <summary>
   /// Navigation property to the parent group
   /// </summary>
   [ForeignKey(nameof(ParentGroupId))]
-  public virtual TenantUserGroup? ParentGroup {
-    get => _parentGroup;
-    set => _parentGroup = value;
-  }
+  public virtual TenantUserGroup? ParentGroup { get; set; }
 
   /// <summary>
   /// Navigation property to sub-groups
   /// </summary>
   [InverseProperty(nameof(ParentGroup))]
-  public virtual ICollection<TenantUserGroup> SubGroups {
-    get => _subGroups;
-    set => _subGroups = value;
-  }
+  public virtual ICollection<TenantUserGroup> SubGroups { get; set; } = new List<TenantUserGroup>();
 
   /// <summary>
   /// Navigation property to user memberships in this group
   /// </summary>
-  public virtual ICollection<TenantUserGroupMembership> Memberships {
-    get => _memberships;
-    set => _memberships = value;
-  }
+  public virtual ICollection<TenantUserGroupMembership> Memberships { get; set; } = new List<TenantUserGroupMembership>();
 
   /// <summary>
   /// Navigation property to domains associated with this group
   /// </summary>
-  public virtual ICollection<TenantDomain> Domains {
-    get => _domains;
-    set => _domains = value;
-  }
+  public virtual ICollection<TenantDomain> Domains { get; set; } = new List<TenantDomain>();
 
   /// <summary>
   /// Default constructor

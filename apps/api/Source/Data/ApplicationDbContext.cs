@@ -24,453 +24,144 @@ namespace GameGuild.Data;
 
 // NOTE: do not add fluent api configurations here, they should be in the same file of the entity. On the entity, use notations for simple configurations, and fluent API for complex ones.
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options) {
-  private DbSet<User> _users;
-
-  private DbSet<Credential> _credentials;
-
-  private DbSet<RefreshToken> _refreshTokens;
-
-  private DbSet<Tenant> _tenants;
-  private DbSet<TenantPermission> _tenantPermissions = null!;
-
-  private DbSet<TenantDomain> _tenantDomains = null!;
-
-  private DbSet<TenantUserGroup> _tenantUserGroups = null!;
-
-  private DbSet<TenantUserGroupMembership> _tenantUserGroupMemberships = null!;
-
-  private DbSet<ResourceBase> _resources;
-
-  private DbSet<Language> _languages;
-
-  private DbSet<ContentLicense> _contentLicenses;
-
-  private DbSet<ResourceMetadata> _resourceMetadata;
-
-  private DbSet<ContentTypePermission> _contentTypePermissions;
-
-  private DbSet<ResourceLocalization> _resourceLocalizations;
-
-  private DbSet<CommentPermission> _commentPermissions;
-
-  private DbSet<ProductPermission> _productPermissions;
-
-  private DbSet<ProjectPermission> _projectPermissions;
-
-  private DbSet<UserReputation> _userReputations;
-
-  private DbSet<UserTenantReputation> _userTenantReputations;
-
-  private DbSet<ReputationTier> _reputationTiers;
-
-  private DbSet<ReputationAction> _reputationActions;
-
-  private DbSet<UserReputationHistory> _userReputationHistory;
-
-  private DbSet<Product> _products;
-
-  private DbSet<ProductPricing> _productPricings;
-
-  private DbSet<ProductProgram> _productPrograms;
-
-  private DbSet<ProductSubscriptionPlan> _productSubscriptionPlans;
-
-  private DbSet<UserProduct> _userProducts;
-
-  private DbSet<PromoCode> _promoCodes;
-
-  private DbSet<PromoCodeUse> _promoCodeUses;
-
-  private DbSet<Project> _projects;
-
-  private DbSet<ProjectCollaborator> _projectCollaborators;
-
-  private DbSet<ProjectRelease> _projectReleases;
-
-  private DbSet<ProjectTeam> _projectTeams;
-
-  private DbSet<ProjectFollower> _projectFollowers;
-
-  private DbSet<ProjectFeedback> _projectFeedbacks;
-
-  private DbSet<ProjectJamSubmission> _projectJamSubmissions;
-
-  private DbSet<TestingRequest> _testingRequests;
-
-  private DbSet<TestingSession> _testingSessions;
-
-  private DbSet<TestingParticipant> _testingParticipants;
-
-  private DbSet<TestingFeedback> _testingFeedback;
-
-  private DbSet<TestingFeedbackForm> _testingFeedbackForms;
-
-  private DbSet<TestingLocation> _testingLocations;
-
-  private DbSet<SessionRegistration> _sessionRegistrations;
-
-  private DbSet<SessionWaitlist> _sessionWaitlists;
-
-  private DbSet<Modules.Program.Models.Program> _programs;
-
-  private DbSet<ProgramContent> _programContents;
-
-  private DbSet<ProgramUser> _programUsers;
-
-  private DbSet<ContentInteraction> _contentInteractions;
-
-  private DbSet<ActivityGrade> _activityGrades;
-
-  private DbSet<Certificate> _certificates;
-
-  private DbSet<UserCertificate> _userCertificates;
-
-  private DbSet<CertificateTag> _certificateTags;
-
-  private DbSet<CertificateBlockchainAnchor> _certificateBlockchainAnchors;
-
-  private DbSet<Tag> _tags;
-
-  private DbSet<TagRelationship> _tagRelationships;
-
-  private DbSet<TagProficiency> _tagProficiencies;
-
-  private DbSet<UserSubscription> _userSubscriptions;
-
-  private DbSet<UserFinancialMethod> _userFinancialMethods;
-
-  private DbSet<FinancialTransaction> _financialTransactions;
-
-  private DbSet<UserKycVerification> _userKycVerifications;
-
-  private DbSet<ProgramFeedbackSubmission> _programFeedbackSubmissions;
-
-  private DbSet<ProgramRating> _programRatings;
-
   // DbSets
-  public DbSet<User> Users {
-    get => _users;
-    set => _users = value;
-  }
+  public DbSet<User> Users { get; set; }
 
-  public DbSet<Credential> Credentials {
-    get => _credentials;
-    set => _credentials = value;
-  }
+  public DbSet<Credential> Credentials { get; set; }
 
-  public DbSet<RefreshToken> RefreshTokens {
-    get => _refreshTokens;
-    set => _refreshTokens = value;
-  }
+  public DbSet<RefreshToken> RefreshTokens { get; set; }
 
-  public DbSet<Tenant> Tenants {
-    get => _tenants;
-    set => _tenants = value;
-  }
+  public DbSet<Tenant> Tenants { get; set; }
 
-  public DbSet<TenantPermission> TenantPermissions {
-    get => _tenantPermissions;
-    set => _tenantPermissions = value;
-  }
+  public DbSet<TenantPermission> TenantPermissions { get; set; } = null!;
 
-  public DbSet<TenantDomain> TenantDomains {
-    get => _tenantDomains;
-    set => _tenantDomains = value;
-  }
+  public DbSet<TenantDomain> TenantDomains { get; set; } = null!;
 
-  public DbSet<TenantUserGroup> TenantUserGroups {
-    get => _tenantUserGroups;
-    set => _tenantUserGroups = value;
-  }
+  public DbSet<TenantUserGroup> TenantUserGroups { get; set; } = null!;
 
-  public DbSet<TenantUserGroupMembership> TenantUserGroupMemberships {
-    get => _tenantUserGroupMemberships;
-    set => _tenantUserGroupMemberships = value;
-  }
+  public DbSet<TenantUserGroupMembership> TenantUserGroupMemberships { get; set; } = null!;
 
   // Resource hierarchy DbSet - Required for proper inheritance configuration
-  public DbSet<ResourceBase> Resources {
-    get => _resources;
-    set => _resources = value;
-  }
+  public DbSet<ResourceBase> Resources { get; set; }
 
   // Resource and Localization DbSets
-  public DbSet<Language> Languages {
-    get => _languages;
-    set => _languages = value;
-  }
+  public DbSet<Language> Languages { get; set; }
 
   // Content hierarchy DbSets - Required for TPC inheritance configuration
-  public DbSet<ContentLicense> ContentLicenses {
-    get => _contentLicenses;
-    set => _contentLicenses = value;
-  }
+  public DbSet<ContentLicense> ContentLicenses { get; set; }
 
-  public DbSet<ResourceMetadata> ResourceMetadata {
-    get => _resourceMetadata;
-    set => _resourceMetadata = value;
-  }
+  public DbSet<ResourceMetadata> ResourceMetadata { get; set; }
 
-  public DbSet<ContentTypePermission> ContentTypePermissions {
-    get => _contentTypePermissions;
-    set => _contentTypePermissions = value;
-  }
+  public DbSet<ContentTypePermission> ContentTypePermissions { get; set; }
 
-  public DbSet<ResourceLocalization> ResourceLocalizations {
-    get => _resourceLocalizations;
-    set => _resourceLocalizations = value;
-  }
+  public DbSet<ResourceLocalization> ResourceLocalizations { get; set; }
 
   // Resource Permission DbSets (Layer 3 of DAC system)
-  public DbSet<Modules.Comment.Models.CommentPermission> CommentPermissions {
-    get => _commentPermissions;
-    set => _commentPermissions = value;
-  }
+  public DbSet<Modules.Comment.Models.CommentPermission> CommentPermissions { get; set; }
 
   public DbSet<Modules.Program.Models.ProgramPermission> ProgramPermissions { get; set; }
 
-  public DbSet<Modules.Product.Models.ProductPermission> ProductPermissions {
-    get => _productPermissions;
-    set => _productPermissions = value;
-  }
+  public DbSet<Modules.Product.Models.ProductPermission> ProductPermissions { get; set; }
 
-  public DbSet<ProjectPermission> ProjectPermissions {
-    get => _projectPermissions;
-    set => _projectPermissions = value;
-  }
+  public DbSet<ProjectPermission> ProjectPermissions { get; set; }
 
   // Reputation Management DbSets
-  public DbSet<Modules.Reputation.Models.UserReputation> UserReputations {
-    get => _userReputations;
-    set => _userReputations = value;
-  }
+  public DbSet<Modules.Reputation.Models.UserReputation> UserReputations { get; set; }
 
-  public DbSet<Modules.Reputation.Models.UserTenantReputation> UserTenantReputations {
-    get => _userTenantReputations;
-    set => _userTenantReputations = value;
-  }
+  public DbSet<Modules.Reputation.Models.UserTenantReputation> UserTenantReputations { get; set; }
 
-  public DbSet<Modules.Reputation.Models.ReputationTier> ReputationTiers {
-    get => _reputationTiers;
-    set => _reputationTiers = value;
-  }
+  public DbSet<Modules.Reputation.Models.ReputationTier> ReputationTiers { get; set; }
 
-  public DbSet<Modules.Reputation.Models.ReputationAction> ReputationActions {
-    get => _reputationActions;
-    set => _reputationActions = value;
-  }
+  public DbSet<Modules.Reputation.Models.ReputationAction> ReputationActions { get; set; }
 
-  public DbSet<Modules.Reputation.Models.UserReputationHistory> UserReputationHistory {
-    get => _userReputationHistory;
-    set => _userReputationHistory = value;
-  }
+  public DbSet<Modules.Reputation.Models.UserReputationHistory> UserReputationHistory { get; set; }
 
   // Product Management DbSets
-  public DbSet<Modules.Product.Models.Product> Products {
-    get => _products;
-    set => _products = value;
-  }
+  public DbSet<Modules.Product.Models.Product> Products { get; set; }
 
-  public DbSet<Modules.Product.Models.ProductPricing> ProductPricings {
-    get => _productPricings;
-    set => _productPricings = value;
-  }
+  public DbSet<Modules.Product.Models.ProductPricing> ProductPricings { get; set; }
 
-  public DbSet<Modules.Product.Models.ProductProgram> ProductPrograms {
-    get => _productPrograms;
-    set => _productPrograms = value;
-  }
+  public DbSet<Modules.Product.Models.ProductProgram> ProductPrograms { get; set; }
 
-  public DbSet<Modules.Product.Models.ProductSubscriptionPlan> ProductSubscriptionPlans {
-    get => _productSubscriptionPlans;
-    set => _productSubscriptionPlans = value;
-  }
+  public DbSet<Modules.Product.Models.ProductSubscriptionPlan> ProductSubscriptionPlans { get; set; }
 
-  public DbSet<Modules.Product.Models.UserProduct> UserProducts {
-    get => _userProducts;
-    set => _userProducts = value;
-  }
+  public DbSet<Modules.Product.Models.UserProduct> UserProducts { get; set; }
 
-  public DbSet<Modules.Product.Models.PromoCode> PromoCodes {
-    get => _promoCodes;
-    set => _promoCodes = value;
-  }
+  public DbSet<Modules.Product.Models.PromoCode> PromoCodes { get; set; }
 
-  public DbSet<Modules.Product.Models.PromoCodeUse> PromoCodeUses {
-    get => _promoCodeUses;
-    set => _promoCodeUses = value;
-  } // Project Management DbSets
+  public DbSet<Modules.Product.Models.PromoCodeUse> PromoCodeUses { get; set; } // Project Management DbSets
 
-  public DbSet<Project> Projects {
-    get => _projects;
-    set => _projects = value;
-  }
+  public DbSet<Project> Projects { get; set; }
 
-  public DbSet<ProjectCollaborator> ProjectCollaborators {
-    get => _projectCollaborators;
-    set => _projectCollaborators = value;
-  }
+  public DbSet<ProjectCollaborator> ProjectCollaborators { get; set; }
 
-  public DbSet<ProjectRelease> ProjectReleases {
-    get => _projectReleases;
-    set => _projectReleases = value;
-  }
+  public DbSet<ProjectRelease> ProjectReleases { get; set; }
 
-  public DbSet<ProjectTeam> ProjectTeams {
-    get => _projectTeams;
-    set => _projectTeams = value;
-  }
+  public DbSet<ProjectTeam> ProjectTeams { get; set; }
 
-  public DbSet<ProjectFollower> ProjectFollowers {
-    get => _projectFollowers;
-    set => _projectFollowers = value;
-  }
+  public DbSet<ProjectFollower> ProjectFollowers { get; set; }
 
-  public DbSet<ProjectFeedback> ProjectFeedbacks {
-    get => _projectFeedbacks;
-    set => _projectFeedbacks = value;
-  }
+  public DbSet<ProjectFeedback> ProjectFeedbacks { get; set; }
 
-  public DbSet<ProjectJamSubmission> ProjectJamSubmissions {
-    get => _projectJamSubmissions;
-    set => _projectJamSubmissions = value;
-  } // Test Module DbSets
+  public DbSet<ProjectJamSubmission> ProjectJamSubmissions { get; set; } // Test Module DbSets
 
-  public DbSet<Modules.TestingLab.Models.TestingRequest> TestingRequests {
-    get => _testingRequests;
-    set => _testingRequests = value;
-  }
+  public DbSet<Modules.TestingLab.Models.TestingRequest> TestingRequests { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.TestingSession> TestingSessions {
-    get => _testingSessions;
-    set => _testingSessions = value;
-  }
+  public DbSet<Modules.TestingLab.Models.TestingSession> TestingSessions { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.TestingParticipant> TestingParticipants {
-    get => _testingParticipants;
-    set => _testingParticipants = value;
-  }
+  public DbSet<Modules.TestingLab.Models.TestingParticipant> TestingParticipants { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.TestingFeedback> TestingFeedback {
-    get => _testingFeedback;
-    set => _testingFeedback = value;
-  }
+  public DbSet<Modules.TestingLab.Models.TestingFeedback> TestingFeedback { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.TestingFeedbackForm> TestingFeedbackForms {
-    get => _testingFeedbackForms;
-    set => _testingFeedbackForms = value;
-  }
+  public DbSet<Modules.TestingLab.Models.TestingFeedbackForm> TestingFeedbackForms { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.TestingLocation> TestingLocations {
-    get => _testingLocations;
-    set => _testingLocations = value;
-  }
+  public DbSet<Modules.TestingLab.Models.TestingLocation> TestingLocations { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.SessionRegistration> SessionRegistrations {
-    get => _sessionRegistrations;
-    set => _sessionRegistrations = value;
-  }
+  public DbSet<Modules.TestingLab.Models.SessionRegistration> SessionRegistrations { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.SessionWaitlist> SessionWaitlists {
-    get => _sessionWaitlists;
-    set => _sessionWaitlists = value;
-  } // Program Management DbSets
+  public DbSet<Modules.TestingLab.Models.SessionWaitlist> SessionWaitlists { get; set; } // Program Management DbSets
 
-  public DbSet<Modules.Program.Models.Program> Programs {
-    get => _programs;
-    set => _programs = value;
-  }
+  public DbSet<Modules.Program.Models.Program> Programs { get; set; }
 
-  public DbSet<Modules.Program.Models.ProgramContent> ProgramContents {
-    get => _programContents;
-    set => _programContents = value;
-  }
+  public DbSet<Modules.Program.Models.ProgramContent> ProgramContents { get; set; }
 
-  public DbSet<Modules.Program.Models.ProgramUser> ProgramUsers {
-    get => _programUsers;
-    set => _programUsers = value;
-  }
+  public DbSet<Modules.Program.Models.ProgramUser> ProgramUsers { get; set; }
 
-  public DbSet<Modules.Program.Models.ContentInteraction> ContentInteractions {
-    get => _contentInteractions;
-    set => _contentInteractions = value;
-  }
+  public DbSet<Modules.Program.Models.ContentInteraction> ContentInteractions { get; set; }
 
-  public DbSet<Modules.Program.Models.ActivityGrade> ActivityGrades {
-    get => _activityGrades;
-    set => _activityGrades = value;
-  }
+  public DbSet<Modules.Program.Models.ActivityGrade> ActivityGrades { get; set; }
 
   // Certificate Management DbSets
-  public DbSet<Modules.Certificate.Models.Certificate> Certificates {
-    get => _certificates;
-    set => _certificates = value;
-  }
+  public DbSet<Modules.Certificate.Models.Certificate> Certificates { get; set; }
 
-  public DbSet<Modules.Certificate.Models.UserCertificate> UserCertificates {
-    get => _userCertificates;
-    set => _userCertificates = value;
-  }
+  public DbSet<Modules.Certificate.Models.UserCertificate> UserCertificates { get; set; }
 
-  public DbSet<Modules.Certificate.Models.CertificateTag> CertificateTags {
-    get => _certificateTags;
-    set => _certificateTags = value;
-  }
+  public DbSet<Modules.Certificate.Models.CertificateTag> CertificateTags { get; set; }
 
-  public DbSet<Modules.Certificate.Models.CertificateBlockchainAnchor> CertificateBlockchainAnchors {
-    get => _certificateBlockchainAnchors;
-    set => _certificateBlockchainAnchors = value;
-  }
+  public DbSet<Modules.Certificate.Models.CertificateBlockchainAnchor> CertificateBlockchainAnchors { get; set; }
 
   // Tag Management DbSets
-  public DbSet<Modules.Tag.Models.Tag> Tags {
-    get => _tags;
-    set => _tags = value;
-  }
+  public DbSet<Modules.Tag.Models.Tag> Tags { get; set; }
 
-  public DbSet<Modules.Tag.Models.TagRelationship> TagRelationships {
-    get => _tagRelationships;
-    set => _tagRelationships = value;
-  }
+  public DbSet<Modules.Tag.Models.TagRelationship> TagRelationships { get; set; }
 
-  public DbSet<Modules.Tag.Models.TagProficiency> TagProficiencies {
-    get => _tagProficiencies;
-    set => _tagProficiencies = value;
-  }
+  public DbSet<Modules.Tag.Models.TagProficiency> TagProficiencies { get; set; }
 
   // Subscription Management DbSets
-  public DbSet<Modules.Subscription.Models.UserSubscription> UserSubscriptions {
-    get => _userSubscriptions;
-    set => _userSubscriptions = value;
-  }
+  public DbSet<Modules.Subscription.Models.UserSubscription> UserSubscriptions { get; set; }
 
   // Payment Management DbSets
-  public DbSet<Modules.Payment.Models.UserFinancialMethod> UserFinancialMethods {
-    get => _userFinancialMethods;
-    set => _userFinancialMethods = value;
-  }
+  public DbSet<Modules.Payment.Models.UserFinancialMethod> UserFinancialMethods { get; set; }
 
-  public DbSet<Modules.Payment.Models.FinancialTransaction> FinancialTransactions {
-    get => _financialTransactions;
-    set => _financialTransactions = value;
-  }
+  public DbSet<Modules.Payment.Models.FinancialTransaction> FinancialTransactions { get; set; }
 
   // KYC Management DbSets
-  public DbSet<Modules.Kyc.Models.UserKycVerification> UserKycVerifications {
-    get => _userKycVerifications;
-    set => _userKycVerifications = value;
-  }
+  public DbSet<Modules.Kyc.Models.UserKycVerification> UserKycVerifications { get; set; }
 
   // Feedback Management DbSets
-  public DbSet<Modules.Feedback.Models.ProgramFeedbackSubmission> ProgramFeedbackSubmissions {
-    get => _programFeedbackSubmissions;
-    set => _programFeedbackSubmissions = value;
-  }
+  public DbSet<Modules.Feedback.Models.ProgramFeedbackSubmission> ProgramFeedbackSubmissions { get; set; }
 
-  public DbSet<Modules.Feedback.Models.ProgramRating> ProgramRatings {
-    get => _programRatings;
-    set => _programRatings = value;
-  }
+  public DbSet<Modules.Feedback.Models.ProgramRating> ProgramRatings { get; set; }
 
   protected override void OnModelCreating(ModelBuilder modelBuilder) {
     base.OnModelCreating(modelBuilder);

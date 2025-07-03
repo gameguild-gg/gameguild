@@ -15,109 +15,54 @@ namespace GameGuild.Modules.Payment.Models;
 [Index(nameof(IsDefault))]
 [Index(nameof(ExternalId))]
 public class UserFinancialMethod : BaseEntity {
-  private Guid _userId;
+  public Guid UserId { get; set; }
 
-  private PaymentMethodType _type;
-
-  private string _name = string.Empty;
-
-  private string? _externalId;
-
-  private string? _lastFour;
-
-  private string? _expiryMonth;
-
-  private string? _expiryYear;
-
-  private string? _brand;
-
-  private PaymentMethodStatus _status = PaymentMethodStatus.Active;
-
-  private bool _isDefault = false;
-
-  private User.Models.User _user = null!;
-
-  public Guid UserId {
-    get => _userId;
-    set => _userId = value;
-  }
-
-  public PaymentMethodType Type {
-    get => _type;
-    set => _type = value;
-  }
+  public PaymentMethodType Type { get; set; }
 
   [Required]
   [MaxLength(255)]
-  public string Name {
-    get => _name;
-    set => _name = value;
-  }
+  public string Name { get; set; } = string.Empty;
 
   /// <summary>
   /// External ID from payment provider (Stripe, PayPal, etc.)
   /// </summary>
   [MaxLength(255)]
-  public string? ExternalId {
-    get => _externalId;
-    set => _externalId = value;
-  }
+  public string? ExternalId { get; set; }
 
   /// <summary>
   /// Last 4 digits of card number or identifier for the method
   /// </summary>
   [MaxLength(10)]
-  public string? LastFour {
-    get => _lastFour;
-    set => _lastFour = value;
-  }
+  public string? LastFour { get; set; }
 
   /// <summary>
   /// Expiration month for cards (MM format)
   /// </summary>
   [MaxLength(2)]
-  public string? ExpiryMonth {
-    get => _expiryMonth;
-    set => _expiryMonth = value;
-  }
+  public string? ExpiryMonth { get; set; }
 
   /// <summary>
   /// Expiration year for cards (YYYY format)
   /// </summary>
   [MaxLength(4)]
-  public string? ExpiryYear {
-    get => _expiryYear;
-    set => _expiryYear = value;
-  }
+  public string? ExpiryYear { get; set; }
 
   /// <summary>
   /// Card brand (Visa, Mastercard, etc.) or wallet type
   /// </summary>
   [MaxLength(50)]
-  public string? Brand {
-    get => _brand;
-    set => _brand = value;
-  }
+  public string? Brand { get; set; }
 
-  public PaymentMethodStatus Status {
-    get => _status;
-    set => _status = value;
-  }
+  public PaymentMethodStatus Status { get; set; } = PaymentMethodStatus.Active;
 
   /// <summary>
   /// Whether this is the default payment method for the user
   /// </summary>
-  public bool IsDefault {
-    get => _isDefault;
-    set => _isDefault = value;
-  }
+  public bool IsDefault { get; set; } = false;
 
   // Navigation properties
   [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User {
-    get => _user;
-    set => _user = value;
-  }
+  public virtual User.Models.User User { get; set; } = null!;
 }
 
 public class UserFinancialMethodConfiguration : IEntityTypeConfiguration<UserFinancialMethod> {

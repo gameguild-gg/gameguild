@@ -8,27 +8,12 @@ namespace GameGuild.Modules.UserProfile.Models;
 /// Represents a user profile, which is a resource and can be localized and permissioned.
 /// </summary>
 public class UserProfile : ResourceBase {
-  private string? _givenName;
-
-  private string? _familyName;
-
-  private string? _displayName;
+  [MaxLength(100)]
+  public string? GivenName { get; set; }
 
   [MaxLength(100)]
-  public string? GivenName {
-    get => _givenName;
-    set => _givenName = value;
-  }
+  public string? FamilyName { get; set; }
 
   [MaxLength(100)]
-  public string? FamilyName {
-    get => _familyName;
-    set => _familyName = value;
-  }
-
-  [MaxLength(100)]
-  public string? DisplayName {
-    get => _displayName;
-    set => _displayName = value;
-  }
+  public string? DisplayName { get; set; }
 }
