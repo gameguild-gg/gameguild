@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Common.Entities;
+using GameGuild.Modules.Payments.Models;
+using GameGuild.Modules.Users.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Payment.Models;
 
 
-namespace GameGuild.Modules.Product.Models;
+namespace GameGuild.Modules.Products.Models;
 
 /// <summary>
 /// Entity tracking when and how promo codes are used
@@ -36,7 +37,7 @@ public class PromoCodeUse : BaseEntity {
   /// Navigation property to the User entity
   /// </summary>
   [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User { get; set; } = null!;
+  public virtual User User { get; set; } = null!;
 
   /// <summary>
   /// Foreign key to the FinancialTransaction entity

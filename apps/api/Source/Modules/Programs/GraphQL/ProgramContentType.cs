@@ -1,14 +1,15 @@
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Programs.Models;
 using Microsoft.EntityFrameworkCore;
-using ProgramContentEntity = GameGuild.Modules.Program.Models.ProgramContent;
+using ProgramContentEntity = GameGuild.Modules.Programs.Models.ProgramContent;
 
 
-namespace GameGuild.Modules.Program.GraphQL;
+namespace GameGuild.Modules.Programs.GraphQL;
 
 /// <summary>
 /// GraphQL type definition for ProgramContent entity
 /// </summary>
-public class ProgramContentType : ObjectType<ProgramContentEntity> {
+public class ProgramContentType : ObjectType<ProgramContent> {
   protected override void Configure(IObjectTypeDescriptor<ProgramContentEntity> descriptor) {
     descriptor.Name("ProgramContent");
     descriptor.Description("Represents program content in the CMS system with hierarchical structure.");

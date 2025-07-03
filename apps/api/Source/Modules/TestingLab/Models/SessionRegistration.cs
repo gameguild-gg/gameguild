@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Models;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Teams.Models;
+using GameGuild.Modules.Users.Models;
 
 
 namespace GameGuild.Modules.TestingLab.Models {
@@ -23,17 +24,15 @@ namespace GameGuild.Modules.TestingLab.Models {
     /// <summary>
     /// Navigation property to the user
     /// </summary>
-    public virtual Modules.User.Models.User User { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
 
-    [Required]
-    public RegistrationType RegistrationType { get; set; }
+    [Required] public RegistrationType RegistrationType { get; set; }
 
     public TeamRole? ProjectRole { get; set; }
 
     public string? RegistrationNotes { get; set; }
 
-    [Required]
-    public AttendanceStatus AttendanceStatus { get; set; } = AttendanceStatus.Registered;
+    [Required] public AttendanceStatus AttendanceStatus { get; set; } = AttendanceStatus.Registered;
 
     public DateTime? AttendedAt { get; set; }
   }

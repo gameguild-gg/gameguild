@@ -1,7 +1,7 @@
 using MediatR;
 
 
-namespace GameGuild.Modules.UserProfile.Notifications;
+namespace GameGuild.Modules.UserProfiles.Notifications;
 
 /// <summary>
 /// Notification sent when a user profile is updated

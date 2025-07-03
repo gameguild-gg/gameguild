@@ -1,14 +1,15 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Tenant.Models;
-using GameGuild.Modules.User.Models;
+using GameGuild.Common.Entities;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Users.Models;
 
 
 // do not remove this, it's needed for IQueryable extensions
 
 // do not remove this, it's needed for IQueryable extensions
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Modules.Permissions.Models;
 
 public enum PermissionType {
   #region Interaction Permissions

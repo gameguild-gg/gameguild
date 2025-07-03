@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenant.Models;
+namespace GameGuild.Modules.Tenants.Models;
 
 /// <summary>
 /// Represents a user group within a tenant (e.g., Students, Professors, Administrators)

@@ -1,9 +1,9 @@
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
-using GameGuild.Modules.User.Models;
+using GameGuild.Modules.Users.Models;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.User.Services;
+namespace GameGuild.Modules.Users.Services;
 
 /// <summary>
 /// Service implementation for managing user credentials
@@ -31,7 +31,7 @@ public class CredentialService(ApplicationDbContext context) : ICredentialServic
   /// <returns>Credential or null if not found</returns>
   public async Task<Credential?> GetCredentialByUserIdAndTypeAsync(Guid userId, string type) {
     return await context.Credentials.Include(c => c.User)
-                         .FirstOrDefaultAsync(c => c.UserId == userId && c.Type == type);
+                        .FirstOrDefaultAsync(c => c.UserId == userId && c.Type == type);
   }
 
   /// <summary>
@@ -99,7 +99,7 @@ public class CredentialService(ApplicationDbContext context) : ICredentialServic
   public async Task<bool> RestoreCredentialAsync(Guid id) {
     // Need to include deleted entities to find soft-deleted credentials
     var credential = await context.Credentials.IgnoreQueryFilters()
-                                   .FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt != null);
+                                  .FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt != null);
 
     if (credential == null) return false;
 
@@ -186,8 +186,8 @@ public class CredentialService(ApplicationDbContext context) : ICredentialServic
   /// <returns>List of soft-deleted credentials</returns>
   public async Task<IEnumerable<Credential>> GetDeletedCredentialsAsync() {
     return await context.Credentials.IgnoreQueryFilters()
-                         .Where(c => c.DeletedAt != null)
-                         .Include(c => c.User)
-                         .ToListAsync();
+                        .Where(c => c.DeletedAt != null)
+                        .Include(c => c.User)
+                        .ToListAsync();
   }
 }

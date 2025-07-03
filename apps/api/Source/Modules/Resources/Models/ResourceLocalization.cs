@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using GameGuild.Common.Entities;
+using GameGuild.Modules.Localizations.Models;
 
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Modules.Resources.Models;
 
 /// <summary>
 /// Entity for storing localized content for resources

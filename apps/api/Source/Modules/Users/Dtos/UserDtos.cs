@@ -1,12 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 
 
-namespace GameGuild.Modules.User.Dtos;
+namespace GameGuild.Modules.Users.Dtos;
 
 public class CreateUserDto {
-  [Required]
-  [StringLength(100)]
-  public string Name { get; set; } = string.Empty;
+  [Required] [StringLength(100)] public string Name { get; set; } = string.Empty;
 
   [Required]
   [EmailAddress]
@@ -15,12 +13,9 @@ public class CreateUserDto {
 }
 
 public class UpdateUserDto {
-  [StringLength(100)]
-  public string? Name { get; set; }
+  [StringLength(100)] public string? Name { get; set; }
 
-  [EmailAddress]
-  [StringLength(255)]
-  public string? Email { get; set; }
+  [EmailAddress] [StringLength(255)] public string? Email { get; set; }
 }
 
 public class UserResponseDto {

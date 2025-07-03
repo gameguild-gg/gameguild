@@ -3,20 +3,21 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using GameGuild.Common.Services;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
-using GameGuild.Common.Services;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Tenant.Dtos;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Tenants.Dtos;
+using GameGuild.Modules.Tenants.Models;
 using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
-using UserModel = GameGuild.Modules.User.Models.User;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.Tests.Modules.Tenant.E2E;
+namespace GameGuild.Tests.Modules.Tenants.E2E;
 
 public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Program>> {
   private readonly WebApplicationFactory<Program> _factory;
@@ -46,7 +47,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
 
     var tenantId = Guid.NewGuid();
 
-    var tenant = new GameGuild.Modules.Tenant.Models.Tenant {
+    var tenant = new Tenant {
       Id = tenantId,
       Name = "University of Technology",
       Description = "A technology university",
@@ -425,7 +426,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
 
     var tenantId = Guid.NewGuid();
 
-    var tenant = new GameGuild.Modules.Tenant.Models.Tenant {
+    var tenant = new Tenant {
       Id = tenantId,
       Name = "TechCorp Inc",
       Description = "A technology corporation",
@@ -640,7 +641,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     SetAuthorizationHeader(token);
   }
 
-  private static string CreateJwtTokenForUser(GameGuild.Modules.User.Models.User user, GameGuild.Modules.Tenant.Models.Tenant tenant, IServiceScope scope) {
+  private static string CreateJwtTokenForUser(UserModel user, Tenant tenant, IServiceScope scope) {
     var jwtService = scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Commands;
+using GameGuild.Modules.Users.Models;
 
 
 namespace GameGuild.Modules.Auth.Handlers;
@@ -9,8 +10,8 @@ namespace GameGuild.Modules.Auth.Handlers;
 /// <summary>
 /// Handler for updating user profile with business logic and validation
 /// </summary>
-public class UpdateUserProfileHandler(ApplicationDbContext context) : IRequestHandler<UpdateUserProfileCommand, User.Models.User> {
-  public async Task<User.Models.User> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken) {
+public class UpdateUserProfileHandler(ApplicationDbContext context) : IRequestHandler<UpdateUserProfileCommand, User> {
+  public async Task<User> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken) {
     // Find the user
     var user =
       await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && !u.IsDeleted, cancellationToken);

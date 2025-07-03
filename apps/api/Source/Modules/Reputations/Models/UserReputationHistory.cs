@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Users.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Tenant.Models;
 
 
-namespace GameGuild.Modules.Reputation.Models;
+namespace GameGuild.Modules.Reputations.Models;
 
 /// <summary>
 /// Tracks the history of reputation changes for any reputation entity
@@ -24,7 +25,7 @@ public class UserReputationHistory : ResourceBase {
   /// The user whose reputation changed (for direct user reputation tracking)
   /// </summary>
   [ForeignKey(nameof(UserId))]
-  public Modules.User.Models.User? User { get; set; }
+  public User? User { get; set; }
 
   public Guid? UserId { get; set; }
 
@@ -94,7 +95,7 @@ public class UserReputationHistory : ResourceBase {
   /// User who triggered this change (null for system actions)
   /// </summary>
   [ForeignKey(nameof(TriggeredByUserId))]
-  public Modules.User.Models.User? TriggeredByUser { get; set; }
+  public User? TriggeredByUser { get; set; }
 
   public Guid? TriggeredByUserId { get; set; }
 

@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using GameGuild.Modules.Tenants.Services;
 
 
 namespace GameGuild.Tests.Fixtures;
@@ -107,13 +108,13 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
 
         // Replace TenantContextService with mock for testing
         var tenantContextServiceDescriptor = services.SingleOrDefault(d =>
-                                                                        d.ServiceType == typeof(GameGuild.Modules.Tenant.Services.ITenantContextService)
+                                                                        d.ServiceType == typeof(ITenantContextService)
         );
 
         if (tenantContextServiceDescriptor != null) services.Remove(tenantContextServiceDescriptor);
 
         services
-          .AddSingleton<GameGuild.Modules.Tenant.Services.ITenantContextService,
+          .AddSingleton<ITenantContextService,
             Helpers.MockTenantContextService>();
 
         // Add in-memory database for testing with unique database name

@@ -1,16 +1,14 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Entities;
+using GameGuild.Modules.Resources.Models;
 
 
-namespace GameGuild.Modules.Project.Models;
+namespace GameGuild.Modules.Projects.Models;
 
 /// <summary>
 /// Represents a project category (game, tool, art, etc.)
 /// </summary>
 public class ProjectCategory : ResourceBase {
-  [Required]
-  [MaxLength(50)]
-  public string Name { get; set; } = string.Empty;
+  [Required] [MaxLength(50)] public string Name { get; set; } = string.Empty;
 
   /// <summary>
   /// Projects in this category

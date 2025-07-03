@@ -1,8 +1,9 @@
-using GameGuild.Modules.Tenant.Models;
-using GameGuild.Modules.User.Models;
+using GameGuild.Common.Entities;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Users.Models;
 
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Modules.Followers.Models;
 
 /// <summary>
 /// Represents a follower of a followable entity.

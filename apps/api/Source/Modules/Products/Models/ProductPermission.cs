@@ -1,9 +1,10 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Permissions.Models;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Product.Models;
+namespace GameGuild.Modules.Products.Models;
 
 /// <summary>
 /// Resource-specific permissions for Product entities (Layer 3 of DAC permission system)

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Attributes;
 using System.Security.Claims;
+using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Modules.TestingLab.Services;
 using GameGuild.Modules.TestingLab.Dtos;

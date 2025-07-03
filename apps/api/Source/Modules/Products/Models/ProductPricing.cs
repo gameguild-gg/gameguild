@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Product.Models;
+namespace GameGuild.Modules.Products.Models;
 
 /// <summary>
 /// Entity representing pricing information for products

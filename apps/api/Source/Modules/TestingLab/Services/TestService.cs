@@ -14,34 +14,34 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public async Task<IEnumerable<TestingRequest>> GetAllTestingRequestsAsync() {
     return await context.TestingRequests.Where(tr => tr.DeletedAt == null)
-                         .Include(tr => tr.ProjectVersion)
-                         .Include(tr => tr.CreatedBy)
-                         .OrderByDescending(tr => tr.CreatedAt)
-                         .ToListAsync();
+                        .Include(tr => tr.ProjectVersion)
+                        .Include(tr => tr.CreatedBy)
+                        .OrderByDescending(tr => tr.CreatedAt)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TestingRequest>> GetTestingRequestsAsync(int skip = 0, int take = 50) {
     return await context.TestingRequests.Where(tr => tr.DeletedAt == null)
-                         .Include(tr => tr.ProjectVersion)
-                         .Include(tr => tr.CreatedBy)
-                         .OrderByDescending(tr => tr.CreatedAt)
-                         .Skip(skip)
-                         .Take(take)
-                         .ToListAsync();
+                        .Include(tr => tr.ProjectVersion)
+                        .Include(tr => tr.CreatedBy)
+                        .OrderByDescending(tr => tr.CreatedAt)
+                        .Skip(skip)
+                        .Take(take)
+                        .ToListAsync();
   }
 
   public async Task<TestingRequest?> GetTestingRequestByIdAsync(Guid id) {
     return await context.TestingRequests.Where(tr => tr.Id == id && tr.DeletedAt == null)
-                         .Include(tr => tr.ProjectVersion)
-                         .Include(tr => tr.CreatedBy)
-                         .FirstOrDefaultAsync();
+                        .Include(tr => tr.ProjectVersion)
+                        .Include(tr => tr.CreatedBy)
+                        .FirstOrDefaultAsync();
   }
 
   public async Task<TestingRequest?> GetTestingRequestByIdWithDetailsAsync(Guid id) {
     return await context.TestingRequests.Where(tr => tr.Id == id && tr.DeletedAt == null)
-                         .Include(tr => tr.ProjectVersion)
-                         .Include(tr => tr.CreatedBy)
-                         .FirstOrDefaultAsync();
+                        .Include(tr => tr.ProjectVersion)
+                        .Include(tr => tr.CreatedBy)
+                        .FirstOrDefaultAsync();
   }
 
   public async Task<TestingRequest> CreateTestingRequestAsync(TestingRequest testingRequest) {
@@ -107,34 +107,34 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public async Task<IEnumerable<TestingSession>> GetAllTestingSessionsAsync() {
     return await context.TestingSessions.Where(ts => ts.DeletedAt == null)
-                         .Include(ts => ts.TestingRequest)
-                         .Include(ts => ts.Location)
-                         .OrderByDescending(ts => ts.SessionDate)
-                         .ToListAsync();
+                        .Include(ts => ts.TestingRequest)
+                        .Include(ts => ts.Location)
+                        .OrderByDescending(ts => ts.SessionDate)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TestingSession>> GetTestingSessionsAsync(int skip = 0, int take = 50) {
     return await context.TestingSessions.Where(ts => ts.DeletedAt == null)
-                         .Include(ts => ts.TestingRequest)
-                         .Include(ts => ts.Location)
-                         .OrderByDescending(ts => ts.SessionDate)
-                         .Skip(skip)
-                         .Take(take)
-                         .ToListAsync();
+                        .Include(ts => ts.TestingRequest)
+                        .Include(ts => ts.Location)
+                        .OrderByDescending(ts => ts.SessionDate)
+                        .Skip(skip)
+                        .Take(take)
+                        .ToListAsync();
   }
 
   public async Task<TestingSession?> GetTestingSessionByIdAsync(Guid id) {
     return await context.TestingSessions.Where(ts => ts.Id == id && ts.DeletedAt == null)
-                         .Include(ts => ts.TestingRequest)
-                         .Include(ts => ts.Location)
-                         .FirstOrDefaultAsync();
+                        .Include(ts => ts.TestingRequest)
+                        .Include(ts => ts.Location)
+                        .FirstOrDefaultAsync();
   }
 
   public async Task<TestingSession?> GetTestingSessionByIdWithDetailsAsync(Guid id) {
     return await context.TestingSessions.Where(ts => ts.Id == id && ts.DeletedAt == null)
-                         .Include(ts => ts.TestingRequest)
-                         .Include(ts => ts.Location)
-                         .FirstOrDefaultAsync();
+                        .Include(ts => ts.TestingRequest)
+                        .Include(ts => ts.Location)
+                        .FirstOrDefaultAsync();
   }
 
   public async Task<TestingSession> CreateTestingSessionAsync(TestingSession testingSession) {
@@ -197,83 +197,83 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public async Task<IEnumerable<TestingRequest>> GetTestingRequestsByProjectVersionAsync(Guid projectVersionId) {
     return await context.TestingRequests.Where(tr => tr.ProjectVersionId == projectVersionId && tr.DeletedAt == null)
-                         .Include(tr => tr.ProjectVersion)
-                         .Include(tr => tr.CreatedBy)
-                         .OrderByDescending(tr => tr.CreatedAt)
-                         .ToListAsync();
+                        .Include(tr => tr.ProjectVersion)
+                        .Include(tr => tr.CreatedBy)
+                        .OrderByDescending(tr => tr.CreatedAt)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TestingRequest>> GetTestingRequestsByCreatorAsync(Guid creatorId) {
     return await context.TestingRequests.Where(tr => tr.CreatedById == creatorId && tr.DeletedAt == null)
-                         .Include(tr => tr.ProjectVersion)
-                         .Include(tr => tr.CreatedBy)
-                         .OrderByDescending(tr => tr.CreatedAt)
-                         .ToListAsync();
+                        .Include(tr => tr.ProjectVersion)
+                        .Include(tr => tr.CreatedBy)
+                        .OrderByDescending(tr => tr.CreatedAt)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TestingRequest>> GetTestingRequestsByStatusAsync(TestingRequestStatus status) {
     return await context.TestingRequests.Where(tr => tr.Status == status && tr.DeletedAt == null)
-                         .Include(tr => tr.ProjectVersion)
-                         .Include(tr => tr.CreatedBy)
-                         .OrderByDescending(tr => tr.CreatedAt)
-                         .ToListAsync();
+                        .Include(tr => tr.ProjectVersion)
+                        .Include(tr => tr.CreatedBy)
+                        .OrderByDescending(tr => tr.CreatedAt)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TestingSession>> GetTestingSessionsByRequestAsync(Guid testingRequestId) {
     return await context.TestingSessions.Where(ts => ts.TestingRequestId == testingRequestId && ts.DeletedAt == null)
-                         .Include(ts => ts.TestingRequest)
-                         .Include(ts => ts.Location)
-                         .OrderByDescending(ts => ts.SessionDate)
-                         .ToListAsync();
+                        .Include(ts => ts.TestingRequest)
+                        .Include(ts => ts.Location)
+                        .OrderByDescending(ts => ts.SessionDate)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TestingSession>> GetTestingSessionsByLocationAsync(Guid locationId) {
     return await context.TestingSessions.Where(ts => ts.LocationId == locationId && ts.DeletedAt == null)
-                         .Include(ts => ts.TestingRequest)
-                         .Include(ts => ts.Location)
-                         .OrderByDescending(ts => ts.SessionDate)
-                         .ToListAsync();
+                        .Include(ts => ts.TestingRequest)
+                        .Include(ts => ts.Location)
+                        .OrderByDescending(ts => ts.SessionDate)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TestingSession>> GetTestingSessionsByStatusAsync(SessionStatus status) {
     return await context.TestingSessions.Where(ts => ts.Status == status && ts.DeletedAt == null)
-                         .Include(ts => ts.TestingRequest)
-                         .Include(ts => ts.Location)
-                         .OrderByDescending(ts => ts.SessionDate)
-                         .ToListAsync();
+                        .Include(ts => ts.TestingRequest)
+                        .Include(ts => ts.Location)
+                        .OrderByDescending(ts => ts.SessionDate)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TestingSession>> GetTestingSessionsByManagerAsync(Guid managerId) {
     return await context.TestingSessions.Where(ts => ts.ManagerUserId == managerId && ts.DeletedAt == null)
-                         .Include(ts => ts.TestingRequest)
-                         .Include(ts => ts.Location)
-                         .OrderByDescending(ts => ts.SessionDate)
-                         .ToListAsync();
+                        .Include(ts => ts.TestingRequest)
+                        .Include(ts => ts.Location)
+                        .OrderByDescending(ts => ts.SessionDate)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TestingRequest>> SearchTestingRequestsAsync(string searchTerm) {
     var lowerSearchTerm = searchTerm.ToLower();
 
     return await context.TestingRequests.Where(tr =>
-                                                  tr.DeletedAt == null &&
-                                                  (tr.Title.ToLower().Contains(lowerSearchTerm) ||
-                                                   (tr.Description != null && tr.Description.ToLower().Contains(lowerSearchTerm)))
-                         )
-                         .Include(tr => tr.ProjectVersion)
-                         .Include(tr => tr.CreatedBy)
-                         .OrderByDescending(tr => tr.CreatedAt)
-                         .ToListAsync();
+                                                 tr.DeletedAt == null &&
+                                                 (tr.Title.ToLower().Contains(lowerSearchTerm) ||
+                                                  (tr.Description != null && tr.Description.ToLower().Contains(lowerSearchTerm)))
+                        )
+                        .Include(tr => tr.ProjectVersion)
+                        .Include(tr => tr.CreatedBy)
+                        .OrderByDescending(tr => tr.CreatedAt)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TestingSession>> SearchTestingSessionsAsync(string searchTerm) {
     var lowerSearchTerm = searchTerm.ToLower();
 
     return await context.TestingSessions
-                         .Where(ts => ts.DeletedAt == null && ts.SessionName.ToLower().Contains(lowerSearchTerm))
-                         .Include(ts => ts.TestingRequest)
-                         .Include(ts => ts.Location)
-                         .OrderByDescending(ts => ts.SessionDate)
-                         .ToListAsync();
+                        .Where(ts => ts.DeletedAt == null && ts.SessionName.ToLower().Contains(lowerSearchTerm))
+                        .Include(ts => ts.TestingRequest)
+                        .Include(ts => ts.Location)
+                        .OrderByDescending(ts => ts.SessionDate)
+                        .ToListAsync();
   }
 
   #endregion
@@ -284,7 +284,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
     // Check if already a participant
     var existingParticipant =
       await context.TestingParticipants.FirstOrDefaultAsync(tp =>
-                                                               tp.TestingRequestId == testingRequestId && tp.UserId == userId
+                                                              tp.TestingRequestId == testingRequestId && tp.UserId == userId
       );
 
     if (existingParticipant != null) return existingParticipant;
@@ -301,14 +301,14 @@ public class TestService(ApplicationDbContext context) : ITestService {
     await context.SaveChangesAsync();
 
     return await context.TestingParticipants.Include(tp => tp.TestingRequest)
-                         .Include(tp => tp.User)
-                         .FirstAsync(tp => tp.Id == participant.Id);
+                        .Include(tp => tp.User)
+                        .FirstAsync(tp => tp.Id == participant.Id);
   }
 
   public async Task<bool> RemoveParticipantAsync(Guid testingRequestId, Guid userId) {
     var participant =
       await context.TestingParticipants.FirstOrDefaultAsync(tp =>
-                                                               tp.TestingRequestId == testingRequestId && tp.UserId == userId
+                                                              tp.TestingRequestId == testingRequestId && tp.UserId == userId
       );
 
     if (participant == null) return false;
@@ -321,14 +321,14 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public async Task<IEnumerable<TestingParticipant>> GetTestingRequestParticipantsAsync(Guid testingRequestId) {
     return await context.TestingParticipants.Where(tp => tp.TestingRequestId == testingRequestId)
-                         .Include(tp => tp.User)
-                         .OrderBy(tp => tp.CreatedAt)
-                         .ToListAsync();
+                        .Include(tp => tp.User)
+                        .OrderBy(tp => tp.CreatedAt)
+                        .ToListAsync();
   }
 
   public async Task<bool> IsUserParticipantAsync(Guid testingRequestId, Guid userId) {
     return await context.TestingParticipants.AnyAsync(tp =>
-                                                         tp.TestingRequestId == testingRequestId && tp.UserId == userId
+                                                        tp.TestingRequestId == testingRequestId && tp.UserId == userId
            );
   }
 
@@ -370,8 +370,8 @@ public class TestService(ApplicationDbContext context) : ITestService {
     await context.SaveChangesAsync();
 
     return await context.SessionRegistrations.Include(sr => sr.Session)
-                         .Include(sr => sr.User)
-                         .FirstAsync(sr => sr.Id == registration.Id);
+                        .Include(sr => sr.User)
+                        .FirstAsync(sr => sr.Id == registration.Id);
   }
 
   public async Task<bool> UnregisterFromSessionAsync(Guid sessionId, Guid userId) {
@@ -397,9 +397,9 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public async Task<IEnumerable<SessionRegistration>> GetSessionRegistrationsAsync(Guid sessionId) {
     return await context.SessionRegistrations.Where(sr => sr.SessionId == sessionId)
-                         .Include(sr => sr.User)
-                         .OrderBy(sr => sr.CreatedAt)
-                         .ToListAsync();
+                        .Include(sr => sr.User)
+                        .OrderBy(sr => sr.CreatedAt)
+                        .ToListAsync();
   }
 
   public async Task<SessionWaitlist> AddToWaitlistAsync(
@@ -414,7 +414,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
     // Get next position in waitlist
     var maxPosition = await context.SessionWaitlists.Where(sw => sw.SessionId == sessionId)
-                                    .MaxAsync(sw => (int?)sw.Position) ??
+                                   .MaxAsync(sw => (int?)sw.Position) ??
                       0;
 
     var waitlistEntry = new SessionWaitlist {
@@ -432,8 +432,8 @@ public class TestService(ApplicationDbContext context) : ITestService {
     await context.SaveChangesAsync();
 
     return await context.SessionWaitlists.Include(sw => sw.Session)
-                         .Include(sw => sw.User)
-                         .FirstAsync(sw => sw.Id == waitlistEntry.Id);
+                        .Include(sw => sw.User)
+                        .FirstAsync(sw => sw.Id == waitlistEntry.Id);
   }
 
   public async Task<bool> RemoveFromWaitlistAsync(Guid sessionId, Guid userId) {
@@ -448,8 +448,8 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
     // Update positions for remaining waitlist entries
     var remainingEntries = await context.SessionWaitlists
-                                         .Where(sw => sw.SessionId == sessionId && sw.Position > removedPosition)
-                                         .ToListAsync();
+                                        .Where(sw => sw.SessionId == sessionId && sw.Position > removedPosition)
+                                        .ToListAsync();
 
     foreach (var entry in remainingEntries) entry.Position--;
 
@@ -460,9 +460,9 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public async Task<IEnumerable<SessionWaitlist>> GetSessionWaitlistAsync(Guid sessionId) {
     return await context.SessionWaitlists.Where(sw => sw.SessionId == sessionId)
-                         .Include(sw => sw.User)
-                         .OrderBy(sw => sw.Position)
-                         .ToListAsync();
+                        .Include(sw => sw.User)
+                        .OrderBy(sw => sw.Position)
+                        .ToListAsync();
   }
 
   #endregion
@@ -490,28 +490,28 @@ public class TestService(ApplicationDbContext context) : ITestService {
     await context.SaveChangesAsync();
 
     return await context.TestingFeedback.Include(tf => tf.TestingRequest)
-                         .Include(tf => tf.User)
-                         .Include(tf => tf.FeedbackForm)
-                         .Include(tf => tf.Session)
-                         .FirstAsync(tf => tf.Id == feedback.Id);
+                        .Include(tf => tf.User)
+                        .Include(tf => tf.FeedbackForm)
+                        .Include(tf => tf.Session)
+                        .FirstAsync(tf => tf.Id == feedback.Id);
   }
 
   public async Task<IEnumerable<TestingFeedback>> GetTestingRequestFeedbackAsync(Guid testingRequestId) {
     return await context.TestingFeedback.Where(tf => tf.TestingRequestId == testingRequestId)
-                         .Include(tf => tf.User)
-                         .Include(tf => tf.FeedbackForm)
-                         .Include(tf => tf.Session)
-                         .OrderByDescending(tf => tf.CreatedAt)
-                         .ToListAsync();
+                        .Include(tf => tf.User)
+                        .Include(tf => tf.FeedbackForm)
+                        .Include(tf => tf.Session)
+                        .OrderByDescending(tf => tf.CreatedAt)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TestingFeedback>> GetFeedbackByUserAsync(Guid userId) {
     return await context.TestingFeedback.Where(tf => tf.UserId == userId)
-                         .Include(tf => tf.TestingRequest)
-                         .Include(tf => tf.FeedbackForm)
-                         .Include(tf => tf.Session)
-                         .OrderByDescending(tf => tf.CreatedAt)
-                         .ToListAsync();
+                        .Include(tf => tf.TestingRequest)
+                        .Include(tf => tf.FeedbackForm)
+                        .Include(tf => tf.Session)
+                        .OrderByDescending(tf => tf.CreatedAt)
+                        .ToListAsync();
   }
 
   #endregion
@@ -527,7 +527,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
     var feedbackCount = await context.TestingFeedback.CountAsync(tf => tf.TestingRequestId == testingRequestId);
 
     var completedSessionCount = await context.TestingSessions.CountAsync(ts =>
-                                                                            ts.TestingRequestId == testingRequestId && ts.Status == SessionStatus.Completed && ts.DeletedAt == null
+                                                                           ts.TestingRequestId == testingRequestId && ts.Status == SessionStatus.Completed && ts.DeletedAt == null
                                 );
 
     return new { ParticipantCount = participantCount, SessionCount = sessionCount, CompletedSessionCount = completedSessionCount, FeedbackCount = feedbackCount };

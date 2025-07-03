@@ -2,13 +2,13 @@ using System.Security.Claims;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
-using GameGuild.Modules.Tenant.Models;
-using GameGuild.Modules.Tenant.Services;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
 using GameGuild.Modules.Auth.Constants;
-using UserModel = GameGuild.Modules.User.Models.User;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Tenants.Services;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
 
 namespace GameGuild.Tests.Modules.Auth.Unit.Services;
@@ -60,7 +60,7 @@ public class TenantAuthServiceTests : IDisposable {
         // Initialize as not expired and not deleted for IsValid to be true
         ExpiresAt = null, // Not expired
         // IsDeleted is false by default
-        Tenant = new GameGuild.Modules.Tenant.Models.Tenant { Id = tenantId, Name = "Test Tenant", IsActive = true },
+        Tenant = new Tenant { Id = tenantId, Name = "Test Tenant", IsActive = true },
       },
     };
 

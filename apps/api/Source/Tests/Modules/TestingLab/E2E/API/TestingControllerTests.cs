@@ -1,23 +1,23 @@
-using Xunit;
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
+using System.Net.Http.Headers;
 using System.Text;
-using GameGuild.Data;
-using GameGuild.Common.Entities;
+using System.Text.Json;
 using GameGuild.Common.Services;
+using GameGuild.Data;
+using GameGuild.Modules.Auth.Dtos;
+using GameGuild.Modules.Auth.Services;
+using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Tests.Fixtures;
-using GameGuild.Modules.Auth.Services;
-using GameGuild.Modules.Auth.Dtos;
-using System.Net.Http.Headers;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
 using Xunit.Abstractions;
-using ProjectModel = GameGuild.Modules.Project.Models.Project;
-using ProjectVersionModel = GameGuild.Modules.Project.Models.ProjectVersion;
-using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
-using UserModel = GameGuild.Modules.User.Models.User;
+using ProjectModel = GameGuild.Modules.Projects.Models.Project;
+using ProjectVersionModel = GameGuild.Modules.Projects.Models.ProjectVersion;
+using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.Tests.Modules.TestingLab.E2E;
+namespace GameGuild.Tests.Modules.TestingLab.E2E.API;
 
 /// <summary>
 /// Integration tests for TestingController
@@ -258,7 +258,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
   }
 
   // Helper Methods
-  private async Task<(TestingRequest, GameGuild.Modules.User.Models.User, TenantModel)> SeedTestDataAsync(ApplicationDbContext context) {
+  private async Task<(TestingRequest, UserModel, TenantModel)> SeedTestDataAsync(ApplicationDbContext context) {
     var (user, tenant) = await SeedUserAndTenantAsync(context);
     await SetupPermissionsAsync(context, user.Id, tenant.Id);
 
@@ -286,7 +286,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     return (testingRequest, user, tenant);
   }
 
-  private async Task<(TestingSession, GameGuild.Modules.User.Models.User, TenantModel)> SeedTestSessionDataAsync(ApplicationDbContext context) {
+  private async Task<(TestingSession, UserModel, TenantModel)> SeedTestSessionDataAsync(ApplicationDbContext context) {
     var (testingRequest, user, tenant) = await SeedTestDataAsync(context);
 
     var location = new TestingLocation {
@@ -321,7 +321,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     return (testingSession, user, tenant);
   }
 
-  private static async Task<(GameGuild.Modules.User.Models.User, TenantModel)> SeedUserAndTenantAsync(ApplicationDbContext context) {
+  private static async Task<(UserModel, TenantModel)> SeedUserAndTenantAsync(ApplicationDbContext context) {
     var tenant = new TenantModel {
       Id = Guid.NewGuid(),
       Name = "Test Tenant",

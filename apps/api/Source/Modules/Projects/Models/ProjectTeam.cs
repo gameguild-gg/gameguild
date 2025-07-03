@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Teams.Models;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Common.Entities;
-using GameGuild.Models;
 
 
-namespace GameGuild.Modules.Project.Models;
+namespace GameGuild.Modules.Projects.Models;
 
 /// <summary>
 /// Represents a team working on a project

@@ -1,13 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
-using GameGuild.Modules.Subscription.Models;
+using GameGuild.Modules.Subscriptions.Models;
+using GameGuild.Modules.Users.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Product.Models;
+namespace GameGuild.Modules.Products.Models;
 
 /// <summary>
 /// Junction entity representing the relationship between a User and a Product
@@ -32,7 +33,7 @@ public class UserProduct : BaseEntity {
   /// Navigation property to the User entity
   /// </summary>
   [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User { get; set; } = null!;
+  public virtual User User { get; set; } = null!;
 
   /// <summary>
   /// Foreign key to the Product entity
@@ -98,7 +99,7 @@ public class UserProduct : BaseEntity {
   /// Navigation property to the user who gifted this product
   /// </summary>
   [ForeignKey(nameof(GiftedByUserId))]
-  public virtual User.Models.User? GiftedByUser { get; set; }
+  public virtual User? GiftedByUser { get; set; }
 
   /// <summary>
   /// Default constructor

@@ -1,7 +1,7 @@
 using GameGuild.Common.Enums;
 
 
-namespace GameGuild.Modules.Payment.Interfaces;
+namespace GameGuild.Modules.Payments.Interfaces;
 
 /// <summary>
 /// Interface for financial transaction services

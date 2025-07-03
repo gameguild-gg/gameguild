@@ -1,13 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
-using GameGuild.Common.Entities;
 using GameGuild.Common.Attributes;
 using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.Tenant.Models;
-using GameGuild.Modules.Tenant.Services;
-using GameGuild.Modules.Tenant.Dtos;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Tenants.Dtos;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Tenants.Services;
+using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Modules.Tenant.Controllers;
+namespace GameGuild.Modules.Tenants.Controllers;
 
 [ApiController]
 [Route("api/tenant-domains")]
@@ -20,11 +20,13 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   public async Task<ActionResult<IEnumerable<TenantDomain>>> GetDomains([FromQuery] Guid? tenantId) {
     if (tenantId.HasValue) {
       var domains = await tenantDomainService.GetDomainsByTenantAsync(tenantId.Value);
+
       return Ok(domains);
     }
 
     // If no tenant specified, return all domains (requires admin permissions via the attribute)
     var allDomains = await tenantDomainService.GetAllDomainsAsync();
+
     return Ok(allDomains);
   }
 
@@ -181,12 +183,13 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   public async Task<ActionResult<IEnumerable<TenantUserGroupMembershipDto>>> GetUserMemberships(Guid userId) {
     var memberships = await tenantDomainService.GetUserGroupMembershipsAsync(userId);
     var dtos = memberships.Select(m => new TenantUserGroupMembershipDto {
-      Id = m.Id,
-      UserId = m.UserId,
-      GroupId = m.UserGroupId,
-      IsAutoAssigned = m.IsAutoAssigned,
-      CreatedAt = m.CreatedAt
-    });
+                                    Id = m.Id,
+                                    UserId = m.UserId,
+                                    GroupId = m.UserGroupId,
+                                    IsAutoAssigned = m.IsAutoAssigned,
+                                    CreatedAt = m.CreatedAt
+                                  }
+    );
 
     return Ok(dtos);
   }
@@ -335,6 +338,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
         IsAutoAssigned = membership.IsAutoAssigned,
         CreatedAt = membership.CreatedAt,
       };
+
       return CreatedAtAction(nameof(GetUserGroups), new { userId = membership.UserId }, membershipDto);
     }
     catch (Exception ex) { return BadRequest($"Error adding user to group: {ex.Message}"); }

@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Text.Json;
 using GameGuild.Common.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Program.Models;
+namespace GameGuild.Modules.Programs.Models;
 
 [Table("activity_grades")]
 public class ActivityGrade : BaseEntity {

@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.User.GraphQL;
+namespace GameGuild.Modules.Users.GraphQL;
 
 public class UserType : ObjectType<Models.User> {
   protected override void Configure(IObjectTypeDescriptor<Models.User> descriptor) {

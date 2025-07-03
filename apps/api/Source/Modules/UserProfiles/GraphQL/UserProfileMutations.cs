@@ -1,8 +1,8 @@
-using GameGuild.Modules.User.GraphQL;
-using GameGuild.Modules.UserProfile.Services;
+using GameGuild.Modules.UserProfiles.Services;
+using GameGuild.Modules.Users.GraphQL;
 
 
-namespace GameGuild.Modules.UserProfile.GraphQL;
+namespace GameGuild.Modules.UserProfiles.GraphQL;
 
 /// <summary>
 /// GraphQL mutations for UserProfile module

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Users.Models;
 
 
 namespace GameGuild.Modules.TestingLab.Models {
@@ -24,20 +25,15 @@ namespace GameGuild.Modules.TestingLab.Models {
     /// </summary>
     public virtual TestingLocation Location { get; set; } = null!;
 
-    [Required][MaxLength(255)]
-    public string SessionName { get; set; } = string.Empty;
+    [Required] [MaxLength(255)] public string SessionName { get; set; } = string.Empty;
 
-    [Required]
-    public DateTime SessionDate { get; set; }
+    [Required] public DateTime SessionDate { get; set; }
 
-    [Required]
-    public DateTime StartTime { get; set; }
+    [Required] public DateTime StartTime { get; set; }
 
-    [Required]
-    public DateTime EndTime { get; set; }
+    [Required] public DateTime EndTime { get; set; }
 
-    [Required]
-    public int MaxTesters { get; set; }
+    [Required] public int MaxTesters { get; set; }
 
     public int RegisteredTesterCount { get; set; } = 0;
 
@@ -45,8 +41,7 @@ namespace GameGuild.Modules.TestingLab.Models {
 
     public int RegisteredProjectCount { get; set; } = 0;
 
-    [Required]
-    public SessionStatus Status { get; set; } = SessionStatus.Scheduled;
+    [Required] public SessionStatus Status { get; set; } = SessionStatus.Scheduled;
 
     /// <summary>
     /// Foreign key to the session manager
@@ -56,7 +51,7 @@ namespace GameGuild.Modules.TestingLab.Models {
     /// <summary>
     /// Navigation property to the session manager
     /// </summary>
-    public virtual Modules.User.Models.User Manager { get; set; } = null!;
+    public virtual User Manager { get; set; } = null!;
 
     /// <summary>
     /// Foreign key to the user who created this session
@@ -66,6 +61,6 @@ namespace GameGuild.Modules.TestingLab.Models {
     /// <summary>
     /// Navigation property to the user who created this session
     /// </summary>
-    public virtual Modules.User.Models.User CreatedBy { get; set; } = null!;
+    public virtual User CreatedBy { get; set; } = null!;
   }
 }

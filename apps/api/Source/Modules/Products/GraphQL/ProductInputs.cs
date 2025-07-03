@@ -1,10 +1,9 @@
-using System.Diagnostics.CodeAnalysis;
 using GameGuild.Common.Enums;
-using GameGuild.Common.Entities;
+using GameGuild.Modules.Contents.Models;
 using PromoCodeTypeEnum = GameGuild.Common.Enums.PromoCodeType;
 
 
-namespace GameGuild.Modules.Product.GraphQL;
+namespace GameGuild.Modules.Products.GraphQL;
 
 public class CreateProductInput {
   public required string Name { get; set; }

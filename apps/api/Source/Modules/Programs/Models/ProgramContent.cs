@@ -1,13 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Text.Json;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Program.Models;
+namespace GameGuild.Modules.Programs.Models;
 
 [Table("program_contents")]
 [Index(nameof(ProgramId))]
@@ -29,9 +29,7 @@ public class ProgramContent : BaseEntity {
   [ForeignKey(nameof(Parent))]
   public Guid? ParentId { get; set; }
 
-  [Required]
-  [MaxLength(255)]
-  public string Title { get; set; } = string.Empty;
+  [Required] [MaxLength(255)] public string Title { get; set; } = string.Empty;
 
   public string Description { get; set; } = string.Empty;
 

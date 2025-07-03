@@ -1,7 +1,7 @@
 using MediatR;
 using GameGuild.Modules.Auth.Commands;
 using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.User.GraphQL;
+using GameGuild.Modules.Users.GraphQL;
 
 
 namespace GameGuild.Modules.Auth.GraphQL;

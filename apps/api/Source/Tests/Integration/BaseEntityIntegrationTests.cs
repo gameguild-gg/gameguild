@@ -1,11 +1,11 @@
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
-using GameGuild.Modules.User.Services;
+using GameGuild.Modules.Users.Services;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
-using UserModel = GameGuild.Modules.User.Models.User;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.Tests.Common.Integration;
+namespace GameGuild.Tests.Integration;
 
 public class BaseEntityIntegrationTests {
   private static ApplicationDbContext GetInMemoryContext() {

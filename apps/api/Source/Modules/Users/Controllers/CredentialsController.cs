@@ -1,10 +1,10 @@
+using GameGuild.Modules.Users.Dtos;
+using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users.Services;
 using Microsoft.AspNetCore.Mvc;
-using GameGuild.Modules.User.Dtos;
-using GameGuild.Modules.User.Models;
-using GameGuild.Modules.User.Services;
 
 
-namespace GameGuild.Modules.User.Controllers;
+namespace GameGuild.Modules.Users.Controllers;
 
 /// <summary>
 /// REST API controller for managing user credentials

@@ -3,22 +3,22 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using GameGuild.Common.Services;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
-using GameGuild.Common.Services;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Tenant.Dtos;
-using GameGuild.Modules.Tenant.Models;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Tenants.Dtos;
+using GameGuild.Modules.Tenants.Models;
 using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
-using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
-using UserModel = GameGuild.Modules.User.Models.User;
+using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.Tests.Modules.Tenant.Integration;
+namespace GameGuild.Tests.Modules.Tenants.Integration;
 
 public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable {
   private readonly WebApplicationFactory<Program> _factory;
@@ -789,7 +789,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     SetAuthorizationHeader(token);
   }
 
-  private string CreateJwtTokenForUserAsync(GameGuild.Modules.User.Models.User user, TenantModel tenant) {
+  private string CreateJwtTokenForUserAsync(UserModel user, TenantModel tenant) {
     var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };

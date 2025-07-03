@@ -1,7 +1,7 @@
-using GameGuild.Modules.User.Models;
+using GameGuild.Modules.Users.Models;
 
 
-namespace GameGuild.Modules.User.GraphQL;
+namespace GameGuild.Modules.Users.GraphQL;
 
 /// <summary>
 /// GraphQL type definition for Credential entity

@@ -1,12 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Diagnostics.CodeAnalysis;
+using GameGuild.Modules.Resources.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using GameGuild.Common.Entities;
 
 
-namespace GameGuild.Modules.Reputation.Models;
+namespace GameGuild.Modules.Reputations.Models;
 
 /// <summary>
 /// Defines actions that can affect user reputation

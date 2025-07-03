@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Users.Models;
 
 
 namespace GameGuild.Modules.TestingLab.Models {
@@ -32,7 +33,7 @@ namespace GameGuild.Modules.TestingLab.Models {
     /// <summary>
     /// Navigation property to the user
     /// </summary>
-    public virtual Modules.User.Models.User User { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
 
     /// <summary>
     /// Optional foreign key to the session
@@ -44,11 +45,9 @@ namespace GameGuild.Modules.TestingLab.Models {
     /// </summary>
     public virtual TestingSession? Session { get; set; }
 
-    [Required]
-    public TestingContext TestingContext { get; set; }
+    [Required] public TestingContext TestingContext { get; set; }
 
-    [Required]
-    public string FeedbackData { get; set; } = string.Empty; // JSON
+    [Required] public string FeedbackData { get; set; } = string.Empty; // JSON
 
     public string? AdditionalNotes { get; set; }
   }

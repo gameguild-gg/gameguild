@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Filters;
+using GameGuild.Modules.Tenants.Services;
 using Microsoft.AspNetCore.Mvc.Authorization;
 
 
@@ -100,7 +101,7 @@ namespace GameGuild.Tests.Helpers {
 
               // Register mock tenant context service for tests
               services
-                .AddSingleton<GameGuild.Modules.Tenant.Services.ITenantContextService, MockTenantContextService>();
+                .AddSingleton<ITenantContextService, MockTenantContextService>();
 
               // Add controllers with test filter that bypasses authentication
               services.AddControllers(options => { options.Filters.Add(new AllowAnonymousFilter()); });

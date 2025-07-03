@@ -1,10 +1,10 @@
+using GameGuild.Data;
+using GameGuild.Modules.UserProfiles.Commands;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Data;
-using GameGuild.Modules.UserProfile.Commands;
 
 
-namespace GameGuild.Modules.UserProfile.Handlers;
+namespace GameGuild.Modules.UserProfiles.Handlers;
 
 /// <summary>
 /// Handler for updating user profile with business logic
@@ -12,7 +12,7 @@ namespace GameGuild.Modules.UserProfile.Handlers;
 public class UpdateUserProfileHandler(ApplicationDbContext context, ILogger<UpdateUserProfileHandler> logger) : IRequestHandler<UpdateUserProfileCommand, Models.UserProfile> {
   public async Task<Models.UserProfile> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken) {
     var userProfile = await context.Resources.OfType<Models.UserProfile>()
-                                    .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
+                                   .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 
     if (userProfile == null) throw new InvalidOperationException($"User profile with ID {request.UserProfileId} not found");
 

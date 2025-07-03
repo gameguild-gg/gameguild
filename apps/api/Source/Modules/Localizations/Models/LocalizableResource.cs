@@ -1,4 +1,8 @@
-namespace GameGuild.Common.Entities;
+using GameGuild.Common.Entities;
+using GameGuild.Modules.Resources.Models;
+
+
+namespace GameGuild.Modules.Localizations.Models;
 
 /// <summary>
 /// Base resource that can be localized

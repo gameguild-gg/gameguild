@@ -1,9 +1,9 @@
-using GameGuild.Modules.Project.Models;
-using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Projects.Models;
 
 
-namespace GameGuild.Modules.Project.Services;
+namespace GameGuild.Modules.Projects.Services;
 
 /// <summary>
 /// Service interface for Project operations

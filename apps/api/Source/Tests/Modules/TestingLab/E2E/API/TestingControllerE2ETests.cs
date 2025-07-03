@@ -1,20 +1,20 @@
 using System.Net;
-using System.Text.Json;
 using System.Net.Http.Headers;
-using Xunit;
+using System.Text.Json;
 using GameGuild.Data;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Modules.Auth.Services;
 using GameGuild.Modules.Auth.Dtos;
+using GameGuild.Modules.Auth.Services;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Tests.Fixtures;
-using ProjectModel = GameGuild.Modules.Project.Models.Project;
-using ProjectVersionModel = GameGuild.Modules.Project.Models.ProjectVersion;
-using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
-using UserModel = GameGuild.Modules.User.Models.User;
+using Xunit;
+using ProjectModel = GameGuild.Modules.Projects.Models.Project;
+using ProjectVersionModel = GameGuild.Modules.Projects.Models.ProjectVersion;
+using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.Tests.Modules.TestingLab.E2E;
+namespace GameGuild.Tests.Modules.TestingLab.E2E.API;
 
 public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory>, IDisposable {
   private readonly TestWebApplicationFactory _factory;
@@ -181,7 +181,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     Assert.Equal(testingSession.Id, session.Id);
   }
 
-  private async Task<(TestingRequest, GameGuild.Modules.User.Models.User, TenantModel)> SeedTestDataAsync(ApplicationDbContext context) {
+  private async Task<(TestingRequest, UserModel, TenantModel)> SeedTestDataAsync(ApplicationDbContext context) {
     // Create test tenant
     var tenant = new TenantModel { Id = Guid.NewGuid(), Name = "Test Tenant", CreatedAt = DateTime.UtcNow };
     context.Tenants.Add(tenant);
@@ -251,7 +251,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     return (testingRequest, user, tenant);
   }
 
-  private async Task<(TestingSession, GameGuild.Modules.User.Models.User, TenantModel)> SeedTestSessionDataAsync(
+  private async Task<(TestingSession, UserModel, TenantModel)> SeedTestSessionDataAsync(
     ApplicationDbContext context
   ) {
     var (testingRequest, user, tenant) = await SeedTestDataAsync(context);
@@ -291,7 +291,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     return (testingSession, user, tenant);
   }
 
-  private Task<string> CreateJwtTokenForUserAsync(GameGuild.Modules.User.Models.User user, TenantModel tenant) {
+  private Task<string> CreateJwtTokenForUserAsync(UserModel user, TenantModel tenant) {
     // Get JWT service from the factory's services, not our custom scope
     var jwtService = _factory.Services.GetRequiredService<IJwtTokenService>();
 

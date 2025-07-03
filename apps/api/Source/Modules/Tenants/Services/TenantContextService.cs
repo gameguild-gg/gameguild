@@ -1,10 +1,10 @@
 using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
-using GameGuild.Modules.Tenant.Models;
+using GameGuild.Modules.Tenants.Models;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenant.Services;
+namespace GameGuild.Modules.Tenants.Services;
 
 /// <summary>
 /// Service for managing tenant context in requests
@@ -78,7 +78,7 @@ public class TenantContextService(ApplicationDbContext context) : ITenantContext
   /// </summary>
   public async Task<TenantPermission?> GetTenantPermissionAsync(Guid userId, Guid tenantId) {
     return await context.TenantPermissions.FirstOrDefaultAsync(tp =>
-                                                                  tp.UserId == userId && tp.TenantId == tenantId && tp.IsValid
+                                                                 tp.UserId == userId && tp.TenantId == tenantId && tp.IsValid
            );
   }
 

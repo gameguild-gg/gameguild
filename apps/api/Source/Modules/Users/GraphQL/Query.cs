@@ -1,9 +1,9 @@
-using GameGuild.Modules.User.Queries;
-using GameGuild.Modules.User.Services;
+using GameGuild.Modules.Users.Queries;
+using GameGuild.Modules.Users.Services;
 using MediatR;
 
 
-namespace GameGuild.Modules.User.GraphQL;
+namespace GameGuild.Modules.Users.GraphQL;
 
 public class Query {
   /// <summary>

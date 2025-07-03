@@ -1,12 +1,12 @@
 using GameGuild.Common.Enums;
 
-namespace GameGuild.Modules.Program.DTOs;
+
+namespace GameGuild.Modules.Programs.DTOs;
 
 /// <summary>
 /// DTO for ContentInteraction responses - avoids circular references for Swagger/OpenAPI
 /// </summary>
-public class ContentInteractionDto
-{
+public class ContentInteractionDto {
   public Guid Id { get; set; }
 
   public Guid ProgramUserId { get; set; }
@@ -40,16 +40,18 @@ public class ContentInteractionDto
 
   // Computed properties for convenience
   public bool IsSubmitted => SubmittedAt.HasValue;
-    public bool IsCompleted => Status == ProgressStatus.Completed;
-    public bool CanModify => !IsSubmitted;
-    public int DurationInMinutes => TimeSpentMinutes ?? 0;
+
+  public bool IsCompleted => Status == ProgressStatus.Completed;
+
+  public bool CanModify => !IsSubmitted;
+
+  public int DurationInMinutes => TimeSpentMinutes ?? 0;
 }
 
 /// <summary>
 /// Simplified content information to avoid circular references
 /// </summary>
-public class ContentSummaryDto
-{
+public class ContentSummaryDto {
   public Guid Id { get; set; }
 
   public string Title { get; set; } = string.Empty;
@@ -62,8 +64,7 @@ public class ContentSummaryDto
 /// <summary>
 /// Simplified program user information to avoid circular references
 /// </summary>
-public class ProgramUserSummaryDto
-{
+public class ProgramUserSummaryDto {
   public Guid Id { get; set; }
 
   public string UserDisplayName { get; set; } = string.Empty;
@@ -74,43 +75,29 @@ public class ProgramUserSummaryDto
 /// <summary>
 /// Extension methods to convert from entity to DTO
 /// </summary>
-public static class ContentInteractionExtensions
-{
-    public static ContentInteractionDto ToDto(this Models.ContentInteraction interaction)
-    {
-        return new ContentInteractionDto
-        {
-            Id = interaction.Id,
-            ProgramUserId = interaction.ProgramUserId,
-            ContentId = interaction.ContentId,
-            Status = interaction.Status,
-            SubmissionData = interaction.SubmissionData,
-            CompletionPercentage = interaction.CompletionPercentage,
-            TimeSpentMinutes = interaction.TimeSpentMinutes,
-            FirstAccessedAt = interaction.FirstAccessedAt,
-            LastAccessedAt = interaction.LastAccessedAt,
-            CompletedAt = interaction.CompletedAt,
-            SubmittedAt = interaction.SubmittedAt,
-            CreatedAt = interaction.CreatedAt,
-            UpdatedAt = interaction.UpdatedAt,
-            Content = interaction.Content != null ? new ContentSummaryDto
-            {
-                Id = interaction.Content.Id,
-                Title = interaction.Content.Title,
-                ContentType = interaction.Content.Type.ToString(),
-                EstimatedMinutes = interaction.Content.EstimatedMinutes
-            } : null,
-            ProgramUser = interaction.ProgramUser?.User != null ? new ProgramUserSummaryDto
-            {
-                Id = interaction.ProgramUser.User.Id,
-                UserDisplayName = interaction.ProgramUser.User.Name,
-                UserEmail = interaction.ProgramUser.User.Email
-            } : null
-        };
-    }
+public static class ContentInteractionExtensions {
+  public static ContentInteractionDto ToDto(this Models.ContentInteraction interaction) {
+    return new ContentInteractionDto {
+      Id = interaction.Id,
+      ProgramUserId = interaction.ProgramUserId,
+      ContentId = interaction.ContentId,
+      Status = interaction.Status,
+      SubmissionData = interaction.SubmissionData,
+      CompletionPercentage = interaction.CompletionPercentage,
+      TimeSpentMinutes = interaction.TimeSpentMinutes,
+      FirstAccessedAt = interaction.FirstAccessedAt,
+      LastAccessedAt = interaction.LastAccessedAt,
+      CompletedAt = interaction.CompletedAt,
+      SubmittedAt = interaction.SubmittedAt,
+      CreatedAt = interaction.CreatedAt,
+      UpdatedAt = interaction.UpdatedAt,
+      Content =
+        interaction.Content != null
+          ? new ContentSummaryDto { Id = interaction.Content.Id, Title = interaction.Content.Title, ContentType = interaction.Content.Type.ToString(), EstimatedMinutes = interaction.Content.EstimatedMinutes }
+          : null,
+      ProgramUser = interaction.ProgramUser?.User != null ? new ProgramUserSummaryDto { Id = interaction.ProgramUser.User.Id, UserDisplayName = interaction.ProgramUser.User.Name, UserEmail = interaction.ProgramUser.User.Email } : null
+    };
+  }
 
-    public static IEnumerable<ContentInteractionDto> ToDto(this IEnumerable<Models.ContentInteraction> interactions)
-    {
-        return interactions.Select(i => i.ToDto());
-    }
+  public static IEnumerable<ContentInteractionDto> ToDto(this IEnumerable<Models.ContentInteraction> interactions) { return interactions.Select(i => i.ToDto()); }
 }

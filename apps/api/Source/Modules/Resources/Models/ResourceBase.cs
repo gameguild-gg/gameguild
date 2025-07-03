@@ -1,8 +1,11 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Modules.Tenant.Models;
+using GameGuild.Common.Entities;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Localizations.Models;
+using GameGuild.Modules.Tenants.Models;
 
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Modules.Resources.Models;
 
 /// <summary>
 /// Abstract base class for resources that can have permissions and be localized.

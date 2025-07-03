@@ -1,10 +1,11 @@
-using Xunit;
 using GameGuild.Common.Services;
-using GameGuild.Common.Entities;
+using GameGuild.Modules.Comments.Models;
+using GameGuild.Modules.Permissions.Models;
 using Moq;
+using Xunit;
 
 
-namespace GameGuild.Tests.Modules.Project.E2E.GraphQL;
+namespace GameGuild.Tests.Modules.Projects.E2E.GraphQL;
 
 /// <summary>
 /// Integration tests for DAC permission system with GraphQL
@@ -34,7 +35,7 @@ public class DACPermissionLogicTests {
     // Arrange
     var mockPermissionService = new Mock<IPermissionService>();
     mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
+      .Setup(x => x.HasResourcePermissionAsync<CommentPermission, Comment>(
                It.IsAny<Guid>(),
                It.IsAny<Guid?>(),
                It.IsAny<Guid>(),
@@ -65,7 +66,7 @@ public class DACPermissionLogicTests {
     // Arrange
     var mockPermissionService = new Mock<IPermissionService>();
     mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
+      .Setup(x => x.HasResourcePermissionAsync<CommentPermission, Comment>(
                It.IsAny<Guid>(),
                It.IsAny<Guid?>(),
                It.IsAny<Guid>(),
@@ -105,7 +106,7 @@ public class DACPermissionLogicTests {
     // Arrange
     var mockPermissionService = new Mock<IPermissionService>();
     mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
+      .Setup(x => x.HasResourcePermissionAsync<CommentPermission, Comment>(
                It.IsAny<Guid>(),
                It.IsAny<Guid?>(),
                It.IsAny<Guid>(),
@@ -148,7 +149,7 @@ public class DACPermissionLogicTests {
     // Arrange
     var mockPermissionService = new Mock<IPermissionService>();
     mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
+      .Setup(x => x.HasResourcePermissionAsync<CommentPermission, Comment>(
                It.IsAny<Guid>(),
                It.IsAny<Guid?>(),
                It.IsAny<Guid>(),
@@ -197,7 +198,7 @@ public class DACPermissionLogicTests {
     try {
       // 1. Check resource-level permission
       var hasResourcePermission =
-        await permissionService.HasResourcePermissionAsync<GameGuild.Modules.Comment.Models.CommentPermission, Comment>(
+        await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
           userId,
           tenantId,
           commentId,
