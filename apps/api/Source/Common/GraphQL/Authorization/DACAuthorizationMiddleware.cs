@@ -31,7 +31,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
     await next(context);
   }
 
-  private async ValueTask<UserContext?> GetUserContextAsync(IMiddlewareContext context) {
+  private static async ValueTask<UserContext?> GetUserContextAsync(IMiddlewareContext context) {
     var httpContext = context.Services.GetService<IHttpContextAccessor>()?.HttpContext;
 
     if (httpContext?.User?.Identity?.IsAuthenticated != true) return null;
@@ -49,7 +49,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
     return new UserContext { UserId = userId, TenantId = tenantId };
   }
 
-  private DACAuthorizationAttribute? GetDACAttribute(IMiddlewareContext context) {
+  private static DACAuthorizationAttribute? GetDACAttribute(IMiddlewareContext context) {
     // Check the resolver method for DAC attributes
     var selection = context.Selection;
     var field = selection.Field;
@@ -101,7 +101,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
     return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(RequireResourcePermissionAttribute<,>);
   }
 
-  private async ValueTask<bool> CheckTenantPermissionAsync(
+  private static async ValueTask<bool> CheckTenantPermissionAsync(
     IPermissionService permissionService,
     UserContext userContext, RequireTenantPermissionAttribute attribute
   ) {
@@ -112,7 +112,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
            );
   }
 
-  private async ValueTask<bool> CheckContentTypePermissionDynamicAsync(
+  private static async ValueTask<bool> CheckContentTypePermissionDynamicAsync(
     IPermissionService permissionService,
     UserContext userContext, DACAuthorizationAttribute attribute
   ) {
@@ -155,7 +155,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
            );
   }
 
-  private Guid? GetResourceIdFromContext(IMiddlewareContext context, string parameterName) {
+  private static Guid? GetResourceIdFromContext(IMiddlewareContext context, string parameterName) {
     var argumentValue = context.ArgumentValue<object>(parameterName);
 
     if (argumentValue is Guid guidValue) return guidValue;

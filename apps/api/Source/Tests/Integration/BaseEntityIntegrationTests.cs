@@ -8,7 +8,7 @@ using UserModel = GameGuild.Modules.User.Models.User;
 namespace GameGuild.Tests.Common.Integration;
 
 public class BaseEntityIntegrationTests {
-  private ApplicationDbContext GetInMemoryContext() {
+  private static ApplicationDbContext GetInMemoryContext() {
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                   .UseInMemoryDatabase(Guid.NewGuid().ToString())
                   .Options;

@@ -262,7 +262,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   /// <summary>
   /// Configure inheritance strategies for the content and resource hierarchies
   /// </summary>
-  private void ConfigureInheritanceStrategies(ModelBuilder modelBuilder) {
+  private static void ConfigureInheritanceStrategies(ModelBuilder modelBuilder) {
     // Configure Table-Per-Concrete-Type (TPC) for ResourceBase inheritance
     // Each concrete entity that inherits from ResourceBase gets its own complete table
     // with all inherited properties included
