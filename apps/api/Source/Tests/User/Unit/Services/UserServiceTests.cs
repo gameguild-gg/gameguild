@@ -5,7 +5,7 @@ using Moq;
 using GameGuild.Modules.User.Services;
 using UserModel = GameGuild.Modules.User.Models.User;
 
-namespace GameGuild.Tests.User.Unit.Services
+namespace GameGuild.Tests.Modules.User.Unit.Services
 {
     public class UserServiceTests
     {
@@ -25,9 +25,6 @@ namespace GameGuild.Tests.User.Unit.Services
                 Name = "Test User",
                 Email = "test@example.com"
             };
-
-            _mockService.Setup(s => s.GetByEmailAsync("test@example.com"))
-                .ReturnsAsync((UserModel?)null); // No existing user with this email
 
             _mockService.Setup(s => s.CreateUserAsync(It.IsAny<UserModel>()))
                 .ReturnsAsync((UserModel u) => 
@@ -49,7 +46,6 @@ namespace GameGuild.Tests.User.Unit.Services
             Assert.NotEqual(default, result.CreatedAt);
 
             // Verify service was called correctly
-            _mockService.Verify(s => s.GetByEmailAsync("test@example.com"), Times.Once);
             _mockService.Verify(s => s.CreateUserAsync(It.IsAny<UserModel>()), Times.Once);
         }
 
@@ -57,23 +53,13 @@ namespace GameGuild.Tests.User.Unit.Services
         public async Task Should_Throw_Exception_When_Creating_User_With_Duplicate_Email()
         {
             // Arrange
-            var existingUser = new UserModel
-            {
-                Id = Guid.NewGuid(),
-                Name = "Existing User",
-                Email = "test@example.com"
-            };
-
-            _mockService.Setup(s => s.GetByEmailAsync("test@example.com"))
-                .ReturnsAsync(existingUser); // Email already exists
-
             _mockService.Setup(s => s.CreateUserAsync(It.IsAny<UserModel>()))
                 .ThrowsAsync(new InvalidOperationException("A user with email 'test@example.com' already exists."));
 
             var newUser = new UserModel
             {
                 Name = "Test User",
-                Email = "test@example.com" // Same email
+                Email = "test@example.com"
             };
 
             // Act & Assert

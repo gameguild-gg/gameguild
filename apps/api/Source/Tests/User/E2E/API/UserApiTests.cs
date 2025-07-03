@@ -37,12 +37,12 @@ namespace GameGuild.Tests.Modules.User.E2E.API
 
             // Act - Register
             var registerResponse = await _client.PostAsync(
-                "/api/auth/register",
+                "/auth/sign-up",
                 new StringContent(JsonSerializer.Serialize(registerPayload), Encoding.UTF8, "application/json")
             );
 
             // Assert - Register
-            Assert.Equal(HttpStatusCode.Created, registerResponse.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, registerResponse.StatusCode);
             
             // Arrange - Login
             var loginPayload = new
@@ -53,7 +53,7 @@ namespace GameGuild.Tests.Modules.User.E2E.API
 
             // Act - Login
             var loginResponse = await _client.PostAsync(
-                "/api/auth/login",
+                "/auth/sign-in",
                 new StringContent(JsonSerializer.Serialize(loginPayload), Encoding.UTF8, "application/json")
             );
             var loginContent = await loginResponse.Content.ReadAsStringAsync();
@@ -61,7 +61,7 @@ namespace GameGuild.Tests.Modules.User.E2E.API
 
             // Assert - Login
             Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
-            Assert.True(loginResult.RootElement.TryGetProperty("token", out _));
+            Assert.True(loginResult.RootElement.TryGetProperty("accessToken", out _));
             Assert.True(loginResult.RootElement.TryGetProperty("user", out var userElement));
             Assert.Equal(email, userElement.GetProperty("email").GetString());
         }
@@ -80,7 +80,7 @@ namespace GameGuild.Tests.Modules.User.E2E.API
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
             // Act
-            var response = await _client.GetAsync($"/api/users/{userId}");
+            var response = await _client.GetAsync($"/users/{userId}");
             var content = await response.Content.ReadAsStringAsync();
             var result = JsonDocument.Parse(content);
 
@@ -110,7 +110,7 @@ namespace GameGuild.Tests.Modules.User.E2E.API
 
             // Act
             var response = await _client.PutAsync(
-                $"/api/users/{userId}",
+                $"/users/{userId}",
                 new StringContent(JsonSerializer.Serialize(updatePayload), Encoding.UTF8, "application/json")
             );
             var content = await response.Content.ReadAsStringAsync();
@@ -135,13 +135,13 @@ namespace GameGuild.Tests.Modules.User.E2E.API
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
             // Act - Delete
-            var deleteResponse = await _client.DeleteAsync($"/api/users/{userId}");
+            var deleteResponse = await _client.DeleteAsync($"/users/{userId}");
             
             // Assert - Delete
-            Assert.Equal(HttpStatusCode.OK, deleteResponse.StatusCode);
+            Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
             
             // Act - Try to get deleted user
-            var getResponse = await _client.GetAsync($"/api/users/{userId}");
+            var getResponse = await _client.GetAsync($"/users/{userId}");
             
             // Assert - Should not find deleted user
             Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
