@@ -1,9 +1,10 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Permissions.Models;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Program.Models;
+namespace GameGuild.Modules.Programs.Models;
 
 /// <summary>
 /// Resource-specific permissions for Program entities (Layer 3 of DAC permission system)

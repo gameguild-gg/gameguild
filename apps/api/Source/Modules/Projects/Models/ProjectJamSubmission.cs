@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Modules.GameJams.Models;
+using GameGuild.Modules.Resources.Models;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Jam.Models;
 
 
-namespace GameGuild.Modules.Project.Models;
+namespace GameGuild.Modules.Projects.Models;
 
 /// <summary>
 /// Represents a project submitted to a game jam
@@ -34,7 +34,7 @@ public class ProjectJamSubmission : ResourceBase {
   /// <summary>
   /// Navigation property to jam
   /// </summary>
-  public virtual Jam.Models.Jam Jam { get; set; } = null!;
+  public virtual Jam Jam { get; set; } = null!;
 
   /// <summary>
   /// Date when the project was submitted to the jam

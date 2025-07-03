@@ -1,6 +1,7 @@
 using HotChocolate.Execution.Configuration;
 using HotChocolate.Language;
 using GameGuild.Common.GraphQL.Authorization;
+using GameGuild.Modules.Permissions.Models;
 
 
 namespace GameGuild.Common.GraphQL.Extensions;
@@ -24,7 +25,7 @@ public static class GraphQLDACAuthorizationExtensions {
 
            // Add enum types for authorization
            .AddType<EnumType<DACPermissionLevel>>()
-           .AddType<EnumType<Entities.PermissionType>>();
+           .AddType<EnumType<PermissionType>>();
   }
 
   /// <summary>
@@ -51,7 +52,7 @@ public static class GraphQLFieldDACExtensions {
   /// <returns>The field descriptor for method chaining</returns>
   public static IObjectFieldDescriptor RequireTenantPermission(
     this IObjectFieldDescriptor descriptor,
-    Entities.PermissionType permission
+    PermissionType permission
   ) {
     return descriptor.Directive(
       "dacAuthorize",
@@ -69,7 +70,7 @@ public static class GraphQLFieldDACExtensions {
   /// <returns>The field descriptor for method chaining</returns>
   public static IObjectFieldDescriptor RequireContentTypePermission<TEntity>(
     this IObjectFieldDescriptor descriptor,
-    Entities.PermissionType permission
+    PermissionType permission
   ) where TEntity : class {
     return descriptor.Directive(
       "dacAuthorize",
@@ -89,7 +90,7 @@ public static class GraphQLFieldDACExtensions {
   /// <param name="resourceIdParameter">The parameter name containing the resource ID</param>
   /// <returns>The field descriptor for method chaining</returns>
   public static IObjectFieldDescriptor RequireResourcePermission<TPermission, TEntity>(
-    this IObjectFieldDescriptor descriptor, Entities.PermissionType permission,
+    this IObjectFieldDescriptor descriptor, PermissionType permission,
     string resourceIdParameter = "id"
   )
     where TPermission : Entities.ResourcePermission<TEntity>
@@ -114,7 +115,7 @@ public static class GraphQLFieldDACExtensions {
   /// <returns>The field descriptor for method chaining</returns>
   public static IObjectFieldDescriptor RequireResourcePermission<TEntity>(
     this IObjectFieldDescriptor descriptor,
-    Entities.PermissionType permission, string resourceIdParameter = "id"
+    PermissionType permission, string resourceIdParameter = "id"
   )
     where TEntity : Entities.BaseEntity {
     return descriptor.Directive(

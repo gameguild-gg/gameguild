@@ -5,6 +5,8 @@ using System.Text.Json;
 using System.Net;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Tenants.Services;
 using GameGuild.Tests.Helpers;
 using Xunit.Abstractions;
 
@@ -64,7 +66,7 @@ public class AuthIntegrationTests {
   private async Task SetupAuthRequiredDataAsync(ApplicationDbContext context) {
     try {
       // Set up a default test tenant
-      var testTenant = new GameGuild.Modules.Tenant.Models.Tenant { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Test Tenant", Slug = "test-tenant", IsActive = true };
+      var testTenant = new Tenant { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Test Tenant", Slug = "test-tenant", IsActive = true };
 
       await context.Tenants.AddAsync(testTenant);
       await context.SaveChangesAsync();
@@ -72,7 +74,7 @@ public class AuthIntegrationTests {
       // Configure the mock tenant context service with our test tenant
       using var serviceScope = _factory.Services.CreateScope();
       var mockTenantService =
-        serviceScope.ServiceProvider.GetRequiredService<GameGuild.Modules.Tenant.Services.ITenantContextService>() as
+        serviceScope.ServiceProvider.GetRequiredService<ITenantContextService>() as
           MockTenantContextService;
       mockTenantService?.AddTenant(testTenant);
 

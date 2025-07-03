@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
-using GameGuild.Modules.Certificate.Models;
+using GameGuild.Modules.Certificates.Models;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tag.Models;
+namespace GameGuild.Modules.Tags.Models;
 
 [Table("tag_proficiencies")]
 [Index(nameof(Name))]
@@ -14,12 +14,9 @@ namespace GameGuild.Modules.Tag.Models;
 [Index(nameof(ProficiencyLevel))]
 [Index(nameof(IsActive))]
 public class TagProficiency : BaseEntity {
-  [Required]
-  [MaxLength(100)]
-  public string Name { get; set; } = string.Empty;
+  [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
 
-  [MaxLength(500)]
-  public string? Description { get; set; }
+  [MaxLength(500)] public string? Description { get; set; }
 
   public TagType Type { get; set; }
 

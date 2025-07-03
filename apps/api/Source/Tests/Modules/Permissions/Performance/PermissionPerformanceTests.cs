@@ -1,15 +1,15 @@
-using Xunit;
-using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
-using GameGuild.Common.Entities;
 using GameGuild.Common.Services;
 using GameGuild.Data;
-using GameGuild.Modules.Comment.Models;
-using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
-using UserModel = GameGuild.Modules.User.Models.User;
+using GameGuild.Modules.Comments.Models;
+using GameGuild.Modules.Permissions.Models;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
+using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.Tests.Modules.Permission.Performance;
+namespace GameGuild.Tests.Modules.Permissions.Performance;
 
 /// <summary>
 /// Performance tests for Permission Module

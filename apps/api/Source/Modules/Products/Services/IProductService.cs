@@ -1,9 +1,10 @@
 using GameGuild.Common.Enums;
-using GameGuild.Modules.Product.Models;
-using ProductEntity = GameGuild.Modules.Product.Models.Product;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Products.Models;
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 
 
-namespace GameGuild.Modules.Product.Services;
+namespace GameGuild.Modules.Products.Services;
 
 /// <summary>
 /// Service interface for Product business logic
@@ -36,7 +37,7 @@ public interface IProductService {
 
   Task<ProductEntity> ArchiveProductAsync(Guid id);
 
-  Task<ProductEntity> SetVisibilityAsync(Guid id, Common.Entities.AccessLevel visibility);
+  Task<ProductEntity> SetVisibilityAsync(Guid id, AccessLevel visibility);
 
   // Bundle management
   Task<IEnumerable<ProductEntity>> GetBundleItemsAsync(Guid bundleId);
@@ -95,7 +96,7 @@ public interface IProductService {
   Task<bool> IsPromoCodeValidAsync(string code, Guid? productId = null);
 
   // Analytics and statistics
-  Task<int> GetProductCountAsync(ProductType? type = null, Common.Entities.AccessLevel? visibility = null);
+  Task<int> GetProductCountAsync(ProductType? type = null, AccessLevel? visibility = null);
 
   Task<int> GetUserCountForProductAsync(Guid productId);
 

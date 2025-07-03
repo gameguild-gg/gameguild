@@ -1,4 +1,4 @@
-namespace GameGuild.Models {
+namespace GameGuild.Modules.Teams.Models {
   public class Team {
     public Guid Id { get; set; }
 

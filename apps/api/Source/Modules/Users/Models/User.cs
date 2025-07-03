@@ -1,18 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
-using GameGuild.Modules.Tenant.Models;
+using GameGuild.Modules.Tenants.Models;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.User.Models;
+namespace GameGuild.Modules.Users.Models;
 
 [Table("Users")]
 [Index(nameof(Email), IsUnique = true)]
 public class User : BaseEntity {
-  [Required]
-  [MaxLength(100)]
-  public string Name { get; set; } = string.Empty;
+  [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
 
   [Required]
   [EmailAddress]

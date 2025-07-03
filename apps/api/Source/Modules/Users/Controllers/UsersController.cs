@@ -1,9 +1,9 @@
+using GameGuild.Modules.Users.Dtos;
+using GameGuild.Modules.Users.Services;
 using Microsoft.AspNetCore.Mvc;
-using GameGuild.Modules.User.Dtos;
-using GameGuild.Modules.User.Services;
 
 
-namespace GameGuild.Modules.User.Controllers;
+namespace GameGuild.Modules.Users.Controllers;
 
 [ApiController]
 [Route("[controller]")]
@@ -15,15 +15,15 @@ public class UsersController(IUserService userService) : ControllerBase {
     var users = await userService.GetAllUsersAsync();
 
     var userDtos = users.Select(u => new UserResponseDto {
-                                  Id = u.Id,
-                                  Version = u.Version,
-                                  Name = u.Name,
-                                  Email = u.Email,
-                                  IsActive = u.IsActive,
-                                  CreatedAt = u.CreatedAt,
-                                  UpdatedAt = u.UpdatedAt,
-                                  DeletedAt = u.DeletedAt,
-                                  IsDeleted = u.IsDeleted,
+        Id = u.Id,
+        Version = u.Version,
+        Name = u.Name,
+        Email = u.Email,
+        IsActive = u.IsActive,
+        CreatedAt = u.CreatedAt,
+        UpdatedAt = u.UpdatedAt,
+        DeletedAt = u.DeletedAt,
+        IsDeleted = u.IsDeleted,
       }
     );
 
@@ -36,15 +36,15 @@ public class UsersController(IUserService userService) : ControllerBase {
     var users = await userService.GetDeletedUsersAsync();
 
     var userDtos = users.Select(u => new UserResponseDto {
-                                  Id = u.Id,
-                                  Version = u.Version,
-                                  Name = u.Name,
-                                  Email = u.Email,
-                                  IsActive = u.IsActive,
-                                  CreatedAt = u.CreatedAt,
-                                  UpdatedAt = u.UpdatedAt,
-                                  DeletedAt = u.DeletedAt,
-                                  IsDeleted = u.IsDeleted,
+        Id = u.Id,
+        Version = u.Version,
+        Name = u.Name,
+        Email = u.Email,
+        IsActive = u.IsActive,
+        CreatedAt = u.CreatedAt,
+        UpdatedAt = u.UpdatedAt,
+        DeletedAt = u.DeletedAt,
+        IsDeleted = u.IsDeleted,
       }
     );
 
@@ -162,20 +162,14 @@ public class UsersController(IUserService userService) : ControllerBase {
   public async Task<ActionResult<UserResponseDto>> GetCurrentUser() {
     // Extract user ID from JWT token claims
     var userIdClaim = User.FindFirst("sub")?.Value;
-    
-    if (string.IsNullOrEmpty(userIdClaim)) {
-      return Unauthorized(new { message = "User ID not found in token" });
-    }
 
-    if (!Guid.TryParse(userIdClaim, out var userId)) {
-      return BadRequest(new { message = "Invalid user ID format" });
-    }
+    if (string.IsNullOrEmpty(userIdClaim)) { return Unauthorized(new { message = "User ID not found in token" }); }
+
+    if (!Guid.TryParse(userIdClaim, out var userId)) { return BadRequest(new { message = "Invalid user ID format" }); }
 
     var user = await userService.GetUserByIdAsync(userId);
 
-    if (user == null) {
-      return NotFound(new { message = "User not found" });
-    }
+    if (user == null) { return NotFound(new { message = "User not found" }); }
 
     var userDto = new UserResponseDto {
       Id = user.Id,

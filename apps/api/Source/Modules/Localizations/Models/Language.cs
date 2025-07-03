@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Common.Entities;
+using GameGuild.Modules.Resources.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Modules.Localizations.Models;
 
 /// <summary>
 /// Entity representing supported languages for localization

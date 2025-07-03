@@ -1,4 +1,5 @@
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Permissions.Models;
 
 
 namespace GameGuild.Common.GraphQL.Authorization;

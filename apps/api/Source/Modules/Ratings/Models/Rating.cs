@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Users.Models;
 
 
-namespace GameGuild.Modules.Rating.Models;
+namespace GameGuild.Modules.Ratings.Models;
 
 /// <summary>
 /// Represents a rating (e.g., 1-5 stars) on a rateable entity.
@@ -19,7 +20,7 @@ public class Rating : BaseEntity {
   /// Entity Framework will automatically create the UserId foreign key
   /// </summary>
   [Required]
-  public virtual User.Models.User User { get; set; } = null!;
+  public virtual User User { get; set; } = null!;
 
   /// <summary>
   /// Foreign key for the entity being rated

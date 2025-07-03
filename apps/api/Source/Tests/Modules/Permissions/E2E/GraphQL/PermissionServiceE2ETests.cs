@@ -1,19 +1,20 @@
-using Xunit;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using GameGuild.Data;
-using GameGuild.Common.Entities;
 using GameGuild.Common.Services;
-using GameGuild.Modules.Comment.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Net.Http.Headers;
-using GameGuild.Modules.Auth.Services;
+using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
+using GameGuild.Modules.Auth.Services;
+using GameGuild.Modules.Comments.Models;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Users.Models;
 using GameGuild.Tests.Fixtures;
-using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
+using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
 
 
-namespace GameGuild.Tests.Modules.Permission.E2E;
+namespace GameGuild.Tests.Modules.Permissions.E2E.GraphQL;
 
 /// <summary>
 /// End-to-end tests for Permission Service API endpoints
@@ -545,8 +546,8 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
 
   #region Helper Methods
 
-  private async Task<GameGuild.Modules.User.Models.User> CreateTestUserAsync(string email = "test@example.com") {
-    var user = new GameGuild.Modules.User.Models.User { Id = Guid.NewGuid(), Name = "Test User", Email = email, IsActive = true };
+  private async Task<User> CreateTestUserAsync(string email = "test@example.com") {
+    var user = new User { Id = Guid.NewGuid(), Name = "Test User", Email = email, IsActive = true };
 
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -554,8 +555,8 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     return user;
   }
 
-  private async Task<GameGuild.Modules.User.Models.User> CreateTestAdminUserAsync(string email = "admin@example.com") {
-    var admin = new GameGuild.Modules.User.Models.User { Id = Guid.NewGuid(), Name = "Admin User", Email = email, IsActive = true };
+  private async Task<User> CreateTestAdminUserAsync(string email = "admin@example.com") {
+    var admin = new User { Id = Guid.NewGuid(), Name = "Admin User", Email = email, IsActive = true };
 
     _context.Users.Add(admin);
     await _context.SaveChangesAsync();
@@ -593,7 +594,7 @@ public class PermissionServiceE2ETests : IClassFixture<TestWebApplicationFactory
     return comment;
   }
 
-  private async Task<string> CreateJwtTokenForUserAsync(GameGuild.Modules.User.Models.User user, TenantModel tenant) {
+  private async Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant) {
     var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };

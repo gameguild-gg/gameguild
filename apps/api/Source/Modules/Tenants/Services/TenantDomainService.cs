@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
-using GameGuild.Modules.Tenant.Models;
-using UserModel = GameGuild.Modules.User.Models.User;
+using GameGuild.Modules.Tenants.Models;
+using Microsoft.EntityFrameworkCore;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.Modules.Tenant.Services;
+namespace GameGuild.Modules.Tenants.Services;
 
 /// <summary>
 /// Implementation of tenant domain service for managing domain-based user group assignments
@@ -28,37 +28,37 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
 
   public async Task<TenantDomain?> GetDomainByIdAsync(Guid id) {
     return await context.TenantDomains.Include(d => d.Tenant)
-                         .Include(d => d.UserGroup)
-                         .FirstOrDefaultAsync(d => d.Id == id && d.DeletedAt == null);
+                        .Include(d => d.UserGroup)
+                        .FirstOrDefaultAsync(d => d.Id == id && d.DeletedAt == null);
   }
 
   public async Task<IEnumerable<TenantDomain>> GetDomainsByTenantAsync(Guid tenantId) {
     return await context.TenantDomains.Where(d => d.TenantId == tenantId && d.DeletedAt == null)
-                         .Include(d => d.UserGroup)
-                         .OrderBy(d => d.IsMainDomain ? 0 : 1)
-                         .ThenBy(d => d.TopLevelDomain)
-                         .ToListAsync();
+                        .Include(d => d.UserGroup)
+                        .OrderBy(d => d.IsMainDomain ? 0 : 1)
+                        .ThenBy(d => d.TopLevelDomain)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TenantDomain>> GetAllDomainsAsync() {
     return await context.TenantDomains.Where(d => d.DeletedAt == null)
-                         .OrderBy(d => d.TenantId)
-                         .ThenBy(d => d.IsMainDomain ? 0 : 1)
-                         .ThenBy(d => d.TopLevelDomain)
-                         .ToListAsync();
+                        .OrderBy(d => d.TenantId)
+                        .ThenBy(d => d.IsMainDomain ? 0 : 1)
+                        .ThenBy(d => d.TopLevelDomain)
+                        .ToListAsync();
   }
 
   public async Task<TenantDomain?> GetDomainByFullDomainAsync(string fullDomain) {
     var normalizedDomain = fullDomain.ToLowerInvariant();
 
     return await context.TenantDomains.Include(d => d.Tenant)
-                         .Include(d => d.UserGroup)
-                         .FirstOrDefaultAsync(d => d.DeletedAt == null &&
-                                                   ((d.Subdomain == null && d.TopLevelDomain == normalizedDomain) ||
-                                                    (d.Subdomain != null &&
-                                                     $"{d.Subdomain}.{d.TopLevelDomain}" ==
-                                                     normalizedDomain))
-                         );
+                        .Include(d => d.UserGroup)
+                        .FirstOrDefaultAsync(d => d.DeletedAt == null &&
+                                                  ((d.Subdomain == null && d.TopLevelDomain == normalizedDomain) ||
+                                                   (d.Subdomain != null &&
+                                                    $"{d.Subdomain}.{d.TopLevelDomain}" ==
+                                                    normalizedDomain))
+                        );
   }
 
   public async Task<TenantDomain> UpdateDomainAsync(TenantDomain domain) {
@@ -95,7 +95,7 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
   public async Task<bool> SetMainDomainAsync(Guid tenantId, Guid domainId) {
     var domain =
       await context.TenantDomains.FirstOrDefaultAsync(d =>
-                                                         d.Id == domainId && d.TenantId == tenantId && d.DeletedAt == null
+                                                        d.Id == domainId && d.TenantId == tenantId && d.DeletedAt == null
       );
 
     if (domain == null) return false;
@@ -111,8 +111,8 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
 
   private async Task UnsetMainDomainsForTenantAsync(Guid tenantId) {
     var mainDomains = await context.TenantDomains
-                                    .Where(d => d.TenantId == tenantId && d.IsMainDomain && d.DeletedAt == null)
-                                    .ToListAsync();
+                                   .Where(d => d.TenantId == tenantId && d.IsMainDomain && d.DeletedAt == null)
+                                   .ToListAsync();
 
     foreach (var mainDomain in mainDomains) {
       mainDomain.IsMainDomain = false;
@@ -137,26 +137,26 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
 
   public async Task<TenantUserGroup?> GetUserGroupByIdAsync(Guid id) {
     return await context.TenantUserGroups.Include(g => g.Tenant)
-                         .Include(g => g.ParentGroup)
-                         .Include(g => g.SubGroups)
-                         .Include(g => g.Domains)
-                         .FirstOrDefaultAsync(g => g.Id == id && g.DeletedAt == null);
+                        .Include(g => g.ParentGroup)
+                        .Include(g => g.SubGroups)
+                        .Include(g => g.Domains)
+                        .FirstOrDefaultAsync(g => g.Id == id && g.DeletedAt == null);
   }
 
   public async Task<IEnumerable<TenantUserGroup>> GetUserGroupsByTenantAsync(Guid tenantId) {
     return await context.TenantUserGroups.Where(g => g.TenantId == tenantId && g.DeletedAt == null)
-                         .Include(g => g.ParentGroup)
-                         .Include(g => g.SubGroups)
-                         .OrderBy(g => g.Name)
-                         .ToListAsync();
+                        .Include(g => g.ParentGroup)
+                        .Include(g => g.SubGroups)
+                        .OrderBy(g => g.Name)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TenantUserGroup>> GetRootUserGroupsByTenantAsync(Guid tenantId) {
     return await context.TenantUserGroups
-                         .Where(g => g.TenantId == tenantId && g.ParentGroupId == null && g.DeletedAt == null)
-                         .Include(g => g.SubGroups)
-                         .OrderBy(g => g.Name)
-                         .ToListAsync();
+                        .Where(g => g.TenantId == tenantId && g.ParentGroupId == null && g.DeletedAt == null)
+                        .Include(g => g.SubGroups)
+                        .OrderBy(g => g.Name)
+                        .ToListAsync();
   }
 
   public async Task<TenantUserGroup> UpdateUserGroupAsync(TenantUserGroup userGroup) {
@@ -197,7 +197,7 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
     // Check if membership already exists
     var existingMembership =
       await context.TenantUserGroupMemberships.FirstOrDefaultAsync(m =>
-                                                                      m.UserId == userId && m.UserGroupId == userGroupId
+                                                                     m.UserId == userId && m.UserGroupId == userGroupId
       );
 
     if (existingMembership != null) return existingMembership;
@@ -208,14 +208,14 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
     await context.SaveChangesAsync();
 
     return await context.TenantUserGroupMemberships.Include(m => m.User)
-                         .Include(m => m.UserGroup)
-                         .FirstAsync(m => m.Id == membership.Id);
+                        .Include(m => m.UserGroup)
+                        .FirstAsync(m => m.Id == membership.Id);
   }
 
   public async Task<bool> RemoveUserFromGroupAsync(Guid userId, Guid userGroupId) {
     var membership =
       await context.TenantUserGroupMemberships.FirstOrDefaultAsync(m =>
-                                                                      m.UserId == userId && m.UserGroupId == userGroupId
+                                                                     m.UserId == userId && m.UserGroupId == userGroupId
       );
 
     if (membership == null) return false;
@@ -228,17 +228,17 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
 
   public async Task<IEnumerable<TenantUserGroupMembership>> GetUserGroupMembershipsAsync(Guid userId) {
     return await context.TenantUserGroupMemberships.Where(m => m.UserId == userId)
-                         .Include(m => m.UserGroup)
-                         .ThenInclude(g => g.Tenant)
-                         .OrderBy(m => m.UserGroup.Name)
-                         .ToListAsync();
+                        .Include(m => m.UserGroup)
+                        .ThenInclude(g => g.Tenant)
+                        .OrderBy(m => m.UserGroup.Name)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TenantUserGroupMembership>> GetGroupMembersAsync(Guid userGroupId) {
     return await context.TenantUserGroupMemberships.Where(m => m.UserGroupId == userGroupId)
-                         .Include(m => m.User)
-                         .OrderBy(m => m.User.Name)
-                         .ToListAsync();
+                        .Include(m => m.User)
+                        .OrderBy(m => m.User.Name)
+                        .ToListAsync();
   }
 
   public async Task<bool> IsUserInGroupAsync(Guid userId, Guid userGroupId) { return await context.TenantUserGroupMemberships.AnyAsync(m => m.UserId == userId && m.UserGroupId == userGroupId); }
@@ -279,15 +279,15 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
     var emailDomain = email.Split('@')[1].ToLowerInvariant();
 
     return await context.TenantDomains.Include(d => d.UserGroup)
-                         .Include(d => d.Tenant)
-                         .FirstOrDefaultAsync(d =>
-                                                d.DeletedAt == null &&
-                                                d.UserGroupId != null &&
-                                                ((d.Subdomain == null && d.TopLevelDomain == emailDomain) ||
-                                                 (d.Subdomain != null &&
-                                                  $"{d.Subdomain}.{d.TopLevelDomain}" ==
-                                                  emailDomain))
-                         );
+                        .Include(d => d.Tenant)
+                        .FirstOrDefaultAsync(d =>
+                                               d.DeletedAt == null &&
+                                               d.UserGroupId != null &&
+                                               ((d.Subdomain == null && d.TopLevelDomain == emailDomain) ||
+                                                (d.Subdomain != null &&
+                                                 $"{d.Subdomain}.{d.TopLevelDomain}" ==
+                                                 emailDomain))
+                        );
   }
 
   public async Task<int> AutoAssignAllUsersAsync() {
@@ -310,8 +310,8 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
     if (!domainStrings.Any()) return 0;
 
     var users = await context.Users
-                              .Where(u => u.DeletedAt == null && domainStrings.Any(domain => u.Email.ToLower().EndsWith("@" + domain)))
-                              .ToListAsync();
+                             .Where(u => u.DeletedAt == null && domainStrings.Any(domain => u.Email.ToLower().EndsWith("@" + domain)))
+                             .ToListAsync();
 
     var assignedCount = 0;
 
@@ -340,23 +340,23 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
     }
 
     return await context.TenantUserGroupMemberships.Where(m => groupIds.Contains(m.UserGroupId))
-                         .Select(m => m.User)
-                         .Distinct()
-                         .OrderBy(u => u.Name)
-                         .ToListAsync();
+                        .Select(m => m.User)
+                        .Distinct()
+                        .OrderBy(u => u.Name)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<TenantUserGroup>> GetUserGroupsForUserAsync(Guid userId) {
     return await context.TenantUserGroupMemberships
-                         .Include(m => m.UserGroup)
-                           .ThenInclude(g => g.Tenant)
-                         .Include(m => m.UserGroup)
-                           .ThenInclude(g => g.ParentGroup)
-                         .Where(m => m.UserId == userId)
-                         .OrderBy(m => m.UserGroup.Tenant!.Name)
-                         .ThenBy(m => m.UserGroup.Name)
-                         .Select(m => m.UserGroup)
-                         .ToListAsync();
+                        .Include(m => m.UserGroup)
+                        .ThenInclude(g => g.Tenant)
+                        .Include(m => m.UserGroup)
+                        .ThenInclude(g => g.ParentGroup)
+                        .Where(m => m.UserId == userId)
+                        .OrderBy(m => m.UserGroup.Tenant!.Name)
+                        .ThenBy(m => m.UserGroup.Name)
+                        .Select(m => m.UserGroup)
+                        .ToListAsync();
   }
 
   public async Task<bool> ValidateDomainOwnershipAsync(Guid tenantId, string domain) {

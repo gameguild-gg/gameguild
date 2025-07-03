@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Users.Models;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Common.Entities;
 
 
-namespace GameGuild.Modules.Project.Models;
+namespace GameGuild.Modules.Projects.Models;
 
 /// <summary>
 /// Represents a user following a project
@@ -32,7 +33,7 @@ public class ProjectFollower : ResourceBase {
   /// <summary>
   /// Navigation property to user
   /// </summary>
-  public virtual User.Models.User User { get; set; } = null!;
+  public virtual User User { get; set; } = null!;
 
   /// <summary>
   /// Date when the user started following

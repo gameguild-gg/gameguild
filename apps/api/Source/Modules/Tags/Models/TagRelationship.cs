@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Tag.Models;
+namespace GameGuild.Modules.Tags.Models;
 
 [Table("tag_relationships")]
 [Index(nameof(SourceId), nameof(TargetId), IsUnique = true)]
@@ -33,11 +33,9 @@ public class TagRelationship : BaseEntity {
   public string? Metadata { get; set; }
 
   // Navigation properties
-  [ForeignKey(nameof(SourceId))]
-  public virtual Tag Source { get; set; } = null!;
+  [ForeignKey(nameof(SourceId))] public virtual Tag Source { get; set; } = null!;
 
-  [ForeignKey(nameof(TargetId))]
-  public virtual Tag Target { get; set; } = null!;
+  [ForeignKey(nameof(TargetId))] public virtual Tag Target { get; set; } = null!;
 }
 
 public class TagRelationshipConfiguration : IEntityTypeConfiguration<TagRelationship> {

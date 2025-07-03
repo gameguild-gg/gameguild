@@ -1,7 +1,7 @@
 using MediatR;
 
 
-namespace GameGuild.Modules.UserProfile.Commands;
+namespace GameGuild.Modules.UserProfiles.Commands;
 
 /// <summary>
 /// Command to update user profile with validation and business logic

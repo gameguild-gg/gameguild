@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
-using UserModel = GameGuild.Modules.User.Models.User;
+using Microsoft.EntityFrameworkCore;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.Modules.Tenant.Models;
+namespace GameGuild.Modules.Tenants.Models;
 
 /// <summary>
 /// Represents a user's membership in a tenant user group

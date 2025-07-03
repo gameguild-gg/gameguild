@@ -1,7 +1,7 @@
 using GameGuild.Common.Enums;
 
 
-namespace GameGuild.Modules.Feedback.Interfaces;
+namespace GameGuild.Modules.Feedbacks.Interfaces;
 
 /// <summary>
 /// Interface for program feedback services

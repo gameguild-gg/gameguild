@@ -5,8 +5,8 @@ using System.Text;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Models;
-using GameGuild.Modules.User.Models;
-using GameGuild.Modules.Tenant.Services;
+using GameGuild.Modules.Tenants.Services;
+using GameGuild.Modules.Users.Models;
 
 
 namespace GameGuild.Modules.Auth.Services {
@@ -48,7 +48,7 @@ namespace GameGuild.Modules.Auth.Services {
 
       return await tenantAuthService.EnhanceWithTenantDataAsync(
                response,
-               (GameGuild.Modules.User.Models.User)user,
+               (User)user,
                requestedTenantId
              );
     }
@@ -56,7 +56,7 @@ namespace GameGuild.Modules.Auth.Services {
     public async Task<SignInResponseDto> LocalSignUpAsync(LocalSignUpRequestDto request) {
       if (await context.Users.AnyAsync(u => u.Email == request.Email)) throw new InvalidOperationException("User already exists");
 
-      var user = new User.Models.User { Name = request.Username ?? request.Email, Email = request.Email, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+      var user = new User { Name = request.Username ?? request.Email, Email = request.Email, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
       context.Users.Add(user);
       await context.SaveChangesAsync();
 
@@ -283,7 +283,7 @@ namespace GameGuild.Modules.Auth.Services {
       return Task.FromResult(url);
     }
 
-    private async Task<User.Models.User> FindOrCreateOAuthUserAsync(
+    private async Task<User> FindOrCreateOAuthUserAsync(
       string email, string name, string provider,
       string providerId
     ) {
@@ -293,7 +293,7 @@ namespace GameGuild.Modules.Auth.Services {
 
       if (user == null) {
         // Create new user
-        user = new User.Models.User {
+        user = new User {
           Id = Guid.NewGuid(),
           Name = name,
           Email = email,

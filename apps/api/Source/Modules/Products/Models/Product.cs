@@ -1,13 +1,15 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
+using GameGuild.Common.Enums;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Users.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System.Text.Json;
-using GameGuild.Common.Entities;
-using GameGuild.Common.Enums;
 
 
-namespace GameGuild.Modules.Product.Models;
+namespace GameGuild.Modules.Products.Models;
 
 [Table("Products")]
 [Index(nameof(Name))]
@@ -15,15 +17,11 @@ namespace GameGuild.Modules.Product.Models;
 [Index(nameof(Visibility))]
 [Index(nameof(CreatorId))]
 public class Product : Content {
-  [Required]
-  [MaxLength(200)]
-  public string Name { get; set; } = string.Empty;
+  [Required] [MaxLength(200)] public string Name { get; set; } = string.Empty;
 
-  [MaxLength(500)]
-  public string? ShortDescription { get; set; }
+  [MaxLength(500)] public string? ShortDescription { get; set; }
 
-  [MaxLength(500)]
-  public string? ImageUrl { get; set; }
+  [MaxLength(500)] public string? ImageUrl { get; set; }
 
   public ProductType Type { get; set; } = ProductType.Program;
 
@@ -32,7 +30,7 @@ public class Product : Content {
   // Creator relationship
   public Guid CreatorId { get; set; }
 
-  public virtual Modules.User.Models.User Creator { get; set; } = null!;
+  public virtual User Creator { get; set; } = null!;
 
   /// <summary>
   /// JSON array of product IDs included in the bundle
@@ -40,14 +38,11 @@ public class Product : Content {
   [Column(TypeName = "jsonb")]
   public string? BundleItems { get; set; }
 
-  [Column(TypeName = "decimal(5,2)")]
-  public decimal ReferralCommissionPercentage { get; set; } = 30m;
+  [Column(TypeName = "decimal(5,2)")] public decimal ReferralCommissionPercentage { get; set; } = 30m;
 
-  [Column(TypeName = "decimal(5,2)")]
-  public decimal MaxAffiliateDiscount { get; set; } = 0m;
+  [Column(TypeName = "decimal(5,2)")] public decimal MaxAffiliateDiscount { get; set; } = 0m;
 
-  [Column(TypeName = "decimal(5,2)")]
-  public decimal AffiliateCommissionPercentage { get; set; } = 30m;
+  [Column(TypeName = "decimal(5,2)")] public decimal AffiliateCommissionPercentage { get; set; } = 30m;
 
   // Navigation properties
   public virtual ICollection<ProductProgram> ProductPrograms { get; set; } = new List<ProductProgram>();

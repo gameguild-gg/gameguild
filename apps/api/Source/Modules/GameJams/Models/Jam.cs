@@ -2,16 +2,13 @@ using System.ComponentModel.DataAnnotations;
 using GameGuild.Common.Entities;
 
 
-namespace GameGuild.Modules.Jam.Models {
+namespace GameGuild.Modules.GameJams.Models {
   public class Jam : BaseEntity {
-    [Required][MaxLength(255)]
-    public string Name { get; set; } = string.Empty;
+    [Required] [MaxLength(255)] public string Name { get; set; } = string.Empty;
 
-    [Required][MaxLength(255)]
-    public string Slug { get; set; } = string.Empty;
+    [Required] [MaxLength(255)] public string Slug { get; set; } = string.Empty;
 
-    [MaxLength(500)]
-    public string? Theme { get; set; }
+    [MaxLength(500)] public string? Theme { get; set; }
 
     public string? Description { get; set; }
 
@@ -19,11 +16,9 @@ namespace GameGuild.Modules.Jam.Models {
 
     public string? SubmissionCriteria { get; set; }
 
-    [Required]
-    public DateTime StartDate { get; set; }
+    [Required] public DateTime StartDate { get; set; }
 
-    [Required]
-    public DateTime EndDate { get; set; }
+    [Required] public DateTime EndDate { get; set; }
 
     public DateTime? VotingEndDate { get; set; }
 
@@ -31,10 +26,8 @@ namespace GameGuild.Modules.Jam.Models {
 
     public int ParticipantCount { get; set; } = 0;
 
-    [Required]
-    public JamStatus Status { get; set; } = JamStatus.Upcoming;
+    [Required] public JamStatus Status { get; set; } = JamStatus.Upcoming;
 
-    [Required]
-    public Guid CreatedBy { get; set; }
+    [Required] public Guid CreatedBy { get; set; }
   }
 }

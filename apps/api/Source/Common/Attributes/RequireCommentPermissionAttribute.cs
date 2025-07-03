@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using System.Security.Claims;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
-using GameGuild.Modules.Comment.Models;
 using GameGuild.Modules.Auth.Constants;
+using GameGuild.Modules.Comments.Models;
+using GameGuild.Modules.Permissions.Models;
 
 
 namespace GameGuild.Common.Attributes;

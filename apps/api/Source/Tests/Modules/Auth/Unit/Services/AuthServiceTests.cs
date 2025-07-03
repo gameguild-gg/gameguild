@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
-using UserModel = GameGuild.Modules.User.Models.User;
-using GameGuild.Modules.User.Models;
-using GameGuild.Modules.Tenant.Services;
-using GameGuild.Modules.Tenant.Models;
+using UserModel = GameGuild.Modules.Users.Models.User;
 using System.Security.Claims;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Tenants.Services;
+using GameGuild.Modules.Users.Models;
 
 
 namespace GameGuild.Tests.Modules.Auth.Unit.Services;
@@ -284,7 +284,7 @@ public class AuthServiceTests : IDisposable {
       TenantId = invalidTenantId,
     };
 
-    var user = new GameGuild.Modules.User.Models.User { Email = "web3user@example.com", Name = "Web3 User" };
+    var user = new UserModel { Email = "web3user@example.com", Name = "Web3 User" };
 
     _mockWeb3Service.Setup(x => x.VerifySignatureAsync(request)).ReturnsAsync(true);
 

@@ -1,12 +1,12 @@
-using Xunit;
-using Microsoft.EntityFrameworkCore;
-using GameGuild.Data;
 using GameGuild.Common.Services;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Tenant.Models;
+using GameGuild.Data;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Tenants.Models;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
 
 
-namespace GameGuild.Tests.Modules.Permission.Unit.Services;
+namespace GameGuild.Tests.Modules.Permissions.Unit.Services;
 
 /// <summary>
 /// Unit tests for PermissionService - Layer 1 (Tenant-wide permissions)

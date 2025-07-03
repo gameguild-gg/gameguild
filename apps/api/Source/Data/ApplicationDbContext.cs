@@ -3,21 +3,24 @@ using GameGuild.Common.Data;
 using System.Reflection;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Auth.Models;
-using GameGuild.Modules.Certificate.Models;
-using GameGuild.Modules.Comment.Models;
-using GameGuild.Modules.Feedback.Models;
+using GameGuild.Modules.Certificates.Models;
+using GameGuild.Modules.Comments.Models;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Feedbacks.Models;
 using GameGuild.Modules.Kyc.Models;
-using GameGuild.Modules.Payment.Models;
-using GameGuild.Modules.Product.Models;
-using GameGuild.Modules.Program.Models;
-using GameGuild.Modules.Project.Models;
-using GameGuild.Modules.Reputation.Models;
-using GameGuild.Modules.Subscription.Models;
-using GameGuild.Modules.Tag.Models;
-using GameGuild.Modules.Tenant.Models;
+using GameGuild.Modules.Localizations.Models;
+using GameGuild.Modules.Payments.Models;
+using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Projects.Models;
+using GameGuild.Modules.Reputations.Models;
+using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Subscriptions.Models;
+using GameGuild.Modules.Tags.Models;
+using GameGuild.Modules.Tenants.Models;
 using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Modules.User.Models;
-using Tag = GameGuild.Modules.Tag.Models.Tag;
+using GameGuild.Modules.Users.Models;
+using Tag = GameGuild.Modules.Tags.Models.Tag;
 
 
 namespace GameGuild.Data;
@@ -121,7 +124,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<SessionWaitlist> SessionWaitlists { get; set; } // Program Management DbSets
 
-  public DbSet<Modules.Program.Models.Program> Programs { get; set; }
+  public DbSet<Modules.Programs.Models.Program> Programs { get; set; }
 
   public DbSet<ProgramContent> ProgramContents { get; set; }
 

@@ -1,13 +1,13 @@
-using Xunit;
+using GameGuild.Common.Services;
+using GameGuild.Data;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Projects.Models;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using GameGuild.Data;
-using GameGuild.Modules.Project.Models;
-using GameGuild.Common.Services;
-using GameGuild.Common.Entities;
+using Xunit;
 
 
-namespace GameGuild.Tests.Modules.Project.E2E.API;
+namespace GameGuild.Tests.Modules.Projects.E2E.API;
 
 /// <summary>
 /// Integration tests for Project DAC (Data Access Control) permission system
@@ -34,7 +34,7 @@ public class ProjectDACIntegrationTests : IDisposable {
     var tenantId = Guid.NewGuid();
     var projectId = Guid.NewGuid();
 
-    var project = new GameGuild.Modules.Project.Models.Project { Id = projectId, Title = "Test Project", Description = "Test project for DAC", CreatedById = userId };
+    var project = new Project { Id = projectId, Title = "Test Project", Description = "Test project for DAC", CreatedById = userId };
 
     var projectPermission = new ProjectPermission { UserId = userId, TenantId = tenantId, ResourceId = projectId, ExpiresAt = DateTime.UtcNow.AddDays(30) };
     projectPermission.AddPermission(PermissionType.Edit);
@@ -45,7 +45,7 @@ public class ProjectDACIntegrationTests : IDisposable {
 
     // Mock the permission service to return true for resource permission
     _mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, Project>(
                userId,
                tenantId,
                projectId,
@@ -83,7 +83,7 @@ public class ProjectDACIntegrationTests : IDisposable {
 
     // Mock the permission service hierarchy
     _mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, Project>(
                userId,
                tenantId,
                projectId,
@@ -117,7 +117,7 @@ public class ProjectDACIntegrationTests : IDisposable {
 
     // Mock the permission service hierarchy
     _mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, Project>(
                userId,
                tenantId,
                projectId,
@@ -154,7 +154,7 @@ public class ProjectDACIntegrationTests : IDisposable {
 
     // Mock all permission levels to return false
     _mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, Project>(
                userId,
                tenantId,
                projectId,
@@ -200,7 +200,7 @@ public class ProjectDACIntegrationTests : IDisposable {
 
     // Mock the permission service
     _mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, Project>(
                userId,
                tenantId,
                projectId,
@@ -251,7 +251,7 @@ public class ProjectDACIntegrationTests : IDisposable {
     await _context.SaveChangesAsync();
 
     _mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, Project>(
                userId,
                tenantId,
                projectId,
@@ -304,7 +304,7 @@ public class ProjectDACIntegrationTests : IDisposable {
 
     // Mock permission service responses
     _mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, Project>(
                user1Id,
                tenantId,
                project1Id,
@@ -314,7 +314,7 @@ public class ProjectDACIntegrationTests : IDisposable {
       .ReturnsAsync(true);
 
     _mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, Project>(
                user1Id,
                tenantId,
                project2Id,
@@ -324,7 +324,7 @@ public class ProjectDACIntegrationTests : IDisposable {
       .ReturnsAsync(false);
 
     _mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, Project>(
                user2Id,
                tenantId,
                project2Id,
@@ -334,7 +334,7 @@ public class ProjectDACIntegrationTests : IDisposable {
       .ReturnsAsync(true);
 
     _mockPermissionService
-      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+      .Setup(x => x.HasResourcePermissionAsync<ProjectPermission, Project>(
                user2Id,
                tenantId,
                project1Id,
@@ -394,7 +394,7 @@ public class ProjectDACIntegrationTests : IDisposable {
     Guid tenantId, Guid projectId, PermissionType permissionType
   ) {
     // Layer 1: Check resource-specific permissions
-    if (await permissionService.HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+    if (await permissionService.HasResourcePermissionAsync<ProjectPermission, Project>(
           userId,
           tenantId,
           projectId,

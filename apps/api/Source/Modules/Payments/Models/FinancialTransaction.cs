@@ -1,13 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
-using GameGuild.Modules.Product.Models;
+using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Users.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Payment.Models;
+namespace GameGuild.Modules.Payments.Models;
 
 [Table("financial_transactions")]
 [Index(nameof(FromUserId))]
@@ -31,11 +32,9 @@ public class FinancialTransaction : BaseEntity {
 
   public TransactionType Type { get; set; }
 
-  [Column(TypeName = "decimal(10,2)")]
-  public decimal Amount { get; set; }
+  [Column(TypeName = "decimal(10,2)")] public decimal Amount { get; set; }
 
-  [MaxLength(3)]
-  public string Currency { get; set; } = "USD";
+  [MaxLength(3)] public string Currency { get; set; } = "USD";
 
   public TransactionStatus Status { get; set; } = TransactionStatus.Pending;
 
@@ -102,17 +101,13 @@ public class FinancialTransaction : BaseEntity {
   public string? ErrorMessage { get; set; }
 
   // Navigation properties
-  [ForeignKey(nameof(FromUserId))]
-  public virtual User.Models.User? FromUser { get; set; }
+  [ForeignKey(nameof(FromUserId))] public virtual User? FromUser { get; set; }
 
-  [ForeignKey(nameof(ToUserId))]
-  public virtual User.Models.User? ToUser { get; set; }
+  [ForeignKey(nameof(ToUserId))] public virtual User? ToUser { get; set; }
 
-  [ForeignKey(nameof(PaymentMethodId))]
-  public virtual UserFinancialMethod? PaymentMethod { get; set; }
+  [ForeignKey(nameof(PaymentMethodId))] public virtual UserFinancialMethod? PaymentMethod { get; set; }
 
-  [ForeignKey(nameof(PromoCodeId))]
-  public virtual PromoCode? PromoCode { get; set; }
+  [ForeignKey(nameof(PromoCodeId))] public virtual PromoCode? PromoCode { get; set; }
 
   public virtual ICollection<PromoCodeUse> PromoCodeUses { get; set; } = new List<PromoCodeUse>();
 }

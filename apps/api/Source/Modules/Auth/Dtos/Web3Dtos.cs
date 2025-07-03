@@ -6,8 +6,7 @@ namespace GameGuild.Modules.Auth.Dtos {
   /// Request DTO for Web3 authentication challenge generation
   /// </summary>
   public class Web3ChallengeRequestDto {
-    [Required]
-    public string WalletAddress { get; set; } = string.Empty;
+    [Required] public string WalletAddress { get; set; } = string.Empty;
 
     public string? ChainId { get; set; }
   }
@@ -27,14 +26,11 @@ namespace GameGuild.Modules.Auth.Dtos {
   /// Request DTO for Web3 authentication verification
   /// </summary>
   public class Web3VerifyRequestDto {
-    [Required]
-    public string WalletAddress { get; set; } = string.Empty;
+    [Required] public string WalletAddress { get; set; } = string.Empty;
 
-    [Required]
-    public string Signature { get; set; } = string.Empty;
+    [Required] public string Signature { get; set; } = string.Empty;
 
-    [Required]
-    public string Nonce { get; set; } = string.Empty;
+    [Required] public string Nonce { get; set; } = string.Empty;
 
     public string? ChainId { get; set; }
 

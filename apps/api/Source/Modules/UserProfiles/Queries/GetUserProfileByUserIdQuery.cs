@@ -1,7 +1,7 @@
 using MediatR;
 
 
-namespace GameGuild.Modules.UserProfile.Queries;
+namespace GameGuild.Modules.UserProfiles.Queries;
 
 /// <summary>
 /// Query to get user profile by user ID

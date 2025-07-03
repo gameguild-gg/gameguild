@@ -1,3 +1,4 @@
+using GameGuild.Modules.Users.Models;
 using MediatR;
 
 
@@ -6,7 +7,7 @@ namespace GameGuild.Modules.Auth.Commands;
 /// <summary>
 /// Command to update the user profile with validation
 /// </summary>
-public class UpdateUserProfileCommand : IRequest<User.Models.User> {
+public class UpdateUserProfileCommand : IRequest<User> {
   public Guid UserId { get; set; }
 
   public string? Name { get; set; }

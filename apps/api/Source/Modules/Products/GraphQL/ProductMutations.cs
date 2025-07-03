@@ -1,14 +1,16 @@
-using GameGuild.Modules.Product.Services;
-using ProductEntity = GameGuild.Modules.Product.Models.Product;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Products.Services;
+using GameGuild.Modules.Users.GraphQL;
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 using PromoCodeTypeEnum = GameGuild.Common.Enums.PromoCodeType;
 
 
-namespace GameGuild.Modules.Product.GraphQL;
+namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary>
 /// GraphQL mutations for Product module
 /// </summary>
-[ExtendObjectType<GameGuild.Modules.User.GraphQL.Mutation>]
+[ExtendObjectType<Mutation>]
 public class ProductMutations {
   /// <summary>
   /// Creates a new product
@@ -89,7 +91,7 @@ public class ProductMutations {
   /// Sets product visibility
   /// </summary>
   public async Task<ProductEntity?> SetProductVisibility(
-    Guid id, Common.Entities.AccessLevel visibility,
+    Guid id, AccessLevel visibility,
     [Service] IProductService productService
   ) {
     return await productService.SetVisibilityAsync(id, visibility);

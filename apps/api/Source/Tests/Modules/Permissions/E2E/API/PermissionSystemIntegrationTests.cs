@@ -1,14 +1,14 @@
-using Xunit;
-using Microsoft.EntityFrameworkCore;
-using GameGuild.Data;
 using GameGuild.Common.Services;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Tenant.Models;
-using GameGuild.Modules.Comment.Models;
+using GameGuild.Data;
+using GameGuild.Modules.Comments.Models;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Tenants.Models;
 using GameGuild.Tests.Fixtures;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
 
 
-namespace GameGuild.Tests.Modules.Permission.E2E.API;
+namespace GameGuild.Tests.Modules.Permissions.E2E.API;
 
 /// <summary>
 /// Integration tests for the complete Permission System

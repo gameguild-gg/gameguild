@@ -1,7 +1,7 @@
-using GameGuild.Modules.Comment.Models;
+using GameGuild.Modules.Resources.Models;
 
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Modules.Comments.Models;
 
 /// <summary>
 /// Represents a comment on a commentable entity.

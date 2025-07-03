@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Jam.Models {
+namespace GameGuild.Modules.GameJams.Models {
   public enum JamStatus {
     Upcoming,
     Active,

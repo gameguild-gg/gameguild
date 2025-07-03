@@ -1,13 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
-using GameGuild.Modules.Payment.Models;
+using GameGuild.Modules.Payments.Models;
+using GameGuild.Modules.Users.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Product.Models;
+namespace GameGuild.Modules.Products.Models;
 
 /// <summary>
 /// Entity representing promotional codes for discounts
@@ -114,7 +115,7 @@ public class PromoCode : BaseEntity {
   /// Navigation property to the user who created this promo code
   /// </summary>
   [ForeignKey(nameof(CreatedBy))]
-  public virtual User.Models.User CreatedByUser { get; set; } = null!;
+  public virtual User CreatedByUser { get; set; } = null!;
 
   /// <summary>
   /// Navigation property to promo code usage records

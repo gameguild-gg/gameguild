@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Users.Models;
 
 
 namespace GameGuild.Modules.TestingLab.Models {
@@ -22,13 +23,11 @@ namespace GameGuild.Modules.TestingLab.Models {
     /// <summary>
     /// Navigation property to the user
     /// </summary>
-    public virtual Modules.User.Models.User User { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
 
-    [Required]
-    public RegistrationType RegistrationType { get; set; }
+    [Required] public RegistrationType RegistrationType { get; set; }
 
-    [Required]
-    public int Position { get; set; }
+    [Required] public int Position { get; set; }
 
     public string? RegistrationNotes { get; set; }
   }

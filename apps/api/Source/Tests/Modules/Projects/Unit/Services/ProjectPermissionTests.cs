@@ -1,9 +1,10 @@
-using Xunit;
-using GameGuild.Modules.Project.Models;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Projects.Models;
+using Xunit;
 
 
-namespace GameGuild.Tests.Modules.Project.Unit.Services;
+namespace GameGuild.Tests.Modules.Projects.Unit.Services;
 
 /// <summary>
 /// Unit tests for ProjectPermission model
@@ -157,7 +158,7 @@ public class ProjectPermissionTests {
     var permission = new ProjectPermission();
 
     // Assert
-    Assert.IsAssignableFrom<ResourcePermission<GameGuild.Modules.Project.Models.Project>>(permission);
+    Assert.IsAssignableFrom<ResourcePermission<Project>>(permission);
   }
 
   [Fact]

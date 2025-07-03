@@ -2,6 +2,7 @@ using HotChocolate.Resolvers;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using System.Security.Claims;
+using GameGuild.Modules.Permissions.Models;
 
 
 namespace GameGuild.Common.GraphQL.Authorization;

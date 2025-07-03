@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Data;
-using GameGuild.Modules.Program.DTOs;
-using GameGuild.Modules.Program.Services;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.Modules.Programs.Services;
 using Xunit;
 
 

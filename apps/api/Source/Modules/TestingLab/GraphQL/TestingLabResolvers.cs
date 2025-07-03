@@ -1,6 +1,7 @@
 using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Modules.Project.Models;
 using GameGuild.Data;
+using GameGuild.Modules.Projects.Models;
+using GameGuild.Modules.Users.Models;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -17,7 +18,7 @@ public class TestingRequestResolvers {
     return await context.Set<ProjectVersion>().FirstOrDefaultAsync(pv => pv.Id == request.ProjectVersionId);
   }
 
-  public async Task<User.Models.User?> GetCreatedBy(
+  public async Task<User?> GetCreatedBy(
     [Parent] TestingRequest request,
     [Service] ApplicationDbContext context
   ) {

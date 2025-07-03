@@ -1,13 +1,13 @@
-using GameGuild.Modules.Tenant.Models;
-using GameGuild.Modules.Tenant.Services;
-using GameGuild.Modules.User.GraphQL;
-using GameGuild.Common.Services;
-using GameGuild.Common.Entities;
 using System.Security.Claims;
+using GameGuild.Common.Services;
 using GameGuild.Modules.Auth.Constants;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Tenants.Services;
+using GameGuild.Modules.Users.GraphQL;
 
 
-namespace GameGuild.Modules.Tenant.GraphQL;
+namespace GameGuild.Modules.Tenants.GraphQL;
 
 /// <summary>
 /// GraphQL mutations for Tenant module

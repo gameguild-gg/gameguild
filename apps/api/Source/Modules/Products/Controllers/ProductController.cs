@@ -1,13 +1,14 @@
-using Microsoft.AspNetCore.Mvc;
-using GameGuild.Common.Enums;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Product.Models;
 using GameGuild.Common.Attributes;
-using GameGuild.Modules.Product.Services;
-using ProductEntity = GameGuild.Modules.Product.Models.Product;
+using GameGuild.Common.Enums;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Products.Services;
+using Microsoft.AspNetCore.Mvc;
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 
 
-namespace GameGuild.Modules.Product.Controllers;
+namespace GameGuild.Modules.Products.Controllers;
 
 /// <summary>
 /// REST API controller for managing products

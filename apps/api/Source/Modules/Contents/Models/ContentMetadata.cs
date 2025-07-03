@@ -1,14 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Modules.Contents.Models;
 
 /// <summary>
 /// Stores statistics and metadata for content.
 /// </summary>
 public class ContentMetadata {
-  [Key]
-  public Guid Id { get; set; }
+  [Key] public Guid Id { get; set; }
 
   /// <summary>
   /// Navigation property to the content
@@ -37,8 +36,7 @@ public class ContentMetadata {
   [MaxLength(160)]
   public string? MetaDescription { get; set; }
 
-  [MaxLength(255)]
-  public string? MetaKeywords { get; set; }
+  [MaxLength(255)] public string? MetaKeywords { get; set; }
 
   /// <summary>
   /// Timestamps for analytics

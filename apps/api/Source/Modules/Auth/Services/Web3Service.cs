@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.User.Models;
+using GameGuild.Modules.Users.Models;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -11,7 +11,7 @@ namespace GameGuild.Modules.Auth.Services {
 
     Task<bool> VerifySignatureAsync(Web3VerifyRequestDto request);
 
-    Task<User.Models.User> FindOrCreateWeb3UserAsync(string walletAddress, string chainId);
+    Task<User> FindOrCreateWeb3UserAsync(string walletAddress, string chainId);
   }
 
   public class Web3Service(ApplicationDbContext context, ILogger<Web3Service> logger) : IWeb3Service {
@@ -75,15 +75,15 @@ namespace GameGuild.Modules.Auth.Services {
       return isValidSignature;
     }
 
-    public async Task<User.Models.User> FindOrCreateWeb3UserAsync(string walletAddress, string chainId = "1") {
+    public async Task<User> FindOrCreateWeb3UserAsync(string walletAddress, string chainId = "1") {
       // Try to find user by wallet address in credentials
       var credential = await context.Credentials.Include(c => c.User)
-                                     .FirstOrDefaultAsync(c => c.Type == "web3_wallet" && c.Value == walletAddress.ToLower());
+                                    .FirstOrDefaultAsync(c => c.Type == "web3_wallet" && c.Value == walletAddress.ToLower());
 
       if (credential?.User != null) return credential.User;
 
       // Create new user with wallet address
-      var user = new User.Models.User {
+      var user = new User {
         Id = Guid.NewGuid(),
         Name = $"User_{walletAddress[..8]}...", // Use first 8 chars of wallet as username
         Email = $"{walletAddress.ToLower()}@web3.local", // Placeholder email

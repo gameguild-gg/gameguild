@@ -1,12 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 
 
-namespace GameGuild.Modules.User.GraphQL;
+namespace GameGuild.Modules.Users.GraphQL;
 
 public class CreateUserInput {
-  [Required]
-  [StringLength(100)]
-  public string Name { get; set; } = string.Empty;
+  [Required] [StringLength(100)] public string Name { get; set; } = string.Empty;
 
   [Required]
   [EmailAddress]
@@ -17,15 +15,11 @@ public class CreateUserInput {
 }
 
 public class UpdateUserInput {
-  [Required]
-  public Guid Id { get; set; }
+  [Required] public Guid Id { get; set; }
 
-  [StringLength(100)]
-  public string? Name { get; set; }
+  [StringLength(100)] public string? Name { get; set; }
 
-  [EmailAddress]
-  [StringLength(255)]
-  public string? Email { get; set; }
+  [EmailAddress] [StringLength(255)] public string? Email { get; set; }
 
   public bool? IsActive { get; set; }
 }

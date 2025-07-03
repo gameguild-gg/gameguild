@@ -1,9 +1,9 @@
+using GameGuild.Modules.Users.Commands;
+using GameGuild.Modules.Users.Services;
 using MediatR;
-using GameGuild.Modules.User.Commands;
-using GameGuild.Modules.User.Services;
 
 
-namespace GameGuild.Modules.User.Handlers;
+namespace GameGuild.Modules.Users.Handlers;
 
 /// <summary>
 /// Handler for creating a new user

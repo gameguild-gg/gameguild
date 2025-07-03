@@ -1,14 +1,16 @@
-using GameGuild.Modules.Project.Services;
-using GameGuild.Common.Entities;
 using GameGuild.Common.Attributes;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Projects.Services;
+using GameGuild.Modules.Users.GraphQL;
 
 
-namespace GameGuild.Modules.Project.GraphQL;
+namespace GameGuild.Modules.Projects.GraphQL;
 
 /// <summary>
 /// GraphQL mutations for Project module
 /// </summary>
-[ExtendObjectType<GameGuild.Modules.User.GraphQL.Mutation>]
+[ExtendObjectType<Mutation>]
 public class ProjectMutations {
   /// <summary>
   /// Creates a new project

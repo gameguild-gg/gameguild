@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Users.Models;
 
 
 namespace GameGuild.Modules.TestingLab.Models {
@@ -22,15 +23,13 @@ namespace GameGuild.Modules.TestingLab.Models {
     /// <summary>
     /// Navigation property to the user
     /// </summary>
-    public virtual Modules.User.Models.User User { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
 
-    [Required]
-    public bool InstructionsAcknowledged { get; set; } = false;
+    [Required] public bool InstructionsAcknowledged { get; set; } = false;
 
     public DateTime? InstructionsAcknowledgedAt { get; set; }
 
-    [Required]
-    public DateTime StartedAt { get; set; } = DateTime.UtcNow;
+    [Required] public DateTime StartedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? CompletedAt { get; set; }
   }

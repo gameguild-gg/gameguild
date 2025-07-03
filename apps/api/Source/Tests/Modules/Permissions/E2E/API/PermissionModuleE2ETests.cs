@@ -1,20 +1,21 @@
-using Xunit;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using GameGuild.Data;
 using GameGuild.Common.Entities;
-using GameGuild.Modules.Tenant.Models;
-using GameGuild.Modules.Comment.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Net.Http.Headers;
-using GameGuild.Modules.Auth.Services;
+using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
+using GameGuild.Modules.Auth.Services;
+using GameGuild.Modules.Comments.Models;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Tenants.Models;
 using GameGuild.Tests.Fixtures;
-using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
-using UserModel = GameGuild.Modules.User.Models.User;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
+using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.Tests.Modules.Permission.E2E;
+namespace GameGuild.Tests.Modules.Permissions.E2E.API;
 
 /// <summary>
 /// End-to-end tests for Permission Module APIs

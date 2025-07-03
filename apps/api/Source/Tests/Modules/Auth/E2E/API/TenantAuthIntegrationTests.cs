@@ -3,14 +3,14 @@ using System.Text;
 using System.Text.Json;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.Tenant.Models;
-using GameGuild.Modules.User.Models;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Users.Models;
 using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
-using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
-using UserModel = GameGuild.Modules.User.Models.User;
+using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
 
 namespace GameGuild.Tests.Modules.Auth.E2E.API;

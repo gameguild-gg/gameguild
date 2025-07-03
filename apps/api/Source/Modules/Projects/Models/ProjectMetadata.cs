@@ -1,14 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 
 
-namespace GameGuild.Modules.Project.Models;
+namespace GameGuild.Modules.Projects.Models;
 
 /// <summary>
 /// Stores statistics and metadata for a project.
 /// </summary>
 public class ProjectMetadata {
-  [Key]
-  public Guid Id { get; set; }
+  [Key] public Guid Id { get; set; }
 
   /// <summary>
   /// Navigation property to the project

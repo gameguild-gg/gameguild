@@ -1,5 +1,6 @@
+using GameGuild.Modules.Projects.Models;
 using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Modules.Project.Models;
+using GameGuild.Modules.Users.Models;
 
 
 namespace GameGuild.Modules.TestingLab.GraphQL;
@@ -68,7 +69,7 @@ public class TestingRequestType : ObjectType<TestingRequest> {
 
     descriptor.Field("createdBy")
               .ResolveWith<TestingRequestResolvers>(r => r.GetCreatedBy(default!, default!))
-              .Type<ObjectType<User.Models.User>>()
+              .Type<ObjectType<User>>()
               .Description("The user who created this testing request.");
 
     descriptor.Field("participants")

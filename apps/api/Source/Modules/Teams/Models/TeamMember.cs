@@ -1,7 +1,7 @@
 using GameGuild.Common.Entities;
 
 
-namespace GameGuild.Models {
+namespace GameGuild.Modules.Teams.Models {
   public class TeamMember : BaseEntity {
     public Guid TeamId { get; set; }
 

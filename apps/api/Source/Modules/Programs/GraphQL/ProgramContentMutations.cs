@@ -1,15 +1,16 @@
 using GameGuild.Common.GraphQL.Authorization;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Program.Interfaces;
-using GameGuild.Modules.Program.Models;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Programs.Interfaces;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Users.GraphQL;
 using ProgramContentTypeEnum = GameGuild.Common.Enums.ProgramContentType;
 using VisibilityEnum = GameGuild.Common.Enums.Visibility;
 using GradingMethodEnum = GameGuild.Common.Enums.GradingMethod;
 
 
-namespace GameGuild.Modules.Program.GraphQL;
+namespace GameGuild.Modules.Programs.GraphQL;
 
-[ExtendObjectType<GameGuild.Modules.User.GraphQL.Mutation>]
+[ExtendObjectType<Mutation>]
 public class ProgramContentMutations {
   /// <summary>
   /// Create new program content (Resource Level: Create permission required for the parent Program)
@@ -72,11 +73,9 @@ public class ProgramContentMutations {
     var existingContent = await contentService.GetContentByIdAsync(contentId);
 
     if (existingContent == null) throw new ArgumentException($"Content with ID {contentId} not found");
-    
+
     // Verify the content belongs to the specified program
-    if (existingContent.ProgramId != programId) {
-      throw new ArgumentException($"Content {contentId} does not belong to program {programId}");
-    }
+    if (existingContent.ProgramId != programId) { throw new ArgumentException($"Content {contentId} does not belong to program {programId}"); }
 
     // Update only provided fields
     if (title != null) existingContent.Title = title;
@@ -99,20 +98,18 @@ public class ProgramContentMutations {
   /// </summary>
   [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Delete, "programId")]
   public async Task<bool> DeleteContentAsync(
-    [Service] IProgramContentService contentService, 
-    Guid programId, 
+    [Service] IProgramContentService contentService,
+    Guid programId,
     Guid contentId
-  ) { 
+  ) {
     var existingContent = await contentService.GetContentByIdAsync(contentId);
-    
+
     if (existingContent == null) return false;
-    
+
     // Verify the content belongs to the specified program
-    if (existingContent.ProgramId != programId) {
-      throw new ArgumentException($"Content {contentId} does not belong to program {programId}");
-    }
-    
-    return await contentService.DeleteContentAsync(contentId); 
+    if (existingContent.ProgramId != programId) { throw new ArgumentException($"Content {contentId} does not belong to program {programId}"); }
+
+    return await contentService.DeleteContentAsync(contentId);
   }
 
   /// <summary>
@@ -121,21 +118,19 @@ public class ProgramContentMutations {
   /// </summary>
   [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
   public async Task<bool> MoveContentAsync(
-    [Service] IProgramContentService contentService, 
+    [Service] IProgramContentService contentService,
     Guid programId,
     Guid contentId,
-    Guid? newParentId, 
+    Guid? newParentId,
     int newSortOrder = 0
   ) {
     var existingContent = await contentService.GetContentByIdAsync(contentId);
-    
+
     if (existingContent == null) return false;
-    
+
     // Verify the content belongs to the specified program
-    if (existingContent.ProgramId != programId) {
-      throw new ArgumentException($"Content {contentId} does not belong to program {programId}");
-    }
-    
+    if (existingContent.ProgramId != programId) { throw new ArgumentException($"Content {contentId} does not belong to program {programId}"); }
+
     return await contentService.MoveContentAsync(contentId, newParentId, newSortOrder);
   }
 

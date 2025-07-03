@@ -4,6 +4,7 @@ using System.Security.Claims;
 using GameGuild.Common.Services;
 using GameGuild.Common.Entities;
 using GameGuild.Modules.Auth.Constants;
+using GameGuild.Modules.Permissions.Models;
 
 
 namespace GameGuild.Common.Attributes;

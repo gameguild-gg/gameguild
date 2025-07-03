@@ -1,13 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Diagnostics.CodeAnalysis;
+using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Tenants.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Tenant.Models;
 
 
-namespace GameGuild.Modules.Reputation.Models;
+namespace GameGuild.Modules.Reputations.Models;
 
 /// <summary>
 /// Tracks a user's reputation score and tier within a specific tenant context
@@ -23,13 +22,9 @@ public class UserTenantReputation : ResourceBase, IReputation {
   /// </summary>
   [Required]
   [ForeignKey(nameof(TenantPermissionId))]
-  public required TenantPermission TenantPermission {
-    get;
-    set;
-  }
+  public required TenantPermission TenantPermission { get; set; }
 
-  [Required]
-  public Guid TenantPermissionId { get; set; }
+  [Required] public Guid TenantPermissionId { get; set; }
 
   /// <summary>
   /// Current reputation score

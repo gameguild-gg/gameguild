@@ -1,9 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Common.Entities;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Modules.Resources.Models;
 
 /// <summary>
 /// Entity for storing additional metadata about resources

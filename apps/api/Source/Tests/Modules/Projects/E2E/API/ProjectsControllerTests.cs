@@ -1,20 +1,23 @@
-using Xunit;
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
+using System.Net.Http.Headers;
 using System.Text;
-using GameGuild.Data;
-using GameGuild.Common.Entities;
+using System.Text.Json;
 using GameGuild.Common.Enums;
 using GameGuild.Common.Services;
-using GameGuild.Tests.Fixtures;
-using GameGuild.Modules.Auth.Services;
+using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
-using System.Net.Http.Headers;
+using GameGuild.Modules.Auth.Services;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Projects.Models;
+using GameGuild.Modules.Users.Models;
+using GameGuild.Tests.Fixtures;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
 using Xunit.Abstractions;
-using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
+using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
 
 
-namespace GameGuild.Tests.Modules.Project.E2E;
+namespace GameGuild.Tests.Modules.Projects.E2E.API;
 
 /// <summary>
 /// Integration tests for ProjectsController
@@ -71,7 +74,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
     // Assert
     Assert.True(response.IsSuccessStatusCode, $"Expected success but got {response.StatusCode}. Content: {content}");
-    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(
+    var projects = JsonSerializer.Deserialize<Project[]>(
       content,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -92,7 +95,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
-    var project1 = new GameGuild.Modules.Project.Models.Project {
+    var project1 = new Project {
       Title = "Test Project 1",
       Description = "Description 1",
       Status = ContentStatus.Published,
@@ -103,7 +106,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       TenantId = tenant.Id,
     };
 
-    var project2 = new GameGuild.Modules.Project.Models.Project {
+    var project2 = new Project {
       Title = "Test Project 2",
       Description = "Description 2",
       Status = ContentStatus.Published,
@@ -123,7 +126,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     // Assert
     Assert.True(response.IsSuccessStatusCode);
     var content = await response.Content.ReadAsStringAsync();
-    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(
+    var projects = JsonSerializer.Deserialize<Project[]>(
       content,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -147,7 +150,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Create });
 
     // Create a proper Project object instead of an anonymous object
-    var project = new GameGuild.Modules.Project.Models.Project {
+    var project = new Project {
       Title = "New Test Project",
       Description = "This is a test project",
       ShortDescription = "Test project",
@@ -179,7 +182,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       $"Expected success status code but got {response.StatusCode}. Content: {responseContent}"
     );
 
-    var createdProject = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project>(
+    var createdProject = JsonSerializer.Deserialize<Project>(
       responseContent,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -233,7 +236,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
-    var project = new GameGuild.Modules.Project.Models.Project {
+    var project = new Project {
       Title = "Specific Test Project",
       Description = "This is a specific test project",
       Status = ContentStatus.Published,
@@ -252,7 +255,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     Assert.True(response.IsSuccessStatusCode);
 
     var content = await response.Content.ReadAsStringAsync();
-    var returnedProject = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project>(
+    var returnedProject = JsonSerializer.Deserialize<Project>(
       content,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -291,7 +294,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     // Create test user for project ownership
     var user = await CreateTestUserAsync();
 
-    var project = new GameGuild.Modules.Project.Models.Project {
+    var project = new Project {
       Title = "Slug Test Project",
       Description = "This project tests slug functionality",
       Status = ContentStatus.Published,
@@ -300,7 +303,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     };
 
     // Manually set the slug using the Project's GenerateSlug method
-    project.Slug = GameGuild.Modules.Project.Models.Project.GenerateSlug(project.Title);
+    project.Slug = Project.GenerateSlug(project.Title);
 
     _context.Projects.Add(project);
     await _context.SaveChangesAsync(); // Debug: Verify the project was saved
@@ -329,7 +332,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       $"Expected success but got {response.StatusCode}. Content: {responseContent}"
     );
 
-    var returnedProject = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project>(
+    var returnedProject = JsonSerializer.Deserialize<Project>(
       responseContent,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -364,7 +367,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
     var categoryId = Guid.NewGuid();
 
-    var project1 = new GameGuild.Modules.Project.Models.Project {
+    var project1 = new Project {
       Title = "Category Project 1",
       CategoryId = categoryId,
       Status = ContentStatus.Published,
@@ -373,7 +376,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       TenantId = tenant.Id,
     };
 
-    var project2 = new GameGuild.Modules.Project.Models.Project {
+    var project2 = new Project {
       Title = "Category Project 2",
       CategoryId = categoryId,
       Status = ContentStatus.Published,
@@ -382,7 +385,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       TenantId = tenant.Id,
     };
 
-    var project3 = new GameGuild.Modules.Project.Models.Project {
+    var project3 = new Project {
       Title = "Other Category Project",
       CategoryId = Guid.NewGuid(), // Different category
       Status = ContentStatus.Published,
@@ -401,7 +404,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     Assert.True(response.IsSuccessStatusCode);
 
     var content = await response.Content.ReadAsStringAsync();
-    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(
+    var projects = JsonSerializer.Deserialize<Project[]>(
       content,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -425,7 +428,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
-    var publishedProject = new GameGuild.Modules.Project.Models.Project {
+    var publishedProject = new Project {
       Title = "Published Project",
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
@@ -433,7 +436,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       TenantId = tenant.Id,
     };
 
-    var draftProject = new GameGuild.Modules.Project.Models.Project {
+    var draftProject = new Project {
       Title = "Draft Project",
       Status = ContentStatus.Draft,
       Visibility = AccessLevel.Public,
@@ -451,7 +454,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     Assert.True(response.IsSuccessStatusCode);
 
     var content = await response.Content.ReadAsStringAsync();
-    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(
+    var projects = JsonSerializer.Deserialize<Project[]>(
       content,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -475,7 +478,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
     _context.Tenants.Add(tenant);
 
-    var publicProject = new GameGuild.Modules.Project.Models.Project {
+    var publicProject = new Project {
       Title = "Public Project",
       Description = "A public project",
       Status = ContentStatus.Published,
@@ -484,7 +487,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       CreatedById = user.Id,
     };
 
-    var privateProject = new GameGuild.Modules.Project.Models.Project {
+    var privateProject = new Project {
       Title = "Private Project",
       Description = "A private project",
       Status = ContentStatus.Published,
@@ -493,7 +496,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       CreatedById = user.Id,
     };
 
-    var draftProject = new GameGuild.Modules.Project.Models.Project {
+    var draftProject = new Project {
       Title = "Draft Public Project",
       Description = "A draft project",
       Status = ContentStatus.Draft,
@@ -526,7 +529,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     // Assert
     Assert.True(response.IsSuccessStatusCode, $"Expected success but got {response.StatusCode}. Content: {content}");
 
-    var projects = JsonSerializer.Deserialize<GameGuild.Modules.Project.Models.Project[]>(
+    var projects = JsonSerializer.Deserialize<Project[]>(
       content,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -538,8 +541,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
   #region Helper Methods
 
-  private async Task<GameGuild.Modules.User.Models.User> CreateTestUserAsync() {
-    var user = new GameGuild.Modules.User.Models.User { Id = Guid.NewGuid(), Name = "Test User", Email = "test@example.com", IsActive = true };
+  private async Task<User> CreateTestUserAsync() {
+    var user = new User { Id = Guid.NewGuid(), Name = "Test User", Email = "test@example.com", IsActive = true };
 
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -556,7 +559,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     return tenant;
   }
 
-  private Task<string> CreateJwtTokenForUserAsync(GameGuild.Modules.User.Models.User user, TenantModel tenant) {
+  private Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant) {
     var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
@@ -569,17 +572,17 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
   }
 
   private async Task GrantProjectPermissions(
-    GameGuild.Modules.User.Models.User user, TenantModel tenant,
-    GameGuild.Modules.Project.Models.Project project, PermissionType[] permissions
+    User user, TenantModel tenant,
+    Project project, PermissionType[] permissions
   ) {
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
     await permissionService
-      .GrantResourcePermissionAsync<GameGuild.Modules.Project.Models.ProjectPermission,
-        GameGuild.Modules.Project.Models.Project>(user.Id, tenant.Id, project.Id, permissions);
+      .GrantResourcePermissionAsync<ProjectPermission,
+        Project>(user.Id, tenant.Id, project.Id, permissions);
   }
 
   private async Task GrantContentTypePermissions(
-    GameGuild.Modules.User.Models.User user, TenantModel tenant, string contentTypeName,
+    User user, TenantModel tenant, string contentTypeName,
     PermissionType[] permissions
   ) {
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();

@@ -1,9 +1,9 @@
+using GameGuild.Modules.Users.Queries;
+using GameGuild.Modules.Users.Services;
 using MediatR;
-using GameGuild.Modules.User.Queries;
-using GameGuild.Modules.User.Services;
 
 
-namespace GameGuild.Modules.User.Handlers;
+namespace GameGuild.Modules.Users.Handlers;
 
 /// <summary>
 /// Handler for getting all users

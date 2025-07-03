@@ -1,13 +1,14 @@
-using Xunit;
-using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
-using GameGuild.Data;
-using GameGuild.Modules.Project.Services;
-using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Data;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Projects.Models;
+using GameGuild.Modules.Projects.Services;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
 
 
-namespace GameGuild.Tests.Modules.Project.Performance;
+namespace GameGuild.Tests.Modules.Projects.Performance;
 
 /// <summary>
 /// Performance tests for Project operations
@@ -30,7 +31,7 @@ public class ProjectPerformanceTests : IDisposable {
   [Fact]
   public async Task CreateProject_Performance_ShouldCompleteUnder100ms() {
     // Arrange
-    var project = new GameGuild.Modules.Project.Models.Project { Title = "Performance Test Project", Description = "Testing project creation performance", Type = ProjectType.Game, DevelopmentStatus = DevelopmentStatus.Planning };
+    var project = new Project { Title = "Performance Test Project", Description = "Testing project creation performance", Type = ProjectType.Game, DevelopmentStatus = DevelopmentStatus.Planning };
 
     var stopwatch = new Stopwatch();
 
@@ -50,11 +51,11 @@ public class ProjectPerformanceTests : IDisposable {
   [Fact]
   public async Task GetAllProjects_Performance_ShouldCompleteUnder500msFor1000Projects() {
     // Arrange - Create 1000 test projects
-    var projects = new List<GameGuild.Modules.Project.Models.Project>();
+    var projects = new List<Project>();
 
     for (var i = 0; i < 1000; i++) {
       projects.Add(
-        new GameGuild.Modules.Project.Models.Project {
+        new Project {
           Title = $"Performance Test Project {i}",
           Description = $"Description for project {i}",
           Type = ProjectType.Game,
@@ -85,11 +86,11 @@ public class ProjectPerformanceTests : IDisposable {
   [Fact]
   public async Task SearchProjects_Performance_ShouldCompleteUnder200msFor1000Projects() {
     // Arrange - Create 1000 test projects with searchable content
-    var projects = new List<GameGuild.Modules.Project.Models.Project>();
+    var projects = new List<Project>();
 
     for (var i = 0; i < 1000; i++) {
       projects.Add(
-        new GameGuild.Modules.Project.Models.Project {
+        new Project {
           Title = $"Searchable Project {i} {(i % 2 == 0 ? "Game" : "Tool")}",
           Description = $"This is a {(i % 3 == 0 ? "fantastic" : "good")} project number {i}",
           ShortDescription = $"Project {i} summary",
@@ -133,7 +134,7 @@ public class ProjectPerformanceTests : IDisposable {
   [Fact]
   public async Task UpdateProject_Performance_ShouldCompleteUnder100ms() {
     // Arrange
-    var project = new GameGuild.Modules.Project.Models.Project { Title = "Original Title", Description = "Original Description", Type = ProjectType.Game };
+    var project = new Project { Title = "Original Title", Description = "Original Description", Type = ProjectType.Game };
 
     var created = await _projectService.CreateProjectAsync(project);
 
@@ -161,12 +162,12 @@ public class ProjectPerformanceTests : IDisposable {
   [Fact]
   public async Task GetProjectsByStatus_Performance_ShouldCompleteUnder150msFor1000Projects() {
     // Arrange - Create projects with different statuses
-    var projects = new List<GameGuild.Modules.Project.Models.Project>();
+    var projects = new List<Project>();
     var statuses = new[] { ContentStatus.Draft, ContentStatus.Published, ContentStatus.Archived };
 
     for (var i = 0; i < 1000; i++) {
       projects.Add(
-        new GameGuild.Modules.Project.Models.Project {
+        new Project {
           Title = $"Status Test Project {i}",
           Description = $"Project {i} for status testing",
           Status = statuses[i % statuses.Length],
@@ -198,12 +199,12 @@ public class ProjectPerformanceTests : IDisposable {
   [Fact]
   public async Task GetProjectsByType_Performance_ShouldCompleteUnder150msFor1000Projects() {
     // Arrange - Create projects with different types
-    var projects = new List<GameGuild.Modules.Project.Models.Project>();
+    var projects = new List<Project>();
     var types = new[] { ProjectType.Game, ProjectType.Tool, ProjectType.Art, ProjectType.Music };
 
     for (var i = 0; i < 1000; i++) {
       projects.Add(
-        new GameGuild.Modules.Project.Models.Project {
+        new Project {
           Title = $"Type Test Project {i}",
           Description = $"Project {i} for type testing",
           Type = types[i % types.Length],
@@ -235,7 +236,7 @@ public class ProjectPerformanceTests : IDisposable {
   [Fact]
   public async Task DeleteProject_Performance_ShouldCompleteUnder100ms() {
     // Arrange
-    var project = new GameGuild.Modules.Project.Models.Project { Title = "Project to Delete", Description = "This project will be deleted for performance testing", Type = ProjectType.Game };
+    var project = new Project { Title = "Project to Delete", Description = "This project will be deleted for performance testing", Type = ProjectType.Game };
 
     var created = await _projectService.CreateProjectAsync(project);
     var stopwatch = new Stopwatch();
@@ -256,11 +257,11 @@ public class ProjectPerformanceTests : IDisposable {
   [Fact]
   public async Task GetProjectsWithPagination_Performance_ShouldCompleteUnder100msFor50Projects() {
     // Arrange - Create 1000 projects but only request 50
-    var projects = new List<GameGuild.Modules.Project.Models.Project>();
+    var projects = new List<Project>();
 
     for (var i = 0; i < 1000; i++) {
       projects.Add(
-        new GameGuild.Modules.Project.Models.Project {
+        new Project {
           Title = $"Pagination Test Project {i}",
           Description = $"Project {i} for pagination testing",
           Type = ProjectType.Game,
@@ -294,11 +295,11 @@ public class ProjectPerformanceTests : IDisposable {
   [InlineData(1000)]
   public async Task BulkOperations_Performance_ShouldScaleLinearly(int projectCount) {
     // Arrange
-    var projects = new List<GameGuild.Modules.Project.Models.Project>();
+    var projects = new List<Project>();
 
     for (var i = 0; i < projectCount; i++) {
       projects.Add(
-        new GameGuild.Modules.Project.Models.Project {
+        new Project {
           Title = $"Bulk Test Project {i}",
           Description = $"Project {i} for bulk testing",
           Type = ProjectType.Game,
@@ -345,11 +346,11 @@ public class ProjectPerformanceTests : IDisposable {
   [Fact]
   public async Task ConcurrentOperations_Performance_ShouldHandleConcurrentReads() {
     // Arrange - Create some test data
-    var projects = new List<GameGuild.Modules.Project.Models.Project>();
+    var projects = new List<Project>();
 
     for (var i = 0; i < 100; i++) {
       projects.Add(
-        new GameGuild.Modules.Project.Models.Project {
+        new Project {
           Title = $"Concurrent Test Project {i}",
           Description = $"Project {i} for concurrent testing",
           Type = ProjectType.Game,

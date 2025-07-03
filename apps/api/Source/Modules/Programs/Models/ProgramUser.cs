@@ -1,13 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Common.Entities;
+using GameGuild.Modules.Certificates.Models;
+using GameGuild.Modules.Feedbacks.Models;
+using GameGuild.Modules.Users.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Certificate.Models;
-using GameGuild.Modules.Feedback.Models;
 
 
-namespace GameGuild.Modules.Program.Models;
+namespace GameGuild.Modules.Programs.Models;
 
 /// <summary>
 /// Junction entity representing the relationship between a User and a Program
@@ -31,7 +32,7 @@ public class ProgramUser : BaseEntity {
   /// Navigation property to the User entity
   /// </summary>
   [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User { get; set; } = null!;
+  public virtual User User { get; set; } = null!;
 
   /// <summary>
   /// Foreign key to the Program entity

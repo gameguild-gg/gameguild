@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Services;
 using GameGuild.Data;
-using GameGuild.Modules.Tenant.Models;
+using GameGuild.Modules.Tenants.Models;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenant.Services;
+namespace GameGuild.Modules.Tenants.Services;
 
 /// <summary>
 /// Service implementation for managing tenants
@@ -23,8 +23,8 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// <returns>Tenant or null if not found</returns>
   public async Task<Models.Tenant?> GetTenantByIdAsync(Guid id) {
     return await context.Tenants.Include(t => t.TenantPermissions)
-                         .ThenInclude(tp => tp.User)
-                         .FirstOrDefaultAsync(t => t.Id == id);
+                        .ThenInclude(tp => tp.User)
+                        .FirstOrDefaultAsync(t => t.Id == id);
   }
 
   /// <summary>
@@ -90,7 +90,7 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// <returns>True if restored successfully</returns>
   public async Task<bool> RestoreTenantAsync(Guid id) {
     var tenant = await context.Tenants.IgnoreQueryFilters()
-                               .FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt != null);
+                              .FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt != null);
 
     if (tenant == null) return false;
 
@@ -154,9 +154,9 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// <returns>List of soft-deleted tenants</returns>
   public async Task<IEnumerable<Models.Tenant>> GetDeletedTenantsAsync() {
     return await context.Tenants.IgnoreQueryFilters()
-                         .Where(t => t.DeletedAt != null)
-                         .Include(t => t.TenantPermissions)
-                         .ToListAsync();
+                        .Where(t => t.DeletedAt != null)
+                        .Include(t => t.TenantPermissions)
+                        .ToListAsync();
   }
 
   /// <summary>
@@ -189,9 +189,9 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// <returns>List of TenantPermission relationships</returns>
   public async Task<IEnumerable<TenantPermission>> GetUsersInTenantAsync(Guid tenantId) {
     return await context.TenantPermissions.Where(tp => tp.TenantId == tenantId && tp.UserId != null)
-                         .Include(tp => tp.User)
-                         .Include(tp => tp.Tenant)
-                         .ToListAsync();
+                        .Include(tp => tp.User)
+                        .Include(tp => tp.Tenant)
+                        .ToListAsync();
   }
 
   /// <summary>

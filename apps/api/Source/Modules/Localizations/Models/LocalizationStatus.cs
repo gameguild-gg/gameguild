@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common.Entities;
+﻿namespace GameGuild.Modules.Localizations.Models;
 
 /// <summary>
 /// Enumeration of localization statuses

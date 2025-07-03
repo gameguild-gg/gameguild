@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Common.Entities;
+using GameGuild.Modules.Users.Models;
 
 
-namespace GameGuild.Modules.Voting.Models;
+namespace GameGuild.Modules.Votes.Models;
 
 /// <summary>
 /// Represents a vote (upvote/downvote) on a voteable entity.
@@ -13,7 +14,7 @@ public class Vote : BaseEntity {
   /// Entity Framework will automatically create the UserId foreign key
   /// </summary>
   [Required]
-  public virtual User.Models.User User { get; set; } = null!;
+  public virtual User User { get; set; } = null!;
 
   /// <summary>
   /// Type of the vote (Upvote or Downvote)

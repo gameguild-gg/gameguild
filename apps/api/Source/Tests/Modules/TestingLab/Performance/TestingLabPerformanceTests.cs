@@ -4,8 +4,9 @@ using System.Diagnostics;
 using GameGuild.Data;
 using GameGuild.Modules.TestingLab.Services;
 using GameGuild.Modules.TestingLab.Models;
-using ProjectModel = GameGuild.Modules.Project.Models.Project;
-using ProjectVersionModel = GameGuild.Modules.Project.Models.ProjectVersion;
+using GameGuild.Modules.Users.Models;
+using ProjectModel = GameGuild.Modules.Projects.Models.Project;
+using ProjectVersionModel = GameGuild.Modules.Projects.Models.ProjectVersion;
 
 
 namespace GameGuild.Tests.Modules.TestingLab.Performance;
@@ -320,8 +321,8 @@ public class TestingLabPerformanceTests : IDisposable {
   }
 
   // Helper methods for creating test data
-  private async Task<GameGuild.Modules.User.Models.User> CreateTestUserAsync() {
-    var user = new GameGuild.Modules.User.Models.User { Id = Guid.NewGuid(), Name = "Performance Test User", Email = "performance@test.com", CreatedAt = DateTime.UtcNow };
+  private async Task<User> CreateTestUserAsync() {
+    var user = new User { Id = Guid.NewGuid(), Name = "Performance Test User", Email = "performance@test.com", CreatedAt = DateTime.UtcNow };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
 

@@ -1,9 +1,9 @@
+using GameGuild.Modules.UserProfiles.Dtos;
+using GameGuild.Modules.UserProfiles.Services;
 using Microsoft.AspNetCore.Mvc;
-using GameGuild.Modules.UserProfile.Dtos;
-using GameGuild.Modules.UserProfile.Services;
 
 
-namespace GameGuild.Modules.UserProfile.Controllers;
+namespace GameGuild.Modules.UserProfiles.Controllers;
 
 [ApiController]
 [Route("[controller]")]
@@ -14,17 +14,17 @@ public class UserProfilesController(IUserProfileService userProfileService) : Co
     var userProfiles = await userProfileService.GetAllUserProfilesAsync();
 
     var userProfileDtos = userProfiles.Select(up => new UserProfileResponseDto {
-                                                Id = up.Id,
-                                                Version = up.Version,
-                                                GivenName = up.GivenName,
-                                                FamilyName = up.FamilyName,
-                                                DisplayName = up.DisplayName,
-                                                Title = up.Title,
-                                                Description = up.Description,
-                                                CreatedAt = up.CreatedAt,
-                                                UpdatedAt = up.UpdatedAt,
-                                                DeletedAt = up.DeletedAt,
-                                                IsDeleted = up.IsDeleted,
+        Id = up.Id,
+        Version = up.Version,
+        GivenName = up.GivenName,
+        FamilyName = up.FamilyName,
+        DisplayName = up.DisplayName,
+        Title = up.Title,
+        Description = up.Description,
+        CreatedAt = up.CreatedAt,
+        UpdatedAt = up.UpdatedAt,
+        DeletedAt = up.DeletedAt,
+        IsDeleted = up.IsDeleted,
       }
     );
 
@@ -37,17 +37,17 @@ public class UserProfilesController(IUserProfileService userProfileService) : Co
     var userProfiles = await userProfileService.GetDeletedUserProfilesAsync();
 
     var userProfileDtos = userProfiles.Select(up => new UserProfileResponseDto {
-                                                Id = up.Id,
-                                                Version = up.Version,
-                                                GivenName = up.GivenName,
-                                                FamilyName = up.FamilyName,
-                                                DisplayName = up.DisplayName,
-                                                Title = up.Title,
-                                                Description = up.Description,
-                                                CreatedAt = up.CreatedAt,
-                                                UpdatedAt = up.UpdatedAt,
-                                                DeletedAt = up.DeletedAt,
-                                                IsDeleted = up.IsDeleted,
+        Id = up.Id,
+        Version = up.Version,
+        GivenName = up.GivenName,
+        FamilyName = up.FamilyName,
+        DisplayName = up.DisplayName,
+        Title = up.Title,
+        Description = up.Description,
+        CreatedAt = up.CreatedAt,
+        UpdatedAt = up.UpdatedAt,
+        DeletedAt = up.DeletedAt,
+        IsDeleted = up.IsDeleted,
       }
     );
 

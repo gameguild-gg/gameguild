@@ -1,12 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Tenants.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Certificate.Models;
+namespace GameGuild.Modules.Certificates.Models;
 
 [Table("certificates")]
 [Index(nameof(Type))]
@@ -15,9 +17,7 @@ namespace GameGuild.Modules.Certificate.Models;
 [Index(nameof(CompletionPercentage))]
 [Index(nameof(TenantId))]
 public class Certificate : BaseEntity, ITenantable {
-  [Required]
-  [MaxLength(255)]
-  public string Name { get; set; } = string.Empty;
+  [Required] [MaxLength(255)] public string Name { get; set; } = string.Empty;
 
   public string Description { get; set; } = string.Empty;
 
@@ -79,9 +79,9 @@ public class Certificate : BaseEntity, ITenantable {
   public Guid? TenantId { get; set; }
 
   // Navigation properties
-  public virtual Program.Models.Program? Program { get; set; }
+  public virtual Programs.Models.Program? Program { get; set; }
 
-  public virtual Product.Models.Product? Product { get; set; }
+  public virtual Product? Product { get; set; }
 
   public virtual ICollection<UserCertificate> UserCertificates { get; set; } = new List<UserCertificate>();
 

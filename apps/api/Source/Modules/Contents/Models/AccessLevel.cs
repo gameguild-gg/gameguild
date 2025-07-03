@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Modules.Contents.Models;
 
 /// <summary>
 /// Enumeration of access levels for resources

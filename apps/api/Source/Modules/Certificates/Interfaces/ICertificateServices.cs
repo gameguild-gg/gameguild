@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Certificate.Interfaces;
+namespace GameGuild.Modules.Certificates.Interfaces;
 
 /// <summary>
 /// Interface for certificate management services

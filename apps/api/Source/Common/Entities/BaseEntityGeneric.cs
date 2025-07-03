@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Tenant.Models;
+using GameGuild.Modules.Tenants.Models;
 
 
 namespace GameGuild.Common.Entities;

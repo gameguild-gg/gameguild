@@ -1,13 +1,15 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
+using GameGuild.Common.Enums;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Users.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System.Text.Json;
-using GameGuild.Common.Entities;
-using GameGuild.Common.Enums;
 
 
-namespace GameGuild.Modules.Project.Models;
+namespace GameGuild.Modules.Projects.Models;
 
 /// <summary>
 /// Represents a project (game, tool, art, etc.)
@@ -122,14 +124,14 @@ public sealed class Project : Content {
   /// <summary>
   /// User who created the project
   /// </summary>
-  public User.Models.User? CreatedBy { get; set; }
+  public User? CreatedBy { get; set; }
 
   public Guid? CreatedById { get; set; }
 
   /// <summary>
   /// Tenant this project belongs to (for multi-tenancy)
   /// </summary>
-  public override Tenant.Models.Tenant? Tenant { get; set; }
+  public override Tenant? Tenant { get; set; }
 
   public Guid? TenantId { get; set; }
 

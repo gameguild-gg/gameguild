@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.User.Models;
+using GameGuild.Modules.Users.Models;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -121,7 +121,7 @@ namespace GameGuild.Modules.Auth.Services {
         if (tokenInfo.Type != "password_reset") return new EmailOperationResponseDto { Success = false, Message = "Invalid token type" };
 
         var user = await context.Users.Include(u => u.Credentials)
-                                 .FirstOrDefaultAsync(u => u.Id == tokenInfo.UserId);
+                                .FirstOrDefaultAsync(u => u.Id == tokenInfo.UserId);
 
         if (user == null) return new EmailOperationResponseDto { Success = false, Message = "User not found" };
 

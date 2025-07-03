@@ -1,23 +1,24 @@
-using GameGuild.Common.GraphQL.Authorization;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Program.Interfaces;
 using GameGuild.Common.Enums;
-using GameGuild.Modules.Program.Models;
-using ProgramContentEntity = GameGuild.Modules.Program.Models.ProgramContent;
+using GameGuild.Common.GraphQL.Authorization;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Programs.Interfaces;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Users.GraphQL;
+using ProgramContentEntity = GameGuild.Modules.Programs.Models.ProgramContent;
 
 
-namespace GameGuild.Modules.Program.GraphQL;
+namespace GameGuild.Modules.Programs.GraphQL;
 
 /// <summary>
 /// GraphQL queries for ProgramContent module
 /// </summary>
-[ExtendObjectType<GameGuild.Modules.User.GraphQL.Query>]
+[ExtendObjectType<Query>]
 public class ProgramContentQueries {
   /// <summary>
   /// Gets a program content by its unique identifier (Resource Level: Read permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Read permission on the parent Program that contains this content
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+  [RequireResourcePermission<ProgramPermission, Models.Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -27,10 +28,12 @@ public class ProgramContentQueries {
     [Service] IProgramContentService programContentService
   ) {
     var content = await programContentService.GetContentByIdAsync(id);
+
     // Verify the content belongs to the specified program
     if (content != null && content.ProgramId != programId) {
       return null; // Content doesn't belong to the specified program
     }
+
     return content;
   }
 
@@ -38,7 +41,7 @@ public class ProgramContentQueries {
   /// Gets all content for a specific program (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+  [RequireResourcePermission<ProgramPermission, Models.Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -53,7 +56,7 @@ public class ProgramContentQueries {
   /// Gets content by parent content ID (Resource Level: Read permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Read permission on the parent Program that contains this content
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+  [RequireResourcePermission<ProgramPermission, Models.Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -63,6 +66,7 @@ public class ProgramContentQueries {
     [Service] IProgramContentService programContentService
   ) {
     var content = await programContentService.GetContentByParentAsync(parentContentId);
+
     // Filter to only return content that belongs to the specified program
     return content.Where(c => c.ProgramId == programId);
   }
@@ -71,7 +75,7 @@ public class ProgramContentQueries {
   /// Gets root-level content for a program (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+  [RequireResourcePermission<ProgramPermission, Models.Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -86,7 +90,7 @@ public class ProgramContentQueries {
   /// Gets content filtered by type (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+  [RequireResourcePermission<ProgramPermission, Models.Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -101,7 +105,7 @@ public class ProgramContentQueries {
   /// Gets content filtered by visibility (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+  [RequireResourcePermission<ProgramPermission, Models.Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -116,7 +120,7 @@ public class ProgramContentQueries {
   /// Gets required content for a program (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+  [RequireResourcePermission<ProgramPermission, Models.Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -131,7 +135,7 @@ public class ProgramContentQueries {
   /// Searches program content (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+  [RequireResourcePermission<ProgramPermission, Models.Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -146,7 +150,7 @@ public class ProgramContentQueries {
   /// Gets content count for a program (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+  [RequireResourcePermission<ProgramPermission, Models.Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -156,7 +160,7 @@ public class ProgramContentQueries {
   /// Gets required content count for a program (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, GameGuild.Modules.Program.Models.Program>(
+  [RequireResourcePermission<ProgramPermission, Models.Program>(
     PermissionType.Read,
     "programId"
   )]

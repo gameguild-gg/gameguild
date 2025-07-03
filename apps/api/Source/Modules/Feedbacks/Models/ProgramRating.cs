@@ -1,12 +1,14 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
-using GameGuild.Modules.Program.Models;
+using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Users.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Feedback.Models;
+namespace GameGuild.Modules.Feedbacks.Models;
 
 [Table("program_ratings")]
 [Index(nameof(UserId), nameof(ProgramId), IsUnique = true)]
@@ -84,20 +86,15 @@ public class ProgramRating : BaseEntity {
   public DateTime SubmittedAt { get; set; }
 
   // Navigation properties
-  [ForeignKey(nameof(UserId))]
-  public virtual User.Models.User User { get; set; } = null!;
+  [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;
 
-  [ForeignKey(nameof(ProgramId))]
-  public virtual Program.Models.Program Program { get; set; } = null!;
+  [ForeignKey(nameof(ProgramId))] public virtual Programs.Models.Program Program { get; set; } = null!;
 
-  [ForeignKey(nameof(ProductId))]
-  public virtual Product.Models.Product? Product { get; set; }
+  [ForeignKey(nameof(ProductId))] public virtual Product? Product { get; set; }
 
-  [ForeignKey(nameof(ProgramUserId))]
-  public virtual ProgramUser ProgramUser { get; set; } = null!;
+  [ForeignKey(nameof(ProgramUserId))] public virtual ProgramUser ProgramUser { get; set; } = null!;
 
-  [ForeignKey(nameof(ModeratedBy))]
-  public virtual User.Models.User? Moderator { get; set; }
+  [ForeignKey(nameof(ModeratedBy))] public virtual User? Moderator { get; set; }
 }
 
 public class ProgramRatingConfiguration : IEntityTypeConfiguration<ProgramRating> {

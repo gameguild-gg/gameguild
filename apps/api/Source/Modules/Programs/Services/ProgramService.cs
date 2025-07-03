@@ -1,13 +1,13 @@
-using Microsoft.EntityFrameworkCore;
-using GameGuild.Data;
-using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
-using GameGuild.Modules.Program.Models;
-using GameGuild.Modules.Program.DTOs;
-using ProgramEntity = GameGuild.Modules.Program.Models.Program;
+using GameGuild.Data;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.Modules.Programs.Models;
+using Microsoft.EntityFrameworkCore;
+using ProgramEntity = GameGuild.Modules.Programs.Models.Program;
 
 
-namespace GameGuild.Modules.Program.Services;
+namespace GameGuild.Modules.Programs.Services;
 
 /// <summary>
 /// Service implementation for Program business logic
@@ -19,17 +19,17 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
 
   public async Task<ProgramEntity?> GetProgramWithContentAsync(Guid id) {
     return await context.Programs.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted))
-                         .Include(p => p.ProgramUsers.Where(pu => !pu.IsDeleted))
-                         .Where(p => !p.IsDeleted)
-                         .FirstOrDefaultAsync(p => p.Id == id);
+                        .Include(p => p.ProgramUsers.Where(pu => !pu.IsDeleted))
+                        .Where(p => !p.IsDeleted)
+                        .FirstOrDefaultAsync(p => p.Id == id);
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetProgramsAsync(int skip = 0, int take = 50) {
     return await context.Programs.Where(p => p.DeletedAt == null)
-                         .OrderByDescending(p => p.CreatedAt)
-                         .Skip(skip)
-                         .Take(take)
-                         .ToListAsync();
+                        .OrderByDescending(p => p.CreatedAt)
+                        .Skip(skip)
+                        .Take(take)
+                        .ToListAsync();
   }
 
   public async Task<ProgramEntity> CreateProgramAsync(ProgramEntity program) {
@@ -113,7 +113,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     // Auto-assign sort order if not provided
     if (content.SortOrder == 0) {
       var maxOrder = await context.ProgramContents.Where(pc => !pc.IsDeleted && pc.ProgramId == programId)
-                                   .MaxAsync(pc => (int?)pc.SortOrder) ??
+                                  .MaxAsync(pc => (int?)pc.SortOrder) ??
                      0;
       content.SortOrder = maxOrder + 1;
     }
@@ -147,8 +147,8 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     if (program == null) throw new ArgumentException("Program not found", nameof(programId));
 
     var contents = await context.ProgramContents
-                                 .Where(pc => !pc.IsDeleted && pc.ProgramId == programId && contentIds.Contains(pc.Id))
-                                 .ToListAsync();
+                                .Where(pc => !pc.IsDeleted && pc.ProgramId == programId && contentIds.Contains(pc.Id))
+                                .ToListAsync();
 
     for (var i = 0; i < contentIds.Count; i++) {
       var content = contents.FirstOrDefault(c => c.Id == contentIds[i]);
@@ -166,15 +166,15 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
 
   public async Task<IEnumerable<ProgramContent>> GetProgramContentAsync(Guid programId) {
     return await context.ProgramContents.Where(pc => !pc.IsDeleted && pc.ProgramId == programId)
-                         .OrderBy(pc => pc.SortOrder)
-                         .ToListAsync();
+                        .OrderBy(pc => pc.SortOrder)
+                        .ToListAsync();
   }
 
   // User Participation Management
   public async Task<ProgramUser> AddUserAsync(Guid programId, Guid userId) {
     var existingUser = await context.ProgramUsers
-                                     .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
-                                     .FirstOrDefaultAsync();
+                                    .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
+                                    .FirstOrDefaultAsync();
 
     if (existingUser != null) {
       if (!existingUser.IsActive) {
@@ -197,8 +197,8 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
 
   public async Task<ProgramUser> RemoveUserAsync(Guid programId, Guid userId) {
     var programUser = await context.ProgramUsers
-                                    .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
-                                    .FirstOrDefaultAsync();
+                                   .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
+                                   .FirstOrDefaultAsync();
 
     if (programUser != null) {
       programUser.IsActive = false;
@@ -211,46 +211,46 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
 
   public async Task<IEnumerable<ProgramUser>> GetProgramUsersAsync(Guid programId) {
     return await context.ProgramUsers.Include(pu => pu.User)
-                         .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive)
-                         .OrderBy(pu => pu.JoinedAt)
-                         .ToListAsync();
+                        .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive)
+                        .OrderBy(pu => pu.JoinedAt)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetUserProgramsAsync(Guid userId) {
     return await context.ProgramUsers.Include(pu => pu.Program)
-                         .Where(pu => !pu.IsDeleted && pu.UserId == userId && pu.IsActive)
-                         .Select(pu => pu.Program)
-                         .Where(p => !p.IsDeleted)
-                         .OrderByDescending(p => p.CreatedAt)
-                         .ToListAsync();
+                        .Where(pu => !pu.IsDeleted && pu.UserId == userId && pu.IsActive)
+                        .Select(pu => pu.Program)
+                        .Where(p => !p.IsDeleted)
+                        .OrderByDescending(p => p.CreatedAt)
+                        .ToListAsync();
   }
 
   public async Task<bool> IsUserInProgramAsync(Guid programId, Guid userId) {
     return await context.ProgramUsers
-                         .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId && pu.IsActive)
-                         .AnyAsync();
+                        .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId && pu.IsActive)
+                        .AnyAsync();
   }
 
   // Progress & Analytics
   public async Task<decimal> GetUserProgressAsync(Guid programId, Guid userId) {
     var programUser = await context.ProgramUsers
-                                    .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
-                                    .FirstOrDefaultAsync();
+                                   .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
+                                   .FirstOrDefaultAsync();
 
     return programUser?.CompletionPercentage ?? 0;
   }
 
   public async Task<IEnumerable<ContentInteraction>> GetUserInteractionsAsync(Guid programId, Guid userId) {
     var programUser = await context.ProgramUsers
-                                    .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
-                                    .FirstOrDefaultAsync();
+                                   .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
+                                   .FirstOrDefaultAsync();
 
     if (programUser == null) return Enumerable.Empty<ContentInteraction>();
 
     return await context.ContentInteractions.Include(ci => ci.Content)
-                         .Where(ci => !ci.IsDeleted && ci.ProgramUserId == programUser.Id)
-                         .OrderBy(ci => ci.Content.SortOrder)
-                         .ToListAsync();
+                        .Where(ci => !ci.IsDeleted && ci.ProgramUserId == programUser.Id)
+                        .OrderBy(ci => ci.Content.SortOrder)
+                        .ToListAsync();
   }
 
   public async Task<ProgramEntity> UpdateUserProgressAsync(
@@ -262,14 +262,14 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     if (program == null) throw new ArgumentException("Program not found", nameof(programId));
 
     var programUser = await context.ProgramUsers
-                                    .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
-                                    .FirstOrDefaultAsync();
+                                   .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
+                                   .FirstOrDefaultAsync();
 
     if (programUser == null) throw new ArgumentException("User not enrolled in program");
 
     var interaction = await context.ContentInteractions
-                                    .Where(ci => !ci.IsDeleted && ci.ProgramUserId == programUser.Id && ci.ContentId == contentId)
-                                    .FirstOrDefaultAsync();
+                                   .Where(ci => !ci.IsDeleted && ci.ProgramUserId == programUser.Id && ci.ContentId == contentId)
+                                   .FirstOrDefaultAsync();
 
     if (interaction == null) {
       interaction = new ContentInteraction {
@@ -426,45 +426,45 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     if (string.IsNullOrWhiteSpace(searchTerm)) return await GetProgramsAsync(skip, take);
 
     return await context.Programs
-                         .Where(p => !p.IsDeleted &&
-                                     (p.Title.Contains(searchTerm) || (p.Description != null && p.Description.Contains(searchTerm)))
-                         )
-                         .OrderByDescending(p => p.CreatedAt)
-                         .Skip(skip)
-                         .Take(take)
-                         .ToListAsync();
+                        .Where(p => !p.IsDeleted &&
+                                    (p.Title.Contains(searchTerm) || (p.Description != null && p.Description.Contains(searchTerm)))
+                        )
+                        .OrderByDescending(p => p.CreatedAt)
+                        .Skip(skip)
+                        .Take(take)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetProgramsByCreatorAsync(Guid creatorId, int skip = 0, int take = 50) {
     // Since Program doesn't have CreatorId, we'll return all programs for now
     // In a real implementation, you'd need to add a CreatorId property to Program
     return await context.Programs.Where(p => !p.IsDeleted)
-                         .OrderByDescending(p => p.CreatedAt)
-                         .Skip(skip)
-                         .Take(take)
-                         .ToListAsync();
+                        .OrderByDescending(p => p.CreatedAt)
+                        .Skip(skip)
+                        .Take(take)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetFeaturedProgramsAsync(int count = 10) {
     return await context.Programs.Where(p => !p.IsDeleted && p.Status == ContentStatus.Published)
-                         .OrderByDescending(p => p.ProgramUsers.Count(pu => !pu.IsDeleted && pu.IsActive))
-                         .Take(count)
-                         .ToListAsync();
+                        .OrderByDescending(p => p.ProgramUsers.Count(pu => !pu.IsDeleted && pu.IsActive))
+                        .Take(count)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetRecentProgramsAsync(int count = 10) {
     return await context.Programs.Where(p => !p.IsDeleted && p.Status == ContentStatus.Published)
-                         .OrderByDescending(p => p.CreatedAt)
-                         .Take(count)
-                         .ToListAsync();
+                        .OrderByDescending(p => p.CreatedAt)
+                        .Take(count)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetPopularProgramsAsync(int count = 10) {
     return await context.Programs.Where(p => !p.IsDeleted && p.Status == ContentStatus.Published)
-                         .OrderByDescending(p => p.ProgramUsers.Count(pu => !pu.IsDeleted && pu.IsActive))
-                         .ThenByDescending(p => p.CreatedAt)
-                         .Take(count)
-                         .ToListAsync();
+                        .OrderByDescending(p => p.ProgramUsers.Count(pu => !pu.IsDeleted && pu.IsActive))
+                        .ThenByDescending(p => p.CreatedAt)
+                        .Take(count)
+                        .ToListAsync();
   }
 
   // Analytics & Statistics
@@ -480,13 +480,13 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
 
   public async Task<int> GetUserCountForProgramAsync(Guid programId) {
     return await context.ProgramUsers.Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive)
-                         .CountAsync();
+                        .CountAsync();
   }
 
   public async Task<decimal> GetAverageCompletionRateAsync(Guid programId) {
     var averageCompletion = await context.ProgramUsers
-                                          .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive)
-                                          .AverageAsync(pu => (decimal?)pu.CompletionPercentage) ??
+                                         .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive)
+                                         .AverageAsync(pu => (decimal?)pu.CompletionPercentage) ??
                             0;
 
     return averageCompletion;
@@ -496,8 +496,8 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     var userCount = await GetUserCountForProgramAsync(programId);
     var averageCompletion = await GetAverageCompletionRateAsync(programId);
     var completedCount = await context.ProgramUsers
-                                       .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive && pu.CompletedAt != null)
-                                       .CountAsync();
+                                      .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive && pu.CompletedAt != null)
+                                      .CountAsync();
 
     return new Dictionary<string, object> { ["totalUsers"] = userCount, ["averageCompletion"] = averageCompletion, ["completedUsers"] = completedCount, ["completionRate"] = userCount > 0 ? (decimal)completedCount / userCount * 100 : 0 };
   }
@@ -511,8 +511,8 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     if (programUser == null) return;
 
     var totalContent = await context.ProgramContents
-                                     .Where(pc => !pc.IsDeleted && pc.ProgramId == programUser.ProgramId && pc.IsRequired)
-                                     .CountAsync();
+                                    .Where(pc => !pc.IsDeleted && pc.ProgramId == programUser.ProgramId && pc.IsRequired)
+                                    .CountAsync();
 
     if (totalContent == 0) {
       programUser.CompletionPercentage = 0;
@@ -521,9 +521,9 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     }
 
     var completedContent = await context.ContentInteractions.Where(ci =>
-                                                                      !ci.IsDeleted && ci.ProgramUserId == programUserId && ci.Status == ProgressStatus.Completed
-                                         )
-                                         .CountAsync();
+                                                                     !ci.IsDeleted && ci.ProgramUserId == programUserId && ci.Status == ProgressStatus.Completed
+                                        )
+                                        .CountAsync();
 
     programUser.CompletionPercentage = (decimal)completedContent / totalContent * 100;
 
@@ -575,10 +575,10 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     int take = 50
   ) {
     return await context.Programs.Where(p => !p.IsDeleted && p.Category == category)
-                         .OrderByDescending(p => p.CreatedAt)
-                         .Skip(skip)
-                         .Take(take)
-                         .ToListAsync();
+                        .OrderByDescending(p => p.CreatedAt)
+                        .Skip(skip)
+                        .Take(take)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetProgramsByDifficultyAsync(
@@ -586,18 +586,18 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     int take = 50
   ) {
     return await context.Programs.Where(p => !p.IsDeleted && p.Difficulty == difficulty)
-                         .OrderByDescending(p => p.CreatedAt)
-                         .Skip(skip)
-                         .Take(take)
-                         .ToListAsync();
+                        .OrderByDescending(p => p.CreatedAt)
+                        .Skip(skip)
+                        .Take(take)
+                        .ToListAsync();
   }
 
   public async Task<IEnumerable<ProgramEntity>> GetPublishedProgramsAsync(int skip = 0, int take = 50) {
     return await context.Programs.Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published)
-                         .OrderByDescending(p => p.CreatedAt)
-                         .Skip(skip)
-                         .Take(take)
-                         .ToListAsync();
+                        .OrderByDescending(p => p.CreatedAt)
+                        .Skip(skip)
+                        .Take(take)
+                        .ToListAsync();
   }
 
   // Content Management with DTOs
@@ -629,7 +629,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   public async Task<ProgramContent?> UpdateContentAsync(Guid programId, Guid contentId, UpdateContentDto contentDto) {
     var content =
       await context.ProgramContents.FirstOrDefaultAsync(c =>
-                                                           c.Id == contentId && c.ProgramId == programId && !c.IsDeleted
+                                                          c.Id == contentId && c.ProgramId == programId && !c.IsDeleted
       );
 
     if (content == null) return null;
@@ -650,7 +650,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   public async Task<bool> RemoveContentAsync(Guid programId, Guid contentId) {
     var content =
       await context.ProgramContents.FirstOrDefaultAsync(c =>
-                                                           c.Id == contentId && c.ProgramId == programId && !c.IsDeleted
+                                                          c.Id == contentId && c.ProgramId == programId && !c.IsDeleted
       );
 
     if (content == null) return false;
@@ -669,7 +669,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
 
     var existingUser =
       await context.ProgramUsers.FirstOrDefaultAsync(pu =>
-                                                        pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
+                                                       pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
       );
 
     if (existingUser != null)
@@ -696,7 +696,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   public async Task<bool> RemoveUserFromProgramAsync(Guid programId, Guid userId) {
     var programUser =
       await context.ProgramUsers.FirstOrDefaultAsync(pu =>
-                                                        pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
+                                                       pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
       );
 
     if (programUser == null) return false;
@@ -709,9 +709,9 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
 
   public async Task<IEnumerable<UserProgressDto>> GetProgramUsersAsync(Guid programId, int skip = 0, int take = 50) {
     var programUsers = await context.ProgramUsers.Where(pu => pu.ProgramId == programId && !pu.IsDeleted)
-                                     .Skip(skip)
-                                     .Take(take)
-                                     .ToListAsync();
+                                    .Skip(skip)
+                                    .Take(take)
+                                    .ToListAsync();
 
     var result = new List<UserProgressDto>();
 
@@ -726,7 +726,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   public async Task<UserProgressDto?> GetUserProgressDtoAsync(Guid programId, Guid userId) {
     var programUser =
       await context.ProgramUsers.FirstOrDefaultAsync(pu =>
-                                                        pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
+                                                       pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
       );
 
     if (programUser == null) return null;
@@ -749,7 +749,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   ) {
     var programUser =
       await context.ProgramUsers.FirstOrDefaultAsync(pu =>
-                                                        pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
+                                                       pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
       );
 
     if (programUser == null) return null;
@@ -766,7 +766,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     // Get the program user to recalculate progress
     var programUser =
       await context.ProgramUsers.FirstOrDefaultAsync(pu =>
-                                                        pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
+                                                       pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
       );
 
     if (programUser == null) return false;
@@ -779,7 +779,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   public async Task<bool> ResetUserProgressAsync(Guid programId, Guid userId) {
     var programUser =
       await context.ProgramUsers.FirstOrDefaultAsync(pu =>
-                                                        pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
+                                                       pu.ProgramId == programId && pu.UserId == userId && !pu.IsDeleted
       );
 
     if (programUser == null) return false;

@@ -1,131 +1,100 @@
-using Xunit;
 using Moq;
-using UserServiceInterface = GameGuild.Modules.User.Services.IUserService;
-using UserModel = GameGuild.Modules.User.Models.User;
+using Xunit;
+using UserServiceInterface = GameGuild.Modules.Users.Services.IUserService;
+using UserModel = GameGuild.Modules.Users.Models.User;
 
-namespace GameGuild.Tests.Modules.User.Unit.Handlers
-{
-    public class UserHandlerTests
-    {
-        private readonly Mock<UserServiceInterface> _mockUserService;
 
-        public UserHandlerTests()
-        {
-            _mockUserService = new Mock<UserServiceInterface>();
-        }
+namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
+  public class UserHandlerTests {
+    private readonly Mock<UserServiceInterface> _mockUserService;
 
-        [Fact]
-        public async Task Should_Handle_User_Creation_Command()
-        {
-            // Arrange
-            var command = new CreateUserCommand 
-            { 
-                Name = "Test User", 
-                Email = "test@example.com",
-                Password = "TestPassword123!"
-            };
+    public UserHandlerTests() { _mockUserService = new Mock<UserServiceInterface>(); }
 
-            var createdUser = new UserModel 
-            {
-                Id = Guid.NewGuid(),
-                Name = "Test User",
-                Email = "test@example.com",
-                CreatedAt = DateTime.UtcNow
-            };
+    [Fact]
+    public async Task Should_Handle_User_Creation_Command() {
+      // Arrange
+      var command = new CreateUserCommand { Name = "Test User", Email = "test@example.com", Password = "TestPassword123!" };
 
-            _mockUserService.Setup(s => s.CreateUserAsync(It.IsAny<UserModel>()))
-                .ReturnsAsync(createdUser);
+      var createdUser = new UserModel { Id = Guid.NewGuid(), Name = "Test User", Email = "test@example.com", CreatedAt = DateTime.UtcNow };
 
-            // Act
-            // var result = await _createHandler.Handle(command, CancellationToken.None);
+      _mockUserService.Setup(s => s.CreateUserAsync(It.IsAny<UserModel>()))
+                      .ReturnsAsync(createdUser);
 
-            // Assert
-            // Assert.NotNull(result);
-            // Assert.Equal(createdUser.Id, result.Id);
-            // Assert.Equal("Test User", result.Name);
-            // Assert.Equal("test@example.com", result.Email);
-            Assert.True(true);
-            
-            // Verify service call
-            _mockUserService.Verify(s => s.CreateUserAsync(It.IsAny<UserModel>()), Times.Once);
-        }
+      // Act
+      // var result = await _createHandler.Handle(command, CancellationToken.None);
 
-        [Fact]
-        public async Task Should_Handle_User_Update_Command()
-        {
-            // Arrange
-            var userId = Guid.NewGuid();
-            var command = new UpdateUserCommand
-            {
-                Id = userId,
-                Name = "Updated Name"
-            };
+      // Assert
+      // Assert.NotNull(result);
+      // Assert.Equal(createdUser.Id, result.Id);
+      // Assert.Equal("Test User", result.Name);
+      // Assert.Equal("test@example.com", result.Email);
+      Assert.True(true);
 
-            var updatedUser = new UserModel
-            {
-                Id = userId,
-                Name = "Updated Name",
-                Email = "test@example.com",
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            _mockUserService.Setup(s => s.UpdateUserAsync(It.IsAny<Guid>(), It.IsAny<UserModel>()))
-                .ReturnsAsync(updatedUser);
-
-            // Act
-            // var result = await _updateHandler.Handle(command, CancellationToken.None);
-
-            // Assert
-            // Assert.NotNull(result);
-            // Assert.Equal(userId, result.Id);
-            // Assert.Equal("Updated Name", result.Name);
-            Assert.True(true);
-            
-            // Verify service call
-            _mockUserService.Verify(s => s.UpdateUserAsync(It.IsAny<Guid>(), It.IsAny<UserModel>()), Times.Once);
-        }
-
-        [Fact]
-        public async Task Should_Handle_User_Delete_Command()
-        {
-            // Arrange
-            var userId = Guid.NewGuid();
-            var command = new DeleteUserCommand { Id = userId };
-
-            _mockUserService.Setup(s => s.DeleteUserAsync(userId))
-                .ReturnsAsync(true);
-
-            // Act
-            // var result = await _deleteHandler.Handle(command, CancellationToken.None);
-
-            // Assert
-            // Assert.True(result);
-            Assert.True(true);
-            
-            // Verify service call
-            _mockUserService.Verify(s => s.DeleteUserAsync(userId), Times.Once);
-        }
+      // Verify service call
+      _mockUserService.Verify(s => s.CreateUserAsync(It.IsAny<UserModel>()), Times.Once);
     }
 
-    // Mock classes for testing purposes
-    public class CreateUserCommand
-    {
-      public string Name { get; set; } = "";
+    [Fact]
+    public async Task Should_Handle_User_Update_Command() {
+      // Arrange
+      var userId = Guid.NewGuid();
+      var command = new UpdateUserCommand { Id = userId, Name = "Updated Name" };
 
-      public string Email { get; set; } = "";
+      var updatedUser = new UserModel { Id = userId, Name = "Updated Name", Email = "test@example.com", UpdatedAt = DateTime.UtcNow };
 
-      public string Password { get; set; } = "";
+      _mockUserService.Setup(s => s.UpdateUserAsync(It.IsAny<Guid>(), It.IsAny<UserModel>()))
+                      .ReturnsAsync(updatedUser);
+
+      // Act
+      // var result = await _updateHandler.Handle(command, CancellationToken.None);
+
+      // Assert
+      // Assert.NotNull(result);
+      // Assert.Equal(userId, result.Id);
+      // Assert.Equal("Updated Name", result.Name);
+      Assert.True(true);
+
+      // Verify service call
+      _mockUserService.Verify(s => s.UpdateUserAsync(It.IsAny<Guid>(), It.IsAny<UserModel>()), Times.Once);
     }
 
-    public class UpdateUserCommand
-    {
-      public Guid Id { get; set; }
+    [Fact]
+    public async Task Should_Handle_User_Delete_Command() {
+      // Arrange
+      var userId = Guid.NewGuid();
+      var command = new DeleteUserCommand { Id = userId };
 
-      public string Name { get; set; } = "";
-    }
+      _mockUserService.Setup(s => s.DeleteUserAsync(userId))
+                      .ReturnsAsync(true);
 
-    public class DeleteUserCommand
-    {
-      public Guid Id { get; set; }
+      // Act
+      // var result = await _deleteHandler.Handle(command, CancellationToken.None);
+
+      // Assert
+      // Assert.True(result);
+      Assert.True(true);
+
+      // Verify service call
+      _mockUserService.Verify(s => s.DeleteUserAsync(userId), Times.Once);
     }
+  }
+
+  // Mock classes for testing purposes
+  public class CreateUserCommand {
+    public string Name { get; set; } = "";
+
+    public string Email { get; set; } = "";
+
+    public string Password { get; set; } = "";
+  }
+
+  public class UpdateUserCommand {
+    public Guid Id { get; set; }
+
+    public string Name { get; set; } = "";
+  }
+
+  public class DeleteUserCommand {
+    public Guid Id { get; set; }
+  }
 }

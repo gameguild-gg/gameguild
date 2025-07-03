@@ -1,20 +1,23 @@
-using Xunit;
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
+using System.Net.Http.Headers;
 using System.Text;
-using GameGuild.Data;
-using GameGuild.Common.Entities;
+using System.Text.Json;
 using GameGuild.Common.Enums;
 using GameGuild.Common.Services;
-using GameGuild.Tests.Fixtures;
-using GameGuild.Modules.Auth.Services;
+using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
-using System.Net.Http.Headers;
-using TenantModel = GameGuild.Modules.Tenant.Models.Tenant;
+using GameGuild.Modules.Auth.Services;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Projects.Models;
+using GameGuild.Modules.Users.Models;
+using GameGuild.Tests.Fixtures;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
 using Xunit.Abstractions;
+using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
 
 
-namespace GameGuild.Tests.Modules.Project.E2E;
+namespace GameGuild.Tests.Modules.Projects.E2E.GraphQL;
 
 /// <summary>
 /// Integration tests for Project GraphQL operations
@@ -59,7 +62,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     var token = await GenerateJwtTokenAsync(user, tenant);
     SetAuthorizationHeader(token);
 
-    var project1 = new GameGuild.Modules.Project.Models.Project {
+    var project1 = new Project {
       Title = "GraphQL Test Project 1",
       Description = "First test project for GraphQL",
       Status = ContentStatus.Published,
@@ -67,7 +70,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
       Type = ProjectType.Game,
     };
 
-    var project2 = new GameGuild.Modules.Project.Models.Project {
+    var project2 = new Project {
       Title = "GraphQL Test Project 2",
       Description = "Second test project for GraphQL",
       Status = ContentStatus.Published,
@@ -129,7 +132,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     var token = await GenerateJwtTokenAsync(user, tenant);
     SetAuthorizationHeader(token);
 
-    var project = new GameGuild.Modules.Project.Models.Project {
+    var project = new Project {
       Title = "Specific GraphQL Project",
       Description = "This project is queried by ID",
       Status = ContentStatus.Published,
@@ -191,9 +194,9 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     var token = await GenerateJwtTokenAsync(user, tenant);
     SetAuthorizationHeader(token);
 
-    var gameProject = new GameGuild.Modules.Project.Models.Project { Title = "Game Project", Type = ProjectType.Game, Status = ContentStatus.Published, Visibility = AccessLevel.Public };
+    var gameProject = new Project { Title = "Game Project", Type = ProjectType.Game, Status = ContentStatus.Published, Visibility = AccessLevel.Public };
 
-    var toolProject = new GameGuild.Modules.Project.Models.Project { Title = "Tool Project", Type = ProjectType.Tool, Status = ContentStatus.Published, Visibility = AccessLevel.Public };
+    var toolProject = new Project { Title = "Tool Project", Type = ProjectType.Tool, Status = ContentStatus.Published, Visibility = AccessLevel.Public };
 
     _context.Projects.AddRange(gameProject, toolProject);
     await _context.SaveChangesAsync();
@@ -313,7 +316,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     var token = await GenerateJwtTokenAsync(user, tenant);
     SetAuthorizationHeader(token);
 
-    var project = new GameGuild.Modules.Project.Models.Project { Title = "Project to Update", Description = "Original description", Status = ContentStatus.Draft, Type = ProjectType.Game };
+    var project = new Project { Title = "Project to Update", Description = "Original description", Status = ContentStatus.Draft, Type = ProjectType.Game };
 
     _context.Projects.Add(project);
     await _context.SaveChangesAsync();
@@ -378,7 +381,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     var token = await GenerateJwtTokenAsync(user, tenant);
     SetAuthorizationHeader(token);
 
-    var project = new GameGuild.Modules.Project.Models.Project { Title = "Project to Delete", Description = "This project will be deleted", Status = ContentStatus.Draft };
+    var project = new Project { Title = "Project to Delete", Description = "This project will be deleted", Status = ContentStatus.Draft };
 
     _context.Projects.Add(project);
     await _context.SaveChangesAsync();
@@ -430,11 +433,11 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     var token = await GenerateJwtTokenAsync(user, tenant);
     SetAuthorizationHeader(token);
 
-    var project1 = new GameGuild.Modules.Project.Models.Project { Title = "Amazing RPG Game", Description = "A fantastic role-playing game", Status = ContentStatus.Published, Visibility = AccessLevel.Public };
+    var project1 = new Project { Title = "Amazing RPG Game", Description = "A fantastic role-playing game", Status = ContentStatus.Published, Visibility = AccessLevel.Public };
 
-    var project2 = new GameGuild.Modules.Project.Models.Project { Title = "Simple Calculator Tool", Description = "A utility for calculations", Status = ContentStatus.Published, Visibility = AccessLevel.Public };
+    var project2 = new Project { Title = "Simple Calculator Tool", Description = "A utility for calculations", Status = ContentStatus.Published, Visibility = AccessLevel.Public };
 
-    var project3 = new GameGuild.Modules.Project.Models.Project { Title = "Another Amazing Project", ShortDescription = "Yet another fantastic creation", Status = ContentStatus.Published, Visibility = AccessLevel.Public };
+    var project3 = new Project { Title = "Another Amazing Project", ShortDescription = "Yet another fantastic creation", Status = ContentStatus.Published, Visibility = AccessLevel.Public };
 
     _context.Projects.AddRange(project1, project2, project3);
     await _context.SaveChangesAsync();
@@ -540,8 +543,8 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   /// <summary>
   /// Creates a test user for authentication purposes
   /// </summary>
-  private async Task<GameGuild.Modules.User.Models.User> CreateTestUserAsync() {
-    var user = new GameGuild.Modules.User.Models.User {
+  private async Task<User> CreateTestUserAsync() {
+    var user = new User {
       Id = Guid.NewGuid(),
       Name = "Test User",
       Email = "test@example.com",
@@ -559,8 +562,8 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   /// <summary>
   /// Creates a test tenant for multi-tenancy support
   /// </summary>
-  private async Task<GameGuild.Modules.Tenant.Models.Tenant> CreateTestTenantAsync() {
-    var tenant = new GameGuild.Modules.Tenant.Models.Tenant {
+  private async Task<TenantModel> CreateTestTenantAsync() {
+    var tenant = new TenantModel {
       Id = Guid.NewGuid(),
       Name = "Test Tenant",
       Slug = "test-tenant",
@@ -579,7 +582,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   /// Grants content-type permissions for a user to perform operations on projects
   /// </summary>
   private async Task GrantContentTypePermissions(
-    GameGuild.Modules.User.Models.User user, TenantModel tenant, string contentTypeName,
+    User user, TenantModel tenant, string contentTypeName,
     PermissionType[] permissions
   ) {
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
@@ -589,7 +592,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   /// <summary>
   /// Generates a JWT token for test authentication
   /// </summary>
-  private Task<string> GenerateJwtTokenAsync(GameGuild.Modules.User.Models.User user, GameGuild.Modules.Tenant.Models.Tenant tenant) {
+  private Task<string> GenerateJwtTokenAsync(User user, TenantModel tenant) {
     var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };

@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.UserProfile.GraphQL;
+namespace GameGuild.Modules.UserProfiles.GraphQL;
 
 /// <summary>
 /// GraphQL type for UserProfile entity

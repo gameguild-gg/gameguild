@@ -1,11 +1,11 @@
-using Microsoft.EntityFrameworkCore;
-using GameGuild.Data;
-using GameGuild.Modules.Project.Models;
-using GameGuild.Common.Entities;
 using GameGuild.Common.Enums;
+using GameGuild.Data;
+using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Projects.Models;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Project.Services;
+namespace GameGuild.Modules.Projects.Services;
 
 /// <summary>
 /// Service implementation for Project business logic

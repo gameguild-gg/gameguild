@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Common.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using GameGuild.Common.Entities;
 
 
-namespace GameGuild.Modules.Product.Models;
+namespace GameGuild.Modules.Products.Models;
 
 /// <summary>
 /// Junction entity representing the relationship between a Product and a Program
@@ -38,7 +38,7 @@ public class ProductProgram : BaseEntity {
   /// Navigation property to the Program entity
   /// </summary>
   [ForeignKey(nameof(ProgramId))]
-  public virtual Program.Models.Program Program { get; set; } = null!;
+  public virtual Programs.Models.Program Program { get; set; } = null!;
 
   /// <summary>
   /// Display order of programs within the product

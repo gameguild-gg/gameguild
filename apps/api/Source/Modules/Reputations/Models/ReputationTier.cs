@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Diagnostics.CodeAnalysis;
+using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Tenants.Models;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Common.Entities;
 
 
-namespace GameGuild.Modules.Reputation.Models;
+namespace GameGuild.Modules.Reputations.Models;
 
 /// <summary>
 /// Configurable reputation tier definition stored in the database
@@ -70,7 +70,7 @@ public class ReputationTier : ResourceBase, ITenantable {
   /// Tenant this reputation tier belongs to (null for global tiers)
   /// </summary>
   [ForeignKey(nameof(TenantId))]
-  public new Modules.Tenant.Models.Tenant? Tenant { get; set; }
+  public new Tenant? Tenant { get; set; }
 
   public Guid? TenantId { get; set; }
 
