@@ -1,4 +1,5 @@
 import Google from 'next-auth/providers/google';
+import Credentials from 'next-auth/providers/credentials';
 import { environment } from '@/configs/environment';
 import { NextAuthConfig } from 'next-auth';
 import { apiClient } from '@/lib/api-client';
@@ -16,6 +17,47 @@ export const authConfig: NextAuthConfig = {
         },
       },
     }),
+    // Admin credentials provider for development
+    Credentials({
+      id: 'admin-bypass',
+      name: 'Admin Login',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        try {
+          // Call the backend API for admin authentication
+          console.log('Attempting admin login via backend API');
+          const response = await apiClient.adminLogin({
+            email: credentials.email,
+            password: credentials.password,
+          });
+
+          console.log('Admin login successful:', {
+            userId: response.user?.id,
+            userEmail: response.user?.email,
+          });
+
+          // Return the authenticated user with backend response data
+          return {
+            id: response.user.id,
+            email: response.user.email,
+            name: response.user.name || 'Admin User',
+            image: null,
+            // Store the backend response for later use in callbacks
+            cmsData: response,
+          };
+        } catch (error) {
+          console.error('Admin login failed:', error);
+          return null;
+        }
+      },
+    }),
   ],
   session: { strategy: 'jwt' },
   callbacks: {
@@ -25,6 +67,19 @@ export const authConfig: NextAuthConfig = {
         hasIdToken: !!account?.id_token,
         userEmail: user?.email,
       });
+
+      // Handle admin bypass provider
+      if (account?.provider === 'admin-bypass') {
+        console.log('Admin credentials sign in successful');
+        // For admin login, the user object already contains the backend response
+        if ((user as any).cmsData) {
+          console.log('Admin login backend response found');
+          return true;
+        } else {
+          console.error('Admin login missing backend response');
+          return false;
+        }
+      }
 
       if (account?.provider === 'google') {
         if (!account?.id_token) {
@@ -76,8 +131,7 @@ export const authConfig: NextAuthConfig = {
         }
       }
 
-      console.log('SignIn: Provider not supported or not Google:', account?.provider);
-      // For other providers, return false or implement accordingly
+      console.log('SignIn: Provider not supported:', account?.provider);
       return false;
     },
     async jwt({ token, user, account, trigger, session }) {

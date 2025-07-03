@@ -39,7 +39,7 @@ public class TenantPermission : WithPermissions {
 /// Constants for tenant permission system
 /// </summary>
 public static class TenantPermissionConstants {
-  public const int MaxPermissionsPerGrant = 50;
+  public const int MaxPermissionsPerGrant = 100;
 
   public const int MaxExpirationDays = 365;
 

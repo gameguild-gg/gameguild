@@ -339,12 +339,15 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
   }
 
   public async Task<IEnumerable<TenantUserGroup>> GetUserGroupsForUserAsync(Guid userId) {
-    return await context.TenantUserGroupMemberships.Where(m => m.UserId == userId)
+    return await context.TenantUserGroupMemberships
+                         .Include(m => m.UserGroup)
+                           .ThenInclude(g => g.Tenant)
+                         .Include(m => m.UserGroup)
+                           .ThenInclude(g => g.ParentGroup)
+                         .Where(m => m.UserId == userId)
+                         .OrderBy(m => m.UserGroup.Tenant!.Name)
+                         .ThenBy(m => m.UserGroup.Name)
                          .Select(m => m.UserGroup)
-                         .Include(g => g.Tenant)
-                         .Include(g => g.ParentGroup)
-                         .OrderBy(g => g.Tenant.Name)
-                         .ThenBy(g => g.Name)
                          .ToListAsync();
   }
 

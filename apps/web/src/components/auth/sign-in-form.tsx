@@ -107,6 +107,11 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                 Sign up
               </Link>
             </div>
+            <div className="text-center text-xs">
+              <Link href="/admin-login" className="text-muted-foreground underline underline-offset-4 hover:text-primary">
+                Admin Login (Development)
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>

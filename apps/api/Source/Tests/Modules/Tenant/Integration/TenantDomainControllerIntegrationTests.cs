@@ -383,9 +383,11 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task AssignUserToGroup_WithValidData_ReturnsCreatedMembership() {
     // Arrange
+    await SetupAuthentication(); // This already calls SetupTestData internally
+
+    // Create a group in the database
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await SetupTestData();
 
     var group = new TenantUserGroup {
       Id = Guid.NewGuid(),
@@ -423,8 +425,10 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(assignDto.UserGroupId, result.GroupId);
     Assert.Equal(assignDto.IsAutoAssigned, result.IsAutoAssigned);
 
-    // Verify it was saved to database
-    var savedMembership = await db.TenantUserGroupMemberships.FirstOrDefaultAsync(m => m.Id == result.Id);
+    // Verify it was saved to database using a fresh scope
+    using var verifyScope = _factory.Services.CreateScope();
+    var verifyDb = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var savedMembership = await verifyDb.TenantUserGroupMemberships.FirstOrDefaultAsync(m => m.Id == result.Id);
     Assert.NotNull(savedMembership);
   }
 
@@ -505,9 +509,9 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task AutoAssignUser_WithMatchingDomain_ReturnsCreatedMembership() {
     // Arrange
+    await SetupAuthentication(); // Only call this, as it calls SetupTestData internally
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await SetupTestData();
 
     var domain = new TenantDomain {
       Id = Guid.NewGuid(),
@@ -536,7 +540,6 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     await db.SaveChangesAsync();
 
     // Link domain to group manually in database for this test
-    // Note: In a real scenario, this would be set up through the admin interface
     domain.UserGroupId = group.Id;
     db.Update(domain);
     await db.SaveChangesAsync();
@@ -573,9 +576,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task AutoAssignUser_WithNoMatchingDomain_ReturnsNotFound() {
     // Arrange
-    using var scope = _factory.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await SetupTestData();
+    await SetupAuthentication(); // Only call this, as it calls SetupTestData internally
 
     var autoAssignDto = new AutoAssignUserDto { UserId = _userId, Email = "test@nonexistent.com" };
 
@@ -589,6 +590,8 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
 
     // Verify no membership was created
+    using var scope = _factory.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var membership = await db.TenantUserGroupMemberships.FirstOrDefaultAsync(m => m.UserId == _userId);
     Assert.Null(membership);
   }
@@ -754,6 +757,13 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
       user.Id,
       tenant.Id,
       "TenantDomain",
+      new[] { PermissionType.Read, PermissionType.Create, PermissionType.Delete }
+    );
+    // Grant permissions for TenantUserGroupMembership operations
+    await permissionService.GrantContentTypePermissionAsync(
+      user.Id,
+      tenant.Id,
+      "TenantUserGroupMembership",
       new[] { PermissionType.Read, PermissionType.Create, PermissionType.Delete }
     );
 
