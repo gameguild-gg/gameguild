@@ -20,12 +20,12 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   public async Task<ActionResult<IEnumerable<TenantDomain>>> GetDomains([FromQuery] Guid? tenantId) {
     if (tenantId.HasValue) {
       var domains = await tenantDomainService.GetDomainsByTenantAsync(tenantId.Value);
-
       return Ok(domains);
     }
 
-    // If no tenant specified, this would require admin permissions
-    return BadRequest("TenantId is required");
+    // If no tenant specified, return all domains (requires admin permissions via the attribute)
+    var allDomains = await tenantDomainService.GetAllDomainsAsync();
+    return Ok(allDomains);
   }
 
   // GET: api/tenant-domains/{id}

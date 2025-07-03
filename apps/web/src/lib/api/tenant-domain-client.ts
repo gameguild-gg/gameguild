@@ -17,6 +17,9 @@ class TenantDomainApiClient {
   constructor(baseUrl: string, accessToken?: string) {
     this.baseUrl = baseUrl;
     this.accessToken = accessToken;
+    if (!accessToken) {
+      console.warn('[TenantDomainApiClient] Warning: No access token provided. Requests may fail due to missing authentication.');
+    }
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -35,6 +38,14 @@ class TenantDomainApiClient {
       headers.Authorization = `Bearer ${this.accessToken}`;
     }
 
+    // Debug log for outgoing request
+    console.log('[TenantDomainApiClient] Request:', {
+      url,
+      method: options.method || 'GET',
+      headers,
+      body: options.body,
+    });
+
     const config: RequestInit = {
       ...options,
       headers,
@@ -42,17 +53,34 @@ class TenantDomainApiClient {
 
     const response = await fetch(url, config);
 
+    // Debug log for response status
+    console.log('[TenantDomainApiClient] Response status:', response.status);
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      let errorData = {};
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        // ignore
+      }
+      console.error('[TenantDomainApiClient] Error response body:', errorData);
+      throw new Error((errorData as any).message || `HTTP error! status: ${response.status}`);
     }
 
     return response.json();
   }
 
   // Domain Management
-  async getDomains(tenantId: string): Promise<TenantDomain[]> {
-    return this.request<TenantDomain[]>(`/api/tenant-domains?tenantId=${tenantId}`);
+  async getDomains(tenantId?: string | null): Promise<TenantDomain[]> {
+    let endpoint = '/api/tenant-domains';
+    // Normalize tenantId: treat 'default-tenant-id' and '' as null
+    const normalizedTenantId = (!tenantId || tenantId === 'default-tenant-id' || tenantId === '') ? null : tenantId;
+    console.log('[TenantDomainApiClient] getDomains called with tenantId:', normalizedTenantId);
+    if (normalizedTenantId) {
+      endpoint += `?tenantId=${normalizedTenantId}`;
+    }
+    console.log('[TenantDomainApiClient] getDomains final endpoint:', endpoint);
+    return this.request<TenantDomain[]>(endpoint);
   }
 
   async getDomain(id: string): Promise<TenantDomain> {
@@ -86,8 +114,24 @@ class TenantDomainApiClient {
   }
 
   // User Group Management
-  async getUserGroups(tenantId: string): Promise<TenantUserGroup[]> {
-    return this.request<TenantUserGroup[]>(`/api/tenant-domains/user-groups/tenant/${tenantId}`);
+  async getUserGroups(tenantId: string | null): Promise<TenantUserGroup[]> {
+    console.log('🔍 [TenantDomainApiClient] Getting user groups for tenantId:', tenantId);
+    
+    // For admin users (tenantId null), we don't have a global endpoint yet
+    // Return empty array to avoid 404 errors
+    if (tenantId === null || tenantId === '' || tenantId === 'default-tenant-id') {
+      console.log('⚠️ [TenantDomainApiClient] Admin user or invalid tenantId - returning empty user groups');
+      return [];
+    }
+    
+    try {
+      const result = await this.request<TenantUserGroup[]>(`/api/tenant-domains/user-groups?tenantId=${tenantId}`);
+      console.log('✅ [TenantDomainApiClient] Successfully fetched user groups:', result.length);
+      return result;
+    } catch (error) {
+      console.error('❌ [TenantDomainApiClient] Failed to fetch user groups:', error);
+      throw error;
+    }
   }
 
   async getUserGroup(id: string): Promise<TenantUserGroup> {

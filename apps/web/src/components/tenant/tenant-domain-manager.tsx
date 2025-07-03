@@ -12,9 +12,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Edit, Plus, Globe, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import { TenantService } from '@/lib/services/tenant.service';
 
 interface TenantDomainManagerProps {
-  tenantId: string;
+  tenantId: string | null;
   apiBaseUrl: string;
   accessToken?: string;
 }
@@ -31,6 +32,9 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
     isMainDomain: false,
     isSecondaryDomain: false,
   });
+  const [allTenants, setAllTenants] = useState<{ id: string; name: string }[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState<string>('');
+  const isAdminView = tenantId === null || tenantId === '' || tenantId === 'default-tenant-id';
 
   const apiClient = useMemo(() => new TenantDomainApiClient(apiBaseUrl, accessToken), [apiBaseUrl, accessToken]);
 
@@ -55,16 +59,30 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
     void fetchDomains();
   }, [fetchDomains]);
 
+  useEffect(() => {
+    if (isAdminView && accessToken) {
+      TenantService.getAllTenants(accessToken).then(tenants => {
+        setAllTenants(tenants.map(t => ({ id: t.id, name: t.name })));
+      });
+    }
+  }, [isAdminView, accessToken]);
+
   const handleCreateDomain = async () => {
+    let domainTenantId: string | null = tenantId;
+    if (isAdminView) {
+      domainTenantId = selectedTenantId || null;
+    }
     try {
-      const request: CreateTenantDomainRequest = {
-        tenantId,
+      // Only include tenantId if not null/empty
+      const request: any = {
         topLevelDomain: formData.topLevelDomain,
         subdomain: formData.subdomain || undefined,
         isMainDomain: formData.isMainDomain,
         isSecondaryDomain: formData.isSecondaryDomain,
       };
-
+      if (domainTenantId) {
+        request.tenantId = domainTenantId;
+      }
       await apiClient.createDomain(request);
       toast.success('Domain created successfully');
       setIsCreateDialogOpen(false);
@@ -109,6 +127,11 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
   };
 
   const handleSetMainDomain = async (domain: TenantDomain) => {
+    if (!tenantId) {
+      toast.error('No tenant ID available for setting main domain');
+      return;
+    }
+    
     try {
       await apiClient.setMainDomain(tenantId, domain.id);
       toast.success('Main domain updated successfully');
@@ -176,6 +199,22 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              {isAdminView && (
+                <div>
+                  <Label htmlFor="tenant">Tenant *</Label>
+                  <select
+                    id="tenant"
+                    className="w-full p-2 border rounded-md"
+                    value={selectedTenantId}
+                    onChange={e => setSelectedTenantId(e.target.value)}
+                  >
+                    <option value="">Global (no tenant)</option>
+                    {allTenants.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <Label htmlFor="topLevelDomain">Top Level Domain *</Label>
                 <Input

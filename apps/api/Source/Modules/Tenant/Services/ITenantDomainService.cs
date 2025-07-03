@@ -15,6 +15,8 @@ public interface ITenantDomainService {
 
   Task<IEnumerable<TenantDomain>> GetDomainsByTenantAsync(Guid tenantId);
 
+  Task<IEnumerable<TenantDomain>> GetAllDomainsAsync();
+
   Task<TenantDomain?> GetDomainByFullDomainAsync(string fullDomain);
 
   Task<TenantDomain> UpdateDomainAsync(TenantDomain domain);
