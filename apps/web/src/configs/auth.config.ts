@@ -27,21 +27,24 @@ export const authConfig: NextAuthConfig = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.error('[NextAuth][admin-bypass] Missing credentials:', credentials);
           return null;
         }
 
         try {
           // Call the backend API for admin authentication
-          console.log('Attempting admin login via backend API');
+          console.log('[NextAuth][admin-bypass] Attempting admin login via backend API', credentials);
           const response = await apiClient.adminLogin({
             email: credentials.email,
             password: credentials.password,
           });
 
-          console.log('Admin login successful:', {
-            userId: response.user?.id,
-            userEmail: response.user?.email,
-          });
+          console.log('[NextAuth][admin-bypass] Raw backend response:', response);
+
+          if (!response || !response.user || !response.user.id || !response.accessToken) {
+            console.error('[NextAuth][admin-bypass] Invalid backend response:', response);
+            return null;
+          }
 
           // Return the authenticated user with backend response data
           return {
@@ -53,7 +56,13 @@ export const authConfig: NextAuthConfig = {
             cmsData: response,
           };
         } catch (error) {
-          console.error('Admin login failed:', error);
+          console.error('[NextAuth][admin-bypass] Admin login failed:', error);
+          if (error instanceof Error) {
+            console.error('[NextAuth][admin-bypass] Error message:', error.message);
+            if ((error as any).response) {
+              console.error('[NextAuth][admin-bypass] Error response:', (error as any).response);
+            }
+          }
           return null;
         }
       },

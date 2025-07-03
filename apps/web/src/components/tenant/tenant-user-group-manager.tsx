@@ -13,9 +13,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Edit, Plus, Users, Star } from 'lucide-react';
 import { toast } from 'sonner';
+import { TenantService } from '@/lib/services/tenant.service';
 
 interface TenantUserGroupManagerProps {
-  tenantId: string;
+  tenantId: string | null;
   apiBaseUrl: string;
   accessToken?: string;
 }
@@ -32,6 +33,8 @@ export function TenantUserGroupManager({ tenantId, apiBaseUrl, accessToken }: Te
     isDefault: false,
     parentGroupId: '',
   });
+  const [allTenants, setAllTenants] = useState<{ id: string; name: string }[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState<string>('');
 
   const apiClient = useMemo(() => new TenantDomainApiClient(apiBaseUrl, accessToken), [apiBaseUrl, accessToken]);
 
@@ -48,20 +51,35 @@ export function TenantUserGroupManager({ tenantId, apiBaseUrl, accessToken }: Te
     }
   }, [tenantId, apiClient]);
 
+  const isAdminView = tenantId === null || tenantId === '' || tenantId === 'default-tenant-id';
+
   useEffect(() => {
     void fetchGroups();
   }, [fetchGroups]);
 
+  // Fetch all tenants for admin view
+  useEffect(() => {
+    if (isAdminView && accessToken) {
+      TenantService.getAllTenants(accessToken).then(tenants => {
+        setAllTenants(tenants.map(t => ({ id: t.id, name: t.name })));
+      });
+    }
+  }, [isAdminView, accessToken]);
+
   const handleCreateGroup = async () => {
+    let groupTenantId = tenantId;
+    if (isAdminView) {
+      groupTenantId = selectedTenantId || null;
+    }
     try {
+      // Only include tenantId if it is a non-empty, non-null value
       const request: CreateTenantUserGroupRequest = {
-        tenantId,
         name: formData.name,
         description: formData.description || undefined,
         isDefault: formData.isDefault,
         parentGroupId: formData.parentGroupId || undefined,
+        ...(groupTenantId ? { tenantId: groupTenantId } : {}),
       };
-
       await apiClient.createUserGroup(request);
       toast.success('User group created successfully');
       setIsCreateDialogOpen(false);
@@ -142,7 +160,12 @@ export function TenantUserGroupManager({ tenantId, apiBaseUrl, accessToken }: Te
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">User Groups</h2>
-          <p className="text-muted-foreground">Manage user groups and their hierarchies</p>
+          <p className="text-muted-foreground">
+            {isAdminView 
+              ? "Admin view - User groups are displayed per tenant. You can also create global user groups."
+              : "Manage user groups and their hierarchies"
+            }
+          </p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -157,6 +180,22 @@ export function TenantUserGroupManager({ tenantId, apiBaseUrl, accessToken }: Te
               <DialogDescription>Add a new user group to organize your tenant users</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              {isAdminView && (
+                <div>
+                  <Label htmlFor="tenant">Tenant</Label>
+                  <select
+                    id="tenant"
+                    className="w-full p-2 border rounded-md"
+                    value={selectedTenantId}
+                    onChange={e => setSelectedTenantId(e.target.value)}
+                  >
+                    <option value="">Global (no tenant)</option>
+                    {allTenants.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <Label htmlFor="name">Group Name *</Label>
                 <Input

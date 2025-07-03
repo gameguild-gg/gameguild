@@ -3,6 +3,7 @@
   "description": "",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "npm run types:check && next dev",
     "build": "npm run types:check && next build",

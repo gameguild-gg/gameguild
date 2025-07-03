@@ -40,6 +40,14 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
                          .ToListAsync();
   }
 
+  public async Task<IEnumerable<TenantDomain>> GetAllDomainsAsync() {
+    return await context.TenantDomains.Where(d => d.DeletedAt == null)
+                         .OrderBy(d => d.TenantId)
+                         .ThenBy(d => d.IsMainDomain ? 0 : 1)
+                         .ThenBy(d => d.TopLevelDomain)
+                         .ToListAsync();
+  }
+
   public async Task<TenantDomain?> GetDomainByFullDomainAsync(string fullDomain) {
     var normalizedDomain = fullDomain.ToLowerInvariant();
 
