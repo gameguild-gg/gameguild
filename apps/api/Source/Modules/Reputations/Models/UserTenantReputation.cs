@@ -23,7 +23,7 @@ public class UserTenantReputation : ResourceBase, IReputation {
   /// </summary>
   [Required]
   [ForeignKey(nameof(TenantPermissionId))]
-  public required Modules.Tenant.Models.TenantPermission TenantPermission {
+  public required TenantPermission TenantPermission {
     get;
     set;
   }

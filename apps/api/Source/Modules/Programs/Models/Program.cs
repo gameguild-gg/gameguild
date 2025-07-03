@@ -70,13 +70,13 @@ public class Program : Content {
 
   public virtual ICollection<ProgramUser> ProgramUsers { get; set; } = new List<ProgramUser>();
 
-  public virtual ICollection<Product.Models.ProductProgram> ProductPrograms { get; set; } = new List<Product.Models.ProductProgram>();
+  public virtual ICollection<ProductProgram> ProductPrograms { get; set; } = new List<ProductProgram>();
 
   public virtual ICollection<Certificate.Models.Certificate> Certificates { get; set; } = new List<Certificate.Models.Certificate>();
 
-  public virtual ICollection<Feedback.Models.ProgramFeedbackSubmission> FeedbackSubmissions { get; set; } = new List<Feedback.Models.ProgramFeedbackSubmission>();
+  public virtual ICollection<ProgramFeedbackSubmission> FeedbackSubmissions { get; set; } = new List<ProgramFeedbackSubmission>();
 
-  public virtual ICollection<Feedback.Models.ProgramRating> ProgramRatings { get; set; } = new List<Feedback.Models.ProgramRating>();
+  public virtual ICollection<ProgramRating> ProgramRatings { get; set; } = new List<ProgramRating>();
 
   public virtual ICollection<ProgramWishlist> ProgramWishlists { get; set; } = new List<ProgramWishlist>();
 

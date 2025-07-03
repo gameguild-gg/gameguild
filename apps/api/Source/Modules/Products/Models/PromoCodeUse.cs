@@ -48,7 +48,7 @@ public class PromoCodeUse : BaseEntity {
   /// Navigation property to the FinancialTransaction entity
   /// </summary>
   [ForeignKey(nameof(FinancialTransactionId))]
-  public virtual Payment.Models.FinancialTransaction FinancialTransaction { get; set; } = null!;
+  public virtual FinancialTransaction FinancialTransaction { get; set; } = null!;
 
   /// <summary>
   /// The actual discount amount that was applied

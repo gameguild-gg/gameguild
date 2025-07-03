@@ -32,7 +32,7 @@ public class UserReputationHistory : ResourceBase {
   /// The user-tenant whose reputation changed (for tenant-specific reputation tracking)
   /// </summary>
   [ForeignKey(nameof(TenantPermissionId))]
-  public Modules.Tenant.Models.TenantPermission? TenantPermission { get; set; }
+  public TenantPermission? TenantPermission { get; set; }
 
   public Guid? TenantPermissionId { get; set; }
 

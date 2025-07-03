@@ -94,7 +94,7 @@ public class ProductSubscriptionPlan : BaseEntity {
   /// <param name="partial">Partial product subscription plan data</param>
   public ProductSubscriptionPlan(object partial) : base(partial) { }
 
-  public virtual ICollection<Subscription.Models.UserSubscription> UserSubscriptions { get; set; } = new List<Subscription.Models.UserSubscription>();
+  public virtual ICollection<UserSubscription> UserSubscriptions { get; set; } = new List<UserSubscription>();
 }
 
 /// <summary>

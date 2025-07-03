@@ -33,7 +33,7 @@ public class UpdateProductInput {
 
   public ContentStatus? Status { get; set; }
 
-  public Common.Entities.AccessLevel? Visibility { get; set; }
+  public AccessLevel? Visibility { get; set; }
 }
 
 public class BundleManagementInput {

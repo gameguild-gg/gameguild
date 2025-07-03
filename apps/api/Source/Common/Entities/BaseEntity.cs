@@ -11,7 +11,7 @@ public class BaseEntity : BaseEntity<Guid> {
   /// Unique identifier for the entity
   /// </summary>
   [GraphQLType(typeof(NonNullType<UuidType>))][GraphQLDescription("The unique identifier for the entity (UUID).")]
-  public override sealed Guid Id { get; set; }
+  public sealed override Guid Id { get; set; }
 
   /// <summary>
   /// Version number for optimistic concurrency control
@@ -23,19 +23,19 @@ public class BaseEntity : BaseEntity<Guid> {
   /// Timestamp when the entity was created
   /// </summary>
   [GraphQLType(typeof(NonNullType<DateTimeType>))][GraphQLDescription("The date and time when the entity was created.")]
-  public override sealed DateTime CreatedAt { get; set; }
+  public sealed override DateTime CreatedAt { get; set; }
 
   /// <summary>
   /// Timestamp when the entity was last updated
   /// </summary>
   [GraphQLType(typeof(NonNullType<DateTimeType>))][GraphQLDescription("The date and time when the entity was last updated.")]
-  public override sealed DateTime UpdatedAt { get; set; }
+  public sealed override DateTime UpdatedAt { get; set; }
 
   /// <summary>
   /// Timestamp when the entity was soft-deleted (null if not deleted)
   /// </summary>
   [GraphQLType(typeof(DateTimeType))][GraphQLDescription("The date and time when the entity was soft deleted (null if not deleted).")]
-  public override sealed DateTime? DeletedAt { get; set; }
+  public sealed override DateTime? DeletedAt { get; set; }
 
   /// <summary>
   /// Whether the entity is soft-deleted

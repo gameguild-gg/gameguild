@@ -245,7 +245,7 @@ public class ProductController(IProductService productService) : ControllerBase 
   [RequireResourcePermission<ProductEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductEntity>> SetProductVisibility(
     Guid id,
-    [FromBody] Common.Entities.AccessLevel visibility
+    [FromBody] AccessLevel visibility
   ) {
     var product = await productService.SetVisibilityAsync(id, visibility);
 
@@ -431,7 +431,7 @@ public class ProductController(IProductService productService) : ControllerBase 
   [RequireContentTypePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<int>> GetProductCount(
     [FromQuery] ProductType? type = null,
-    [FromQuery] Common.Entities.AccessLevel? visibility = null
+    [FromQuery] AccessLevel? visibility = null
   ) {
     var count = await productService.GetProductCountAsync(type, visibility);
 

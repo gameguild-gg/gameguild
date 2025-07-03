@@ -170,7 +170,7 @@ public class RequireResourcePermissionAttribute<TResource>(PermissionType requir
             case "Project":
               var hasProjectPermission =
                 await permissionService
-                  .HasResourcePermissionAsync<ProjectPermission, GameGuild.Modules.Project.Models.Project>(
+                  .HasResourcePermissionAsync<ProjectPermission, Project>(
                     userId,
                     tenantId,
                     resourceId,
@@ -226,7 +226,7 @@ public class RequireResourcePermissionAttribute<TResource>(PermissionType requir
       var logger = context.HttpContext.RequestServices
                           .GetService<ILogger<RequireResourcePermissionAttribute<TResource>>>();
       logger?.LogError(ex, "Authorization error in RequireResourcePermissionAttribute");
-      context.Result = new Microsoft.AspNetCore.Mvc.ObjectResult("Authorization error occurred") { StatusCode = 500 };
+      context.Result = new ObjectResult("Authorization error occurred") { StatusCode = 500 };
     }
   }
 }

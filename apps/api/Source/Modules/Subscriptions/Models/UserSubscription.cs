@@ -70,9 +70,9 @@ public class UserSubscription : BaseEntity {
   public virtual User.Models.User User { get; set; } = null!;
 
   [ForeignKey(nameof(SubscriptionPlanId))]
-  public virtual Product.Models.ProductSubscriptionPlan SubscriptionPlan { get; set; } = null!;
+  public virtual ProductSubscriptionPlan SubscriptionPlan { get; set; } = null!;
 
-  public virtual ICollection<Product.Models.UserProduct> UserProducts { get; set; } = new List<Product.Models.UserProduct>();
+  public virtual ICollection<UserProduct> UserProducts { get; set; } = new List<UserProduct>();
 }
 
 public class UserSubscriptionConfiguration : IEntityTypeConfiguration<UserSubscription> {

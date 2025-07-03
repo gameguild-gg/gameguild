@@ -54,7 +54,7 @@ public class ProductType : ObjectType<ProductEntity> {
               .Description("The publication status of the product.");
 
     descriptor.Field(p => p.Visibility)
-              .Type<NonNullType<EnumType<Common.Entities.AccessLevel>>>()
+              .Type<NonNullType<EnumType<AccessLevel>>>()
               .Description("The access level of the product.");
 
     descriptor.Field(p => p.IsBundle)

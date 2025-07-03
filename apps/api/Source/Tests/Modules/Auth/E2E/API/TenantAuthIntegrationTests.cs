@@ -29,7 +29,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
 
   private static async Task SetupTestTenantData(ApplicationDbContext db) {
     // Ensure the database is clean and recreated before each test
-    if (Microsoft.EntityFrameworkCore.InMemoryDatabaseFacadeExtensions.IsInMemory(db.Database)) {
+    if (InMemoryDatabaseFacadeExtensions.IsInMemory(db.Database)) {
       // Clean and recreate the database to avoid test interference
       await db.Database.EnsureDeletedAsync();
       await db.Database.EnsureCreatedAsync();

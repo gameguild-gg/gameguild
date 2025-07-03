@@ -114,7 +114,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
 
         services
           .AddSingleton<GameGuild.Modules.Tenant.Services.ITenantContextService,
-            GameGuild.Tests.Helpers.MockTenantContextService>();
+            Helpers.MockTenantContextService>();
 
         // Add in-memory database for testing with unique database name
         var databaseName = $"TestDatabase_{Guid.NewGuid()}";

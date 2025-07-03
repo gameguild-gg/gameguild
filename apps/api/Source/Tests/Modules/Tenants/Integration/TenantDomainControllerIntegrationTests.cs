@@ -39,7 +39,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
 
   private async Task SetupTestData() {
     // Ensure the database is clean and recreated before each test
-    if (Microsoft.EntityFrameworkCore.InMemoryDatabaseFacadeExtensions.IsInMemory(_context.Database)) {
+    if (InMemoryDatabaseFacadeExtensions.IsInMemory(_context.Database)) {
       // Clean and recreate the database to avoid test interference
       await _context.Database.EnsureDeletedAsync();
       await _context.Database.EnsureCreatedAsync();

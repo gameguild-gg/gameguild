@@ -94,7 +94,7 @@ public class ProgramRating : BaseEntity {
   public virtual Product.Models.Product? Product { get; set; }
 
   [ForeignKey(nameof(ProgramUserId))]
-  public virtual Program.Models.ProgramUser ProgramUser { get; set; } = null!;
+  public virtual ProgramUser ProgramUser { get; set; } = null!;
 
   [ForeignKey(nameof(ModeratedBy))]
   public virtual User.Models.User? Moderator { get; set; }

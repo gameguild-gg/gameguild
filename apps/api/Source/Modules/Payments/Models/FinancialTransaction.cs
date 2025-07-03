@@ -112,9 +112,9 @@ public class FinancialTransaction : BaseEntity {
   public virtual UserFinancialMethod? PaymentMethod { get; set; }
 
   [ForeignKey(nameof(PromoCodeId))]
-  public virtual Product.Models.PromoCode? PromoCode { get; set; }
+  public virtual PromoCode? PromoCode { get; set; }
 
-  public virtual ICollection<Product.Models.PromoCodeUse> PromoCodeUses { get; set; } = new List<Product.Models.PromoCodeUse>();
+  public virtual ICollection<PromoCodeUse> PromoCodeUses { get; set; } = new List<PromoCodeUse>();
 }
 
 public class FinancialTransactionConfiguration : IEntityTypeConfiguration<FinancialTransaction> {

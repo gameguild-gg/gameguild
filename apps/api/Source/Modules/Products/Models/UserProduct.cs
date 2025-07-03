@@ -55,7 +55,7 @@ public class UserProduct : BaseEntity {
   /// Navigation property to the Subscription entity
   /// </summary>
   [ForeignKey(nameof(SubscriptionId))]
-  public virtual Subscription.Models.UserSubscription? Subscription { get; set; }
+  public virtual UserSubscription? Subscription { get; set; }
 
   /// <summary>
   /// How the user acquired this product

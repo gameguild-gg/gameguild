@@ -88,11 +88,11 @@ public class ProgramUser : BaseEntity {
 
   public virtual ICollection<ActivityGrade> GivenGrades { get; set; } = new List<ActivityGrade>();
 
-  public virtual ICollection<Certificate.Models.UserCertificate> UserCertificates { get; set; } = new List<Certificate.Models.UserCertificate>();
+  public virtual ICollection<UserCertificate> UserCertificates { get; set; } = new List<UserCertificate>();
 
-  public virtual ICollection<Feedback.Models.ProgramFeedbackSubmission> FeedbackSubmissions { get; set; } = new List<Feedback.Models.ProgramFeedbackSubmission>();
+  public virtual ICollection<ProgramFeedbackSubmission> FeedbackSubmissions { get; set; } = new List<ProgramFeedbackSubmission>();
 
-  public virtual ICollection<Feedback.Models.ProgramRating> ProgramRatings { get; set; } = new List<Feedback.Models.ProgramRating>();
+  public virtual ICollection<ProgramRating> ProgramRatings { get; set; } = new List<ProgramRating>();
 
   /// <summary>
   /// Default constructor
