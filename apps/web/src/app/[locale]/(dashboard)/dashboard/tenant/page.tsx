@@ -21,15 +21,15 @@ export default function TenantManagementPage() {
       if (session.user?.email === 'admin@gameguild.local') {
         console.log('Admin session detected');
         setIsAdminMode(true);
-        setTenantId('default-tenant-id'); // Default tenant ID for admin
+        setTenantId(null); // Admin should get all domains, no specific tenant
       } else if (session.tenantId) {
         // Regular user session
         console.log('Regular session tenant ID found:', session.tenantId);
         setTenantId(session.tenantId);
       } else {
         console.log('Session found but no tenant ID:', session);
-        // Could set a default or redirect to tenant selection
-        setTenantId('default-tenant-id');
+        // Set null instead of default-tenant-id
+        setTenantId(null);
       }
     }
   }, [session]);
@@ -46,8 +46,8 @@ export default function TenantManagementPage() {
     );
   }
 
-  // Show loading if we don't have a tenant ID yet
-  if (!tenantId) {
+  // Show loading if we don't have a tenant ID yet (unless it's admin mode)
+  if (!tenantId && !isAdminMode) {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center">
@@ -59,7 +59,7 @@ export default function TenantManagementPage() {
   }
 
   // Ensure we have a tenant ID (either from session or admin mode)
-  const currentTenantId = tenantId || 'default-tenant-id';
+  const currentTenantId = tenantId;
 
   return (
     <div className="container mx-auto p-6 space-y-8">
