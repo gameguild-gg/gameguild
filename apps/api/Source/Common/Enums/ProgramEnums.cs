@@ -142,7 +142,9 @@ public enum ProgramCategory {
 
   [Description("Mobile app development")]
   MobileDevelopment,
-  [Description("Game development")] GameDevelopment,
+
+  [Description("Game development")]
+  GameDevelopment,
 
   [Description("Artificial intelligence and machine learning")]
   AI,
@@ -174,7 +176,9 @@ public enum ProgramCategory {
 
   [Description("Science and mathematics")]
   Science,
+
   [Description("Language learning")] Language,
+
   [Description("Other categories")] Other,
 }
 
@@ -190,4 +194,33 @@ public enum ProgramDifficulty {
 
   [Description("Requires expert-level knowledge")]
   Expert,
+}
+
+// public enum VerificationStatus {
+//   [Description("Not verified")]
+//   NotVerified,
+
+//   [Description("Verified by GameGuild team")]
+//   GameGuildVerified,
+
+//   [Description("Verified by community")]
+//   CommunityVerified,
+
+//   [Description("Verified by both GameGuild and community")]
+//   FullyVerified
+// }
+
+// todo: EnrollmentStatus should use permission system instead of this enum
+public enum EnrollmentStatus {
+  [Description("Open for enrollment")]
+  Open,
+
+  [Description("Closed for enrollment")]
+  Closed,
+
+  [Description("Invite only")]
+  InviteOnly,
+
+  [Description("Waitlist available")]
+  Waitlist
 }
