@@ -25,7 +25,7 @@ public class CertificateTag : BaseEntity {
   public virtual Certificate Certificate { get; set; } = null!;
 
   [ForeignKey(nameof(TagId))]
-  public virtual Tag.Models.TagProficiency Tag { get; set; } = null!;
+  public virtual TagProficiency Tag { get; set; } = null!;
 }
 
 public class CertificateTagConfiguration : IEntityTypeConfiguration<CertificateTag> {

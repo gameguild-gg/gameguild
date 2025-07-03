@@ -177,7 +177,7 @@ public class WithPermissions : BaseEntity {
   /// </summary>
   [GraphQLIgnore]
   [ForeignKey(nameof(UserId))]
-  public virtual Modules.User.Models.User? User { get; set; }
+  public virtual User? User { get; set; }
 
   /// <summary>
   /// Tenant relationship - NULL means global defaults
@@ -191,7 +191,7 @@ public class WithPermissions : BaseEntity {
   /// </summary>
   [GraphQLIgnore]
   [ForeignKey(nameof(TenantId))]
-  public virtual new Modules.Tenant.Models.Tenant? Tenant { get; set; }
+  public new virtual Tenant? Tenant { get; set; }
 
   /// <summary>
   /// Optional expiration date for this permission

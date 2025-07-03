@@ -33,7 +33,7 @@ public class ProjectTeam : ResourceBase {
   /// <summary>
   /// Navigation property to team
   /// </summary>
-  public virtual GameGuild.Models.Team Team { get; set; } = null!;
+  public virtual Team Team { get; set; } = null!;
 
   /// <summary>
   /// Role of the team in the project

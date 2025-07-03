@@ -43,5 +43,5 @@ public class TagProficiency : BaseEntity {
   public bool IsActive { get; set; } = true;
 
   // Navigation properties
-  public virtual ICollection<Certificate.Models.CertificateTag> CertificateTags { get; set; } = new List<Certificate.Models.CertificateTag>();
+  public virtual ICollection<CertificateTag> CertificateTags { get; set; } = new List<CertificateTag>();
 }

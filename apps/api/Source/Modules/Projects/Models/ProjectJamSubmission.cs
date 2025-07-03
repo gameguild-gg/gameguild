@@ -82,5 +82,5 @@ public class ProjectJamSubmission : ResourceBase {
   /// <summary>
   /// Navigation property to jam scores
   /// </summary>
-  public virtual ICollection<Jam.Models.JamScore> Scores { get; set; } = new List<Jam.Models.JamScore>();
+  public virtual ICollection<JamScore> Scores { get; set; } = new List<JamScore>();
 }

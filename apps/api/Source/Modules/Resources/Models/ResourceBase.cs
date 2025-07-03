@@ -40,7 +40,7 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable {
   /// Entity Framework will automatically create the TenantId foreign key
   /// Null means the resource is global and accessible across all tenants
   /// </summary>
-  public override Modules.Tenant.Models.Tenant? Tenant { get; set; }
+  public override Tenant? Tenant { get; set; }
 
   /// <summary>
   /// Indicates whether this resource is accessible across all tenants (when Tenant is null)
@@ -81,7 +81,7 @@ public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable {
   /// Assigns this resource to a specific tenant
   /// </summary>
   /// <param name="tenant">The tenant to assign this resource to</param>
-  public void AssignToTenant(Modules.Tenant.Models.Tenant tenant) { Tenant = tenant; }
+  public void AssignToTenant(Tenant tenant) { Tenant = tenant; }
 
   /// <summary>
   /// Makes this resource global (accessible across all tenants)

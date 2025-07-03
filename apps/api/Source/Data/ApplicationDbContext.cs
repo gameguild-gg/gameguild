@@ -57,39 +57,39 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<ResourceLocalization> ResourceLocalizations { get; set; }
 
   // Resource Permission DbSets (Layer 3 of DAC system)
-  public DbSet<Modules.Comment.Models.CommentPermission> CommentPermissions { get; set; }
+  public DbSet<CommentPermission> CommentPermissions { get; set; }
 
-  public DbSet<Modules.Program.Models.ProgramPermission> ProgramPermissions { get; set; }
+  public DbSet<ProgramPermission> ProgramPermissions { get; set; }
 
-  public DbSet<Modules.Product.Models.ProductPermission> ProductPermissions { get; set; }
+  public DbSet<ProductPermission> ProductPermissions { get; set; }
 
   public DbSet<ProjectPermission> ProjectPermissions { get; set; }
 
   // Reputation Management DbSets
-  public DbSet<Modules.Reputation.Models.UserReputation> UserReputations { get; set; }
+  public DbSet<UserReputation> UserReputations { get; set; }
 
-  public DbSet<Modules.Reputation.Models.UserTenantReputation> UserTenantReputations { get; set; }
+  public DbSet<UserTenantReputation> UserTenantReputations { get; set; }
 
-  public DbSet<Modules.Reputation.Models.ReputationTier> ReputationTiers { get; set; }
+  public DbSet<ReputationTier> ReputationTiers { get; set; }
 
-  public DbSet<Modules.Reputation.Models.ReputationAction> ReputationActions { get; set; }
+  public DbSet<ReputationAction> ReputationActions { get; set; }
 
-  public DbSet<Modules.Reputation.Models.UserReputationHistory> UserReputationHistory { get; set; }
+  public DbSet<UserReputationHistory> UserReputationHistory { get; set; }
 
   // Product Management DbSets
-  public DbSet<Modules.Product.Models.Product> Products { get; set; }
+  public DbSet<Product> Products { get; set; }
 
-  public DbSet<Modules.Product.Models.ProductPricing> ProductPricings { get; set; }
+  public DbSet<ProductPricing> ProductPricings { get; set; }
 
-  public DbSet<Modules.Product.Models.ProductProgram> ProductPrograms { get; set; }
+  public DbSet<ProductProgram> ProductPrograms { get; set; }
 
-  public DbSet<Modules.Product.Models.ProductSubscriptionPlan> ProductSubscriptionPlans { get; set; }
+  public DbSet<ProductSubscriptionPlan> ProductSubscriptionPlans { get; set; }
 
-  public DbSet<Modules.Product.Models.UserProduct> UserProducts { get; set; }
+  public DbSet<UserProduct> UserProducts { get; set; }
 
-  public DbSet<Modules.Product.Models.PromoCode> PromoCodes { get; set; }
+  public DbSet<PromoCode> PromoCodes { get; set; }
 
-  public DbSet<Modules.Product.Models.PromoCodeUse> PromoCodeUses { get; set; } // Project Management DbSets
+  public DbSet<PromoCodeUse> PromoCodeUses { get; set; } // Project Management DbSets
 
   public DbSet<Project> Projects { get; set; }
 
@@ -105,63 +105,63 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<ProjectJamSubmission> ProjectJamSubmissions { get; set; } // Test Module DbSets
 
-  public DbSet<Modules.TestingLab.Models.TestingRequest> TestingRequests { get; set; }
+  public DbSet<TestingRequest> TestingRequests { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.TestingSession> TestingSessions { get; set; }
+  public DbSet<TestingSession> TestingSessions { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.TestingParticipant> TestingParticipants { get; set; }
+  public DbSet<TestingParticipant> TestingParticipants { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.TestingFeedback> TestingFeedback { get; set; }
+  public DbSet<TestingFeedback> TestingFeedback { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.TestingFeedbackForm> TestingFeedbackForms { get; set; }
+  public DbSet<TestingFeedbackForm> TestingFeedbackForms { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.TestingLocation> TestingLocations { get; set; }
+  public DbSet<TestingLocation> TestingLocations { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.SessionRegistration> SessionRegistrations { get; set; }
+  public DbSet<SessionRegistration> SessionRegistrations { get; set; }
 
-  public DbSet<Modules.TestingLab.Models.SessionWaitlist> SessionWaitlists { get; set; } // Program Management DbSets
+  public DbSet<SessionWaitlist> SessionWaitlists { get; set; } // Program Management DbSets
 
   public DbSet<Modules.Program.Models.Program> Programs { get; set; }
 
-  public DbSet<Modules.Program.Models.ProgramContent> ProgramContents { get; set; }
+  public DbSet<ProgramContent> ProgramContents { get; set; }
 
-  public DbSet<Modules.Program.Models.ProgramUser> ProgramUsers { get; set; }
+  public DbSet<ProgramUser> ProgramUsers { get; set; }
 
-  public DbSet<Modules.Program.Models.ContentInteraction> ContentInteractions { get; set; }
+  public DbSet<ContentInteraction> ContentInteractions { get; set; }
 
-  public DbSet<Modules.Program.Models.ActivityGrade> ActivityGrades { get; set; }
+  public DbSet<ActivityGrade> ActivityGrades { get; set; }
 
   // Certificate Management DbSets
-  public DbSet<Modules.Certificate.Models.Certificate> Certificates { get; set; }
+  public DbSet<Certificate> Certificates { get; set; }
 
-  public DbSet<Modules.Certificate.Models.UserCertificate> UserCertificates { get; set; }
+  public DbSet<UserCertificate> UserCertificates { get; set; }
 
-  public DbSet<Modules.Certificate.Models.CertificateTag> CertificateTags { get; set; }
+  public DbSet<CertificateTag> CertificateTags { get; set; }
 
-  public DbSet<Modules.Certificate.Models.CertificateBlockchainAnchor> CertificateBlockchainAnchors { get; set; }
+  public DbSet<CertificateBlockchainAnchor> CertificateBlockchainAnchors { get; set; }
 
   // Tag Management DbSets
-  public DbSet<Modules.Tag.Models.Tag> Tags { get; set; }
+  public DbSet<Tag> Tags { get; set; }
 
-  public DbSet<Modules.Tag.Models.TagRelationship> TagRelationships { get; set; }
+  public DbSet<TagRelationship> TagRelationships { get; set; }
 
-  public DbSet<Modules.Tag.Models.TagProficiency> TagProficiencies { get; set; }
+  public DbSet<TagProficiency> TagProficiencies { get; set; }
 
   // Subscription Management DbSets
-  public DbSet<Modules.Subscription.Models.UserSubscription> UserSubscriptions { get; set; }
+  public DbSet<UserSubscription> UserSubscriptions { get; set; }
 
   // Payment Management DbSets
-  public DbSet<Modules.Payment.Models.UserFinancialMethod> UserFinancialMethods { get; set; }
+  public DbSet<UserFinancialMethod> UserFinancialMethods { get; set; }
 
-  public DbSet<Modules.Payment.Models.FinancialTransaction> FinancialTransactions { get; set; }
+  public DbSet<FinancialTransaction> FinancialTransactions { get; set; }
 
   // KYC Management DbSets
-  public DbSet<Modules.Kyc.Models.UserKycVerification> UserKycVerifications { get; set; }
+  public DbSet<UserKycVerification> UserKycVerifications { get; set; }
 
   // Feedback Management DbSets
-  public DbSet<Modules.Feedback.Models.ProgramFeedbackSubmission> ProgramFeedbackSubmissions { get; set; }
+  public DbSet<ProgramFeedbackSubmission> ProgramFeedbackSubmissions { get; set; }
 
-  public DbSet<Modules.Feedback.Models.ProgramRating> ProgramRatings { get; set; }
+  public DbSet<ProgramRating> ProgramRatings { get; set; }
 
   protected override void OnModelCreating(ModelBuilder modelBuilder) {
     base.OnModelCreating(modelBuilder);

@@ -57,7 +57,7 @@ public class ProductService(ApplicationDbContext context) : IProductService {
                          .Include(p => p.ProductPricings)
                          .Where(p => p.DeletedAt == null &&
                                      p.Status == ContentStatus.Published &&
-                                     p.Visibility == Common.Entities.AccessLevel.Public
+                                     p.Visibility == AccessLevel.Public
                          )
                          .OrderBy(p => p.Name)
                          .Skip(skip)
@@ -67,7 +67,7 @@ public class ProductService(ApplicationDbContext context) : IProductService {
 
   public async Task<ProductEntity> CreateProductAsync(ProductEntity product) {
     product.Status = ContentStatus.Draft;
-    product.Visibility = Common.Entities.AccessLevel.Private;
+    product.Visibility = AccessLevel.Private;
 
     context.Products.Add(product);
     await context.SaveChangesAsync();
@@ -131,7 +131,7 @@ public class ProductService(ApplicationDbContext context) : IProductService {
     return product;
   }
 
-  public async Task<ProductEntity> SetVisibilityAsync(Guid id, Common.Entities.AccessLevel visibility) {
+  public async Task<ProductEntity> SetVisibilityAsync(Guid id, AccessLevel visibility) {
     var product = await GetProductByIdAsync(id);
 
     if (product == null) throw new ArgumentException("Product not found", nameof(id));
@@ -446,7 +446,7 @@ public class ProductService(ApplicationDbContext context) : IProductService {
   }
 
   // Analytics and statistics
-  public async Task<int> GetProductCountAsync(ProductType? type = null, Common.Entities.AccessLevel? visibility = null) {
+  public async Task<int> GetProductCountAsync(ProductType? type = null, AccessLevel? visibility = null) {
     var query = context.Products.Where(p => p.DeletedAt == null);
 
     if (type.HasValue) query = query.Where(p => p.Type == type.Value);
