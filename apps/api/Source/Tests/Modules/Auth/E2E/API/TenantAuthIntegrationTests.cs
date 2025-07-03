@@ -27,7 +27,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
     _client = _factory.CreateClient();
   }
 
-  private async Task SetupTestTenantData(ApplicationDbContext db) {
+  private static async Task SetupTestTenantData(ApplicationDbContext db) {
     // Ensure the database is clean and recreated before each test
     if (Microsoft.EntityFrameworkCore.InMemoryDatabaseFacadeExtensions.IsInMemory(db.Database)) {
       // Clean and recreate the database to avoid test interference

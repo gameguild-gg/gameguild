@@ -389,7 +389,7 @@ public class ProjectDACIntegrationTests : IDisposable {
   /// Layer 2: Content-type permissions 
   /// Layer 3: Tenant permissions (lowest priority)
   /// </summary>
-  private async Task<bool> CheckProjectPermissionHierarchy(
+  private static async Task<bool> CheckProjectPermissionHierarchy(
     IPermissionService permissionService, Guid userId,
     Guid tenantId, Guid projectId, PermissionType permissionType
   ) {

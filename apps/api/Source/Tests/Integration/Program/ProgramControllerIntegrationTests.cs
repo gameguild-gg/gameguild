@@ -9,7 +9,7 @@ using Xunit;
 namespace GameGuild.Tests.Integration.Program;
 
 public class ProgramControllerIntegrationTests {
-  private ApplicationDbContext GetInMemoryContext() {
+  private static ApplicationDbContext GetInMemoryContext() {
     var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                   .UseInMemoryDatabase(Guid.NewGuid().ToString())
                   .Options;

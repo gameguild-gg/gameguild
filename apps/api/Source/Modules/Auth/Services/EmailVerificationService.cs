@@ -191,7 +191,7 @@ namespace GameGuild.Modules.Auth.Services {
       return Task.FromResult(token);
     }
 
-    private string GenerateSecureToken() {
+    private static string GenerateSecureToken() {
       using var rng = RandomNumberGenerator.Create();
       var bytes = new byte[32];
       rng.GetBytes(bytes);
@@ -199,7 +199,7 @@ namespace GameGuild.Modules.Auth.Services {
       return Convert.ToBase64String(bytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
     }
 
-    private string HashPassword(string password) {
+    private static string HashPassword(string password) {
       // Use the same hashing logic as in AuthService
       using var sha256 = SHA256.Create();
       var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));

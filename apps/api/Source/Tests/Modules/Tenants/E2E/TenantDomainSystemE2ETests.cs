@@ -640,7 +640,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     SetAuthorizationHeader(token);
   }
 
-  private string CreateJwtTokenForUser(GameGuild.Modules.User.Models.User user, GameGuild.Modules.Tenant.Models.Tenant tenant, IServiceScope scope) {
+  private static string CreateJwtTokenForUser(GameGuild.Modules.User.Models.User user, GameGuild.Modules.Tenant.Models.Tenant tenant, IServiceScope scope) {
     var jwtService = scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };

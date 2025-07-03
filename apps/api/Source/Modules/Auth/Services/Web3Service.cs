@@ -110,7 +110,7 @@ namespace GameGuild.Modules.Auth.Services {
       return user;
     }
 
-    private string GenerateNonce() {
+    private static string GenerateNonce() {
       using var rng = RandomNumberGenerator.Create();
       var bytes = new byte[32];
       rng.GetBytes(bytes);
@@ -118,14 +118,14 @@ namespace GameGuild.Modules.Auth.Services {
       return Convert.ToHexString(bytes).ToLower();
     }
 
-    private string GenerateChallenge(string walletAddress, string nonce) {
+    private static string GenerateChallenge(string walletAddress, string nonce) {
       var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
       return
         $"Sign this message to authenticate with GameGuild CMS.\n\nWallet: {walletAddress}\nNonce: {nonce}\nTimestamp: {timestamp}";
     }
 
-    private string ExtractWalletFromChallenge(string challenge) {
+    private static string ExtractWalletFromChallenge(string challenge) {
       // Extract wallet address from challenge message
       var lines = challenge.Split('\n');
       var walletLine = lines.FirstOrDefault(l => l.StartsWith("Wallet: "));

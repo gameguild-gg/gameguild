@@ -503,7 +503,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   }
 
   // Private Helper Methods
-  private string GenerateSlug(string title) { return title.ToLowerInvariant().Replace(" ", "-").Replace("'", "").Replace("\"", ""); }
+  private static string GenerateSlug(string title) { return title.ToLowerInvariant().Replace(" ", "-").Replace("'", "").Replace("\"", ""); }
 
   private async Task RecalculateUserProgressAsync(Guid programUserId) {
     var programUser = await context.ProgramUsers.Where(pu => pu.Id == programUserId).FirstOrDefaultAsync();

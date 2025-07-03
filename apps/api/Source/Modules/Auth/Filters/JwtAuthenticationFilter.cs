@@ -20,7 +20,7 @@ namespace GameGuild.Modules.Auth.Filters {
 
       if (publicAttribute?.IsPublic == true) return; // Skip authentication for public endpoints
 
-      // Check for AllowAnonymous attribute
+      // Check for the AllowAnonymous attribute
       if (context.ActionDescriptor.EndpointMetadata.OfType<AllowAnonymousAttribute>().Any()) return;
 
       var token = ExtractTokenFromHeader(context.HttpContext.Request);
@@ -38,8 +38,8 @@ namespace GameGuild.Modules.Auth.Filters {
       catch (Exception) { context.Result = new UnauthorizedResult(); }
     }
 
-    private string? ExtractTokenFromHeader(HttpRequest request) {
-      var authHeader = request.Headers["Authorization"].FirstOrDefault();
+    private static string? ExtractTokenFromHeader(HttpRequest request) {
+      var authHeader = request.Headers.Authorization.FirstOrDefault();
 
       if (authHeader != null && authHeader.StartsWith("Bearer ")) return authHeader.Substring("Bearer ".Length).Trim();
 

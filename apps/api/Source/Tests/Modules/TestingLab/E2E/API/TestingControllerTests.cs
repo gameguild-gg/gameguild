@@ -321,7 +321,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     return (testingSession, user, tenant);
   }
 
-  private async Task<(GameGuild.Modules.User.Models.User, TenantModel)> SeedUserAndTenantAsync(ApplicationDbContext context) {
+  private static async Task<(GameGuild.Modules.User.Models.User, TenantModel)> SeedUserAndTenantAsync(ApplicationDbContext context) {
     var tenant = new TenantModel {
       Id = Guid.NewGuid(),
       Name = "Test Tenant",
@@ -347,7 +347,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     return (user, tenant);
   }
 
-  private async Task<ProjectModel> CreateTestProjectAsync(ApplicationDbContext context, Guid userId) {
+  private static async Task<ProjectModel> CreateTestProjectAsync(ApplicationDbContext context, Guid userId) {
     var project = new ProjectModel {
       Id = Guid.NewGuid(),
       Title = "Test Project",
@@ -362,7 +362,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     return project;
   }
 
-  private async Task<ProjectVersionModel> CreateTestProjectVersionAsync(
+  private static async Task<ProjectVersionModel> CreateTestProjectVersionAsync(
     ApplicationDbContext context, Guid projectId,
     Guid userId
   ) {
