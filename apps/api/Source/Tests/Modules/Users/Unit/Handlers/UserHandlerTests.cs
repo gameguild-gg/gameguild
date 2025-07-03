@@ -6,12 +6,10 @@ using UserModel = GameGuild.Modules.Users.Models.User;
 
 namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
   public class UserHandlerTests {
-    private readonly Mock<UserServiceInterface> _mockUserService;
-
-    public UserHandlerTests() { _mockUserService = new Mock<UserServiceInterface>(); }
+    private readonly Mock<UserServiceInterface> _mockUserService = new();
 
     [Fact]
-    public async Task Should_Handle_User_Creation_Command() {
+    public Task Should_Handle_User_Creation_Command() {
       // Arrange
       var command = new CreateUserCommand { Name = "Test User", Email = "test@example.com", Password = "TestPassword123!" };
 
@@ -32,10 +30,12 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
 
       // Verify service call
       _mockUserService.Verify(s => s.CreateUserAsync(It.IsAny<UserModel>()), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Handle_User_Update_Command() {
+    public Task Should_Handle_User_Update_Command() {
       // Arrange
       var userId = Guid.NewGuid();
       var command = new UpdateUserCommand { Id = userId, Name = "Updated Name" };
@@ -56,10 +56,12 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
 
       // Verify service call
       _mockUserService.Verify(s => s.UpdateUserAsync(It.IsAny<Guid>(), It.IsAny<UserModel>()), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Handle_User_Delete_Command() {
+    public Task Should_Handle_User_Delete_Command() {
       // Arrange
       var userId = Guid.NewGuid();
       var command = new DeleteUserCommand { Id = userId };
@@ -76,6 +78,8 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
 
       // Verify service call
       _mockUserService.Verify(s => s.DeleteUserAsync(userId), Times.Once);
+
+      return Task.CompletedTask;
     }
   }
 

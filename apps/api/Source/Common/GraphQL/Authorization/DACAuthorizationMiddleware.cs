@@ -1,6 +1,5 @@
 using HotChocolate.Resolvers;
 using GameGuild.Common.Services;
-using GameGuild.Common.Entities;
 using System.Security.Claims;
 using GameGuild.Modules.Permissions.Models;
 
@@ -32,10 +31,10 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
     await next(context);
   }
 
-  private static async ValueTask<UserContext?> GetUserContextAsync(IMiddlewareContext context) {
+  private static ValueTask<UserContext?> GetUserContextAsync(IMiddlewareContext context) {
     var httpContext = context.Services.GetService<IHttpContextAccessor>()?.HttpContext;
 
-    if (httpContext?.User?.Identity?.IsAuthenticated != true) return null;
+    if (httpContext?.User?.Identity?.IsAuthenticated != true) return ValueTask.FromResult<UserContext?>(null);
 
     var claims = httpContext.User.Claims;
     var userIdClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -45,9 +44,9 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
         tenantIdClaim == null ||
         !Guid.TryParse(userIdClaim, out var userId) ||
         !Guid.TryParse(tenantIdClaim, out var tenantId))
-      return null;
+      return ValueTask.FromResult<UserContext?>(null);
 
-    return new UserContext { UserId = userId, TenantId = tenantId };
+    return ValueTask.FromResult(new UserContext { UserId = userId, TenantId = tenantId });
   }
 
   private static DACAuthorizationAttribute? GetDACAttribute(IMiddlewareContext context) {

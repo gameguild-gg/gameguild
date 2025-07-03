@@ -359,10 +359,10 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
                         .ToListAsync();
   }
 
-  public async Task<bool> ValidateDomainOwnershipAsync(Guid tenantId, string domain) {
+  public Task<bool> ValidateDomainOwnershipAsync(Guid tenantId, string domain) {
     // This is a placeholder for domain ownership validation
     // In a real implementation, you might check DNS records, verify through email, etc.
-    return true;
+    return Task.FromResult(true);
   }
 
   #endregion

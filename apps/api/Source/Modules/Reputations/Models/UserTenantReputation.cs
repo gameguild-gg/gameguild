@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Reputations.Models;
 
 /// <summary>
 /// Tracks a user's reputation score and tier within a specific tenant context
-/// Supports tenant-specific reputation that is separate from global user reputation
+/// Supports a tenant-specific reputation that is separate from a global user reputation
 /// </summary>
 [Table("UserTenantReputations")]
 [Index(nameof(TenantPermissionId), IsUnique = true)]
@@ -29,7 +29,7 @@ public class UserTenantReputation : ResourceBase, IReputation {
   /// <summary>
   /// Current reputation score
   /// </summary>
-  public int Score { get; set; } = 0;
+  public int Score { get; set; }
 
   /// <summary>
   /// Current reputation tier (linked to configurable tier)
@@ -52,12 +52,12 @@ public class UserTenantReputation : ResourceBase, IReputation {
   /// <summary>
   /// Number of positive reputation changes
   /// </summary>
-  public int PositiveChanges { get; set; } = 0;
+  public int PositiveChanges { get; set; }
 
   /// <summary>
   /// Number of negative reputation changes
   /// </summary>
-  public int NegativeChanges { get; set; } = 0;
+  public int NegativeChanges { get; set; }
 
   /// <summary>
   /// History of reputation changes for this user-tenant
@@ -67,13 +67,13 @@ public class UserTenantReputation : ResourceBase, IReputation {
 
 public class UserTenantReputationConfiguration : IEntityTypeConfiguration<UserTenantReputation> {
   public void Configure(EntityTypeBuilder<UserTenantReputation> builder) {
-    // Configure relationship with UserTenant (can't be done with annotations)
+    // Configure a relationship with UserTenant (can't be done with annotations)
     builder.HasOne(utr => utr.TenantPermission)
            .WithMany()
            .HasForeignKey(utr => utr.TenantPermissionId)
            .OnDelete(DeleteBehavior.Cascade);
 
-    // Configure relationship with CurrentLevel (can't be done with annotations)
+    // Configure a relationship with CurrentLevel (can't be done with annotations)
     builder.HasOne(utr => utr.CurrentLevel)
            .WithMany()
            .HasForeignKey(utr => utr.CurrentLevelId)

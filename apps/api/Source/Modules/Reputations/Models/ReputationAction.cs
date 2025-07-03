@@ -24,7 +24,7 @@ public class ReputationAction : ResourceBase {
   public required string ActionType { get; set; }
 
   /// <summary>
-  /// Display name for this action
+  /// Display the name for this action
   /// </summary>
   [Required]
   [MaxLength(200)]
@@ -41,13 +41,13 @@ public class ReputationAction : ResourceBase {
   public int Points { get; set; }
 
   /// <summary>
-  /// Maximum number of times this action can award points per day
+  /// The maximum number of times this action can award points per day
   /// (null for no limit)
   /// </summary>
   public int? DailyLimit { get; set; }
 
   /// <summary>
-  /// Maximum number of times this action can award points total
+  /// The maximum number of times this action can award points total
   /// (null for no limit)
   /// </summary>
   public int? TotalLimit { get; set; }
@@ -74,13 +74,13 @@ public class ReputationAction : ResourceBase {
 
 public class ReputationActionConfiguration : IEntityTypeConfiguration<ReputationAction> {
   public void Configure(EntityTypeBuilder<ReputationAction> builder) {
-    // Configure relationship with RequiredLevel (can't be done with annotations)
+    // Configure a relationship with RequiredLevel (can't be done with annotations)
     builder.HasOne(ra => ra.RequiredLevel)
            .WithMany()
            .HasForeignKey(ra => ra.RequiredLevelId)
            .OnDelete(DeleteBehavior.SetNull);
 
-    // Configure shadow property for TenantId (since ReputationAction implements ITenantable)
+    // Configure a shadow property for TenantId (since ReputationAction implements ITenantable)
     builder.Property<Guid?>("TenantId");
 
     // Filtered unique constraint (can't be done with annotations)

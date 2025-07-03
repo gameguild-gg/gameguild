@@ -122,40 +122,40 @@ public class UserReputationHistoryConfiguration : IEntityTypeConfiguration<UserR
       )
     );
 
-    // Configure optional relationship with User (can't be done with annotations)
+    // Configure an optional relationship with User (can't be done with annotations)
     builder.HasOne(urh => urh.User).WithMany().HasForeignKey(urh => urh.UserId).OnDelete(DeleteBehavior.SetNull);
 
-    // Configure optional relationship with UserTenant (can't be done with annotations)
+    // Configure an optional relationship with UserTenant (can't be done with annotations)
     builder.HasOne(urh => urh.TenantPermission)
            .WithMany()
            .HasForeignKey(urh => urh.TenantPermissionId)
            .OnDelete(DeleteBehavior.SetNull);
 
-    // Configure relationship with ReputationAction (can't be done with annotations)
+    // Configure a relationship with ReputationAction (can't be done with annotations)
     builder.HasOne(urh => urh.ReputationAction)
            .WithMany(ra => ra.ReputationHistory)
            .HasForeignKey(urh => urh.ReputationActionId)
            .OnDelete(DeleteBehavior.SetNull);
 
-    // Configure relationship with TriggeredByUser (can't be done with annotations)
+    // Configure a relationship with TriggeredByUser (can't be done with annotations)
     builder.HasOne(urh => urh.TriggeredByUser)
            .WithMany()
            .HasForeignKey(urh => urh.TriggeredByUserId)
            .OnDelete(DeleteBehavior.SetNull);
 
-    // Configure relationship with PreviousLevel (can't be done with annotations)
+    // Configure a relationship with PreviousLevel (can't be done with annotations)
     builder.HasOne(urh => urh.PreviousLevel)
            .WithMany()
            .HasForeignKey(urh => urh.PreviousLevelId)
            .OnDelete(DeleteBehavior.SetNull);
 
-    // Configure relationship with NewLevel (can't be done with annotations)
+    // Configure a relationship with NewLevel (can't be done with annotations)
     builder.HasOne(urh => urh.NewLevel)
            .WithMany()
            .HasForeignKey(urh => urh.NewLevelId)
            .OnDelete(DeleteBehavior.SetNull);
 
-    // Configure polymorphic relationship with RelatedResource (can't be done with annotations)
+    // Configure a polymorphic relationship with RelatedResource (can't be done with annotations)
     builder.HasOne(urh => urh.RelatedResource)
            .WithMany()
            .HasForeignKey("RelatedResourceId")

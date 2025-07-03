@@ -323,7 +323,7 @@ public class TenantUserGroupDto {
   /// <summary>
   /// Whether this is the default group for auto-assignment
   /// </summary>
-  public bool IsDefault { get; set; } = false;
+  public bool IsDefault { get; set; }
 
   /// <summary>
   /// Parent group ID if this is a subgroup

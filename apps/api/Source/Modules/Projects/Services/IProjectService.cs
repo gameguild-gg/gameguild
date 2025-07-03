@@ -15,27 +15,27 @@ public interface IProjectService {
   /// <summary>
   /// Get all projects (non-deleted only)
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetAllProjectsAsync();
+  Task<IEnumerable<Project>> GetAllProjectsAsync();
 
   /// <summary>
   /// Get projects with pagination
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetProjectsAsync(int skip = 0, int take = 50);
+  Task<IEnumerable<Project>> GetProjectsAsync(int skip = 0, int take = 50);
 
   /// <summary>
   /// Get a project by ID
   /// </summary>
-  Task<Models.Project?> GetProjectByIdAsync(Guid id);
+  Task<Project?> GetProjectByIdAsync(Guid id);
 
   /// <summary>
   /// Get a project by ID with all related details
   /// </summary>
-  Task<Models.Project?> GetProjectByIdWithDetailsAsync(Guid id);
+  Task<Project?> GetProjectByIdWithDetailsAsync(Guid id);
 
   /// <summary>
   /// Get a project by slug
   /// </summary>
-  Task<Models.Project?> GetProjectBySlugAsync(string slug);
+  Task<Project?> GetProjectBySlugAsync(string slug);
 
   #endregion
 
@@ -44,37 +44,37 @@ public interface IProjectService {
   /// <summary>
   /// Get projects by category
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetProjectsByCategoryAsync(Guid categoryId);
+  Task<IEnumerable<Project>> GetProjectsByCategoryAsync(Guid categoryId);
 
   /// <summary>
   /// Get projects by creator
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetProjectsByCreatorAsync(Guid creatorId);
+  Task<IEnumerable<Project>> GetProjectsByCreatorAsync(Guid creatorId);
 
   /// <summary>
   /// Get projects with a specific status
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetProjectsByStatusAsync(ContentStatus status);
+  Task<IEnumerable<Project>> GetProjectsByStatusAsync(ContentStatus status);
 
   /// <summary>
   /// Get projects by type
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetProjectsByTypeAsync(ProjectType type);
+  Task<IEnumerable<Project>> GetProjectsByTypeAsync(ProjectType type);
 
   /// <summary>
   /// Get projects by development status
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetProjectsByDevelopmentStatusAsync(DevelopmentStatus status);
+  Task<IEnumerable<Project>> GetProjectsByDevelopmentStatusAsync(DevelopmentStatus status);
 
   /// <summary>
   /// Get public projects with pagination
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetPublicProjectsAsync(int skip = 0, int take = 50);
+  Task<IEnumerable<Project>> GetPublicProjectsAsync(int skip = 0, int take = 50);
 
   /// <summary>
   /// Search projects by term
   /// </summary>
-  Task<IEnumerable<Models.Project>> SearchProjectsAsync(string searchTerm, int skip = 0, int take = 50);
+  Task<IEnumerable<Project>> SearchProjectsAsync(string searchTerm, int skip = 0, int take = 50);
 
   #endregion
 
@@ -83,12 +83,12 @@ public interface IProjectService {
   /// <summary>
   /// Create a new project
   /// </summary>
-  Task<Models.Project> CreateProjectAsync(Models.Project project);
+  Task<Project> CreateProjectAsync(Project project);
 
   /// <summary>
   /// Update an existing project
   /// </summary>
-  Task<Models.Project> UpdateProjectAsync(Models.Project project);
+  Task<Project> UpdateProjectAsync(Project project);
 
   /// <summary>
   /// Soft delete a project
@@ -107,7 +107,7 @@ public interface IProjectService {
   /// <summary>
   /// Get all deleted projects
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetDeletedProjectsAsync();
+  Task<IEnumerable<Project>> GetDeletedProjectsAsync();
 
   #endregion
 
@@ -131,7 +131,7 @@ public interface IProjectService {
   /// <summary>
   /// Get all projects for a team
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetProjectsByTeamAsync(Guid teamId);
+  Task<IEnumerable<Project>> GetProjectsByTeamAsync(Guid teamId);
 
   #endregion
 
@@ -163,7 +163,7 @@ public interface IProjectService {
   /// <summary>
   /// Get all projects followed by a user
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetProjectsFollowedByUserAsync(Guid userId);
+  Task<IEnumerable<Project>> GetProjectsFollowedByUserAsync(Guid userId);
 
   #endregion
 
@@ -219,7 +219,7 @@ public interface IProjectService {
   /// <summary>
   /// Get all projects submitted to a game jam
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetProjectsByJamAsync(Guid jamId);
+  Task<IEnumerable<Project>> GetProjectsByJamAsync(Guid jamId);
 
   #endregion
 
@@ -228,7 +228,7 @@ public interface IProjectService {
   /// <summary>
   /// Get projects by tenant
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetProjectsByTenantAsync(Guid tenantId, int skip = 0, int take = 50);
+  Task<IEnumerable<Project>> GetProjectsByTenantAsync(Guid tenantId, int skip = 0, int take = 50);
 
   /// <summary>
   /// Move project to different tenant
@@ -247,12 +247,12 @@ public interface IProjectService {
   /// <summary>
   /// Get trending projects
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetTrendingProjectsAsync(int take = 10, TimeSpan? timeWindow = null);
+  Task<IEnumerable<Project>> GetTrendingProjectsAsync(int take = 10, TimeSpan? timeWindow = null);
 
   /// <summary>
   /// Get popular projects by downloads
   /// </summary>
-  Task<IEnumerable<Models.Project>> GetPopularProjectsAsync(int take = 10);
+  Task<IEnumerable<Project>> GetPopularProjectsAsync(int take = 10);
 
   #endregion
 }

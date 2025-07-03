@@ -10,16 +10,13 @@ using Xunit;
 
 namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
   public class UserProfileControllerTests {
-    private readonly Mock<IUserProfileService> _mockService;
+    private readonly Mock<IUserProfileService> _mockService = new();
     // private readonly UserProfileController _controller;
 
-    public UserProfileControllerTests() {
-      _mockService = new Mock<IUserProfileService>();
-      // _controller = new UserProfileController(_mockService.Object);
-    }
+    // _controller = new UserProfileController(_mockService.Object);
 
     [Fact]
-    public async Task Should_Return_UserProfile_By_Id() {
+    public Task Should_Return_UserProfile_By_Id() {
       // Arrange
       var profileId = Guid.NewGuid();
       var profile = new UserProfile { Id = profileId, UserId = Guid.NewGuid(), Bio = "Test bio", AvatarUrl = "https://example.com/avatar.jpg" };
@@ -39,10 +36,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
 
       // Verify service was called
       _mockService.Verify(s => s.GetUserProfileByIdAsync(profileId), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Return_NotFound_When_Profile_Does_Not_Exist() {
+    public Task Should_Return_NotFound_When_Profile_Does_Not_Exist() {
       // Arrange
       var profileId = Guid.NewGuid();
 
@@ -58,10 +57,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
 
       // Verify service was called
       _mockService.Verify(s => s.GetUserProfileByIdAsync(profileId), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Return_UserProfile_By_UserId() {
+    public Task Should_Return_UserProfile_By_UserId() {
       // Arrange
       var userId = Guid.NewGuid();
       var profile = new UserProfile { Id = Guid.NewGuid(), UserId = userId, Bio = "Test bio" };
@@ -80,10 +81,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
 
       // Verify service was called
       _mockService.Verify(s => s.GetUserProfileByUserIdAsync(userId), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Create_UserProfile() {
+    public Task Should_Create_UserProfile() {
       // Arrange
       var userId = Guid.NewGuid();
       var createDto = new CreateUserProfileDto { Bio = "New bio", AvatarUrl = "https://example.com/avatar.jpg" };
@@ -105,10 +108,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
 
       // Verify service was called
       _mockService.Verify(s => s.CreateUserProfileAsync(It.IsAny<UserProfile>()), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Return_BadRequest_When_Profile_Creation_Fails() {
+    public Task Should_Return_BadRequest_When_Profile_Creation_Fails() {
       // Arrange
       var userId = Guid.NewGuid();
       var createDto = new CreateUserProfileDto { Bio = "New bio" };
@@ -126,10 +131,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
 
       // Verify service was called
       _mockService.Verify(s => s.CreateUserProfileAsync(It.IsAny<UserProfile>()), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Update_UserProfile() {
+    public Task Should_Update_UserProfile() {
       // Arrange
       var profileId = Guid.NewGuid();
       var updateDto = new UpdateUserProfileDto { Bio = "Updated bio", AvatarUrl = "https://example.com/new-avatar.jpg" };
@@ -154,10 +161,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
       // Verify service was called
       _mockService.Verify(s => s.GetUserProfileByIdAsync(profileId), Times.Once);
       _mockService.Verify(s => s.UpdateUserProfileAsync(It.IsAny<UserProfile>()), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Delete_UserProfile() {
+    public Task Should_Delete_UserProfile() {
       // Arrange
       var profileId = Guid.NewGuid();
 
@@ -173,6 +182,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
 
       // Verify service was called
       _mockService.Verify(s => s.DeleteUserProfileAsync(profileId), Times.Once);
+
+      return Task.CompletedTask;
     }
   }
 
@@ -221,7 +232,5 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
     Task<bool> DeleteUserProfileAsync(Guid id);
   }
 
-  public class ProfileAlreadyExistsException : Exception {
-    public ProfileAlreadyExistsException(string message) : base(message) { }
-  }
+  public class ProfileAlreadyExistsException(string message) : Exception(message);
 }

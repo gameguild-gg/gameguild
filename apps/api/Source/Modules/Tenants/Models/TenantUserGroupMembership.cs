@@ -34,7 +34,7 @@ public class TenantUserGroupMembership : BaseEntity {
   /// <summary>
   /// Whether this membership was automatically assigned based on domain matching
   /// </summary>
-  public bool IsAutoAssigned { get; set; } = false;
+  public bool IsAutoAssigned { get; set; }
 
   /// <summary>
   /// Navigation property to the user

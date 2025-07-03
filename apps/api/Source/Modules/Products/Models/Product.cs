@@ -25,7 +25,7 @@ public class Product : Content {
 
   public ProductType Type { get; set; } = ProductType.Program;
 
-  public bool IsBundle { get; set; } = false;
+  public bool IsBundle { get; set; }
 
   // Creator relationship
   public Guid CreatorId { get; set; }
@@ -40,7 +40,7 @@ public class Product : Content {
 
   [Column(TypeName = "decimal(5,2)")] public decimal ReferralCommissionPercentage { get; set; } = 30m;
 
-  [Column(TypeName = "decimal(5,2)")] public decimal MaxAffiliateDiscount { get; set; } = 0m;
+  [Column(TypeName = "decimal(5,2)")] public decimal MaxAffiliateDiscount { get; set; }
 
   [Column(TypeName = "decimal(5,2)")] public decimal AffiliateCommissionPercentage { get; set; } = 30m;
 

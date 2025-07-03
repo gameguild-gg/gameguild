@@ -48,12 +48,12 @@ public class Certificate : BaseEntity, ITenantable {
   /// <summary>
   /// Whether feedback submission is required for certificate issuance
   /// </summary>
-  public bool RequiresFeedback { get; set; } = false;
+  public bool RequiresFeedback { get; set; }
 
   /// <summary>
   /// Whether rating submission is required for certificate issuance
   /// </summary>
-  public bool RequiresRating { get; set; } = false;
+  public bool RequiresRating { get; set; }
 
   /// <summary>
   /// Minimum rating required if rating is required (1-5, null = any rating accepted)

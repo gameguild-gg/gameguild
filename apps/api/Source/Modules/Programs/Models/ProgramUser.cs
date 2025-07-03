@@ -60,7 +60,7 @@ public class ProgramUser : BaseEntity {
   /// Overall completion percentage for the program (0-100)
   /// </summary>
   [Column(TypeName = "decimal(5,2)")]
-  public decimal CompletionPercentage { get; set; } = 0;
+  public decimal CompletionPercentage { get; set; }
 
   /// <summary>
   /// Overall grade for the program (0-100)

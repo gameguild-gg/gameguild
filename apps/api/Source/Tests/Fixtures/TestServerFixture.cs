@@ -190,9 +190,7 @@ namespace GameGuild.Tests.Fixtures {
   }
 
   // Test models, interfaces, and implementations
-  public class TestDbContext : DbContext {
-    public TestDbContext(DbContextOptions<TestDbContext> options) : base(options) { }
-
+  public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(options) {
     public DbSet<TestUserEntity> Users { get; set; }
 
     public DbSet<TestUserProfileEntity> UserProfiles { get; set; }
@@ -242,27 +240,23 @@ namespace GameGuild.Tests.Fixtures {
 
     Task<TestUserEntity> CreateAsync(TestUserEntity user);
 
-    Task<TestUserEntity> UpdateAsync(string id, TestUserEntity user);
+    Task<TestUserEntity?> UpdateAsync(string id, TestUserEntity user);
 
     Task<bool> DeleteAsync(string id);
   }
 
-  public class TestUserService : IUserService {
-    private readonly TestDbContext _dbContext;
-
-    public TestUserService(TestDbContext dbContext) { _dbContext = dbContext; }
-
-    public async Task<TestUserEntity> GetByIdAsync(string id) { return await _dbContext.Users.FindAsync(id); }
+  public class TestUserService(TestDbContext dbContext) : IUserService {
+    public async Task<TestUserEntity> GetByIdAsync(string id) { return await dbContext.Users.FindAsync(id); }
 
     public async Task<TestUserEntity> CreateAsync(TestUserEntity user) {
-      _dbContext.Users.Add(user);
-      await _dbContext.SaveChangesAsync();
+      dbContext.Users.Add(user);
+      await dbContext.SaveChangesAsync();
 
       return user;
     }
 
-    public async Task<TestUserEntity> UpdateAsync(string id, TestUserEntity user) {
-      var existingUser = await _dbContext.Users.FindAsync(id);
+    public async Task<TestUserEntity?> UpdateAsync(string id, TestUserEntity user) {
+      var existingUser = await dbContext.Users.FindAsync(id);
 
       if (existingUser == null) return null;
 
@@ -270,18 +264,18 @@ namespace GameGuild.Tests.Fixtures {
       existingUser.Email = user.Email;
       existingUser.UpdatedAt = DateTime.UtcNow;
 
-      await _dbContext.SaveChangesAsync();
+      await dbContext.SaveChangesAsync();
 
       return existingUser;
     }
 
     public async Task<bool> DeleteAsync(string id) {
-      var user = await _dbContext.Users.FindAsync(id);
+      var user = await dbContext.Users.FindAsync(id);
 
       if (user == null) return false;
 
-      _dbContext.Users.Remove(user);
-      await _dbContext.SaveChangesAsync();
+      dbContext.Users.Remove(user);
+      await dbContext.SaveChangesAsync();
 
       return true;
     }
@@ -299,27 +293,23 @@ namespace GameGuild.Tests.Fixtures {
     Task<bool> DeleteAsync(string id);
   }
 
-  public class TestUserProfileService : IUserProfileService {
-    private readonly TestDbContext _dbContext;
-
-    public TestUserProfileService(TestDbContext dbContext) { _dbContext = dbContext; }
-
-    public async Task<TestUserProfileEntity> GetByIdAsync(string id) { return await _dbContext.UserProfiles.FindAsync(id); }
+  public class TestUserProfileService(TestDbContext dbContext) : IUserProfileService {
+    public async Task<TestUserProfileEntity> GetByIdAsync(string id) { return await dbContext.UserProfiles.FindAsync(id); }
 
     public async Task<TestUserProfileEntity> GetByUserIdAsync(string userId) {
       // Use LINQ to find by UserId
-      return await _dbContext.UserProfiles.FirstOrDefaultAsync(p => p.UserId == userId)!;
+      return await dbContext.UserProfiles.FirstOrDefaultAsync(p => p.UserId == userId)!;
     }
 
     public async Task<TestUserProfileEntity> CreateAsync(TestUserProfileEntity profile) {
-      _dbContext.UserProfiles.Add(profile);
-      await _dbContext.SaveChangesAsync();
+      dbContext.UserProfiles.Add(profile);
+      await dbContext.SaveChangesAsync();
 
       return profile;
     }
 
     public async Task<TestUserProfileEntity> UpdateAsync(string id, TestUserProfileEntity profile) {
-      var existingProfile = await _dbContext.UserProfiles.FindAsync(id);
+      var existingProfile = await dbContext.UserProfiles.FindAsync(id);
 
       if (existingProfile == null) return null;
 
@@ -329,18 +319,18 @@ namespace GameGuild.Tests.Fixtures {
       existingProfile.WebsiteUrl = profile.WebsiteUrl;
       existingProfile.UpdatedAt = DateTime.UtcNow;
 
-      await _dbContext.SaveChangesAsync();
+      await dbContext.SaveChangesAsync();
 
       return existingProfile;
     }
 
     public async Task<bool> DeleteAsync(string id) {
-      var profile = await _dbContext.UserProfiles.FindAsync(id);
+      var profile = await dbContext.UserProfiles.FindAsync(id);
 
       if (profile == null) return false;
 
-      _dbContext.UserProfiles.Remove(profile);
-      await _dbContext.SaveChangesAsync();
+      dbContext.UserProfiles.Remove(profile);
+      await dbContext.SaveChangesAsync();
 
       return true;
     }

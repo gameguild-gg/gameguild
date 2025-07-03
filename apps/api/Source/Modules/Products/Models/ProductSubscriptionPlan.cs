@@ -81,7 +81,7 @@ public class ProductSubscriptionPlan : BaseEntity {
   /// <summary>
   /// Whether this is the default plan for the product
   /// </summary>
-  public bool IsDefault { get; set; } = false;
+  public bool IsDefault { get; set; }
 
   /// <summary>
   /// Default constructor

@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Teams.Models {
 
     public TeamRole Role { get; set; }
 
-    public string? InvitedBy { get; set; } // user_id who sent invitation (nullable)
+    public string? InvitedBy { get; set; } // user_id who sent the invitation (nullable)
 
     public MemberStatus Status { get; set; } = MemberStatus.Pending;
 

@@ -57,7 +57,7 @@ public class UserFinancialMethod : BaseEntity {
   /// <summary>
   /// Whether this is the default payment method for the user
   /// </summary>
-  public bool IsDefault { get; set; } = false;
+  public bool IsDefault { get; set; }
 
   // Navigation properties
   [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;

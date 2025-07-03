@@ -9,18 +9,14 @@ using Xunit;
 
 namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
   public class UserProfileServiceTests {
-    private readonly Mock<IUserProfileRepository> _mockProfileRepo;
-    private readonly Mock<IUserRepository> _mockUserRepo;
+    private readonly Mock<IUserProfileRepository> _mockProfileRepo = new();
+    private readonly Mock<IUserRepository> _mockUserRepo = new();
     // private readonly IUserProfileService _service;
 
-    public UserProfileServiceTests() {
-      _mockProfileRepo = new Mock<IUserProfileRepository>();
-      _mockUserRepo = new Mock<IUserRepository>();
-      // _service = new UserProfileService(_mockProfileRepo.Object, _mockUserRepo.Object);
-    }
+    // _service = new UserProfileService(_mockProfileRepo.Object, _mockUserRepo.Object);
 
     [Fact]
-    public async Task Should_Create_UserProfile_Successfully() {
+    public Task Should_Create_UserProfile_Successfully() {
       // Arrange
       var userId = Guid.NewGuid();
       var user = new User { Id = userId, Name = "Test User" };
@@ -60,10 +56,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
       _mockUserRepo.Verify(r => r.GetByIdAsync(userId), Times.Once);
       _mockProfileRepo.Verify(r => r.GetByUserIdAsync(userId), Times.Once);
       _mockProfileRepo.Verify(r => r.AddAsync(It.IsAny<UserProfile>()), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Throw_Exception_When_User_Does_Not_Exist() {
+    public Task Should_Throw_Exception_When_User_Does_Not_Exist() {
       // Arrange
       var userId = Guid.NewGuid();
       var newProfile = new UserProfile { UserId = userId, Bio = "Test bio" };
@@ -78,10 +76,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
       // Verify repository calls
       _mockUserRepo.Verify(r => r.GetByIdAsync(userId), Times.Once);
       _mockProfileRepo.Verify(r => r.AddAsync(It.IsAny<UserProfile>()), Times.Never);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Throw_Exception_When_Profile_Already_Exists() {
+    public Task Should_Throw_Exception_When_Profile_Already_Exists() {
       // Arrange
       var userId = Guid.NewGuid();
       var user = new User { Id = userId };
@@ -103,10 +103,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
       _mockUserRepo.Verify(r => r.GetByIdAsync(userId), Times.Once);
       _mockProfileRepo.Verify(r => r.GetByUserIdAsync(userId), Times.Once);
       _mockProfileRepo.Verify(r => r.AddAsync(It.IsAny<UserProfile>()), Times.Never);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Get_UserProfile_By_Id() {
+    public Task Should_Get_UserProfile_By_Id() {
       // Arrange
       var profileId = Guid.NewGuid();
       var userId = Guid.NewGuid();
@@ -134,10 +136,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
 
       // Verify repository call
       _mockProfileRepo.Verify(r => r.GetByIdAsync(profileId), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Get_UserProfile_By_UserId() {
+    public Task Should_Get_UserProfile_By_UserId() {
       // Arrange
       var userId = Guid.NewGuid();
       var profile = new UserProfile { Id = Guid.NewGuid(), UserId = userId, Bio = "Test bio" };
@@ -156,10 +160,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
 
       // Verify repository call
       _mockProfileRepo.Verify(r => r.GetByUserIdAsync(userId), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Update_UserProfile() {
+    public Task Should_Update_UserProfile() {
       // Arrange
       var profileId = Guid.NewGuid();
       var userId = Guid.NewGuid();
@@ -191,10 +197,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
       // Verify repository calls
       _mockProfileRepo.Verify(r => r.GetByIdAsync(profileId), Times.Once);
       _mockProfileRepo.Verify(r => r.UpdateAsync(It.IsAny<UserProfile>()), Times.Once);
+
+      return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task Should_Delete_UserProfile() {
+    public Task Should_Delete_UserProfile() {
       // Arrange
       var profileId = Guid.NewGuid();
 
@@ -210,6 +218,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
 
       // Verify repository call
       _mockProfileRepo.Verify(r => r.DeleteAsync(profileId), Times.Once);
+
+      return Task.CompletedTask;
     }
   }
 

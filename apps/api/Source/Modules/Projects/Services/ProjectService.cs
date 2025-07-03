@@ -14,14 +14,14 @@ namespace GameGuild.Modules.Projects.Services;
 public class ProjectService(ApplicationDbContext context) : IProjectService {
   #region Basic CRUD Operations
 
-  public async Task<Models.Project?> GetProjectByIdAsync(Guid id) {
+  public async Task<Project?> GetProjectByIdAsync(Guid id) {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Where(p => p.DeletedAt == null)
                         .FirstOrDefaultAsync(p => p.Id == id);
   }
 
-  public async Task<Models.Project?> GetProjectByIdWithDetailsAsync(Guid id) {
+  public async Task<Project?> GetProjectByIdWithDetailsAsync(Guid id) {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Include(p => p.Tenant)
@@ -43,14 +43,14 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .FirstOrDefaultAsync(p => p.Id == id);
   }
 
-  public async Task<Models.Project?> GetProjectBySlugAsync(string slug) {
+  public async Task<Project?> GetProjectBySlugAsync(string slug) {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Where(p => p.DeletedAt == null)
                         .FirstOrDefaultAsync(p => p.Slug == slug);
   }
 
-  public async Task<IEnumerable<Models.Project>> GetProjectsAsync(int skip = 0, int take = 50) {
+  public async Task<IEnumerable<Project>> GetProjectsAsync(int skip = 0, int take = 50) {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Where(p => p.DeletedAt == null)
@@ -60,7 +60,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<Models.Project>> GetAllProjectsAsync() {
+  public async Task<IEnumerable<Project>> GetAllProjectsAsync() {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Where(p => p.DeletedAt == null)
@@ -72,7 +72,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
 
   #region Filtered Queries
 
-  public async Task<IEnumerable<Models.Project>> GetProjectsByCategoryAsync(Guid categoryId) {
+  public async Task<IEnumerable<Project>> GetProjectsByCategoryAsync(Guid categoryId) {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Where(p => p.CategoryId == categoryId && p.DeletedAt == null)
@@ -80,7 +80,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<Models.Project>> GetProjectsByCreatorAsync(Guid creatorId) {
+  public async Task<IEnumerable<Project>> GetProjectsByCreatorAsync(Guid creatorId) {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Where(p => p.CreatedById == creatorId && p.DeletedAt == null)
@@ -88,7 +88,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<Models.Project>> GetProjectsByStatusAsync(ContentStatus status) {
+  public async Task<IEnumerable<Project>> GetProjectsByStatusAsync(ContentStatus status) {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Where(p => p.Status == status && p.DeletedAt == null)
@@ -96,7 +96,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<Models.Project>> GetProjectsByTypeAsync(ProjectType type) {
+  public async Task<IEnumerable<Project>> GetProjectsByTypeAsync(ProjectType type) {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Where(p => p.Type == type && p.DeletedAt == null)
@@ -104,7 +104,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<Models.Project>> GetProjectsByDevelopmentStatusAsync(DevelopmentStatus status) {
+  public async Task<IEnumerable<Project>> GetProjectsByDevelopmentStatusAsync(DevelopmentStatus status) {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Where(p => p.DevelopmentStatus == status && p.DeletedAt == null)
@@ -112,7 +112,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<Models.Project>> GetPublicProjectsAsync(int skip = 0, int take = 50) {
+  public async Task<IEnumerable<Project>> GetPublicProjectsAsync(int skip = 0, int take = 50) {
     // Explicitly ignore global query filters for public projects
     // This is necessary because we need to show public projects regardless of tenant context
     return await context.Projects.IgnoreQueryFilters() // Bypass global tenant and other filters
@@ -125,7 +125,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<Models.Project>> SearchProjectsAsync(string searchTerm, int skip = 0, int take = 50) {
+  public async Task<IEnumerable<Project>> SearchProjectsAsync(string searchTerm, int skip = 0, int take = 50) {
     var lowerSearchTerm = searchTerm.ToLower();
 
     return await context.Projects.Include(p => p.CreatedBy)
@@ -145,13 +145,13 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
 
   #region Create, Update, Delete
 
-  public async Task<Models.Project> CreateProjectAsync(Models.Project project) {
+  public async Task<Project> CreateProjectAsync(Project project) {
     // Set timestamps
     project.CreatedAt = DateTime.UtcNow;
     project.UpdatedAt = DateTime.UtcNow;
 
     // Generate slug if not provided
-    if (string.IsNullOrEmpty(project.Slug)) project.Slug = Models.Project.GenerateSlug(project.Title);
+    if (string.IsNullOrEmpty(project.Slug)) project.Slug = Project.GenerateSlug(project.Title);
 
     // Set default values
     if (project.Status == default) project.Status = ContentStatus.Draft;
@@ -164,7 +164,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     return project;
   }
 
-  public async Task<Models.Project> UpdateProjectAsync(Models.Project project) {
+  public async Task<Project> UpdateProjectAsync(Project project) {
     var existingProject = await GetProjectByIdAsync(project.Id);
 
     if (existingProject == null) throw new InvalidOperationException($"Project with ID {project.Id} not found");
@@ -228,7 +228,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
 
   #region Deleted Projects
 
-  public async Task<IEnumerable<Models.Project>> GetDeletedProjectsAsync() {
+  public async Task<IEnumerable<Project>> GetDeletedProjectsAsync() {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Where(p => p.DeletedAt != null)
@@ -341,7 +341,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<Models.Project>> GetProjectsByTeamAsync(Guid teamId) {
+  public async Task<IEnumerable<Project>> GetProjectsByTeamAsync(Guid teamId) {
     return await context.ProjectTeams.Include(pt => pt.Project)
                         .ThenInclude(p => p.CreatedBy)
                         .Include(pt => pt.Project)
@@ -400,7 +400,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<Models.Project>> GetProjectsFollowedByUserAsync(Guid userId) {
+  public async Task<IEnumerable<Project>> GetProjectsFollowedByUserAsync(Guid userId) {
     return await context.ProjectFollowers.Include(pf => pf.Project)
                         .ThenInclude(p => p.CreatedBy)
                         .Include(pf => pf.Project)
@@ -538,7 +538,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<Models.Project>> GetProjectsByJamAsync(Guid jamId) {
+  public async Task<IEnumerable<Project>> GetProjectsByJamAsync(Guid jamId) {
     return await context.ProjectJamSubmissions.Include(pjs => pjs.Project)
                         .ThenInclude(p => p.CreatedBy)
                         .Include(pjs => pjs.Project)
@@ -552,7 +552,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
 
   #region Tenant Integration
 
-  public async Task<IEnumerable<Models.Project>> GetProjectsByTenantAsync(Guid tenantId, int skip = 0, int take = 50) {
+  public async Task<IEnumerable<Project>> GetProjectsByTenantAsync(Guid tenantId, int skip = 0, int take = 50) {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Where(p => p.TenantId == tenantId && p.DeletedAt == null)
@@ -610,7 +610,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     };
   }
 
-  public async Task<IEnumerable<Models.Project>> GetTrendingProjectsAsync(int take = 10, TimeSpan? timeWindow = null) {
+  public async Task<IEnumerable<Project>> GetTrendingProjectsAsync(int take = 10, TimeSpan? timeWindow = null) {
     var cutoffDate = DateTime.UtcNow.Subtract(timeWindow ?? TimeSpan.FromDays(7));
 
     var projects = await context.Projects.Include(p => p.CreatedBy)
@@ -624,7 +624,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     return projects.OrderByDescending(p => CalculateTrendingScore(p, cutoffDate)).Take(take).ToList();
   }
 
-  public async Task<IEnumerable<Models.Project>> GetPopularProjectsAsync(int take = 10) {
+  public async Task<IEnumerable<Project>> GetPopularProjectsAsync(int take = 10) {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Include(p => p.Releases)
@@ -635,7 +635,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
-  private static decimal CalculateTrendingScore(Models.Project project, DateTime cutoffDate) {
+  private static decimal CalculateTrendingScore(Project project, DateTime cutoffDate) {
     var recentFollowers = project.Followers.Count(f => f.FollowedAt >= cutoffDate);
     var recentFeedback = project.Feedbacks.Count(f => f.CreatedAt >= cutoffDate);
     var totalDownloads = project.Releases.Sum(r => r.DownloadCount);
