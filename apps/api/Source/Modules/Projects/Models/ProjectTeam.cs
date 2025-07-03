@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Common.Entities;
+using GameGuild.Models;
 
 
 namespace GameGuild.Modules.Project.Models;

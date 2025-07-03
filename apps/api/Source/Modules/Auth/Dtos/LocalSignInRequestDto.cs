@@ -5,7 +5,7 @@ namespace GameGuild.Modules.Auth.Dtos {
   public class LocalSignInRequestDto {
     public string? Username { get; set; }
 
-    [Required, EmailAddress]
+    [Required][EmailAddress]
     public string Email { get; set; } = string.Empty;
 
     [Required]

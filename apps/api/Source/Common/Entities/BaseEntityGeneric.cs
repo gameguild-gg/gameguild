@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Modules.Tenant.Models;
 
 
 namespace GameGuild.Common.Entities;
@@ -13,7 +14,7 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
   /// <summary>
   /// Unique identifier for the entity
   /// </summary>
-  [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+  [Key][DatabaseGenerated(DatabaseGeneratedOption.Identity)]
   public virtual TKey Id { get; set; } = default!;
 
   /// <summary>
@@ -34,13 +35,13 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
   /// <summary>
   /// Timestamp when the entity was created
   /// </summary>
-  [Required, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+  [Required][DatabaseGenerated(DatabaseGeneratedOption.Identity)]
   public virtual DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
   /// <summary>
   /// Timestamp when the entity was last updated
   /// </summary>
-  [Required, DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+  [Required][DatabaseGenerated(DatabaseGeneratedOption.Computed)]
   public virtual DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
   /// <summary>

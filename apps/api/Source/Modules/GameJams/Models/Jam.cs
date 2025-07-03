@@ -4,10 +4,10 @@ using GameGuild.Common.Entities;
 
 namespace GameGuild.Modules.Jam.Models {
   public class Jam : BaseEntity {
-    [Required, MaxLength(255)]
+    [Required][MaxLength(255)]
     public string Name { get; set; } = string.Empty;
 
-    [Required, MaxLength(255)]
+    [Required][MaxLength(255)]
     public string Slug { get; set; } = string.Empty;
 
     [MaxLength(500)]

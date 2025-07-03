@@ -7,26 +7,39 @@ namespace GameGuild.Modules.Program.DTOs;
 /// </summary>
 public class ContentInteractionDto
 {
-    public Guid Id { get; set; }
-    public Guid ProgramUserId { get; set; }
-    public Guid ContentId { get; set; }
-    public ProgressStatus Status { get; set; }
-    public string? SubmissionData { get; set; }
-    public decimal CompletionPercentage { get; set; }
-    public int? TimeSpentMinutes { get; set; }
-    public DateTime? FirstAccessedAt { get; set; }
-    public DateTime? LastAccessedAt { get; set; }
-    public DateTime? CompletedAt { get; set; }
-    public DateTime? SubmittedAt { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+  public Guid Id { get; set; }
 
-    // Simplified nested objects to avoid circular references
-    public ContentSummaryDto? Content { get; set; }
-    public ProgramUserSummaryDto? ProgramUser { get; set; }
+  public Guid ProgramUserId { get; set; }
 
-    // Computed properties for convenience
-    public bool IsSubmitted => SubmittedAt.HasValue;
+  public Guid ContentId { get; set; }
+
+  public ProgressStatus Status { get; set; }
+
+  public string? SubmissionData { get; set; }
+
+  public decimal CompletionPercentage { get; set; }
+
+  public int? TimeSpentMinutes { get; set; }
+
+  public DateTime? FirstAccessedAt { get; set; }
+
+  public DateTime? LastAccessedAt { get; set; }
+
+  public DateTime? CompletedAt { get; set; }
+
+  public DateTime? SubmittedAt { get; set; }
+
+  public DateTime CreatedAt { get; set; }
+
+  public DateTime UpdatedAt { get; set; }
+
+  // Simplified nested objects to avoid circular references
+  public ContentSummaryDto? Content { get; set; }
+
+  public ProgramUserSummaryDto? ProgramUser { get; set; }
+
+  // Computed properties for convenience
+  public bool IsSubmitted => SubmittedAt.HasValue;
     public bool IsCompleted => Status == ProgressStatus.Completed;
     public bool CanModify => !IsSubmitted;
     public int DurationInMinutes => TimeSpentMinutes ?? 0;
@@ -37,10 +50,13 @@ public class ContentInteractionDto
 /// </summary>
 public class ContentSummaryDto
 {
-    public Guid Id { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string ContentType { get; set; } = string.Empty;
-    public int? EstimatedMinutes { get; set; }
+  public Guid Id { get; set; }
+
+  public string Title { get; set; } = string.Empty;
+
+  public string ContentType { get; set; } = string.Empty;
+
+  public int? EstimatedMinutes { get; set; }
 }
 
 /// <summary>
@@ -48,9 +64,11 @@ public class ContentSummaryDto
 /// </summary>
 public class ProgramUserSummaryDto
 {
-    public Guid Id { get; set; }
-    public string UserDisplayName { get; set; } = string.Empty;
-    public string UserEmail { get; set; } = string.Empty;
+  public Guid Id { get; set; }
+
+  public string UserDisplayName { get; set; } = string.Empty;
+
+  public string UserEmail { get; set; } = string.Empty;
 }
 
 /// <summary>
