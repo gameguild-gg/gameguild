@@ -11,13 +11,6 @@ namespace GameGuild.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<bool>(
-                name: "IsDefault",
-                table: "TenantUserGroups",
-                type: "INTEGER",
-                nullable: false,
-                defaultValue: false);
-
             migrationBuilder.AddColumn<DateTime>(
                 name: "EnrollmentDeadline",
                 table: "programs",
@@ -181,10 +174,6 @@ namespace GameGuild.Migrations
             migrationBuilder.DropIndex(
                 name: "IX_certificate_tags_ProgramId1",
                 table: "certificate_tags");
-
-            migrationBuilder.DropColumn(
-                name: "IsDefault",
-                table: "TenantUserGroups");
 
             migrationBuilder.DropColumn(
                 name: "EnrollmentDeadline",
