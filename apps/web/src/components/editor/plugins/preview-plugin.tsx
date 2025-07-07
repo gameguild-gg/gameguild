@@ -134,8 +134,8 @@ function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
         setSelectedAnswers={() => {}} // Dummy function
         showFeedback={showFeedback}
         isCorrect={isCorrect}
-        correctFeedback={correctFeedback}
-        incorrectFeedback={incorrectFeedback}
+        correctFeedback={correctFeedback ?? ""}
+        incorrectFeedback={incorrectFeedback ?? ""}
         allowRetry={allowRetry}
         checkAnswers={checkAnswers}
         toggleAnswer={toggleAnswer}
@@ -549,7 +549,7 @@ function PreviewCallout({ node }: { node: SerializedCalloutNode }) {
 
   const { title, content, type } = node.data
 
-  return <UICallout title={title} content={content} type={type} />
+  return <UICallout type={type}>{title && <div className="font-bold mb-1">{title}</div>}{content}</UICallout>
 }
 
 // Add this function to the PreviewContent component, alongside the other node renderers
@@ -1344,13 +1344,13 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
       if (node.style) {
         // Parse the style string and convert to React CSSProperties
         const styleString = node.style
-        const styleRules = styleString.split(";").filter((rule) => rule.trim())
+        const styleRules = styleString.split(";").filter((rule: string) => rule.trim())
 
-        styleRules.forEach((rule) => {
-          const [property, value] = rule.split(":").map((s) => s.trim())
+        styleRules.forEach((rule: { split: (arg0: string) => { (): any; new(): any; map: { (arg0: (s: any) => any): [any, any]; new(): any } } }) => {
+          const [property, value] = rule.split(":").map((s: string) => s.trim())
           if (property && value) {
             // Convert CSS property names to camelCase for React
-            const camelCaseProperty = property.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase())
+            const camelCaseProperty = property.replace(/-([a-z])/g, (match: any, letter: string) => letter.toUpperCase())
             inlineStyles[camelCaseProperty as keyof React.CSSProperties] = value
           }
         })
@@ -1450,12 +1450,12 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
           const headingStyles: React.CSSProperties = {}
           if (node.style) {
             const styleString = node.style
-            const styleRules = styleString.split(";").filter((rule) => rule.trim())
+            const styleRules = styleString.split(";").filter((rule: string) => rule.trim())
 
-            styleRules.forEach((rule) => {
-              const [property, value] = rule.split(":").map((s) => s.trim())
+            styleRules.forEach((rule: { split: (arg0: string) => { (): any; new(): any; map: { (arg0: (s: any) => any): [any, any]; new(): any } } }) => {
+              const [property, value] = rule.split(":").map((s: string) => s.trim())
               if (property && value) {
-                const camelCaseProperty = property.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase())
+                const camelCaseProperty = property.replace(/-([a-z])/g, (match: any, letter: string) => letter.toUpperCase())
                 headingStyles[camelCaseProperty as keyof React.CSSProperties] = value
               }
             })
