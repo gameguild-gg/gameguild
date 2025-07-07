@@ -297,7 +297,17 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
   }
 
   const handleSave = () => {
-    updateGallery({ images, layout, caption, defaultDisplayMode, captionStyle })
+    updateGallery({
+      images,
+      layout,
+      caption,
+      defaultDisplayMode,
+      captionStyle: {
+        fontSize: captionStyle.fontSize as "xs" | "sm" | "base" | "lg" | undefined,
+        fontFamily: captionStyle.fontFamily as "sans" | "serif" | "mono" | undefined,
+        fontWeight: captionStyle.fontWeight as "normal" | "medium" | "bold" | undefined,
+      },
+    })
     setIsEditing(false)
   }
 
@@ -440,8 +450,8 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
         {displayImages.map((image) => {
           // Calculate grid area style
           const gridAreaStyle = {
-            gridRow: image.gridPosition?.rowSpan > 1 ? `span ${image.gridPosition.rowSpan}` : undefined,
-            gridColumn: image.gridPosition?.colSpan > 1 ? `span ${image.gridPosition.colSpan}` : undefined,
+            gridRow: image.gridPosition?.rowSpan && image.gridPosition.rowSpan > 1 ? `span ${image.gridPosition.rowSpan}` : undefined,
+            gridColumn: image.gridPosition?.colSpan && image.gridPosition.colSpan > 1 ? `span ${image.gridPosition.colSpan}` : undefined,
           }
 
           return (
@@ -608,7 +618,13 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
   const handleCaptionStyleChange = (property: string, value: string) => {
     const newStyle = { ...captionStyle, [property]: value }
     setCaptionStyle(newStyle)
-    updateGallery({ captionStyle: newStyle })
+    updateGallery({
+      captionStyle: {
+        fontSize: newStyle.fontSize as "xs" | "sm" | "base" | "lg" | undefined,
+        fontFamily: newStyle.fontFamily as "sans" | "serif" | "mono" | undefined,
+        fontWeight: newStyle.fontWeight as "normal" | "medium" | "bold" | undefined,
+      },
+    })
   }
 
   if (!isEditing) {
@@ -1000,11 +1016,10 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                         Font Size
                       </Label>
                       <Select
-                        id="caption-font-size"
                         value={captionStyle.fontSize || "sm"}
                         onValueChange={(value) => handleCaptionStyleChange("fontSize", value)}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger id="caption-font-size">
                           <SelectValue placeholder="Font size" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1021,11 +1036,10 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                         Font Family
                       </Label>
                       <Select
-                        id="caption-font-family"
                         value={captionStyle.fontFamily || "sans"}
                         onValueChange={(value) => handleCaptionStyleChange("fontFamily", value)}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger id="caption-font-family">
                           <SelectValue placeholder="Font family" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1041,11 +1055,10 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                         Font Weight
                       </Label>
                       <Select
-                        id="caption-font-weight"
                         value={captionStyle.fontWeight || "normal"}
                         onValueChange={(value) => handleCaptionStyleChange("fontWeight", value)}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger id="caption-font-weight">
                           <SelectValue placeholder="Font weight" />
                         </SelectTrigger>
                         <SelectContent>

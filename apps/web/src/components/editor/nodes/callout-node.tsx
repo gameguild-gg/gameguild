@@ -137,7 +137,10 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
   if (!isEditing) {
     return (
       <div className="my-4 relative">
-        <UICallout title={title} content={content} type={type} />
+        <UICallout type={type}>
+          {title && <div className="font-semibold mb-1">{title}</div>}
+          <div>{content}</div>
+        </UICallout>
         <ContentEditMenu
           options={[
             {
@@ -226,7 +229,10 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
 
             <div className="mt-4">
               <h4 className="text-sm font-medium mb-2">Preview</h4>
-              <UICallout title={title} content={content} type={type} />
+              <UICallout type={type}>
+                {title && <div className="font-semibold mb-1">{title}</div>}
+                <div>{content}</div>
+              </UICallout>
             </div>
           </div>
         </div>

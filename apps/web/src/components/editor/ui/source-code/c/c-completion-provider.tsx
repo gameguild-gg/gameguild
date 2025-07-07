@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import type { editor } from "monaco-editor"
+import type { editor, languages } from "monaco-editor"
 
 interface CCompletionProviderProps {
   monaco: typeof import("monaco-editor") | null
@@ -250,7 +250,7 @@ export function CCompletionProvider({ monaco, editor }: CCompletionProviderProps
         const isStructOrUnion = /\b(struct|union)\s+$/.test(textUntilPosition)
 
         // Create suggestions based on context
-        let suggestions = []
+        let suggestions: ({ label: string; kind: languages.CompletionItemKind; insertText: string; range: { startLineNumber: number; endLineNumber: number; startColumn: number; endColumn: number } } | { label: string; kind: languages.CompletionItemKind; insertText: string; insertTextRules: languages.CompletionItemInsertTextRule; range: { startLineNumber: number; endLineNumber: number; startColumn: number; endColumn: number } })[] = []
 
         if (isPreprocessor) {
           // After # we suggest preprocessor directives
