@@ -1,6 +1,6 @@
 {
-  "hash": "e2da6213677d0993eee468314fc5bd2150a7c59107accc65f09ede58049078ba",
-  "timestamp": "2025-07-02T23:36:22.827Z",
+  "hash": "a76d5836791cc3e2026f233cb658018987d5e92ce41cb96430fb2f78b3ce9a38",
+  "timestamp": "2025-07-08T16:41:34.148Z",
   "apiUrl": "http://localhost:5001",
   "apiVersion": "v1",
   "generator": "@hey-api/openapi-ts"

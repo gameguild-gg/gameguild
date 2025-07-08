@@ -57,11 +57,11 @@ export function TenantUserGroupManager({ tenantId, apiBaseUrl, accessToken }: Te
     void fetchGroups();
   }, [fetchGroups]);
 
-  // Fetch all tenants for admin view
+  // Fetch all tenants for the admin view
   useEffect(() => {
     if (isAdminView && accessToken) {
-      TenantService.getAllTenants(accessToken).then(tenants => {
-        setAllTenants(tenants.map(t => ({ id: t.id, name: t.name })));
+      TenantService.getAllTenants(accessToken).then((tenants) => {
+        setAllTenants(tenants.map((t) => ({ id: t.id, name: t.name })));
       });
     }
   }, [isAdminView, accessToken]);
@@ -145,7 +145,7 @@ export function TenantUserGroupManager({ tenantId, apiBaseUrl, accessToken }: Te
     setIsEditDialogOpen(true);
   };
 
-  const availableParentGroups = groups.filter(g => g.id !== editingGroup?.id);
+  const availableParentGroups = groups.filter((g) => g.id !== editingGroup?.id);
 
   if (loading) {
     return (
@@ -161,10 +161,9 @@ export function TenantUserGroupManager({ tenantId, apiBaseUrl, accessToken }: Te
         <div>
           <h2 className="text-2xl font-bold tracking-tight">User Groups</h2>
           <p className="text-muted-foreground">
-            {isAdminView 
-              ? "Admin view - User groups are displayed per tenant. You can also create global user groups."
-              : "Manage user groups and their hierarchies"
-            }
+            {isAdminView
+              ? 'Admin view - User groups are displayed per tenant. You can also create global user groups.'
+              : 'Manage user groups and their hierarchies'}
           </p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -183,15 +182,12 @@ export function TenantUserGroupManager({ tenantId, apiBaseUrl, accessToken }: Te
               {isAdminView && (
                 <div>
                   <Label htmlFor="tenant">Tenant</Label>
-                  <select
-                    id="tenant"
-                    className="w-full p-2 border rounded-md"
-                    value={selectedTenantId}
-                    onChange={e => setSelectedTenantId(e.target.value)}
-                  >
+                  <select id="tenant" className="w-full p-2 border rounded-md" value={selectedTenantId} onChange={(e) => setSelectedTenantId(e.target.value)}>
                     <option value="">Global (no tenant)</option>
-                    {allTenants.map(t => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
+                    {allTenants.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -223,17 +219,15 @@ export function TenantUserGroupManager({ tenantId, apiBaseUrl, accessToken }: Te
                   onChange={(e) => setFormData({ ...formData, parentGroupId: e.target.value })}
                 >
                   <option value="">No parent group</option>
-                  {groups.map(group => (
-                    <option key={group.id} value={group.id}>{group.name}</option>
+                  {groups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
                   ))}
                 </select>
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="isDefault"
-                  checked={formData.isDefault}
-                  onCheckedChange={(checked) => setFormData({ ...formData, isDefault: !!checked })}
-                />
+                <Checkbox id="isDefault" checked={formData.isDefault} onCheckedChange={(checked) => setFormData({ ...formData, isDefault: !!checked })} />
                 <Label htmlFor="isDefault">Default Group (auto-assign new users)</Label>
               </div>
             </div>
@@ -274,8 +268,7 @@ export function TenantUserGroupManager({ tenantId, apiBaseUrl, accessToken }: Te
                 )}
                 {group.parentGroupId && (
                   <div>
-                    <span className="font-medium">Parent Group:</span>{' '}
-                    {groups.find(g => g.id === group.parentGroupId)?.name || 'Unknown'}
+                    <span className="font-medium">Parent Group:</span> {groups.find((g) => g.id === group.parentGroupId)?.name || 'Unknown'}
                   </div>
                 )}
               </div>
@@ -297,9 +290,7 @@ export function TenantUserGroupManager({ tenantId, apiBaseUrl, accessToken }: Te
         <div className="text-center py-12">
           <Users className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-4 text-lg font-medium">No user groups found</h3>
-          <p className="mt-2 text-sm text-gray-500">
-            Get started by creating your first user group to organize your tenant users.
-          </p>
+          <p className="mt-2 text-sm text-gray-500">Get started by creating your first user group to organize your tenant users.</p>
         </div>
       )}
 
@@ -312,19 +303,11 @@ export function TenantUserGroupManager({ tenantId, apiBaseUrl, accessToken }: Te
           <div className="space-y-4">
             <div>
               <Label htmlFor="editName">Group Name *</Label>
-              <Input
-                id="editName"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
+              <Input id="editName" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
             </div>
             <div>
               <Label htmlFor="editDescription">Description</Label>
-              <Textarea
-                id="editDescription"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
+              <Textarea id="editDescription" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
             </div>
             <div>
               <Label htmlFor="editParentGroup">Parent Group (optional)</Label>
@@ -335,17 +318,15 @@ export function TenantUserGroupManager({ tenantId, apiBaseUrl, accessToken }: Te
                 onChange={(e) => setFormData({ ...formData, parentGroupId: e.target.value })}
               >
                 <option value="">No parent group</option>
-                {availableParentGroups.map(group => (
-                  <option key={group.id} value={group.id}>{group.name}</option>
+                {availableParentGroups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
                 ))}
               </select>
             </div>
             <div className="flex items-center space-x-2">
-              <Checkbox
-                id="editIsDefault"
-                checked={formData.isDefault}
-                onCheckedChange={(checked) => setFormData({ ...formData, isDefault: !!checked })}
-              />
+              <Checkbox id="editIsDefault" checked={formData.isDefault} onCheckedChange={(checked) => setFormData({ ...formData, isDefault: !!checked })} />
               <Label htmlFor="editIsDefault">Default Group (auto-assign new users)</Label>
             </div>
           </div>

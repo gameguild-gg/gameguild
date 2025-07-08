@@ -716,6 +716,8 @@ export type EngagementMetricsDto = {
   } | null;
 };
 
+export type EnrollmentStatus = 0 | 1 | 2 | 3;
+
 export type FeedbackRequest = {
   feedbackFormId?: string;
   feedbackData?: string | null;
@@ -1207,6 +1209,11 @@ export type ProgramReadable = {
   slug?: string | null;
   status?: ContentStatus;
   thumbnail?: string | null;
+  videoShowcaseUrl?: string | null;
+  estimatedHours?: number | null;
+  enrollmentStatus?: EnrollmentStatus;
+  maxEnrollments?: number | null;
+  enrollmentDeadline?: string | null;
   category?: ProgramCategory;
   difficulty?: ProgramDifficulty;
   programContents?: Array<ProgramContentReadable> | null;
@@ -1215,6 +1222,13 @@ export type ProgramReadable = {
   certificates?: Array<CertificateReadable> | null;
   feedbackSubmissions?: Array<ProgramFeedbackSubmissionReadable> | null;
   programRatings?: Array<ProgramRatingReadable> | null;
+  programWishlists?: Array<ProgramWishlistReadable> | null;
+  readonly skillsRequired?: Array<CertificateTagReadable> | null;
+  readonly skillsProvided?: Array<CertificateTagReadable> | null;
+  readonly currentEnrollments?: number;
+  readonly averageRating?: number;
+  readonly totalRatings?: number;
+  readonly isEnrollmentOpen?: boolean;
 };
 
 export type ProgramWritable = {
@@ -1233,6 +1247,11 @@ export type ProgramWritable = {
   slug?: string | null;
   status?: ContentStatus;
   thumbnail?: string | null;
+  videoShowcaseUrl?: string | null;
+  estimatedHours?: number | null;
+  enrollmentStatus?: EnrollmentStatus;
+  maxEnrollments?: number | null;
+  enrollmentDeadline?: string | null;
   category?: ProgramCategory;
   difficulty?: ProgramDifficulty;
   programContents?: Array<ProgramContentWritable> | null;
@@ -1241,6 +1260,7 @@ export type ProgramWritable = {
   certificates?: Array<CertificateWritable> | null;
   feedbackSubmissions?: Array<ProgramFeedbackSubmissionWritable> | null;
   programRatings?: Array<ProgramRatingWritable> | null;
+  programWishlists?: Array<ProgramWishlistWritable> | null;
 };
 
 export type ProgramAnalyticsDto = {
@@ -1506,6 +1526,39 @@ export type ProgramUserSummaryDto = {
   id?: string;
   userDisplayName?: string | null;
   userEmail?: string | null;
+};
+
+export type ProgramWishlistReadable = {
+  readonly isNew?: boolean;
+  readonly isGlobal?: boolean;
+  id?: string;
+  version?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+  readonly isDeleted?: boolean;
+  tenant?: TenantReadable;
+  userId?: string;
+  programId?: string;
+  addedAt?: string;
+  notes?: string | null;
+  user?: UserReadable;
+  program?: ProgramReadable;
+};
+
+export type ProgramWishlistWritable = {
+  id?: string;
+  version?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+  tenant?: TenantWritable;
+  userId?: string;
+  programId?: string;
+  addedAt?: string;
+  notes?: string | null;
+  user?: UserWritable;
+  program?: ProgramWritable;
 };
 
 export type ProgressStatus = 0 | 1 | 2 | 3;
@@ -6302,6 +6355,25 @@ export type PutApiTenantDomainsUserGroupsByIdResponses = {
 
 export type PutApiTenantDomainsUserGroupsByIdResponse = PutApiTenantDomainsUserGroupsByIdResponses[keyof PutApiTenantDomainsUserGroupsByIdResponses];
 
+export type GetApiTenantDomainsMembershipsUserByUserIdData = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: '/api/tenant-domains/memberships/user/{userId}';
+};
+
+export type GetApiTenantDomainsMembershipsUserByUserIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<TenantUserGroupMembershipDto>;
+};
+
+export type GetApiTenantDomainsMembershipsUserByUserIdResponse =
+  GetApiTenantDomainsMembershipsUserByUserIdResponses[keyof GetApiTenantDomainsMembershipsUserByUserIdResponses];
+
 export type DeleteApiTenantDomainsUserGroupsMembershipsData = {
   body?: never;
   path?: never;
@@ -6440,6 +6512,22 @@ export type GetApiTenantDomainsDomainMatchResponses = {
 };
 
 export type GetApiTenantDomainsDomainMatchResponse = GetApiTenantDomainsDomainMatchResponses[keyof GetApiTenantDomainsDomainMatchResponses];
+
+export type PostApiTenantDomainsMembershipsData = {
+  body?: AddUserToGroupDto;
+  path?: never;
+  query?: never;
+  url: '/api/tenant-domains/memberships';
+};
+
+export type PostApiTenantDomainsMembershipsResponses = {
+  /**
+   * OK
+   */
+  200: TenantUserGroupMembershipDto;
+};
+
+export type PostApiTenantDomainsMembershipsResponse = PostApiTenantDomainsMembershipsResponses[keyof PostApiTenantDomainsMembershipsResponses];
 
 export type GetTenantsData = {
   body?: never;

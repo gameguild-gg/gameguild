@@ -37,7 +37,7 @@ function PageFooter({ children }: Readonly<Props>) {
               Terms of Service
             </a>
             {' | '}
-            <Link href={'/contributors'}>Contributors</Link>
+            <Link href={'/old/contributors'}>Contributors</Link>
           </div>
         </div>
       </div>

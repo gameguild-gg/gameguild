@@ -20,7 +20,7 @@
     "format": "npm run format --workspaces --if-present",
     "format:api": "npm run format --workspace=apps/api",
     "format:web": "npm run format --workspace=apps/web",
-    "gource": "./contributors/gource.sh",
+    "gource": "old/contributors/gource.sh",
     "install:api": "npm install --workspace=apps/api",
     "install:apiclient": "npm install @game-guild/apiclient --no-save --workspace=apps/web",
     "install:web": "npm install --workspace=apps/web",
