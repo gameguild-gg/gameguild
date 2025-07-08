@@ -2,8 +2,8 @@
 **/*
 
 # Allow only the web service directory and its contents, but exclude node_modules inside it
-!services/web/**
-services/web/node_modules/
+!old/services/web/**
+old/services/web/node_modules/
 
 # Allow the packages directory and its contents, but exclude node_modules inside it
 !packages/**
@@ -16,7 +16,7 @@ packages/eslint-config/node_modules/
 !yarn.lock
 
 # Allow git-stats.json if needed by next.config.js
-!git-stats.json
+!old/git-stats.json
 
 # If you need specific files from packages/ or elsewhere, add exceptions below:
 # !packages/ui/dist/**

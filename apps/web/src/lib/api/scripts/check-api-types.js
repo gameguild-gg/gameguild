@@ -1,9 +1,9 @@
-const { execSync } = require('child_process');
-const { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } = require('fs');
-const { createHash } = require('crypto');
-const { join } = require('path');
+import { execSync } from 'child_process';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { createHash } from 'crypto';
+import { join } from 'path';
 
-// Use require instead of import for node-fetch in CommonJS
+// Dynamic import for node-fetch in ESM
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const projectRoot = process.cwd();
@@ -20,7 +20,6 @@ console.log(`Environment: NODE_ENV=${process.env.NODE_ENV}`);
 console.log(`API URL: ${API_URL}`);
 console.log(`Development mode: ${isDevelopment}`);
 
-// Only run in development mode
 if (!isDevelopment) {
   console.log('📦 Production mode - skipping API type check');
   process.exit(0);
@@ -30,7 +29,7 @@ async function fetchSwaggerSpec() {
   try {
     console.log(`📡 Fetching API specification from ${SWAGGER_ENDPOINT}`);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch(SWAGGER_ENDPOINT, {
       signal: controller.signal,
@@ -64,11 +63,10 @@ function loadMetadata() {
   if (!existsSync(metadataFile)) {
     return { hash: null, timestamp: null };
   }
-
   try {
     const metadata = JSON.parse(readFileSync(metadataFile, 'utf8'));
     return metadata;
-  } catch (error) {
+  } catch {
     console.log('⚠️  Invalid metadata file, will regenerate');
     return { hash: null, timestamp: null };
   }
@@ -78,7 +76,6 @@ function saveMetadata(hash, apiVersion) {
   if (!existsSync(generatedDir)) {
     mkdirSync(generatedDir, { recursive: true });
   }
-
   const metadata = {
     hash,
     timestamp: new Date().toISOString(),
@@ -86,12 +83,10 @@ function saveMetadata(hash, apiVersion) {
     apiVersion: apiVersion || 'unknown',
     generator: '@hey-api/openapi-ts',
   };
-
   writeFileSync(metadataFile, JSON.stringify(metadata, null, 2));
 }
 
 function hasGeneratedTypes() {
-  // @hey-api/openapi-ts generates multiple files
   const typesFile = join(generatedDir, 'types.gen.ts');
   const servicesFile = join(generatedDir, 'services.gen.ts');
   const schemasFile = join(generatedDir, 'schemas.gen.ts');
@@ -100,28 +95,20 @@ function hasGeneratedTypes() {
 
 async function generateTypes(swaggerSpec) {
   console.log('🔄 Generating TypeScript types...');
-
   if (!existsSync(generatedDir)) {
     mkdirSync(generatedDir, { recursive: true });
   }
-
-  // Save swagger spec temporarily
   const tempSwaggerFile = join(generatedDir, 'swagger.json');
   writeFileSync(tempSwaggerFile, JSON.stringify(swaggerSpec, null, 2));
-
   try {
-    // Generate types using @hey-api/openapi-ts
     const command = `npx @hey-api/openapi-ts -i "${tempSwaggerFile}" -o "${generatedDir}" --client @hey-api/client-next`;
-
     console.log('Running:', command);
     execSync(command, {
       cwd: projectRoot,
       stdio: 'inherit',
-      timeout: 60000, // 60 second timeout
+      timeout: 60000,
     });
-
     console.log('✅ Types generated successfully');
-
     // Run ESLint fix on the generated folder
     console.log('🔧 Running ESLint fix on generated files...');
     try {
@@ -129,18 +116,16 @@ async function generateTypes(swaggerSpec) {
       execSync(lintCommand, {
         cwd: projectRoot,
         stdio: 'inherit',
-        timeout: 30000, // 30 second timeout
+        timeout: 30000,
       });
       console.log('✅ ESLint fix completed successfully');
     } catch (lintError) {
       console.warn('⚠️  ESLint fix failed (non-critical):', lintError.message);
-      // Don't fail the entire process if lint fix fails
     }
   } catch (error) {
     console.error('❌ Failed to generate types:', error.message);
     throw error;
   } finally {
-    // Clean up temp file
     try {
       if (existsSync(tempSwaggerFile)) {
         unlinkSync(tempSwaggerFile);
@@ -153,46 +138,34 @@ async function generateTypes(swaggerSpec) {
 
 async function main() {
   try {
-    // Fetch current swagger spec
     const currentSpec = await fetchSwaggerSpec();
     const currentHash = calculateHash(currentSpec);
-
-    // Load existing metadata
     const metadata = loadMetadata();
-
-    // Check if regeneration is needed
     const needsRegeneration = !hasGeneratedTypes() || metadata.hash !== currentHash;
-
     if (needsRegeneration) {
       if (metadata.hash === null) {
         console.log('🆕 No previous API types found, generating...');
       } else {
         console.log('🔄 API changes detected, regenerating types...');
       }
-
       await generateTypes(currentSpec);
       saveMetadata(currentHash, currentSpec.info?.version);
-
       console.log('✅ API types are up to date');
     } else {
       console.log('✅ API types are already up to date');
     }
   } catch (error) {
     console.error('❌ Type check failed:', error.message);
-
-    // In development, if we have existing types, warn but don't fail
     if (hasGeneratedTypes()) {
       console.log('⚠️  Using existing types, but they may be outdated');
       console.log('💡 To fix this, ensure API is running: cd apps/api && dotnet run');
       return;
     }
-
     console.log('💡 Please start the API server: cd apps/api && dotnet run');
     process.exit(1);
   }
 }
 
-// Handle process termination gracefully
 process.on('SIGINT', () => {
   console.log('\n🛑 Process interrupted');
   process.exit(1);

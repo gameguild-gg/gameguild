@@ -114,8 +114,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
 
     Assert.Contains(
       errorMessages,
-      m => m != null &&
-           (m.Contains("Authentication required", StringComparison.OrdinalIgnoreCase) ||
+      m => (m.Contains("Authentication required", StringComparison.OrdinalIgnoreCase) ||
             m.Contains("Unauthorized", StringComparison.OrdinalIgnoreCase))
     );
   }
@@ -168,8 +167,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
 
         Assert.Contains(
           errorMessages,
-          m => m != null &&
-               (m.Contains("permission", StringComparison.OrdinalIgnoreCase) ||
+          m => (m.Contains("permission", StringComparison.OrdinalIgnoreCase) ||
                 m.Contains("unauthorized", StringComparison.OrdinalIgnoreCase) ||
                 m.Contains("forbidden", StringComparison.OrdinalIgnoreCase) ||
                 m.Contains("Insufficient permissions", StringComparison.OrdinalIgnoreCase))

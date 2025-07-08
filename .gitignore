@@ -44,9 +44,9 @@ next-env.d.ts
 chessSubmissions
 
 # dtos
-services/web/.env.local
-services/web/.env
-/contributors/gource.mp4
-/contributors/gource.txt
+old/services/web/.env.local
+old/services/web/.env
+/old/contributors/gource.mp4
+/old/contributors/gource.txt
 
 **/package-lock.json
