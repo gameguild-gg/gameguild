@@ -34,7 +34,7 @@ export default function CoursesLandingPage() {
                 </Link>
               </Button>
             </div>
-
+            
             {/* Key Features */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
               <div className="text-center">
@@ -75,7 +75,9 @@ export default function CoursesLandingPage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">Find Your Path</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">One Campus. Multiple Disciplines. Endless Possibilities.</p>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              One Campus. Multiple Disciplines. Endless Possibilities.
+            </p>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
@@ -218,23 +220,29 @@ export default function CoursesLandingPage() {
                 <Users className="h-12 w-12 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-4">Industry Experts</h3>
-              <p className="text-muted-foreground">Learn from professionals who have shipped AAA games and work at top studios worldwide.</p>
+              <p className="text-muted-foreground">
+                Learn from professionals who have shipped AAA games and work at top studios worldwide.
+              </p>
             </div>
-
+            
             <div className="text-center">
               <div className="bg-primary/10 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
                 <Zap className="h-12 w-12 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-4">Hands-On Projects</h3>
-              <p className="text-muted-foreground">Build real games and develop a portfolio that showcases your skills to potential employers.</p>
+              <p className="text-muted-foreground">
+                Build real games and develop a portfolio that showcases your skills to potential employers.
+              </p>
             </div>
-
+            
             <div className="text-center">
               <div className="bg-primary/10 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
                 <Headphones className="h-12 w-12 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-4">Personalized Support</h3>
-              <p className="text-muted-foreground">Get individual feedback on your work and guidance from instructors throughout your learning journey.</p>
+              <p className="text-muted-foreground">
+                Get individual feedback on your work and guidance from instructors throughout your learning journey.
+              </p>
             </div>
           </div>
         </div>
@@ -245,7 +253,9 @@ export default function CoursesLandingPage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">What Our Students Are Saying</h2>
-            <p className="text-xl text-muted-foreground">Join thousands of successful graduates working in the game industry.</p>
+            <p className="text-xl text-muted-foreground">
+              Join thousands of successful graduates working in the game industry.
+            </p>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -257,8 +267,7 @@ export default function CoursesLandingPage() {
                   ))}
                 </div>
                 <p className="text-muted-foreground mb-6">
-                  &quot;Game Guild Academy gave me the foundation I needed to transition from hobby programming to professional game development. The hands-on
-                  approach and expert feedback were invaluable.&quot;
+                  &quot;Game Guild Academy gave me the foundation I needed to transition from hobby programming to professional game development. The hands-on approach and expert feedback were invaluable.&quot;
                 </p>
                 <div className="flex items-center">
                   <div className="bg-primary/10 rounded-full p-2 w-12 h-12 flex items-center justify-center mr-4">
@@ -280,8 +289,7 @@ export default function CoursesLandingPage() {
                   ))}
                 </div>
                 <p className="text-muted-foreground mb-6">
-                  &quot;The art and design courses helped me develop a professional portfolio. Within 6 months of completing the program, I landed my dream job
-                  as a 3D artist.&quot;
+                  &quot;The art and design courses helped me develop a professional portfolio. Within 6 months of completing the program, I landed my dream job as a 3D artist.&quot;
                 </p>
                 <div className="flex items-center">
                   <div className="bg-primary/10 rounded-full p-2 w-12 h-12 flex items-center justify-center mr-4">
@@ -303,8 +311,7 @@ export default function CoursesLandingPage() {
                   ))}
                 </div>
                 <p className="text-muted-foreground mb-6">
-                  &quot;The game design courses taught me how to think like a designer. The community and networking opportunities were just as valuable as the
-                  coursework.&quot;
+                  &quot;The game design courses taught me how to think like a designer. The community and networking opportunities were just as valuable as the coursework.&quot;
                 </p>
                 <div className="flex items-center">
                   <div className="bg-primary/10 rounded-full p-2 w-12 h-12 flex items-center justify-center mr-4">
@@ -324,7 +331,9 @@ export default function CoursesLandingPage() {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold mb-6">Ready to Start Your Game Development Journey?</h2>
+          <h2 className="text-3xl lg:text-4xl font-bold mb-6">
+            Ready to Start Your Game Development Journey?
+          </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
             Join thousands of students who have transformed their passion for games into successful careers.
           </p>
@@ -335,12 +344,7 @@ export default function CoursesLandingPage() {
                 Browse All Courses
               </Link>
             </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="text-lg px-8 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10"
-            >
+            <Button asChild size="lg" variant="outline" className="text-lg px-8 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10">
               <Link href="#contact">
                 <Users className="mr-2 h-5 w-5" />
                 Get Guidance
