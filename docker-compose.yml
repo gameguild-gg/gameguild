@@ -8,7 +8,7 @@ networks:
 services:
   api:
     build:
-      dockerfile: DockerfileApi
+      dockerfile: old/DockerfileApi
     container_name: api
     image: game-guild-api
     restart: always
@@ -30,7 +30,7 @@ services:
 
   web:
     build:
-      dockerfile: DockerfileWeb
+      dockerfile: old/DockerfileWeb
     container_name: web
     image: game-guild-web
     restart: always

@@ -1,5 +1,6 @@
 using GameGuild.Common.Attributes;
 using GameGuild.Common.Enums;
+using GameGuild.Modules.Auth.Attributes;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.DTOs;
 using GameGuild.Modules.Programs.Models;
@@ -43,6 +44,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Get published programs (no permission required - public access)
   /// </summary>
   [HttpGet("published")]
+  [Public]
   public async Task<ActionResult<IEnumerable<ProgramEntity>>> GetPublishedPrograms(
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50

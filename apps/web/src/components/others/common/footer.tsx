@@ -21,7 +21,7 @@ function Footer() {
             <a href="#">Privacy Policy</a>
             {' | '}
             <a href="#">Terms of Service</a>
-            {' | '}| <Link href={'/contributors'}>Contributors</Link>
+            {' | '}| <Link href={'/old/contributors'}>Contributors</Link>
           </div>
         </div>
       </div>
