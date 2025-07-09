@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.API.Tests.Source.Tests.Integration;
+namespace GameGuild.API.Tests.Integration;
 
 public class BaseEntityIntegrationTests {
   private static ApplicationDbContext GetInMemoryContext() {

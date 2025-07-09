@@ -6,7 +6,7 @@ using GameGuild.Modules.Auth.Services;
 using MediatR;
 using Moq;
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Auth.Unit.Handlers;
+namespace GameGuild.API.Tests.Modules.Auth.Unit.Handlers;
 
 public class LocalSignUpHandlerTests {
   private readonly Mock<IAuthService> _mockAuthService;

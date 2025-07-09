@@ -8,7 +8,7 @@ using ProjectModel = GameGuild.Modules.Projects.Models.Project;
 using ProjectVersionModel = GameGuild.Modules.Projects.Models.ProjectVersion;
 
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.TestingLab.Performance;
+namespace GameGuild.API.Tests.Modules.TestingLab.Performance;
 
 /// <summary>
 /// Performance tests for TestingLab operations

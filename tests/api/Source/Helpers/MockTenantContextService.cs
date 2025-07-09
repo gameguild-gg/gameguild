@@ -3,7 +3,7 @@ using GameGuild.Modules.Auth.Constants;
 using GameGuild.Modules.Tenants.Models;
 using GameGuild.Modules.Tenants.Services;
 
-namespace GameGuild.API.Tests.Source.Tests.Helpers {
+namespace GameGuild.API.Tests.Helpers {
   /// <summary>
   /// Mock implementation of ITenantContextService for testing purposes
   /// </summary>

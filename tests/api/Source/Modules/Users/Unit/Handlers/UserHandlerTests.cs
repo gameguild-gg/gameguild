@@ -3,7 +3,7 @@ using UserServiceInterface = GameGuild.Modules.Users.Services.IUserService;
 using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Users.Unit.Handlers {
+namespace GameGuild.API.Tests.Modules.Users.Unit.Handlers {
   public class UserHandlerTests {
     private readonly Mock<UserServiceInterface> _mockUserService = new();
 

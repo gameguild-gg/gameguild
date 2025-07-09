@@ -3,7 +3,7 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Source.Tests.Helpers;
+using GameGuild.API.Tests.Helpers;
 using GameGuild.Common.Services;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
@@ -17,7 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Tenants.E2E;
+namespace GameGuild.API.Tests.Modules.Tenants.E2E;
 
 public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Program>> {
   private readonly WebApplicationFactory<Program> _factory;

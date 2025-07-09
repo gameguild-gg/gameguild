@@ -1,4 +1,4 @@
-using GameGuild.API.Tests.Source.Tests.Fixtures;
+using GameGuild.API.Tests.Fixtures;
 using GameGuild.Common.Services;
 using GameGuild.Data;
 using GameGuild.Modules.Comments.Models;
@@ -7,7 +7,7 @@ using GameGuild.Modules.Tenants.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Permissions.E2E.API;
+namespace GameGuild.API.Tests.Modules.Permissions.E2E.API;
 
 /// <summary>
 /// Integration tests for the complete Permission System

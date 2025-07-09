@@ -1,7 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Source.Tests.Fixtures;
+using GameGuild.API.Tests.Fixtures;
 using GameGuild.Common.Enums;
 using GameGuild.Common.Services;
 using GameGuild.Data;
@@ -17,7 +17,7 @@ using Xunit.Abstractions;
 using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
 
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Projects.E2E.GraphQL;
+namespace GameGuild.API.Tests.Modules.Projects.E2E.GraphQL;
 
 /// <summary>
 /// Integration tests for Project GraphQL operations

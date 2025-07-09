@@ -1,6 +1,6 @@
 using GameGuild.Modules.TestingLab.Models;
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.TestingLab.Unit.Models;
+namespace GameGuild.API.Tests.Modules.TestingLab.Unit.Models;
 
 public class TestingLabModelsTests {
   [Fact]

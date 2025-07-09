@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
-using GameGuild.API.Tests.Source.Tests.Fixtures;
+using GameGuild.API.Tests.Fixtures;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
@@ -14,7 +14,7 @@ using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
 using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.TestingLab.E2E.API;
+namespace GameGuild.API.Tests.Modules.TestingLab.E2E.API;
 
 public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory>, IDisposable {
   private readonly TestWebApplicationFactory _factory;

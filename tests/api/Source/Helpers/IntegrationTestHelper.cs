@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace GameGuild.API.Tests.Source.Tests.Helpers {
+namespace GameGuild.API.Tests.Helpers {
   /// <summary>
   /// Helper class for running integration tests with a mock database
   /// </summary>
