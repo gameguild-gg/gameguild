@@ -3,7 +3,7 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Source.Tests.Helpers;
+using GameGuild.API.Tests.Helpers;
 using GameGuild.Common.Services;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
@@ -18,7 +18,7 @@ using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
 using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Tenants.Integration;
+namespace GameGuild.API.Tests.Modules.Tenants.Integration;
 
 public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable {
   private readonly WebApplicationFactory<Program> _factory;

@@ -17,7 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 
-namespace GameGuild.API.Tests.Source.Tests.Fixtures {
+namespace GameGuild.API.Tests.Fixtures {
   /// <summary>
   /// A test fixture that provides a TestServer for E2E tests
   /// </summary>

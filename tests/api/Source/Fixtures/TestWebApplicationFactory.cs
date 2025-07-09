@@ -13,7 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
-namespace GameGuild.API.Tests.Source.Tests.Fixtures;
+namespace GameGuild.API.Tests.Fixtures;
 
 /// <summary>
 /// Custom WebApplicationFactory for integration and E2E tests that properly configures content root and services

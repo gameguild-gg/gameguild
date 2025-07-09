@@ -1,12 +1,12 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Source.Tests.Fixtures;
+using GameGuild.API.Tests.Fixtures;
 
 
 // using GameGuild.API.Models;
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Users.E2E.API {
+namespace GameGuild.API.Tests.Modules.Users.E2E.API {
   public class UserApiTests : IClassFixture<TestServerFixture> {
     private readonly TestServerFixture _fixture;
     private readonly HttpClient _client;

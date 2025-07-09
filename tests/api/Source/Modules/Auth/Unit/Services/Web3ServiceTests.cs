@@ -8,7 +8,7 @@ using Moq;
 using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Auth.Unit.Services;
+namespace GameGuild.API.Tests.Modules.Auth.Unit.Services;
 
 public class Web3ServiceTests : IDisposable {
   private readonly ApplicationDbContext _context;

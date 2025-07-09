@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
-namespace GameGuild.API.Tests.Source.Tests.Helpers {
+namespace GameGuild.API.Tests.Helpers {
   /// <summary>
   /// Extension methods for database operations in tests
   /// </summary>

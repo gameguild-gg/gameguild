@@ -6,7 +6,7 @@ using GameGuild.Modules.Projects.Models;
 using GameGuild.Modules.Projects.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Projects.Performance;
+namespace GameGuild.API.Tests.Modules.Projects.Performance;
 
 /// <summary>
 /// Performance tests for Project operations

@@ -1,7 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Source.Tests.Fixtures;
+using GameGuild.API.Tests.Fixtures;
 using GameGuild.Common.Entities;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
@@ -15,7 +15,7 @@ using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
 using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Permissions.E2E.API;
+namespace GameGuild.API.Tests.Modules.Permissions.E2E.API;
 
 /// <summary>
 /// End-to-end tests for Permission Module APIs

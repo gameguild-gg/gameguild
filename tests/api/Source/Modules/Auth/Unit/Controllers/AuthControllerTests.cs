@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Auth.Unit.Controllers;
+namespace GameGuild.API.Tests.Modules.Auth.Unit.Controllers;
 
 public class AuthControllerTests {
   private readonly Mock<IAuthService> _mockAuthService;
