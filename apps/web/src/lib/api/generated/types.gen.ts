@@ -5121,6 +5121,24 @@ export type PostApiProgramByIdCloneResponses = {
 
 export type PostApiProgramByIdCloneResponse = PostApiProgramByIdCloneResponses[keyof PostApiProgramByIdCloneResponses];
 
+export type GetApiProgramSlugBySlugData = {
+  body?: never;
+  path: {
+    slug: string;
+  };
+  query?: never;
+  url: '/api/program/slug/{slug}';
+};
+
+export type GetApiProgramSlugBySlugResponses = {
+  /**
+   * OK
+   */
+  200: ProgramReadable;
+};
+
+export type GetApiProgramSlugBySlugResponse = GetApiProgramSlugBySlugResponses[keyof GetApiProgramSlugBySlugResponses];
+
 export type PostApiProgramByIdContentData = {
   body?: CreateContentDto;
   path: {

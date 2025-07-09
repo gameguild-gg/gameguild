@@ -21,7 +21,7 @@ export function CourseGrid() {
           key={course.id}
           course={course}
           onClick={() => {
-            router.push(`/courses/${course.slug}`);
+            router.push(`/courses/${course.area}/${course.id}`);
           }}
         />
       ))}

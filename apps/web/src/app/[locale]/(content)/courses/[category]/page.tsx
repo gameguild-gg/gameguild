@@ -4,7 +4,8 @@ import Link from 'next/link';
 
 export default async function CategoryCatalogPage({ params }: { params: { category: string } }) {
   const allCourses = await fetchCourses();
-  const category = decodeURIComponent(params.category);
+  const { category: categoryParam } = await params;
+  const category = decodeURIComponent(categoryParam);
   const courses = allCourses.filter((c) => c.category.toLowerCase() === category.toLowerCase());
 
   // For sidebar: gather all unique categories
