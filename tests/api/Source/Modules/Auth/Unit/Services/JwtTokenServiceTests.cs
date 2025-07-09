@@ -4,7 +4,7 @@ using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Auth.Services;
 using Microsoft.Extensions.Configuration;
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Auth.Unit.Services;
+namespace GameGuild.API.Tests.Modules.Auth.Unit.Services;
 
 public class JwtTokenServiceTests {
   private readonly JwtTokenService _jwtTokenService;

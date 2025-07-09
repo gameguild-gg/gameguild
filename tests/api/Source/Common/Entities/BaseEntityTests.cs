@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.API.Tests.Source.Tests.Common.Entities;
+namespace GameGuild.API.Tests.Common.Entities;
 
 public class BaseEntityTests {
   [Fact]

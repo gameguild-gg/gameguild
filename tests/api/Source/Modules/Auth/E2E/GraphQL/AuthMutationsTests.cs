@@ -4,7 +4,7 @@ using GameGuild.Modules.Auth.GraphQL;
 using MediatR;
 using Moq;
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Auth.E2E.GraphQL;
+namespace GameGuild.API.Tests.Modules.Auth.E2E.GraphQL;
 
 public class AuthMutationsTests {
   private readonly Mock<IMediator> _mockMediator = new();

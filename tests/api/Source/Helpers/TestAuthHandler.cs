@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace GameGuild.API.Tests.Source.Tests.Helpers
+namespace GameGuild.API.Tests.Helpers
 {
     /// <summary>
     /// Authentication handler that always authenticates requests for testing purposes

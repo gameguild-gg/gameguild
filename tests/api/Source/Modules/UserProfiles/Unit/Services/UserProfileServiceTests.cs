@@ -6,7 +6,7 @@ using Moq;
 // using GameGuild.API.Services;
 // using GameGuild.API.Exceptions;
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.UserProfiles.Unit.Services {
+namespace GameGuild.API.Tests.Modules.UserProfiles.Unit.Services {
   public class UserProfileServiceTests {
     private readonly Mock<IUserProfileRepository> _mockProfileRepo = new();
     private readonly Mock<IUserRepository> _mockUserRepo = new();

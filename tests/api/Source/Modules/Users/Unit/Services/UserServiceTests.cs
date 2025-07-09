@@ -3,7 +3,7 @@ using Moq;
 using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Users.Unit.Services {
+namespace GameGuild.API.Tests.Modules.Users.Unit.Services {
   public class UserServiceTests {
     private readonly Mock<IUserService> _mockService;
 

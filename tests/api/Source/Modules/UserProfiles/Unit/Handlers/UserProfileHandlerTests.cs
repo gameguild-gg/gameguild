@@ -7,7 +7,7 @@ using Moq;
 // using GameGuild.API.Services;
 // using GameGuild.API.Models;
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.UserProfiles.Unit.Handlers {
+namespace GameGuild.API.Tests.Modules.UserProfiles.Unit.Handlers {
   public class UserProfileHandlerTests {
     private readonly Mock<IUserProfileService> _mockProfileService = new();
     // private readonly CreateUserProfileCommandHandler _createHandler;

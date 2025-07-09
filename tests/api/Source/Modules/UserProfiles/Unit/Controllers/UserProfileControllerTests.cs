@@ -7,7 +7,7 @@ using Moq;
 // using GameGuild.API.DTOs;
 // using GameGuild.API.Exceptions;
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.UserProfiles.Unit.Controllers {
+namespace GameGuild.API.Tests.Modules.UserProfiles.Unit.Controllers {
   public class UserProfileControllerTests {
     private readonly Mock<IUserProfileService> _mockService = new();
     // private readonly UserProfileController _controller;

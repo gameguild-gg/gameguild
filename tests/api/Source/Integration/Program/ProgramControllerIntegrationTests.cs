@@ -4,7 +4,7 @@ using GameGuild.Modules.Programs.DTOs;
 using GameGuild.Modules.Programs.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.API.Tests.Source.Tests.Integration.Program;
+namespace GameGuild.API.Tests.Integration.Program;
 
 public class ProgramControllerIntegrationTests {
   private static ApplicationDbContext GetInMemoryContext() {

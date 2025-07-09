@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Source.Tests.Helpers;
+using GameGuild.API.Tests.Helpers;
 using GameGuild.Data;
 using GameGuild.Modules.Auth.Dtos;
 using GameGuild.Modules.Tenants.Models;
@@ -14,7 +14,7 @@ using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
 using UserModel = GameGuild.Modules.Users.Models.User;
 
 
-namespace GameGuild.API.Tests.Source.Tests.Modules.Auth.E2E.API;
+namespace GameGuild.API.Tests.Modules.Auth.E2E.API;
 
 public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>> {
   private readonly WebApplicationFactory<Program> _factory;
