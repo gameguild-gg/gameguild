@@ -103,11 +103,18 @@ export default function CoursesLandingPage() {
                     <span>Game Architecture & Design Patterns</span>
                   </div>
                 </div>
-                <Button asChild className="w-full">
-                  <Link href="/courses/catalog?category=programming">
-                    Explore Programming <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+                <div className="space-y-3">
+                  <Button asChild className="w-full">
+                    <Link href="/courses/catalog?category=programming">
+                      Browse Courses <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link href="/tracks/beginner-track-game-dev-fundamentals">
+                      View Learning Track <BookOpen className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -135,11 +142,18 @@ export default function CoursesLandingPage() {
                     <span>UI/UX Design for Games</span>
                   </div>
                 </div>
-                <Button asChild className="w-full">
-                  <Link href="/courses/catalog?category=art">
-                    Explore Art & Design <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+                <div className="space-y-3">
+                  <Button asChild className="w-full">
+                    <Link href="/courses/catalog?category=art">
+                      Browse Courses <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link href="/tracks/creative-track-game-art-animation">
+                      View Learning Track <BookOpen className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -167,11 +181,80 @@ export default function CoursesLandingPage() {
                     <span>Narrative & Storytelling</span>
                   </div>
                 </div>
-                <Button asChild className="w-full">
-                  <Link href="/courses/catalog?category=design">
-                    Explore Game Design <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+                <div className="space-y-3">
+                  <Button asChild className="w-full">
+                    <Link href="/courses/catalog?category=design">
+                      Browse Courses <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link href="/tracks/beginner-track-game-dev-fundamentals">
+                      View Learning Track <BookOpen className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Learning Tracks Section */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Structured Learning Tracks</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Follow our comprehensive learning tracks that guide you from beginner to expert in your chosen field.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <Card className="border-2 border-primary/20 shadow-lg">
+              <CardContent className="p-8">
+                <div className="text-center mb-8">
+                  <div className="bg-primary/10 rounded-full p-4 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                    <BookOpen className="h-10 w-10 text-primary" />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4">Comprehensive Learning Paths</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Our learning tracks provide a structured approach to mastering game development, with carefully sequenced courses, hands-on projects, and
+                    milestone assessments to track your progress.
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6 mb-8">
+                  <div className="text-center">
+                    <div className="bg-blue-500/10 rounded-lg p-4 mb-4">
+                      <Code className="h-8 w-8 text-blue-600 mx-auto" />
+                    </div>
+                    <h4 className="font-semibold mb-2">Programming Tracks</h4>
+                    <p className="text-sm text-muted-foreground">From C++ fundamentals to advanced game architecture</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="bg-purple-500/10 rounded-lg p-4 mb-4">
+                      <Palette className="h-8 w-8 text-purple-600 mx-auto" />
+                    </div>
+                    <h4 className="font-semibold mb-2">Art & Design Tracks</h4>
+                    <p className="text-sm text-muted-foreground">Master 2D/3D art, animation, and visual design</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="bg-green-500/10 rounded-lg p-4 mb-4">
+                      <Gamepad2 className="h-8 w-8 text-green-600 mx-auto" />
+                    </div>
+                    <h4 className="font-semibold mb-2">Game Design Tracks</h4>
+                    <p className="text-sm text-muted-foreground">Learn mechanics, level design, and player psychology</p>
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <Button asChild size="lg" className="text-lg px-8">
+                    <Link href="/tracks">
+                      <BookOpen className="mr-2 h-5 w-5" />
+                      Explore All Learning Tracks
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>

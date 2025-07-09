@@ -17,6 +17,10 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   // Basic CRUD Operations
   public async Task<ProgramEntity?> GetProgramByIdAsync(Guid id) { return await context.Programs.Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id); }
 
+  public async Task<ProgramEntity?> GetProgramBySlugAsync(string slug) { 
+    return await context.Programs.Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Slug == slug); 
+  }
+
   public async Task<ProgramEntity?> GetProgramWithContentAsync(Guid id) {
     return await context.Programs.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted))
                         .Include(p => p.ProgramUsers.Where(pu => !pu.IsDeleted))
