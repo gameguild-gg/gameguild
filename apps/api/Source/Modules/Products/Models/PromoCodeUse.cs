@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Entities;
+using GameGuild.Common.Domain.Entities;
 using GameGuild.Modules.Payments.Models;
 using GameGuild.Modules.Users.Models;
 using Microsoft.EntityFrameworkCore;

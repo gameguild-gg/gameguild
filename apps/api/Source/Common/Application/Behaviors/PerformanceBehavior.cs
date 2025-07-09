@@ -1,8 +1,9 @@
-using MediatR;
 using System.Diagnostics;
+using GameGuild.Common.Abstractions;
+using MediatR;
 
 
-namespace GameGuild.Common.Behaviors;
+namespace GameGuild.Common.Application.Behaviors;
 
 /// <summary>
 /// Performance monitoring behavior for tracking slow requests and memory usage

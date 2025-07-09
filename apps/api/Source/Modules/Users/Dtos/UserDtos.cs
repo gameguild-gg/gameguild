@@ -1,10 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Enums;
+using GameGuild.Common.Domain.Enums;
 
-namespace GameGuild.Modules.Users.Dtos;
-
-using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Enums;
 
 namespace GameGuild.Modules.Users.Dtos;
 

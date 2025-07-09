@@ -3,7 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Slugify;
 
 
-namespace GameGuild.Common.Strategies;
+namespace GameGuild.Common.Application.Strategies;
 
 /// <summary>
 /// Provides utilities for converting strings to URL-friendly slug format.

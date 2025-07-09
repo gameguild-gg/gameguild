@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
-using SharedKernel;
 
-namespace Web.Api.Infrastructure;
+
+namespace GameGuild.Abstractions.Infrastructure;
 
 internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
     : IExceptionHandler

@@ -1,4 +1,4 @@
-using GameGuild.Common.Entities;
+using GameGuild.Common.Domain.Entities;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Projects.Models;
 

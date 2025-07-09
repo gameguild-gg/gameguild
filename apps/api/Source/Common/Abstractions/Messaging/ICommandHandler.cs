@@ -1,4 +1,7 @@
-﻿namespace GameGuild.Common.Messaging;
+﻿using GameGuild.Common.Domain;
+
+
+namespace GameGuild.Common.Abstractions.Messaging;
 
 public interface ICommandHandler<in TCommand>
     where TCommand : ICommand
@@ -9,5 +12,5 @@ public interface ICommandHandler<in TCommand>
 public interface ICommandHandler<in TCommand, TResponse>
     where TCommand : ICommand<TResponse>
 {
-    Task<Result<TResponse>> Handle(TCommand command, CancellationToken cancellationToken);
+    Task<Domain.Result<TResponse>> Handle(TCommand command, CancellationToken cancellationToken);
 }

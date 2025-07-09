@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Common.Domain.Entities;
 
 /// <summary>
 /// Interface that defines the contract for all entities in the system.

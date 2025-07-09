@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Modules.Tenants.Models;
 
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Common.Domain.Entities;
 
 /// <summary>
 /// Generic base entity class that provides common properties and functionality for all domain entities.

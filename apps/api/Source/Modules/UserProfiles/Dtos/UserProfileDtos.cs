@@ -1,10 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 
-
-namespace GameGuild.Modules.UserProfiles.Dtos;
-
-using System.ComponentModel.DataAnnotations;
-
 namespace GameGuild.Modules.UserProfiles.Dtos;
 
 public class CreateUserProfileDto

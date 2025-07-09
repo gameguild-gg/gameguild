@@ -1,4 +1,4 @@
-using GameGuild.Common.Enums;
+using GameGuild.Common.Domain.Enums;
 using GameGuild.Data;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;

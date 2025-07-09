@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Entities;
+using GameGuild.Common.Domain.Entities;
 using GameGuild.Modules.Tenants.Models;
 using GameGuild.Modules.Users.Models;
 

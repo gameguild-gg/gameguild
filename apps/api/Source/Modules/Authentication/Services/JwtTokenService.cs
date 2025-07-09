@@ -2,11 +2,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using GameGuild.Modules.Auth.Dtos;
+using GameGuild.Modules.Authentication.Dtos;
 using Microsoft.IdentityModel.Tokens;
 
 
-namespace GameGuild.Modules.Auth.Services {
+namespace GameGuild.Modules.Authentication.Services {
   public interface IJwtTokenService {
     string GenerateAccessToken(UserDto user, string[] roles);
 

@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
 using GameGuild.Data;
+using GameGuild.Modules.Authentication.Attributes;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Modules.Auth.Attributes;
 
 
-namespace GameGuild.Common.Controllers;
+namespace GameGuild.Common.Presentation.Controllers;
 
 [ApiController]
 [Route("[controller]")]

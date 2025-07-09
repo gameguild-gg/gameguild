@@ -112,11 +112,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         // MediatR for CQRS
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-            cfg.RegisterServicesFromAssembly(typeof(GameGuild.Program).Assembly);
-        });
+        services.AddMediatR(Assembly.GetExecutingAssembly(), typeof(GameGuild.Program).Assembly);
 
         // Unified MediatR Pipeline Behaviors (order matters!)
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(GameGuild.Common.Behaviors.UnifiedLoggingBehavior<,>));

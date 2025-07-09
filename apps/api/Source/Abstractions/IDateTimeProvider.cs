@@ -1,4 +1,4 @@
-﻿namespace SharedKernel;
+﻿namespace GameGuild.Abstractions;
 
 public interface IDateTimeProvider
 {

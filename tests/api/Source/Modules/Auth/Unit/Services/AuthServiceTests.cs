@@ -1,7 +1,8 @@
 using System.Security.Claims;
 using GameGuild.Data;
-using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.Auth.Services;
+using GameGuild.Modules.Authentication.Dtos;
+using GameGuild.Modules.Authentication.Models;
+using GameGuild.Modules.Authentication.Services;
 using GameGuild.Modules.Tenants.Models;
 using GameGuild.Modules.Tenants.Services;
 using GameGuild.Modules.Users.Models;
@@ -363,7 +364,7 @@ public class AuthServiceTests : IDisposable
         var user = new UserModel { Id = Guid.NewGuid(), Email = "test@example.com", Name = "Test User" };
         _context.Users.Add(user);
 
-        var refreshToken = new GameGuild.Modules.Auth.Models.RefreshToken
+        var refreshToken = new RefreshToken
         {
             UserId = user.Id, Token = "valid-refresh-token", ExpiresAt = DateTime.UtcNow.AddDays(7),
             IsRevoked = false, // IsActive is calculated from !IsRevoked && !IsExpired

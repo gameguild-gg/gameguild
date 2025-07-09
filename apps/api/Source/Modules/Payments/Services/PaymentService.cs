@@ -1,4 +1,4 @@
-using GameGuild.Common.Enums;
+using GameGuild.Common.Domain.Enums;
 using GameGuild.Modules.Payments.Models;
 using GameGuild.Data;
 using Microsoft.EntityFrameworkCore;
@@ -43,13 +43,13 @@ public class PaymentService(ApplicationDbContext context) : IPaymentService
         var paymentMethod = new UserFinancialMethod
         {
             UserId = userId,
-            Type = createDto.Type,
+            Type = Enum.Parse<PaymentMethodType>(createDto.Type, true),
             ExternalId = createDto.ExternalId,
             DisplayName = createDto.DisplayName,
-            LastFourDigits = createDto.LastFourDigits,
+            LastFour = createDto.LastFourDigits,
             Brand = createDto.Brand,
-            ExpiryMonth = createDto.ExpiryMonth,
-            ExpiryYear = createDto.ExpiryYear,
+            ExpiryMonth = createDto.ExpiryMonth?.ToString(),
+            ExpiryYear = createDto.ExpiryYear?.ToString(),
             IsDefault = createDto.IsDefault,
             IsActive = true
         };
@@ -70,7 +70,6 @@ public class PaymentService(ApplicationDbContext context) : IPaymentService
         }
 
         // Soft delete
-        paymentMethod.IsDeleted = true;
         paymentMethod.DeletedAt = DateTime.UtcNow;
         
         await context.SaveChangesAsync();

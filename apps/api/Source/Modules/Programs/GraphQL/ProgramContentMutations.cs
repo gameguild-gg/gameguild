@@ -1,11 +1,11 @@
-using GameGuild.Common.GraphQL.Authorization;
+using GameGuild.Common.Presentation.GraphQL.Authorization;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
 using GameGuild.Modules.Users.GraphQL;
-using ProgramContentTypeEnum = GameGuild.Common.Enums.ProgramContentType;
-using VisibilityEnum = GameGuild.Common.Enums.Visibility;
-using GradingMethodEnum = GameGuild.Common.Enums.GradingMethod;
+using ProgramContentTypeEnum = GameGuild.Common.Domain.Enums.ProgramContentType;
+using VisibilityEnum = GameGuild.Common.Domain.Enums.Visibility;
+using GradingMethodEnum = GameGuild.Common.Domain.Enums.GradingMethod;
 
 
 namespace GameGuild.Modules.Programs.GraphQL;

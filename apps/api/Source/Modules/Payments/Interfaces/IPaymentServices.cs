@@ -1,4 +1,4 @@
-using GameGuild.Common.Enums;
+using GameGuild.Common.Domain.Enums;
 
 
 namespace GameGuild.Modules.Payments.Interfaces;

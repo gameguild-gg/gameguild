@@ -1,10 +1,10 @@
+using GameGuild.Modules.Authentication.Commands;
+using GameGuild.Modules.Authentication.Dtos;
+using GameGuild.Modules.Authentication.Services;
 using MediatR;
-using GameGuild.Modules.Auth.Commands;
-using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.Auth.Services;
 
 
-namespace GameGuild.Modules.Auth.Handlers;
+namespace GameGuild.Modules.Authentication.Handlers;
 
 /// <summary>
 /// Handler for verifying Web3 signature

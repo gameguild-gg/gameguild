@@ -1,4 +1,4 @@
-using GameGuild.Common.Entities;
+using GameGuild.Common.Domain.Entities;
 using GameGuild.Data;
 using Microsoft.EntityFrameworkCore;
 using UserModel = GameGuild.Modules.Users.Models.User;

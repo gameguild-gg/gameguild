@@ -1,6 +1,6 @@
-using GameGuild.Modules.Auth.Commands;
-using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.Auth.GraphQL;
+using GameGuild.Modules.Authentication.Commands;
+using GameGuild.Modules.Authentication.Dtos;
+using GameGuild.Modules.Authentication.GraphQL;
 using MediatR;
 using Moq;
 
