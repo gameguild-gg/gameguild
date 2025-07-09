@@ -12,7 +12,7 @@ namespace GameGuild.Common.Strategies;
 public static class SlugCase {
   private static readonly SlugHelper SlugHelper;
 
-  private static IMemoryCache _cache;
+  internal static IMemoryCache Cache;
 
   static SlugCase() {
     var config = new SlugHelperConfiguration {
@@ -32,7 +32,7 @@ public static class SlugCase {
       CompactionPercentage = 0.25, // Remove 25% of entries when limit is reached
     };
 
-    _cache = new MemoryCache(cacheOptions);
+    Cache = new MemoryCache(cacheOptions);
   }
 
   /// <summary>
@@ -49,7 +49,7 @@ public static class SlugCase {
 
     var cacheKey = $"slugify:{text}:{maxLength}";
 
-    return _cache.GetOrCreate(
+    return Cache.GetOrCreate(
              cacheKey,
              entry => {
                entry.Size = 1; // Each entry counts as 1 towards the size limit
@@ -88,7 +88,7 @@ public static class SlugCase {
   /// <param name="texts">The strings to convert.</param>
   /// <returns>An array of slug strings.</returns>
   public static string[] ConvertMany(params string[] texts) {
-    if (texts == null || texts.Length == 0) return [];
+    if (texts.Length == 0) return [];
 
     var result = new string[texts.Length];
 
@@ -107,9 +107,11 @@ public static class SlugCase {
   public static string GenerateUnique(string text, IEnumerable<string> existingSlugs, int maxLength = 100) {
     var baseSlug = Convert(text, maxLength);
 
-    if (existingSlugs == null || !existingSlugs.Contains(baseSlug)) return baseSlug;
+    var enumerable = existingSlugs as string[] ?? existingSlugs.ToArray();
 
-    var existingSet = new HashSet<string>(existingSlugs, StringComparer.OrdinalIgnoreCase);
+    if (!enumerable.Contains(baseSlug)) return baseSlug;
+
+    var existingSet = new HashSet<string>(enumerable, StringComparer.OrdinalIgnoreCase);
     var counter = 1;
     string uniqueSlug;
 
@@ -179,7 +181,7 @@ public static class SlugCase {
     var slug = SlugHelper.GenerateSlug(text);
 
     // Truncate if necessary
-    if (slug.Length > maxLength) slug = slug.Substring(0, maxLength).TrimEnd('-');
+    if (slug.Length > maxLength) slug = slug[..maxLength].TrimEnd('-');
 
     return slug;
   }
@@ -189,18 +191,18 @@ public static class SlugCase {
   /// </summary>
   public static void ClearCache() {
     // IMemoryCache doesn't have a Clear method, so we need to dispose and recreate
-    _cache.Dispose();
+    Cache.Dispose();
 
     var cacheOptions = new MemoryCacheOptions {
       SizeLimit = 1000, // Maximum 1000 entries
       CompactionPercentage = 0.25, // Remove 25% of entries when limit is reached
     };
 
-    _cache = new MemoryCache(cacheOptions);
+    Cache = new MemoryCache(cacheOptions);
   }
 
   /// <summary>
   /// Disposes the memory cache. Call this method when the application is shutting down.
   /// </summary>
-  public static void Dispose() { _cache?.Dispose(); }
+  public static void Dispose() { Cache?.Dispose(); }
 }

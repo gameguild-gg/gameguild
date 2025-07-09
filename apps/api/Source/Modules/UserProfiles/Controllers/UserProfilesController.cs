@@ -1,199 +1,255 @@
+using GameGuild.Modules.UserProfiles.Commands;
 using GameGuild.Modules.UserProfiles.Dtos;
+using GameGuild.Modules.UserProfiles.Queries;
 using GameGuild.Modules.UserProfiles.Services;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-
 
 namespace GameGuild.Modules.UserProfiles.Controllers;
 
+/// <summary>
+/// REST API controller for managing user profiles using CQRS pattern
+/// </summary>
 [ApiController]
-[Route("[controller]")]
-public class UserProfilesController(IUserProfileService userProfileService) : ControllerBase {
-  // GET: user-profiles
-  [HttpGet]
-  public async Task<ActionResult<IEnumerable<UserProfileResponseDto>>> GetUserProfiles() {
-    var userProfiles = await userProfileService.GetAllUserProfilesAsync();
+[Route("api/[controller]")]
+public class UserProfilesController(IMediator mediator) : ControllerBase
+{
+    /// <summary>
+    /// Get all user profiles with optional filtering and pagination
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<UserProfileResponseDto>>> GetUserProfiles(
+        [FromQuery] bool includeDeleted = false,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] Guid? tenantId = null)
+    {
+        var query = new GetAllUserProfilesQuery
+        {
+            IncludeDeleted = includeDeleted,
+            Skip = skip,
+            Take = take,
+            SearchTerm = searchTerm,
+            TenantId = tenantId
+        };
 
-    var userProfileDtos = userProfiles.Select(up => new UserProfileResponseDto {
-        Id = up.Id,
-        Version = up.Version,
-        GivenName = up.GivenName,
-        FamilyName = up.FamilyName,
-        DisplayName = up.DisplayName,
-        Title = up.Title,
-        Description = up.Description,
-        CreatedAt = up.CreatedAt,
-        UpdatedAt = up.UpdatedAt,
-        DeletedAt = up.DeletedAt,
-        IsDeleted = up.IsDeleted,
-      }
-    );
+        var userProfiles = await mediator.Send(query);
 
-    return Ok(userProfileDtos);
-  }
+        var userProfileDtos = userProfiles.Select(up => new UserProfileResponseDto
+        {
+            Id = up.Id,
+            Version = up.Version,
+            GivenName = up.GivenName,
+            FamilyName = up.FamilyName,
+            DisplayName = up.DisplayName,
+            Title = up.Title,
+            Description = up.Description,
+            CreatedAt = up.CreatedAt,
+            UpdatedAt = up.UpdatedAt,
+            DeletedAt = up.DeletedAt,
+            IsDeleted = up.IsDeleted,
+        });
 
-  // GET: user-profiles/deleted
-  [HttpGet("deleted")]
-  public async Task<ActionResult<IEnumerable<UserProfileResponseDto>>> GetDeletedUserProfiles() {
-    var userProfiles = await userProfileService.GetDeletedUserProfilesAsync();
+        return Ok(userProfileDtos);
+    }
 
-    var userProfileDtos = userProfiles.Select(up => new UserProfileResponseDto {
-        Id = up.Id,
-        Version = up.Version,
-        GivenName = up.GivenName,
-        FamilyName = up.FamilyName,
-        DisplayName = up.DisplayName,
-        Title = up.Title,
-        Description = up.Description,
-        CreatedAt = up.CreatedAt,
-        UpdatedAt = up.UpdatedAt,
-        DeletedAt = up.DeletedAt,
-        IsDeleted = up.IsDeleted,
-      }
-    );
+    /// <summary>
+    /// Get user profile by ID
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<ActionResult<UserProfileResponseDto>> GetUserProfile(Guid id, [FromQuery] bool includeDeleted = false)
+    {
+        var query = new GetUserProfileByIdQuery
+        {
+            UserProfileId = id,
+            IncludeDeleted = includeDeleted
+        };
 
-    return Ok(userProfileDtos);
-  }
+        var userProfile = await mediator.Send(query);
+        if (userProfile == null) return NotFound();
 
-  // GET: user-profiles/{id}
-  [HttpGet("{id}")]
-  public async Task<ActionResult<UserProfileResponseDto>> GetUserProfile(Guid id) {
-    var userProfile = await userProfileService.GetUserProfileByIdAsync(id);
+        var userProfileDto = new UserProfileResponseDto
+        {
+            Id = userProfile.Id,
+            Version = userProfile.Version,
+            GivenName = userProfile.GivenName,
+            FamilyName = userProfile.FamilyName,
+            DisplayName = userProfile.DisplayName,
+            Title = userProfile.Title,
+            Description = userProfile.Description,
+            CreatedAt = userProfile.CreatedAt,
+            UpdatedAt = userProfile.UpdatedAt,
+            DeletedAt = userProfile.DeletedAt,
+            IsDeleted = userProfile.IsDeleted,
+        };
 
-    if (userProfile == null) return NotFound();
+        return Ok(userProfileDto);
+    }
 
-    var userProfileDto = new UserProfileResponseDto {
-      Id = userProfile.Id,
-      Version = userProfile.Version,
-      GivenName = userProfile.GivenName,
-      FamilyName = userProfile.FamilyName,
-      DisplayName = userProfile.DisplayName,
-      Title = userProfile.Title,
-      Description = userProfile.Description,
-      CreatedAt = userProfile.CreatedAt,
-      UpdatedAt = userProfile.UpdatedAt,
-      DeletedAt = userProfile.DeletedAt,
-      IsDeleted = userProfile.IsDeleted,
-    };
+    /// <summary>
+    /// Get user profile by user ID
+    /// </summary>
+    [HttpGet("user/{userId}")]
+    public async Task<ActionResult<UserProfileResponseDto>> GetUserProfileByUserId(Guid userId, [FromQuery] bool includeDeleted = false)
+    {
+        var query = new GetUserProfileByUserIdQuery
+        {
+            UserId = userId,
+            IncludeDeleted = includeDeleted
+        };
 
-    return Ok(userProfileDto);
-  }
+        var userProfile = await mediator.Send(query);
+        if (userProfile == null) return NotFound();
 
-  // GET: user-profiles/user/{userId}
-  [HttpGet("user/{userId}")]
-  public async Task<ActionResult<UserProfileResponseDto>> GetUserProfileByUserId(Guid userId) {
-    var userProfile = await userProfileService.GetUserProfileByUserIdAsync(userId);
+        var userProfileDto = new UserProfileResponseDto
+        {
+            Id = userProfile.Id,
+            Version = userProfile.Version,
+            GivenName = userProfile.GivenName,
+            FamilyName = userProfile.FamilyName,
+            DisplayName = userProfile.DisplayName,
+            Title = userProfile.Title,
+            Description = userProfile.Description,
+            CreatedAt = userProfile.CreatedAt,
+            UpdatedAt = userProfile.UpdatedAt,
+            DeletedAt = userProfile.DeletedAt,
+            IsDeleted = userProfile.IsDeleted,
+        };
 
-    if (userProfile == null) return NotFound();
+        return Ok(userProfileDto);
+    }
 
-    var userProfileDto = new UserProfileResponseDto {
-      Id = userProfile.Id,
-      Version = userProfile.Version,
-      GivenName = userProfile.GivenName,
-      FamilyName = userProfile.FamilyName,
-      DisplayName = userProfile.DisplayName,
-      Title = userProfile.Title,
-      Description = userProfile.Description,
-      CreatedAt = userProfile.CreatedAt,
-      UpdatedAt = userProfile.UpdatedAt,
-      DeletedAt = userProfile.DeletedAt,
-      IsDeleted = userProfile.IsDeleted,
-    };
+    /// <summary>
+    /// Create a new user profile
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<UserProfileResponseDto>> CreateUserProfile([FromBody] CreateUserProfileDto createDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
 
-    return Ok(userProfileDto);
-  }
+        var command = new CreateUserProfileCommand
+        {
+            GivenName = createDto.GivenName ?? string.Empty,
+            FamilyName = createDto.FamilyName ?? string.Empty,
+            DisplayName = createDto.DisplayName ?? string.Empty,
+            Title = createDto.Title,
+            Description = createDto.Description,
+            UserId = createDto.UserId ?? Guid.NewGuid(), // Should be provided in DTO
+            TenantId = createDto.TenantId
+        };
 
-  // POST: user-profiles
-  [HttpPost]
-  public async Task<ActionResult<UserProfileResponseDto>> CreateUserProfile(CreateUserProfileDto createUserProfileDto) {
-    var userProfile = new Models.UserProfile {
-      GivenName = createUserProfileDto.GivenName,
-      FamilyName = createUserProfileDto.FamilyName,
-      DisplayName = createUserProfileDto.DisplayName,
-      Title = createUserProfileDto.Title ?? string.Empty,
-      Description = createUserProfileDto.Description,
-    };
+        var userProfile = await mediator.Send(command);
 
-    var createdUserProfile = await userProfileService.CreateUserProfileAsync(userProfile);
+        var userProfileDto = new UserProfileResponseDto
+        {
+            Id = userProfile.Id,
+            Version = userProfile.Version,
+            GivenName = userProfile.GivenName,
+            FamilyName = userProfile.FamilyName,
+            DisplayName = userProfile.DisplayName,
+            Title = userProfile.Title,
+            Description = userProfile.Description,
+            CreatedAt = userProfile.CreatedAt,
+            UpdatedAt = userProfile.UpdatedAt,
+            DeletedAt = userProfile.DeletedAt,
+            IsDeleted = userProfile.IsDeleted,
+        };
 
-    var userProfileDto = new UserProfileResponseDto {
-      Id = createdUserProfile.Id,
-      Version = createdUserProfile.Version,
-      GivenName = createdUserProfile.GivenName,
-      FamilyName = createdUserProfile.FamilyName,
-      DisplayName = createdUserProfile.DisplayName,
-      Title = createdUserProfile.Title,
-      Description = createdUserProfile.Description,
-      CreatedAt = createdUserProfile.CreatedAt,
-      UpdatedAt = createdUserProfile.UpdatedAt,
-      DeletedAt = createdUserProfile.DeletedAt,
-      IsDeleted = createdUserProfile.IsDeleted,
-    };
+        return CreatedAtAction(nameof(GetUserProfile), new { id = userProfile.Id }, userProfileDto);
+    }
 
-    return CreatedAtAction(nameof(GetUserProfile), new { id = createdUserProfile.Id }, userProfileDto);
-  }
+    /// <summary>
+    /// Update a user profile
+    /// </summary>
+    [HttpPut("{id}")]
+    public async Task<ActionResult<UserProfileResponseDto>> UpdateUserProfile(
+        Guid id,
+        [FromBody] UpdateUserProfileDto updateDto,
+        [FromHeader(Name = "If-Match")] int? ifMatch = null)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
 
-  // PUT: user-profiles/{id}
-  [HttpPut("{id}")]
-  public async Task<ActionResult<UserProfileResponseDto>> UpdateUserProfile(
-    Guid id,
-    UpdateUserProfileDto updateUserProfileDto
-  ) {
-    var userProfile = new Models.UserProfile {
-      GivenName = updateUserProfileDto.GivenName,
-      FamilyName = updateUserProfileDto.FamilyName,
-      DisplayName = updateUserProfileDto.DisplayName,
-      Title = updateUserProfileDto.Title ?? string.Empty,
-      Description = updateUserProfileDto.Description,
-    };
+        var command = new UpdateUserProfileCommand
+        {
+            UserProfileId = id,
+            GivenName = updateDto.GivenName,
+            FamilyName = updateDto.FamilyName,
+            DisplayName = updateDto.DisplayName,
+            Title = updateDto.Title,
+            Description = updateDto.Description,
+            ExpectedVersion = ifMatch
+        };
 
-    var updatedUserProfile = await userProfileService.UpdateUserProfileAsync(id, userProfile);
+        try
+        {
+            var userProfile = await mediator.Send(command);
 
-    if (updatedUserProfile == null) return NotFound();
+            var userProfileDto = new UserProfileResponseDto
+            {
+                Id = userProfile.Id,
+                Version = userProfile.Version,
+                GivenName = userProfile.GivenName,
+                FamilyName = userProfile.FamilyName,
+                DisplayName = userProfile.DisplayName,
+                Title = userProfile.Title,
+                Description = userProfile.Description,
+                CreatedAt = userProfile.CreatedAt,
+                UpdatedAt = userProfile.UpdatedAt,
+                DeletedAt = userProfile.DeletedAt,
+                IsDeleted = userProfile.IsDeleted,
+            };
 
-    var userProfileDto = new UserProfileResponseDto {
-      Id = updatedUserProfile.Id,
-      Version = updatedUserProfile.Version,
-      GivenName = updatedUserProfile.GivenName,
-      FamilyName = updatedUserProfile.FamilyName,
-      DisplayName = updatedUserProfile.DisplayName,
-      Title = updatedUserProfile.Title,
-      Description = updatedUserProfile.Description,
-      CreatedAt = updatedUserProfile.CreatedAt,
-      UpdatedAt = updatedUserProfile.UpdatedAt,
-      DeletedAt = updatedUserProfile.DeletedAt,
-      IsDeleted = updatedUserProfile.IsDeleted,
-    };
+            return Ok(userProfileDto);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Concurrency conflict"))
+        {
+            return Conflict(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
 
-    return Ok(userProfileDto);
-  }
+    /// <summary>
+    /// Delete a user profile (soft delete by default)
+    /// </summary>
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteUserProfile(Guid id, [FromQuery] bool permanent = false)
+    {
+        var command = new DeleteUserProfileCommand
+        {
+            UserProfileId = id,
+            SoftDelete = !permanent
+        };
 
-  // DELETE: user-profiles/{id}
-  [HttpDelete("{id}")]
-  public async Task<IActionResult> DeleteUserProfile(Guid id) {
-    var result = await userProfileService.DeleteUserProfileAsync(id);
+        var result = await mediator.Send(command);
+        if (!result) return NotFound();
 
-    if (!result) return NotFound();
+        return NoContent();
+    }
 
-    return NoContent();
-  }
+    /// <summary>
+    /// Restore a soft-deleted user profile
+    /// </summary>
+    [HttpPost("{id}/restore")]
+    public async Task<IActionResult> RestoreUserProfile(Guid id)
+    {
+        var command = new RestoreUserProfileCommand
+        {
+            UserProfileId = id
+        };
 
-  // DELETE: user-profiles/{id}/soft
-  [HttpDelete("{id}/soft")]
-  public async Task<IActionResult> SoftDeleteUserProfile(Guid id) {
-    var result = await userProfileService.SoftDeleteUserProfileAsync(id);
+        var result = await mediator.Send(command);
+        if (!result) return NotFound();
 
-    if (!result) return NotFound();
-
-    return NoContent();
-  }
-
-  // POST: user-profiles/{id}/restore
-  [HttpPost("{id}/restore")]
-  public async Task<IActionResult> RestoreUserProfile(Guid id) {
-    var result = await userProfileService.RestoreUserProfileAsync(id);
-
-    if (!result) return NotFound();
-
-    return NoContent();
-  }
+        return NoContent();
+    }
 }

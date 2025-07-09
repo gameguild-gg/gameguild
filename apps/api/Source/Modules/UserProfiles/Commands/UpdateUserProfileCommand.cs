@@ -1,17 +1,33 @@
+using System.ComponentModel.DataAnnotations;
 using MediatR;
-
 
 namespace GameGuild.Modules.UserProfiles.Commands;
 
 /// <summary>
 /// Command to update user profile with validation and business logic
 /// </summary>
-public class UpdateUserProfileCommand : IRequest<Models.UserProfile> {
-  public Guid UserProfileId { get; set; }
+public class UpdateUserProfileCommand : IRequest<Models.UserProfile>
+{
+    [Required]
+    public Guid UserProfileId { get; set; }
 
-  public string? GivenName { get; set; }
+    [StringLength(100, MinimumLength = 1)]
+    public string? GivenName { get; set; }
 
-  public string? FamilyName { get; set; }
+    [StringLength(100, MinimumLength = 1)]
+    public string? FamilyName { get; set; }
 
-  public string? DisplayName { get; set; }
+    [StringLength(100, MinimumLength = 2)]
+    public string? DisplayName { get; set; }
+
+    [StringLength(200)]
+    public string? Title { get; set; }
+
+    [StringLength(1000)]
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// Expected version for optimistic concurrency control
+    /// </summary>
+    public int? ExpectedVersion { get; set; }
 }

@@ -107,6 +107,9 @@ builder.Services.AddUserProfileModule(); // Register the UserProfile module
 builder.Services.AddProgramModule(); // Register the Program module
 builder.Services.AddProjectModule(); // Register the Project module
 builder.Services.AddTestModule(); // Register the Test module
+builder.Services.AddProductModule(); // Register the Product module
+builder.Services.AddSubscriptionModule(); // Register the Subscription module
+builder.Services.AddPaymentModule(); // Register the Payment module
 builder.Services.AddAuthModule(builder.Configuration); // Register the Auth module
 
 // Add database seeder
@@ -115,11 +118,7 @@ builder.Services.AddScoped<GameGuild.Common.Services.IDatabaseSeeder, GameGuild.
 // Add HTTP context accessor for GraphQL authorization
 builder.Services.AddHttpContextAccessor();
 
-// Add MediatR for CQRS
-builder.Services.AddMediatR(typeof(GameGuild.Program));
-
-// Add MediatR pipeline behaviors
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(GameGuild.Common.Behaviors.LoggingBehavior<,>));
+// MediatR and pipeline behaviors are now handled in AddApplication() method
 
 // Get connection string from the environment
 var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
