@@ -5,6 +5,9 @@ using GameGuild.Modules.Projects.Services;
 using GameGuild.Modules.Tenants.Services;
 using GameGuild.Modules.UserProfiles.Services;
 using GameGuild.Modules.Users.Services;
+using GameGuild.Modules.Subscriptions.Services;
+using GameGuild.Modules.Payments.Services;
+using GameGuild.Modules.Products.Services;
 using IProgramService = GameGuild.Modules.Programs.Services.IProgramService;
 
 
@@ -71,6 +74,27 @@ public static class ServiceCollectionExtensions {
 
     // Add permission service for three-layer permission system
     services.AddScoped<IPermissionService, PermissionService>();
+
+    return services;
+  }
+
+  public static IServiceCollection AddProductModule(this IServiceCollection services) {
+    // Register Product module services
+    services.AddScoped<IProductService, ProductService>();
+
+    return services;
+  }
+
+  public static IServiceCollection AddSubscriptionModule(this IServiceCollection services) {
+    // Register Subscription module services
+    services.AddScoped<ISubscriptionService, SubscriptionService>();
+
+    return services;
+  }
+
+  public static IServiceCollection AddPaymentModule(this IServiceCollection services) {
+    // Register Payment module services
+    services.AddScoped<IPaymentService, PaymentService>();
 
     return services;
   }

@@ -59,6 +59,22 @@ public class UserFinancialMethod : BaseEntity {
   /// </summary>
   public bool IsDefault { get; set; }
 
+  /// <summary>
+  /// Whether this payment method is currently active and usable
+  /// </summary>
+  public bool IsActive { get; set; } = true;
+
+  /// <summary>
+  /// Display name for the payment method (user-friendly)
+  /// </summary>
+  [MaxLength(100)]
+  public string? DisplayName { get; set; }
+
+  /// <summary>
+  /// Last 4 digits for backwards compatibility
+  /// </summary>
+  public string? LastFourDigits => LastFour;
+
   // Navigation properties
   [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;
 }
