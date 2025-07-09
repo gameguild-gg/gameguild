@@ -1,7 +1,6 @@
 using GameGuild.Data;
 using GameGuild.Modules.Users.Commands;
 using GameGuild.Modules.Users.Notifications;
-using GameGuild.Modules.Users.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 

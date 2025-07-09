@@ -1,7 +1,6 @@
 using GameGuild.Modules.UserProfiles.Commands;
 using GameGuild.Modules.UserProfiles.Dtos;
 using GameGuild.Modules.UserProfiles.Queries;
-using GameGuild.Modules.UserProfiles.Services;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

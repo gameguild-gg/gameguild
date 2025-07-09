@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using GameGuild.Modules.Auth.Constants;
+using GameGuild.Modules.Authentication.Constants;
 using GameGuild.Modules.Tenants.Models;
 using GameGuild.Modules.Tenants.Services;
 

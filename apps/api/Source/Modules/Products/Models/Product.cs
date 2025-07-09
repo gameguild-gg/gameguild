@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using GameGuild.Common.Enums;
+using GameGuild.Common.Domain.Enums;
 using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Resources.Models;
 using GameGuild.Modules.Users.Models;

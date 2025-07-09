@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using GameGuild.Common.Behaviors;
+using GameGuild.Common.Application.Behaviors;
 using MediatR;
 
 namespace GameGuild.Modules.Users.Commands;

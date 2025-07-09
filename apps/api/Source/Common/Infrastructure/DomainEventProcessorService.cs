@@ -1,4 +1,7 @@
-namespace GameGuild.Common;
+using GameGuild.Common.Abstractions;
+
+
+namespace GameGuild.Common.Infrastructure;
 
 /// <summary>
 /// Background service for processing domain events

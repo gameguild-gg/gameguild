@@ -1,7 +1,7 @@
 using System.ComponentModel;
 
 
-namespace GameGuild.Common.Enums;
+namespace GameGuild.Common.Domain.Enums;
 
 public enum PaymentMethodType {
   [Description("Credit card payment method")]

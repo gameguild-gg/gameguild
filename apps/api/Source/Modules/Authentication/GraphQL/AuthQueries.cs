@@ -1,10 +1,10 @@
-using MediatR;
-using GameGuild.Modules.Auth.Queries;
+using GameGuild.Modules.Authentication.Queries;
 using GameGuild.Modules.Users.GraphQL;
 using GameGuild.Modules.Users.Models;
+using MediatR;
 
 
-namespace GameGuild.Modules.Auth.GraphQL;
+namespace GameGuild.Modules.Authentication.GraphQL;
 
 /// <summary>
 /// GraphQL queries for Auth module using CQRS pattern

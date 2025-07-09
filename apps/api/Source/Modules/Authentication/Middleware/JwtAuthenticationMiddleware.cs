@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
 
-namespace GameGuild.Modules.Auth.Middleware {
+namespace GameGuild.Modules.Authentication.Middleware {
   /// <summary>
   /// JWT Authentication middleware
   /// </summary>

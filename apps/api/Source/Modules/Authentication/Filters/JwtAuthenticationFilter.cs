@@ -1,14 +1,14 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using GameGuild.Modules.Auth.Attributes;
+using GameGuild.Modules.Authentication.Attributes;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.IdentityModel.Tokens;
 
 
-namespace GameGuild.Modules.Auth.Filters {
+namespace GameGuild.Modules.Authentication.Filters {
   /// <summary>
   /// JWT Authentication filter that validates tokens and sets user context
   /// </summary>

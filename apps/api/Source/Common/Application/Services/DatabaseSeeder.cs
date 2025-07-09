@@ -1,13 +1,14 @@
-using GameGuild.Data;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using GameGuild.Common.Domain.Enums;
+using GameGuild.Data;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Users.Models;
 using GameGuild.Modules.Users.Services;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Common.Services;
+namespace GameGuild.Common.Application.Services;
 
 /// <summary>
 /// Database seeder for initial data setup
@@ -215,10 +216,10 @@ public class DatabaseSeeder(
         Slug = "intro-game-programming",
         EstimatedHours = 40,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Programming,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Beginner,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Programming,
+        Difficulty = ProgramDifficulty.Beginner,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -228,10 +229,10 @@ public class DatabaseSeeder(
         Slug = "python-game-development",
         EstimatedHours = 30,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Programming,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Beginner,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Programming,
+        Difficulty = ProgramDifficulty.Beginner,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -241,14 +242,14 @@ public class DatabaseSeeder(
         Slug = "javascript-game-development",
         EstimatedHours = 35,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Programming,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Beginner,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Programming,
+        Difficulty = ProgramDifficulty.Beginner,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
-      
+
       // Programming Courses (Intermediate)
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Unity 3D Game Development",
@@ -256,10 +257,10 @@ public class DatabaseSeeder(
         Slug = "unity-3d-game-development",
         EstimatedHours = 60,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Programming,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Programming,
+        Difficulty = ProgramDifficulty.Intermediate,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -269,10 +270,10 @@ public class DatabaseSeeder(
         Slug = "unreal-cpp-programming",
         EstimatedHours = 70,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Programming,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Programming,
+        Difficulty = ProgramDifficulty.Intermediate,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -282,14 +283,14 @@ public class DatabaseSeeder(
         Slug = "flutter-mobile-games",
         EstimatedHours = 45,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.MobileDevelopment,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.MobileDevelopment,
+        Difficulty = ProgramDifficulty.Intermediate,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
-      
+
       // Programming Courses (Advanced)
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Game Engine Architecture",
@@ -297,10 +298,10 @@ public class DatabaseSeeder(
         Slug = "game-engine-architecture",
         EstimatedHours = 120,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Programming,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Advanced,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Programming,
+        Difficulty = ProgramDifficulty.Advanced,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -310,14 +311,14 @@ public class DatabaseSeeder(
         Slug = "multiplayer-networking",
         EstimatedHours = 80,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Programming,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Advanced,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Programming,
+        Difficulty = ProgramDifficulty.Advanced,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
-      
+
       // Art and Design Courses (Beginner)
       new GameGuild.Modules.Programs.Models.Program {
         Title = "2D Game Art Creation",
@@ -325,10 +326,10 @@ public class DatabaseSeeder(
         Slug = "2d-game-art",
         EstimatedHours = 35,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.CreativeArts,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Beginner,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.CreativeArts,
+        Difficulty = ProgramDifficulty.Beginner,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -338,10 +339,10 @@ public class DatabaseSeeder(
         Slug = "pixel-art-fundamentals",
         EstimatedHours = 25,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.CreativeArts,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Beginner,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.CreativeArts,
+        Difficulty = ProgramDifficulty.Beginner,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -351,14 +352,14 @@ public class DatabaseSeeder(
         Slug = "game-ui-ux-design",
         EstimatedHours = 40,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Design,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Beginner,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Design,
+        Difficulty = ProgramDifficulty.Beginner,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
-      
+
       // Art and Design Courses (Intermediate)
       new GameGuild.Modules.Programs.Models.Program {
         Title = "3D Modeling for Games",
@@ -366,10 +367,10 @@ public class DatabaseSeeder(
         Slug = "3d-modeling-games",
         EstimatedHours = 55,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.CreativeArts,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.CreativeArts,
+        Difficulty = ProgramDifficulty.Intermediate,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -379,10 +380,10 @@ public class DatabaseSeeder(
         Slug = "character-animation",
         EstimatedHours = 65,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.CreativeArts,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.CreativeArts,
+        Difficulty = ProgramDifficulty.Intermediate,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -392,14 +393,14 @@ public class DatabaseSeeder(
         Slug = "environment-art-level-design",
         EstimatedHours = 50,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.CreativeArts,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.CreativeArts,
+        Difficulty = ProgramDifficulty.Intermediate,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
-      
+
       // Game Design Courses
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Game Design Fundamentals",
@@ -407,10 +408,10 @@ public class DatabaseSeeder(
         Slug = "game-design-fundamentals",
         EstimatedHours = 30,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Design,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Beginner,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Design,
+        Difficulty = ProgramDifficulty.Beginner,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -420,10 +421,10 @@ public class DatabaseSeeder(
         Slug = "advanced-game-design",
         EstimatedHours = 50,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Design,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Design,
+        Difficulty = ProgramDifficulty.Intermediate,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -433,10 +434,10 @@ public class DatabaseSeeder(
         Slug = "narrative-design",
         EstimatedHours = 35,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Design,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Design,
+        Difficulty = ProgramDifficulty.Intermediate,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -446,14 +447,14 @@ public class DatabaseSeeder(
         Slug = "game-analytics-monetization",
         EstimatedHours = 25,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Business,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Business,
+        Difficulty = ProgramDifficulty.Intermediate,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
-      
+
       // Audio Courses
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Game Audio Design",
@@ -461,10 +462,10 @@ public class DatabaseSeeder(
         Slug = "game-audio-design",
         EstimatedHours = 40,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.CreativeArts,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Beginner,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.CreativeArts,
+        Difficulty = ProgramDifficulty.Beginner,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -474,14 +475,14 @@ public class DatabaseSeeder(
         Slug = "music-composition-games",
         EstimatedHours = 45,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.CreativeArts,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.CreativeArts,
+        Difficulty = ProgramDifficulty.Intermediate,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
-      
+
       // VR/AR Courses
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Virtual Reality Game Development",
@@ -489,10 +490,10 @@ public class DatabaseSeeder(
         Slug = "vr-game-development",
         EstimatedHours = 60,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.GameDevelopment,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Advanced,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.GameDevelopment,
+        Difficulty = ProgramDifficulty.Advanced,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -502,14 +503,14 @@ public class DatabaseSeeder(
         Slug = "ar-game-development",
         EstimatedHours = 50,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.GameDevelopment,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Advanced,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.GameDevelopment,
+        Difficulty = ProgramDifficulty.Advanced,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
-      
+
       // Specialized Courses
       new GameGuild.Modules.Programs.Models.Program {
         Title = "AI for Game Development",
@@ -517,10 +518,10 @@ public class DatabaseSeeder(
         Slug = "ai-game-development",
         EstimatedHours = 55,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.AI,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Advanced,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.AI,
+        Difficulty = ProgramDifficulty.Advanced,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -530,10 +531,10 @@ public class DatabaseSeeder(
         Slug = "procedural-generation",
         EstimatedHours = 65,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Programming,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Advanced,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Programming,
+        Difficulty = ProgramDifficulty.Advanced,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -543,10 +544,10 @@ public class DatabaseSeeder(
         Slug = "game-physics-programming",
         EstimatedHours = 70,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Programming,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Advanced,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Programming,
+        Difficulty = ProgramDifficulty.Advanced,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -556,14 +557,14 @@ public class DatabaseSeeder(
         Slug = "game-security-anti-cheat",
         EstimatedHours = 45,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Cybersecurity,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Expert,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Cybersecurity,
+        Difficulty = ProgramDifficulty.Expert,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
-      
+
       // Business and Production
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Indie Game Marketing",
@@ -571,10 +572,10 @@ public class DatabaseSeeder(
         Slug = "indie-game-marketing",
         EstimatedHours = 30,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Marketing,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Beginner,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Marketing,
+        Difficulty = ProgramDifficulty.Beginner,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -584,10 +585,10 @@ public class DatabaseSeeder(
         Slug = "game-project-management",
         EstimatedHours = 35,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.ProjectManagement,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.ProjectManagement,
+        Difficulty = ProgramDifficulty.Intermediate,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -597,14 +598,14 @@ public class DatabaseSeeder(
         Slug = "game-publishing-distribution",
         EstimatedHours = 25,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.Business,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.Business,
+        Difficulty = ProgramDifficulty.Intermediate,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
-      
+
       // Retro and Indie Focus
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Retro Game Development",
@@ -612,10 +613,10 @@ public class DatabaseSeeder(
         Slug = "retro-game-development",
         EstimatedHours = 40,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.GameDevelopment,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.GameDevelopment,
+        Difficulty = ProgramDifficulty.Intermediate,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -625,10 +626,10 @@ public class DatabaseSeeder(
         Slug = "game-jam-survival",
         EstimatedHours = 15,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.GameDevelopment,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Beginner,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.GameDevelopment,
+        Difficulty = ProgramDifficulty.Beginner,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -638,10 +639,10 @@ public class DatabaseSeeder(
         Slug = "game-dev-portfolio",
         EstimatedHours = 20,
         Thumbnail = "/placeholder.svg",
-        Category = GameGuild.Common.Enums.ProgramCategory.PersonalDevelopment,
-        Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Beginner,
-        Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+        Category = ProgramCategory.PersonalDevelopment,
+        Difficulty = ProgramDifficulty.Beginner,
+        Visibility = Modules.Contents.Models.AccessLevel.Public,
+        Status = Modules.Contents.Models.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       }
@@ -658,9 +659,9 @@ public class DatabaseSeeder(
     var existingTracks = await context.Set<GameGuild.Modules.Programs.Models.Program>()
       .Where(p => p.Slug.Contains("-track-") || p.Title.Contains("Track"))
       .AnyAsync();
-    
+
     logger.LogInformation("Found {ExistingTracksCount} existing tracks", existingTracks ? "some" : "no");
-    
+
     // Temporarily force track seeding for debugging
     // if (existingTracks) {
     //   logger.LogInformation("Track programs already exist, skipping seeding");
@@ -680,7 +681,7 @@ public class DatabaseSeeder(
     }
 
     var trackPrograms = new List<GameGuild.Modules.Programs.Models.Program>();
-    var trackContentList = new List<GameGuild.Modules.Programs.Models.ProgramContent>();
+    var trackContentList = new List<Modules.Programs.Models.ProgramContent>();
 
     // Beginner Track - Game Development Fundamentals
     var beginnerTrack = new GameGuild.Modules.Programs.Models.Program {
@@ -690,34 +691,34 @@ public class DatabaseSeeder(
       Slug = "beginner-track-game-dev-fundamentals",
       EstimatedHours = 100,
       Thumbnail = "/placeholder.svg",
-      Category = GameGuild.Common.Enums.ProgramCategory.GameDevelopment,
-      Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Beginner,
-      Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-      Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+      Category = ProgramCategory.GameDevelopment,
+      Difficulty = ProgramDifficulty.Beginner,
+      Visibility = Modules.Contents.Models.AccessLevel.Public,
+      Status = Modules.Contents.Models.ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };
 
     // Add related courses to beginner track as ProgramContent
     var beginnerCourses = coursePrograms
-      .Where(c => c.Difficulty == GameGuild.Common.Enums.ProgramDifficulty.Beginner && 
-                  (c.Category == GameGuild.Common.Enums.ProgramCategory.Programming ||
-                   c.Category == GameGuild.Common.Enums.ProgramCategory.GameDevelopment ||
-                   c.Category == GameGuild.Common.Enums.ProgramCategory.Design))
+      .Where(c => c.Difficulty == ProgramDifficulty.Beginner &&
+                  (c.Category == ProgramCategory.Programming ||
+                   c.Category == ProgramCategory.GameDevelopment ||
+                   c.Category == ProgramCategory.Design))
       .Take(5)
       .ToList();
 
     for (int i = 0; i < beginnerCourses.Count; i++) {
-      trackContentList.Add(new GameGuild.Modules.Programs.Models.ProgramContent {
+      trackContentList.Add(new Modules.Programs.Models.ProgramContent {
         Id = Guid.NewGuid(),
         ProgramId = beginnerTrack.Id,
         Title = beginnerCourses[i].Title,
         Description = beginnerCourses[i].Description ?? "",
-        Type = GameGuild.Common.Enums.ProgramContentType.Page, // Using Page type to reference other programs
+        Type = ProgramContentType.Page, // Using Page type to reference other programs
         Body = $"{{\"programId\": \"{beginnerCourses[i].Id}\", \"type\": \"program_reference\"}}",
         SortOrder = i + 1,
         IsRequired = true,
-        Visibility = GameGuild.Common.Enums.Visibility.Published,
+        Visibility = Visibility.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       });
@@ -731,36 +732,36 @@ public class DatabaseSeeder(
       Slug = "intermediate-track-2d-game-dev",
       EstimatedHours = 120,
       Thumbnail = "/placeholder.svg",
-      Category = GameGuild.Common.Enums.ProgramCategory.GameDevelopment,
-      Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-      Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-      Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+      Category = ProgramCategory.GameDevelopment,
+      Difficulty = ProgramDifficulty.Intermediate,
+      Visibility = Modules.Contents.Models.AccessLevel.Public,
+      Status = Modules.Contents.Models.ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };
 
     // Add related courses to intermediate track
     var intermediateCourses = coursePrograms
-      .Where(c => c.Difficulty == GameGuild.Common.Enums.ProgramDifficulty.Intermediate && 
-                  (c.Category == GameGuild.Common.Enums.ProgramCategory.Programming ||
-                   c.Category == GameGuild.Common.Enums.ProgramCategory.GameDevelopment || 
-                   c.Category == GameGuild.Common.Enums.ProgramCategory.CreativeArts ||
-                   c.Category == GameGuild.Common.Enums.ProgramCategory.Design ||
-                   c.Category == GameGuild.Common.Enums.ProgramCategory.MobileDevelopment))
+      .Where(c => c.Difficulty == ProgramDifficulty.Intermediate &&
+                  (c.Category == ProgramCategory.Programming ||
+                   c.Category == ProgramCategory.GameDevelopment ||
+                   c.Category == ProgramCategory.CreativeArts ||
+                   c.Category == ProgramCategory.Design ||
+                   c.Category == ProgramCategory.MobileDevelopment))
       .Take(6)
       .ToList();
 
     for (int i = 0; i < intermediateCourses.Count; i++) {
-      trackContentList.Add(new GameGuild.Modules.Programs.Models.ProgramContent {
+      trackContentList.Add(new Modules.Programs.Models.ProgramContent {
         Id = Guid.NewGuid(),
         ProgramId = intermediateTrack.Id,
         Title = intermediateCourses[i].Title,
         Description = intermediateCourses[i].Description ?? "",
-        Type = GameGuild.Common.Enums.ProgramContentType.Page,
+        Type = ProgramContentType.Page,
         Body = $"{{\"programId\": \"{intermediateCourses[i].Id}\", \"type\": \"program_reference\"}}",
         SortOrder = i + 1,
         IsRequired = i < 4, // First 4 courses are required
-        Visibility = GameGuild.Common.Enums.Visibility.Published,
+        Visibility = Visibility.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       });
@@ -774,33 +775,33 @@ public class DatabaseSeeder(
       Slug = "advanced-track-multiplayer-game-dev",
       EstimatedHours = 150,
       Thumbnail = "/placeholder.svg",
-      Category = GameGuild.Common.Enums.ProgramCategory.GameDevelopment,
-      Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Advanced,
-      Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-      Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+      Category = ProgramCategory.GameDevelopment,
+      Difficulty = ProgramDifficulty.Advanced,
+      Visibility = Modules.Contents.Models.AccessLevel.Public,
+      Status = Modules.Contents.Models.ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };
 
     // Add related courses to advanced track
     var advancedCourses = coursePrograms
-      .Where(c => c.Difficulty == GameGuild.Common.Enums.ProgramDifficulty.Advanced && 
-                  (c.Category == GameGuild.Common.Enums.ProgramCategory.GameDevelopment ||
-                   c.Category == GameGuild.Common.Enums.ProgramCategory.Programming))
+      .Where(c => c.Difficulty == ProgramDifficulty.Advanced &&
+                  (c.Category == ProgramCategory.GameDevelopment ||
+                   c.Category == ProgramCategory.Programming))
       .Take(7)
       .ToList();
 
     for (int i = 0; i < advancedCourses.Count; i++) {
-      trackContentList.Add(new GameGuild.Modules.Programs.Models.ProgramContent {
+      trackContentList.Add(new Modules.Programs.Models.ProgramContent {
         Id = Guid.NewGuid(),
         ProgramId = advancedTrack.Id,
         Title = advancedCourses[i].Title,
         Description = advancedCourses[i].Description ?? "",
-        Type = GameGuild.Common.Enums.ProgramContentType.Page,
+        Type = ProgramContentType.Page,
         Body = $"{{\"programId\": \"{advancedCourses[i].Id}\", \"type\": \"program_reference\"}}",
         SortOrder = i + 1,
         IsRequired = i < 5, // First 5 courses are required
-        Visibility = GameGuild.Common.Enums.Visibility.Published,
+        Visibility = Visibility.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       });
@@ -814,34 +815,34 @@ public class DatabaseSeeder(
       Slug = "specialization-track-ai-in-games",
       EstimatedHours = 110,
       Thumbnail = "/placeholder.svg",
-      Category = GameGuild.Common.Enums.ProgramCategory.AI,
-      Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Advanced,
-      Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-      Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+      Category = ProgramCategory.AI,
+      Difficulty = ProgramDifficulty.Advanced,
+      Visibility = Modules.Contents.Models.AccessLevel.Public,
+      Status = Modules.Contents.Models.ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };
 
     // Add AI-related courses
     var aiCourses = coursePrograms
-      .Where(c => c.Category == GameGuild.Common.Enums.ProgramCategory.AI ||
-                  (c.Category == GameGuild.Common.Enums.ProgramCategory.Programming && 
-                   (c.Title.Contains("AI") || c.Title.Contains("Algorithm") || c.Title.Contains("Procedural") || 
-                    c.Title.Contains("Physics") || c.Difficulty == GameGuild.Common.Enums.ProgramDifficulty.Advanced)))
+      .Where(c => c.Category == ProgramCategory.AI ||
+                  (c.Category == ProgramCategory.Programming &&
+                   (c.Title.Contains("AI") || c.Title.Contains("Algorithm") || c.Title.Contains("Procedural") ||
+                    c.Title.Contains("Physics") || c.Difficulty == ProgramDifficulty.Advanced)))
       .Take(5)
       .ToList();
 
     for (int i = 0; i < aiCourses.Count; i++) {
-      trackContentList.Add(new GameGuild.Modules.Programs.Models.ProgramContent {
+      trackContentList.Add(new Modules.Programs.Models.ProgramContent {
         Id = Guid.NewGuid(),
         ProgramId = aiTrack.Id,
         Title = aiCourses[i].Title,
         Description = aiCourses[i].Description ?? "",
-        Type = GameGuild.Common.Enums.ProgramContentType.Page,
+        Type = ProgramContentType.Page,
         Body = $"{{\"programId\": \"{aiCourses[i].Id}\", \"type\": \"program_reference\"}}",
         SortOrder = i + 1,
         IsRequired = true,
-        Visibility = GameGuild.Common.Enums.Visibility.Published,
+        Visibility = Visibility.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       });
@@ -855,31 +856,31 @@ public class DatabaseSeeder(
       Slug = "creative-track-game-art-animation",
       EstimatedHours = 130,
       Thumbnail = "/placeholder.svg",
-      Category = GameGuild.Common.Enums.ProgramCategory.CreativeArts,
-      Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-      Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-      Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+      Category = ProgramCategory.CreativeArts,
+      Difficulty = ProgramDifficulty.Intermediate,
+      Visibility = Modules.Contents.Models.AccessLevel.Public,
+      Status = Modules.Contents.Models.ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };
 
     // Add creative arts courses
     var creativeCourses = coursePrograms
-      .Where(c => c.Category == GameGuild.Common.Enums.ProgramCategory.CreativeArts)
+      .Where(c => c.Category == ProgramCategory.CreativeArts)
       .Take(6)
       .ToList();
 
     for (int i = 0; i < creativeCourses.Count; i++) {
-      trackContentList.Add(new GameGuild.Modules.Programs.Models.ProgramContent {
+      trackContentList.Add(new Modules.Programs.Models.ProgramContent {
         Id = Guid.NewGuid(),
         ProgramId = creativeTrack.Id,
         Title = creativeCourses[i].Title,
         Description = creativeCourses[i].Description ?? "",
-        Type = GameGuild.Common.Enums.ProgramContentType.Page,
+        Type = ProgramContentType.Page,
         Body = $"{{\"programId\": \"{creativeCourses[i].Id}\", \"type\": \"program_reference\"}}",
         SortOrder = i + 1,
         IsRequired = i < 4, // First 4 courses are required
-        Visibility = GameGuild.Common.Enums.Visibility.Published,
+        Visibility = Visibility.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       });
@@ -893,34 +894,34 @@ public class DatabaseSeeder(
       Slug = "business-track-game-marketing-monetization",
       EstimatedHours = 90,
       Thumbnail = "/placeholder.svg",
-      Category = GameGuild.Common.Enums.ProgramCategory.Business,
-      Difficulty = GameGuild.Common.Enums.ProgramDifficulty.Intermediate,
-      Visibility = GameGuild.Modules.Contents.Models.AccessLevel.Public,
-      Status = GameGuild.Modules.Contents.Models.ContentStatus.Published,
+      Category = ProgramCategory.Business,
+      Difficulty = ProgramDifficulty.Intermediate,
+      Visibility = Modules.Contents.Models.AccessLevel.Public,
+      Status = Modules.Contents.Models.ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };
 
     // Add business courses
     var businessCourses = coursePrograms
-      .Where(c => c.Category == GameGuild.Common.Enums.ProgramCategory.Business ||
-                  c.Category == GameGuild.Common.Enums.ProgramCategory.Marketing ||
-                  c.Category == GameGuild.Common.Enums.ProgramCategory.ProjectManagement ||
-                  (c.Category == GameGuild.Common.Enums.ProgramCategory.PersonalDevelopment))
+      .Where(c => c.Category == ProgramCategory.Business ||
+                  c.Category == ProgramCategory.Marketing ||
+                  c.Category == ProgramCategory.ProjectManagement ||
+                  (c.Category == ProgramCategory.PersonalDevelopment))
       .Take(4)
       .ToList();
 
     for (int i = 0; i < businessCourses.Count; i++) {
-      trackContentList.Add(new GameGuild.Modules.Programs.Models.ProgramContent {
+      trackContentList.Add(new Modules.Programs.Models.ProgramContent {
         Id = Guid.NewGuid(),
         ProgramId = businessTrack.Id,
         Title = businessCourses[i].Title,
         Description = businessCourses[i].Description ?? "",
-        Type = GameGuild.Common.Enums.ProgramContentType.Page,
+        Type = ProgramContentType.Page,
         Body = $"{{\"programId\": \"{businessCourses[i].Id}\", \"type\": \"program_reference\"}}",
         SortOrder = i + 1,
         IsRequired = true,
-        Visibility = GameGuild.Common.Enums.Visibility.Published,
+        Visibility = Visibility.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       });
@@ -941,7 +942,7 @@ public class DatabaseSeeder(
       trackPrograms.Count, trackContentList.Count);
     
     await context.Set<GameGuild.Modules.Programs.Models.Program>().AddRangeAsync(trackPrograms);
-    await context.Set<GameGuild.Modules.Programs.Models.ProgramContent>().AddRangeAsync(trackContentList);
+    await context.Set<Modules.Programs.Models.ProgramContent>().AddRangeAsync(trackContentList);
 
     logger.LogInformation("Sample tracks seeded successfully with {TrackCount} tracks and {ContentCount} track content items", 
       trackPrograms.Count, trackContentList.Count);

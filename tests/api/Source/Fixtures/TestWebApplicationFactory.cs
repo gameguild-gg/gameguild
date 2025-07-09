@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using GameGuild.Data;
+using GameGuild.Modules.Authentication.Services;
 using GameGuild.Modules.Tenants.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
@@ -139,12 +140,12 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
 
         // Remove existing JWT configuration and re-add with test settings
         var jwtServiceDescriptor =
-          services.SingleOrDefault(d => d.ServiceType == typeof(GameGuild.Modules.Auth.Services.IJwtTokenService));
+          services.SingleOrDefault(d => d.ServiceType == typeof(IJwtTokenService));
 
         if (jwtServiceDescriptor != null) services.Remove(jwtServiceDescriptor);
 
-        services.AddSingleton<GameGuild.Modules.Auth.Services.IJwtTokenService>(provider =>
-                                                                                  new GameGuild.Modules.Auth.Services.JwtTokenService(testJwtConfig)
+        services.AddSingleton<IJwtTokenService>(provider =>
+                                                                                  new JwtTokenService(testJwtConfig)
         );
 
         // Configure JWT Bearer options for tests by overriding the existing options

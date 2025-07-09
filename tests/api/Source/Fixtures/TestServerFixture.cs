@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using GameGuild.Data;
+using GameGuild.Modules.Authentication.Services;
 using GameGuild.Modules.Tenants.Models;
 using GameGuild.Modules.Tenants.Services;
 using GameGuild.Modules.Users.Models;
@@ -89,15 +90,15 @@ namespace GameGuild.API.Tests.Fixtures {
       services.AddHttpClient();
 
       // Register MediatR for CQRS pattern
-      services.AddMediatR(typeof(GameGuild.Modules.Auth.Services.AuthService));
+      services.AddMediatR(typeof(AuthService));
 
       // Register Auth module services
-      services.AddScoped<GameGuild.Modules.Auth.Services.IAuthService, GameGuild.Modules.Auth.Services.AuthService>();
-      services.AddScoped<GameGuild.Modules.Auth.Services.IJwtTokenService, GameGuild.Modules.Auth.Services.JwtTokenService>();
-      services.AddScoped<GameGuild.Modules.Auth.Services.IOAuthService, GameGuild.Modules.Auth.Services.OAuthService>();
-      services.AddScoped<GameGuild.Modules.Auth.Services.IWeb3Service, GameGuild.Modules.Auth.Services.Web3Service>();
-      services.AddScoped<GameGuild.Modules.Auth.Services.IEmailVerificationService, GameGuild.Modules.Auth.Services.EmailVerificationService>();
-      services.AddScoped<GameGuild.Modules.Auth.Services.ITenantAuthService, GameGuild.Modules.Auth.Services.TenantAuthService>();
+      services.AddScoped<IAuthService, AuthService>();
+      services.AddScoped<IJwtTokenService, JwtTokenService>();
+      services.AddScoped<IOAuthService, OAuthService>();
+      services.AddScoped<IWeb3Service, Web3Service>();
+      services.AddScoped<IEmailVerificationService, EmailVerificationService>();
+      services.AddScoped<ITenantAuthService, TenantAuthService>();
 
       // Register Tenant module services - using existing mock implementations for test simplicity
       services.AddScoped<ITenantService, MockTenantService>();

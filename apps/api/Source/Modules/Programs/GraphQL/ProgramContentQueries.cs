@@ -1,5 +1,5 @@
-using GameGuild.Common.Enums;
-using GameGuild.Common.GraphQL.Authorization;
+using GameGuild.Common.Domain.Enums;
+using GameGuild.Common.Presentation.GraphQL.Authorization;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
@@ -96,7 +96,7 @@ public class ProgramContentQueries {
   )]
   public async Task<IEnumerable<ProgramContentEntity>> GetContentByType(
     Guid programId,
-    GameGuild.Common.Enums.ProgramContentType contentType, [Service] IProgramContentService programContentService
+    Common.Domain.Enums.ProgramContentType contentType, [Service] IProgramContentService programContentService
   ) {
     return await programContentService.GetContentByTypeAsync(programId, contentType);
   }

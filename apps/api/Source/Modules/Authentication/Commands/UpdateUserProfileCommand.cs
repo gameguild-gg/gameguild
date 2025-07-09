@@ -2,7 +2,7 @@ using GameGuild.Modules.Users.Models;
 using MediatR;
 
 
-namespace GameGuild.Modules.Auth.Commands;
+namespace GameGuild.Modules.Authentication.Commands;
 
 /// <summary>
 /// Command to update the user profile with validation

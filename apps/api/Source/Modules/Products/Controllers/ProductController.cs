@@ -1,5 +1,5 @@
-using GameGuild.Common.Attributes;
-using GameGuild.Common.Enums;
+using GameGuild.Common.Application.Attributes;
+using GameGuild.Common.Domain.Enums;
 using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Products.Models;

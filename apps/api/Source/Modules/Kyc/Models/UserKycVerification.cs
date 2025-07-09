@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Common.Domain.Entities;
+using GameGuild.Common.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using GameGuild.Common.Entities;
-using GameGuild.Common.Enums;
 using GameGuild.Modules.Users.Models;
 
 

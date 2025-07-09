@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Entities;
-using GameGuild.Common.Enums;
+using GameGuild.Common.Domain.Entities;
+using GameGuild.Common.Domain.Enums;
 using GameGuild.Modules.Tags.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

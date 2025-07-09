@@ -1,4 +1,8 @@
-﻿namespace GameGuild.Common;
+﻿using GameGuild.Common.Domain;
+using Error = GameGuild.Common.Domain.Error;
+
+
+namespace GameGuild.Common.Infrastructure;
 
 public static class CustomResults
 {

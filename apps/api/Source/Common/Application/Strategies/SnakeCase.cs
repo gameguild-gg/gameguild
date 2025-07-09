@@ -2,7 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Serialization;
 
 
-namespace GameGuild.Common.Strategies;
+namespace GameGuild.Common.Application.Strategies;
 
 /// <summary>
 /// Provides utilities for converting strings and type names to snake_case format.

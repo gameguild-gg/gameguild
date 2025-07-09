@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common;
+﻿namespace GameGuild.Common.Domain;
 
 public sealed record ValidationError(Error[] Errors) : Error(
   "Validation.General",

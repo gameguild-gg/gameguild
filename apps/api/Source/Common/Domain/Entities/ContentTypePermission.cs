@@ -4,7 +4,7 @@ using GameGuild.Modules.Permissions.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Common.Domain.Entities;
 
 /// <summary>
 /// Content-type-wide permissions (Layer 3 of a DAC permission system)

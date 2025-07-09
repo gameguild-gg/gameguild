@@ -1,10 +1,11 @@
-using MediatR;
 using System.ComponentModel.DataAnnotations;
 using FluentValidation;
-using FluentValidation.Results;
+using GameGuild.Common.Domain;
+using MediatR;
+using Error = GameGuild.Common.Domain.Error;
 
 
-namespace GameGuild.Common.Behaviors;
+namespace GameGuild.Common.Application.Behaviors;
 
 /// <summary>
 /// Unified validation behavior that supports both DataAnnotations and FluentValidation
@@ -44,7 +45,7 @@ public class UnifiedValidationBehavior<TRequest, TResponse>(
 
       // Handle Result pattern responses
       if (typeof(TResponse).IsGenericType &&
-          typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>)) {
+          typeof(TResponse).GetGenericTypeDefinition() == typeof(Domain.Result<>)) {
         var resultType = typeof(TResponse).GetGenericArguments()[0];
         var error = Error.Failure("Validation.Failed", errorMessage);
         var failureMethod = typeof(Result).GetMethod("Failure", new[] { typeof(Error) })!

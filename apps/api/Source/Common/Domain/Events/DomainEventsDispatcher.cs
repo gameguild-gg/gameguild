@@ -1,7 +1,8 @@
 ﻿using System.Collections.Concurrent;
+using GameGuild.Common.Abstractions;
 
 
-namespace GameGuild.Common.DomainEvents;
+namespace GameGuild.Common.Domain.Events;
 
 internal sealed class DomainEventsDispatcher(IServiceProvider serviceProvider) : IDomainEventsDispatcher
 {

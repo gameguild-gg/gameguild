@@ -1,7 +1,7 @@
 using System.ComponentModel;
 
 
-namespace GameGuild.Common.Enums;
+namespace GameGuild.Common.Domain.Enums;
 
 public enum Visibility {
   [Description("Content only visible to creators and editors, not published to users")]

@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.Primitives;
+using Serilog.Context;
 
 
-namespace GameGuild.Common.Middleware;
+namespace GameGuild.Common.Infrastructure.Middleware;
 
 public class RequestContextLoggingMiddleware(RequestDelegate next)
 {
@@ -19,7 +20,7 @@ public class RequestContextLoggingMiddleware(RequestDelegate next)
     {
         context.Request.Headers.TryGetValue(
             CorrelationIdHeaderName,
-            out StringValues correlationId);
+            out var correlationId);
 
         return correlationId.FirstOrDefault() ?? context.TraceIdentifier;
     }

@@ -1,5 +1,5 @@
 using GameGuild.API.Tests.Fixtures;
-using GameGuild.Common.Services;
+using GameGuild.Common.Application.Services;
 using GameGuild.Data;
 using GameGuild.Modules.Comments.Models;
 using GameGuild.Modules.Permissions.Models;
