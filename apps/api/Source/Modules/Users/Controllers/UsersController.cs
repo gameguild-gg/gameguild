@@ -1,13 +1,13 @@
 using GameGuild.Modules.Users.Dtos;
 using GameGuild.Modules.Users.Services;
+using GameGuild.Modules.Subscriptions.Services;
 using Microsoft.AspNetCore.Mvc;
-
 
 namespace GameGuild.Modules.Users.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class UsersController(IUserService userService) : ControllerBase {
+public class UsersController(IUserService userService, ISubscriptionService subscriptionService) : ControllerBase {
   // GET: users
 
   [HttpGet]
@@ -171,6 +171,9 @@ public class UsersController(IUserService userService) : ControllerBase {
 
     if (user == null) { return NotFound(new { message = "User not found" }); }
 
+    // Get user's active subscription
+    var activeSubscription = await subscriptionService.GetActiveSubscriptionAsync(userId);
+
     var userDto = new UserResponseDto {
       Id = user.Id,
       Version = user.Version,
@@ -181,6 +184,19 @@ public class UsersController(IUserService userService) : ControllerBase {
       UpdatedAt = user.UpdatedAt,
       DeletedAt = user.DeletedAt,
       IsDeleted = user.IsDeleted,
+      Role = "Game Developer", // You can enhance this with actual role logic
+      SubscriptionType = activeSubscription?.Status.ToString() ?? "Free Trial",
+      ActiveSubscription = activeSubscription != null ? new UserSubscriptionSummaryDto {
+        Id = activeSubscription.Id,
+        Status = activeSubscription.Status,
+        PlanName = "Premium Plan", // You'll need to get this from the subscription plan
+        CurrentPeriodStart = activeSubscription.CurrentPeriodStart,
+        CurrentPeriodEnd = activeSubscription.CurrentPeriodEnd,
+        TrialEndsAt = activeSubscription.TrialEndsAt,
+        NextBillingAt = activeSubscription.NextBillingAt,
+        IsTrialActive = activeSubscription.TrialEndsAt.HasValue && activeSubscription.TrialEndsAt.Value > DateTime.UtcNow,
+        IsActive = activeSubscription.Status == Common.Enums.SubscriptionStatus.Active && activeSubscription.CurrentPeriodEnd > DateTime.UtcNow
+      } : null
     };
 
     return Ok(userDto);

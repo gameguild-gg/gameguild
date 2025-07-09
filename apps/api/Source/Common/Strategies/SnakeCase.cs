@@ -10,7 +10,7 @@ namespace GameGuild.Common.Strategies;
 public static class SnakeCase {
   private static readonly SnakeCaseNamingStrategy NamingStrategy = new();
 
-  private static IMemoryCache _cache;
+  internal static IMemoryCache Cache;
 
   static SnakeCase() {
     var options = new MemoryCacheOptions {
@@ -18,7 +18,7 @@ public static class SnakeCase {
       CompactionPercentage = 0.25, // Remove 25% of entries when limit is reached
     };
 
-    _cache = new MemoryCache(options);
+    Cache = new MemoryCache(options);
   }
 
   /// <summary>
@@ -32,7 +32,7 @@ public static class SnakeCase {
 
     var cacheKey = $"string:{name}";
 
-    return _cache.GetOrCreate(
+    return Cache.GetOrCreate(
              cacheKey,
              entry => {
                entry.Size = 1; // Each entry counts as 1 towards the size limit
@@ -63,7 +63,7 @@ public static class SnakeCase {
 
     var cacheKey = $"type:{type.FullName}";
 
-    return _cache.GetOrCreate(
+    return Cache.GetOrCreate(
              cacheKey,
              entry => {
                entry.Size = 1; // Each entry counts as 1 towards the size limit
@@ -93,7 +93,7 @@ public static class SnakeCase {
   /// <param name="names">The strings to convert.</param>
   /// <returns>An array of converted strings in snake_case.</returns>
   public static string[] ConvertMany(params string[] names) {
-    if (names == null || names.Length == 0) return [];
+    if (names.Length == 0) return [];
 
     var result = new string[names.Length];
 
@@ -108,7 +108,7 @@ public static class SnakeCase {
   /// <param name="types">The types whose names to convert.</param>
   /// <returns>An array of converted type names in snake_case.</returns>
   public static string[] ConvertMany(params Type[] types) {
-    if (types == null || types.Length == 0) return [];
+    if (types.Length == 0) return [];
 
     var result = new string[types.Length];
 
@@ -122,18 +122,18 @@ public static class SnakeCase {
   /// </summary>
   public static void ClearCache() {
     // IMemoryCache doesn't have a Clear method, so we need to dispose and recreate
-    _cache.Dispose();
+    Cache.Dispose();
 
     var options = new MemoryCacheOptions {
       SizeLimit = 1000, // Maximum 1000 entries
       CompactionPercentage = 0.25, // Remove 25% of entries when limit is reached
     };
 
-    _cache = new MemoryCache(options);
+    Cache = new MemoryCache(options);
   }
 
   /// <summary>
   /// Disposes the memory cache. Call this method when the application is shutting down.
   /// </summary>
-  public static void Dispose() { _cache?.Dispose(); }
+  public static void Dispose() { Cache?.Dispose(); }
 }

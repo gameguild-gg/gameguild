@@ -100,6 +100,12 @@ public class FinancialTransaction : BaseEntity {
   [MaxLength(500)]
   public string? ErrorMessage { get; set; }
 
+  /// <summary>
+  /// Reason for failure if transaction failed
+  /// </summary>
+  [MaxLength(500)]
+  public string? FailureReason { get; set; }
+
   // Navigation properties
   [ForeignKey(nameof(FromUserId))] public virtual User? FromUser { get; set; }
 
