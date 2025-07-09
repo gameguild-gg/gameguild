@@ -42,8 +42,14 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
                 <NavigationMenuTrigger>Courses</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
-                    <ListItem href="/courses" title="All Courses">
-                      Browse all available courses.
+                    <ListItem href="/courses" title="Courses">
+                      Learn about our learning pathways and start your journey.
+                    </ListItem>
+                    <ListItem href="/courses/catalog" title="Course Catalog">
+                      Browse and filter through all available courses.
+                    </ListItem>
+                    <ListItem href="/tracks" title="Learning Tracks">
+                      Explore structured learning paths from beginner to expert.
                     </ListItem>
                   </ul>
                 </NavigationMenuContent>

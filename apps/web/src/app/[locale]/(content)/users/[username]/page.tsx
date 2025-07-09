@@ -17,7 +17,8 @@ async function getUserExists(username: string): Promise<boolean> {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const userExists = await getUserExists(params.username);
+  const { username } = await params;
+  const userExists = await getUserExists(username);
   
   if (!userExists) {
     return {
@@ -26,13 +27,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${params.username} - User Profile | Game Guild`,
-    description: `View ${params.username}'s profile, courses, projects, and achievements on Game Guild.`,
+    title: `${username} - User Profile | Game Guild`,
+    description: `View ${username}'s profile, courses, projects, and achievements on Game Guild.`,
   };
 }
 
 export default async function UserProfilePage({ params }: PageProps) {
-  const userExists = await getUserExists(params.username);
+  const { username } = await params;
+  const userExists = await getUserExists(username);
   
   if (!userExists) {
     notFound();
@@ -40,7 +42,7 @@ export default async function UserProfilePage({ params }: PageProps) {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
-      <UserProfile username={params.username} />
+      <UserProfile username={username} />
     </div>
   );
 }

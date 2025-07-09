@@ -190,6 +190,8 @@ import type {
   GetApiProgramByIdWithContentResponses,
   PostApiProgramByIdCloneData,
   PostApiProgramByIdCloneResponses,
+  GetApiProgramSlugBySlugData,
+  GetApiProgramSlugBySlugResponses,
   PostApiProgramByIdContentData,
   PostApiProgramByIdContentResponses,
   DeleteApiProgramByIdContentByContentIdData,
@@ -1812,6 +1814,19 @@ export const postApiProgramByIdClone = <ThrowOnError extends boolean = false>(op
       'Content-Type': 'application/json',
       ...options.headers,
     },
+  });
+};
+
+export const getApiProgramSlugBySlug = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramSlugBySlugData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramSlugBySlugResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/program/slug/{slug}',
+    ...options,
   });
 };
 

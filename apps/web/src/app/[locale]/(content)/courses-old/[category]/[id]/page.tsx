@@ -3,14 +3,15 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export default async function CourseDetailPage({ params }: { params: { category: string; id: string } }) {
-  const course = await getCourse(Number(params.id));
+  const { id, category } = await params;
+  const course = await getCourse(Number(id));
   if (!course) {
     return <div className="p-8 text-center text-destructive">Course not found.</div>;
   }
   return (
     <div className="max-w-3xl mx-auto p-6 bg-card rounded-xl shadow-lg mt-8">
-      <Link href={`/courses/${encodeURIComponent(params.category)}`} className="text-primary hover:underline text-sm mb-4 inline-block">
-        ← Back to {params.category} courses
+      <Link href={`/courses/${encodeURIComponent(category)}`} className="text-primary hover:underline text-sm mb-4 inline-block">
+        ← Back to {category} courses
       </Link>
       <div className="flex flex-col md:flex-row gap-6">
         <div className="md:w-1/3 w-full flex-shrink-0">

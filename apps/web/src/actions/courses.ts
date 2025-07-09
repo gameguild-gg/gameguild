@@ -2,6 +2,18 @@
 
 import { CourseData, Course, CourseArea, CourseLevel } from '@/types/courses';
 
+// Helper function to sanitize image paths
+function sanitizeImagePath(thumbnail: string | null | undefined): string {
+  if (!thumbnail) return '/placeholder.svg';
+  
+  // If the thumbnail path starts with /images/ but the image doesn't exist, use placeholder
+  if (thumbnail.startsWith('/images/')) {
+    return '/placeholder.svg';
+  }
+  
+  return thumbnail;
+}
+
 // Map API program category enum to our course area
 function mapCategoryToArea(category: number): CourseArea {
   // Based on the ProgramCategory enum in the API
@@ -59,7 +71,7 @@ function transformProgramToCourse(program: {
     area: mapCategoryToArea(program.category),
     level: mapDifficultyToLevel(program.difficulty),
     tools: [], // Empty for now, could be populated from program data later
-    image: program.thumbnail || '/images/courses/default.jpg',
+    image: sanitizeImagePath(program.thumbnail),
     slug: program.slug,
     progress: undefined, // Not provided by API
   };
@@ -92,9 +104,14 @@ export async function getCourseData(): Promise<CourseData> {
       throw new Error('Invalid course data structure - expected array');
     }
 
-    // Transform the API response to match our expected format
+    // Filter out tracks (programs with "track" in slug or title) and transform the API response
+    const filteredData = data.filter((program: { slug?: string; title?: string }) => {
+      // Exclude programs that are tracks
+      return !(program.slug?.includes('-track-') || program.title?.includes('Track'));
+    });
+
     return {
-      courses: data.map(transformProgramToCourse),
+      courses: filteredData.map(transformProgramToCourse),
       toolsByArea: {
         programming: [],
         art: [],
@@ -104,6 +121,20 @@ export async function getCourseData(): Promise<CourseData> {
     };
   } catch (error) {
     console.error('Error in getCourseData:', error);
+    // Return empty data structure for network errors instead of throwing
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error('Network error fetching course data, returning empty data');
+      return {
+        courses: [],
+        toolsByArea: {
+          programming: [],
+          art: [],
+          design: [],
+          audio: [],
+        },
+      };
+    }
+    // Still throw for unexpected errors that should bubble up
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch course data');
   }
 }
@@ -115,58 +146,49 @@ export async function revalidateCourseData(): Promise<void> {
 
 export async function getCourseBySlug(slug: string): Promise<CourseData['courses'][0] | null> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    // Get all published courses and find the one with the matching slug
+    const courseData = await getCourseData();
+    const course = courseData.courses.find((c) => c.slug === slug);
     
-    const response = await fetch(`${apiUrl}/api/program/slug/${slug}`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      next: {
-        revalidate: 300, // Revalidate every 5 minutes
-        tags: ['course-data'],
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      throw new Error(`Failed to fetch course: ${response.status} ${response.statusText}`);
+    if (!course) {
+      console.log(`Course not found with slug: ${slug}`);
+      return null;
     }
 
-    const course = await response.json();
+    // Return the course from the published list (no need for additional API call)
     return course;
   } catch (error) {
     console.error('Error in getCourseBySlug:', error);
+    // Return null for network errors or API failures instead of throwing
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error('Network error fetching course:', slug);
+      return null;
+    }
+    // Still throw for unexpected errors that should bubble up
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch course');
   }
 }
 
 export async function getCourseById(id: string): Promise<CourseData['courses'][0] | null> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    // Get all published courses and find the one with the matching ID
+    const courseData = await getCourseData();
+    const course = courseData.courses.find((c) => c.id === id);
     
-    const response = await fetch(`${apiUrl}/api/program/${id}`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      next: {
-        revalidate: 300, // Revalidate every 5 minutes
-        tags: ['course-data'],
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      throw new Error(`Failed to fetch course: ${response.status} ${response.statusText}`);
+    if (!course) {
+      console.log(`Course not found with ID: ${id}`);
+      return null;
     }
 
-    const course = await response.json();
     return course;
   } catch (error) {
     console.error('Error in getCourseById:', error);
+    // Return null for network errors instead of throwing
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error('Network error fetching course:', id);
+      return null;
+    }
+    // Still throw for unexpected errors that should bubble up
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch course');
   }
 }

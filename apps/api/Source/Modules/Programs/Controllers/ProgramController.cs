@@ -218,6 +218,19 @@ public class ProgramController(IProgramService programService) : ControllerBase 
     return CreatedAtAction(nameof(GetProgram), new { id = program.Id }, program);
   }
 
+  /// <summary>
+  /// Get a specific program by slug (resource-level read permission)
+  /// </summary>
+  [HttpGet("slug/{slug}")]
+  [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
+  public async Task<ActionResult<ProgramEntity>> GetProgramBySlug(string slug) {
+    var program = await programService.GetProgramBySlugAsync(slug);
+
+    if (program == null) return NotFound();
+
+    return Ok(program);
+  }
+
   // ===== CONTENT MANAGEMENT ENDPOINTS =====
 
   /// <summary>
