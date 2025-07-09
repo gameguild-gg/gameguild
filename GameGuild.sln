@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.API", "apps\api\GameGuild.API.csproj", "{CE2E3AB1-0E9D-46F2-8F0B-25C2F0BBE9DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.API.Tests", "tests\api\GameGuild.API.Tests.csproj", "{AF0DEE48-029D-4C9C-A443-8B75FF0BEC03}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apps", "Apps", "{B149968F-A20D-4A42-91E3-FA7BFA63D1FB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Packages", "Packages", "{53C8440A-E537-4A8E-ADC8-C10748FA260F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7794BC93-9C81-44C1-9120-333F92E72F71}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CE2E3AB1-0E9D-46F2-8F0B-25C2F0BBE9DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE2E3AB1-0E9D-46F2-8F0B-25C2F0BBE9DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE2E3AB1-0E9D-46F2-8F0B-25C2F0BBE9DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE2E3AB1-0E9D-46F2-8F0B-25C2F0BBE9DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF0DEE48-029D-4C9C-A443-8B75FF0BEC03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF0DEE48-029D-4C9C-A443-8B75FF0BEC03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF0DEE48-029D-4C9C-A443-8B75FF0BEC03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF0DEE48-029D-4C9C-A443-8B75FF0BEC03}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CE2E3AB1-0E9D-46F2-8F0B-25C2F0BBE9DD} = {B149968F-A20D-4A42-91E3-FA7BFA63D1FB}
+		{AF0DEE48-029D-4C9C-A443-8B75FF0BEC03} = {7794BC93-9C81-44C1-9120-333F92E72F71}
+	EndGlobalSection
+EndGlobal
