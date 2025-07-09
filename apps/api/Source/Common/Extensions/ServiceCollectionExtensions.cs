@@ -1,4 +1,4 @@
-using GameGuild.Common.Services;
+using GameGuild.Common.Application.Services;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Services;
 using GameGuild.Modules.Projects.Services;

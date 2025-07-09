@@ -1,5 +1,5 @@
-using GameGuild.Common.Attributes;
-using GameGuild.Modules.Auth.Dtos;
+using GameGuild.Common.Application.Attributes;
+using GameGuild.Modules.Authentication.Dtos;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Tenants.Dtos;
 using GameGuild.Modules.Tenants.Models;

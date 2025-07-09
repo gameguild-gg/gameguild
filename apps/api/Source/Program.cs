@@ -1,20 +1,23 @@
 using DotNetEnv;
+using GameGuild.Common.Application.Services;
 using GameGuild.Common.Extensions;
-using GameGuild.Common.GraphQL.Extensions;
-using GameGuild.Common.Middleware;
-using GameGuild.Common.Transformers;
+using GameGuild.Common.Configuration;
+using GameGuild.Common.Infrastructure.Middleware;
+using GameGuild.Common.Presentation.GraphQL.Extensions;
+using GameGuild.Common.Presentation.Swagger;
 using GameGuild.Config;
 using GameGuild.Data;
-using GameGuild.Modules.Auth.Configuration;
+using GameGuild.Modules.Authentication.Configuration;
+using GameGuild.Modules.Authentication.GraphQL;
 using GameGuild.Modules.Programs.GraphQL;
 using GameGuild.Modules.Projects.GraphQL;
 using GameGuild.Modules.Tenants.GraphQL;
 using GameGuild.Modules.UserProfiles.GraphQL;
 using GameGuild.Modules.Users.GraphQL;
-using MediatR;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using ToKebabParameterTransformer = GameGuild.Common.Presentation.Transformers.ToKebabParameterTransformer;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -95,30 +98,14 @@ builder.Services.AddSwaggerGen(c => {
     );
 
     // Configure security requirements based on the [Public] attribute
-    c.OperationFilter<GameGuild.Common.Swagger.AuthOperationFilter>();
+    c.OperationFilter<AuthOperationFilter>();
   }
 );
 
-// Add common services and modules
-builder.Services.AddCommonServices();
-builder.Services.AddUserModule();
-builder.Services.AddTenantModule();
-builder.Services.AddUserProfileModule(); // Register the UserProfile module
-builder.Services.AddProgramModule(); // Register the Program module
-builder.Services.AddProjectModule(); // Register the Project module
-builder.Services.AddTestModule(); // Register the Test module
-builder.Services.AddProductModule(); // Register the Product module
-builder.Services.AddSubscriptionModule(); // Register the Subscription module
-builder.Services.AddPaymentModule(); // Register the Payment module
-builder.Services.AddAuthModule(builder.Configuration); // Register the Auth module
-
-// Add database seeder
-builder.Services.AddScoped<GameGuild.Common.Services.IDatabaseSeeder, GameGuild.Common.Services.DatabaseSeeder>();
-
-// Add HTTP context accessor for GraphQL authorization
-builder.Services.AddHttpContextAccessor();
-
-// MediatR and pipeline behaviors are now handled in AddApplication() method
+// Configure Clean Architecture layers
+builder.Services.AddPresentation();
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 // Get connection string from the environment
 var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
@@ -167,8 +154,8 @@ builder.Services.AddGraphQLServer()
        .AddTypeExtension<TenantMutations>()
        .AddTypeExtension<UserProfileQueries>()
        .AddTypeExtension<UserProfileMutations>()
-       .AddTypeExtension<GameGuild.Modules.Auth.GraphQL.AuthQueries>()
-       .AddTypeExtension<GameGuild.Modules.Auth.GraphQL.AuthMutations>()
+       .AddTypeExtension<AuthQueries>()
+       .AddTypeExtension<AuthMutations>()
        .AddTypeExtension<ProjectQueries>()
        .AddTypeExtension<ProjectMutations>()
        .AddTypeExtension<GameGuild.Modules.TestingLab.GraphQL.TestingLabQueries>()
@@ -219,7 +206,7 @@ using (var scope = app.Services.CreateScope()) {
     }
 
     // Seed initial data
-    var seeder = scope.ServiceProvider.GetRequiredService<GameGuild.Common.Services.IDatabaseSeeder>();
+    var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
     await seeder.SeedAsync();
   }
   catch (Exception ex) {

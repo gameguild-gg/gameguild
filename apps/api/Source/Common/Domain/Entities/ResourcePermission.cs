@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Modules.Permissions.Models;
 
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Common.Domain.Entities;
 
 /// <summary>
 /// Base class for resource-specific permissions (Layer 3 of the DAC permission system)

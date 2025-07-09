@@ -1,8 +1,8 @@
-using GameGuild.Modules.Auth.Commands;
-using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.Auth.Handlers;
-using GameGuild.Modules.Auth.Notifications;
-using GameGuild.Modules.Auth.Services;
+using GameGuild.Modules.Authentication.Commands;
+using GameGuild.Modules.Authentication.Dtos;
+using GameGuild.Modules.Authentication.Handlers;
+using GameGuild.Modules.Authentication.Notifications;
+using GameGuild.Modules.Authentication.Services;
 using MediatR;
 using Moq;
 

@@ -1,8 +1,8 @@
+using GameGuild.Modules.Authentication.Notifications;
 using MediatR;
-using GameGuild.Modules.Auth.Notifications;
 
 
-namespace GameGuild.Modules.Auth.Handlers;
+namespace GameGuild.Modules.Authentication.Handlers;
 
 /// <summary>
 /// Handler for user signed up notifications - logs analytics event

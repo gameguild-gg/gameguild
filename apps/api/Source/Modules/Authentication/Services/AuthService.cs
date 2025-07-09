@@ -1,15 +1,15 @@
-using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Data;
-using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.Auth.Models;
+using GameGuild.Modules.Authentication.Dtos;
+using GameGuild.Modules.Authentication.Models;
 using GameGuild.Modules.Tenants.Services;
 using GameGuild.Modules.Users.Models;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Auth.Services {
+namespace GameGuild.Modules.Authentication.Services {
   public class AuthService(
     ApplicationDbContext context,
     IJwtTokenService jwtTokenService,

@@ -1,10 +1,10 @@
-using HotChocolate.Resolvers;
-using GameGuild.Common.Services;
 using System.Security.Claims;
+using GameGuild.Common.Application.Services;
 using GameGuild.Modules.Permissions.Models;
+using HotChocolate.Resolvers;
 
 
-namespace GameGuild.Common.GraphQL.Authorization;
+namespace GameGuild.Common.Presentation.GraphQL.Authorization;
 
 /// <summary>
 /// HotChocolate middleware for 3-layer DAC permission system

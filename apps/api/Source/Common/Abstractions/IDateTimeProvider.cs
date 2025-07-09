@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common;
+﻿namespace GameGuild.Common.Abstractions;
 
 public interface IDateTimeProvider
 {

@@ -1,8 +1,10 @@
-using MediatR;
 using System.Security.Claims;
+using GameGuild.Common.Domain;
+using MediatR;
+using Error = GameGuild.Common.Domain.Error;
 
 
-namespace GameGuild.Common.Behaviors;
+namespace GameGuild.Common.Application.Behaviors;
 
 /// <summary>
 /// Authorization behavior for securing commands and queries
@@ -96,7 +98,7 @@ public class AuthorizationBehavior<TRequest, TResponse>(
     // Handle Result pattern
     if (typeof(T) == typeof(Result)) { return (TResponse)(object)Result.Failure(error); }
 
-    if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Result<>)) {
+    if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Domain.Result<>)) {
       var resultType = typeof(T).GetGenericArguments()[0];
       var failureMethod = typeof(Result).GetMethod("Failure", new[] { typeof(Error) })!
                                         .MakeGenericMethod(resultType);

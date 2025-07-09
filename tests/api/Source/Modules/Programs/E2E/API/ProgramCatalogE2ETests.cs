@@ -1,10 +1,10 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using GameGuild.API.Tests.Fixtures;
-using GameGuild.Common.Enums;
+using GameGuild.Common.Domain.Enums;
 using GameGuild.Data;
-using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.Auth.Services;
+using GameGuild.Modules.Authentication.Dtos;
+using GameGuild.Modules.Authentication.Services;
 using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Users.Models;
 using Microsoft.Extensions.DependencyInjection;

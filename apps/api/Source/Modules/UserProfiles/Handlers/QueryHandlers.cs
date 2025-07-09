@@ -13,7 +13,7 @@ public class GetAllUserProfilesHandler(ApplicationDbContext context)
 {
     public async Task<IEnumerable<Models.UserProfile>> Handle(GetAllUserProfilesQuery request, CancellationToken cancellationToken)
     {
-        var query = context.Resources.OfType<Models.UserProfile>()
+        IQueryable<Models.UserProfile> query = context.Resources.OfType<Models.UserProfile>()
             .Include(up => up.Metadata);
 
         // Apply filters
@@ -28,7 +28,7 @@ public class GetAllUserProfilesHandler(ApplicationDbContext context)
 
         if (request.TenantId.HasValue)
         {
-            query = query.Where(up => up.TenantId == request.TenantId);
+            query = query.Where(up => EF.Property<Guid?>(up, "TenantId") == request.TenantId);
         }
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
@@ -55,7 +55,7 @@ public class GetUserProfileByIdHandler(ApplicationDbContext context)
 {
     public async Task<Models.UserProfile?> Handle(GetUserProfileByIdQuery request, CancellationToken cancellationToken)
     {
-        var query = context.Resources.OfType<Models.UserProfile>()
+        IQueryable<Models.UserProfile> query = context.Resources.OfType<Models.UserProfile>()
             .Include(up => up.Metadata);
 
         if (!request.IncludeDeleted)
@@ -79,7 +79,7 @@ public class GetUserProfileByUserIdHandler(ApplicationDbContext context)
 {
     public async Task<Models.UserProfile?> Handle(GetUserProfileByUserIdQuery request, CancellationToken cancellationToken)
     {
-        var query = context.Resources.OfType<Models.UserProfile>()
+        IQueryable<Models.UserProfile> query = context.Resources.OfType<Models.UserProfile>()
             .Include(up => up.Metadata);
 
         if (!request.IncludeDeleted)

@@ -2,9 +2,10 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using GameGuild.API.Tests.Fixtures;
+using GameGuild.Common.Application.Services;
 using GameGuild.Data;
-using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.Auth.Services;
+using GameGuild.Modules.Authentication.Dtos;
+using GameGuild.Modules.Authentication.Services;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.TestingLab.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -310,7 +311,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
   ) {
     // Use the permission service from the factory's DI container
     using var scope = _factory.Services.CreateScope();
-    var permissionService = scope.ServiceProvider.GetRequiredService<GameGuild.Common.Services.IPermissionService>();
+    var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
     await permissionService.GrantTenantPermissionAsync(userId, tenantId, permissions);
   }
 
@@ -320,7 +321,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
   ) {
     // Use the permission service from the factory's DI container
     using var scope = _factory.Services.CreateScope();
-    var permissionService = scope.ServiceProvider.GetRequiredService<GameGuild.Common.Services.IPermissionService>();
+    var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
     await permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentType, permissions);
   }
 

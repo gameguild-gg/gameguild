@@ -1,11 +1,11 @@
+using GameGuild.Modules.Authentication.Commands;
+using GameGuild.Modules.Authentication.Dtos;
+using GameGuild.Modules.Authentication.Notifications;
+using GameGuild.Modules.Authentication.Services;
 using MediatR;
-using GameGuild.Modules.Auth.Commands;
-using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.Auth.Notifications;
-using GameGuild.Modules.Auth.Services;
 
 
-namespace GameGuild.Modules.Auth.Handlers;
+namespace GameGuild.Modules.Authentication.Handlers;
 
 /// <summary>
 /// Handler for local sign-up command

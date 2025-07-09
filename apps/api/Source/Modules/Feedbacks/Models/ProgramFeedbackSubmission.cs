@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using GameGuild.Common.Entities;
+using GameGuild.Common.Domain.Entities;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Programs.Models;
 using GameGuild.Modules.Users.Models;

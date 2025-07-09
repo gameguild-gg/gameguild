@@ -1,6 +1,6 @@
 using System.Security.Claims;
-using GameGuild.Common.Enums;
-using GameGuild.Common.Services;
+using GameGuild.Common.Application.Services;
+using GameGuild.Common.Domain.Enums;
 using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Products.Models;

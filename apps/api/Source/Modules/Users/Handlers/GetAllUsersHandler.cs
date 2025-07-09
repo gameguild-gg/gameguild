@@ -1,6 +1,5 @@
 using GameGuild.Data;
 using GameGuild.Modules.Users.Queries;
-using GameGuild.Modules.Users.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +12,7 @@ public class GetAllUsersHandler(ApplicationDbContext context) : IRequestHandler<
 {
     public async Task<IEnumerable<Models.User>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
     {
-        var query = context.Users.Include(u => u.Credentials);
+        IQueryable<Models.User> query = context.Users.Include(u => u.Credentials);
 
         // Apply filters
         if (!request.IncludeDeleted)

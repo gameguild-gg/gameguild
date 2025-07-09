@@ -1,8 +1,8 @@
+using GameGuild.Modules.Authentication.Dtos;
 using MediatR;
-using GameGuild.Modules.Auth.Dtos;
 
 
-namespace GameGuild.Modules.Auth.Commands;
+namespace GameGuild.Modules.Authentication.Commands;
 
 /// <summary>
 /// Command to verify Web3 signature and authenticate a user

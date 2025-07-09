@@ -1,4 +1,4 @@
-using GameGuild.Common.Services;
+using GameGuild.Common.Application.Services;
 using GameGuild.Data;
 using GameGuild.Modules.Tenants.Models;
 using Microsoft.EntityFrameworkCore;

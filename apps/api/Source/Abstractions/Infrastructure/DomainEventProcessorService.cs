@@ -1,6 +1,7 @@
-using SharedKernel;
+using GameGuild.Common.Abstractions;
 
-namespace Web.Api.Infrastructure;
+
+namespace GameGuild.Abstractions.Infrastructure;
 
 /// <summary>
 /// Background service for processing domain events
@@ -38,7 +39,7 @@ public class DomainEventProcessorService(
     private async Task ProcessPendingEvents(CancellationToken cancellationToken)
     {
         using var scope = serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<GameGuild.Data.ApplicationDbContext>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<Data.ApplicationDbContext>();
         
         // Get entities with pending domain events
         var entitiesWithEvents = dbContext.ChangeTracker.Entries()

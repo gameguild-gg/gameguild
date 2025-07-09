@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Behaviors;
+using GameGuild.Common.Application.Behaviors;
 using MediatR;
 
 namespace GameGuild.Modules.Users.Queries;

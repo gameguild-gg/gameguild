@@ -1,0 +1,323 @@
+using GameGuild.Modules.Users.Dtos;
+using GameGuild.Modules.Users.Commands;
+using GameGuild.Modules.Users.Queries;
+using GameGuild.Modules.Subscriptions.Services;
+using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using GameGuild.Common.Domain;
+using GameGuild.Common.Domain.Enums;
+
+
+namespace GameGuild.Modules.Users.Controllers;
+
+/// <summary>
+/// Users controller using CQRS pattern with MediatR
+/// </summary>
+[ApiController]
+[Route("api/[controller]")]
+public class UsersController(IMediator mediator, ISubscriptionService subscriptionService) : ControllerBase
+{
+    /// <summary>
+    /// Get all users with optional filtering
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetUsers(
+        [FromQuery] bool includeDeleted = false,
+        [FromQuery] bool? isActive = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50)
+    {
+        var query = new GetAllUsersQuery
+        {
+            IncludeDeleted = includeDeleted,
+            IsActive = isActive,
+            Skip = skip,
+            Take = Math.Min(take, 100) // Limit to prevent abuse
+        };
+
+        try
+        {
+            var users = await mediator.Send(query);
+            var userDtos = users.Select(u => new UserResponseDto
+            {
+                Id = u.Id,
+                Name = u.Name,
+                Email = u.Email,
+                IsActive = u.IsActive,
+                Balance = u.Balance,
+                AvailableBalance = u.AvailableBalance,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt,
+                Version = u.Version,
+                IsDeleted = u.IsDeleted,
+                DeletedAt = u.DeletedAt
+            });
+
+            return Ok(userDtos);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"Error retrieving users: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Get user by ID
+    /// </summary>
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<UserResponseDto>> GetUser(
+        Guid id,
+        [FromQuery] bool includeDeleted = false)
+    {
+        var query = new GetUserByIdQuery
+        {
+            UserId = id,
+            IncludeDeleted = includeDeleted
+        };
+
+        var user = await mediator.Send(query);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        var userDto = new UserResponseDto
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            IsActive = user.IsActive,
+            Balance = user.Balance,
+            AvailableBalance = user.AvailableBalance,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt,
+            Version = user.Version,
+            IsDeleted = user.IsDeleted,
+            DeletedAt = user.DeletedAt
+        };
+
+        return Ok(userDto);
+    }
+
+    /// <summary>
+    /// Create a new user
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<UserResponseDto>> CreateUser([FromBody] CreateUserDto createDto)
+    {
+        var command = new CreateUserCommand
+        {
+            Name = createDto.Name,
+            Email = createDto.Email,
+            IsActive = createDto.IsActive,
+            InitialBalance = createDto.InitialBalance
+        };
+
+        try
+        {
+            var result = await mediator.Send(command);
+            
+            if (result.IsFailure)
+            {
+                if (result.Error.Type == ErrorType.Validation)
+                {
+                    return BadRequest(result.Error.Message);
+                }
+                return StatusCode(500, result.Error.Message);
+            }
+
+            var user = result.Value;
+            var userDto = new UserResponseDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                IsActive = user.IsActive,
+                Balance = user.Balance,
+                AvailableBalance = user.AvailableBalance,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt,
+                Version = user.Version,
+                IsDeleted = user.IsDeleted,
+                DeletedAt = user.DeletedAt
+            };
+
+            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, userDto);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Update user information
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<UserResponseDto>> UpdateUser(
+        Guid id,
+        [FromBody] UpdateUserDto updateDto,
+        [FromHeader(Name = "If-Match")] int? ifMatch)
+    {
+        var command = new UpdateUserCommand
+        {
+            UserId = id,
+            Name = updateDto.Name,
+            Email = updateDto.Email,
+            IsActive = updateDto.IsActive,
+            ExpectedVersion = ifMatch
+        };
+
+        try
+        {
+            var result = await mediator.Send(command);
+            
+            if (result.IsFailure)
+            {
+                if (result.Error.Message.Contains("not found"))
+                {
+                    return NotFound();
+                }
+                if (result.Error.Message.Contains("Concurrency conflict"))
+                {
+                    return Conflict(result.Error.Message);
+                }
+                return BadRequest(result.Error.Message);
+            }
+
+            var user = result.Value;
+            var userDto = new UserResponseDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                IsActive = user.IsActive,
+                Balance = user.Balance,
+                AvailableBalance = user.AvailableBalance,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt,
+                Version = user.Version,
+                IsDeleted = user.IsDeleted,
+                DeletedAt = user.DeletedAt
+            };
+
+            return Ok(userDto);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Concurrency conflict"))
+        {
+            return Conflict(ex.Message);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
+        {
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Delete user (soft delete by default)
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteUser(
+        Guid id,
+        [FromQuery] bool permanent = false)
+    {
+        var command = new DeleteUserCommand
+        {
+            UserId = id,
+            SoftDelete = !permanent
+        };
+
+        var result = await mediator.Send(command);
+        return result ? NoContent() : NotFound();
+    }
+
+    /// <summary>
+    /// Restore a soft-deleted user
+    /// </summary>
+    [HttpPost("{id:guid}/restore")]
+    public async Task<IActionResult> RestoreUser(Guid id)
+    {
+        var command = new RestoreUserCommand
+        {
+            UserId = id
+        };
+
+        var result = await mediator.Send(command);
+        return result ? NoContent() : NotFound();
+    }
+
+    /// <summary>
+    /// Get current authenticated user
+    /// </summary>
+    [HttpGet("me")]
+    public async Task<ActionResult<UserResponseDto>> GetCurrentUser()
+    {
+        // Extract user ID from JWT token claims
+        var userIdClaim = User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim))
+        {
+            return Unauthorized(new { message = "User ID not found in token" });
+        }
+
+        if (!Guid.TryParse(userIdClaim, out var userId))
+        {
+            return BadRequest(new { message = "Invalid user ID format" });
+        }
+
+        var query = new GetUserByIdQuery
+        {
+            UserId = userId,
+            IncludeDeleted = false
+        };
+
+        var user = await mediator.Send(query);
+
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        // Get user's active subscription
+        var activeSubscription = await subscriptionService.GetActiveSubscriptionAsync(userId);
+
+        var userDto = new UserResponseDto
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            IsActive = user.IsActive,
+            Balance = user.Balance,
+            AvailableBalance = user.AvailableBalance,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt,
+            Version = user.Version,
+            IsDeleted = user.IsDeleted,
+            DeletedAt = user.DeletedAt,
+            Role = "Game Developer", // Enhanced with actual role logic
+            SubscriptionType = activeSubscription?.Status.ToString() ?? "Free Trial",
+            ActiveSubscription = activeSubscription != null ? new UserSubscriptionSummaryDto
+            {
+                Id = activeSubscription.Id,
+                Status = activeSubscription.Status,
+                PlanName = "Premium Plan", // Get from subscription plan
+                CurrentPeriodStart = activeSubscription.CurrentPeriodStart,
+                CurrentPeriodEnd = activeSubscription.CurrentPeriodEnd,
+                TrialEndsAt = activeSubscription.TrialEndsAt,
+                NextBillingAt = activeSubscription.NextBillingAt,
+                IsTrialActive = activeSubscription.TrialEndsAt.HasValue && activeSubscription.TrialEndsAt.Value > DateTime.UtcNow,
+                IsActive = activeSubscription.Status == SubscriptionStatus.Active && activeSubscription.CurrentPeriodEnd > DateTime.UtcNow
+            } : null
+        };
+
+        return Ok(userDto);
+    }
+}

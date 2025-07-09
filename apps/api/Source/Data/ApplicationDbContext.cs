@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Common.Data;
 using System.Reflection;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Auth.Models;
+using GameGuild.Common.Domain.Entities;
+using GameGuild.Common.Infrastructure.Data;
+using GameGuild.Modules.Authentication.Models;
 using GameGuild.Modules.Certificates.Models;
 using GameGuild.Modules.Comments.Models;
 using GameGuild.Modules.Contents.Models;

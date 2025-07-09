@@ -1,12 +1,12 @@
 using System.Security.Claims;
-using GameGuild.Modules.Auth.Dtos;
-using GameGuild.Modules.Auth.Constants;
+using GameGuild.Modules.Authentication.Constants;
+using GameGuild.Modules.Authentication.Dtos;
 using GameGuild.Modules.Tenants.Models;
 using GameGuild.Modules.Tenants.Services;
 using GameGuild.Modules.Users.Models;
 
 
-namespace GameGuild.Modules.Auth.Services;
+namespace GameGuild.Modules.Authentication.Services;
 
 /// <summary>
 /// Service for enhancing authentication with tenant-specific operations

@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
 
-namespace GameGuild.Common;
+namespace GameGuild.Common.Domain;
 
 public class Result
 {

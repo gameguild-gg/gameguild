@@ -1,3 +1,3 @@
-﻿namespace GameGuild.Common.Messaging;
+﻿namespace GameGuild.Common.Abstractions.Messaging;
 
 public interface IQuery<TResponse>;

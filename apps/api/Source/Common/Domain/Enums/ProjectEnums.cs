@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Enums;
+namespace GameGuild.Common.Domain.Enums;
 
 /// <summary>
 /// Types of projects in the game guild platform

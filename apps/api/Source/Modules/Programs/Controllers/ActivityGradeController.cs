@@ -1,4 +1,4 @@
-using GameGuild.Common.Attributes;
+using GameGuild.Common.Application.Attributes;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.DTOs;
 using GameGuild.Modules.Programs.Interfaces;

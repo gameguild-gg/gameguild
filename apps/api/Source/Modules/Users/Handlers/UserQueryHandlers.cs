@@ -12,7 +12,7 @@ public class GetUserByIdHandler(ApplicationDbContext context) : IRequestHandler<
 {
     public async Task<Models.User?> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
-        var query = context.Users.Include(u => u.Credentials);
+        IQueryable<Models.User> query = context.Users.Include(u => u.Credentials);
 
         if (!request.IncludeDeleted)
         {
@@ -34,7 +34,7 @@ public class GetUserByEmailHandler(ApplicationDbContext context) : IRequestHandl
 {
     public async Task<Models.User?> Handle(GetUserByEmailQuery request, CancellationToken cancellationToken)
     {
-        var query = context.Users.Include(u => u.Credentials);
+        IQueryable<Models.User> query = context.Users.Include(u => u.Credentials);
 
         if (!request.IncludeDeleted)
         {
@@ -56,7 +56,7 @@ public class SearchUsersHandler(ApplicationDbContext context) : IRequestHandler<
 {
     public async Task<IEnumerable<Models.User>> Handle(SearchUsersQuery request, CancellationToken cancellationToken)
     {
-        var query = context.Users.Include(u => u.Credentials);
+        IQueryable<Models.User> query = context.Users.Include(u => u.Credentials);
 
         // Apply filters
         if (!request.IncludeDeleted)

@@ -1,10 +1,11 @@
+using GameGuild.Common.Domain.Entities;
+using GameGuild.Common.Presentation.GraphQL.Authorization;
+using GameGuild.Modules.Permissions.Models;
 using HotChocolate.Execution.Configuration;
 using HotChocolate.Language;
-using GameGuild.Common.GraphQL.Authorization;
-using GameGuild.Modules.Permissions.Models;
 
 
-namespace GameGuild.Common.GraphQL.Extensions;
+namespace GameGuild.Common.Presentation.GraphQL.Extensions;
 
 /// <summary>
 /// Extension methods for configuring 3-layer DAC authorization in HotChocolate GraphQL
@@ -93,8 +94,8 @@ public static class GraphQLFieldDACExtensions {
     this IObjectFieldDescriptor descriptor, PermissionType permission,
     string resourceIdParameter = "id"
   )
-    where TPermission : Entities.ResourcePermission<TEntity>
-    where TEntity : Entities.BaseEntity {
+    where TPermission : ResourcePermission<TEntity>
+    where TEntity : BaseEntity {
     return descriptor.Directive(
       "dacAuthorize",
       new ArgumentNode("level", new StringValueNode(DACPermissionLevel.Resource.ToString())),
@@ -117,7 +118,7 @@ public static class GraphQLFieldDACExtensions {
     this IObjectFieldDescriptor descriptor,
     PermissionType permission, string resourceIdParameter = "id"
   )
-    where TEntity : Entities.BaseEntity {
+    where TEntity : BaseEntity {
     return descriptor.Directive(
       "dacAuthorize",
       new ArgumentNode("level", new StringValueNode(DACPermissionLevel.Resource.ToString())),

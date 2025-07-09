@@ -1,4 +1,4 @@
-using GameGuild.Modules.Auth.Filters;
+using GameGuild.Modules.Authentication.Filters;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 

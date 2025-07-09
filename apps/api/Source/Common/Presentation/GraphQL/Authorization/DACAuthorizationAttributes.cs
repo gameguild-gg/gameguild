@@ -1,8 +1,8 @@
-using GameGuild.Common.Entities;
+using GameGuild.Common.Domain.Entities;
 using GameGuild.Modules.Permissions.Models;
 
 
-namespace GameGuild.Common.GraphQL.Authorization;
+namespace GameGuild.Common.Presentation.GraphQL.Authorization;
 
 /// <summary>
 /// Permission levels for the 3-layer DAC system

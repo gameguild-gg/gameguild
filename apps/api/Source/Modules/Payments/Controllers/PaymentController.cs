@@ -1,7 +1,8 @@
-using GameGuild.Common.Attributes;
-using GameGuild.Common.Enums;
+using GameGuild.Common.Application.Attributes;
+using GameGuild.Common.Domain.Enums;
 using GameGuild.Modules.Payments.Models;
 using GameGuild.Modules.Payments.Services;
+using GameGuild.Modules.Permissions.Models;
 using Microsoft.AspNetCore.Mvc;
 
 

@@ -1,10 +1,10 @@
 using System.Reflection;
-using GameGuild.Modules.Auth.Attributes;
+using GameGuild.Modules.Authentication.Attributes;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 
-namespace GameGuild.Common.Swagger;
+namespace GameGuild.Common.Presentation.Swagger;
 
 /// <summary>
 /// Swagger operation filter to automatically add security requirements based on [Public] attribute

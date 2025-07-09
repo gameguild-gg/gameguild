@@ -1,5 +1,5 @@
-using GameGuild.Common.Enums;
-using GameGuild.Common.GraphQL.Authorization;
+using GameGuild.Common.Domain.Enums;
+using GameGuild.Common.Presentation.GraphQL.Authorization;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;

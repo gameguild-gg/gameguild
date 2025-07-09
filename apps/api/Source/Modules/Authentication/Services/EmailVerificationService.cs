@@ -1,12 +1,12 @@
 using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Data;
-using GameGuild.Modules.Auth.Dtos;
+using GameGuild.Modules.Authentication.Dtos;
 using GameGuild.Modules.Users.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Auth.Services {
+namespace GameGuild.Modules.Authentication.Services {
   public interface IEmailVerificationService {
     Task<EmailOperationResponseDto> SendEmailVerificationAsync(string email);
 

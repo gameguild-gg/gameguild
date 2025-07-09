@@ -1,13 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using System.Security.Claims;
-using GameGuild.Common.Services;
-using GameGuild.Modules.Auth.Constants;
+using GameGuild.Common.Application.Services;
+using GameGuild.Modules.Authentication.Constants;
 using GameGuild.Modules.Comments.Models;
 using GameGuild.Modules.Permissions.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 
-namespace GameGuild.Common.Attributes;
+namespace GameGuild.Common.Application.Attributes;
 
 /// <summary>
 /// Specific attribute for Comment resource-level permission checks. This demonstrates 

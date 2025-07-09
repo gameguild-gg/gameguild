@@ -1,6 +1,7 @@
-using SharedKernel;
+using GameGuild.Common.Abstractions;
 
-namespace Web.Api.Infrastructure;
+
+namespace GameGuild.Abstractions.Infrastructure;
 
 /// <summary>
 /// Service for publishing domain events

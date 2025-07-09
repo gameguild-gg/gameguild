@@ -1,4 +1,4 @@
-using GameGuild.Common.GraphQL.Authorization;
+using GameGuild.Common.Presentation.GraphQL.Authorization;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.DTOs;
 using GameGuild.Modules.Programs.Interfaces;

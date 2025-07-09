@@ -1,7 +1,7 @@
 using MediatR;
 
 
-namespace GameGuild.Modules.Auth.Notifications;
+namespace GameGuild.Modules.Authentication.Notifications;
 
 /// <summary>
 /// Notification sent when a user successfully signs up

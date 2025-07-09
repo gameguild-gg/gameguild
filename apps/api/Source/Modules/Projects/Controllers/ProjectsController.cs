@@ -1,6 +1,6 @@
 using System.Security.Claims;
-using GameGuild.Common.Attributes;
-using GameGuild.Modules.Auth.Attributes;
+using GameGuild.Common.Application.Attributes;
+using GameGuild.Modules.Authentication.Attributes;
 using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Projects.Services;

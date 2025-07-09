@@ -1,12 +1,12 @@
+using System.Text;
+using GameGuild.Modules.Authentication.Filters;
+using GameGuild.Modules.Authentication.Middleware;
+using GameGuild.Modules.Authentication.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using GameGuild.Modules.Auth.Filters;
-using GameGuild.Modules.Auth.Middleware;
-using GameGuild.Modules.Auth.Services;
 
 
-namespace GameGuild.Modules.Auth.Configuration {
+namespace GameGuild.Modules.Authentication.Configuration {
   /// <summary>
   /// Extension methods for configuring authentication services
   /// </summary>

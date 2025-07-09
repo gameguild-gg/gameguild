@@ -1,4 +1,7 @@
-﻿namespace GameGuild.Common;
+﻿using GameGuild.Modules.Users.Models;
+
+
+namespace GameGuild.Common.Abstractions;
 
 public interface ITokenProvider
 {

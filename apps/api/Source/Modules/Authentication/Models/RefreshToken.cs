@@ -1,7 +1,7 @@
-using GameGuild.Common.Entities;
+using GameGuild.Common.Domain.Entities;
 
 
-namespace GameGuild.Modules.Auth.Models {
+namespace GameGuild.Modules.Authentication.Models {
   /// <summary>
   /// Refresh token entity for managing user sessions
   /// </summary>

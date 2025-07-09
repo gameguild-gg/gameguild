@@ -1,7 +1,7 @@
 using GameGuild.Modules.Tenants.Models;
 
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Common.Domain.Entities;
 
 /// <summary>
 /// Base entity class that provides common properties and functionality for all domain entities.

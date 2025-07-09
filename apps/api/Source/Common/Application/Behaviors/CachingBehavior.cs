@@ -1,8 +1,9 @@
+using GameGuild.Common.Domain;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 
 
-namespace GameGuild.Common.Behaviors;
+namespace GameGuild.Common.Application.Behaviors;
 
 /// <summary>
 /// Caching behavior for read operations (queries) to improve performance
@@ -10,11 +11,11 @@ namespace GameGuild.Common.Behaviors;
 public class CachingBehavior<TRequest, TResponse>(
     IMemoryCache cache,
     ILogger<CachingBehavior<TRequest, TResponse>> logger)
-    : IPipelineBehavior<TRequest, TResponse> 
+    : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>, ICachedRequest
 {
     public async Task<TResponse> Handle(
-        TRequest request, 
+        TRequest request,
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
@@ -35,7 +36,7 @@ public class CachingBehavior<TRequest, TResponse>(
 
         // Cache the response if it's successful (for Result pattern)
         var shouldCache = ShouldCacheResponse(response);
-        
+
         if (shouldCache)
         {
             var cacheOptions = new MemoryCacheEntryOptions
@@ -46,7 +47,7 @@ public class CachingBehavior<TRequest, TResponse>(
             };
 
             cache.Set(cacheKey, response, cacheOptions);
-            
+
             logger.LogDebug("Cached response for {RequestName} with key {CacheKey}, expires in {Expiration}",
                 requestName, cacheKey, request.CacheExpiration);
         }
@@ -65,8 +66,8 @@ public class CachingBehavior<TRequest, TResponse>(
             return result.IsSuccess;
 
         // For Result<T> pattern, only cache successful results
-        if (response.GetType().IsGenericType && 
-            response.GetType().GetGenericTypeDefinition() == typeof(Result<>))
+        if (response.GetType().IsGenericType &&
+            response.GetType().GetGenericTypeDefinition() == typeof(Domain.Result<>))
         {
             var isSuccessProperty = response.GetType().GetProperty("IsSuccess");
             if (isSuccessProperty != null)

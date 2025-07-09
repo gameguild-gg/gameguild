@@ -1,4 +1,4 @@
-using GameGuild.Common.Enums;
+using GameGuild.Common.Domain.Enums;
 using GameGuild.Modules.Programs.Models;
 using Microsoft.EntityFrameworkCore;
 using ProgramContentEntity = GameGuild.Modules.Programs.Models.ProgramContent;

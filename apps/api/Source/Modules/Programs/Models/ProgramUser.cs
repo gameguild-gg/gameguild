@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Entities;
+using GameGuild.Common.Domain.Entities;
 using GameGuild.Modules.Certificates.Models;
 using GameGuild.Modules.Feedbacks.Models;
 using GameGuild.Modules.Users.Models;

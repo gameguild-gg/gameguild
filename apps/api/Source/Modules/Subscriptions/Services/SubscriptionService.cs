@@ -1,4 +1,4 @@
-using GameGuild.Common.Enums;
+using GameGuild.Common.Domain.Enums;
 using GameGuild.Modules.Subscriptions.Models;
 using GameGuild.Data;
 using Microsoft.EntityFrameworkCore;

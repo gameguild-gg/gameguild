@@ -1,4 +1,7 @@
-﻿namespace GameGuild.Common.DomainEvents;
+﻿using GameGuild.Common.Abstractions;
+
+
+namespace GameGuild.Common.Domain.Events;
 
 public interface IDomainEventsDispatcher
 {
