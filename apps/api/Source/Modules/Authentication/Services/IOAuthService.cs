@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Authentication;
+﻿namespace GameGuild.Modules.Auth;
 
 public interface IOAuthService {
   Task<GitHubUserDto> GetGitHubUserAsync(string accessToken);

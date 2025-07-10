@@ -3,7 +3,7 @@ using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.Authentication;
+namespace GameGuild.Modules.Auth;
 
 /// <summary>
 /// Service for enhancing authentication with tenant-specific operations

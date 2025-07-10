@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using GameGuild.Database;
-using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Auth;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;

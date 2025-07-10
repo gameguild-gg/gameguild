@@ -1,6 +1,6 @@
 using DotNetEnv;
 using GameGuild.Database;
-using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Auth;
 using Microsoft.EntityFrameworkCore;
 
 

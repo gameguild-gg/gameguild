@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Authentication;
+﻿namespace GameGuild.Modules.Auth;
 
 /// <summary>
 /// Request DTO for Google ID Token validation (NextAuth.js integration)

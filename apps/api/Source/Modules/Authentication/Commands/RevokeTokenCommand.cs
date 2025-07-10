@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace GameGuild.Modules.Authentication;
+namespace GameGuild.Modules.Auth;
 
 /// <summary>
 /// Command to handle token revocation using CQRS pattern
