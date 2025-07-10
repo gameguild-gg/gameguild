@@ -11,16 +11,11 @@ namespace GameGuild.API.Tests.Helpers
         /// <summary>
         /// The ID of the user
         /// </summary>
-        public Guid UserId { get; set; }
+        public Guid UserId { get; init; }
 
         /// <summary>
         /// The ID of the tenant
         /// </summary>
-        public Guid TenantId { get; set; }
-        
-        /// <summary>
-        /// Whether this user-tenant relationship is active
-        /// </summary>
-        public new bool IsActive { get; set; }
+        public Guid TenantId { get; init; }
     }
 }
