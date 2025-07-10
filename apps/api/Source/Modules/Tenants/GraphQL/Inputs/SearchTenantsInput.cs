@@ -1,7 +1,4 @@
-﻿using GameGuild.Modules.Tenants.Queries;
-
-
-namespace GameGuild.Modules.Tenants.Inputs;
+﻿namespace GameGuild.Modules.Tenants.Inputs;
 
 /// <summary>
 /// Input for searching tenants

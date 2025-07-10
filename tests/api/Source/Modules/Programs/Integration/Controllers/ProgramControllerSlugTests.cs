@@ -7,7 +7,6 @@ using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Tenants.Entities;
 using GameGuild.Modules.Users;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;

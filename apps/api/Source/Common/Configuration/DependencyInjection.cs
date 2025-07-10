@@ -85,7 +85,7 @@ public static class DependencyInjection {
     // Health Checks
     if (options.EnableHealthChecks) {
       services.AddHealthChecks()
-              .AddCheck("database", () => HealthCheckResult.Healthy(), new[] { "database" });
+              .AddCheck("database", () => HealthCheckResult.Healthy(), ["database"]);
     }
 
     // Response Compression
@@ -187,7 +187,7 @@ public static class DependencyInjection {
   /// Configuration options for presentation layer
   /// </summary>
   public class PresentationOptions {
-    public string[] AllowedOrigins { get; set; } = { "http://localhost:3000", "https://localhost:3001" };
+    public string[] AllowedOrigins { get; set; } = ["http://localhost:3000", "https://localhost:3001"];
     public int RateLimitRequests { get; set; } = 100;
     public TimeSpan RateLimitWindow { get; set; } = TimeSpan.FromMinutes(1);
     public int RateLimitQueueLimit { get; set; } = 50;
@@ -264,7 +264,7 @@ public static class DependencyInjection {
           catch (Exception ex) {
             options.Logger?.LogError(ex, "Failed to load types from assembly {AssemblyName}", assembly.GetName().Name);
             if (options.ThrowOnRegistrationFailure) throw;
-            return Enumerable.Empty<Type>();
+            return [];
           }
         })
         .Where(t => t is { IsClass: true, IsAbstract: false })
@@ -273,12 +273,13 @@ public static class DependencyInjection {
       options.Logger?.LogInformation("Found {TypeCount} concrete types across all assemblies", allTypes.Length);
 
       // Register all handler types in a single optimized pass
-      var registeredCount = RegisterHandlerTypes(services, allTypes, new[] {
+      var registeredCount = RegisterHandlerTypes(services, allTypes,
+      [
         typeof(IQueryHandler<,>),
         typeof(ICommandHandler<,>),
         typeof(ICommandHandler<>),
         typeof(IDomainEventHandler<>),
-      }, options);
+      ], options);
 
       // Register FluentValidation validators
       var validatorCount = RegisterValidators(services, allTypes, options);

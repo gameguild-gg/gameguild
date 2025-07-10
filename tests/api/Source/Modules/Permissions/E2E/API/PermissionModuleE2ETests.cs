@@ -8,7 +8,6 @@ using GameGuild.Modules.Comments.Models;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Tenants.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TenantModel = GameGuild.Modules.Tenants.Tenant;

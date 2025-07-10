@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Users;
 /// Command to create multiple users at once
 /// </summary>
 public sealed class BulkCreateUsersCommand : ICommand<BulkOperationResult> {
-  [Required] public List<CreateUserDto> Users { get; set; } = new();
+  [Required] public List<CreateUserDto> Users { get; init; } = [];
 
-  public string? Reason { get; set; }
+  public string? Reason { get; init; }
 }

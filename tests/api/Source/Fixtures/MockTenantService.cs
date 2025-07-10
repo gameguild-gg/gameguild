@@ -1,5 +1,4 @@
 ﻿using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Tenants.Entities;
 
 namespace GameGuild.API.Tests.Fixtures;
 
