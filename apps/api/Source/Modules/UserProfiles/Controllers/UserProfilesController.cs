@@ -1,4 +1,3 @@
-using GameGuild.Common;
 using GameGuild.Modules.UserProfiles.Commands;
 using GameGuild.Modules.UserProfiles.Dtos;
 using GameGuild.Modules.UserProfiles.Queries;

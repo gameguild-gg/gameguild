@@ -1,41 +1,95 @@
+using GameGuild.Common;
 using GameGuild.Modules.UserProfiles.Entities;
-using GameGuild.Modules.UserProfiles.Services;
+using GameGuild.Modules.UserProfiles.Queries;
 using GameGuild.Modules.Users;
-
+using MediatR;
 
 namespace GameGuild.Modules.UserProfiles.GraphQL;
 
 /// <summary>
-/// GraphQL queries for UserProfile module
+/// GraphQL queries for UserProfile module using CQRS pattern
 /// </summary>
 [ExtendObjectType<Query>]
-public class UserProfileQueries {
-  /// <summary>
-  /// Get all user profiles (non-deleted only)
-  /// </summary>
-  public async Task<IEnumerable<UserProfile>> GetUserProfiles([Service] IUserProfileService userProfileService) { return await userProfileService.GetAllUserProfilesAsync(); }
+public class UserProfileQueries
+{
+    /// <summary>
+    /// Get all user profiles with optional filtering using CQRS pattern
+    /// </summary>
+    public async Task<IEnumerable<UserProfile>> GetUserProfiles(
+        [Service] IMediator mediator,
+        bool includeDeleted = false,
+        int skip = 0,
+        int take = 50,
+        string? searchTerm = null,
+        Guid? tenantId = null
+    )
+    {
+        var query = new GetAllUserProfilesQuery
+        {
+            IncludeDeleted = includeDeleted,
+            Skip = skip,
+            Take = take,
+            SearchTerm = searchTerm,
+            TenantId = tenantId,
+        };
 
-  /// <summary>
-  /// Get a user profile by ID
-  /// </summary>
-  public async Task<UserProfile?> GetUserProfileById([Service] IUserProfileService userProfileService, Guid id) { return await userProfileService.GetUserProfileByIdAsync(id); }
+        var result = await mediator.Send(query);
+        
+        if (!result.IsSuccess)
+        {
+            throw new GraphQLException(result.Error.Description);
+        }
 
-  /// <summary>
-  /// Get a user profile by user ID
-  /// </summary>
-  public async Task<UserProfile?> GetUserProfileByUserId(
-    [Service] IUserProfileService userProfileService,
-    Guid userId
-  ) {
-    return await userProfileService.GetUserProfileByUserIdAsync(userId);
-  }
+        return result.Value;
+    }
 
-  /// <summary>
-  /// Get soft-deleted user profiles
-  /// </summary>
-  public async Task<IEnumerable<UserProfile>> GetDeletedUserProfiles(
-    [Service] IUserProfileService userProfileService
-  ) {
-    return await userProfileService.GetDeletedUserProfilesAsync();
-  }
+    /// <summary>
+    /// Get a user profile by ID using CQRS pattern
+    /// </summary>
+    public async Task<UserProfile?> GetUserProfileById(
+        [Service] IMediator mediator,
+        Guid id,
+        bool includeDeleted = false
+    )
+    {
+        var query = new GetUserProfileByIdQuery
+        {
+            UserProfileId = id,
+            IncludeDeleted = includeDeleted,
+        };
+
+        var result = await mediator.Send(query);
+        
+        if (!result.IsSuccess)
+        {
+            throw new GraphQLException(result.Error.Description);
+        }
+
+        return result.Value;
+    }
+
+    /// <summary>
+    /// Get a user profile by user ID using CQRS pattern
+    /// </summary>
+    public async Task<UserProfile?> GetUserProfileByUserId(
+        [Service] IMediator mediator,
+        Guid userId,
+        bool includeDeleted = false
+    )
+    {
+        var query = new GetUserProfileByUserIdQuery
+        {
+            UserId = userId,
+            IncludeDeleted = includeDeleted,
+        };
+
+        var result = await mediator.Send(query);
+        
+        if (!result.IsSuccess)
+        {
+            throw new GraphQLException(result.Error.Description);
+        }
+
+        return result.Value;
+    }
 }

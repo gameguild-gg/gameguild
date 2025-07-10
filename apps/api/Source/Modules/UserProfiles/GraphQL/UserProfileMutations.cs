@@ -1,76 +1,118 @@
+using GameGuild.Common;
+using GameGuild.Modules.UserProfiles.Commands;
 using GameGuild.Modules.UserProfiles.Entities;
-using GameGuild.Modules.UserProfiles.Services;
 using GameGuild.Modules.Users;
-
+using MediatR;
 
 namespace GameGuild.Modules.UserProfiles.GraphQL;
 
 /// <summary>
-/// GraphQL mutations for UserProfile module
+/// GraphQL mutations for UserProfile module using CQRS pattern
 /// </summary>
 [ExtendObjectType<Mutation>]
-public class UserProfileMutations {
-  /// <summary>
-  /// Create a new user profile
-  /// </summary>
-  public async Task<UserProfile> CreateUserProfile(
-    [Service] IUserProfileService userProfileService,
-    CreateUserProfileInput input
-  ) {
-    var userProfile = new UserProfile {
-      GivenName = input.GivenName,
-      FamilyName = input.FamilyName,
-      DisplayName = input.DisplayName,
-      Title = input.Title ?? string.Empty,
-      Description = input.Description,
-    };
+public class UserProfileMutations
+{
+    /// <summary>
+    /// Create a new user profile using CQRS pattern
+    /// </summary>
+    public async Task<UserProfile> CreateUserProfile(
+        [Service] IMediator mediator,
+        CreateUserProfileInput input
+    )
+    {
+        var command = new CreateUserProfileCommand
+        {
+            GivenName = input.GivenName ?? string.Empty,
+            FamilyName = input.FamilyName ?? string.Empty,
+            DisplayName = input.DisplayName ?? string.Empty,
+            Title = input.Title,
+            Description = input.Description,
+            TenantId = input.TenantId,
+        };
 
-    // Handle tenant assignment if provided
-    if (input.TenantId.HasValue) {
-      // We would need to get the tenant from the context and assign it
-      // For now, we'll leave the tenant assignment to be handled by the service layer
+        var result = await mediator.Send(command);
+        
+        if (!result.IsSuccess)
+        {
+            throw new GraphQLException(result.Error.Description);
+        }
+
+        return result.Value;
     }
 
-    return await userProfileService.CreateUserProfileAsync(userProfile);
-  }
+    /// <summary>
+    /// Update an existing user profile using CQRS pattern
+    /// </summary>
+    public async Task<UserProfile> UpdateUserProfile(
+        [Service] IMediator mediator,
+        UpdateUserProfileInput input
+    )
+    {
+        var command = new UpdateUserProfileCommand
+        {
+            UserProfileId = input.Id,
+            GivenName = input.GivenName,
+            FamilyName = input.FamilyName,
+            DisplayName = input.DisplayName,
+            Title = input.Title,
+            Description = input.Description,
+        };
 
-  /// <summary>
-  /// Update an existing user profile
-  /// </summary>
-  public async Task<UserProfile?> UpdateUserProfile(
-    [Service] IUserProfileService userProfileService,
-    UpdateUserProfileInput input
-  ) {
-    var userProfile = new UserProfile {
-      Id = input.Id,
-      GivenName = input.GivenName,
-      FamilyName = input.FamilyName,
-      DisplayName = input.DisplayName,
-      Title = input.Title ?? string.Empty,
-      Description = input.Description,
-    };
+        var result = await mediator.Send(command);
+        
+        if (!result.IsSuccess)
+        {
+            throw new GraphQLException(result.Error.Description);
+        }
 
-    // Handle tenant assignment if provided
-    if (input.TenantId.HasValue) {
-      // We would need to get the tenant from the context and assign it
-      // For now, we'll leave the tenant assignment to be handled by the service layer
+        return result.Value;
     }
 
-    return await userProfileService.UpdateUserProfileAsync(input.Id, userProfile);
-  }
+    /// <summary>
+    /// Delete a user profile using CQRS pattern
+    /// </summary>
+    public async Task<bool> DeleteUserProfile(
+        [Service] IMediator mediator,
+        Guid id,
+        bool softDelete = true
+    )
+    {
+        var command = new DeleteUserProfileCommand
+        {
+            UserProfileId = id,
+            SoftDelete = softDelete,
+        };
 
-  /// <summary>
-  /// Soft delete a user profile
-  /// </summary>
-  public async Task<bool> SoftDeleteUserProfile([Service] IUserProfileService userProfileService, Guid id) { return await userProfileService.SoftDeleteUserProfileAsync(id); }
+        var result = await mediator.Send(command);
+        
+        if (!result.IsSuccess)
+        {
+            throw new GraphQLException(result.Error.Description);
+        }
 
-  /// <summary>
-  /// Restore a soft-deleted user profile
-  /// </summary>
-  public async Task<bool> RestoreUserProfile([Service] IUserProfileService userProfileService, Guid id) { return await userProfileService.RestoreUserProfileAsync(id); }
+        return result.Value;
+    }
 
-  /// <summary>
-  /// Hard delete a user profile
-  /// </summary>
-  public async Task<bool> DeleteUserProfile([Service] IUserProfileService userProfileService, Guid id) { return await userProfileService.DeleteUserProfileAsync(id); }
+    /// <summary>
+    /// Restore a soft-deleted user profile using CQRS pattern
+    /// </summary>
+    public async Task<bool> RestoreUserProfile(
+        [Service] IMediator mediator,
+        Guid id
+    )
+    {
+        var command = new RestoreUserProfileCommand
+        {
+            UserProfileId = id,
+        };
+
+        var result = await mediator.Send(command);
+        
+        if (!result.IsSuccess)
+        {
+            throw new GraphQLException(result.Error.Description);
+        }
+
+        return result.Value;
+    }
 }
