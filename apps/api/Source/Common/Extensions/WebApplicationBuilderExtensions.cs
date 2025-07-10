@@ -139,7 +139,8 @@ public static class WebApplicationExtensions {
     app.UseRequestContextLogging();
 
     // Authentication and authorization
-    app.UseAuthModule();
+    app.UseAuthentication();
+    app.UseAuthorization();
 
     // Endpoint mapping
     app.MapEndpoints();
