@@ -5,6 +5,7 @@ using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
+using GameGuild.Common;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
@@ -80,14 +81,14 @@ namespace GameGuild.API.Tests.Fixtures {
                 }
               );
 
+      // Add application services (includes IDomainEventPublisher registration)
+      services.AddApplication();
+
       // Register User module services
       services.AddScoped<GameGuild.Modules.Users.IUserService, UserService>();
 
       // Register HttpClient for OAuth service
       services.AddHttpClient();
-
-      // Register MediatR for CQRS pattern
-      services.AddMediatR(typeof(AuthService));
 
       // Register Auth module services
       services.AddScoped<IAuthService, AuthService>();
