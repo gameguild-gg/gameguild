@@ -462,19 +462,3 @@ public class ProductController(IProductService productService) : ControllerBase 
 }
 
 // ===== DTOs FOR REQUEST BODIES =====
-
-public class SetPricingRequest {
-  public decimal BasePrice { get; set; }
-
-  public string Currency { get; set; } = "USD";
-}
-
-public class GrantAccessRequest {
-  public ProductAcquisitionType AcquisitionType { get; set; }
-
-  public decimal PurchasePrice { get; set; } = 0;
-
-  public string Currency { get; set; } = "USD";
-
-  public DateTime? ExpiresAt { get; set; }
-}

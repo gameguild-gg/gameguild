@@ -6,14 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Authentication {
-  public interface IWeb3Service {
-    Task<Web3ChallengeResponseDto> GenerateChallengeAsync(Web3ChallengeRequestDto request);
-
-    Task<bool> VerifySignatureAsync(Web3VerifyRequestDto request);
-
-    Task<User> FindOrCreateWeb3UserAsync(string walletAddress, string chainId);
-  }
-
   public class Web3Service(ApplicationDbContext context, ILogger<Web3Service> logger) : IWeb3Service {
     private readonly Dictionary<string, Web3ChallengeResponseDto> _challenges = new();
 

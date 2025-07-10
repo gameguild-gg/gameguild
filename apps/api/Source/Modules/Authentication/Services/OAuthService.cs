@@ -2,18 +2,6 @@ using System.Text.Json;
 
 
 namespace GameGuild.Modules.Authentication {
-  public interface IOAuthService {
-    Task<GitHubUserDto> GetGitHubUserAsync(string accessToken);
-
-    Task<GoogleUserDto> GetGoogleUserAsync(string accessToken);
-
-    Task<GoogleUserDto> ValidateGoogleIdTokenAsync(string idToken);
-
-    Task<string> ExchangeGitHubCodeAsync(string code, string redirectUri);
-
-    Task<string> ExchangeGoogleCodeAsync(string code, string redirectUri);
-  }
-
   public class OAuthService(HttpClient httpClient, IConfiguration configuration) : IOAuthService {
     public async Task<string> ExchangeGitHubCodeAsync(string code, string redirectUri) {
       var clientId = configuration["OAuth:GitHub:ClientId"];

@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
 namespace GameGuild.Modules.Certificates.Models;
@@ -46,14 +45,4 @@ public class CertificateBlockchainAnchor : Entity {
 
   // Navigation properties
   [ForeignKey(nameof(CertificateId))] public virtual UserCertificate Certificate { get; set; } = null!;
-}
-
-public class CertificateBlockchainAnchorConfiguration : IEntityTypeConfiguration<CertificateBlockchainAnchor> {
-  public void Configure(EntityTypeBuilder<CertificateBlockchainAnchor> builder) {
-    // Configure relationship with Certificate (can't be done with annotations)
-    builder.HasOne(cba => cba.Certificate)
-           .WithMany(uc => uc.BlockchainAnchors)
-           .HasForeignKey(cba => cba.CertificateId)
-           .OnDelete(DeleteBehavior.Cascade);
-  }
 }

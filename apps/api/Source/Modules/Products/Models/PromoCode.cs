@@ -4,7 +4,6 @@ using GameGuild.Common;
 using GameGuild.Modules.Payments.Models;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
 namespace GameGuild.Modules.Products.Models;
@@ -157,24 +156,5 @@ public class PromoCode : Entity {
     if (MinimumOrderAmount.HasValue && orderAmount < MinimumOrderAmount.Value) return 0;
 
     return Type switch { PromoCodeType.PercentageOff => orderAmount * (DiscountPercentage ?? 0) / 100, PromoCodeType.FixedAmountOff => Math.Min(DiscountAmount ?? 0, orderAmount), _ => 0 };
-  }
-}
-
-/// <summary>
-/// Entity Framework configuration for PromoCode entity
-/// </summary>
-public class PromoCodeConfiguration : IEntityTypeConfiguration<PromoCode> {
-  public void Configure(EntityTypeBuilder<PromoCode> builder) {
-    // Configure relationship with CreatedByUser (can't be done with annotations)
-    builder.HasOne(pc => pc.CreatedByUser)
-           .WithMany()
-           .HasForeignKey(pc => pc.CreatedBy)
-           .OnDelete(DeleteBehavior.Restrict);
-
-    // Configure relationship with Product (can't be done with annotations)
-    builder.HasOne(pc => pc.Product)
-           .WithMany(p => p.PromoCodes)
-           .HasForeignKey(pc => pc.ProductId)
-           .OnDelete(DeleteBehavior.Cascade);
   }
 }

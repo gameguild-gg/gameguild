@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
 namespace GameGuild.Modules.Programs.Models;
@@ -32,13 +31,4 @@ public class ProgramWishlist : Entity {
   [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;
 
   [ForeignKey(nameof(ProgramId))] public virtual Program Program { get; set; } = null!;
-}
-
-/// <summary>
-/// Entity Framework configuration for ProgramWishlist entity
-/// </summary>
-public class ProgramWishlistConfiguration : IEntityTypeConfiguration<ProgramWishlist> {
-  public void Configure(EntityTypeBuilder<ProgramWishlist> builder) {
-    // Additional configuration if needed
-  }
 }

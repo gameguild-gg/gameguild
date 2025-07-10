@@ -57,12 +57,3 @@ public class DomainEventProcessorService(ILogger<DomainEventProcessorService> lo
     await dbContext.SaveChangesAsync(cancellationToken);
   }
 }
-
-/// <summary>
-/// Interface for entities that can raise domain events
-/// </summary>
-public interface IHasDomainEvents {
-  IReadOnlyList<IDomainEvent> DomainEvents { get; }
-
-  void ClearDomainEvents();
-}

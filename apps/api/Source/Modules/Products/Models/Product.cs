@@ -6,7 +6,6 @@ using GameGuild.Modules.Contents;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
 namespace GameGuild.Modules.Products.Models;
@@ -91,14 +90,4 @@ public class Product : Content {
   }
 
   public void SetBundleItemIds(List<Guid> productIds) { BundleItems = JsonSerializer.Serialize(productIds); }
-}
-
-/// <summary>
-/// Entity Framework configuration for Product entity
-/// </summary>
-public class ProductConfiguration : IEntityTypeConfiguration<Product> {
-  public void Configure(EntityTypeBuilder<Product> builder) {
-    // Configure relationship with Creator (can't be done with annotations)
-    builder.HasOne(p => p.Creator).WithMany().HasForeignKey(p => p.CreatorId).OnDelete(DeleteBehavior.Restrict);
-  }
 }

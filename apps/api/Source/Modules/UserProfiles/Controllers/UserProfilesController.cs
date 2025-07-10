@@ -1,3 +1,4 @@
+using GameGuild.Common;
 using GameGuild.Modules.UserProfiles.Commands;
 using GameGuild.Modules.UserProfiles.Dtos;
 using GameGuild.Modules.UserProfiles.Queries;
@@ -35,7 +36,12 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
 
         var userProfiles = await mediator.Send(query);
 
-        var userProfileDtos = userProfiles.Select(up => new UserProfileResponseDto
+        if (!userProfiles.IsSuccess)
+        {
+            return BadRequest(userProfiles.Error);
+        }
+
+        var userProfileDtos = userProfiles.Value.Select(up => new UserProfileResponseDto
         {
             Id = up.Id,
             Version = up.Version,
@@ -66,21 +72,30 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
         };
 
         var userProfile = await mediator.Send(query);
-        if (userProfile == null) return NotFound();
+        
+        if (!userProfile.IsSuccess)
+        {
+            return BadRequest(userProfile.Error);
+        }
+
+        if (userProfile.Value == null) 
+        {
+            return NotFound();
+        }
 
         var userProfileDto = new UserProfileResponseDto
         {
-            Id = userProfile.Id,
-            Version = userProfile.Version,
-            GivenName = userProfile.GivenName,
-            FamilyName = userProfile.FamilyName,
-            DisplayName = userProfile.DisplayName,
-            Title = userProfile.Title,
-            Description = userProfile.Description,
-            CreatedAt = userProfile.CreatedAt,
-            UpdatedAt = userProfile.UpdatedAt,
-            DeletedAt = userProfile.DeletedAt,
-            IsDeleted = userProfile.IsDeleted,
+            Id = userProfile.Value.Id,
+            Version = userProfile.Value.Version,
+            GivenName = userProfile.Value.GivenName,
+            FamilyName = userProfile.Value.FamilyName,
+            DisplayName = userProfile.Value.DisplayName,
+            Title = userProfile.Value.Title,
+            Description = userProfile.Value.Description,
+            CreatedAt = userProfile.Value.CreatedAt,
+            UpdatedAt = userProfile.Value.UpdatedAt,
+            DeletedAt = userProfile.Value.DeletedAt,
+            IsDeleted = userProfile.Value.IsDeleted,
         };
 
         return Ok(userProfileDto);
@@ -99,21 +114,30 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
         };
 
         var userProfile = await mediator.Send(query);
-        if (userProfile == null) return NotFound();
+        
+        if (!userProfile.IsSuccess)
+        {
+            return BadRequest(userProfile.Error);
+        }
+
+        if (userProfile.Value == null) 
+        {
+            return NotFound();
+        }
 
         var userProfileDto = new UserProfileResponseDto
         {
-            Id = userProfile.Id,
-            Version = userProfile.Version,
-            GivenName = userProfile.GivenName,
-            FamilyName = userProfile.FamilyName,
-            DisplayName = userProfile.DisplayName,
-            Title = userProfile.Title,
-            Description = userProfile.Description,
-            CreatedAt = userProfile.CreatedAt,
-            UpdatedAt = userProfile.UpdatedAt,
-            DeletedAt = userProfile.DeletedAt,
-            IsDeleted = userProfile.IsDeleted,
+            Id = userProfile.Value.Id,
+            Version = userProfile.Value.Version,
+            GivenName = userProfile.Value.GivenName,
+            FamilyName = userProfile.Value.FamilyName,
+            DisplayName = userProfile.Value.DisplayName,
+            Title = userProfile.Value.Title,
+            Description = userProfile.Value.Description,
+            CreatedAt = userProfile.Value.CreatedAt,
+            UpdatedAt = userProfile.Value.UpdatedAt,
+            DeletedAt = userProfile.Value.DeletedAt,
+            IsDeleted = userProfile.Value.IsDeleted,
         };
 
         return Ok(userProfileDto);
@@ -140,22 +164,27 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
 
         var userProfile = await mediator.Send(command);
 
+        if (!userProfile.IsSuccess)
+        {
+            return BadRequest(userProfile.Error);
+        }
+
         var userProfileDto = new UserProfileResponseDto
         {
-            Id = userProfile.Id,
-            Version = userProfile.Version,
-            GivenName = userProfile.GivenName,
-            FamilyName = userProfile.FamilyName,
-            DisplayName = userProfile.DisplayName,
-            Title = userProfile.Title,
-            Description = userProfile.Description,
-            CreatedAt = userProfile.CreatedAt,
-            UpdatedAt = userProfile.UpdatedAt,
-            DeletedAt = userProfile.DeletedAt,
-            IsDeleted = userProfile.IsDeleted,
+            Id = userProfile.Value.Id,
+            Version = userProfile.Value.Version,
+            GivenName = userProfile.Value.GivenName,
+            FamilyName = userProfile.Value.FamilyName,
+            DisplayName = userProfile.Value.DisplayName,
+            Title = userProfile.Value.Title,
+            Description = userProfile.Value.Description,
+            CreatedAt = userProfile.Value.CreatedAt,
+            UpdatedAt = userProfile.Value.UpdatedAt,
+            DeletedAt = userProfile.Value.DeletedAt,
+            IsDeleted = userProfile.Value.IsDeleted,
         };
 
-        return CreatedAtAction(nameof(GetUserProfile), new { id = userProfile.Id }, userProfileDto);
+        return CreatedAtAction(nameof(GetUserProfile), new { id = userProfile.Value.Id }, userProfileDto);
     }
 
     /// <summary>
@@ -184,19 +213,24 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
         {
             var userProfile = await mediator.Send(command);
 
+            if (!userProfile.IsSuccess)
+            {
+                return BadRequest(userProfile.Error);
+            }
+
             var userProfileDto = new UserProfileResponseDto
             {
-                Id = userProfile.Id,
-                Version = userProfile.Version,
-                GivenName = userProfile.GivenName,
-                FamilyName = userProfile.FamilyName,
-                DisplayName = userProfile.DisplayName,
-                Title = userProfile.Title,
-                Description = userProfile.Description,
-                CreatedAt = userProfile.CreatedAt,
-                UpdatedAt = userProfile.UpdatedAt,
-                DeletedAt = userProfile.DeletedAt,
-                IsDeleted = userProfile.IsDeleted,
+                Id = userProfile.Value.Id,
+                Version = userProfile.Value.Version,
+                GivenName = userProfile.Value.GivenName,
+                FamilyName = userProfile.Value.FamilyName,
+                DisplayName = userProfile.Value.DisplayName,
+                Title = userProfile.Value.Title,
+                Description = userProfile.Value.Description,
+                CreatedAt = userProfile.Value.CreatedAt,
+                UpdatedAt = userProfile.Value.UpdatedAt,
+                DeletedAt = userProfile.Value.DeletedAt,
+                IsDeleted = userProfile.Value.IsDeleted,
             };
 
             return Ok(userProfileDto);
@@ -224,7 +258,16 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
         };
 
         var result = await mediator.Send(command);
-        if (!result) return NotFound();
+        
+        if (!result.IsSuccess)
+        {
+            return BadRequest(result.Error);
+        }
+
+        if (!result.Value)
+        {
+            return NotFound();
+        }
 
         return NoContent();
     }
@@ -241,7 +284,16 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
         };
 
         var result = await mediator.Send(command);
-        if (!result) return NotFound();
+        
+        if (!result.IsSuccess)
+        {
+            return BadRequest(result.Error);
+        }
+
+        if (!result.Value)
+        {
+            return NotFound();
+        }
 
         return NoContent();
     }

@@ -9,7 +9,6 @@ using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tags.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
 namespace GameGuild.Modules.Programs.Models;
@@ -173,14 +172,5 @@ public class Program : Content {
     if (EstimatedHours == null || EstimatedHours <= 0 || hoursPerWeek <= 0) return null;
 
     return (float)Math.Ceiling((double)EstimatedHours.Value / hoursPerWeek);
-  }
-}
-
-/// <summary>
-/// Entity Framework configuration for Program entity
-/// </summary>
-public class ProgramConfiguration : IEntityTypeConfiguration<Program> {
-  public void Configure(EntityTypeBuilder<Program> builder) {
-    // Additional configuration can be added here if needed
   }
 }

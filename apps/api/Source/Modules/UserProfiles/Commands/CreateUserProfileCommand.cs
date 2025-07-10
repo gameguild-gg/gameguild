@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using GameGuild.Common;
 using GameGuild.Modules.UserProfiles.Entities;
 using MediatR;
 
@@ -7,7 +8,7 @@ namespace GameGuild.Modules.UserProfiles.Commands;
 /// <summary>
 /// Command to create a new user profile with validation and business logic
 /// </summary>
-public class CreateUserProfileCommand : IRequest<UserProfile>
+public class CreateUserProfileCommand : ICommand<GameGuild.Common.Result<UserProfile>>
 {
     [Required]
     [StringLength(100, MinimumLength = 1)]

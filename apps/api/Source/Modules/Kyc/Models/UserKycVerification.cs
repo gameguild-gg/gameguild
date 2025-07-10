@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
 namespace GameGuild.Modules.Kyc.Models;
@@ -74,11 +73,4 @@ public class UserKycVerification : Entity {
 
   // Navigation properties
   [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;
-}
-
-public class UserKycVerificationConfiguration : IEntityTypeConfiguration<UserKycVerification> {
-  public void Configure(EntityTypeBuilder<UserKycVerification> builder) {
-    // Configure relationship with User (can't be done with annotations)
-    builder.HasOne(ukv => ukv.User).WithMany().HasForeignKey(ukv => ukv.UserId).OnDelete(DeleteBehavior.Cascade);
-  }
 }
