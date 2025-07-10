@@ -516,3 +516,5 @@ W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\refint\GameGuil
 W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\GameGuild.API.Tests.pdb
 W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\GameGuild.API.Tests.genruntimeconfig.cache
 W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\ref\GameGuild.API.Tests.dll
+W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\FluentValidation.dll
+W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\Serilog.dll

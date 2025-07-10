@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common.Enums;
 using GameGuild.Data;
 using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Projects.Models;

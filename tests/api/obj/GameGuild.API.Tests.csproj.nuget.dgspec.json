@@ -120,6 +120,10 @@
               "target": "Package",
               "version": "[9.0.0, )"
             },
+            "Serilog": {
+              "target": "Package",
+              "version": "[4.3.0, )"
+            },
             "Slugify.Core": {
               "target": "Package",
               "version": "[5.1.1, )"

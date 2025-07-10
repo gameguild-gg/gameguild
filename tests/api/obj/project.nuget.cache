@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "H4jBhW+Db3Y=",
+  "dgSpecHash": "+lHissWgWeU=",
   "success": true,
   "projectFilePath": "W:\\repositories\\game-guild\\game-guild\\tests\\api\\GameGuild.API.Tests.csproj",
   "expectedPackageFiles": [
@@ -131,6 +131,7 @@
     "C:\\Users\\MatheusMartins\\.nuget\\packages\\runtime.ubuntu.14.04-x64.runtime.native.system.security.cryptography.openssl\\4.3.2\\runtime.ubuntu.14.04-x64.runtime.native.system.security.cryptography.openssl.4.3.2.nupkg.sha512",
     "C:\\Users\\MatheusMartins\\.nuget\\packages\\runtime.ubuntu.16.04-x64.runtime.native.system.security.cryptography.openssl\\4.3.2\\runtime.ubuntu.16.04-x64.runtime.native.system.security.cryptography.openssl.4.3.2.nupkg.sha512",
     "C:\\Users\\MatheusMartins\\.nuget\\packages\\runtime.ubuntu.16.10-x64.runtime.native.system.security.cryptography.openssl\\4.3.2\\runtime.ubuntu.16.10-x64.runtime.native.system.security.cryptography.openssl.4.3.2.nupkg.sha512",
+    "C:\\Users\\MatheusMartins\\.nuget\\packages\\serilog\\4.3.0\\serilog.4.3.0.nupkg.sha512",
     "C:\\Users\\MatheusMartins\\.nuget\\packages\\slugify.core\\5.1.1\\slugify.core.5.1.1.nupkg.sha512",
     "C:\\Users\\MatheusMartins\\.nuget\\packages\\sprache\\2.3.1\\sprache.2.3.1.nupkg.sha512",
     "C:\\Users\\MatheusMartins\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.10\\sqlitepclraw.bundle_e_sqlite3.2.1.10.nupkg.sha512",
