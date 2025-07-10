@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Resources.Models;
-using GameGuild.Modules.Tenants.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Resources;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -20,7 +20,7 @@ namespace GameGuild.Modules.Reputations.Models;
 [Index(nameof(ReputationActionId))]
 [Index(nameof(OccurredAt))]
 [Index(nameof(PointsChange))]
-public class UserReputationHistory : ResourceBase {
+public class UserReputationHistory : Resource {
   /// <summary>
   /// The user whose reputation changed (for direct user reputation tracking)
   /// </summary>
@@ -103,7 +103,7 @@ public class UserReputationHistory : ResourceBase {
   /// Related resource that triggered this change (polymorphic relationship)
   /// Entity Framework will create a shadow RelatedResourceId foreign key property automatically
   /// </summary>
-  public ResourceBase? RelatedResource { get; set; }
+  public Resource? RelatedResource { get; set; }
 
   /// <summary>
   /// When this reputation change occurred

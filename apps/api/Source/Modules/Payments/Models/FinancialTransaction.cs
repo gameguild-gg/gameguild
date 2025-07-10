@@ -1,9 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,7 +18,7 @@ namespace GameGuild.Modules.Payments.Models;
 [Index(nameof(PaymentMethodId))]
 [Index(nameof(ProcessedAt))]
 [Index(nameof(Amount))]
-public class FinancialTransaction : BaseEntity {
+public class FinancialTransaction : Entity {
   /// <summary>
   /// User who initiated the transaction (payer)
   /// </summary>

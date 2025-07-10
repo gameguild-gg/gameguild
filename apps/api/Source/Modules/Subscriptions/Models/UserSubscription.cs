@@ -1,9 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -18,7 +17,7 @@ namespace GameGuild.Modules.Subscriptions.Models;
 [Index(nameof(CurrentPeriodEnd))]
 [Index(nameof(NextBillingAt))]
 [Index(nameof(ExternalSubscriptionId))]
-public class UserSubscription : BaseEntity {
+public class UserSubscription : Entity {
   public Guid UserId { get; set; }
 
   public Guid SubscriptionPlanId { get; set; }

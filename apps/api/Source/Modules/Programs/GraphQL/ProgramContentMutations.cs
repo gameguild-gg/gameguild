@@ -1,11 +1,11 @@
-using GameGuild.Common.Presentation.GraphQL.Authorization;
+using GameGuild.Common.Authorization;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Users.GraphQL;
-using ProgramContentTypeEnum = GameGuild.Common.Domain.Enums.ProgramContentType;
-using VisibilityEnum = GameGuild.Common.Domain.Enums.Visibility;
-using GradingMethodEnum = GameGuild.Common.Domain.Enums.GradingMethod;
+using GameGuild.Modules.Users;
+using ProgramContentTypeEnum = GameGuild.Common.ProgramContentType;
+using VisibilityEnum = GameGuild.Common.Visibility;
+using GradingMethodEnum = GameGuild.Common.GradingMethod;
 
 
 namespace GameGuild.Modules.Programs.GraphQL;
@@ -75,7 +75,7 @@ public class ProgramContentMutations {
     if (existingContent == null) throw new ArgumentException($"Content with ID {contentId} not found");
 
     // Verify the content belongs to the specified program
-    if (existingContent.ProgramId != programId) { throw new ArgumentException($"Content {contentId} does not belong to program {programId}"); }
+    if (existingContent.ProgramId != programId) throw new ArgumentException($"Content {contentId} does not belong to program {programId}");
 
     // Update only provided fields
     if (title != null) existingContent.Title = title;
@@ -107,7 +107,7 @@ public class ProgramContentMutations {
     if (existingContent == null) return false;
 
     // Verify the content belongs to the specified program
-    if (existingContent.ProgramId != programId) { throw new ArgumentException($"Content {contentId} does not belong to program {programId}"); }
+    if (existingContent.ProgramId != programId) throw new ArgumentException($"Content {contentId} does not belong to program {programId}");
 
     return await contentService.DeleteContentAsync(contentId);
   }
@@ -129,7 +129,7 @@ public class ProgramContentMutations {
     if (existingContent == null) return false;
 
     // Verify the content belongs to the specified program
-    if (existingContent.ProgramId != programId) { throw new ArgumentException($"Content {contentId} does not belong to program {programId}"); }
+    if (existingContent.ProgramId != programId) throw new ArgumentException($"Content {contentId} does not belong to program {programId}");
 
     return await contentService.MoveContentAsync(contentId, newParentId, newSortOrder);
   }

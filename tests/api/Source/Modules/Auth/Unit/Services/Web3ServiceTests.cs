@@ -1,11 +1,11 @@
-using GameGuild.Data;
+using GameGuild.Database;
 using GameGuild.Modules.Authentication.Dtos;
 using GameGuild.Modules.Authentication.Services;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using UserModel = GameGuild.Modules.Users.Models.User;
+using UserModel = GameGuild.Modules.Users.User;
 
 
 namespace GameGuild.API.Tests.Modules.Auth.Unit.Services;

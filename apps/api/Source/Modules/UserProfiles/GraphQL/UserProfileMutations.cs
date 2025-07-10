@@ -1,5 +1,5 @@
 using GameGuild.Modules.UserProfiles.Services;
-using GameGuild.Modules.Users.GraphQL;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.UserProfiles.GraphQL;

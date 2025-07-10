@@ -1,7 +1,7 @@
 using System.ComponentModel;
 
 
-namespace GameGuild.Common.Enums;
+namespace GameGuild.Common;
 
 public enum FeedbackFormQuestionType {
   [Description("Single line text input")]

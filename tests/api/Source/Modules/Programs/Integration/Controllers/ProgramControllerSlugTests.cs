@@ -2,13 +2,13 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using GameGuild.API.Tests.Fixtures;
 using GameGuild.API.Tests.Helpers;
-using GameGuild.Common.Enums;
-using GameGuild.Data;
+using GameGuild.Common;
+using GameGuild.Database;
 using GameGuild.Modules.Authentication.Dtos;
 using GameGuild.Modules.Authentication.Services;
-using GameGuild.Modules.Contents.Models;
-using GameGuild.Modules.Tenants.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Contents;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 
@@ -197,7 +197,7 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
         }
     }
 
-    private async Task<(Tenant Tenant, User User)> CreateTenantWithUserAsync()
+    private async Task<(GameGuild.Modules.Tenants.Tenant Tenant, GameGuild.Modules.Users.User User)> CreateTenantWithUserAsync()
     {
         var tenant = new Tenant
         {

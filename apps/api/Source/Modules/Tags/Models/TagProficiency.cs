@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using GameGuild.Modules.Certificates.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +12,7 @@ namespace GameGuild.Modules.Tags.Models;
 [Index(nameof(Type))]
 [Index(nameof(ProficiencyLevel))]
 [Index(nameof(IsActive))]
-public class TagProficiency : BaseEntity {
+public class TagProficiency : Entity {
   [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
 
   [MaxLength(500)] public string? Description { get; set; }

@@ -1,4 +1,4 @@
-namespace GameGuild.Config;
+namespace GameGuild.Common;
 
 public class DatabaseConfig {
   public string ConnectionString { get; set; } = string.Empty;

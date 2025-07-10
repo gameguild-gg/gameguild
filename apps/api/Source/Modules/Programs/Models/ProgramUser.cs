@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 using GameGuild.Modules.Certificates.Models;
 using GameGuild.Modules.Feedbacks.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -21,7 +21,7 @@ namespace GameGuild.Modules.Programs.Models;
 [Index(nameof(JoinedAt))]
 [Index(nameof(IsActive))]
 [Index(nameof(CompletionPercentage))]
-public class ProgramUser : BaseEntity {
+public class ProgramUser : Entity {
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>

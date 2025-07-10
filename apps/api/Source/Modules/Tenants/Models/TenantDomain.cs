@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenants.Models;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Represents a domain (top-level or subdomain) associated with a tenant for automatic user grouping.
@@ -14,7 +14,7 @@ namespace GameGuild.Modules.Tenants.Models;
 [Table("TenantDomains")]
 [Index(nameof(TopLevelDomain), nameof(Subdomain), IsUnique = true)]
 [Index(nameof(TenantId), nameof(IsMainDomain))]
-public class TenantDomain : BaseEntity {
+public class TenantDomain : Entity {
   private string _topLevelDomain = string.Empty;
   private string? _subdomain;
 

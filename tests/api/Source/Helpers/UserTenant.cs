@@ -1,4 +1,4 @@
-using GameGuild.Common.Entities;
+using GameGuild.Common;
 
 namespace GameGuild.API.Tests.Helpers
 {

@@ -1,6 +1,6 @@
-using GameGuild.Data;
+using GameGuild.Database;
 using GameGuild.Modules.Authentication.Commands;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 

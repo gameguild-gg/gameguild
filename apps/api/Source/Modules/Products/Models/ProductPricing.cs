@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -16,7 +16,7 @@ namespace GameGuild.Modules.Products.Models;
 [Index(nameof(Currency))]
 [Index(nameof(SaleStartDate))]
 [Index(nameof(SaleEndDate))]
-public class ProductPricing : BaseEntity {
+public class ProductPricing : Entity {
   /// <summary>
   /// Foreign key to the Product entity
   /// </summary>

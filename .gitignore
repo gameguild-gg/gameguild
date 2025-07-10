@@ -50,3 +50,5 @@ old/services/web/.env
 /old/contributors/gource.txt
 
 **/package-lock.json
+
+apps/abc/

@@ -1,9 +1,9 @@
 using GameGuild.API.Tests.Fixtures;
-using GameGuild.Common.Services;
-using GameGuild.Data;
+using GameGuild.Common;
+using GameGuild.Database;
 using GameGuild.Modules.Comments.Models;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

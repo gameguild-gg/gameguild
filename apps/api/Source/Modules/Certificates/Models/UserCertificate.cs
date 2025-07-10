@@ -1,10 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -20,7 +19,7 @@ namespace GameGuild.Modules.Certificates.Models;
 [Index(nameof(VerificationCode), IsUnique = true)]
 [Index(nameof(Status))]
 [Index(nameof(IssuedAt))]
-public class UserCertificate : BaseEntity {
+public class UserCertificate : Entity {
   [Required] [ForeignKey(nameof(User))] public Guid UserId { get; set; }
 
   [Required]

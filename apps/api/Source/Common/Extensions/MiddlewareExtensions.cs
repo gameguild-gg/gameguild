@@ -1,13 +1,15 @@
-﻿using Web.Api.Middleware;
+﻿namespace GameGuild.Common;
 
-namespace Web.Api.Extensions;
+public static class MiddlewareExtensions {
+  public static IApplicationBuilder UseRequestContextLogging(this IApplicationBuilder app) {
+    app.UseMiddleware<RequestContextLoggingMiddleware>();
 
-public static class MiddlewareExtensions
-{
-    public static IApplicationBuilder UseRequestContextLogging(this IApplicationBuilder app)
-    {
-        app.UseMiddleware<RequestContextLoggingMiddleware>();
+    return app;
+  }
 
-        return app;
-    }
+  // public static IApplicationBuilder UseExceptionHandler(this IApplicationBuilder app) {
+  //   app.UseMiddleware<ExceptionHandlingMiddleware>();
+  //
+  //   return app;
+  // }
 }

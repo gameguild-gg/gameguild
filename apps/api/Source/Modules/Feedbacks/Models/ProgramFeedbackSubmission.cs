@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -18,7 +18,7 @@ namespace GameGuild.Modules.Feedbacks.Models;
 [Index(nameof(ProgramUserId))]
 [Index(nameof(OverallRating))]
 [Index(nameof(SubmittedAt))]
-public class ProgramFeedbackSubmission : BaseEntity {
+public class ProgramFeedbackSubmission : Entity {
   public Guid UserId { get; set; }
 
   public Guid ProgramId { get; set; }

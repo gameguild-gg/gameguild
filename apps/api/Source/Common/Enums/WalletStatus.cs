@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Common.Enums;
+namespace GameGuild.Common;
 
 public enum WalletStatus {
   [Description("Wallet is operational and can process transactions")]

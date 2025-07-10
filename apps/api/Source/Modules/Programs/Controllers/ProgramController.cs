@@ -1,5 +1,4 @@
-using GameGuild.Common.Application.Attributes;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using GameGuild.Modules.Authentication.Attributes;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.DTOs;

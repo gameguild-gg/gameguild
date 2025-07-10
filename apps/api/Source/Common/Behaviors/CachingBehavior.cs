@@ -1,9 +1,8 @@
-using GameGuild.Common.Domain;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 
 
-namespace GameGuild.Common.Application.Behaviors;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Caching behavior for read operations (queries) to improve performance
@@ -52,7 +51,7 @@ public class CachingBehavior<TRequest, TResponse>(IMemoryCache cache, ILogger<Ca
     if (response is Result result) return result.IsSuccess;
 
     // For Result<T> pattern, only cache successful results
-    if (!response.GetType().IsGenericType || response.GetType().GetGenericTypeDefinition() != typeof(Domain.Result<>)) return true;
+    if (!response.GetType().IsGenericType || response.GetType().GetGenericTypeDefinition() != typeof(Result<>)) return true;
 
     var isSuccessProperty = response.GetType().GetProperty("IsSuccess");
 

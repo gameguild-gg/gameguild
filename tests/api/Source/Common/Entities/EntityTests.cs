@@ -1,7 +1,7 @@
-using GameGuild.Common.Entities;
-using GameGuild.Data;
+using GameGuild.Common;
+using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
-using UserModel = GameGuild.Modules.Users.Models.User;
+using UserModel = GameGuild.Modules.Users.User;
 
 
 namespace GameGuild.API.Tests.Common.Entities;

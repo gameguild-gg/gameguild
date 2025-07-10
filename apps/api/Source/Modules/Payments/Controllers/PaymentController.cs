@@ -1,5 +1,4 @@
-using GameGuild.Common.Application.Attributes;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using GameGuild.Modules.Payments.Models;
 using GameGuild.Modules.Payments.Services;
 using GameGuild.Modules.Permissions.Models;
@@ -21,7 +20,7 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
   public async Task<ActionResult<IEnumerable<UserFinancialMethod>>> GetMyPaymentMethods() {
     var userIdClaim = User.FindFirst("sub")?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized(new { message = "User ID not found in token" }); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
     var paymentMethods = await paymentService.GetUserPaymentMethodsAsync(userId);
 
@@ -35,9 +34,9 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
   public async Task<ActionResult<UserFinancialMethod>> AddPaymentMethod([FromBody] CreatePaymentMethodDto createDto) {
     var userIdClaim = User.FindFirst("sub")?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized(new { message = "User ID not found in token" }); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var paymentMethod = await paymentService.CreatePaymentMethodAsync(userId, createDto);
 
@@ -51,11 +50,11 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
   public async Task<ActionResult<UserFinancialMethod>> GetPaymentMethod(Guid id) {
     var userIdClaim = User.FindFirst("sub")?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized(new { message = "User ID not found in token" }); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
     var paymentMethod = await paymentService.GetPaymentMethodByIdAsync(id, userId);
 
-    if (paymentMethod == null) { return NotFound(); }
+    if (paymentMethod == null) return NotFound();
 
     return Ok(paymentMethod);
   }
@@ -67,11 +66,11 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
   public async Task<ActionResult> DeletePaymentMethod(Guid id) {
     var userIdClaim = User.FindFirst("sub")?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized(new { message = "User ID not found in token" }); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
     var result = await paymentService.DeletePaymentMethodAsync(id, userId);
 
-    if (!result) { return NotFound(); }
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -88,7 +87,7 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
   ) {
     var userIdClaim = User.FindFirst("sub")?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized(new { message = "User ID not found in token" }); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
     var transactions = await paymentService.GetUserTransactionsAsync(userId, skip, take, type, status);
 
@@ -102,11 +101,11 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
   public async Task<ActionResult<FinancialTransaction>> GetTransaction(Guid id) {
     var userIdClaim = User.FindFirst("sub")?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized(new { message = "User ID not found in token" }); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
     var transaction = await paymentService.GetTransactionByIdAsync(id, userId);
 
-    if (transaction == null) { return NotFound(); }
+    if (transaction == null) return NotFound();
 
     return Ok(transaction);
   }
@@ -118,9 +117,9 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
   public async Task<ActionResult<FinancialTransaction>> CreateTransaction([FromBody] CreateTransactionDto createDto) {
     var userIdClaim = User.FindFirst("sub")?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized(new { message = "User ID not found in token" }); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var transaction = await paymentService.CreateTransactionAsync(userId, createDto);
 
@@ -134,13 +133,13 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
   public async Task<ActionResult<FinancialTransaction>> ProcessPayment(Guid id, [FromBody] ProcessPaymentDto processDto) {
     var userIdClaim = User.FindFirst("sub")?.Value;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { return Unauthorized(new { message = "User ID not found in token" }); }
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var transaction = await paymentService.ProcessPaymentAsync(id, userId, processDto);
 
-    if (transaction == null) { return NotFound(); }
+    if (transaction == null) return NotFound();
 
     return Ok(transaction);
   }

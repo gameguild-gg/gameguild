@@ -1,7 +1,7 @@
+using GameGuild.Database;
 using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Data;
 using GameGuild.Modules.Projects.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 

@@ -1,6 +1,6 @@
-using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Projects.Services;
-using GameGuild.Modules.Users.GraphQL;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Projects.GraphQL;

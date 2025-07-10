@@ -1,7 +1,7 @@
 using System.ComponentModel;
 
 
-namespace GameGuild.Common.Enums;
+namespace GameGuild.Common;
 
 public enum VerificationMethod {
   [Description("Certificate can be verified using a unique code")]

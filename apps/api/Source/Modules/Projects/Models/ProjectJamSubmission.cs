@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Modules.GameJams.Models;
-using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -15,7 +15,7 @@ namespace GameGuild.Modules.Projects.Models;
 [Index(nameof(JamId), Name = "IX_ProjectJamSubmissions_Jam")]
 [Index(nameof(SubmittedAt), Name = "IX_ProjectJamSubmissions_Date")]
 [Index(nameof(FinalScore), Name = "IX_ProjectJamSubmissions_Score")]
-public class ProjectJamSubmission : ResourceBase {
+public class ProjectJamSubmission : Resource {
   /// <summary>
   /// Project being submitted
   /// </summary>

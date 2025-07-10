@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using GameGuild.Modules.Certificates.Models;
-using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Feedbacks.Models;
 using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tags.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

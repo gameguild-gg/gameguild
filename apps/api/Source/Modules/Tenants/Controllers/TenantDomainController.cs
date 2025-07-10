@@ -1,13 +1,10 @@
-using GameGuild.Common.Application.Attributes;
+using GameGuild.Common;
 using GameGuild.Modules.Authentication.Dtos;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Tenants.Dtos;
-using GameGuild.Modules.Tenants.Models;
-using GameGuild.Modules.Tenants.Services;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Modules.Tenants.Controllers;
+namespace GameGuild.Modules.Tenants;
 
 [ApiController]
 [Route("api/tenant-domains")]
