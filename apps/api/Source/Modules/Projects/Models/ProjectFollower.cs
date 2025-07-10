@@ -5,7 +5,7 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Projects.Models;
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// Represents a user following a project

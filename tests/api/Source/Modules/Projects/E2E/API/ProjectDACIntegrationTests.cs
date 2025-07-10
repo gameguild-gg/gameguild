@@ -1,7 +1,7 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Projects.Models;
+using GameGuild.Modules.Projects;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 

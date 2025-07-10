@@ -1,11 +1,10 @@
 using GameGuild.Database;
-using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Modules.Projects.Models;
+using GameGuild.Modules.Projects;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.TestingLab.GraphQL;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary>
 /// Resolvers for TestingRequest GraphQL type

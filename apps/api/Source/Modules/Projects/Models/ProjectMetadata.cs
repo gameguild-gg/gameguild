@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
 
-namespace GameGuild.Modules.Projects.Models;
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// Stores statistics and metadata for a project.

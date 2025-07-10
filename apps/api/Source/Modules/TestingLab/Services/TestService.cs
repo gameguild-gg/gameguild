@@ -1,9 +1,8 @@
 using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Modules.TestingLab.Models;
 
 
-namespace GameGuild.Modules.TestingLab.Services;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary>
 /// Service implementation for Testing operations

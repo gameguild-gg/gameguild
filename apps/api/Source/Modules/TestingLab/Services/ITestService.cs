@@ -1,7 +1,4 @@
-using GameGuild.Modules.TestingLab.Models;
-
-
-namespace GameGuild.Modules.TestingLab.Services;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary>
 /// Service interface for Testing operations

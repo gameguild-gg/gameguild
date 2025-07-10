@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Modules.TestingLab.Models;
 
 
-namespace GameGuild.Modules.TestingLab.Dtos {
+namespace GameGuild.Modules.TestingLab {
   public class CreateTestingRequestDto {
     [Required] public Guid ProjectVersionId { get; set; }
 

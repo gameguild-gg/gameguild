@@ -1,8 +1,4 @@
-using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Modules.TestingLab.Services;
-
-
-namespace GameGuild.Modules.TestingLab.GraphQL;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary>
 /// GraphQL queries for TestingLab module

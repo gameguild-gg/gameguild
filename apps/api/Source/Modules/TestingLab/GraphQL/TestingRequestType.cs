@@ -1,9 +1,8 @@
-using GameGuild.Modules.Projects.Models;
-using GameGuild.Modules.TestingLab.Models;
+using GameGuild.Modules.Projects;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.TestingLab.GraphQL;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary>
 /// GraphQL type definition for TestingRequest entity

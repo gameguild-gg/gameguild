@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.TestingLab.Models {
+namespace GameGuild.Modules.TestingLab {
   public class TestingLocation : Entity {
     [Required] [MaxLength(255)] public string Name { get; set; } = string.Empty;
 
