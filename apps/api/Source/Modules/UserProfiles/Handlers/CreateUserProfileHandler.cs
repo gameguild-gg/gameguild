@@ -30,7 +30,7 @@ public class CreateUserProfileHandler(
             FamilyName = request.FamilyName,
             DisplayName = request.DisplayName,
             Title = request.Title ?? string.Empty,
-            Description = request.Description
+            Description = request.Description,
         };
 
         context.Resources.Add(userProfile);
@@ -43,7 +43,7 @@ public class CreateUserProfileHandler(
         {
             UserProfileId = userProfile.Id,
             UserId = request.UserId,
-            CreatedAt = userProfile.CreatedAt
+            CreatedAt = userProfile.CreatedAt,
         }, cancellationToken);
 
         return userProfile;

@@ -30,7 +30,7 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
             Skip = skip,
             Take = take,
             SearchTerm = searchTerm,
-            TenantId = tenantId
+            TenantId = tenantId,
         };
 
         var userProfiles = await mediator.Send(query);
@@ -62,7 +62,7 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
         var query = new GetUserProfileByIdQuery
         {
             UserProfileId = id,
-            IncludeDeleted = includeDeleted
+            IncludeDeleted = includeDeleted,
         };
 
         var userProfile = await mediator.Send(query);
@@ -95,7 +95,7 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
         var query = new GetUserProfileByUserIdQuery
         {
             UserId = userId,
-            IncludeDeleted = includeDeleted
+            IncludeDeleted = includeDeleted,
         };
 
         var userProfile = await mediator.Send(query);
@@ -135,7 +135,7 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
             Title = createDto.Title,
             Description = createDto.Description,
             UserId = createDto.UserId ?? Guid.NewGuid(), // Should be provided in DTO
-            TenantId = createDto.TenantId
+            TenantId = createDto.TenantId,
         };
 
         var userProfile = await mediator.Send(command);
@@ -177,7 +177,7 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
             DisplayName = updateDto.DisplayName,
             Title = updateDto.Title,
             Description = updateDto.Description,
-            ExpectedVersion = ifMatch
+            ExpectedVersion = ifMatch,
         };
 
         try
@@ -220,7 +220,7 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
         var command = new DeleteUserProfileCommand
         {
             UserProfileId = id,
-            SoftDelete = !permanent
+            SoftDelete = !permanent,
         };
 
         var result = await mediator.Send(command);
@@ -237,7 +237,7 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
     {
         var command = new RestoreUserProfileCommand
         {
-            UserProfileId = id
+            UserProfileId = id,
         };
 
         var result = await mediator.Send(command);

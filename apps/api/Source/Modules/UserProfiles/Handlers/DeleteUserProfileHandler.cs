@@ -42,7 +42,7 @@ public class DeleteUserProfileHandler(
             UserProfileId = userProfile.Id,
             UserId = userProfile.Id, // Assuming 1:1 relationship
             DeletedAt = DateTime.UtcNow,
-            SoftDelete = request.SoftDelete
+            SoftDelete = request.SoftDelete,
         }, cancellationToken);
 
         return true;
@@ -75,7 +75,7 @@ public class RestoreUserProfileHandler(
         {
             UserProfileId = userProfile.Id,
             UserId = userProfile.Id,
-            RestoredAt = DateTime.UtcNow
+            RestoredAt = DateTime.UtcNow,
         }, cancellationToken);
 
         return true;

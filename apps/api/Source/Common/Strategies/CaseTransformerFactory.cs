@@ -43,7 +43,7 @@ public static class CaseTransformerFactory
             Type t when t == typeof(KebabCaseTransformer) => (T)(object)Kebab,
             Type t when t == typeof(SnakeCaseTransformer) => (T)(object)Snake,
             Type t when t == typeof(SlugCaseTransformer) => (T)(object)Slug,
-            _ => throw new NotSupportedException($"Transformer type {typeof(T).Name} is not supported.")
+            _ => throw new NotSupportedException($"Transformer type {typeof(T).Name} is not supported."),
         };
     }
 
@@ -60,7 +60,7 @@ public static class CaseTransformerFactory
             CaseType.Kebab => Kebab,
             CaseType.Snake => Snake,
             CaseType.Slug => Slug,
-            _ => throw new ArgumentOutOfRangeException(nameof(caseType), caseType, "Unsupported case type.")
+            _ => throw new ArgumentOutOfRangeException(nameof(caseType), caseType, "Unsupported case type."),
         };
     }
 
@@ -108,5 +108,5 @@ public enum CaseType
     /// <summary>
     /// slug format (URL-friendly lowercase with hyphens).
     /// </summary>
-    Slug
+    Slug,
 }

@@ -167,7 +167,7 @@ public class EntityTests {
     // Arrange
     var user = new UserModel {
       // Manually set to empty GUID to test the IsNew logic
-      Id = Guid.Empty,
+      Id = Guid.Empty
     };
 
     // Act & Assert

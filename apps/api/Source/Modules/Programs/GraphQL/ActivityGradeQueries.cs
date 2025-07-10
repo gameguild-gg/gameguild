@@ -130,7 +130,7 @@ public class ActivityGradeQueries {
       AverageGrade = statistics.AverageGrade,
       MinGrade = statistics.MinGrade,
       MaxGrade = statistics.MaxGrade,
-      PassingRate = statistics.PassingRate
+      PassingRate = statistics.PassingRate,
     };
   }
 }
