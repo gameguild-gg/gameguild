@@ -8,10 +8,8 @@ namespace GameGuild.Modules.UserProfiles.Queries;
 /// <summary>
 /// Query to get user profile by user ID
 /// </summary>
-public class GetUserProfileByUserIdQuery : IQuery<GameGuild.Common.Result<UserProfile?>>
-{
-    [Required]
-    public Guid UserId { get; set; }
+public class GetUserProfileByUserIdQuery : IQuery<GameGuild.Common.Result<UserProfile?>> {
+  [Required] public Guid UserId { get; set; }
 
-    public bool IncludeDeleted { get; set; } = false;
+  public bool IncludeDeleted { get; set; } = false;
 }

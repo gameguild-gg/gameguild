@@ -18,3 +18,4 @@ public class UpdateUserProfileDto {
 
   public Guid? TenantId { get; set; }
 }
+
