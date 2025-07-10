@@ -179,7 +179,7 @@ public class ActivityGradeService(ApplicationDbContext context) : IActivityGrade
                               .Select(ag => ag.Grade)
                               .ToListAsync();
 
-    if (!grades.Any())
+    if (grades.Count == 0)
       return new GradeStatistics {
         TotalGrades = 0,
         AverageGrade = 0,

@@ -114,7 +114,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
     return Ok(dtos);
   } // GET: api/tenant-domains/user-groups/{id}
 
-  [HttpGet("user-groups/{id}")]
+  [HttpGet("user-groups/{id:guid}")]
   [RequireResourcePermission<TenantUserGroup>(PermissionType.Read)]
   public async Task<ActionResult<TenantUserGroupDto>> GetUserGroup(Guid id) {
     var userGroup = await tenantDomainService.GetUserGroupByIdAsync(id);
@@ -139,7 +139,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
     catch (Exception ex) { return BadRequest($"Error creating user group: {ex.Message}"); }
   } // PUT: api/tenant-domains/user-groups/{id}
 
-  [HttpPut("user-groups/{id}")]
+  [HttpPut("user-groups/{id:guid}")]
   [RequireResourcePermission<TenantUserGroup>(PermissionType.Edit)]
   public async Task<ActionResult<TenantUserGroupDto>> UpdateUserGroup(
     Guid id,
@@ -216,7 +216,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   }
 
   // GET: api/tenant-domains/user-groups/{groupId}/members
-  [HttpGet("user-groups/{groupId}/members")]
+  [HttpGet("user-groups/{groupId:guid}/members")]
   [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TenantUserGroupMembership>>> GetGroupMembers(Guid groupId) {
     var members = await tenantDomainService.GetGroupMembersAsync(groupId);
@@ -224,7 +224,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
     return Ok(members);
   } // GET: api/tenant-domains/users/{userId}/groups
 
-  [HttpGet("users/{userId}/groups")]
+  [HttpGet("users/{userId:guid}/groups")]
   [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TenantUserGroupDto>>> GetUserGroups(Guid userId) {
     var userGroups = await tenantDomainService.GetUserGroupsForUserAsync(userId);
@@ -234,7 +234,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   }
 
   // GET: api/tenant-domains/groups/{groupId}/users  
-  [HttpGet("groups/{groupId}/users")]
+  [HttpGet("groups/{groupId:guid}/users")]
   [RequireResourcePermission<TenantUserGroupMembership>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<UserDto>>> GetGroupUsers(Guid groupId) {
     var users = await tenantDomainService.GetUsersInGroupAsync(groupId);
@@ -281,7 +281,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
     try {
       int assignedCount;
 
-      if (request.UserEmails != null && request.UserEmails.Any()) {
+      if (request.UserEmails != null && request.UserEmails.Count != 0) {
         // Auto-assign specific users
         var memberships = new List<TenantUserGroupMembership>();
 

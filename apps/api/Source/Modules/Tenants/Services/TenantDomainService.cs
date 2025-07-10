@@ -306,7 +306,7 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
     var tenantDomains = await GetDomainsByTenantAsync(tenantId);
     var domainStrings = tenantDomains.Select(d => d.FullDomainName).ToList();
 
-    if (!domainStrings.Any()) return 0;
+    if (domainStrings.Count == 0) return 0;
 
     var users = await context.Users
                              .Where(u => u.DeletedAt == null && domainStrings.Any(domain => u.Email.ToLower().EndsWith("@" + domain)))

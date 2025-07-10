@@ -31,7 +31,7 @@ public class UserProfilesController(IMediator mediator) : ControllerBase {
 
     var userProfiles = await mediator.Send(query);
 
-    if (!userProfiles.IsSuccess) { return BadRequest(userProfiles.Error); }
+    if (!userProfiles.IsSuccess) return BadRequest(userProfiles.Error);
 
     var userProfileDtos = userProfiles.Value.Select(up => new UserProfileResponseDto {
         Id = up.Id,
@@ -60,9 +60,9 @@ public class UserProfilesController(IMediator mediator) : ControllerBase {
 
     var userProfile = await mediator.Send(query);
 
-    if (!userProfile.IsSuccess) { return BadRequest(userProfile.Error); }
+    if (!userProfile.IsSuccess) return BadRequest(userProfile.Error);
 
-    if (userProfile.Value == null) { return NotFound(); }
+    if (userProfile.Value == null) return NotFound();
 
     var userProfileDto = new UserProfileResponseDto {
       Id = userProfile.Value.Id,
@@ -90,9 +90,9 @@ public class UserProfilesController(IMediator mediator) : ControllerBase {
 
     var userProfile = await mediator.Send(query);
 
-    if (!userProfile.IsSuccess) { return BadRequest(userProfile.Error); }
+    if (!userProfile.IsSuccess) return BadRequest(userProfile.Error);
 
-    if (userProfile.Value == null) { return NotFound(); }
+    if (userProfile.Value == null) return NotFound();
 
     var userProfileDto = new UserProfileResponseDto {
       Id = userProfile.Value.Id,
@@ -130,7 +130,7 @@ public class UserProfilesController(IMediator mediator) : ControllerBase {
 
     var userProfile = await mediator.Send(command);
 
-    if (!userProfile.IsSuccess) { return BadRequest(userProfile.Error); }
+    if (!userProfile.IsSuccess) return BadRequest(userProfile.Error);
 
     var userProfileDto = new UserProfileResponseDto {
       Id = userProfile.Value.Id,
@@ -173,7 +173,7 @@ public class UserProfilesController(IMediator mediator) : ControllerBase {
     try {
       var userProfile = await mediator.Send(command);
 
-      if (!userProfile.IsSuccess) { return BadRequest(userProfile.Error); }
+      if (!userProfile.IsSuccess) return BadRequest(userProfile.Error);
 
       var userProfileDto = new UserProfileResponseDto {
         Id = userProfile.Value.Id,
@@ -204,9 +204,9 @@ public class UserProfilesController(IMediator mediator) : ControllerBase {
 
     var result = await mediator.Send(command);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
-    if (!result.Value) { return NotFound(); }
+    if (!result.Value) return NotFound();
 
     return NoContent();
   }
@@ -220,9 +220,9 @@ public class UserProfilesController(IMediator mediator) : ControllerBase {
 
     var result = await mediator.Send(command);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
-    if (!result.Value) { return NotFound(); }
+    if (!result.Value) return NotFound();
 
     return NoContent();
   }

@@ -13,12 +13,12 @@ public class GetUserStatisticsHandler(ApplicationDbContext context) : IRequestHa
     var query = context.Users.AsQueryable();
 
     // Apply date filters if provided
-    if (request.FromDate.HasValue) { query = query.Where(u => u.CreatedAt >= request.FromDate.Value); }
+    if (request.FromDate.HasValue) query = query.Where(u => u.CreatedAt >= request.FromDate.Value);
 
-    if (request.ToDate.HasValue) { query = query.Where(u => u.CreatedAt <= request.ToDate.Value); }
+    if (request.ToDate.HasValue) query = query.Where(u => u.CreatedAt <= request.ToDate.Value);
 
     // Include deleted users if requested
-    if (request.IncludeDeleted) { query = query.IgnoreQueryFilters(); }
+    if (request.IncludeDeleted) query = query.IgnoreQueryFilters();
 
     var now = DateTime.UtcNow;
     var today = now.Date;

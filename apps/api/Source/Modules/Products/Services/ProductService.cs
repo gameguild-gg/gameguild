@@ -151,7 +151,7 @@ public class ProductService(ApplicationDbContext context) : IProductService {
 
     var bundleItemIds = bundle.GetBundleItemIds();
 
-    if (!bundleItemIds.Any()) return [];
+    if (bundleItemIds.Count == 0) return [];
 
     return await context.Products.Include(p => p.Creator)
                         .Include(p => p.ProductPricings)

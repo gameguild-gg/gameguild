@@ -8,20 +8,16 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Handler for bulk restoring soft-deleted user profiles
 /// </summary>
-public class BulkRestoreUserProfilesHandler(ApplicationDbContext context, ILogger<BulkRestoreUserProfilesHandler> logger)
-  : ICommandHandler<BulkRestoreUserProfilesCommand, Common.Result<int>> {
+public class BulkRestoreUserProfilesHandler(ApplicationDbContext context, ILogger<BulkRestoreUserProfilesHandler> logger) : ICommandHandler<BulkRestoreUserProfilesCommand, Common.Result<int>> {
   public async Task<Common.Result<int>> Handle(BulkRestoreUserProfilesCommand request, CancellationToken cancellationToken) {
     try {
       var userProfileIds = request.UserProfileIds.ToList();
 
-      if (!userProfileIds.Any()) { return Result.Success(0); }
+      if (userProfileIds.Count == 0) return Result.Success(0);
 
-      var userProfiles = await context.Resources.OfType<UserProfile>()
-                                      .IgnoreQueryFilters()
-                                      .Where(up => userProfileIds.Contains(up.Id) && up.DeletedAt != null)
-                                      .ToListAsync(cancellationToken);
+      var userProfiles = await context.Resources.OfType<UserProfile>().IgnoreQueryFilters().Where(up => userProfileIds.Contains(up.Id) && up.DeletedAt != null).ToListAsync(cancellationToken);
 
-      if (!userProfiles.Any()) {
+      if (userProfiles.Count == 0) {
         logger.LogWarning(
           "No deleted user profiles found for bulk restoration with IDs: {UserProfileIds}",
           string.Join(", ", userProfileIds)

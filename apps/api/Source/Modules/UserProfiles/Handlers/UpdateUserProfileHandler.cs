@@ -8,21 +8,15 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Handler for updating user profile with business logic and optimistic concurrency control
 /// </summary>
-public class UpdateUserProfileHandler(
-  ApplicationDbContext context,
-  ILogger<UpdateUserProfileHandler> logger,
-  IDomainEventPublisher eventPublisher
-) : ICommandHandler<UpdateUserProfileCommand, Common.Result<UserProfile>> {
+public class UpdateUserProfileHandler(ApplicationDbContext context, ILogger<UpdateUserProfileHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<UpdateUserProfileCommand, Common.Result<UserProfile>> {
   public async Task<Common.Result<UserProfile>> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken) {
     try {
-      var userProfile = await context.Resources.OfType<UserProfile>()
-                                     .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
+      var userProfile = await context.Resources.OfType<UserProfile>().FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 
-      if (userProfile == null) {
+      if (userProfile == null)
         return Result.Failure<UserProfile>(
           Common.Error.NotFound("UserProfile.NotFound", $"User profile with ID {request.UserProfileId} not found")
         );
-      }
 
       // Track changes for notification
       var changes = new Dictionary<string, object>();
@@ -54,7 +48,7 @@ public class UpdateUserProfileHandler(
       }
 
       // Only save if there are actual changes
-      if (changes.Any()) {
+      if (changes.Count != 0) {
         // Update timestamps and version
         userProfile.Touch();
         await context.SaveChangesAsync(cancellationToken);

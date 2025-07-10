@@ -639,7 +639,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     var recentFollowers = project.Followers.Count(f => f.FollowedAt >= cutoffDate);
     var recentFeedback = project.Feedbacks.Count(f => f.CreatedAt >= cutoffDate);
     var totalDownloads = project.Releases.Sum(r => r.DownloadCount);
-    var averageRating = project.Feedbacks.Any()
+    var averageRating = project.Feedbacks.Count != 0
                           ? project.Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating)
                           : 0;
 

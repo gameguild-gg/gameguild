@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common;
+using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -12,19 +12,13 @@ namespace GameGuild.Modules.Tenants;
 /// </summary>
 [Table("Tenants")]
 [Index(nameof(Name), IsUnique = true)]
-public class Tenant : Entity {
+public class Tenant : Resource {
   /// <summary>
   /// Name of the tenant
   /// </summary>
   [Required]
   [MaxLength(100)]
   public string Name { get; set; } = string.Empty;
-
-  /// <summary>
-  /// Description of the tenant
-  /// </summary>
-  [MaxLength(500)]
-  public string? Description { get; set; }
 
   /// <summary>
   /// Whether this tenant is currently active
@@ -47,12 +41,6 @@ public class Tenant : Entity {
   /// Default constructor
   /// </summary>
   public Tenant() { }
-
-  /// <summary>
-  /// Constructor for partial initialization
-  /// </summary>
-  /// <param name="partial">Partial tenant data</param>
-  public Tenant(object partial) : base(partial) { }
 
   /// <summary>
   /// Activate the tenant

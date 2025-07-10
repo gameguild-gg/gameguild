@@ -22,16 +22,11 @@ public class DeactivateTenantHandler(
                                 .FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
 
       if (tenant == null)
-      {
         return Result.Failure<bool>(
           Common.Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found")
         );
-      }
 
-      if (!tenant.IsActive)
-      {
-        return Result.Success(true); // Already inactive
-      }
+      if (!tenant.IsActive) return Result.Success(true); // Already inactive
 
       tenant.IsActive = false;
       tenant.Touch();

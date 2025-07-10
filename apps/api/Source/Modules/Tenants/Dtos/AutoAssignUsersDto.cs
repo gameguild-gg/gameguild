@@ -1,16 +1,31 @@
-﻿namespace GameGuild.Modules.Tenants;
+using System.ComponentModel.DataAnnotations;
+
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-/// DTO for auto-assignment request
+/// DTO for auto-assigning multiple users to groups based on domain
 /// </summary>
-public class AutoAssignUsersDto {
-  /// <summary>
-  /// Optional tenant ID to limit auto-assignment to specific tenant
-  /// </summary>
-  public Guid? TenantId { get; set; }
+public class AutoAssignUsersDto
+{
+    /// <summary>
+    /// List of user IDs to auto-assign
+    /// </summary>
+    [MinLength(1, ErrorMessage = "At least one user ID must be provided")]
+    public IEnumerable<Guid>? UserIds { get; set; }
 
-  /// <summary>
-  /// Optional list of user emails to specifically auto-assign
-  /// </summary>
-  public List<string>? UserEmails { get; set; }
+    /// <summary>
+    /// List of user emails to auto-assign
+    /// </summary>
+    [MinLength(1, ErrorMessage = "At least one user email must be provided")]
+    public ICollection<string>? UserEmails { get; set; }
+
+    /// <summary>
+    /// ID of the tenant to auto-assign the users to
+    /// </summary>
+    public Guid? TenantId { get; set; }
+
+    /// <summary>
+    /// Whether to force reassignment even if users are already assigned
+    /// </summary>
+    public bool ForceReassignment { get; set; } = false;
 }

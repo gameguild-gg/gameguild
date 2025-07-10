@@ -173,7 +173,7 @@ public class PaymentService(ApplicationDbContext context) : IPaymentService
             TotalTransactions = transactions.Count,
             SuccessfulTransactions = successfulTransactions.Count,
             FailedTransactions = transactions.Count(t => t.Status == TransactionStatus.Failed),
-            AverageTransactionAmount = successfulTransactions.Any() ? successfulTransactions.Average(t => t.Amount) : 0,
+            AverageTransactionAmount = successfulTransactions.Count != 0 ? successfulTransactions.Average(t => t.Amount) : 0,
             FromDate = fromDate,
             ToDate = toDate,
         };

@@ -9,7 +9,6 @@ namespace GameGuild.Modules.Localization;
 
 /// <summary>
 /// Entity representing supported languages for localization
-/// Mirrors the TypeScript LanguageEntity from the API
 /// </summary>
 [Table("Languages")]
 [Index(nameof(Code), IsUnique = true)]
@@ -20,14 +19,14 @@ public class Language : Entity {
   /// </summary>
   [Required]
   [MaxLength(64)]
-  public string Code { get; set; } = string.Empty;
+  public string Code { get; init; } = string.Empty;
 
   /// <summary>
   /// Display name of the language
   /// </summary>
   [Required]
   [MaxLength(64)]
-  public string Name { get; set; } = string.Empty;
+  public string Name { get; init; } = string.Empty;
 
   /// <summary>
   /// Whether this language is currently active/supported
@@ -37,5 +36,5 @@ public class Language : Entity {
   /// <summary>
   /// Collection of resource localizations in this language
   /// </summary>
-  public virtual ICollection<ResourceLocalization> ResourceLocalizations { get; set; } = new List<ResourceLocalization>();
+  public virtual ICollection<ResourceLocalization> ResourceLocalizations { get; init; } = new List<ResourceLocalization>();
 }

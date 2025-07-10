@@ -3,7 +3,7 @@ using GameGuild.Modules.Users;
 using MediatR;
 
 
-namespace GameGuild.Modules.Tenants;
+namespace GameGuild.Modules.Tenants.GraphQL;
 
 /// <summary>
 /// GraphQL queries for Tenant module using CQRS pattern
@@ -20,12 +20,12 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) { throw new UnauthorizedAccessException("Authentication required"); }
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
 
     var query = new GetAllTenantsQuery(false);
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) { throw new GraphQLException(result.Error.Description); }
+    if (result.IsFailure) throw new GraphQLException(result.Error.ToString());
 
     return result.Value;
   }
@@ -41,12 +41,12 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) { throw new UnauthorizedAccessException("Authentication required"); }
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
 
     var query = new GetTenantByIdQuery(id, false);
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) { throw new GraphQLException(result.Error.Description); }
+    if (result.IsFailure) throw new GraphQLException(result.Error.ToString());
 
     return result.Value;
   }
@@ -62,12 +62,12 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) { throw new UnauthorizedAccessException("Authentication required"); }
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
 
     var query = new GetTenantByNameQuery(name, false);
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) { throw new GraphQLException(result.Error.Description); }
+    if (result.IsFailure) throw new GraphQLException(result.Error.ToString());
 
     return result.Value;
   }
@@ -83,12 +83,12 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) { throw new UnauthorizedAccessException("Authentication required"); }
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
 
     var query = new GetTenantBySlugQuery(slug, false);
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) { throw new GraphQLException(result.Error.Description); }
+    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
 
     return result.Value;
   }
@@ -103,12 +103,12 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) { throw new UnauthorizedAccessException("Authentication required"); }
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
 
     var query = new GetDeletedTenantsQuery();
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) { throw new GraphQLException(result.Error.Description); }
+    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
 
     return result.Value;
   }
@@ -123,12 +123,12 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) { throw new UnauthorizedAccessException("Authentication required"); }
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
 
     var query = new GetActiveTenantsQuery();
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) { throw new GraphQLException(result.Error.Description); }
+    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
 
     return result.Value;
   }
@@ -144,7 +144,7 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) { throw new UnauthorizedAccessException("Authentication required"); }
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
 
     var query = new SearchTenantsQuery(
       input.SearchTerm,
@@ -157,7 +157,7 @@ public class TenantQueries {
     );
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) { throw new GraphQLException(result.Error.Description); }
+    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
 
     return result.Value;
   }
@@ -172,13 +172,14 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) { throw new UnauthorizedAccessException("Authentication required"); }
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
 
     var query = new GetTenantStatisticsQuery();
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) { throw new GraphQLException(result.Error.Description); }
+    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
 
     return result.Value;
   }
+
 }

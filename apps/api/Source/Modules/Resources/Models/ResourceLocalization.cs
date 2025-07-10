@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Resources;
 /// Provides multi-language support for resources
 /// </summary>
 /// todo: field should be the one coming from the resource as a generic origin, and not a plain string. revisit the others entries too, such as resource type.
-public class ResourceLocalization : Entity {
+public sealed class ResourceLocalization : Entity {
   // todo: apply polymorphism
   /// <summary>
   /// Type of the resource being localized
@@ -24,7 +24,7 @@ public class ResourceLocalization : Entity {
   /// Entity Framework will automatically create the LanguageId foreign key
   /// </summary>
   [Required]
-  public virtual Language Language { get; set; } = null!;
+  public Language Language { get; set; } = null!;
 
   /// <summary>
   /// The field name being localized (e.g., 'Title', 'Description', 'Content')

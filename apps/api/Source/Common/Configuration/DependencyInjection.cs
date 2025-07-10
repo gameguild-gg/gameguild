@@ -29,7 +29,7 @@ public static class DependencyInjection {
     // API Documentation
     services.AddEndpointsApiExplorer();
     
-    if (options.EnableSwagger) {
+    if (options.EnableSwagger)
       services.AddSwaggerGen(c => {
           c.SwaggerDoc("v1", new OpenApiInfo { 
             Title = options.ApiTitle, 
@@ -45,12 +45,9 @@ public static class DependencyInjection {
           var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
           var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
 
-          if (File.Exists(xmlPath)) {
-            c.IncludeXmlComments(xmlPath);
-          }
+          if (File.Exists(xmlPath)) c.IncludeXmlComments(xmlPath);
         }
       );
-    }
 
     // Controllers (for backward compatibility with existing REST endpoints)
     services.AddControllers()
@@ -83,23 +80,21 @@ public static class DependencyInjection {
     );
 
     // Health Checks
-    if (options.EnableHealthChecks) {
+    if (options.EnableHealthChecks)
       services.AddHealthChecks()
               .AddCheck("database", () => HealthCheckResult.Healthy(), ["database"]);
-    }
 
     // Response Compression
-    if (options.EnableResponseCompression) {
+    if (options.EnableResponseCompression)
       services.AddResponseCompression(compressionOptions => {
           compressionOptions.EnableForHttps = true;
           compressionOptions.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
           compressionOptions.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
         }
       );
-    }
 
     // Rate Limiting
-    if (options.EnableRateLimiting) {
+    if (options.EnableRateLimiting)
       services.AddRateLimiter(limiterOptions => {
           limiterOptions.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
           limiterOptions.AddFixedWindowLimiter(
@@ -113,7 +108,6 @@ public static class DependencyInjection {
           );
         }
       );
-    }
 
     return services;
   }
@@ -203,25 +197,15 @@ public static class DependencyInjection {
     /// Validates the configuration options
     /// </summary>
     public void Validate() {
-      if (AllowedOrigins == null || AllowedOrigins.Length == 0) {
-        throw new InvalidOperationException("At least one allowed origin must be specified");
-      }
-      
-      if (RateLimitRequests <= 0) {
-        throw new ArgumentOutOfRangeException(nameof(RateLimitRequests), "Rate limit requests must be greater than 0");
-      }
-      
-      if (RateLimitWindow <= TimeSpan.Zero) {
-        throw new ArgumentOutOfRangeException(nameof(RateLimitWindow), "Rate limit window must be greater than zero");
-      }
-      
-      if (string.IsNullOrWhiteSpace(ApiTitle)) {
-        throw new ArgumentException("API title cannot be null or empty", nameof(ApiTitle));
-      }
-      
-      if (string.IsNullOrWhiteSpace(ApiVersion)) {
-        throw new ArgumentException("API version cannot be null or empty", nameof(ApiVersion));
-      }
+      if (AllowedOrigins == null || AllowedOrigins.Length == 0) throw new InvalidOperationException("At least one allowed origin must be specified");
+
+      if (RateLimitRequests <= 0) throw new ArgumentOutOfRangeException(nameof(RateLimitRequests), "Rate limit requests must be greater than 0");
+
+      if (RateLimitWindow <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(RateLimitWindow), "Rate limit window must be greater than zero");
+
+      if (string.IsNullOrWhiteSpace(ApiTitle)) throw new ArgumentException("API title cannot be null or empty", nameof(ApiTitle));
+
+      if (string.IsNullOrWhiteSpace(ApiVersion)) throw new ArgumentException("API version cannot be null or empty", nameof(ApiVersion));
     }
   }
 
@@ -311,12 +295,11 @@ public static class DependencyInjection {
     var registeredCount = 0;
 
     foreach (var handlerInterfaceType in handlerInterfaces) {
-      if (!registrationCache.ContainsKey(handlerInterfaceType)) {
+      if (!registrationCache.ContainsKey(handlerInterfaceType))
         registrationCache[handlerInterfaceType] = allTypes
-          .Where(type => type.GetInterfaces()
-            .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == handlerInterfaceType))
-          .ToArray();
-      }
+                                                  .Where(type => type.GetInterfaces()
+                                                                     .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == handlerInterfaceType))
+                                                  .ToArray();
 
       var implementingTypes = registrationCache[handlerInterfaceType];
       options?.Logger?.LogDebug("Found {Count} implementations for {Interface}", 

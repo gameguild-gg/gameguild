@@ -100,7 +100,7 @@ public class Program : Content {
   }
 
   public decimal AverageRating {
-    get => ProgramRatings.Any() ? ProgramRatings.Average(pr => pr.Rating) : 0;
+    get => ProgramRatings.Count != 0 ? ProgramRatings.Average(pr => pr.Rating) : 0;
   }
 
   public int TotalRatings {

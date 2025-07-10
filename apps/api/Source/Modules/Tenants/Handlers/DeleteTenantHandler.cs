@@ -22,11 +22,9 @@ public class DeleteTenantHandler(
                                 .FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
 
       if (tenant == null)
-      {
         return Result.Failure<bool>(
           Common.Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found")
         );
-      }
 
       tenant.SoftDelete();
       await context.SaveChangesAsync(cancellationToken);

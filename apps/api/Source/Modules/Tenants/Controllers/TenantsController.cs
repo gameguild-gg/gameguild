@@ -34,25 +34,13 @@ public class TenantsController(
   /// <param name="includeDeleted">Include soft-deleted tenants</param>
   /// <returns>List of tenants</returns>
   [HttpGet]
-  public async Task<ActionResult<IEnumerable<TenantResponseDtoV2>>> GetAllTenants([FromQuery] bool includeDeleted = false) {
+  public async Task<ActionResult<IEnumerable<Tenant>>> GetAllTenants([FromQuery] bool includeDeleted = false) {
     var query = new GetAllTenantsQuery(includeDeleted);
     var result = await getAllTenantsHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
-    var tenantDtos = result.Value.Select(t => new TenantResponseDtoV2 {
-      Id = t.Id,
-      Name = t.Name,
-      Description = t.Description,
-      IsActive = t.IsActive,
-      Slug = t.Slug,
-      CreatedAt = t.CreatedAt,
-      UpdatedAt = t.UpdatedAt,
-      DeletedAt = t.DeletedAt,
-      IsDeleted = t.DeletedAt != null
-    });
-
-    return Ok(tenantDtos);
+    return Ok(result.Value);
   }
 
   /// <summary>
@@ -62,27 +50,13 @@ public class TenantsController(
   /// <param name="includeDeleted">Include soft-deleted tenants</param>
   /// <returns>Tenant details</returns>
   [HttpGet("{id:guid}")]
-  public async Task<ActionResult<TenantResponseDtoV2>> GetTenantById(Guid id, [FromQuery] bool includeDeleted = false) {
+  public async Task<ActionResult<Tenant>> GetTenantById(Guid id, [FromQuery] bool includeDeleted = false) {
     var query = new GetTenantByIdQuery(id, includeDeleted);
     var result = await getTenantByIdHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
-    if (result.Value == null) { return NotFound($"Tenant with ID {id} not found"); }
-
-    var tenantDto = new TenantResponseDtoV2 {
-      Id = result.Value.Id,
-      Name = result.Value.Name,
-      Description = result.Value.Description,
-      IsActive = result.Value.IsActive,
-      Slug = result.Value.Slug,
-      CreatedAt = result.Value.CreatedAt,
-      UpdatedAt = result.Value.UpdatedAt,
-      DeletedAt = result.Value.DeletedAt,
-      IsDeleted = result.Value.DeletedAt != null
-    };
-
-    return Ok(tenantDto);
+    return Ok(result.Value);
   }
 
   /// <summary>
@@ -96,9 +70,7 @@ public class TenantsController(
     var query = new GetTenantByNameQuery(name, includeDeleted);
     var result = await getTenantByNameHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
-
-    if (result.Value == null) { return NotFound($"Tenant with name '{name}' not found"); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return Ok(result.Value);
   }
@@ -114,9 +86,7 @@ public class TenantsController(
     var query = new GetTenantBySlugQuery(slug, includeDeleted);
     var result = await getTenantBySlugHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
-
-    if (result.Value == null) { return NotFound($"Tenant with slug '{slug}' not found"); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return Ok(result.Value);
   }
@@ -130,7 +100,7 @@ public class TenantsController(
     var query = new GetDeletedTenantsQuery();
     var result = await getDeletedTenantsHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return Ok(result.Value);
   }
@@ -144,7 +114,7 @@ public class TenantsController(
     var query = new GetActiveTenantsQuery();
     var result = await getActiveTenantsHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return Ok(result.Value);
   }
@@ -173,7 +143,7 @@ public class TenantsController(
     var command = new SearchTenantsCommand(searchTerm, isActive, includeDeleted, sortBy, sortDescending, limit, offset);
     var result = await searchTenantsHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return Ok(result.Value);
   }
@@ -187,7 +157,7 @@ public class TenantsController(
     var query = new GetTenantStatisticsQuery();
     var result = await getTenantStatisticsHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return Ok(result.Value);
   }
@@ -195,16 +165,16 @@ public class TenantsController(
   /// <summary>
   /// Create a new tenant
   /// </summary>
-  /// <param name="request">Tenant creation request</param>
+  /// <param name="dto">Tenant creation DTO</param>
   /// <returns>Created tenant</returns>
   [HttpPost]
-  public async Task<ActionResult<Tenant>> CreateTenant([FromBody] CreateTenantRequest request) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+  public async Task<ActionResult<Tenant>> CreateTenant([FromBody] CreateTenantDto dto) {
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var command = new CreateTenantCommand(request.Name, request.Description, request.IsActive, request.Slug);
+    var command = new CreateTenantCommand(dto.Name, dto.Description, dto.IsActive, dto.Slug);
     var result = await createTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return CreatedAtAction(nameof(GetTenantById), new { id = result.Value.Id }, result.Value);
   }
@@ -213,16 +183,16 @@ public class TenantsController(
   /// Update an existing tenant
   /// </summary>
   /// <param name="id">Tenant ID</param>
-  /// <param name="request">Tenant update request</param>
+  /// <param name="dto">Tenant update DTO</param>
   /// <returns>Updated tenant</returns>
   [HttpPut("{id:guid}")]
-  public async Task<ActionResult<Tenant>> UpdateTenant(Guid id, [FromBody] UpdateTenantRequest request) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+  public async Task<ActionResult<Tenant>> UpdateTenant(Guid id, [FromBody] UpdateTenantDto dto) {
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var command = new UpdateTenantCommand(id, request.Name, request.Description, request.IsActive, request.Slug);
+    var command = new UpdateTenantCommand(id, dto.Name, dto.Description, dto.IsActive, dto.Slug);
     var result = await updateTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return Ok(result.Value);
   }
@@ -237,7 +207,7 @@ public class TenantsController(
     var command = new DeleteTenantCommand(id);
     var result = await deleteTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return NoContent();
   }
@@ -252,7 +222,7 @@ public class TenantsController(
     var command = new RestoreTenantCommand(id);
     var result = await restoreTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return NoContent();
   }
@@ -267,7 +237,7 @@ public class TenantsController(
     var command = new HardDeleteTenantCommand(id);
     var result = await hardDeleteTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return NoContent();
   }
@@ -282,7 +252,7 @@ public class TenantsController(
     var command = new ActivateTenantCommand(id);
     var result = await activateTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return NoContent();
   }
@@ -297,7 +267,7 @@ public class TenantsController(
     var command = new DeactivateTenantCommand(id);
     var result = await deactivateTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return NoContent();
   }
@@ -305,16 +275,16 @@ public class TenantsController(
   /// <summary>
   /// Bulk delete multiple tenants
   /// </summary>
-  /// <param name="request">Bulk delete request</param>
+  /// <param name="dto">Bulk delete DTO</param>
   /// <returns>Number of deleted tenants</returns>
   [HttpPost("bulk-delete")]
-  public async Task<ActionResult<int>> BulkDeleteTenants([FromBody] BulkDeleteTenantsRequest request) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+  public async Task<ActionResult<int>> BulkDeleteTenants([FromBody] BulkDeleteTenantsDto dto) {
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var command = new BulkDeleteTenantsCommand(request.TenantIds);
+    var command = new BulkDeleteTenantsCommand(dto.TenantIds);
     var result = await bulkDeleteTenantsHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return Ok(result.Value);
   }
@@ -322,16 +292,16 @@ public class TenantsController(
   /// <summary>
   /// Bulk restore multiple tenants
   /// </summary>
-  /// <param name="request">Bulk restore request</param>
+  /// <param name="dto">Bulk restore DTO</param>
   /// <returns>Number of restored tenants</returns>
   [HttpPost("bulk-restore")]
-  public async Task<ActionResult<int>> BulkRestoreTenants([FromBody] BulkRestoreTenantsRequest request) {
-    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+  public async Task<ActionResult<int>> BulkRestoreTenants([FromBody] BulkRestoreTenantsDto dto) {
+    if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var command = new BulkRestoreTenantsCommand(request.TenantIds);
+    var command = new BulkRestoreTenantsCommand(dto.TenantIds);
     var result = await bulkRestoreTenantsHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) { return BadRequest(result.Error); }
+    if (!result.IsSuccess) return BadRequest(result.Error);
 
     return Ok(result.Value);
   }

@@ -25,7 +25,7 @@ public class TenantAuthService(
     var availableTenants = tenantPermissions.Where(tp => tp.IsValid).ToList();
 
     // If no tenants available, return original result
-    if (!availableTenants.Any()) return authResult;
+    if (availableTenants.Count == 0) return authResult;
 
     // Use specified tenant ID or the first available tenant
     Guid selectedTenantId;

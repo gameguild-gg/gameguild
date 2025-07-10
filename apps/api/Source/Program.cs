@@ -7,6 +7,7 @@ using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Programs.GraphQL;
 using GameGuild.Modules.Projects.GraphQL;
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Tenants.GraphQL;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -149,7 +150,7 @@ builder.Services.AddGraphQLServer()
        .AddMutationType<Mutation>()
        .AddDACAuthorization() // Add 3-layer DAC authorization
        .AddTypeExtension<TenantQueries>()
-       .AddTypeExtension<TenantMutations>()
+       // .AddTypeExtension<GameGuild.Modules.Tenants.GraphQL.TenantMutations>()
        .AddTypeExtension<UserProfileQueries>()
        .AddTypeExtension<UserProfileMutations>()
        .AddTypeExtension<AuthQueries>()
