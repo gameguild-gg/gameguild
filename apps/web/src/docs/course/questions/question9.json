@@ -2,17 +2,9 @@
   "id": 9,
   "format_ver": "1.0.0",
   "type": "code",
-  "rules": [
-    "inputs: n",
-    "outputs: y",
-    "chars: 3000",
-    "files: 10"
-  ],
+  "rules": ["inputs: n", "outputs: y", "chars: 3000", "files: 10"],
   "status": 1,
-  "subject": [
-    "multi-language",
-    "file organization"
-  ],
+  "subject": ["multi-language", "file organization"],
   "title": "Organized Code Samples",
   "description": "This question demonstrates file organization with containers.",
   "initialCode": {
@@ -46,41 +38,18 @@
   ],
   "inputs": {},
   "outputs": {
-    "/javascript/hello.js": [
-      "Hello, World!"
-    ],
-    "/javascript/utils/math.js": [
-      "5"
-    ],
-    "/python/hello.py": [
-      "Hello, World!"
-    ],
-    "/python/utils/math.py": [
-      "5"
-    ],
-    "main.js": [
-      "Result: 12"
-    ]
+    "/javascript/hello.js": ["Hello, World!"],
+    "/javascript/utils/math.js": ["5"],
+    "/python/hello.py": ["Hello, World!"],
+    "/python/utils/math.py": ["5"],
+    "main.js": ["Result: 12"]
   },
   "outputsScore": {
-    "/javascript/hello.js": [
-      2
-    ],
-    "/javascript/utils/math.js": [
-      2
-    ],
-    "/python/hello.py": [
-      2
-    ],
-    "/python/utils/math.py": [
-      2
-    ],
-    "main.js": [
-      2
-    ]
+    "/javascript/hello.js": [2],
+    "/javascript/utils/math.js": [2],
+    "/python/hello.py": [2],
+    "/python/utils/math.py": [2],
+    "main.js": [2]
   },
-  "score": [
-    10,
-    0
-  ]
+  "score": [10, 0]
 }

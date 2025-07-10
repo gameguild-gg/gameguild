@@ -74,7 +74,7 @@ class TenantDomainApiClient {
   async getDomains(tenantId?: string | null): Promise<TenantDomain[]> {
     let endpoint = '/api/tenant-domains';
     // Normalize tenantId: treat 'default-tenant-id' and '' as null
-    const normalizedTenantId = (!tenantId || tenantId === 'default-tenant-id' || tenantId === '') ? null : tenantId;
+    const normalizedTenantId = !tenantId || tenantId === 'default-tenant-id' || tenantId === '' ? null : tenantId;
     console.log('[TenantDomainApiClient] getDomains called with tenantId:', normalizedTenantId);
     if (normalizedTenantId) {
       endpoint += `?tenantId=${normalizedTenantId}`;
@@ -116,14 +116,14 @@ class TenantDomainApiClient {
   // User Group Management
   async getUserGroups(tenantId: string | null): Promise<TenantUserGroup[]> {
     console.log('🔍 [TenantDomainApiClient] Getting user groups for tenantId:', tenantId);
-    
+
     // For admin users (tenantId null), we don't have a global endpoint yet
     // Return empty array to avoid 404 errors
     if (tenantId === null || tenantId === '' || tenantId === 'default-tenant-id') {
       console.log('⚠️ [TenantDomainApiClient] Admin user or invalid tenantId - returning empty user groups');
       return [];
     }
-    
+
     try {
       const result = await this.request<TenantUserGroup[]>(`/api/tenant-domains/user-groups?tenantId=${tenantId}`);
       console.log('✅ [TenantDomainApiClient] Successfully fetched user groups:', result.length);

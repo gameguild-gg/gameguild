@@ -41,7 +41,7 @@ export function CourseCard({ course, onClick }: CourseCardProps) {
             <AreaIcon className="w-6 h-6 transition-all duration-300 hover:scale-110" />
           </div>
         </div>
-        
+
         <div className="relative w-full h-48 mb-4">
           <Image
             src={course.image || '/placeholder.svg'}
@@ -51,13 +51,13 @@ export function CourseCard({ course, onClick }: CourseCardProps) {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         </div>
-        
+
         <CardTitle className="text-lg font-semibold line-clamp-2">{course.title}</CardTitle>
       </CardHeader>
-      
+
       <CardContent>
         <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{course.description}</p>
-        
+
         {course.progress !== undefined && (
           <div className="mb-4">
             <div className="flex justify-between text-sm mb-1">
@@ -67,7 +67,7 @@ export function CourseCard({ course, onClick }: CourseCardProps) {
             <Progress value={course.progress} className="w-full" />
           </div>
         )}
-        
+
         <div className="flex flex-wrap gap-1 mb-4">
           {course.tools.slice(0, 3).map((tool, index) => (
             <Badge key={`${course.id || course.slug}-${tool}-${index}`} variant="outline" className="text-xs">
@@ -80,7 +80,7 @@ export function CourseCard({ course, onClick }: CourseCardProps) {
             </Badge>
           )}
         </div>
-        
+
         <div className="text-sm text-muted-foreground capitalize">{course.area}</div>
       </CardContent>
     </Card>

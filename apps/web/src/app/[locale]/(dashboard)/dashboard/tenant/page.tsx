@@ -66,9 +66,7 @@ export default function TenantManagementPage() {
       {isAdminMode && (
         <Alert>
           <Shield className="h-4 w-4" />
-          <AlertDescription>
-            Admin Mode: You are accessing the tenant management system as a super admin for testing purposes.
-          </AlertDescription>
+          <AlertDescription>Admin Mode: You are accessing the tenant management system as a super admin for testing purposes.</AlertDescription>
         </Alert>
       )}
       <div>
@@ -93,19 +91,11 @@ export default function TenantManagementPage() {
         </TabsList>
 
         <TabsContent value="domains" className="space-y-6">
-          <TenantDomainManager 
-            tenantId={currentTenantId} 
-            apiBaseUrl={apiBaseUrl} 
-            accessToken={session.accessToken}
-          />
+          <TenantDomainManager tenantId={currentTenantId} apiBaseUrl={apiBaseUrl} accessToken={session.accessToken} />
         </TabsContent>
 
         <TabsContent value="groups" className="space-y-6">
-          <TenantUserGroupManager 
-            tenantId={currentTenantId} 
-            apiBaseUrl={apiBaseUrl} 
-            accessToken={session.accessToken}
-          />
+          <TenantUserGroupManager tenantId={currentTenantId} apiBaseUrl={apiBaseUrl} accessToken={session.accessToken} />
         </TabsContent>
 
         <TabsContent value="overview" className="space-y-6">
@@ -119,9 +109,7 @@ export default function TenantManagementPage() {
                 <CardDescription>How domain-based user assignment works</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  When users sign up with an email address, the system automatically:
-                </p>
+                <p className="text-sm text-muted-foreground">When users sign up with an email address, the system automatically:</p>
                 <ol className="list-decimal list-inside space-y-2 text-sm">
                   <li>Extracts the domain from their email address</li>
                   <li>Matches it against configured tenant domains</li>
@@ -129,8 +117,8 @@ export default function TenantManagementPage() {
                   <li>Grants appropriate permissions based on group settings</li>
                 </ol>
                 <p className="text-xs text-muted-foreground mt-4">
-                  Example: A user with email "student@university.edu" would be automatically 
-                  assigned to the "Students" group if "university.edu" is configured as a domain.
+                  Example: A user with email "student@university.edu" would be automatically assigned to the "Students" group if "university.edu" is configured
+                  as a domain.
                 </p>
               </CardContent>
             </Card>
@@ -141,23 +129,17 @@ export default function TenantManagementPage() {
                   <Users className="h-5 w-5" />
                   User Group Hierarchy
                 </CardTitle>
-                <CardDescription>
-                  Organize users with parent-child relationships
-                </CardDescription>
+                <CardDescription>Organize users with parent-child relationships</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  User groups can be organized hierarchically:
-                </p>
+                <p className="text-sm text-muted-foreground">User groups can be organized hierarchically:</p>
                 <ul className="list-disc list-inside space-y-2 text-sm">
                   <li>Create parent groups for departments or divisions</li>
                   <li>Add child groups for specific roles or classes</li>
                   <li>Set default groups for automatic user assignment</li>
                   <li>Link domains to specific groups for auto-assignment</li>
                 </ul>
-                <p className="text-xs text-muted-foreground mt-4">
-                  Example: "Faculty" (parent) → "Computer Science Faculty" (child)
-                </p>
+                <p className="text-xs text-muted-foreground mt-4">Example: "Faculty" (parent) → "Computer Science Faculty" (child)</p>
               </CardContent>
             </Card>
 
@@ -167,9 +149,7 @@ export default function TenantManagementPage() {
                   <Network className="h-5 w-5" />
                   Best Practices
                 </CardTitle>
-                <CardDescription>
-                  Tips for effective tenant management
-                </CardDescription>
+                <CardDescription>Tips for effective tenant management</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <ul className="list-disc list-inside space-y-2 text-sm">
@@ -185,14 +165,11 @@ export default function TenantManagementPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Quick Stats</CardTitle>
-                <CardDescription>
-                  Current tenant configuration
-                </CardDescription>
+                <CardDescription>Current tenant configuration</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-muted-foreground">
-                  View detailed statistics about domains, groups, and user assignments 
-                  in the respective tabs.
+                  View detailed statistics about domains, groups, and user assignments in the respective tabs.
                 </div>
               </CardContent>
             </Card>
