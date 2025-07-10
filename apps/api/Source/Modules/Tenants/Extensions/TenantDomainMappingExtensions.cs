@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Tenants;
+namespace GameGuild.Modules.Tenants.Extensions;
 
 /// <summary>
 /// Extension methods for mapping between DTOs and entities in the Tenant module
