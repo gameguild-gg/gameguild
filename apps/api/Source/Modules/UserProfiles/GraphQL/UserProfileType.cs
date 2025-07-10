@@ -1,10 +1,13 @@
+using GameGuild.Modules.UserProfiles.Entities;
+
+
 namespace GameGuild.Modules.UserProfiles.GraphQL;
 
 /// <summary>
 /// GraphQL type for UserProfile entity
 /// </summary>
-public class UserProfileType : ObjectType<Models.UserProfile> {
-  protected override void Configure(IObjectTypeDescriptor<Models.UserProfile> descriptor) {
+public class UserProfileType : ObjectType<UserProfile> {
+  protected override void Configure(IObjectTypeDescriptor<UserProfile> descriptor) {
     descriptor.Description("Represents a user profile with personal information and settings");
 
     // Base entity fields from ResourceBase

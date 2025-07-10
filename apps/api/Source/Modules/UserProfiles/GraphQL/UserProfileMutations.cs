@@ -1,3 +1,4 @@
+using GameGuild.Modules.UserProfiles.Entities;
 using GameGuild.Modules.UserProfiles.Services;
 using GameGuild.Modules.Users;
 
@@ -12,11 +13,11 @@ public class UserProfileMutations {
   /// <summary>
   /// Create a new user profile
   /// </summary>
-  public async Task<Models.UserProfile> CreateUserProfile(
+  public async Task<UserProfile> CreateUserProfile(
     [Service] IUserProfileService userProfileService,
     CreateUserProfileInput input
   ) {
-    var userProfile = new Models.UserProfile {
+    var userProfile = new UserProfile {
       GivenName = input.GivenName,
       FamilyName = input.FamilyName,
       DisplayName = input.DisplayName,
@@ -36,11 +37,11 @@ public class UserProfileMutations {
   /// <summary>
   /// Update an existing user profile
   /// </summary>
-  public async Task<Models.UserProfile?> UpdateUserProfile(
+  public async Task<UserProfile?> UpdateUserProfile(
     [Service] IUserProfileService userProfileService,
     UpdateUserProfileInput input
   ) {
-    var userProfile = new Models.UserProfile {
+    var userProfile = new UserProfile {
       Id = input.Id,
       GivenName = input.GivenName,
       FamilyName = input.FamilyName,

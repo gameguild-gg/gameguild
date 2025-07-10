@@ -1,6 +1,6 @@
 using GameGuild.Database;
-using GameGuild.Modules.Authentication.Dtos;
-using GameGuild.Modules.Authentication.Services;
+using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

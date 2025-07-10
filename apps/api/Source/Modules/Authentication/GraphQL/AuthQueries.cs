@@ -1,9 +1,8 @@
 using GameGuild.Modules.Users;
 using MediatR;
-using GetUserByEmailQuery = GameGuild.Modules.Authentication.Queries.GetUserByEmailQuery;
 
 
-namespace GameGuild.Modules.Authentication.GraphQL;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// GraphQL queries for Auth module using CQRS pattern

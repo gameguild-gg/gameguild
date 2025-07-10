@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.Users;
+namespace GameGuild.Modules.Credentials;
 
 /// <summary>
 /// DTO for creating a new credential

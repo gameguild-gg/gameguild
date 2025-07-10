@@ -1,5 +1,6 @@
 using GameGuild.Database;
 using GameGuild.Modules.UserProfiles.Commands;
+using GameGuild.Modules.UserProfiles.Entities;
 using GameGuild.Modules.UserProfiles.Notifications;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,7 @@ public class DeleteUserProfileHandler(
 {
     public async Task<bool> Handle(DeleteUserProfileCommand request, CancellationToken cancellationToken)
     {
-        var userProfile = await context.Resources.OfType<Models.UserProfile>()
+        var userProfile = await context.Resources.OfType<UserProfile>()
             .FirstOrDefaultAsync(up => up.Id == request.UserProfileId, cancellationToken);
 
         if (userProfile == null) return false;
@@ -59,7 +60,7 @@ public class RestoreUserProfileHandler(
 {
     public async Task<bool> Handle(RestoreUserProfileCommand request, CancellationToken cancellationToken)
     {
-        var userProfile = await context.Resources.OfType<Models.UserProfile>()
+        var userProfile = await context.Resources.OfType<UserProfile>()
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(up => up.Id == request.UserProfileId, cancellationToken);
 

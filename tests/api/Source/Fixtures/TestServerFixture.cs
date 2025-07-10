@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using GameGuild.Database;
-using GameGuild.Modules.Authentication.Services;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using MediatR;

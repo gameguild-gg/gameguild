@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Authentication.Attributes {
+namespace GameGuild.Modules.Authentication {
   /// <summary>
   /// Attribute to mark endpoints as public (bypasses authentication)
   /// </summary>

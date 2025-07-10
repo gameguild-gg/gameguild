@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Users;
+namespace GameGuild.Modules.Credentials;
 
 /// <summary>
 /// Service interface for managing user credentials

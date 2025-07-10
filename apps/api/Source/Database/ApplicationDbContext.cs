@@ -1,9 +1,10 @@
 using System.Reflection;
 using GameGuild.Common;
-using GameGuild.Modules.Authentication.Models;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Certificates.Models;
 using GameGuild.Modules.Comments.Models;
 using GameGuild.Modules.Contents;
+using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Feedbacks.Models;
 using GameGuild.Modules.Kyc.Models;
 using GameGuild.Modules.Localization;

@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Authentication.Dtos;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Tenant information included in authentication responses

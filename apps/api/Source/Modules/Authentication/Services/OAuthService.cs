@@ -1,8 +1,7 @@
 using System.Text.Json;
-using GameGuild.Modules.Authentication.Dtos;
 
 
-namespace GameGuild.Modules.Authentication.Services {
+namespace GameGuild.Modules.Authentication {
   public interface IOAuthService {
     Task<GitHubUserDto> GetGitHubUserAsync(string accessToken);
 
