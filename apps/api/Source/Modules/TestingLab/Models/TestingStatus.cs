@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Models {
+namespace GameGuild.Modules.TestingLab {
   public enum TestingStatus {
     Upcoming,
     Active,

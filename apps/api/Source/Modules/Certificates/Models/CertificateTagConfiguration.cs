@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Certificates.Models;
+namespace GameGuild.Modules.Certificates;
 
 public class CertificateTagConfiguration : IEntityTypeConfiguration<CertificateTag> {
   public void Configure(EntityTypeBuilder<CertificateTag> builder) {

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using GameGuild.Modules.Resources;
 
 
-namespace GameGuild.Modules.Projects.Models;
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// Represents a project category (game, tool, art, etc.)

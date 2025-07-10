@@ -1,22 +1,22 @@
-namespace GameGuild.Modules.Certificates.Interfaces;
+namespace GameGuild.Modules.Certificates;
 
 /// <summary>
 /// Interface for certificate management services
 /// </summary>
 public interface ICertificateService {
-  Task<Models.Certificate> CreateCertificateAsync(Models.Certificate certificate);
+  Task<Certificate> CreateCertificateAsync(Certificate certificate);
 
-  Task<Models.Certificate?> GetCertificateByIdAsync(Guid id);
+  Task<Certificate?> GetCertificateByIdAsync(Guid id);
 
-  Task<IEnumerable<Models.Certificate>> GetCertificatesByProgramAsync(Guid programId);
+  Task<IEnumerable<Certificate>> GetCertificatesByProgramAsync(Guid programId);
 
-  Task<IEnumerable<Models.Certificate>> GetCertificatesByProductAsync(Guid productId);
+  Task<IEnumerable<Certificate>> GetCertificatesByProductAsync(Guid productId);
 
-  Task<Models.Certificate> UpdateCertificateAsync(Models.Certificate certificate);
+  Task<Certificate> UpdateCertificateAsync(Certificate certificate);
 
   Task<bool> DeleteCertificateAsync(Guid id);
 
   Task<bool> CheckEligibilityAsync(Guid certificateId, Guid programUserId);
 
-  Task<IEnumerable<Models.Certificate>> GetActiveCertificatesAsync();
+  Task<IEnumerable<Certificate>> GetActiveCertificatesAsync();
 }

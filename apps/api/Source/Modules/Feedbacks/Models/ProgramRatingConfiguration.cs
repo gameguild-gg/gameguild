@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Feedbacks.Models;
+namespace GameGuild.Modules.Feedbacks;
 
 public class ProgramRatingConfiguration : IEntityTypeConfiguration<ProgramRating> {
   public void Configure(EntityTypeBuilder<ProgramRating> builder) {

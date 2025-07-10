@@ -2,9 +2,10 @@ using System.Diagnostics;
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Projects.Models;
-using GameGuild.Modules.Projects.Services;
+using GameGuild.Modules.Projects;
 using Microsoft.EntityFrameworkCore;
+using ProjectType = GameGuild.Common.ProjectType;
+
 
 namespace GameGuild.API.Tests.Modules.Projects.Performance;
 

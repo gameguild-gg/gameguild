@@ -1,5 +1,6 @@
 using GameGuild.Modules.Users;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Authentication;
@@ -7,7 +8,7 @@ namespace GameGuild.Modules.Authentication;
 /// <summary>
 /// GraphQL queries for Auth module using CQRS pattern
 /// </summary>
-[ExtendObjectType<Query>]
+[ExtendObjectType<DbLoggerCategory.Query>]
 public class AuthQueries {
   /// <summary>
   /// Get user by email using CQRS

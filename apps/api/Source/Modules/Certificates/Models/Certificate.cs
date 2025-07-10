@@ -6,7 +6,7 @@ using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Certificates.Models;
+namespace GameGuild.Modules.Certificates;
 
 [Table("certificates")]
 [Index(nameof(Type))]

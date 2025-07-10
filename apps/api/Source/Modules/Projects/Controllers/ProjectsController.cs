@@ -3,18 +3,17 @@ using GameGuild.Common;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Projects.Services;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Modules.Projects.Controllers;
+namespace GameGuild.Modules.Projects;
 
 [ApiController]
 [Route("[controller]")]
 public class ProjectsController(IProjectService projectService) : ControllerBase {
   [HttpGet]
-  [RequireResourcePermission<Models.Project>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Models.Project>>> GetProjects() {
+  [RequireResourcePermission<Project>(PermissionType.Read)]
+  public async Task<ActionResult<IEnumerable<Project>>> GetProjects() {
     // Get the current authenticated user's ID
     var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -28,8 +27,8 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
 
   // GET: projects/{id}
   [HttpGet("{id:guid}")]
-  [RequireResourcePermission<Models.Project>(PermissionType.Read)]
-  public async Task<ActionResult<Models.Project>> GetProject(Guid id) {
+  [RequireResourcePermission<Project>(PermissionType.Read)]
+  public async Task<ActionResult<Project>> GetProject(Guid id) {
     var project = await projectService.GetProjectByIdAsync(id);
 
     if (project == null) return NotFound();
@@ -40,7 +39,7 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
   // GET: projects/slug/{slug}
   [HttpGet("slug/{slug}")]
   [Public]
-  public async Task<ActionResult<Models.Project>> GetProjectBySlug(string slug) {
+  public async Task<ActionResult<Project>> GetProjectBySlug(string slug) {
     var project = await projectService.GetProjectBySlugAsync(slug);
 
     if (project == null) return NotFound();
@@ -50,8 +49,8 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
 
   // GET: projects/category/{categoryId}
   [HttpGet("category/{categoryId:guid}")]
-  [RequireResourcePermission<Models.Project>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Models.Project>>> GetProjectsByCategory(Guid categoryId) {
+  [RequireResourcePermission<Project>(PermissionType.Read)]
+  public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCategory(Guid categoryId) {
     var projects = await projectService.GetProjectsByCategoryAsync(categoryId);
 
     return Ok(projects);
@@ -59,8 +58,8 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
 
   // GET: projects/creator/{creatorId}
   [HttpGet("creator/{creatorId:guid}")]
-  [RequireResourcePermission<Models.Project>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Models.Project>>> GetProjectsByCreator(Guid creatorId) {
+  [RequireResourcePermission<Project>(PermissionType.Read)]
+  public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCreator(Guid creatorId) {
     var projects = await projectService.GetProjectsByCreatorAsync(creatorId);
 
     return Ok(projects);
@@ -68,16 +67,16 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
 
   // GET: projects/status/{status}
   [HttpGet("status/{status}")]
-  [RequireResourcePermission<Models.Project>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Models.Project>>> GetProjectsByStatus(ContentStatus status) {
+  [RequireResourcePermission<Project>(PermissionType.Read)]
+  public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByStatus(ContentStatus status) {
     var projects = await projectService.GetProjectsByStatusAsync(status);
 
     return Ok(projects);
   } // POST: projects
 
   [HttpPost]
-  [RequireResourcePermission<Models.Project>(PermissionType.Create)]
-  public async Task<ActionResult<Models.Project>> CreateProject([FromBody] Models.Project project) {
+  [RequireResourcePermission<Project>(PermissionType.Create)]
+  public async Task<ActionResult<Project>> CreateProject([FromBody] Project project) {
     // Get the current authenticated user's ID
     var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -87,7 +86,7 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
     project.CreatedById = userId;
 
     // Auto-generate slug if not provided
-    if (string.IsNullOrEmpty(project.Slug)) project.Slug = Models.Project.GenerateSlug(project.Title);
+    if (string.IsNullOrEmpty(project.Slug)) project.Slug = Project.GenerateSlug(project.Title);
 
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -98,8 +97,8 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
 
   // PUT: projects/{id}
   [HttpPut("{id}")]
-  [RequireResourcePermission<Models.Project>(PermissionType.Edit)]
-  public async Task<ActionResult<Models.Project>> UpdateProject(Guid id, [FromBody] Models.Project project) {
+  [RequireResourcePermission<Project>(PermissionType.Edit)]
+  public async Task<ActionResult<Project>> UpdateProject(Guid id, [FromBody] Project project) {
     if (id != project.Id) return BadRequest("Project ID mismatch");
 
     if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -114,7 +113,7 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
 
   // DELETE: projects/{id}
   [HttpDelete("{id}")]
-  [RequireResourcePermission<Models.Project>(PermissionType.Delete)]
+  [RequireResourcePermission<Project>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteProject(Guid id) {
     var success = await projectService.DeleteProjectAsync(id);
 
@@ -125,7 +124,7 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
 
   // POST: projects/{id}/restore
   [HttpPost("{id}/restore")]
-  [RequireResourcePermission<Models.Project>(PermissionType.Restore)]
+  [RequireResourcePermission<Project>(PermissionType.Restore)]
   public async Task<ActionResult> RestoreProject(Guid id) {
     var success = await projectService.RestoreProjectAsync(id);
 
@@ -136,8 +135,8 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
 
   // GET: projects/deleted
   [HttpGet("deleted")]
-  [RequireResourcePermission<Models.Project>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Models.Project>>> GetDeletedProjects() {
+  [RequireResourcePermission<Project>(PermissionType.Read)]
+  public async Task<ActionResult<IEnumerable<Project>>> GetDeletedProjects() {
     var projects = await projectService.GetDeletedProjectsAsync();
 
     return Ok(projects);
@@ -146,7 +145,7 @@ public class ProjectsController(IProjectService projectService) : ControllerBase
   // GET: projects/public (public access for web app integration)
   [HttpGet("public")]
   [Public]
-  public async Task<ActionResult<IEnumerable<Models.Project>>> GetPublicProjects() {
+  public async Task<ActionResult<IEnumerable<Project>>> GetPublicProjects() {
     // Only return published AND public visibility projects for public access
     var projects = await projectService.GetPublicProjectsAsync();
 

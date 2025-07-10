@@ -1,11 +1,15 @@
+using GameGuild.Common.GraphQL;
 using GameGuild.Common.Models;
 using GameGuild.Modules.Users.Inputs;
+using HotChocolate;
+using HotChocolate.Types;
 using MediatR;
 
 
 namespace GameGuild.Modules.Users;
 
-public class Mutation {
+[ExtendObjectType<Mutation>]
+public class UserMutations {
   /// <summary>
   /// Creates a new user using CQRS pattern
   /// </summary>

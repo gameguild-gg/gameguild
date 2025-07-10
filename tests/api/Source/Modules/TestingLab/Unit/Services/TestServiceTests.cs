@@ -1,10 +1,9 @@
 using GameGuild.Database;
-using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Modules.TestingLab.Services;
+using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
-using ProjectModel = GameGuild.Modules.Projects.Models.Project;
-using ProjectVersionModel = GameGuild.Modules.Projects.Models.ProjectVersion;
+using ProjectModel = GameGuild.Modules.Projects.Project;
+using ProjectVersionModel = GameGuild.Modules.Projects.ProjectVersion;
 
 
 namespace GameGuild.API.Tests.Modules.TestingLab.Unit.Services;

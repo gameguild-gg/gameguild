@@ -3,6 +3,7 @@ using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
 using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Programs.GraphQL;
@@ -11,7 +12,7 @@ namespace GameGuild.Modules.Programs.GraphQL;
 /// GraphQL queries for ActivityGrade operations
 /// Following permission inheritance: ActivityGrade permissions come from parent Program
 /// </summary>
-[ExtendObjectType<Query>]
+[ExtendObjectType<DbLoggerCategory.Query>]
 public class ActivityGradeQueries {
   /// <summary>
   /// Get grade for a specific content interaction

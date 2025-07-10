@@ -1,19 +1,21 @@
 using DotNetEnv;
 using GameGuild.Common;
 using GameGuild.Common.Extensions;
+using GameGuild.Common.GraphQL;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Programs.GraphQL;
-using GameGuild.Modules.Projects.GraphQL;
+using GameGuild.Modules.Projects;
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using ProgramContentType = GameGuild.Modules.Programs.GraphQL.ProgramContentType;
-using ProjectType = GameGuild.Modules.Projects.GraphQL.ProjectType;
+using ProjectType = GameGuild.Modules.Projects.ProjectType;
 using ToKebabParameterTransformer = GameGuild.Common.ToKebabParameterTransformer;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -150,14 +152,16 @@ builder.Services.AddGraphQLServer()
        .AddDACAuthorization() // Add 3-layer DAC authorization
        .AddTypeExtension<TenantQueries>()
        // .AddTypeExtension<GameGuild.Modules.Tenants.GraphQL.TenantMutations>()
+       .AddTypeExtension<UserQueries>()
+       .AddTypeExtension<UserMutations>()
        .AddTypeExtension<UserProfileQueries>()
        .AddTypeExtension<UserProfileMutations>()
        .AddTypeExtension<AuthQueries>()
        .AddTypeExtension<AuthMutations>()
        .AddTypeExtension<ProjectQueries>()
        .AddTypeExtension<ProjectMutations>()
-       .AddTypeExtension<GameGuild.Modules.TestingLab.GraphQL.TestingLabQueries>()
-       .AddTypeExtension<GameGuild.Modules.TestingLab.GraphQL.TestingLabMutations>()
+       .AddTypeExtension<TestingLabQueries>()
+       .AddTypeExtension<TestingLabMutations>()
        .AddTypeExtension<ProgramContentQueries>()
        .AddTypeExtension<ProgramContentMutations>()
        .AddTypeExtension<ContentInteractionQueries>()
@@ -173,10 +177,10 @@ builder.Services.AddGraphQLServer()
        .AddType<ProgramContentType>()
        .AddType<ContentInteractionType>()
        .AddType<ActivityGradeType>()
-       .AddType<GameGuild.Modules.TestingLab.GraphQL.TestingRequestType>()
-       .AddType<GameGuild.Modules.TestingLab.GraphQL.TestingSessionType>()
-       .AddType<GameGuild.Modules.TestingLab.GraphQL.TestingParticipantType>()
-       .AddType<GameGuild.Modules.TestingLab.GraphQL.TestingLocationType>()
+       .AddType<TestingRequestType>()
+       .AddType<TestingSessionType>()
+       .AddType<TestingParticipantType>()
+       .AddType<TestingLocationType>()
        .ModifyOptions(opt => { opt.RemoveUnreachableTypes = true; })
        .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = builder.Environment.IsDevelopment());
 

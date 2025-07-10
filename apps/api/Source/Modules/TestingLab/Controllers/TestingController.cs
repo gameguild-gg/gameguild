@@ -1,13 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Modules.TestingLab.Services;
-using GameGuild.Modules.TestingLab.Dtos;
+using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Modules.TestingLab.Controllers;
+namespace GameGuild.Modules.TestingLab;
 
 [ApiController]
 [Route("[controller]")]

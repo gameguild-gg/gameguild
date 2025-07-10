@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.TestingLab.Models {
+namespace GameGuild.Modules.TestingLab {
   public class FeedbackQualityRating : Entity {
     [Required] public Guid FeedbackId { get; set; }
 

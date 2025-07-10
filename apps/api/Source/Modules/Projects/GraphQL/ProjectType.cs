@@ -3,11 +3,10 @@ using GameGuild.Common;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Projects.Models;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.Projects.GraphQL;
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// GraphQL type definition for Project entity with DAC permission integration

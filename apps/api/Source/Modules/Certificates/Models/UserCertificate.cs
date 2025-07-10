@@ -7,7 +7,7 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Certificates.Models;
+namespace GameGuild.Modules.Certificates;
 
 [Table("user_certificates")]
 [Index(nameof(UserId))]

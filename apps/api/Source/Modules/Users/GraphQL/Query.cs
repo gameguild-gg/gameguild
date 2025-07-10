@@ -1,15 +1,23 @@
+using GameGuild.Common.GraphQL;
 using GameGuild.Common.Models;
 using GameGuild.Modules.Users.Inputs;
+using HotChocolate;
+using HotChocolate.Types;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Users;
 
-public class Query {
+/// <summary>
+/// GraphQL queries for User module using CQRS pattern
+/// </summary>
+[ExtendObjectType<Query>]
+public class UserQueries {
   /// <summary>
   /// Gets all users with optional filtering using CQRS pattern
   /// </summary>
-  public async Task<IEnumerable<User>> GetUsers(
+  public async Task<IEnumerable<User>> Users(
     [Service] IMediator mediator,
     bool includeDeleted = false,
     bool? isActive = null,

@@ -114,8 +114,10 @@ namespace GameGuild.API.Tests.Fixtures {
               
       // Add GraphQL for testing with explicit schema only
       services.AddGraphQLServer()
-              .AddQueryType<GameGuild.Modules.Users.Query>()
-              .AddMutationType<GameGuild.Modules.Users.Mutation>()
+              .AddQueryType<GameGuild.Common.GraphQL.Query>()
+              .AddTypeExtension<GameGuild.Modules.Users.UserQueries>()
+              .AddMutationType<GameGuild.Common.GraphQL.Mutation>()
+              .AddTypeExtension<GameGuild.Modules.Users.UserMutations>()
               .AddType<GameGuild.Modules.Users.UserType>()
               .AddGlobalObjectIdentification(false)
               .ModifyOptions(opt => { 

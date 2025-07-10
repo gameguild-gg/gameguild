@@ -1,11 +1,10 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Projects.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Projects.Services;
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// Service implementation for Project business logic
@@ -96,7 +95,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<Project>> GetProjectsByTypeAsync(ProjectType type) {
+  public async Task<IEnumerable<Project>> GetProjectsByTypeAsync(Common.ProjectType type) {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Where(p => p.Type == type && p.DeletedAt == null)

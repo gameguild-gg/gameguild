@@ -1,6 +1,7 @@
 using GameGuild.Modules.Tenants.Inputs;
 using GameGuild.Modules.Users;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Tenants;
@@ -8,7 +9,7 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// GraphQL queries for Tenant module using CQRS pattern
 /// </summary>
-[ExtendObjectType<Query>]
+[ExtendObjectType<DbLoggerCategory.Query>]
 public class TenantQueries {
   /// <summary>
   /// Get all tenants (non-deleted only)

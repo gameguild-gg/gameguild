@@ -4,7 +4,7 @@ using GameGuild.Modules.Tags.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Certificates.Models;
+namespace GameGuild.Modules.Certificates;
 
 [Table("certificate_tags")]
 [Index(nameof(CertificateId), nameof(TagId), IsUnique = true)]

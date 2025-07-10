@@ -7,11 +7,12 @@ using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Projects.Models;
+using GameGuild.Modules.Projects;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
+using ProjectType = GameGuild.Common.ProjectType;
 using TenantModel = GameGuild.Modules.Tenants.Tenant;
 
 

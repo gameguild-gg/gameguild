@@ -6,11 +6,11 @@ using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.TestingLab.Models;
+using GameGuild.Modules.TestingLab;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
-using ProjectModel = GameGuild.Modules.Projects.Models.Project;
-using ProjectVersionModel = GameGuild.Modules.Projects.Models.ProjectVersion;
+using ProjectModel = GameGuild.Modules.Projects.Project;
+using ProjectVersionModel = GameGuild.Modules.Projects.ProjectVersion;
 using TenantModel = GameGuild.Modules.Tenants.Tenant;
 using UserModel = GameGuild.Modules.Users.User;
 

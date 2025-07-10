@@ -1,7 +1,4 @@
-﻿using GameGuild.Modules.TestingLab.Models;
-
-
-namespace GameGuild.Modules.TestingLab.GraphQL;
+﻿namespace GameGuild.Modules.TestingLab;
 
 /// <summary>
 /// GraphQL type definition for TestingSession entity

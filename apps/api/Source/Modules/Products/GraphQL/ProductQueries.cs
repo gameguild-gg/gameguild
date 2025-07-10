@@ -1,6 +1,7 @@
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Products.Services;
 using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
 using ProductTypeEnum = GameGuild.Common.ProductType;
 
@@ -10,7 +11,7 @@ namespace GameGuild.Modules.Products.GraphQL;
 /// <summary>
 /// GraphQL queries for Product module
 /// </summary>
-[ExtendObjectType<Query>]
+[ExtendObjectType<DbLoggerCategory.Query>]
 public class ProductQueries {
   /// <summary>
   /// Gets all products accessible to the current user

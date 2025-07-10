@@ -1,34 +1,34 @@
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Projects.Services;
 using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Projects.GraphQL;
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// GraphQL queries for Project module
 /// </summary>
-[ExtendObjectType<Query>]
+[ExtendObjectType<DbLoggerCategory.Query>]
 public class ProjectQueries {
   /// <summary>
   /// Gets all projects accessible to the current user
   /// </summary>
-  public async Task<IEnumerable<Models.Project>> GetProjects([Service] IProjectService projectService) { return await projectService.GetAllProjectsAsync(); }
+  public async Task<IEnumerable<Project>> GetProjects([Service] IProjectService projectService) { return await projectService.GetAllProjectsAsync(); }
 
   /// <summary>
   /// Gets a project by its unique identifier
   /// </summary>
-  public async Task<Models.Project?> GetProjectById(Guid id, [Service] IProjectService projectService) { return await projectService.GetProjectByIdAsync(id); }
+  public async Task<Project?> GetProjectById(Guid id, [Service] IProjectService projectService) { return await projectService.GetProjectByIdAsync(id); }
 
   /// <summary>
   /// Gets a project by its slug
   /// </summary>
-  public async Task<Models.Project?> GetProjectBySlug(string slug, [Service] IProjectService projectService) { return await projectService.GetProjectBySlugAsync(slug); }
+  public async Task<Project?> GetProjectBySlug(string slug, [Service] IProjectService projectService) { return await projectService.GetProjectBySlugAsync(slug); }
 
   /// <summary>
   /// Gets projects by category
   /// </summary>
-  public async Task<IEnumerable<Models.Project>> GetProjectsByCategory(
+  public async Task<IEnumerable<Project>> GetProjectsByCategory(
     Guid categoryId,
     [Service] IProjectService projectService
   ) {
@@ -38,7 +38,7 @@ public class ProjectQueries {
   /// <summary>
   /// Gets projects by creator
   /// </summary>
-  public async Task<IEnumerable<Models.Project>> GetProjectsByCreator(
+  public async Task<IEnumerable<Project>> GetProjectsByCreator(
     Guid creatorId,
     [Service] IProjectService projectService
   ) {
@@ -48,7 +48,7 @@ public class ProjectQueries {
   /// <summary>
   /// Gets projects by status
   /// </summary>
-  public async Task<IEnumerable<Models.Project>> GetProjectsByStatus(
+  public async Task<IEnumerable<Project>> GetProjectsByStatus(
     ContentStatus status,
     [Service] IProjectService projectService
   ) {
@@ -58,5 +58,5 @@ public class ProjectQueries {
   /// <summary>
   /// Gets deleted projects (admin only)
   /// </summary>
-  public async Task<IEnumerable<Models.Project>> GetDeletedProjects([Service] IProjectService projectService) { return await projectService.GetDeletedProjectsAsync(); }
+  public async Task<IEnumerable<Project>> GetDeletedProjects([Service] IProjectService projectService) { return await projectService.GetDeletedProjectsAsync(); }
 }

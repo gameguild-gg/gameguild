@@ -1,5 +1,5 @@
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Projects.Models;
+using GameGuild.Modules.Projects;
 using GameGuild.Modules.Resources;
 
 namespace GameGuild.API.Tests.Modules.Projects.Unit.Services;

@@ -1,11 +1,10 @@
 using GameGuild.Common;
+using GameGuild.Common.GraphQL;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Projects.Services;
-using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.Projects.GraphQL;
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// GraphQL mutations for Project module
@@ -15,9 +14,9 @@ public class ProjectMutations {
   /// <summary>
   /// Creates a new project
   /// </summary>
-  [RequireResourcePermission<Models.Project>(PermissionType.Create)]
-  public async Task<Models.Project> CreateProject(CreateProjectInput input, [Service] IProjectService projectService) {
-    var project = new Models.Project {
+  [RequireResourcePermission<Project>(PermissionType.Create)]
+  public async Task<Project> CreateProject(CreateProjectInput input, [Service] IProjectService projectService) {
+    var project = new Project {
       Title = input.Title,
       Description = input.Description,
       ShortDescription = input.ShortDescription,
@@ -35,8 +34,8 @@ public class ProjectMutations {
   /// <summary>
   /// Updates an existing project
   /// </summary>
-  [RequireResourcePermission<Models.Project>(PermissionType.Edit)]
-  public async Task<Models.Project> UpdateProject(
+  [RequireResourcePermission<Project>(PermissionType.Edit)]
+  public async Task<Project> UpdateProject(
     Guid id, UpdateProjectInput input,
     [Service] IProjectService projectService
   ) {
@@ -69,12 +68,12 @@ public class ProjectMutations {
   /// <summary>
   /// Deletes a project (soft delete)
   /// </summary>
-  [RequireResourcePermission<Models.Project>(PermissionType.Delete)]
+  [RequireResourcePermission<Project>(PermissionType.Delete)]
   public async Task<bool> DeleteProject(Guid id, [Service] IProjectService projectService) { return await projectService.DeleteProjectAsync(id); }
 
   /// <summary>
   /// Restores a deleted project
   /// </summary>
-  [RequireResourcePermission<Models.Project>(PermissionType.Restore)]
+  [RequireResourcePermission<Project>(PermissionType.Restore)]
   public async Task<bool> RestoreProject(Guid id, [Service] IProjectService projectService) { return await projectService.RestoreProjectAsync(id); }
 }

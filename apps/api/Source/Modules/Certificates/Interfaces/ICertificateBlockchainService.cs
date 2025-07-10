@@ -1,16 +1,16 @@
-﻿namespace GameGuild.Modules.Certificates.Interfaces;
+﻿namespace GameGuild.Modules.Certificates;
 
 /// <summary>
 /// Interface for blockchain anchoring services
 /// </summary>
 public interface ICertificateBlockchainService {
-  Task<Models.CertificateBlockchainAnchor> AnchorCertificateAsync(Guid userCertificateId, string blockchainNetwork);
+  Task<CertificateBlockchainAnchor> AnchorCertificateAsync(Guid userCertificateId, string blockchainNetwork);
 
   Task<bool> VerifyBlockchainAnchorAsync(Guid anchorId);
 
-  Task<Models.CertificateBlockchainAnchor?> GetAnchorByTransactionHashAsync(string transactionHash);
+  Task<CertificateBlockchainAnchor?> GetAnchorByTransactionHashAsync(string transactionHash);
 
-  Task<IEnumerable<Models.CertificateBlockchainAnchor>> GetAnchorsByCertificateAsync(Guid userCertificateId);
+  Task<IEnumerable<CertificateBlockchainAnchor>> GetAnchorsByCertificateAsync(Guid userCertificateId);
 
   Task<bool> UpdateAnchorStatusAsync(Guid anchorId, string status, string? transactionHash = null);
 }

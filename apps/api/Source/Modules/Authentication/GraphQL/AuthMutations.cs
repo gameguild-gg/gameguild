@@ -1,4 +1,4 @@
-using GameGuild.Modules.Users;
+using GameGuild.Common.GraphQL;
 using MediatR;
 
 

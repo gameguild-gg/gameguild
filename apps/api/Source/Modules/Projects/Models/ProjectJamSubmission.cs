@@ -5,7 +5,7 @@ using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Projects.Models;
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// Represents a project submitted to a game jam

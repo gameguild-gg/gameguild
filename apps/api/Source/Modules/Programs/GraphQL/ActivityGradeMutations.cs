@@ -1,8 +1,8 @@
 using GameGuild.Common.Authorization;
+using GameGuild.Common.GraphQL;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Programs.GraphQL;

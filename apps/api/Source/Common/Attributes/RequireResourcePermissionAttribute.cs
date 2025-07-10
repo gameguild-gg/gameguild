@@ -4,7 +4,7 @@ using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Projects.Models;
+using GameGuild.Modules.Projects;
 using GameGuild.Modules.Resources;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
