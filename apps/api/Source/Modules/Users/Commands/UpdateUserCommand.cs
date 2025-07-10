@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Command to update user information with validation and business logic
 /// </summary>
-public class UpdateUserCommand : IRequest<User> {
+public sealed class UpdateUserCommand : IRequest<User> {
   [Required] public Guid UserId { get; set; }
 
   [StringLength(100, MinimumLength = 1)] public string? Name { get; set; }

@@ -38,10 +38,14 @@ public class CaseTransformOptions
     /// <summary>
     /// Creates default options for case transformation.
     /// </summary>
-    public static CaseTransformOptions Default => new();
+    public static CaseTransformOptions Default {
+      get => new();
+    }
 
     /// <summary>
     /// Creates options without caching (for one-time transformations).
     /// </summary>
-    public static CaseTransformOptions Uncached => new() { UseCache = false };
+    public static CaseTransformOptions Uncached {
+      get => new() { UseCache = false };
+    }
 }

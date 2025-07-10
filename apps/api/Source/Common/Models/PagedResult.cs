@@ -36,20 +36,28 @@ public class PagedResult<T>
     /// <summary>
     /// Current page number (1-based)
     /// </summary>
-    public int PageNumber => (Skip / Take) + 1;
+    public int PageNumber {
+      get => (Skip / Take) + 1;
+    }
 
     /// <summary>
     /// Total number of pages
     /// </summary>
-    public int TotalPages => (int)Math.Ceiling((double)TotalCount / Take);
+    public int TotalPages {
+      get => (int)Math.Ceiling((double)TotalCount / Take);
+    }
 
     /// <summary>
     /// Whether there are more pages after this one
     /// </summary>
-    public bool HasNextPage => PageNumber < TotalPages;
+    public bool HasNextPage {
+      get => PageNumber < TotalPages;
+    }
 
     /// <summary>
     /// Whether there are pages before this one
     /// </summary>
-    public bool HasPreviousPage => PageNumber > 1;
+    public bool HasPreviousPage {
+      get => PageNumber > 1;
+    }
 }

@@ -56,7 +56,7 @@ public abstract class CachedCaseTransformer : ICaseTransformer
     /// </summary>
     /// <param name="input">The input string to transform.</param>
     /// <returns>The transformed string.</returns>
-    public string Transform(string input) => Transform(input, CaseTransformOptions.Default);
+    public string Transform(string input) { return Transform(input, CaseTransformOptions.Default); }
 
     /// <summary>
     /// Transforms a string with additional options.
@@ -122,8 +122,7 @@ public abstract class CachedCaseTransformer : ICaseTransformer
     /// <typeparam name="T">The type whose name to transform.</typeparam>
     /// <param name="options">Transformation options.</param>
     /// <returns>The transformed type name.</returns>
-    public string TransformType<T>(CaseTransformOptions? options = null) => 
-        Transform(typeof(T).Name, options ?? CaseTransformOptions.Default);
+    public string TransformType<T>(CaseTransformOptions? options = null) { return Transform(typeof(T).Name, options ?? CaseTransformOptions.Default); }
 
     /// <summary>
     /// Transforms a type name.

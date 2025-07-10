@@ -12,17 +12,23 @@ public static class CaseTransformerFactory
     /// <summary>
     /// Gets a kebab-case transformer instance.
     /// </summary>
-    public static KebabCaseTransformer Kebab => LazyKebabTransformer.Value;
+    public static KebabCaseTransformer Kebab {
+      get => LazyKebabTransformer.Value;
+    }
 
     /// <summary>
     /// Gets a snake_case transformer instance.
     /// </summary>
-    public static SnakeCaseTransformer Snake => LazySnakeTransformer.Value;
+    public static SnakeCaseTransformer Snake {
+      get => LazySnakeTransformer.Value;
+    }
 
     /// <summary>
     /// Gets a slug-case transformer instance.
     /// </summary>
-    public static SlugCaseTransformer Slug => LazySlugTransformer.Value;
+    public static SlugCaseTransformer Slug {
+      get => LazySlugTransformer.Value;
+    }
 
     /// <summary>
     /// Gets a transformer instance by type.

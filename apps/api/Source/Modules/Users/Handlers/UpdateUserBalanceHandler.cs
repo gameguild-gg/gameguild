@@ -40,17 +40,16 @@ public class UpdateUserBalanceHandler(
       request.Reason ?? "Not specified"
     );
 
-    // Publish notification
+    // Publish domain event
     await mediator.Publish(
-      new UserBalanceUpdatedNotification {
-        UserId = user.Id,
-        OldBalance = oldBalance,
-        NewBalance = request.Balance,
-        OldAvailableBalance = oldAvailableBalance,
-        NewAvailableBalance = request.AvailableBalance,
-        Reason = request.Reason,
-        UpdatedAt = user.UpdatedAt
-      },
+      new UserBalanceUpdatedEvent(
+        user.Id,
+        oldBalance,
+        request.Balance,
+        oldAvailableBalance,
+        request.AvailableBalance,
+        request.Reason
+      ),
       cancellationToken
     );
 

@@ -54,7 +54,6 @@
 
     <ItemGroup>
       <Folder Include="Source\Common\Constraints\" />
-      <Folder Include="Source\Modules\Credentials\" />
     </ItemGroup>
 
     <ItemGroup>

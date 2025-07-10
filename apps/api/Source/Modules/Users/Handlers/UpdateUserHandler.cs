@@ -56,8 +56,8 @@ public class UpdateUserHandler(ApplicationDbContext context, ILogger<UpdateUserH
       changes.Count
     );
 
-    // Publish notification
-    await mediator.Publish(new UserUpdatedNotification { UserId = user.Id, UpdatedAt = user.UpdatedAt, Changes = changes }, cancellationToken);
+    // Publish domain event
+    await mediator.Publish(new UserUpdatedEvent(user.Id, changes), cancellationToken);
 
     return user;
   }

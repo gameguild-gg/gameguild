@@ -1,5 +1,4 @@
 using GameGuild.Database;
-using GameGuild.Modules.Users.Events;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,15 +38,6 @@ public class CreateUserHandler(
 
         // Publish domain event
         await mediator.Publish(new UserCreatedEvent(user.Id, user.Email, user.Name, user.CreatedAt), cancellationToken);
-
-        // Publish legacy notification for backward compatibility
-        await mediator.Publish(new UserCreatedNotification 
-        { 
-            UserId = user.Id, 
-            Email = user.Email, 
-            Name = user.Name, 
-            CreatedAt = user.CreatedAt 
-        }, cancellationToken);
 
         return user;
     }

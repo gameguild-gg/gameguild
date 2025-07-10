@@ -139,46 +139,60 @@ public sealed class Project : Content {
   /// Computed property: Is the project active
   /// </summary>
   [NotMapped]
-  public bool IsActive => Status == ContentStatus.Published && !IsDeleted;
+  public bool IsActive {
+    get => Status == ContentStatus.Published && !IsDeleted;
+  }
 
   /// <summary>
   /// Computed property: Latest version
   /// </summary>
   [NotMapped]
-  public ProjectVersion? LatestVersion => Versions.OrderByDescending(v => v.CreatedAt).FirstOrDefault();
+  public ProjectVersion? LatestVersion {
+    get => Versions.OrderByDescending(v => v.CreatedAt).FirstOrDefault();
+  }
 
   /// <summary>
   /// Computed property: Number of followers
   /// </summary>
   [NotMapped]
-  public int FollowerCount => Followers.Count;
+  public int FollowerCount {
+    get => Followers.Count;
+  }
 
   /// <summary>
   /// Computed property: Average rating from feedback
   /// </summary>
   [NotMapped]
-  public decimal? AverageRating =>
-    Feedbacks.Count != 0
-      ? (decimal?)Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating)
-      : null;
+  public decimal? AverageRating {
+    get =>
+      Feedbacks.Count != 0
+        ? (decimal?)Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating)
+        : null;
+  }
 
   /// <summary>
   /// Computed property: Total feedback count
   /// </summary>
   [NotMapped]
-  public int FeedbackCount => Feedbacks.Count(f => f.Status == ContentStatus.Published);
+  public int FeedbackCount {
+    get => Feedbacks.Count(f => f.Status == ContentStatus.Published);
+  }
 
   /// <summary>
   /// Computed property: Whether the project is part of active jams
   /// </summary>
   [NotMapped]
-  public bool IsInJam => JamSubmissions.Count != 0;
+  public bool IsInJam {
+    get => JamSubmissions.Count != 0;
+  }
 
   /// <summary>
   /// Computed property: Number of teams working on this project
   /// </summary>
   [NotMapped]
-  public int TeamCount => Teams.Count(team => team.IsActive);
+  public int TeamCount {
+    get => Teams.Count(team => team.IsActive);
+  }
 
   // Computed property temporarily commented out due to circular reference
   // /// <summary>
