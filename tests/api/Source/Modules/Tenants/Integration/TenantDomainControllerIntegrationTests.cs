@@ -20,56 +20,31 @@ namespace GameGuild.API.Tests.Modules.Tenants.Integration;
 
 public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable {
   private readonly WebApplicationFactory<Program> _factory;
-  private readonly HttpClient _client;
+  private HttpClient? _client;
   private readonly IServiceScope _scope;
   private readonly ApplicationDbContext _context;
-  private readonly Guid _tenantId = Guid.NewGuid();
-  private readonly Guid _userId = Guid.NewGuid();
+  private Guid _tenantId;
+  private Guid _userId;
 
   public TenantDomainControllerIntegrationTests(WebApplicationFactory<Program> factory) {
     // Use a unique database name for this test class to avoid interference
     var uniqueDbName = $"TenantDomainIntegrationTests_{Guid.NewGuid()}";
     _factory = IntegrationTestHelper.GetTestFactory(uniqueDbName);
-    _client = _factory.CreateClient();
+    
+    // We'll create the authenticated client and get the user/tenant IDs later
     _scope = _factory.Services.CreateScope();
     _context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
   }
 
-  private async Task SetupTestData() {
-    // Ensure the database is clean and recreated before each test
-    if (InMemoryDatabaseFacadeExtensions.IsInMemory(_context.Database)) {
-      // Clean and recreate the database to avoid test interference
-      await _context.Database.EnsureDeletedAsync();
-      await _context.Database.EnsureCreatedAsync();
-    }
-
-    // Check if data already exists
-    if (await _context.Tenants.AnyAsync(t => t.Id == _tenantId)) return;
-
-    // Create test tenant
-    var tenant = new TenantModel {
-      Id = _tenantId,
-      Name = "Test Tenant",
-      Description = "Test tenant for domain integration tests",
-      IsActive = true,
-      CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
-    };
-
-    _context.Tenants.Add(tenant);
-
-    // Create test user
-    var user = new UserModel {
-      Id = _userId,
-      Name = "Test User",
-      Email = "test@example.com",
-      CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
-    };
-
-    _context.Users.Add(user);
-
-    await _context.SaveChangesAsync();
+  private async Task<HttpClient> GetAuthenticatedClientAsync() {
+    // Create authenticated test user with permissions
+    var (client, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(_factory);
+    
+    // Store the IDs for use in test assertions
+    _userId = userId;
+    _tenantId = tenantId;
+    
+    return client;
   }
 
   #region Domain API Tests
@@ -77,7 +52,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task CreateDomain_WithValidData_ReturnsCreatedDomain() {
     // Arrange
-    await SetupAuthentication();
+    _client = await GetAuthenticatedClientAsync();
 
     var createDto = new CreateTenantDomainDto {
       TenantId = _tenantId,
@@ -116,7 +91,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task CreateDomain_WithSubdomain_ReturnsCreatedDomain() {
     // Arrange
-    await SetupAuthentication();
+    _client = await GetAuthenticatedClientAsync();
 
     var createDto = new CreateTenantDomainDto {
       TenantId = _tenantId,
@@ -151,7 +126,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task GetDomainsByTenant_WithExistingDomains_ReturnsCorrectDomains() {
     // Arrange
-    await SetupAuthentication(); // Add authentication setup
+    _client = await GetAuthenticatedClientAsync();
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -201,7 +176,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task UpdateDomain_WithValidData_ReturnsUpdatedDomain() {
     // Arrange
-    await SetupAuthentication(); // Add authentication setup
+    _client = await GetAuthenticatedClientAsync();
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -252,7 +227,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task DeleteDomain_WithValidId_ReturnsNoContent() {
     // Arrange
-    await SetupAuthentication(); // Add authentication setup
+    _client = await GetAuthenticatedClientAsync();
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -288,7 +263,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task CreateUserGroup_WithValidData_ReturnsCreatedGroup() {
     // Arrange
-    await SetupAuthentication(); // Add authentication setup
+    _client = await GetAuthenticatedClientAsync();
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -329,7 +304,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task GetUserGroupsByTenant_WithExistingGroups_ReturnsCorrectGroups() {
     // Arrange
-    await SetupAuthentication(); // Add authentication setup
+    _client = await GetAuthenticatedClientAsync();
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -383,7 +358,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task AssignUserToGroup_WithValidData_ReturnsCreatedMembership() {
     // Arrange
-    await SetupAuthentication(); // This already calls SetupTestData internally
+    _client = await GetAuthenticatedClientAsync();
 
     // Create a group in the database
     using var scope = _factory.Services.CreateScope();
@@ -435,7 +410,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task GetUserGroupMemberships_WithExistingMemberships_ReturnsCorrectMemberships() {
     // Arrange
-    await SetupAuthentication(); // Add authentication setup
+    _client = await GetAuthenticatedClientAsync();
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -509,7 +484,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task AutoAssignUser_WithMatchingDomain_ReturnsCreatedMembership() {
     // Arrange
-    await SetupAuthentication(); // Only call this, as it calls SetupTestData internally
+    _client = await GetAuthenticatedClientAsync();
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -582,7 +557,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task AutoAssignUser_WithNoMatchingDomain_ReturnsNotFound() {
     // Arrange
-    await SetupAuthentication(); // Only call this, as it calls SetupTestData internally
+    _client = await GetAuthenticatedClientAsync();
 
     var autoAssignDto = new AutoAssignUserDto { UserId = _userId, Email = "test@nonexistent.com" };
 
@@ -609,7 +584,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task GetUsersByGroup_WithExistingMemberships_ReturnsCorrectUsers() {
     // Arrange
-    await SetupAuthentication(); // Add authentication setup
+    _client = await GetAuthenticatedClientAsync();
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -678,7 +653,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   [Fact]
   public async Task GetGroupsByUser_WithExistingMemberships_ReturnsCorrectGroups() {
     // Arrange
-    await SetupAuthentication(); // Add authentication setup
+    _client = await GetAuthenticatedClientAsync();
     using var scope = _factory.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -747,66 +722,9 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
 
   #endregion
 
-  #region Helper Methods
-
-  private async Task SetupAuthentication() {
-    // Create test user and tenant (if not already created)
-    await SetupTestData();
-
-    // Get the user and tenant entities
-    var user = await _context.Users.FirstAsync(u => u.Id == _userId);
-    var tenant = await _context.Tenants.FirstAsync(t => t.Id == _tenantId);
-
-    // Grant permissions for TenantDomain operations
-    var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
-    await permissionService.GrantContentTypePermissionAsync(
-      user.Id,
-      tenant.Id,
-      "TenantDomain",
-      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
-    );
-    // Grant permissions for TenantUserGroup operations
-    await permissionService.GrantContentTypePermissionAsync(
-      user.Id,
-      tenant.Id,
-      "TenantUserGroup",
-      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
-    );
-    // Grant permissions for TenantUserGroupMembership operations
-    await permissionService.GrantContentTypePermissionAsync(
-      user.Id,
-      tenant.Id,
-      "TenantUserGroupMembership",
-      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
-    );
-
-    // Generate JWT token
-    var token = CreateJwtTokenForUserAsync(user, tenant);
-
-    // Set authorization header
-    SetAuthorizationHeader(token);
-  }
-
-  private string CreateJwtTokenForUserAsync(UserModel user, TenantModel tenant) {
-    var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
-
-    var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-
-    var roles = new[] { "User" };
-    var additionalClaims = new[] { new Claim("tenant_id", tenant.Id.ToString()) };
-
-    return jwtService.GenerateAccessToken(userDto, roles, additionalClaims);
-  }
-
-  private void SetAuthorizationHeader(string token) { _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token); }
-
-  private void ClearAuthorizationHeader() { _client.DefaultRequestHeaders.Authorization = null; }
-
   public void Dispose() {
     _scope.Dispose();
     _context.Dispose();
-    _client.Dispose();
+    _client?.Dispose();
   }
-
-  #endregion
 }

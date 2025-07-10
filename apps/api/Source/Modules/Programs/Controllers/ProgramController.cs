@@ -218,10 +218,10 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   }
 
   /// <summary>
-  /// Get a specific program by slug (resource-level read permission)
+  /// Get a specific program by slug (public access for published programs)
   /// </summary>
   [HttpGet("slug/{slug}")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
+  [Public]
   public async Task<ActionResult<ProgramEntity>> GetProgramBySlug(string slug) {
     var program = await programService.GetProgramBySlugAsync(slug);
 
