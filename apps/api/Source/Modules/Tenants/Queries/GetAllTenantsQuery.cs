@@ -7,5 +7,5 @@ namespace GameGuild.Modules.Tenants.Queries;
 /// Query to get all tenants
 /// </summary>
 public class GetAllTenantsQuery(bool includeDeleted = false) : IQuery<Common.Result<IEnumerable<Tenant>>> {
-    public bool IncludeDeleted { get; init; } = includeDeleted;
+  public bool IncludeDeleted { get; init; } = includeDeleted;
 }

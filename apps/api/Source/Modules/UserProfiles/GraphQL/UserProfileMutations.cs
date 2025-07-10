@@ -1,11 +1,9 @@
-using GameGuild.Common;
-using GameGuild.Modules.UserProfiles.Commands;
-using GameGuild.Modules.UserProfiles.Entities;
+using GameGuild.Modules.UserProfiles.Inputs;
 using GameGuild.Modules.Users;
 using MediatR;
 
 
-namespace GameGuild.Modules.UserProfiles.GraphQL;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// GraphQL mutations for UserProfile module using CQRS pattern

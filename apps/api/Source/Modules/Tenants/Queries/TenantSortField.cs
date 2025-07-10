@@ -10,5 +10,5 @@ public enum TenantSortField
   IsActive,
   Slug,
   CreatedAt,
-  UpdatedAt
+  UpdatedAt,
 }

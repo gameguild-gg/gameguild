@@ -1,11 +1,9 @@
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.UserProfiles.Entities;
-using GameGuild.Modules.UserProfiles.Queries;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.UserProfiles.Handlers;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Handler for getting user profile statistics

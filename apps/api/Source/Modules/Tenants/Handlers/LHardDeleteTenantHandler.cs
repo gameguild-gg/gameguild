@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Tenants.Handlers;
 /// <summary>
 /// Handler for permanently deleting a tenant
 /// </summary>
-public class HardDeleteTenantHandler(
+public class LHardDeleteTenantHandler(
   ApplicationDbContext context,
   ILogger<HardDeleteTenantHandler> logger
 ) : ICommandHandler<HardDeleteTenantCommand, Common.Result<bool>>

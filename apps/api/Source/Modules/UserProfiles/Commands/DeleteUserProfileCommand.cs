@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.UserProfiles.Commands;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Command to delete a user profile

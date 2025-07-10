@@ -6,10 +6,8 @@ namespace GameGuild.Common;
 /// <summary>
 /// Kebab case transformer implementation.
 /// </summary>
-public partial class KebabCaseTransformer : CachedCaseTransformer
-{
-  [GeneratedRegex("([a-z])([A-Z])")]
-  private static partial Regex KebabCaseGeneratedRegex();
+public partial class KebabCaseTransformer : CachedCaseTransformer {
+  [GeneratedRegex("([a-z])([A-Z])")] private static partial Regex KebabCaseGeneratedRegex();
 
   [GeneratedRegex(@"^[a-z0-9]+(?:-[a-z0-9]+)*$")]
   private static partial Regex KebabCaseValidationRegex();
@@ -18,18 +16,14 @@ public partial class KebabCaseTransformer : CachedCaseTransformer
     get => "kebab";
   }
 
-  protected override string TransformCore(string input, CaseTransformOptions options)
-  {
+  protected override string TransformCore(string input, CaseTransformOptions options) {
     if (string.IsNullOrEmpty(input)) return string.Empty;
 
     var result = input;
 
     // Apply custom replacements if provided
     if (options.StringReplacements != null)
-      foreach (var replacement in options.StringReplacements)
-      {
-        result = result.Replace(replacement.Key, replacement.Value);
-      }
+      foreach (var replacement in options.StringReplacements) { result = result.Replace(replacement.Key, replacement.Value); }
 
     // Trim whitespace if requested
     if (options.TrimWhitespace) result = result.Trim();
@@ -49,9 +43,9 @@ public partial class KebabCaseTransformer : CachedCaseTransformer
     return result;
   }
 
-  public override bool IsValidFormat(string input)
-  {
+  public override bool IsValidFormat(string input) {
     if (string.IsNullOrEmpty(input)) return false;
+
     return KebabCaseValidationRegex().IsMatch(input);
   }
 }

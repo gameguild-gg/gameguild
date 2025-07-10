@@ -1,7 +1,7 @@
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.UserProfiles.Queries;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Query to get user profile statistics

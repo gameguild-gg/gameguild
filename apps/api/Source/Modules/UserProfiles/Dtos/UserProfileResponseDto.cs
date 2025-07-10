@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.UserProfiles.Dtos;
+﻿namespace GameGuild.Modules.UserProfiles;
 
 public class UserProfileResponseDto {
   public Guid Id { get; set; }

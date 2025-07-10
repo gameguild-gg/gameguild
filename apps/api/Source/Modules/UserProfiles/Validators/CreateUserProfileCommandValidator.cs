@@ -1,12 +1,10 @@
 using FluentValidation;
 using GameGuild.Database;
-using GameGuild.Modules.UserProfiles.Commands;
-using GameGuild.Modules.UserProfiles.Entities;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.UserProfiles.Validators;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// FluentValidation validator for CreateUserProfileCommand

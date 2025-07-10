@@ -9,6 +9,7 @@ using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Tenants.Entities;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

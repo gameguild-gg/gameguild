@@ -1,5 +1,4 @@
 using GameGuild.Common;
-using GameGuild.Modules.UserProfiles.Entities;
 
 
 namespace GameGuild.Modules.UserProfiles;

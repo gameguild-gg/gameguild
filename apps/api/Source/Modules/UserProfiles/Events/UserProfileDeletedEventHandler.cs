@@ -1,7 +1,7 @@
 ﻿using GameGuild.Common;
 
 
-namespace GameGuild.Modules.UserProfiles.Events;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Handles UserProfileDeletedEvent - manages cleanup and notifications

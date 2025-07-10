@@ -1,7 +1,4 @@
-﻿using GameGuild.Modules.UserProfiles.Entities;
-
-
-namespace GameGuild.Modules.UserProfiles.Services;
+﻿namespace GameGuild.Modules.UserProfiles;
 
 public interface IUserProfileService {
   Task<IEnumerable<UserProfile>> GetAllUserProfilesAsync();

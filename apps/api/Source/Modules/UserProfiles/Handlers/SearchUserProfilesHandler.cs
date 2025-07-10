@@ -1,11 +1,9 @@
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.UserProfiles.Entities;
-using GameGuild.Modules.UserProfiles.Queries;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.UserProfiles.Handlers;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Handler for searching user profiles with advanced filtering
@@ -75,7 +73,7 @@ public class SearchUserProfilesHandler(ApplicationDbContext context, ILogger<Sea
         UserProfileSortField.Title => request.SortDirection == SortDirection.Ascending
                                         ? query.OrderBy(up => up.Title)
                                         : query.OrderByDescending(up => up.Title),
-        _ => query.OrderByDescending(up => up.UpdatedAt)
+        _ => query.OrderByDescending(up => up.UpdatedAt),
       };
 
       // Apply pagination

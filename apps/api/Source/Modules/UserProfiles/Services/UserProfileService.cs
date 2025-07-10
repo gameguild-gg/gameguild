@@ -1,9 +1,8 @@
 using GameGuild.Database;
-using GameGuild.Modules.UserProfiles.Entities;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.UserProfiles.Services;
+namespace GameGuild.Modules.UserProfiles;
 
 public class UserProfileService(ApplicationDbContext context) : IUserProfileService {
   public async Task<IEnumerable<UserProfile>> GetAllUserProfilesAsync() {

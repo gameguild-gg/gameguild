@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.UserProfiles.GraphQL;
+﻿namespace GameGuild.Modules.UserProfiles.Inputs;
 
 /// <summary>
 /// Input for updating a user profile

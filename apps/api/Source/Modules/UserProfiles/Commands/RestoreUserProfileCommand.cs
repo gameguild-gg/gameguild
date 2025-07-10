@@ -2,7 +2,7 @@
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.UserProfiles.Commands;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Command to restore a soft-deleted user profile

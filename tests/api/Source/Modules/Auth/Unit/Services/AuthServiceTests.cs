@@ -3,6 +3,7 @@ using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Tenants.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Moq;

@@ -1,8 +1,7 @@
 using GameGuild.Common;
-using GameGuild.Modules.UserProfiles.Entities;
 
 
-namespace GameGuild.Modules.UserProfiles.Queries;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Query to search user profiles with advanced filtering and pagination
