@@ -47,7 +47,8 @@ public class GetUserProfileStatisticsHandler(ApplicationDbContext context, ILogg
       var displayNames = await query.Where(up => up.DisplayName != null).Select(up => up.DisplayName).ToListAsync(cancellationToken);
 
       var patterns = displayNames
-                     .SelectMany(name => name.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                     .Where(name => !string.IsNullOrEmpty(name))
+                     .SelectMany(name => name!.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                      .Where(word => word.Length > 2)
                      .GroupBy(word => word.ToLower())
                      .ToDictionary(g => g.Key, g => g.Count());

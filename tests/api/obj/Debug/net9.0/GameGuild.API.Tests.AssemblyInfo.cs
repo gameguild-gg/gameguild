@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GameGuild.API.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+960a8300a082101345de79971de57931801733cc")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1ef87603dec6a4739989dc1c4f894f13e2a9e085")]
 [assembly: System.Reflection.AssemblyProductAttribute("GameGuild.API.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GameGuild.API.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -97,7 +97,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<TenantDomainDto>(
+    var result = JsonSerializer.Deserialize<TenantDomain>(
       responseContent,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -136,7 +136,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<TenantDomainDto>(
+    var result = JsonSerializer.Deserialize<TenantDomain>(
       responseContent,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -187,7 +187,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<List<TenantDomainDto>>(
+    var result = JsonSerializer.Deserialize<List<TenantDomain>>(
       responseContent,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -231,7 +231,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
     var responseContent = await response.Content.ReadAsStringAsync();
-    var result = JsonSerializer.Deserialize<TenantDomainDto>(
+    var result = JsonSerializer.Deserialize<TenantDomain>(
       responseContent,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
