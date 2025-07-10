@@ -33,7 +33,7 @@ public class TenantAuthService(
     if (tenantId.HasValue)
       selectedTenantId = tenantId.Value;
     else if (availableTenants.First().TenantId.HasValue)
-      selectedTenantId = availableTenants.First().TenantId.Value;
+      selectedTenantId = availableTenants.First().TenantId!.Value;
     else
       // If we somehow don't have a valid tenant ID, return original result
       return authResult;
@@ -65,7 +65,7 @@ public class TenantAuthService(
     authResult.AccessToken = accessToken;
     authResult.TenantId = selectedTenantId;
     authResult.AvailableTenants = availableTenants.Where(tp => tp.TenantId.HasValue)
-                                                  .Select(tp => new TenantInfoDto { Id = tp.TenantId.Value, Name = tp.Tenant?.Name ?? "Unknown Tenant", IsActive = tp.Tenant?.IsActive ?? false })
+                                                  .Select(tp => new TenantInfoDto { Id = tp.TenantId!.Value, Name = tp.Tenant?.Name ?? "Unknown Tenant", IsActive = tp.Tenant?.IsActive ?? false })
                                                   .ToList();
 
     return authResult;

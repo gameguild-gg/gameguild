@@ -4,7 +4,7 @@ using GameGuild.API.Tests.Fixtures;
 using GameGuild.API.Tests.Helpers;
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Auth;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;

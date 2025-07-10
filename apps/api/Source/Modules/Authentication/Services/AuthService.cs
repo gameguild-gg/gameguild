@@ -77,7 +77,7 @@ namespace GameGuild.Modules.Auth {
           // Try to add user to the specified tenant
           await tenantService.AddUserToTenantAsync(user.Id, request.TenantId.Value);
         }
-        catch (Exception ex) {
+        catch (Exception) {
           // Log but continue - tenant association failed but user is still created
         }
       }
