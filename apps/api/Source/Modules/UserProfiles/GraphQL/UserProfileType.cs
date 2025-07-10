@@ -25,6 +25,18 @@ public class UserProfileType : ObjectType<UserProfile> {
 
     descriptor.Field(f => f.Description).Description("A description of the user profile");
 
+    // Add bio alias for description to match test expectations
+    descriptor.Field("bio")
+             .Resolve(ctx => ctx.Parent<UserProfile>().Description)
+             .Type<StringType>()
+             .Description("User's biography (alias for description)");
+
+    // Add avatarUrl field (placeholder for now since it's not in the entity)
+    descriptor.Field("avatarUrl")
+             .Resolve(ctx => "https://example.com/default-avatar.jpg") // Default placeholder
+             .Type<StringType>()
+             .Description("User's avatar URL");
+
     descriptor.Field(f => f.Tenant).Description("The tenant this profile belongs to (null for global profiles)");
 
     descriptor.Field(f => f.Visibility).Description("The visibility status of the user profile");

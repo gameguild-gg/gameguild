@@ -2,7 +2,6 @@ using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using ProgramContentEntity = GameGuild.Modules.Programs.Models.ProgramContent;
 
