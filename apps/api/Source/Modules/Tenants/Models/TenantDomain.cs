@@ -74,7 +74,9 @@ public class TenantDomain : Entity {
   /// Gets the full domain string including subdomain if present
   /// </summary>
   [NotMapped]
-  public string FullDomainName => string.IsNullOrEmpty(Subdomain) ? TopLevelDomain : $"{Subdomain}.{TopLevelDomain}";
+  public string FullDomainName {
+    get => string.IsNullOrEmpty(Subdomain) ? TopLevelDomain : $"{Subdomain}.{TopLevelDomain}";
+  }
 
   /// <summary>
   /// Gets the domain type as a string for display purposes

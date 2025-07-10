@@ -72,7 +72,9 @@ public class UserFinancialMethod : Entity {
   /// <summary>
   /// Last 4 digits for backwards compatibility
   /// </summary>
-  public string? LastFourDigits => LastFour;
+  public string? LastFourDigits {
+    get => LastFour;
+  }
 
   // Navigation properties
   [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;

@@ -28,7 +28,9 @@ public partial class KebabCaseTransformer : CachedCaseTransformer
     [GeneratedRegex(@"^[a-z0-9]+(?:-[a-z0-9]+)*$")] 
     private static partial Regex KebabCaseValidationRegex();
 
-    protected override string CacheKeyPrefix => "kebab";
+    protected override string CacheKeyPrefix {
+      get => "kebab";
+    }
 
     protected override string TransformCore(string input, CaseTransformOptions options)
     {

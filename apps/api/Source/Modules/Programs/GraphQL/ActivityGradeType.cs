@@ -126,9 +126,15 @@ public class ActivityGradeStatistics {
 
   public decimal PassingRate { get; set; }
 
-  public bool HasGrades => TotalGrades > 0;
+  public bool HasGrades {
+    get => TotalGrades > 0;
+  }
 
-  public string AverageGradeFormatted => $"{AverageGrade:F1}%";
+  public string AverageGradeFormatted {
+    get => $"{AverageGrade:F1}%";
+  }
 
-  public string PassingRateFormatted => $"{PassingRate:F1}%";
+  public string PassingRateFormatted {
+    get => $"{PassingRate:F1}%";
+  }
 }

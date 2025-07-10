@@ -10,7 +10,9 @@ public class SnakeCaseTransformer : CachedCaseTransformer
 {
     private static readonly SnakeCaseNamingStrategy NamingStrategy = new();
 
-    protected override string CacheKeyPrefix => "snake";
+    protected override string CacheKeyPrefix {
+      get => "snake";
+    }
 
     protected override string TransformCore(string input, CaseTransformOptions options)
     {
@@ -75,7 +77,7 @@ public static class SnakeCase
     /// </summary>
     /// <typeparam name="T">The type whose name to convert.</typeparam>
     /// <returns>The converted type name in snake_case.</returns>
-    public static string Convert<T>() => Transformer.TransformType<T>();
+    public static string Convert<T>() { return Transformer.TransformType<T>(); }
 
     /// <summary>
     /// Converts a type name to snake_case.
@@ -105,7 +107,7 @@ public static class SnakeCase
     /// </summary>
     /// <param name="names">The strings to convert.</param>
     /// <returns>An array of converted strings in snake_case.</returns>
-    public static string[] ConvertMany(params string[] names) => Transformer.TransformMany(names);
+    public static string[] ConvertMany(params string[] names) { return Transformer.TransformMany(names); }
 
     /// <summary>
     /// Converts multiple type names to snake_case.
@@ -127,10 +129,10 @@ public static class SnakeCase
     /// <summary>
     /// Clears the internal cache by disposing and recreating it. Useful for memory management in long-running applications.
     /// </summary>
-    public static void ClearCache() => CachedCaseTransformer.ClearCache();
+    public static void ClearCache() { CachedCaseTransformer.ClearCache(); }
 
     /// <summary>
     /// Disposes the memory cache. Call this method when the application is shutting down.
     /// </summary>
-    public static void Dispose() => CachedCaseTransformer.Dispose();
+    public static void Dispose() { CachedCaseTransformer.Dispose(); }
 }

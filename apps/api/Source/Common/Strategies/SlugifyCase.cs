@@ -24,7 +24,9 @@ public class SlugCaseTransformer : CachedCaseTransformer
         SlugHelper = new SlugHelper(config);
     }
 
-    protected override string CacheKeyPrefix => "slug";
+    protected override string CacheKeyPrefix {
+      get => "slug";
+    }
 
     protected override string TransformCore(string input, CaseTransformOptions options)
     {
@@ -155,7 +157,7 @@ public static class SlugCase
     /// </summary>
     /// <param name="texts">The strings to convert.</param>
     /// <returns>An array of slug strings.</returns>
-    public static string[] ConvertMany(params string[] texts) => Transformer.TransformMany(texts);
+    public static string[] ConvertMany(params string[] texts) { return Transformer.TransformMany(texts); }
 
     /// <summary>
     /// Generates a unique slug by appending a number if the base slug already exists.
@@ -174,7 +176,7 @@ public static class SlugCase
     /// </summary>
     /// <param name="text">The text to validate.</param>
     /// <returns>True if the text is a valid slug, false otherwise.</returns>
-    public static bool IsValidSlug(string text) => Transformer.IsValidFormat(text);
+    public static bool IsValidSlug(string text) { return Transformer.IsValidFormat(text); }
 
     /// <summary>
     /// Creates a slug from a type name.
@@ -182,8 +184,7 @@ public static class SlugCase
     /// <typeparam name="T">The type whose name to convert.</typeparam>
     /// <param name="maxLength">Maximum length of the resulting slug (default: 100).</param>
     /// <returns>A slug based on the type name.</returns>
-    public static string FromType<T>(int maxLength = 100) => 
-        Transformer.TransformType<T>(new CaseTransformOptions { MaxLength = maxLength });
+    public static string FromType<T>(int maxLength = 100) { return Transformer.TransformType<T>(new CaseTransformOptions { MaxLength = maxLength }); }
 
     /// <summary>
     /// Creates a slug from a type name.
@@ -215,10 +216,10 @@ public static class SlugCase
     /// <summary>
     /// Clears the internal cache by disposing and recreating it. Useful for memory management in long-running applications.
     /// </summary>
-    public static void ClearCache() => CachedCaseTransformer.ClearCache();
+    public static void ClearCache() { CachedCaseTransformer.ClearCache(); }
 
     /// <summary>
     /// Disposes the memory cache. Call this method when the application is shutting down.
     /// </summary>
-    public static void Dispose() => CachedCaseTransformer.Dispose();
+    public static void Dispose() { CachedCaseTransformer.Dispose(); }
 }

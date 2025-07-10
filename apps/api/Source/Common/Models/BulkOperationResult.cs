@@ -36,17 +36,23 @@ public class BulkOperationResult
     /// <summary>
     /// Whether the operation was completely successful
     /// </summary>
-    public bool IsCompletelySuccessful => Failed == 0;
+    public bool IsCompletelySuccessful {
+      get => Failed == 0;
+    }
 
     /// <summary>
     /// Whether the operation was partially successful
     /// </summary>
-    public bool IsPartiallySuccessful => Successful > 0 && Failed > 0;
+    public bool IsPartiallySuccessful {
+      get => Successful > 0 && Failed > 0;
+    }
 
     /// <summary>
     /// Whether the operation completely failed
     /// </summary>
-    public bool IsCompletelyFailed => Successful == 0 && Failed > 0;
+    public bool IsCompletelyFailed {
+      get => Successful == 0 && Failed > 0;
+    }
 
     /// <summary>
     /// Add an error message to the result

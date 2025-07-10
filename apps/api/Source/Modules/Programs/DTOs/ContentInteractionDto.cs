@@ -39,13 +39,21 @@ public class ContentInteractionDto {
   public ProgramUserSummaryDto? ProgramUser { get; set; }
 
   // Computed properties for convenience
-  public bool IsSubmitted => SubmittedAt.HasValue;
+  public bool IsSubmitted {
+    get => SubmittedAt.HasValue;
+  }
 
-  public bool IsCompleted => Status == ProgressStatus.Completed;
+  public bool IsCompleted {
+    get => Status == ProgressStatus.Completed;
+  }
 
-  public bool CanModify => !IsSubmitted;
+  public bool CanModify {
+    get => !IsSubmitted;
+  }
 
-  public int DurationInMinutes => TimeSpentMinutes ?? 0;
+  public int DurationInMinutes {
+    get => TimeSpentMinutes ?? 0;
+  }
 }
 
 /// <summary>

@@ -1,4 +1,6 @@
-﻿namespace GameGuild.Modules.Users;
+﻿using GameGuild.Common;
+
+namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// Query to get user statistics
