@@ -1,3 +1,6 @@
+using GameGuild.Modules.Tenants.Entities;
+
+
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>

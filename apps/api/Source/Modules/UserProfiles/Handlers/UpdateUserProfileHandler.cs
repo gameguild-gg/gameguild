@@ -14,15 +14,15 @@ public class UpdateUserProfileHandler(
   ApplicationDbContext context,
   ILogger<UpdateUserProfileHandler> logger,
   IDomainEventPublisher eventPublisher
-) : ICommandHandler<UpdateUserProfileCommand, GameGuild.Common.Result<UserProfile>> {
-  public async Task<GameGuild.Common.Result<UserProfile>> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken) {
+) : ICommandHandler<UpdateUserProfileCommand, Common.Result<UserProfile>> {
+  public async Task<Common.Result<UserProfile>> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken) {
     try {
       var userProfile = await context.Resources.OfType<UserProfile>()
                                      .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 
       if (userProfile == null) {
-        return GameGuild.Common.Result.Failure<UserProfile>(
-          GameGuild.Common.Error.NotFound("UserProfile.NotFound", $"User profile with ID {request.UserProfileId} not found")
+        return Result.Failure<UserProfile>(
+          Common.Error.NotFound("UserProfile.NotFound", $"User profile with ID {request.UserProfileId} not found")
         );
       }
 
@@ -79,13 +79,13 @@ public class UpdateUserProfileHandler(
         );
       }
 
-      return GameGuild.Common.Result.Success(userProfile);
+      return Result.Success(userProfile);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error updating user profile {UserProfileId}", request.UserProfileId);
 
-      return GameGuild.Common.Result.Failure<UserProfile>(
-        GameGuild.Common.Error.Failure("UserProfile.UpdateFailed", "Failed to update user profile")
+      return Result.Failure<UserProfile>(
+        Common.Error.Failure("UserProfile.UpdateFailed", "Failed to update user profile")
       );
     }
   }

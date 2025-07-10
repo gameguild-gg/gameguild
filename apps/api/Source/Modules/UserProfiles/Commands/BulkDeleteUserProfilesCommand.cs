@@ -6,7 +6,7 @@ namespace GameGuild.Modules.UserProfiles.Commands;
 /// <summary>
 /// Command to bulk delete multiple user profiles
 /// </summary>
-public sealed class BulkDeleteUserProfilesCommand : ICommand<GameGuild.Common.Result<int>> {
+public sealed class BulkDeleteUserProfilesCommand : ICommand<Common.Result<int>> {
   /// <summary>
   /// User profile IDs to delete
   /// </summary>

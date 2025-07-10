@@ -4,7 +4,7 @@ using GameGuild.Modules.Permissions.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenants;
+namespace GameGuild.Modules.Tenants.Entities;
 
 /// <summary>
 /// Unified entity for tenant permissions and user-tenant relationships

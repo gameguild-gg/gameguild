@@ -11,8 +11,8 @@ namespace GameGuild.Modules.UserProfiles.Handlers;
 /// Handler for searching user profiles with advanced filtering
 /// </summary>
 public class SearchUserProfilesHandler(ApplicationDbContext context, ILogger<SearchUserProfilesHandler> logger)
-  : IQueryHandler<SearchUserProfilesQuery, GameGuild.Common.Result<IEnumerable<UserProfile>>> {
-  public async Task<GameGuild.Common.Result<IEnumerable<UserProfile>>> Handle(SearchUserProfilesQuery request, CancellationToken cancellationToken) {
+  : IQueryHandler<SearchUserProfilesQuery, Common.Result<IEnumerable<UserProfile>>> {
+  public async Task<Common.Result<IEnumerable<UserProfile>>> Handle(SearchUserProfilesQuery request, CancellationToken cancellationToken) {
     try {
       IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>()
                                              .Include(up => up.Metadata);
@@ -86,13 +86,13 @@ public class SearchUserProfilesHandler(ApplicationDbContext context, ILogger<Sea
 
       logger.LogDebug("Search returned {Count} user profiles with advanced filters", userProfiles.Count);
 
-      return GameGuild.Common.Result.Success<IEnumerable<UserProfile>>(userProfiles);
+      return Result.Success<IEnumerable<UserProfile>>(userProfiles);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error searching user profiles");
 
-      return GameGuild.Common.Result.Failure<IEnumerable<UserProfile>>(
-        GameGuild.Common.Error.Failure("UserProfile.SearchFailed", "Failed to search user profiles")
+      return Result.Failure<IEnumerable<UserProfile>>(
+        Common.Error.Failure("UserProfile.SearchFailed", "Failed to search user profiles")
       );
     }
   }

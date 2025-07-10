@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Localization;
-using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Tenants.Entities;
 
 
 namespace GameGuild.Modules.Resources;

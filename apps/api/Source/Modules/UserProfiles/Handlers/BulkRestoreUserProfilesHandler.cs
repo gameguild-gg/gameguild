@@ -11,12 +11,12 @@ namespace GameGuild.Modules.UserProfiles.Handlers;
 /// Handler for bulk restoring soft-deleted user profiles
 /// </summary>
 public class BulkRestoreUserProfilesHandler(ApplicationDbContext context, ILogger<BulkRestoreUserProfilesHandler> logger)
-  : ICommandHandler<BulkRestoreUserProfilesCommand, GameGuild.Common.Result<int>> {
-  public async Task<GameGuild.Common.Result<int>> Handle(BulkRestoreUserProfilesCommand request, CancellationToken cancellationToken) {
+  : ICommandHandler<BulkRestoreUserProfilesCommand, Common.Result<int>> {
+  public async Task<Common.Result<int>> Handle(BulkRestoreUserProfilesCommand request, CancellationToken cancellationToken) {
     try {
       var userProfileIds = request.UserProfileIds.ToList();
 
-      if (!userProfileIds.Any()) { return GameGuild.Common.Result.Success(0); }
+      if (!userProfileIds.Any()) { return Result.Success(0); }
 
       var userProfiles = await context.Resources.OfType<UserProfile>()
                                       .IgnoreQueryFilters()
@@ -29,7 +29,7 @@ public class BulkRestoreUserProfilesHandler(ApplicationDbContext context, ILogge
           string.Join(", ", userProfileIds)
         );
 
-        return GameGuild.Common.Result.Success(0);
+        return Result.Success(0);
       }
 
       var restoredCount = 0;
@@ -49,13 +49,13 @@ public class BulkRestoreUserProfilesHandler(ApplicationDbContext context, ILogge
         request.Reason ?? "Not specified"
       );
 
-      return GameGuild.Common.Result.Success(restoredCount);
+      return Result.Success(restoredCount);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error during bulk restore of user profiles");
 
-      return GameGuild.Common.Result.Failure<int>(
-        GameGuild.Common.Error.Failure("UserProfile.BulkRestoreFailed", "Failed to bulk restore user profiles")
+      return Result.Failure<int>(
+        Common.Error.Failure("UserProfile.BulkRestoreFailed", "Failed to bulk restore user profiles")
       );
     }
   }

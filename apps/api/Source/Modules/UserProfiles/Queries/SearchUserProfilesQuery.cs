@@ -7,7 +7,7 @@ namespace GameGuild.Modules.UserProfiles.Queries;
 /// <summary>
 /// Query to search user profiles with advanced filtering and pagination
 /// </summary>
-public sealed class SearchUserProfilesQuery : PaginatedQuery<UserProfile>, IQuery<GameGuild.Common.Result<IEnumerable<UserProfile>>> {
+public sealed class SearchUserProfilesQuery : PaginatedQuery<UserProfile>, IQuery<Common.Result<IEnumerable<UserProfile>>> {
   public DateTime? CreatedAfter { get; set; }
 
   public DateTime? CreatedBefore { get; set; }

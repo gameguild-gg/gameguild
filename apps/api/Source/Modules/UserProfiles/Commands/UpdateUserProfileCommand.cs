@@ -8,7 +8,7 @@ namespace GameGuild.Modules.UserProfiles.Commands;
 /// <summary>
 /// Command to update user profile with validation and business logic
 /// </summary>
-public class UpdateUserProfileCommand : ICommand<GameGuild.Common.Result<UserProfile>> {
+public class UpdateUserProfileCommand : ICommand<Common.Result<UserProfile>> {
   [Required] public Guid UserProfileId { get; set; }
 
   [StringLength(100, MinimumLength = 1)] public string? GivenName { get; set; }

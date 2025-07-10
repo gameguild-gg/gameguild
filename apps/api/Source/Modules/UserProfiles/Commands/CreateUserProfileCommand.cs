@@ -8,7 +8,7 @@ namespace GameGuild.Modules.UserProfiles.Commands;
 /// <summary>
 /// Command to create a new user profile with validation and business logic
 /// </summary>
-public class CreateUserProfileCommand : ICommand<GameGuild.Common.Result<UserProfile>> {
+public class CreateUserProfileCommand : ICommand<Common.Result<UserProfile>> {
   [Required]
   [StringLength(100, MinimumLength = 1)]
   public string GivenName { get; set; } = string.Empty;

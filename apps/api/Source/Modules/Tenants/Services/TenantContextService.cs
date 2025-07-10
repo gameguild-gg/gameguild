@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using GameGuild.Database;
+using GameGuild.Modules.Tenants.Entities;
 using Microsoft.EntityFrameworkCore;
 
 

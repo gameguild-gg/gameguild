@@ -279,7 +279,7 @@ public class ProgramCatalogE2ETests : IClassFixture<TestWebApplicationFactory>, 
         }
     }
 
-    private async Task<(TenantModel Tenant, GameGuild.Modules.Users.User User)> CreateTenantWithUserAsync()
+    private async Task<(TenantModel Tenant, User User)> CreateTenantWithUserAsync()
     {
         var tenant = new TenantModel
         {

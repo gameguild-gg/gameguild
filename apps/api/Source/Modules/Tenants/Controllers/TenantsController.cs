@@ -1,5 +1,6 @@
 using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Tenants.Entities;
 using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Mvc;
 

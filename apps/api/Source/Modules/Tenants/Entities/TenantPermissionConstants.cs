@@ -1,7 +1,7 @@
 ﻿using GameGuild.Modules.Permissions.Models;
 
 
-namespace GameGuild.Modules.Tenants;
+namespace GameGuild.Modules.Tenants.Entities;
 
 /// <summary>
 /// Constants for tenant permission system

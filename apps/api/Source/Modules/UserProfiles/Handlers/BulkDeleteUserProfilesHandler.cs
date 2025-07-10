@@ -11,12 +11,12 @@ namespace GameGuild.Modules.UserProfiles.Handlers;
 /// Handler for bulk deleting user profiles
 /// </summary>
 public class BulkDeleteUserProfilesHandler(ApplicationDbContext context, ILogger<BulkDeleteUserProfilesHandler> logger)
-  : ICommandHandler<BulkDeleteUserProfilesCommand, GameGuild.Common.Result<int>> {
-  public async Task<GameGuild.Common.Result<int>> Handle(BulkDeleteUserProfilesCommand request, CancellationToken cancellationToken) {
+  : ICommandHandler<BulkDeleteUserProfilesCommand, Common.Result<int>> {
+  public async Task<Common.Result<int>> Handle(BulkDeleteUserProfilesCommand request, CancellationToken cancellationToken) {
     try {
       var userProfileIds = request.UserProfileIds.ToList();
 
-      if (!userProfileIds.Any()) { return GameGuild.Common.Result.Success(0); }
+      if (!userProfileIds.Any()) { return Result.Success(0); }
 
       var userProfiles = await context.Resources.OfType<UserProfile>()
                                       .Where(up => userProfileIds.Contains(up.Id) && up.DeletedAt == null)
@@ -28,7 +28,7 @@ public class BulkDeleteUserProfilesHandler(ApplicationDbContext context, ILogger
           string.Join(", ", userProfileIds)
         );
 
-        return GameGuild.Common.Result.Success(0);
+        return Result.Success(0);
       }
 
       var deletedCount = 0;
@@ -53,13 +53,13 @@ public class BulkDeleteUserProfilesHandler(ApplicationDbContext context, ILogger
         request.Reason ?? "Not specified"
       );
 
-      return GameGuild.Common.Result.Success(deletedCount);
+      return Result.Success(deletedCount);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error during bulk delete of user profiles");
 
-      return GameGuild.Common.Result.Failure<int>(
-        GameGuild.Common.Error.Failure("UserProfile.BulkDeleteFailed", "Failed to bulk delete user profiles")
+      return Result.Failure<int>(
+        Common.Error.Failure("UserProfile.BulkDeleteFailed", "Failed to bulk delete user profiles")
       );
     }
   }

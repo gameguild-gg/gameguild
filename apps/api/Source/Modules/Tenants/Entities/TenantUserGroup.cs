@@ -4,7 +4,7 @@ using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenants;
+namespace GameGuild.Modules.Tenants.Entities;
 
 /// <summary>
 /// Represents a user group within a tenant (e.g., Students, Professors, Administrators)
