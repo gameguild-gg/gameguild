@@ -1,17 +1,16 @@
 using System.Security.Claims;
-using GameGuild.Common.Application.Services;
-using GameGuild.Common.Entities;
 using GameGuild.Modules.Authentication.Constants;
 using GameGuild.Modules.Comments.Models;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Programs.Models;
 using GameGuild.Modules.Projects.Models;
+using GameGuild.Modules.Resources;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 
-namespace GameGuild.Common.Application.Attributes;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Generic attribute for resource-level permission checks. This implementation provides

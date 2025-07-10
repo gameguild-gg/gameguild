@@ -1,37 +1,35 @@
-using GameGuild.Data;
-using GameGuild.Modules.Users.Commands;
-using GameGuild.Modules.Users.Notifications;
+using GameGuild.Database;
+using GameGuild.Modules.Users.Events;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Users.Handlers;
+
+namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// Handler for creating a new user with validation and business logic
 /// </summary>
 public class CreateUserHandler(
     ApplicationDbContext context, 
-    ILogger<CreateUserHandler> logger,
-    IMediator mediator) : IRequestHandler<CreateUserCommand, Models.User>
+    ILogger<CreateUserHandler> logger, 
+    IMediator mediator) : IRequestHandler<CreateUserCommand, User>
 {
-    public async Task<Models.User> Handle(CreateUserCommand request, CancellationToken cancellationToken)
+    public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
         // Check if email already exists
         var existingUser = await context.Users
-            .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+            .FirstOrDefaultAsync(user => user.Email == request.Email, cancellationToken);
 
-        if (existingUser != null)
-        {
+        if (existingUser != null) 
             throw new InvalidOperationException($"User with email {request.Email} already exists");
-        }
 
-        var user = new Models.User 
-        { 
-            Name = request.Name, 
-            Email = request.Email, 
+        var user = new User
+        {
+            Name = request.Name,
+            Email = request.Email,
             IsActive = request.IsActive,
             Balance = request.InitialBalance,
-            AvailableBalance = request.InitialBalance
+            AvailableBalance = request.InitialBalance,
         };
 
         context.Users.Add(user);
@@ -39,13 +37,16 @@ public class CreateUserHandler(
 
         logger.LogInformation("User {UserId} created with email {Email}", user.Id, user.Email);
 
-        // Publish notification
-        await mediator.Publish(new UserCreatedNotification
-        {
-            UserId = user.Id,
-            Email = user.Email,
-            Name = user.Name,
-            CreatedAt = user.CreatedAt
+        // Publish domain event
+        await mediator.Publish(new UserCreatedEvent(user.Id, user.Email, user.Name, user.CreatedAt), cancellationToken);
+
+        // Publish legacy notification for backward compatibility
+        await mediator.Publish(new UserCreatedNotification 
+        { 
+            UserId = user.Id, 
+            Email = user.Email, 
+            Name = user.Name, 
+            CreatedAt = user.CreatedAt 
         }, cancellationToken);
 
         return user;

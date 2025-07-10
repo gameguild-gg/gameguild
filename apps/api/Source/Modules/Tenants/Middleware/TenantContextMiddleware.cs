@@ -1,7 +1,4 @@
-using GameGuild.Modules.Tenants.Services;
-
-
-namespace GameGuild.Modules.Tenants.Middleware;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Middleware to handle tenant context in requests

@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 
 
 namespace GameGuild.Modules.GameJams.Models {
-  public class Jam : BaseEntity {
+  public class Jam : Entity {
     [Required] [MaxLength(255)] public string Name { get; set; } = string.Empty;
 
     [Required] [MaxLength(255)] public string Slug { get; set; } = string.Empty;

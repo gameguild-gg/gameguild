@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
 
-namespace GameGuild.Config;
+namespace GameGuild.Common;
 
 public class CorsOptions {
   public const string SectionName = "Cors";

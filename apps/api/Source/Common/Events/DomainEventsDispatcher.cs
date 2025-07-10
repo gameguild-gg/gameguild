@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 
 
-namespace GameGuild.Common.Messaging;
+namespace GameGuild.Common;
 
 internal sealed class DomainEventsDispatcher(IServiceProvider serviceProvider) : IDomainEventsDispatcher {
   private static readonly ConcurrentDictionary<Type, Type> HandlerTypeDictionary = new();

@@ -1,11 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using FluentValidation;
-using GameGuild.Common.Domain;
 using MediatR;
-using Error = GameGuild.Common.Domain.Error;
 
 
-namespace GameGuild.Common.Application.Behaviors;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Unified validation behavior that supports both DataAnnotations and FluentValidation
@@ -45,7 +43,7 @@ public class UnifiedValidationBehavior<TRequest, TResponse>(
 
       // Handle Result pattern responses
       if (typeof(TResponse).IsGenericType &&
-          typeof(TResponse).GetGenericTypeDefinition() == typeof(Domain.Result<>)) {
+          typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>)) {
         var resultType = typeof(TResponse).GetGenericArguments()[0];
         var error = Error.Failure("Validation.Failed", errorMessage);
         var failureMethod = typeof(Result).GetMethod("Failure", new[] { typeof(Error) })!
@@ -76,13 +74,12 @@ public class UnifiedValidationBehavior<TRequest, TResponse>(
 
     var isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
-    if (!isValid) {
+    if (!isValid)
       errors.AddRange(
         validationResults
           .Where(r => !string.IsNullOrEmpty(r.ErrorMessage))
           .Select(r => r.ErrorMessage!)
       );
-    }
 
     return errors;
   }
@@ -90,7 +87,7 @@ public class UnifiedValidationBehavior<TRequest, TResponse>(
   private async Task<List<string>> ValidateWithFluentValidation(TRequest request, CancellationToken cancellationToken) {
     var errors = new List<string>();
 
-    if (!fluentValidators.Any()) { return errors; }
+    if (!fluentValidators.Any()) return errors;
 
     var context = new ValidationContext<TRequest>(request);
 

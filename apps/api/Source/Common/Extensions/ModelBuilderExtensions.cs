@@ -1,10 +1,9 @@
 using System.Linq.Expressions;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Common.Infrastructure.Data;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Extension methods for configuring base entity properties in Entity Framework

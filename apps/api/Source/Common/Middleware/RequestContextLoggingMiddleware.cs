@@ -1,27 +1,21 @@
-﻿using Microsoft.Extensions.Primitives;
-using Serilog.Context;
+﻿using Serilog.Context;
 
 
-namespace GameGuild.Common.Infrastructure.Middleware;
+namespace GameGuild.Common;
 
-public class RequestContextLoggingMiddleware(RequestDelegate next)
-{
-    private const string CorrelationIdHeaderName = "Correlation-Id";
+public class RequestContextLoggingMiddleware(RequestDelegate next) {
+  private const string CorrelationIdHeaderName = "Correlation-Id";
 
-    public Task Invoke(HttpContext context)
-    {
-        using (LogContext.PushProperty("CorrelationId", GetCorrelationId(context)))
-        {
-            return next.Invoke(context);
-        }
-    }
+  public Task Invoke(HttpContext context) {
+    using (LogContext.PushProperty("CorrelationId", GetCorrelationId(context))) { return next.Invoke(context); }
+  }
 
-    private static string GetCorrelationId(HttpContext context)
-    {
-        context.Request.Headers.TryGetValue(
-            CorrelationIdHeaderName,
-            out var correlationId);
+  private static string GetCorrelationId(HttpContext context) {
+    context.Request.Headers.TryGetValue(
+      CorrelationIdHeaderName,
+      out var correlationId
+    );
 
-        return correlationId.FirstOrDefault() ?? context.TraceIdentifier;
-    }
+    return correlationId.FirstOrDefault() ?? context.TraceIdentifier;
+  }
 }

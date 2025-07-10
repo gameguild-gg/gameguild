@@ -1,10 +1,9 @@
-using GameGuild.Data;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
-using UserModel = GameGuild.Modules.Users.Models.User;
+using UserModel = GameGuild.Modules.Users.User;
 
 
-namespace GameGuild.Modules.Tenants.Services;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Implementation of tenant domain service for managing domain-based user group assignments

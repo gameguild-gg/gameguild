@@ -1,15 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Users.Models;
+namespace GameGuild.Modules.Users;
 
 [Table("Users")]
 [Index(nameof(Email), IsUnique = true)]
-public class User : BaseEntity {
+public sealed class User : Entity {
   [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
 
   [Required]
@@ -23,30 +24,29 @@ public class User : BaseEntity {
   /// Total wallet balance including pending/frozen funds
   /// </summary>
   [Column(TypeName = "decimal(10,2)")]
-  public decimal Balance { get; set; } = 0;
+  public decimal Balance { get; set; }
 
   /// <summary>
   /// Available balance that can be spent (excludes frozen/pending funds)
   /// </summary>
   [Column(TypeName = "decimal(10,2)")]
-  public decimal AvailableBalance { get; set; } = 0;
+  public decimal AvailableBalance { get; set; }
 
   /// <summary>
   /// Navigation property to user credentials
   /// </summary>
-  public virtual ICollection<Credential> Credentials { get; set; } = new List<Credential>();
+  public ICollection<Credential> Credentials { get; set; } = new List<Credential>();
 
   /// <summary>
   /// Navigation property to tenant permissions and memberships
   /// </summary>
-  public virtual ICollection<TenantPermission> TenantPermissions { get; set; } = new List<TenantPermission>();
+  public ICollection<TenantPermission> TenantPermissions { get; set; } = new List<TenantPermission>();
 
   /// <summary>
   /// Navigation property to global content type permissions (Layer 2a of permission system)
   /// </summary>
-  public virtual ICollection<ContentTypePermission> ContentTypePermissions { get; set; } = new List<ContentTypePermission>();
+  public ICollection<ContentTypePermission> ContentTypePermissions { get; set; } = new List<ContentTypePermission>();
 
-  /// <summary>
   /// <summary>
   /// Default constructor
   /// </summary>

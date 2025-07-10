@@ -1,13 +1,13 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Resources;
 
 
-namespace GameGuild.Modules.Contents.Models;
+namespace GameGuild.Modules.Contents;
 
 /// <summary>
 /// Represents a license that can be assigned to content.
 /// </summary>
-public class ContentLicense : ResourceBase {
+public class ContentLicense : Resource {
   /// <summary>
   /// Optional URL to the license text
   /// </summary>

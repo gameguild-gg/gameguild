@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace GameGuild.Modules.Programs.Models;
 
 [Table("activity_grades")]
-public class ActivityGrade : BaseEntity {
+public class ActivityGrade : Entity {
   public Guid ContentInteractionId { get; set; }
 
   public Guid GraderProgramUserId { get; set; }

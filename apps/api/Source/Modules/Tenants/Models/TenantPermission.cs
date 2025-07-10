@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenants.Models;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Unified entity for tenant permissions and user-tenant relationships

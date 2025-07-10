@@ -2,19 +2,18 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using GameGuild.API.Tests.Fixtures;
-using GameGuild.Common.Enums;
-using GameGuild.Common.Services;
-using GameGuild.Data;
+using GameGuild.Common;
+using GameGuild.Database;
 using GameGuild.Modules.Authentication.Dtos;
 using GameGuild.Modules.Authentication.Services;
-using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Projects.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
-using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
+using TenantModel = GameGuild.Modules.Tenants.Tenant;
 
 
 namespace GameGuild.API.Tests.Modules.Projects.E2E.GraphQL;

@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace GameGuild.Modules.Programs.Models;
 
 [Table("content_interactions")]
-public class ContentInteraction : BaseEntity {
+public class ContentInteraction : Entity {
   public Guid ProgramUserId { get; set; }
 
   public Guid ContentId { get; set; }

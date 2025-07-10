@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Resources.Models;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Resources;
+using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -14,7 +14,7 @@ namespace GameGuild.Modules.Reputations.Models;
 [Table("ReputationLevels")]
 [Index(nameof(MinimumScore))]
 [Index(nameof(SortOrder))]
-public class ReputationTier : ResourceBase, ITenantable {
+public class ReputationTier : Resource, ITenantable {
   /// <summary>
   /// Unique name/identifier for this reputation tier
   /// </summary>

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Resources;
 using GameGuild.Modules.Teams.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +14,7 @@ namespace GameGuild.Modules.Projects.Models;
 [Index(nameof(ProjectId), nameof(TeamId), IsUnique = true, Name = "IX_ProjectTeams_Project_Team")]
 [Index(nameof(TeamId), Name = "IX_ProjectTeams_Team")]
 [Index(nameof(AssignedAt), Name = "IX_ProjectTeams_Date")]
-public class ProjectTeam : ResourceBase {
+public class ProjectTeam : Resource {
   /// <summary>
   /// Project the team is working on
   /// </summary>

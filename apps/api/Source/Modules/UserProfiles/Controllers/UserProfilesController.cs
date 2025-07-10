@@ -125,10 +125,7 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<UserProfileResponseDto>> CreateUserProfile([FromBody] CreateUserProfileDto createDto)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var command = new CreateUserProfileCommand
         {
@@ -170,10 +167,7 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
         [FromBody] UpdateUserProfileDto updateDto,
         [FromHeader(Name = "If-Match")] int? ifMatch = null)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var command = new UpdateUserProfileCommand
         {

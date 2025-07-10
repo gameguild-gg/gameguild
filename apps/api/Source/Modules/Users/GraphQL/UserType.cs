@@ -1,7 +1,7 @@
-namespace GameGuild.Modules.Users.GraphQL;
+namespace GameGuild.Modules.Users;
 
-public class UserType : ObjectType<Models.User> {
-  protected override void Configure(IObjectTypeDescriptor<Models.User> descriptor) {
+public class UserType : ObjectType<User> {
+  protected override void Configure(IObjectTypeDescriptor<User> descriptor) {
     descriptor.Description("Represents a user in the CMS system with full EntityBase support.");
 
     // Base Entity Properties
@@ -13,8 +13,7 @@ public class UserType : ObjectType<Models.User> {
 
     descriptor.Field(u => u.UpdatedAt).Description("The date and time when the user was last updated.");
 
-    descriptor.Field(u => u.DeletedAt)
-              .Description("The date and time when the user was soft deleted (null if not deleted).");
+    descriptor.Field(u => u.DeletedAt).Description("The date and time when the user was soft deleted (null if not deleted).");
 
     descriptor.Field(u => u.IsDeleted).Description("Indicates whether the user has been soft deleted.");
 

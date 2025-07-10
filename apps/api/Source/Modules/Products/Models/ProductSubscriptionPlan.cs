@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using GameGuild.Modules.Subscriptions.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -20,7 +19,7 @@ namespace GameGuild.Modules.Products.Models;
 [Index(nameof(IsDefault))]
 [Index(nameof(Price))]
 [Index(nameof(BillingInterval))]
-public class ProductSubscriptionPlan : BaseEntity {
+public class ProductSubscriptionPlan : Entity {
   /// <summary>
   /// Foreign key to the Product entity
   /// </summary>

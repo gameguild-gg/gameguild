@@ -1,6 +1,6 @@
-using GameGuild.Common.Domain.Enums;
-using GameGuild.Data;
-using GameGuild.Modules.Contents.Models;
+using GameGuild.Common;
+using GameGuild.Database;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Products.Models;
 using Microsoft.EntityFrameworkCore;
 using ProductEntity = GameGuild.Modules.Products.Models.Product;

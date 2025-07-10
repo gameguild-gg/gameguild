@@ -1,6 +1,9 @@
-﻿namespace GameGuild.Common.Entities;
+﻿namespace GameGuild.Common;
 
-internal sealed class DateTimeProvider : Abstractions.IDateTimeProvider {
+/// <summary>
+/// System date time provider implementation
+/// </summary>
+public class DateTimeProvider : IDateTimeProvider {
   public DateTime UtcNow {
     get => DateTime.UtcNow;
   }

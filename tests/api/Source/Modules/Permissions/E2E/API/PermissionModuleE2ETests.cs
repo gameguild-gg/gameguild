@@ -3,17 +3,17 @@ using System.Text;
 using System.Text.Json;
 using GameGuild.API.Tests.Fixtures;
 using GameGuild.Common;
-using GameGuild.Common.Entities;
-using GameGuild.Data;
+using GameGuild.Database;
 using GameGuild.Modules.Authentication.Dtos;
 using GameGuild.Modules.Authentication.Services;
 using GameGuild.Modules.Comments.Models;
+using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
-using UserModel = GameGuild.Modules.Users.Models.User;
+using TenantModel = GameGuild.Modules.Tenants.Tenant;
+using UserModel = GameGuild.Modules.Users.User;
 
 
 namespace GameGuild.API.Tests.Modules.Permissions.E2E.API;

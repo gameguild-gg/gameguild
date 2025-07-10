@@ -1,6 +1,6 @@
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
+using GameGuild.Database;
 using GameGuild.Modules.Payments.Models;
-using GameGuild.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Payments.Services;
@@ -64,10 +64,7 @@ public class PaymentService(ApplicationDbContext context) : IPaymentService
         var paymentMethod = await context.UserFinancialMethods
             .FirstOrDefaultAsync(pm => pm.Id == id && pm.UserId == userId);
 
-        if (paymentMethod == null)
-        {
-            return false;
-        }
+        if (paymentMethod == null) return false;
 
         // Soft delete
         paymentMethod.DeletedAt = DateTime.UtcNow;
@@ -82,21 +79,15 @@ public class PaymentService(ApplicationDbContext context) : IPaymentService
             .Where(t => t.FromUserId == userId || t.ToUserId == userId)
             .AsQueryable();
 
-        if (type.HasValue)
-        {
-            query = query.Where(t => t.Type == type.Value);
-        }
+        if (type.HasValue) query = query.Where(t => t.Type == type.Value);
 
-        if (status.HasValue)
-        {
-            query = query.Where(t => t.Status == status.Value);
-        }
+        if (status.HasValue) query = query.Where(t => t.Status == status.Value);
 
         return await query
-            .Skip(skip)
-            .Take(take)
-            .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync();
+                     .Skip(skip)
+                     .Take(take)
+                     .OrderByDescending(t => t.CreatedAt)
+                     .ToListAsync();
     }
 
     public async Task<FinancialTransaction?> GetTransactionByIdAsync(Guid id, Guid userId)
@@ -130,10 +121,7 @@ public class PaymentService(ApplicationDbContext context) : IPaymentService
         var transaction = await context.FinancialTransactions
             .FirstOrDefaultAsync(t => t.Id == transactionId && t.FromUserId == userId);
 
-        if (transaction == null)
-        {
-            return null;
-        }
+        if (transaction == null) return null;
 
         transaction.PaymentMethodId = processDto.PaymentMethodId;
         transaction.ExternalTransactionId = processDto.ExternalTransactionId;
@@ -156,36 +144,24 @@ public class PaymentService(ApplicationDbContext context) : IPaymentService
     {
         var query = context.FinancialTransactions.AsQueryable();
 
-        if (type.HasValue)
-        {
-            query = query.Where(t => t.Type == type.Value);
-        }
+        if (type.HasValue) query = query.Where(t => t.Type == type.Value);
 
-        if (status.HasValue)
-        {
-            query = query.Where(t => t.Status == status.Value);
-        }
+        if (status.HasValue) query = query.Where(t => t.Status == status.Value);
 
         return await query
-            .Skip(skip)
-            .Take(take)
-            .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync();
+                     .Skip(skip)
+                     .Take(take)
+                     .OrderByDescending(t => t.CreatedAt)
+                     .ToListAsync();
     }
 
     public async Task<PaymentStatisticsDto> GetPaymentStatisticsAsync(DateTime? fromDate = null, DateTime? toDate = null)
     {
         var query = context.FinancialTransactions.AsQueryable();
 
-        if (fromDate.HasValue)
-        {
-            query = query.Where(t => t.CreatedAt >= fromDate.Value);
-        }
+        if (fromDate.HasValue) query = query.Where(t => t.CreatedAt >= fromDate.Value);
 
-        if (toDate.HasValue)
-        {
-            query = query.Where(t => t.CreatedAt <= toDate.Value);
-        }
+        if (toDate.HasValue) query = query.Where(t => t.CreatedAt <= toDate.Value);
 
         var transactions = await query.ToListAsync();
 
@@ -208,10 +184,7 @@ public class PaymentService(ApplicationDbContext context) : IPaymentService
         var transaction = await context.FinancialTransactions
             .FirstOrDefaultAsync(t => t.Id == transactionId);
 
-        if (transaction == null || transaction.Status != TransactionStatus.Completed)
-        {
-            return false;
-        }
+        if (transaction == null || transaction.Status != TransactionStatus.Completed) return false;
 
         var refundAmount = amount ?? transaction.Amount;
 
@@ -237,22 +210,13 @@ public class PaymentService(ApplicationDbContext context) : IPaymentService
         var transaction = await context.FinancialTransactions
             .FirstOrDefaultAsync(t => t.Id == transactionId);
 
-        if (transaction == null)
-        {
-            return null;
-        }
+        if (transaction == null) return null;
 
         transaction.Status = status;
         
-        if (status == TransactionStatus.Completed)
-        {
-            transaction.ProcessedAt = DateTime.UtcNow;
-        }
+        if (status == TransactionStatus.Completed) transaction.ProcessedAt = DateTime.UtcNow;
 
-        if (!string.IsNullOrEmpty(reason))
-        {
-            transaction.FailureReason = reason;
-        }
+        if (!string.IsNullOrEmpty(reason)) transaction.FailureReason = reason;
 
         await context.SaveChangesAsync();
         return transaction;

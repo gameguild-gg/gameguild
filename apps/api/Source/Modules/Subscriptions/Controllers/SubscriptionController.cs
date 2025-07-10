@@ -1,5 +1,4 @@
-using GameGuild.Common.Application.Attributes;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Subscriptions.Models;
 using GameGuild.Modules.Subscriptions.Services;
@@ -23,10 +22,7 @@ public class SubscriptionController(ISubscriptionService subscriptionService) : 
     {
         // Extract user ID from JWT token claims
         var userIdClaim = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized(new { message = "User ID not found in token" });
-        }
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
         var subscriptions = await subscriptionService.GetUserSubscriptionsAsync(userId);
         return Ok(subscriptions);
@@ -39,16 +35,10 @@ public class SubscriptionController(ISubscriptionService subscriptionService) : 
     public async Task<ActionResult<UserSubscription>> GetMyActiveSubscription()
     {
         var userIdClaim = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized(new { message = "User ID not found in token" });
-        }
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
         var subscription = await subscriptionService.GetActiveSubscriptionAsync(userId);
-        if (subscription == null)
-        {
-            return NotFound(new { message = "No active subscription found" });
-        }
+        if (subscription == null) return NotFound(new { message = "No active subscription found" });
 
         return Ok(subscription);
     }
@@ -61,10 +51,7 @@ public class SubscriptionController(ISubscriptionService subscriptionService) : 
     public async Task<ActionResult<UserSubscription>> GetSubscription(Guid id)
     {
         var subscription = await subscriptionService.GetSubscriptionByIdAsync(id);
-        if (subscription == null)
-        {
-            return NotFound();
-        }
+        if (subscription == null) return NotFound();
 
         return Ok(subscription);
     }
@@ -90,15 +77,9 @@ public class SubscriptionController(ISubscriptionService subscriptionService) : 
     public async Task<ActionResult<UserSubscription>> CreateSubscription([FromBody] CreateSubscriptionDto createDto)
     {
         var userIdClaim = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized(new { message = "User ID not found in token" });
-        }
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var subscription = await subscriptionService.CreateSubscriptionAsync(userId, createDto);
         return CreatedAtAction(nameof(GetSubscription), new { id = subscription.Id }, subscription);
@@ -111,16 +92,10 @@ public class SubscriptionController(ISubscriptionService subscriptionService) : 
     public async Task<ActionResult<UserSubscription>> CancelSubscription(Guid id)
     {
         var userIdClaim = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized(new { message = "User ID not found in token" });
-        }
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
         var subscription = await subscriptionService.CancelSubscriptionAsync(id, userId);
-        if (subscription == null)
-        {
-            return NotFound(new { message = "Subscription not found or not owned by user" });
-        }
+        if (subscription == null) return NotFound(new { message = "Subscription not found or not owned by user" });
 
         return Ok(subscription);
     }
@@ -132,16 +107,10 @@ public class SubscriptionController(ISubscriptionService subscriptionService) : 
     public async Task<ActionResult<UserSubscription>> ResumeSubscription(Guid id)
     {
         var userIdClaim = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized(new { message = "User ID not found in token" });
-        }
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
         var subscription = await subscriptionService.ResumeSubscriptionAsync(id, userId);
-        if (subscription == null)
-        {
-            return NotFound(new { message = "Subscription not found or not owned by user" });
-        }
+        if (subscription == null) return NotFound(new { message = "Subscription not found or not owned by user" });
 
         return Ok(subscription);
     }
@@ -153,21 +122,12 @@ public class SubscriptionController(ISubscriptionService subscriptionService) : 
     public async Task<ActionResult<UserSubscription>> UpdatePaymentMethod(Guid id, [FromBody] UpdatePaymentMethodDto updateDto)
     {
         var userIdClaim = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized(new { message = "User ID not found in token" });
-        }
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var subscription = await subscriptionService.UpdatePaymentMethodAsync(id, userId, updateDto.PaymentMethodId);
-        if (subscription == null)
-        {
-            return NotFound(new { message = "Subscription not found or not owned by user" });
-        }
+        if (subscription == null) return NotFound(new { message = "Subscription not found or not owned by user" });
 
         return Ok(subscription);
     }

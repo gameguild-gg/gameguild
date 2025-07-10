@@ -1,4 +1,4 @@
-using GameGuild.Common.Application.Attributes;
+using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.DTOs;
 using GameGuild.Modules.Programs.Interfaces;
@@ -192,6 +192,6 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
   private async Task ValidateGradeBelongsToProgram(Guid gradeId, Guid programId) {
     var grade = await activityGradeService.GetGradeByIdAsync(gradeId);
 
-    if (grade?.ContentInteraction?.Content?.ProgramId != programId) { throw new UnauthorizedAccessException($"Grade {gradeId} does not belong to program {programId}"); }
+    if (grade?.ContentInteraction?.Content?.ProgramId != programId) throw new UnauthorizedAccessException($"Grade {gradeId} does not belong to program {programId}");
   }
 }

@@ -1,8 +1,8 @@
-using GameGuild.Common.Presentation.GraphQL.Authorization;
+using GameGuild.Common.Authorization;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Users.GraphQL;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Programs.GraphQL;
@@ -29,7 +29,7 @@ public class ActivityGradeMutations {
       var interactions = await contentInteractionService.GetUserInteractionsAsync(Guid.Empty);
       var interaction = interactions.FirstOrDefault(i => i.Id == input.ContentInteractionId);
 
-      if (interaction?.Content?.ProgramId != programId) { return new ActivityGradeResult { Success = false, ErrorMessage = "Content interaction does not belong to the specified program.", Grade = null }; }
+      if (interaction?.Content?.ProgramId != programId) return new ActivityGradeResult { Success = false, ErrorMessage = "Content interaction does not belong to the specified program.", Grade = null };
 
       var grade = await activityGradeService.GradeActivityAsync(
                     input.ContentInteractionId,
@@ -59,7 +59,7 @@ public class ActivityGradeMutations {
       // Verify the grade belongs to the specified program
       var existingGrade = await activityGradeService.GetGradeByIdAsync(input.GradeId);
 
-      if (existingGrade?.ContentInteraction?.Content?.ProgramId != programId) { return new ActivityGradeResult { Success = false, ErrorMessage = "Grade does not belong to the specified program.", Grade = null }; }
+      if (existingGrade?.ContentInteraction?.Content?.ProgramId != programId) return new ActivityGradeResult { Success = false, ErrorMessage = "Grade does not belong to the specified program.", Grade = null };
 
       var updatedGrade = await activityGradeService.UpdateGradeAsync(
                            input.GradeId,
@@ -68,7 +68,7 @@ public class ActivityGradeMutations {
                            input.GradingDetails
                          );
 
-      if (updatedGrade == null) { return new ActivityGradeResult { Success = false, ErrorMessage = "Grade not found.", Grade = null }; }
+      if (updatedGrade == null) return new ActivityGradeResult { Success = false, ErrorMessage = "Grade not found.", Grade = null };
 
       return new ActivityGradeResult { Success = true, ErrorMessage = null, Grade = updatedGrade };
     }
@@ -89,11 +89,11 @@ public class ActivityGradeMutations {
       // Verify the grade belongs to the specified program
       var existingGrade = await activityGradeService.GetGradeByIdAsync(gradeId);
 
-      if (existingGrade?.ContentInteraction?.Content?.ProgramId != programId) { return new ActivityGradeResult { Success = false, ErrorMessage = "Grade does not belong to the specified program.", Grade = null }; }
+      if (existingGrade?.ContentInteraction?.Content?.ProgramId != programId) return new ActivityGradeResult { Success = false, ErrorMessage = "Grade does not belong to the specified program.", Grade = null };
 
       var deleted = await activityGradeService.DeleteGradeAsync(gradeId);
 
-      if (!deleted) { return new ActivityGradeResult { Success = false, ErrorMessage = "Grade not found or could not be deleted.", Grade = null }; }
+      if (!deleted) return new ActivityGradeResult { Success = false, ErrorMessage = "Grade not found or could not be deleted.", Grade = null };
 
       return new ActivityGradeResult { Success = true, ErrorMessage = null, Grade = null };
     }

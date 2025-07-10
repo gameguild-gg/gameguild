@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using GameGuild.Common.Domain.Enums;
-using GameGuild.Modules.Contents.Models;
-using GameGuild.Modules.Tenants.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Contents;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

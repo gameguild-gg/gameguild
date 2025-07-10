@@ -1,8 +1,8 @@
-using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Products.Services;
-using GameGuild.Modules.Users.GraphQL;
+using GameGuild.Modules.Users;
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
-using ProductTypeEnum = GameGuild.Common.Domain.Enums.ProductType;
+using ProductTypeEnum = GameGuild.Common.ProductType;
 
 
 namespace GameGuild.Modules.Products.GraphQL;

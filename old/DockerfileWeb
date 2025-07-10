@@ -25,7 +25,7 @@ WORKDIR /app
 RUN apt-get clean && apt-get update
 
 # copy the files
-COPY . /app
+COPY .. /app
 
 # Install dependencies
 RUN npm run install:web

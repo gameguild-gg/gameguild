@@ -1,13 +1,13 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Resources;
 
 
-namespace GameGuild.Modules.Contents.Models;
+namespace GameGuild.Modules.Contents;
 
 /// <summary>
 /// Represents a content item that is a specialized resource.
 /// </summary>
-public abstract class Content : ResourceBase {
+public abstract class Content : Resource {
   // Content-specific properties can be added here if needed
 
   /// <summary>

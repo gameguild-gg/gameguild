@@ -70,7 +70,7 @@ public class ContentInteractionType : ObjectType<ContentInteraction> {
               .Resolve(context => {
                   var interaction = context.Parent<ContentInteraction>();
 
-                  if (interaction is { FirstAccessedAt: not null, LastAccessedAt: not null }) { return (int)(interaction.LastAccessedAt.Value - interaction.FirstAccessedAt.Value).TotalMinutes; }
+                  if (interaction is { FirstAccessedAt: not null, LastAccessedAt: not null }) return (int)(interaction.LastAccessedAt.Value - interaction.FirstAccessedAt.Value).TotalMinutes;
 
                   return null;
                 }

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -15,7 +15,7 @@ namespace GameGuild.Modules.Reputations.Models;
 [Index(nameof(ActionType), IsUnique = true)]
 [Index(nameof(Points))]
 [Index(nameof(IsActive))]
-public class ReputationAction : ResourceBase {
+public class ReputationAction : Resource {
   /// <summary>
   /// Unique identifier for this action type
   /// </summary>

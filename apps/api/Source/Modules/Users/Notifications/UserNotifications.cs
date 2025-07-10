@@ -1,9 +1,10 @@
 using MediatR;
 
-namespace GameGuild.Modules.Users.Notifications;
+
+namespace GameGuild.Modules.Users;
 
 /// <summary>
-/// Notification sent when a user is created
+/// Legacy notification sent when a user is created
 /// </summary>
 public class UserCreatedNotification : INotification
 {
@@ -14,7 +15,7 @@ public class UserCreatedNotification : INotification
 }
 
 /// <summary>
-/// Notification sent when a user is updated
+/// Legacy notification sent when a user is updated
 /// </summary>
 public class UserUpdatedNotification : INotification
 {
@@ -24,7 +25,7 @@ public class UserUpdatedNotification : INotification
 }
 
 /// <summary>
-/// Notification sent when a user is deleted
+/// Legacy notification sent when a user is deleted
 /// </summary>
 public class UserDeletedNotification : INotification
 {
@@ -34,7 +35,7 @@ public class UserDeletedNotification : INotification
 }
 
 /// <summary>
-/// Notification sent when a user is restored
+/// Legacy notification sent when a user is restored
 /// </summary>
 public class UserRestoredNotification : INotification
 {
@@ -43,7 +44,7 @@ public class UserRestoredNotification : INotification
 }
 
 /// <summary>
-/// Notification sent when a user's balance is updated
+/// Legacy notification sent when a user's balance is updated
 /// </summary>
 public class UserBalanceUpdatedNotification : INotification
 {

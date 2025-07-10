@@ -1,5 +1,5 @@
-using GameGuild.Common.Domain.Enums;
-using GameGuild.Data;
+using GameGuild.Common;
+using GameGuild.Database;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +27,7 @@ public class ContentInteractionService : IContentInteractionService {
 
     if (existingInteraction != null) {
       // If already submitted, create a new interaction based on the last one
-      if (existingInteraction.SubmittedAt.HasValue) { return await CreateNewInteractionFromPreviousAsync(existingInteraction); }
+      if (existingInteraction.SubmittedAt.HasValue) return await CreateNewInteractionFromPreviousAsync(existingInteraction);
 
       // Otherwise, resume the existing interaction
       existingInteraction.FirstAccessedAt ??= DateTime.UtcNow;
@@ -61,7 +61,7 @@ public class ContentInteractionService : IContentInteractionService {
   public async Task<ContentInteraction> UpdateProgressAsync(Guid interactionId, decimal completionPercentage) {
     var interaction = await GetInteractionByIdAsync(interactionId);
 
-    if (interaction.SubmittedAt.HasValue) { throw new InvalidOperationException("Cannot update progress on submitted interaction. Create a new interaction to continue work."); }
+    if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Cannot update progress on submitted interaction. Create a new interaction to continue work.");
 
     interaction.CompletionPercentage = Math.Min(100, Math.Max(0, completionPercentage));
     interaction.LastAccessedAt = DateTime.UtcNow;
@@ -83,7 +83,7 @@ public class ContentInteractionService : IContentInteractionService {
   public async Task<ContentInteraction> SubmitContentAsync(Guid interactionId, string submissionData) {
     var interaction = await GetInteractionByIdAsync(interactionId);
 
-    if (interaction.SubmittedAt.HasValue) { throw new InvalidOperationException("Interaction has already been submitted and cannot be changed."); }
+    if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Interaction has already been submitted and cannot be changed.");
 
     interaction.SubmissionData = submissionData;
     interaction.SubmittedAt = DateTime.UtcNow;
@@ -103,7 +103,7 @@ public class ContentInteractionService : IContentInteractionService {
   public async Task<ContentInteraction> CompleteContentAsync(Guid interactionId) {
     var interaction = await GetInteractionByIdAsync(interactionId);
 
-    if (interaction.SubmittedAt.HasValue) { throw new InvalidOperationException("Cannot modify submitted interaction. Create a new interaction to continue work."); }
+    if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Cannot modify submitted interaction. Create a new interaction to continue work.");
 
     interaction.Status = ProgressStatus.Completed;
     interaction.CompletedAt = DateTime.UtcNow;
@@ -144,7 +144,7 @@ public class ContentInteractionService : IContentInteractionService {
   public async Task<ContentInteraction> UpdateTimeSpentAsync(Guid interactionId, int additionalMinutes) {
     var interaction = await GetInteractionByIdAsync(interactionId);
 
-    if (interaction.SubmittedAt.HasValue) { throw new InvalidOperationException("Cannot update time spent on submitted interaction."); }
+    if (interaction.SubmittedAt.HasValue) throw new InvalidOperationException("Cannot update time spent on submitted interaction.");
 
     interaction.TimeSpentMinutes = (interaction.TimeSpentMinutes ?? 0) + additionalMinutes;
     interaction.LastAccessedAt = DateTime.UtcNow;
@@ -164,7 +164,7 @@ public class ContentInteractionService : IContentInteractionService {
                                     .Include(ci => ci.ActivityGrades)
                                     .FirstOrDefaultAsync(ci => ci.Id == interactionId);
 
-    if (interaction == null) { throw new InvalidOperationException($"Content interaction with ID {interactionId} not found."); }
+    if (interaction == null) throw new InvalidOperationException($"Content interaction with ID {interactionId} not found.");
 
     return interaction;
   }

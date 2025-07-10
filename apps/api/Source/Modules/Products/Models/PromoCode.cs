@@ -1,9 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using GameGuild.Modules.Payments.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -20,7 +19,7 @@ namespace GameGuild.Modules.Products.Models;
 [Index(nameof(IsActive))]
 [Index(nameof(ValidFrom))]
 [Index(nameof(ValidUntil))]
-public class PromoCode : BaseEntity {
+public class PromoCode : Entity {
   /// <summary>
   /// The promotional code that users enter
   /// </summary>

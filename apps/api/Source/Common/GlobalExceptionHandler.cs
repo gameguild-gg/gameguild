@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Common.Infrastructure;
+namespace GameGuild.Common;
 
 internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
   : IExceptionHandler {

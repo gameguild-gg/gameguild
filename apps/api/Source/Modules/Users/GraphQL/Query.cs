@@ -1,15 +1,13 @@
-using GameGuild.Modules.Users.Queries;
-using GameGuild.Modules.Users.Services;
 using MediatR;
 
 
-namespace GameGuild.Modules.Users.GraphQL;
+namespace GameGuild.Modules.Users;
 
 public class Query {
   /// <summary>
   /// Gets all active users using CQRS pattern with MediatR.
   /// </summary>
-  public async Task<IEnumerable<Models.User>> GetUsers([Service] IMediator mediator) {
+  public async Task<IEnumerable<User>> GetUsers([Service] IMediator mediator) {
     var query = new GetAllUsersQuery { IncludeDeleted = false };
 
     return await mediator.Send(query);
@@ -18,17 +16,17 @@ public class Query {
   /// <summary>
   /// Gets all users using traditional service pattern (for comparison).
   /// </summary>
-  public async Task<IEnumerable<Models.User>> GetUsersLegacy([Service] IUserService userService) { return await userService.GetAllUsersAsync(); }
+  public async Task<IEnumerable<User>> GetUsersLegacy([Service] IUserService userService) { return await userService.GetAllUsersAsync(); }
 
   /// <summary>
   /// Gets a user by their unique identifier (UUID).
   /// </summary>
-  public async Task<Models.User?> GetUserById(Guid id, [Service] IUserService userService) { return await userService.GetUserByIdAsync(id); }
+  public async Task<User?> GetUserById(Guid id, [Service] IUserService userService) { return await userService.GetUserByIdAsync(id); }
 
   /// <summary>
   /// Gets active users only.
   /// </summary>
-  public async Task<IEnumerable<Models.User>> GetActiveUsers([Service] IUserService userService) {
+  public async Task<IEnumerable<User>> GetActiveUsers([Service] IUserService userService) {
     var users = await userService.GetAllUsersAsync();
 
     return users.Where(u => u.IsActive);
@@ -37,5 +35,5 @@ public class Query {
   /// <summary>
   /// Gets soft-deleted users.
   /// </summary>
-  public async Task<IEnumerable<Models.User>> GetDeletedUsers([Service] IUserService userService) { return await userService.GetDeletedUsersAsync(); }
+  public async Task<IEnumerable<User>> GetDeletedUsers([Service] IUserService userService) { return await userService.GetDeletedUsersAsync(); }
 }

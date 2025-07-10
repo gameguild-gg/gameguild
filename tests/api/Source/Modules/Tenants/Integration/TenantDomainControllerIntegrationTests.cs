@@ -4,18 +4,17 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using GameGuild.API.Tests.Helpers;
-using GameGuild.Common.Services;
-using GameGuild.Data;
+using GameGuild.Common;
+using GameGuild.Database;
 using GameGuild.Modules.Authentication.Dtos;
 using GameGuild.Modules.Authentication.Services;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Tenants.Dtos;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Tenants;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
-using UserModel = GameGuild.Modules.Users.Models.User;
+using TenantModel = GameGuild.Modules.Tenants.Tenant;
+using UserModel = GameGuild.Modules.Users.User;
 
 
 namespace GameGuild.API.Tests.Modules.Tenants.Integration;

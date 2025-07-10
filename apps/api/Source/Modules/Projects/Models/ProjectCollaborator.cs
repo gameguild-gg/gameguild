@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Resources.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Resources;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -13,7 +13,7 @@ namespace GameGuild.Modules.Projects.Models;
 [Table("ProjectCollaborators")]
 [Index(nameof(ProjectId), nameof(UserId), IsUnique = true, Name = "IX_ProjectCollaborators_Project_User")]
 [Index(nameof(UserId), Name = "IX_ProjectCollaborators_User")]
-public class ProjectCollaborator : ResourceBase {
+public class ProjectCollaborator : Resource {
   /// <summary>
   /// Project ID
   /// </summary>

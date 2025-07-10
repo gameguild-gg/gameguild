@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -15,7 +15,7 @@ namespace GameGuild.Modules.Products.Models;
 [Index(nameof(ProductId), nameof(ProgramId), IsUnique = true)]
 [Index(nameof(ProductId), nameof(SortOrder))]
 [Index(nameof(ProgramId))]
-public class ProductProgram : BaseEntity {
+public class ProductProgram : Entity {
   /// <summary>
   /// Foreign key to the Product entity
   /// </summary>

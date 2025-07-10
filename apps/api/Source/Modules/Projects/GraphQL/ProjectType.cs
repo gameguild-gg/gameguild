@@ -1,10 +1,10 @@
 using System.Security.Claims;
-using GameGuild.Common.Application.Services;
+using GameGuild.Common;
 using GameGuild.Modules.Authentication.Constants;
-using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Projects.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Projects.GraphQL;

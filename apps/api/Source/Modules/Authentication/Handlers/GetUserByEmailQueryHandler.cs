@@ -1,8 +1,8 @@
-using GameGuild.Data;
-using GameGuild.Modules.Authentication.Queries;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Database;
+using GameGuild.Modules.Users;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using GetUserByEmailQuery = GameGuild.Modules.Authentication.Queries.GetUserByEmailQuery;
 
 
 namespace GameGuild.Modules.Authentication.Handlers;

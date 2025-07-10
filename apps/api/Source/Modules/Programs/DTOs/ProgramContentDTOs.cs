@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 
 
 namespace GameGuild.Modules.Programs.DTOs;

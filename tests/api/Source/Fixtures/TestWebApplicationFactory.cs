@@ -1,8 +1,8 @@
 using System.Security.Claims;
 using System.Text;
-using GameGuild.Data;
+using GameGuild.Database;
 using GameGuild.Modules.Authentication.Services;
-using GameGuild.Modules.Tenants.Services;
+using GameGuild.Modules.Tenants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;

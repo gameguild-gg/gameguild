@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Modules.Tenants.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 
 
 // do not remove this, it's needed for IQueryable extensions
@@ -155,7 +155,7 @@ public enum PermissionType {
 
 // this is a base permission model that can be used to store permissions for any entity
 [ObjectType]
-public class WithPermissions : BaseEntity {
+public class WithPermissions : Entity {
   [GraphQLType(typeof(NonNullType<LongType>))]
   [GraphQLDescription("Permission flags for bits 0-63")]
   [Column(TypeName = "bigint")]

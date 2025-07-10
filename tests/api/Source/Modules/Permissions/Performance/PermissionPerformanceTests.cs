@@ -1,11 +1,11 @@
 using System.Diagnostics;
-using GameGuild.Common.Services;
-using GameGuild.Data;
+using GameGuild.Common;
+using GameGuild.Database;
 using GameGuild.Modules.Comments.Models;
 using GameGuild.Modules.Permissions.Models;
 using Microsoft.EntityFrameworkCore;
-using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
-using UserModel = GameGuild.Modules.Users.Models.User;
+using TenantModel = GameGuild.Modules.Tenants.Tenant;
+using UserModel = GameGuild.Modules.Users.User;
 
 
 namespace GameGuild.API.Tests.Modules.Permissions.Performance;

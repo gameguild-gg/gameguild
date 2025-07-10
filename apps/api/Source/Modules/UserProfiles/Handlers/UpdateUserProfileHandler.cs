@@ -1,4 +1,4 @@
-using GameGuild.Data;
+using GameGuild.Database;
 using GameGuild.Modules.UserProfiles.Commands;
 using GameGuild.Modules.UserProfiles.Notifications;
 using MediatR;
@@ -19,16 +19,10 @@ public class UpdateUserProfileHandler(
         var userProfile = await context.Resources.OfType<Models.UserProfile>()
             .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 
-        if (userProfile == null)
-        {
-            throw new InvalidOperationException($"User profile with ID {request.UserProfileId} not found");
-        }
+        if (userProfile == null) throw new InvalidOperationException($"User profile with ID {request.UserProfileId} not found");
 
         // Optimistic concurrency control
-        if (request.ExpectedVersion.HasValue && userProfile.Version != request.ExpectedVersion.Value)
-        {
-            throw new InvalidOperationException($"Concurrency conflict. Expected version {request.ExpectedVersion}, but current version is {userProfile.Version}");
-        }
+        if (request.ExpectedVersion.HasValue && userProfile.Version != request.ExpectedVersion.Value) throw new InvalidOperationException($"Concurrency conflict. Expected version {request.ExpectedVersion}, but current version is {userProfile.Version}");
 
         // Track changes for notification
         var changes = new Dictionary<string, object>();

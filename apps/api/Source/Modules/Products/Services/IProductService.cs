@@ -1,5 +1,5 @@
-using GameGuild.Common.Domain.Enums;
-using GameGuild.Modules.Contents.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Products.Models;
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
 

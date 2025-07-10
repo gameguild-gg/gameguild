@@ -1,6 +1,6 @@
 using Moq;
-using UserServiceInterface = GameGuild.Modules.Users.Services.IUserService;
-using UserModel = GameGuild.Modules.Users.Models.User;
+using UserServiceInterface = GameGuild.Modules.Users.IUserService;
+using UserModel = GameGuild.Modules.Users.User;
 
 
 namespace GameGuild.API.Tests.Modules.Users.Unit.Handlers {

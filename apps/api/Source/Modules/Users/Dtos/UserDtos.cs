@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Users.Dtos;
+namespace GameGuild.Modules.Users;
 
 public class CreateUserDto
 {
@@ -31,6 +31,30 @@ public class UpdateUserDto
     public string? Email { get; set; }
 
     public bool? IsActive { get; set; }
+    
+    /// <summary>
+    /// Expected version for optimistic concurrency control
+    /// </summary>
+    public int? ExpectedVersion { get; set; }
+}
+
+/// <summary>
+/// DTO for updating user balance
+/// </summary>
+public class UpdateUserBalanceDto
+{
+    [Range(0, double.MaxValue)]
+    public decimal Balance { get; set; }
+
+    [Range(0, double.MaxValue)]
+    public decimal AvailableBalance { get; set; }
+
+    public string? Reason { get; set; }
+    
+    /// <summary>
+    /// Expected version for optimistic concurrency control
+    /// </summary>
+    public int? ExpectedVersion { get; set; }
 }
 
 public class UserResponseDto

@@ -1,9 +1,9 @@
-using GameGuild.Common.Entities;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Resources;
+using GameGuild.Modules.Tenants;
 
 
-namespace GameGuild.Common.Application.Services;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Interface for the three-layer permission service

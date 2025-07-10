@@ -1,4 +1,5 @@
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
+using GameGuild.Database;
 using GameGuild.Modules.Programs.Models;
 using Microsoft.EntityFrameworkCore;
 using ProgramContentEntity = GameGuild.Modules.Programs.Models.ProgramContent;
@@ -103,7 +104,7 @@ public class ProgramContentResolvers {
   /// </summary>
   public async Task<Models.Program?> GetProgramAsync(
     [Parent] ProgramContentEntity content,
-    [Service] Data.ApplicationDbContext context
+    [Service] ApplicationDbContext context
   ) {
     return await context.Programs.FirstOrDefaultAsync(p => p.Id == content.ProgramId);
   }
@@ -113,7 +114,7 @@ public class ProgramContentResolvers {
   /// </summary>
   public async Task<ProgramContentEntity?> GetParentContentAsync(
     [Parent] ProgramContentEntity content,
-    [Service] Data.ApplicationDbContext context
+    [Service] ApplicationDbContext context
   ) {
     if (!content.ParentId.HasValue) return null;
 
@@ -125,7 +126,7 @@ public class ProgramContentResolvers {
   /// </summary>
   public async Task<IEnumerable<ProgramContentEntity>> GetChildContentsAsync(
     [Parent] ProgramContentEntity content,
-    [Service] Data.ApplicationDbContext context
+    [Service] ApplicationDbContext context
   ) {
     return await context.ProgramContents.Where(pc => pc.ParentId == content.Id)
                         .OrderBy(pc => pc.SortOrder)

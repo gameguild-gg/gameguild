@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Ratings.Models;
@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Ratings.Models;
 /// <summary>
 /// Represents a rating (e.g., 1-5 stars) on a rateable entity.
 /// </summary>
-public class Rating : BaseEntity {
+public class Rating : Entity {
   /// <summary>
   /// The rating value (e.g., 1-5 stars)
   /// </summary>

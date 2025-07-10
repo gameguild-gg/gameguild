@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Resources.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Resources;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -14,7 +14,7 @@ namespace GameGuild.Modules.Projects.Models;
 [Index(nameof(ProjectId), nameof(UserId), IsUnique = true, Name = "IX_ProjectFollowers_Project_User")]
 [Index(nameof(UserId), Name = "IX_ProjectFollowers_User")]
 [Index(nameof(FollowedAt), Name = "IX_ProjectFollowers_Date")]
-public class ProjectFollower : ResourceBase {
+public class ProjectFollower : Resource {
   /// <summary>
   /// Project being followed
   /// </summary>

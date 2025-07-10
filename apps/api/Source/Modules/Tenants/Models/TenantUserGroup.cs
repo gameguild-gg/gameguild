@@ -1,17 +1,17 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenants.Models;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Represents a user group within a tenant (e.g., Students, Professors, Administrators)
 /// </summary>
 [Table("TenantUserGroups")]
 [Index(nameof(TenantId), nameof(Name), IsUnique = true)]
-public class TenantUserGroup : BaseEntity {
+public class TenantUserGroup : Entity {
   /// <summary>
   /// Name of the user group (e.g., "Students", "Professors", "Administrators")
   /// </summary>

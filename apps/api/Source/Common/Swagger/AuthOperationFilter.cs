@@ -4,7 +4,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 
-namespace GameGuild.Common.Presentation.Swagger;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Swagger operation filter to automatically add security requirements based on [Public] attribute
@@ -23,12 +23,12 @@ public class AuthOperationFilter : IOperationFilter {
                                        false;
 
     // If neither the method nor the controller has [Public] attribute, require authentication
-    if (!hasPublicAttribute && !controllerHasPublicAttribute) {
+    if (!hasPublicAttribute && !controllerHasPublicAttribute)
       operation.Security = new List<OpenApiSecurityRequirement> {
         new OpenApiSecurityRequirement { { new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }, Array.Empty<string>() } }
       };
-    }
     // If the endpoint is public, explicitly clear any security requirements
-    else { operation.Security?.Clear(); }
+    else
+      operation.Security?.Clear();
   }
 }

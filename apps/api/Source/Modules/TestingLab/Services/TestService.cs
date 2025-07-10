@@ -1,5 +1,5 @@
+using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Data;
 using GameGuild.Modules.TestingLab.Models;
 
 

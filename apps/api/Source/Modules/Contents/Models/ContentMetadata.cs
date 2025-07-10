@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
 
-namespace GameGuild.Modules.Contents.Models;
+namespace GameGuild.Modules.Contents;
 
 /// <summary>
 /// Stores statistics and metadata for content.

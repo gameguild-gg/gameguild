@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Contents.Models;
-using GameGuild.Modules.Resources.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Contents;
+using GameGuild.Modules.Resources;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -16,7 +16,7 @@ namespace GameGuild.Modules.Projects.Models;
 [Index(nameof(ProjectId), nameof(Rating), Name = "IX_ProjectFeedbacks_Project_Rating")]
 [Index(nameof(UserId), Name = "IX_ProjectFeedbacks_User")]
 [Index(nameof(CreatedAt), Name = "IX_ProjectFeedbacks_Date")]
-public class ProjectFeedback : ResourceBase {
+public class ProjectFeedback : Resource {
   /// <summary>
   /// Project being reviewed
   /// </summary>

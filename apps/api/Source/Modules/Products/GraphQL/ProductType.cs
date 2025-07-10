@@ -1,11 +1,11 @@
 using System.Security.Claims;
-using GameGuild.Common.Application.Services;
-using GameGuild.Common.Domain.Enums;
-using GameGuild.Modules.Contents.Models;
+using GameGuild.Common;
+using GameGuild.Database;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Tenants.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
 
@@ -376,7 +376,7 @@ public class PromoCodeType : ObjectType<PromoCode> {
               .Description("Current number of times this code has been used")
               .Resolve(async context => {
                   var promoCode = context.Parent<PromoCode>();
-                  var dbContext = context.Service<Data.ApplicationDbContext>();
+                  var dbContext = context.Service<ApplicationDbContext>();
 
                   return await dbContext.PromoCodeUses.Where(pcu => !pcu.IsDeleted && pcu.PromoCodeId == promoCode.Id)
                                         .CountAsync();

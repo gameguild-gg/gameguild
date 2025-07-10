@@ -1,26 +1,24 @@
 using DotNetEnv;
-using GameGuild.Common.Application.Services;
+using GameGuild.Common;
 using GameGuild.Common.Extensions;
-using GameGuild.Common.Configuration;
-using GameGuild.Common.Infrastructure.Middleware;
-using GameGuild.Common.Presentation.GraphQL.Extensions;
-using GameGuild.Common.Presentation.Swagger;
-using GameGuild.Config;
-using GameGuild.Data;
+using GameGuild.Database;
 using GameGuild.Modules.Authentication.Configuration;
 using GameGuild.Modules.Authentication.GraphQL;
 using GameGuild.Modules.Programs.GraphQL;
 using GameGuild.Modules.Projects.GraphQL;
-using GameGuild.Modules.Tenants.GraphQL;
+using GameGuild.Modules.Tenants;
 using GameGuild.Modules.UserProfiles.GraphQL;
-using GameGuild.Modules.Users.GraphQL;
+using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using ToKebabParameterTransformer = GameGuild.Common.Presentation.Transformers.ToKebabParameterTransformer;
+using ProgramContentType = GameGuild.Modules.Programs.GraphQL.ProgramContentType;
+using ProjectType = GameGuild.Modules.Projects.GraphQL.ProjectType;
+using ToKebabParameterTransformer = GameGuild.Common.ToKebabParameterTransformer;
 
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-var builder = WebApplication.CreateBuilder(args);
+// builder.Host.UseSerilog((context, loggerConfig) => loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 // Load environment variables from .env file
 Env.Load();
@@ -184,8 +182,11 @@ builder.Services.AddGraphQLServer()
 
 var app = builder.Build();
 
-// Add exception handling middleware (similar to NestJS global filters)
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.MapEndpoints();
+
+app.UseRequestContextLogging();
+
+app.UseExceptionHandler();
 
 // Automatically apply pending migrations and create a database if it doesn't exist
 using (var scope = app.Services.CreateScope()) {
@@ -241,9 +242,9 @@ app.MapGraphQL();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();
 
-// Make Program class accessible for testing
+// REMARK: Required for functional and integration tests to work.
 namespace GameGuild {
-  public partial class Program { }
+  public partial class Program;
 }

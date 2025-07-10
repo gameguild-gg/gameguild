@@ -1,7 +1,4 @@
-using GameGuild.Config;
-
-
-namespace GameGuild.Common.Extensions;
+namespace GameGuild.Common;
 
 public static class ConfigurationExtensions {
   public static IServiceCollection AddAppConfiguration(this IServiceCollection services, IConfiguration configuration) {

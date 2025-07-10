@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,7 +13,7 @@ namespace GameGuild.Modules.Certificates.Models;
 [Index(nameof(BlockchainNetwork))]
 [Index(nameof(Status))]
 [Index(nameof(AnchoredAt))]
-public class CertificateBlockchainAnchor : BaseEntity {
+public class CertificateBlockchainAnchor : Entity {
   public Guid CertificateId { get; set; }
 
   [Required] [MaxLength(100)] public string BlockchainNetwork { get; set; } = string.Empty;

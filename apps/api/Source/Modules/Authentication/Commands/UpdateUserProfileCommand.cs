@@ -1,4 +1,4 @@
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using MediatR;
 
 

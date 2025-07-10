@@ -1,6 +1,6 @@
-using GameGuild.Common.Enums;
-using GameGuild.Data;
-using GameGuild.Modules.Contents.Models;
+using GameGuild.Common;
+using GameGuild.Database;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Programs.Services;
 using Microsoft.EntityFrameworkCore;
 

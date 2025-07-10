@@ -1,8 +1,7 @@
-using GameGuild.Modules.Tenants.Models;
-using UserModel = GameGuild.Modules.Users.Models.User;
+using UserModel = GameGuild.Modules.Users.User;
 
 
-namespace GameGuild.Modules.Tenants.Services;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Service for managing tenant domain-based user group assignments

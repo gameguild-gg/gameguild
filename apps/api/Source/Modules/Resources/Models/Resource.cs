@@ -1,18 +1,17 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Entities;
-using GameGuild.Modules.Contents.Models;
-using GameGuild.Modules.Localizations.Models;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Contents;
+using GameGuild.Modules.Localization;
+using GameGuild.Modules.Tenants;
 
 
-namespace GameGuild.Modules.Resources.Models;
+namespace GameGuild.Modules.Resources;
 
 /// <summary>
 /// Abstract base class for resources that can have permissions and be localized.
 /// Provides common functionality for content resources like articles, courses, media, etc.
-/// Mirrors the TypeScript ResourceBase functionality from the API.
 /// </summary>
-public abstract class ResourceBase : BaseEntity, ILocalizable, ITenantable {
+public abstract class Resource : Entity, ILocalizable, ITenantable {
   /// <summary>
   /// The title/name of this resource
   /// </summary>

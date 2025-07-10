@@ -1,10 +1,8 @@
 using System.Diagnostics;
-using GameGuild.Common.Abstractions;
-using GameGuild.Common.Providers;
 using MediatR;
 
 
-namespace GameGuild.Common.Application.Behaviors;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Performance monitoring behavior for tracking slow requests and memory usage
@@ -64,21 +62,18 @@ public class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavio
 
     // Additional warnings for resource-intensive operations
     if (memoryUsedKb > 1024) // More than 1MB
-    {
       logger.LogWarning(
         "High memory usage detected: {RequestName} used {MemoryKB:F2}KB",
         requestName,
         memoryUsedKb
       );
-    }
 
-    if (elapsedMilliseconds > CriticalRequestThresholdMs) {
+    if (elapsedMilliseconds > CriticalRequestThresholdMs)
       logger.LogCritical(
         "Critical performance issue: {RequestName} took {ElapsedMs}ms",
         requestName,
         elapsedMilliseconds
       );
-    }
   }
 
   private static LogLevel GetLogLevel(long elapsedMilliseconds, bool hasError) {

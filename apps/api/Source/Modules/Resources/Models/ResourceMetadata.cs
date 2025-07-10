@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Resources.Models;
+namespace GameGuild.Modules.Resources;
 
 /// <summary>
 /// Entity for storing additional metadata about resources
@@ -12,7 +12,7 @@ namespace GameGuild.Modules.Resources.Models;
 /// </summary>
 [Table("ResourceMetadata")]
 [Index(nameof(ResourceType))]
-public class ResourceMetadata : BaseEntity {
+public class ResourceMetadata : Entity {
   /// <summary>
   /// The type of resource this metadata belongs to
   /// </summary>

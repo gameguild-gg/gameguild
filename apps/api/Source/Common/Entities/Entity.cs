@@ -1,16 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Tenants;
 
 
-namespace GameGuild.Common.Entities;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Generic base entity class that provides common properties and functionality for all domain entities.
 /// Supports different ID types while maintaining the same base functionality.
 /// </summary>
 /// <typeparam name="TKey">The type of the entity's identifier</typeparam>
-public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<TKey> {
+public abstract class Entity<TKey> : IEntity<TKey> where TKey : IEquatable<TKey> {
   /// <summary>
   /// Unique identifier for the entity
   /// </summary>
@@ -55,14 +55,14 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
   /// <summary>
   /// Default constructor
   /// </summary>
-  protected BaseEntity() { }
+  protected Entity() { }
 
   /// <summary>
   /// Constructor for partial initialization (useful for updates)
   /// Mirrors the NestJS EntityDto constructor pattern
   /// </summary>
   /// <param name="partial">Partial entity data to initialize with</param>
-  protected BaseEntity(object partial) : this() {
+  protected Entity(object partial) : this() {
     var properties = partial.GetType().GetProperties();
     var entityType = GetType();
 
@@ -120,7 +120,7 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
         propertyInfo.SetValue(this, value);
 
         // Don't auto-update UpdatedAt for CreatedAt changes
-        if (property.Key != nameof(CreatedAt)) { Touch(); }
+        if (property.Key != nameof(CreatedAt)) Touch();
       }
       catch (Exception) {
         // Silently ignore conversion errors for now
@@ -172,7 +172,7 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
     var properties = GetType().GetProperties();
 
     foreach (var property in properties) {
-      if (property.CanRead) { result[property.Name] = property.GetValue(this); }
+      if (property.CanRead) result[property.Name] = property.GetValue(this);
     }
 
     return result;
@@ -194,12 +194,22 @@ public abstract class BaseEntity<TKey> : IEntity<TKey> where TKey : IEquatable<T
   public virtual bool IsGlobal {
     get => Tenant == null;
   }
+
+  private readonly List<IDomainEvent> _domainEvents = [];
+
+  public List<IDomainEvent> DomainEvents {
+    get => [.. _domainEvents];
+  }
+
+  public void ClearDomainEvents() { _domainEvents.Clear(); }
+
+  public void Raise(IDomainEvent domainEvent) { _domainEvents.Add(domainEvent); }
 }
 
 /// <summary>
 /// Base entity class that provides common properties and functionality for all domain entities.
 /// </summary>
-public class BaseEntity : BaseEntity<Guid> {
+public class Entity : Entity<Guid> {
   /// <summary>
   /// Unique identifier for the entity
   /// </summary>
@@ -252,7 +262,7 @@ public class BaseEntity : BaseEntity<Guid> {
   /// <summary>
   /// Default constructor
   /// </summary>
-  protected BaseEntity() {
+  protected Entity() {
     // Generate new GUID for new entities
     if (Id == Guid.Empty) Id = Guid.NewGuid();
   }
@@ -261,7 +271,7 @@ public class BaseEntity : BaseEntity<Guid> {
   /// Constructor for partial initialization (useful for updates)
   /// </summary>
   /// <param name="partial">Partial entity data to initialize with</param>
-  protected BaseEntity(object partial) : base(partial) {
+  protected Entity(object partial) : base(partial) {
     // Generate new GUID for new entities if not provided in partial
     if (Id == Guid.Empty) Id = Guid.NewGuid();
   }
@@ -272,7 +282,7 @@ public class BaseEntity : BaseEntity<Guid> {
   /// <typeparam name="T">The entity type</typeparam>
   /// <param name="partial">Initial properties</param>
   /// <returns>New instance of the entity</returns>
-  public static T Create<T>(object partial) where T : BaseEntity, new() {
+  public static T Create<T>(object partial) where T : Entity, new() {
     // Create an instance and set properties
     var instance = new T();
 
@@ -302,5 +312,5 @@ public class BaseEntity : BaseEntity<Guid> {
   /// </summary>
   /// <typeparam name="T">The entity type</typeparam>
   /// <returns>New instance of the entity</returns>
-  public static T Create<T>() where T : BaseEntity, new() { return new T(); }
+  public static T Create<T>() where T : Entity, new() { return new T(); }
 }

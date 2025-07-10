@@ -1,7 +1,7 @@
-using GameGuild.Common.Services;
-using GameGuild.Data;
+using GameGuild.Common;
+using GameGuild.Database;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.API.Tests.Modules.Permissions.Unit.Services;

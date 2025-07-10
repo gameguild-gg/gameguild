@@ -1,4 +1,4 @@
-namespace GameGuild.Config;
+namespace GameGuild.Common;
 
 public class AppConfig {
   public string Host { get; set; } = "localhost";

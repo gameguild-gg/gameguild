@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,7 +12,7 @@ namespace GameGuild.Modules.Programs.Models;
 [Index(nameof(UserId))]
 [Index(nameof(ProgramId))]
 [Index(nameof(AddedAt))]
-public class ProgramWishlist : BaseEntity {
+public class ProgramWishlist : Entity {
   public Guid UserId { get; set; }
 
   public Guid ProgramId { get; set; }

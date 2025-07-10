@@ -1,10 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using GameGuild.Modules.Users.Models;
 
 
 namespace GameGuild.Modules.Kyc.Models;
@@ -15,7 +14,7 @@ namespace GameGuild.Modules.Kyc.Models;
 [Index(nameof(Status))]
 [Index(nameof(SubmittedAt))]
 [Index(nameof(ExternalVerificationId))]
-public class UserKycVerification : BaseEntity {
+public class UserKycVerification : Entity {
   [Required] public Guid UserId { get; set; }
 
   [Required] public KycProvider Provider { get; set; }

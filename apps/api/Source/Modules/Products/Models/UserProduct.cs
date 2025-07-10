@@ -1,9 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using GameGuild.Modules.Subscriptions.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,7 +21,7 @@ namespace GameGuild.Modules.Products.Models;
 [Index(nameof(AcquisitionType))]
 [Index(nameof(AccessEndDate))]
 [Index(nameof(SubscriptionId))]
-public class UserProduct : BaseEntity {
+public class UserProduct : Entity {
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>

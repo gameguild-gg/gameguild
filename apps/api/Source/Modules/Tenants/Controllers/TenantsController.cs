@@ -1,13 +1,10 @@
-using GameGuild.Common.Application.Attributes;
+using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Tenants.Dtos;
-using GameGuild.Modules.Tenants.Models;
-using GameGuild.Modules.Tenants.Services;
-using GameGuild.Modules.Users.Dtos;
+using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Modules.Tenants.Controllers;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// REST API controller for managing tenants
@@ -32,7 +29,7 @@ public class TenantsController(ITenantService tenantService) : ControllerBase {
   /// </summary>
   /// <param name="id">Tenant ID</param>
   /// <returns>Tenant details</returns>
-  [HttpGet("{id}")]
+  [HttpGet("{id:guid}")]
   public async Task<ActionResult<TenantResponseDto>> GetTenant(Guid id) {
     var tenant = await tenantService.GetTenantByIdAsync(id);
 

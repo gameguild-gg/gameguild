@@ -1,17 +1,16 @@
-using GameGuild.Common.Application.Services;
+using GameGuild.Modules.Payments.Services;
+using GameGuild.Modules.Products.Services;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Services;
 using GameGuild.Modules.Projects.Services;
-using GameGuild.Modules.Tenants.Services;
-using GameGuild.Modules.UserProfiles.Services;
-using GameGuild.Modules.Users.Services;
 using GameGuild.Modules.Subscriptions.Services;
-using GameGuild.Modules.Payments.Services;
-using GameGuild.Modules.Products.Services;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.UserProfiles.Services;
+using GameGuild.Modules.Users;
 using IProgramService = GameGuild.Modules.Programs.Services.IProgramService;
 
 
-namespace GameGuild.Common.Extensions;
+namespace GameGuild.Common;
 
 public static class ServiceCollectionExtensions {
   public static IServiceCollection AddUserModule(this IServiceCollection services) {

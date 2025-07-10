@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common.Messaging;
+﻿namespace GameGuild.Common;
 
 public interface IDomainEventsDispatcher
 {

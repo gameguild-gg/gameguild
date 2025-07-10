@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common.Enums;
+﻿namespace GameGuild.Common;
 
 /// <summary>
 /// Content visibility levels

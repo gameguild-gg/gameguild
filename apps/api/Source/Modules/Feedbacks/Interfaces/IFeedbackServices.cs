@@ -1,4 +1,4 @@
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 
 
 namespace GameGuild.Modules.Feedbacks.Interfaces;

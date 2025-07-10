@@ -1,6 +1,6 @@
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Modules.Tenants.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Followers.Models;
@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Followers.Models;
 /// <summary>
 /// Represents a follower of a followable entity.
 /// </summary>
-public class Follower : BaseEntity, ITenantable {
+public class Follower : Entity, ITenantable {
   /// <summary>
   /// The user who is following
   /// </summary>

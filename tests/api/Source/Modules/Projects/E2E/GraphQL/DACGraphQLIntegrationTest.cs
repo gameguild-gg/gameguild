@@ -1,4 +1,4 @@
-using GameGuild.Common.Services;
+using GameGuild.Common;
 using GameGuild.Modules.Comments.Models;
 using GameGuild.Modules.Permissions.Models;
 using Moq;

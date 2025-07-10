@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Presentation.GraphQL.Authorization;
+namespace GameGuild.Common.Authorization;
 
 /// <summary>
 /// Represents user context for 3-layer DAC authorization
