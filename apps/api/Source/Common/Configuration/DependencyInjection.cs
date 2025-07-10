@@ -113,6 +113,10 @@ public static class DependencyInjection {
   }
 
   public static IServiceCollection AddApplication(this IServiceCollection services, ServiceRegistrationOptions? options = null) {
+    // Register domain event infrastructure early (needed by handlers)
+    services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
+    services.AddScoped<IDomainEventsDispatcher, DomainEventsDispatcher>();
+
     // MediatR for CQRS 
     services.AddMediatR(Assembly.GetExecutingAssembly(), typeof(Program).Assembly);
 
@@ -156,9 +160,6 @@ public static class DependencyInjection {
 
     // Time Provider
     services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-
-    // Background Services
-    services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
 
     return services;
   }

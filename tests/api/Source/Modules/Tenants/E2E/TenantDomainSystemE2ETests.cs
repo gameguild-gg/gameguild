@@ -120,7 +120,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     if (response.StatusCode != HttpStatusCode.Created) throw new Exception($"Domain creation failed. Status: {response.StatusCode}, Content: {responseContent}");
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var mainDomainResult = JsonSerializer.Deserialize<TenantDomainDto>(
+    var mainDomainResult = JsonSerializer.Deserialize<TenantDomain>(
       await response.Content.ReadAsStringAsync(),
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -140,7 +140,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     response = await _client.PostAsync("/api/tenant-domains", content);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var csDomainResult = JsonSerializer.Deserialize<TenantDomainDto>(
+    var csDomainResult = JsonSerializer.Deserialize<TenantDomain>(
       await response.Content.ReadAsStringAsync(),
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -160,7 +160,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     response = await _client.PostAsync("/api/tenant-domains", content);
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var facultyDomainResult = JsonSerializer.Deserialize<TenantDomainDto>(
+    var facultyDomainResult = JsonSerializer.Deserialize<TenantDomain>(
       await response.Content.ReadAsStringAsync(),
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
@@ -383,7 +383,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     // Step 13: Test getting all domains for tenant
     response = await _client.GetAsync($"/api/tenant-domains/tenant/{tenantId}");
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    var tenantDomains = JsonSerializer.Deserialize<List<TenantDomainDto>>(
+    var tenantDomains = JsonSerializer.Deserialize<List<TenantDomain>>(
       await response.Content.ReadAsStringAsync(),
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );

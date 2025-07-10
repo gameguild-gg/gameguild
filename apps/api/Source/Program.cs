@@ -7,7 +7,6 @@ using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Programs.GraphQL;
 using GameGuild.Modules.Projects.GraphQL;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Tenants.GraphQL;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
