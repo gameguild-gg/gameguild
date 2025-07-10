@@ -1,15 +1,15 @@
 ﻿using GameGuild.Database;
+using GameGuild.Common.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-
 
 namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// Handler for searching users with filtering and pagination
 /// </summary>
-public class SearchUsersHandler(ApplicationDbContext context) : IRequestHandler<SearchUsersQuery, IEnumerable<User>> {
-  public async Task<IEnumerable<User>> Handle(SearchUsersQuery request, CancellationToken cancellationToken) {
+public class SearchUsersHandler(ApplicationDbContext context) : IRequestHandler<SearchUsersQuery, PagedResult<User>> {
+  public async Task<PagedResult<User>> Handle(SearchUsersQuery request, CancellationToken cancellationToken) {
     IQueryable<User> query = context.Users.Include(u => u.Credentials);
 
     // Apply filters
@@ -26,9 +26,16 @@ public class SearchUsersHandler(ApplicationDbContext context) : IRequestHandler<
 
     if (request.MaxBalance.HasValue) query = query.Where(u => u.Balance <= request.MaxBalance.Value);
 
-    // Apply pagination
-    query = query.Skip(request.Skip).Take(request.Take);
+    if (request.CreatedAfter.HasValue) query = query.Where(u => u.CreatedAt >= request.CreatedAfter.Value);
 
-    return await query.ToListAsync(cancellationToken);
+    if (request.CreatedBefore.HasValue) query = query.Where(u => u.CreatedAt <= request.CreatedBefore.Value);
+
+    // Get total count before applying pagination
+    var totalCount = await query.CountAsync(cancellationToken);
+
+    // Apply pagination
+    var items = await query.Skip(request.Skip).Take(request.Take).ToListAsync(cancellationToken);
+
+    return new PagedResult<User>(items, totalCount, request.Skip, request.Take);
   }
 }

@@ -31,13 +31,21 @@ public class ActivityGradeDto {
   public GraderSummaryDto? Grader { get; set; }
 
   // Computed properties for convenience
-  public bool IsPassingGrade => Grade >= 70; // Assuming 70% is passing
+  public bool IsPassingGrade {
+    get => Grade >= 70; // Assuming 70% is passing
+  }
 
-  public string GradePercentage => $"{Grade:F1}%";
+  public string GradePercentage {
+    get => $"{Grade:F1}%";
+  }
 
-  public bool HasFeedback => !string.IsNullOrEmpty(Feedback);
+  public bool HasFeedback {
+    get => !string.IsNullOrEmpty(Feedback);
+  }
 
-  public bool HasGradingDetails => !string.IsNullOrEmpty(GradingDetails);
+  public bool HasGradingDetails {
+    get => !string.IsNullOrEmpty(GradingDetails);
+  }
 }
 
 /// <summary>
@@ -134,11 +142,17 @@ public class GradeStatisticsDto {
   public decimal PassingRate { get; set; }
 
   // Additional computed properties for better UX
-  public string AverageGradeFormatted => $"{AverageGrade:F1}%";
+  public string AverageGradeFormatted {
+    get => $"{AverageGrade:F1}%";
+  }
 
-  public string PassingRateFormatted => $"{PassingRate:F1}%";
+  public string PassingRateFormatted {
+    get => $"{PassingRate:F1}%";
+  }
 
-  public bool HasGrades => TotalGrades > 0;
+  public bool HasGrades {
+    get => TotalGrades > 0;
+  }
 }
 
 /// <summary>

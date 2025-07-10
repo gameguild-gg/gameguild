@@ -23,8 +23,8 @@ public class RestoreUserHandler(
 
     logger.LogInformation("User {UserId} restored", request.UserId);
 
-    // Publish notification
-    await mediator.Publish(new UserRestoredNotification { UserId = user.Id, RestoredAt = DateTime.UtcNow }, cancellationToken);
+    // Publish domain event
+    await mediator.Publish(new UserRestoredEvent(user.Id), cancellationToken);
 
     return true;
   }

@@ -61,7 +61,9 @@ public abstract class DACAuthorizationAttribute(PermissionType requiredPermissio
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
 public class RequireTenantPermissionAttribute : DACAuthorizationAttribute {
-  public override DACPermissionLevel PermissionLevel => DACPermissionLevel.Tenant;
+  public override DACPermissionLevel PermissionLevel {
+    get => DACPermissionLevel.Tenant;
+  }
 
   /// <summary>
   /// Initialize tenant-level permission requirement
@@ -78,7 +80,9 @@ public class RequireTenantPermissionAttribute : DACAuthorizationAttribute {
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
 public class RequireContentTypePermissionAttribute<TEntity> : DACAuthorizationAttribute where TEntity : class {
-  public override DACPermissionLevel PermissionLevel => DACPermissionLevel.ContentType;
+  public override DACPermissionLevel PermissionLevel {
+    get => DACPermissionLevel.ContentType;
+  }
 
   /// <summary>
   /// Initialize content-type level permission requirement
@@ -97,9 +101,13 @@ public class RequireContentTypePermissionAttribute<TEntity> : DACAuthorizationAt
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
 public class RequireResourcePermissionAttribute<TPermission, TEntity> : DACAuthorizationAttribute
   where TPermission : ResourcePermission<TEntity> where TEntity : Entity {
-  public override DACPermissionLevel PermissionLevel => DACPermissionLevel.Resource;
+  public override DACPermissionLevel PermissionLevel {
+    get => DACPermissionLevel.Resource;
+  }
 
-  public override Type PermissionType => typeof(TPermission);
+  public override Type PermissionType {
+    get => typeof(TPermission);
+  }
 
   /// <summary>
   /// Initialize resource-level permission requirement
@@ -117,7 +125,9 @@ public class RequireResourcePermissionAttribute<TPermission, TEntity> : DACAutho
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
 public class RequireResourcePermissionAttribute<TEntity> : DACAuthorizationAttribute where TEntity : Entity {
-  public override DACPermissionLevel PermissionLevel => DACPermissionLevel.Resource;
+  public override DACPermissionLevel PermissionLevel {
+    get => DACPermissionLevel.Resource;
+  }
 
   /// <summary>
   /// Initialize resource-level permission requirement with inferred permission type

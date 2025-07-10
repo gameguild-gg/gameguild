@@ -84,24 +84,36 @@ public class Program : Content {
   /// <summary>
   /// Get all skills required by certificates in this program where RelationshipType is Required
   /// </summary>
-  public IEnumerable<CertificateTag> SkillsRequired => Certificates.SelectMany(c => c.CertificateTags.Where(ct => ct.RelationshipType == CertificateTagRelationshipType.Required));
+  public IEnumerable<CertificateTag> SkillsRequired {
+    get => Certificates.SelectMany(c => c.CertificateTags.Where(ct => ct.RelationshipType == CertificateTagRelationshipType.Required));
+  }
 
   /// <summary>
   /// Get all skills provided by certificates in this program where RelationshipType is Demonstrates
   /// </summary>
-  public IEnumerable<CertificateTag> SkillsProvided => Certificates.SelectMany(c => c.CertificateTags.Where(ct => ct.RelationshipType == CertificateTagRelationshipType.Demonstrates));
+  public IEnumerable<CertificateTag> SkillsProvided {
+    get => Certificates.SelectMany(c => c.CertificateTags.Where(ct => ct.RelationshipType == CertificateTagRelationshipType.Demonstrates));
+  }
 
   // Computed properties for metrics
-  public int CurrentEnrollments => ProgramUsers.Count(pu => pu.IsActive);
+  public int CurrentEnrollments {
+    get => ProgramUsers.Count(pu => pu.IsActive);
+  }
 
-  public decimal AverageRating => ProgramRatings.Any() ? ProgramRatings.Average(pr => pr.Rating) : 0;
+  public decimal AverageRating {
+    get => ProgramRatings.Any() ? ProgramRatings.Average(pr => pr.Rating) : 0;
+  }
 
-  public int TotalRatings => ProgramRatings.Count;
+  public int TotalRatings {
+    get => ProgramRatings.Count;
+  }
 
-  public bool IsEnrollmentOpen =>
-    EnrollmentStatus == EnrollmentStatus.Open &&
-    (MaxEnrollments == null || CurrentEnrollments < MaxEnrollments) &&
-    (EnrollmentDeadline == null || EnrollmentDeadline > DateTime.UtcNow);
+  public bool IsEnrollmentOpen {
+    get =>
+      EnrollmentStatus == EnrollmentStatus.Open &&
+      (MaxEnrollments == null || CurrentEnrollments < MaxEnrollments) &&
+      (EnrollmentDeadline == null || EnrollmentDeadline > DateTime.UtcNow);
+  }
 
   /// <summary>
   /// Calculate estimated weeks to complete based on hours per week load
