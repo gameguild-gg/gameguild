@@ -1,12 +1,12 @@
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common.Entities;
 
-namespace GameGuild.Modules.Tenants.Models
+namespace GameGuild.API.Tests.Helpers
 {
     /// <summary>
     /// Represents a relationship between a User and a Tenant
     /// Used only for testing purposes
     /// </summary>
-    public class UserTenant : BaseEntity
+    public class UserTenant : Entity
     {
         /// <summary>
         /// The ID of the user

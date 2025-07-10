@@ -1,7 +1,8 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using GameGuild.API.Tests.Fixtures;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.API.Tests.Helpers;
+using GameGuild.Common.Enums;
 using GameGuild.Data;
 using GameGuild.Modules.Authentication.Dtos;
 using GameGuild.Modules.Authentication.Services;
@@ -302,7 +303,7 @@ public class ProgramCatalogE2ETests : IClassFixture<TestWebApplicationFactory>, 
         };
 
         // Create user tenant relationship
-        var userTenant = new GameGuild.Modules.Tenants.Models.UserTenant
+        var userTenant = new UserTenant
         {
             UserId = user.Id,
             TenantId = tenant.Id,
@@ -317,7 +318,7 @@ public class ProgramCatalogE2ETests : IClassFixture<TestWebApplicationFactory>, 
 
         _context.Set<TenantModel>().Add(tenant);
         _context.Set<User>().Add(user);
-        _context.Set<GameGuild.Modules.Tenants.Models.UserTenant>().Add(userTenant);
+        _context.Set<UserTenant>().Add(userTenant);
         await _context.SaveChangesAsync();
 
         return (tenant, user);

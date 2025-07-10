@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using GameGuild.Common.Application.Services;
+using GameGuild.Common.Services;
 using GameGuild.Data;
 using GameGuild.Modules.Comments.Models;
 using GameGuild.Modules.Permissions.Models;

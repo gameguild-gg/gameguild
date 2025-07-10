@@ -1,7 +1,8 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using GameGuild.API.Tests.Fixtures;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.API.Tests.Helpers;
+using GameGuild.Common.Enums;
 using GameGuild.Data;
 using GameGuild.Modules.Authentication.Dtos;
 using GameGuild.Modules.Authentication.Services;
