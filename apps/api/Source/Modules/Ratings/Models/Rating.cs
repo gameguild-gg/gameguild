@@ -3,7 +3,7 @@ using GameGuild.Common;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.Ratings.Models;
+namespace GameGuild.Modules.Ratings;
 
 /// <summary>
 /// Represents a rating (e.g., 1-5 stars) on a rateable entity.

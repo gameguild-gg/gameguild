@@ -1,7 +1,7 @@
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.Ratings.Services;
+namespace GameGuild.Modules.Ratings;
 
 /// <summary>
 /// Interface for rating-related operations
@@ -16,7 +16,7 @@ public interface IRatingService {
   /// <param name="user">The user providing the rating</param>
   /// <param name="comment">Optional comment with the rating</param>
   /// <returns>The created rating</returns>
-  Task<Models.Rating> AddRatingAsync(
+  Task<Rating> AddRatingAsync(
     Guid entityId, string entityType, int value, User user,
     string? comment = null
   );
@@ -29,7 +29,7 @@ public interface IRatingService {
   /// <param name="user">The user updating the rating (must be the original rater)</param>
   /// <param name="comment">Optional updated comment</param>
   /// <returns>The updated rating</returns>
-  Task<Models.Rating> UpdateRatingAsync(Guid ratingId, int value, User user, string? comment = null);
+  Task<Rating> UpdateRatingAsync(Guid ratingId, int value, User user, string? comment = null);
 
   /// <summary>
   /// Deletes a rating
@@ -45,7 +45,7 @@ public interface IRatingService {
   /// <param name="entityId">The ID of the entity</param>
   /// <param name="entityType">The type name of the entity</param>
   /// <returns>Collection of ratings</returns>
-  Task<IEnumerable<Models.Rating>> GetRatingsForEntityAsync(Guid entityId, string entityType);
+  Task<IEnumerable<Rating>> GetRatingsForEntityAsync(Guid entityId, string entityType);
 
   /// <summary>
   /// Gets the average rating for a specific entity
@@ -60,7 +60,7 @@ public interface IRatingService {
   /// </summary>
   /// <param name="ratingId">The ID of the rating to retrieve</param>
   /// <returns>The rating if found, otherwise null</returns>
-  Task<Models.Rating?> GetRatingByIdAsync(Guid ratingId);
+  Task<Rating?> GetRatingByIdAsync(Guid ratingId);
 
   /// <summary>
   /// Checks if a user has already rated an entity

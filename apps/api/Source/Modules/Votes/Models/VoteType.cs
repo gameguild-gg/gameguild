@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Votes.Models;
+namespace GameGuild.Modules.Votes;
 
 /// <summary>
 /// Represents the type of vote (upvote or downvote)

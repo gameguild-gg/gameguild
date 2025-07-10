@@ -112,11 +112,18 @@ namespace GameGuild.API.Tests.Fixtures {
       services.AddControllers()
               .AddApplicationPart(typeof(GameGuild.Modules.Users.UsersController).Assembly);
               
-      // Add GraphQL for testing
+      // Add GraphQL for testing with explicit schema only
       services.AddGraphQLServer()
               .AddQueryType<GameGuild.Modules.Users.Query>()
               .AddMutationType<GameGuild.Modules.Users.Mutation>()
-              .AddType<GameGuild.Modules.Users.UserType>();
+              .AddType<GameGuild.Modules.Users.UserType>()
+              .AddGlobalObjectIdentification(false)
+              .ModifyOptions(opt => { 
+                opt.RemoveUnreachableTypes = true;
+                opt.EnsureAllNodesCanBeResolved = false;
+                opt.StrictValidation = false;
+                opt.EnableDirectiveIntrospection = false;
+              });
     }
 
     public HttpClient CreateClient() { return Server.CreateClient(); }

@@ -1,7 +1,7 @@
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Reputations.Models;
+namespace GameGuild.Modules.Reputations;
 
 /// <summary>
 /// Interface for reputation entities that can track reputation scores and levels

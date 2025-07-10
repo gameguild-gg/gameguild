@@ -5,7 +5,7 @@ using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Reputations.Models;
+namespace GameGuild.Modules.Reputations;
 
 /// <summary>
 /// Configurable reputation tier definition stored in the database

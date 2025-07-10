@@ -4,7 +4,7 @@ using System.Text.Json;
 using GameGuild.API.Tests.Fixtures;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
-using GameGuild.Modules.Comments.Models;
+using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Tenants;
