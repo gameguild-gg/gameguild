@@ -6,7 +6,7 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Feedbacks.Models;
+namespace GameGuild.Modules.Feedbacks;
 
 [Table("program_ratings")]
 [Index(nameof(UserId), nameof(ProgramId), IsUnique = true)]

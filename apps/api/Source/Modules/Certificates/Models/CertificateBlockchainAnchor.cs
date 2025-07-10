@@ -4,7 +4,7 @@ using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Certificates.Models;
+namespace GameGuild.Modules.Certificates;
 
 [Table("certificate_blockchain_anchors")]
 [Index(nameof(CertificateId))]

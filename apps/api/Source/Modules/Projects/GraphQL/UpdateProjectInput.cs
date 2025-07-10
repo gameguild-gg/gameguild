@@ -1,7 +1,7 @@
 ﻿using GameGuild.Modules.Contents;
 
 
-namespace GameGuild.Modules.Projects.GraphQL;
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// Input type for updating an existing project

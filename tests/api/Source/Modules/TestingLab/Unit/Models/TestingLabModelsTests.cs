@@ -1,4 +1,5 @@
-using GameGuild.Modules.TestingLab.Models;
+using GameGuild.Modules.TestingLab;
+
 
 namespace GameGuild.API.Tests.Modules.TestingLab.Unit.Models;
 

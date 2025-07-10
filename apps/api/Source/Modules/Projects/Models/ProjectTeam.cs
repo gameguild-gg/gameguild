@@ -5,7 +5,7 @@ using GameGuild.Modules.Teams.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Projects.Models;
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// Represents a team working on a project

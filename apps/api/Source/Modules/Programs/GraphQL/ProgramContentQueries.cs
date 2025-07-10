@@ -3,6 +3,7 @@ using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
 using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
 using ProgramContentEntity = GameGuild.Modules.Programs.Models.ProgramContent;
 
 
@@ -11,7 +12,7 @@ namespace GameGuild.Modules.Programs.GraphQL;
 /// <summary>
 /// GraphQL queries for ProgramContent module
 /// </summary>
-[ExtendObjectType<Query>]
+[ExtendObjectType<DbLoggerCategory.Query>]
 public class ProgramContentQueries {
   /// <summary>
   /// Gets a program content by its unique identifier (Resource Level: Read permission required for the parent Program)

@@ -1,9 +1,8 @@
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Projects.Models;
 
 
-namespace GameGuild.Modules.Projects.Services;
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// Service interface for Project operations
@@ -59,7 +58,7 @@ public interface IProjectService {
   /// <summary>
   /// Get projects by type
   /// </summary>
-  Task<IEnumerable<Project>> GetProjectsByTypeAsync(ProjectType type);
+  Task<IEnumerable<Project>> GetProjectsByTypeAsync(Common.ProjectType type);
 
   /// <summary>
   /// Get projects by development status

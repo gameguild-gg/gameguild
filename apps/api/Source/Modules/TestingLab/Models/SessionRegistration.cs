@@ -4,7 +4,7 @@ using GameGuild.Modules.Teams.Models;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.TestingLab.Models {
+namespace GameGuild.Modules.TestingLab {
   public class SessionRegistration : Entity {
     /// <summary>
     /// Foreign key to the session

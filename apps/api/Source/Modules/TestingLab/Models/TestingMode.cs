@@ -1,3 +1,3 @@
-namespace GameGuild.Modules.TestingLab.Models {
+namespace GameGuild.Modules.TestingLab {
   public enum TestingMode { Online, InPerson, Hybrid }
 }

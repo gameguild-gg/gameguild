@@ -1,10 +1,7 @@
-using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Modules.TestingLab.Services;
-using GameGuild.Modules.TestingLab.Dtos;
 using System.Security.Claims;
 
 
-namespace GameGuild.Modules.TestingLab.GraphQL;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary>
 /// GraphQL mutations for TestingLab module

@@ -7,7 +7,7 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Projects.Models;
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// Represents a project (game, tool, art, etc.)
@@ -37,7 +37,7 @@ public sealed class Project : Content {
   /// <summary>
   /// Project type (Game, Tool, Art, etc.)
   /// </summary>
-  public ProjectType Type { get; set; } = ProjectType.Game;
+  public Common.ProjectType Type { get; set; } = Common.ProjectType.Game;
 
   /// <summary>
   /// Development status

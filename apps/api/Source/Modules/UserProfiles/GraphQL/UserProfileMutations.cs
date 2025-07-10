@@ -1,5 +1,5 @@
+using GameGuild.Common.GraphQL;
 using GameGuild.Modules.UserProfiles.Inputs;
-using GameGuild.Modules.Users;
 using MediatR;
 
 
