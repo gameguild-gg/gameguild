@@ -1,7 +1,7 @@
 ﻿using GameGuild.Common;
 
 
-namespace GameGuild.Modules.UserProfiles.Events;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Handles UserProfileUpdatedEvent - manages update notifications and integrations

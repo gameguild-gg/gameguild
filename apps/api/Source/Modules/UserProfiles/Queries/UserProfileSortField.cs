@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.UserProfiles.Queries;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Sort field options for user profiles
@@ -9,5 +9,5 @@ public enum UserProfileSortField {
   DisplayName,
   GivenName,
   FamilyName,
-  Title
+  Title,
 }

@@ -1,11 +1,8 @@
-using GameGuild.Modules.UserProfiles.Commands;
-using GameGuild.Modules.UserProfiles.Dtos;
-using GameGuild.Modules.UserProfiles.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Modules.UserProfiles.Controllers;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// REST API controller for managing user profiles using CQRS pattern

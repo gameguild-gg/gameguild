@@ -37,8 +37,8 @@ public static class DependencyInjection {
             Description = "A comprehensive API for GameGuild platform with CQRS architecture",
             Contact = options.Contact ?? new OpenApiContact {
               Name = "GameGuild Team",
-              Email = "support@gameguild.com"
-            }
+              Email = "support@gameguild.com",
+            },
           });
 
           // Include XML comments for better documentation
@@ -231,7 +231,7 @@ public static class DependencyInjection {
   private static Assembly[] GetApplicationAssemblies(Assembly[]? additionalAssemblies = null) {
     var baseAssemblies = new[] {
       Assembly.GetExecutingAssembly(),
-      typeof(Program).Assembly
+      typeof(Program).Assembly,
     };
 
     return additionalAssemblies?.Length > 0 
@@ -277,7 +277,7 @@ public static class DependencyInjection {
         typeof(IQueryHandler<,>),
         typeof(ICommandHandler<,>),
         typeof(ICommandHandler<>),
-        typeof(IDomainEventHandler<>)
+        typeof(IDomainEventHandler<>),
       }, options);
 
       // Register FluentValidation validators
@@ -373,7 +373,7 @@ public static class DependencyInjection {
     return serviceProvider.GetService<RegistrationMetrics>() ?? new RegistrationMetrics {
       TotalHandlersRegistered = 0,
       TotalValidatorsRegistered = 0,
-      RegistrationDuration = TimeSpan.Zero
+      RegistrationDuration = TimeSpan.Zero,
     };
   }
 }

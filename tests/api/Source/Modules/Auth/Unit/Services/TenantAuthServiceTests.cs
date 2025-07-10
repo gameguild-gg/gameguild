@@ -2,6 +2,7 @@ using System.Security.Claims;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Tenants.Entities;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using UserModel = GameGuild.Modules.Users.User;

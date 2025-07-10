@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.UserProfiles.GraphQL;
+namespace GameGuild.Modules.UserProfiles.Inputs;
 
 /// <summary>
 /// Input for creating a user profile

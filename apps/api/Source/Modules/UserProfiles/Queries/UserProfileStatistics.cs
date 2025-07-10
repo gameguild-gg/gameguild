@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.UserProfiles.Queries;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Statistics model for user profiles
