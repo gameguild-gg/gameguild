@@ -86,7 +86,7 @@ test.describe('🔄 Data Flow Validation: API to Frontend', () => {
         // Individual course detail
         const slug = route.request().url().split('/').pop();
         const course = mockCoursesData.find((c) => c.slug === slug);
-        
+
         if (course) {
           route.fulfill({
             status: 200,
@@ -159,12 +159,12 @@ test.describe('🔄 Data Flow Validation: API to Frontend', () => {
     console.log('🎯 Testing component state management...');
 
     let apiCallCount = 0;
-    
+
     // Track API calls
     await page.route('**/api/programs**', (route: Route) => {
       apiCallCount++;
       console.log(`📡 API Call #${apiCallCount}: ${route.request().url()}`);
-      
+
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -224,10 +224,10 @@ test.describe('🔄 Data Flow Validation: API to Frontend', () => {
     // Simulate slow API response
     await page.route('**/api/programs**', async (route: Route) => {
       console.log('⏳ Simulating slow API response...');
-      
+
       // Delay response to test loading state
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      
+
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -237,7 +237,7 @@ test.describe('🔄 Data Flow Validation: API to Frontend', () => {
 
     // Navigate and immediately check for loading state
     const navigationPromise = page.goto('/courses');
-    
+
     // Check for loading indicators
     await page.waitForTimeout(500);
 
@@ -274,7 +274,7 @@ test.describe('🔄 Data Flow Validation: API to Frontend', () => {
     // Mock API error
     await page.route('**/api/programs**', (route: Route) => {
       console.log('❌ Simulating API error...');
-      
+
       route.fulfill({
         status: 500,
         contentType: 'application/json',
@@ -297,7 +297,7 @@ test.describe('🔄 Data Flow Validation: API to Frontend', () => {
       console.log(`📝 Error message: ${errorText}`);
     } else {
       console.log('ℹ️ No explicit error state found, checking for empty/fallback state');
-      
+
       // Check for empty state or fallback content
       const mainContent = page.locator('main, [role="main"]');
       expect(await mainContent.isVisible()).toBe(true);
@@ -306,7 +306,7 @@ test.describe('🔄 Data Flow Validation: API to Frontend', () => {
     // Test recovery - mock successful response
     await page.route('**/api/programs**', (route: Route) => {
       console.log('✅ Simulating API recovery...');
-      
+
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -405,7 +405,7 @@ test.describe('🔄 Data Flow Validation: API to Frontend', () => {
 
       // Check detailed content
       const pageContent = await page.textContent('main, [role="main"], body');
-      
+
       if (pageContent?.includes(courseWithSpecialData.title)) {
         console.log('✅ Full title displayed on detail page');
       }
@@ -425,7 +425,7 @@ test.describe('🔄 Data Flow Validation: API to Frontend', () => {
       if (route.request().url().includes('/api/programs/')) {
         const slug = route.request().url().split('/').pop();
         const course = mockCoursesData.find((c) => c.slug === slug);
-        
+
         route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -442,7 +442,7 @@ test.describe('🔄 Data Flow Validation: API to Frontend', () => {
 
     // Start from homepage or courses
     await page.goto('/', { waitUntil: 'networkidle' });
-    
+
     // Navigate to courses
     await page.goto('/courses', { waitUntil: 'networkidle' });
     console.log(`📍 At courses page: ${page.url()}`);
@@ -452,38 +452,38 @@ test.describe('🔄 Data Flow Validation: API to Frontend', () => {
     if ((await firstCard.count()) > 0) {
       const firstLink = firstCard.locator('a').first();
       const expectedSlug = mockCoursesData[0].slug;
-      
+
       await firstLink.click();
       await page.waitForLoadState('networkidle');
-      
+
       console.log(`📍 At course detail: ${page.url()}`);
       expect(page.url()).toContain(expectedSlug);
 
       // Test browser back button
       await page.goBack();
       await page.waitForLoadState('networkidle');
-      
+
       console.log(`📍 Back to courses: ${page.url()}`);
       expect(page.url()).toMatch(/courses/);
 
       // Test browser forward button
       await page.goForward();
       await page.waitForLoadState('networkidle');
-      
+
       console.log(`📍 Forward to detail: ${page.url()}`);
       expect(page.url()).toContain(expectedSlug);
 
       // Test direct URL navigation
       const directSlug = mockCoursesData[1].slug;
       await page.goto(`/course/${directSlug}`, { waitUntil: 'networkidle' });
-      
+
       console.log(`📍 Direct navigation: ${page.url()}`);
       expect(page.url()).toContain(directSlug);
 
       // Verify content matches the directly navigated course
       const pageTitle = await page.locator('h1, h2, [class*="title"]').first().textContent();
       const expectedTitle = mockCoursesData[1].title;
-      
+
       if (pageTitle?.includes(expectedTitle) || pageTitle?.includes('Advanced Unity')) {
         console.log('✅ Direct navigation loads correct course content');
       }

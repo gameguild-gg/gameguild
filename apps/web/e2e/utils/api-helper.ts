@@ -30,7 +30,7 @@ export class APITestHelper {
         password,
       },
     });
-    
+
     if (response.ok()) {
       const data = await response.json();
       return data.accessToken;
@@ -68,7 +68,7 @@ export class APITestHelper {
     expect(program).toHaveProperty('difficulty');
     expect(program).toHaveProperty('status');
     expect(program).toHaveProperty('visibility');
-    
+
     this.validateProgramSlug(program.slug as string);
   }
 }
