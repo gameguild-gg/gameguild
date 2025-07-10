@@ -507,20 +507,3 @@ public class TestingController(ITestService testService) : ControllerBase {
 }
 
 // DTOs for request bodies
-public class SessionRegistrationRequest {
-  public RegistrationType RegistrationType { get; set; }
-
-  public string? Notes { get; set; }
-}
-
-public class FeedbackRequest {
-  public Guid FeedbackFormId { get; set; }
-
-  public string FeedbackData { get; set; } = string.Empty;
-
-  public TestingContext TestingContext { get; set; }
-
-  public Guid? SessionId { get; set; }
-
-  public string? AdditionalNotes { get; set; }
-}

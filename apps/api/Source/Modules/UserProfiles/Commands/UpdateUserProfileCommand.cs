@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using GameGuild.Common;
 using GameGuild.Modules.UserProfiles.Entities;
 using MediatR;
 
@@ -7,7 +8,7 @@ namespace GameGuild.Modules.UserProfiles.Commands;
 /// <summary>
 /// Command to update user profile with validation and business logic
 /// </summary>
-public class UpdateUserProfileCommand : IRequest<UserProfile>
+public class UpdateUserProfileCommand : ICommand<GameGuild.Common.Result<UserProfile>>
 {
     [Required]
     public Guid UserProfileId { get; set; }
@@ -26,8 +27,6 @@ public class UpdateUserProfileCommand : IRequest<UserProfile>
 
     [StringLength(1000)]
     public string? Description { get; set; }
-
-    /// <summary>
     /// Expected version for optimistic concurrency control
     /// </summary>
     public int? ExpectedVersion { get; set; }

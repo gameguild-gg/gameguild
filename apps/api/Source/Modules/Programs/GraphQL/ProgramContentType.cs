@@ -1,7 +1,5 @@
 using GameGuild.Common;
-using GameGuild.Database;
 using GameGuild.Modules.Programs.Models;
-using Microsoft.EntityFrameworkCore;
 using ProgramContentEntity = GameGuild.Modules.Programs.Models.ProgramContent;
 
 
@@ -92,44 +90,5 @@ public class ProgramContentType : ObjectType<ProgramContent> {
               .Type<ListType<ObjectType<ProgramContentEntity>>>()
               .Description("Child contents under this content.")
               .ResolveWith<ProgramContentResolvers>(r => r.GetChildContentsAsync(default!, default!));
-  }
-}
-
-/// <summary>
-/// Resolvers for ProgramContent navigation properties
-/// </summary>
-public class ProgramContentResolvers {
-  /// <summary>
-  /// Resolves the parent program for the content
-  /// </summary>
-  public async Task<Models.Program?> GetProgramAsync(
-    [Parent] ProgramContentEntity content,
-    [Service] ApplicationDbContext context
-  ) {
-    return await context.Programs.FirstOrDefaultAsync(p => p.Id == content.ProgramId);
-  }
-
-  /// <summary>
-  /// Resolves the parent content for hierarchical structure
-  /// </summary>
-  public async Task<ProgramContentEntity?> GetParentContentAsync(
-    [Parent] ProgramContentEntity content,
-    [Service] ApplicationDbContext context
-  ) {
-    if (!content.ParentId.HasValue) return null;
-
-    return await context.ProgramContents.FirstOrDefaultAsync(pc => pc.Id == content.ParentId.Value);
-  }
-
-  /// <summary>
-  /// Resolves child contents for hierarchical structure
-  /// </summary>
-  public async Task<IEnumerable<ProgramContentEntity>> GetChildContentsAsync(
-    [Parent] ProgramContentEntity content,
-    [Service] ApplicationDbContext context
-  ) {
-    return await context.ProgramContents.Where(pc => pc.ParentId == content.Id)
-                        .OrderBy(pc => pc.SortOrder)
-                        .ToListAsync();
   }
 }

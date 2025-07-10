@@ -143,14 +143,3 @@ public class ContentInteractionMutations {
     catch (Exception ex) { return new ContentInteractionResult { Success = false, ErrorMessage = "An unexpected error occurred while updating time spent.", Interaction = null }; }
   }
 }
-
-/// <summary>
-/// Result type for ContentInteraction mutations with proper error handling
-/// </summary>
-public class ContentInteractionResult {
-  public bool Success { get; set; }
-
-  public string? ErrorMessage { get; set; }
-
-  public ContentInteraction? Interaction { get; set; }
-}

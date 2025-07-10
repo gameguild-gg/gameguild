@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using GameGuild.Modules.Tags.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
 namespace GameGuild.Modules.Certificates.Models;
@@ -23,17 +22,4 @@ public class CertificateTag : Entity {
   [ForeignKey(nameof(CertificateId))] public virtual Certificate Certificate { get; set; } = null!;
 
   [ForeignKey(nameof(TagId))] public virtual TagProficiency Tag { get; set; } = null!;
-}
-
-public class CertificateTagConfiguration : IEntityTypeConfiguration<CertificateTag> {
-  public void Configure(EntityTypeBuilder<CertificateTag> builder) {
-    // Configure relationship with Certificate (can't be done with annotations)
-    builder.HasOne(ct => ct.Certificate)
-           .WithMany()
-           .HasForeignKey(ct => ct.CertificateId)
-           .OnDelete(DeleteBehavior.Cascade);
-
-    // Configure relationship with Tag (can't be done with annotations)
-    builder.HasOne(ct => ct.Tag).WithMany().HasForeignKey(ct => ct.TagId).OnDelete(DeleteBehavior.Cascade);
-  }
 }
