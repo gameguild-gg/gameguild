@@ -1,8 +1,6 @@
 using GameGuild.Common.GraphQL;
 using GameGuild.Common.Models;
 using GameGuild.Modules.Users.Inputs;
-using HotChocolate;
-using HotChocolate.Types;
 using MediatR;
 
 

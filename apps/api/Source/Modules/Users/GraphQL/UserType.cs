@@ -1,3 +1,6 @@
+using GameGuild.Modules.UserProfiles;
+using MediatR;
+
 namespace GameGuild.Modules.Users;
 
 public class UserType : ObjectType<User> {
@@ -23,5 +26,27 @@ public class UserType : ObjectType<User> {
     descriptor.Field(u => u.Email).Description("The email address of the user.");
 
     descriptor.Field(u => u.IsActive).Description("Indicates whether the user is active.");
+
+    // Profile relationship
+    descriptor.Field("profile")
+             .Type<UserProfileType>()
+             .Description("The user's profile information.")
+             .ResolveWith<UserResolvers>(r => r.GetProfileAsync(default!, default!));
+  }
+}
+
+public class UserResolvers {
+  public async Task<UserProfile?> GetProfileAsync(
+    [Parent] User user,
+    [Service] IMediator mediator
+  ) {
+    var query = new GetUserProfileByUserIdQuery { 
+      UserId = user.Id, 
+      IncludeDeleted = false 
+    };
+
+    var result = await mediator.Send(query);
+    
+    return result.IsSuccess ? result.Value : null;
   }
 }

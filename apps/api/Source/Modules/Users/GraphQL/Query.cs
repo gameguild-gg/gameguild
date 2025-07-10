@@ -1,10 +1,7 @@
 using GameGuild.Common.GraphQL;
 using GameGuild.Common.Models;
 using GameGuild.Modules.Users.Inputs;
-using HotChocolate;
-using HotChocolate.Types;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Users;
@@ -33,6 +30,19 @@ public class UserQueries {
   /// Gets a user by their unique identifier using CQRS pattern
   /// </summary>
   public async Task<User?> GetUserById(
+    [Service] IMediator mediator,
+    Guid id,
+    bool includeDeleted = false
+  ) {
+    var query = new GetUserByIdQuery { UserId = id, IncludeDeleted = includeDeleted };
+
+    return await mediator.Send(query);
+  }
+
+  /// <summary>
+  /// Gets a user by their unique identifier (alias for GetUserById)
+  /// </summary>
+  public async Task<User?> User(
     [Service] IMediator mediator,
     Guid id,
     bool includeDeleted = false

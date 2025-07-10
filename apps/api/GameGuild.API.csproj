@@ -41,19 +41,20 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Update="appsettings.json">
+        <Content Update="appSettings.json">
             <CopyToPublishDirectory>Never</CopyToPublishDirectory>
         </Content>
-        <Content Update="appsettings.Development.json">
+        <Content Update="appSettings.Development.json">
             <CopyToPublishDirectory>Never</CopyToPublishDirectory>
         </Content>
-        <Content Update="appsettings.Production.json">
+        <Content Update="appSettings.Production.json">
             <CopyToPublishDirectory>Never</CopyToPublishDirectory>
         </Content>
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Source\Common\Constraints\" />
+      <Folder Include="Source\Core\" />
     </ItemGroup>
 
     <ItemGroup>

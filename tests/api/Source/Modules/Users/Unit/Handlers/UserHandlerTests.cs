@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using GameGuild.Database;
 using GameGuild.Modules.Users;
-using GameGuild.Common;
 using Moq;
 using MediatR;
 

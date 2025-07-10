@@ -1,5 +1,4 @@
 using GameGuild.Modules.Tenants.Inputs;
-using GameGuild.Modules.Users;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 

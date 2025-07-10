@@ -2,11 +2,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using GameGuild.Database;
-using GameGuild.Modules.Authentication;
-using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using GameGuild.Common;
-using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -90,42 +87,15 @@ namespace GameGuild.API.Tests.Fixtures {
       // Add application services (includes IDomainEventPublisher registration)
       services.AddApplication();
 
-      // Register User module services
-      services.AddScoped<GameGuild.Modules.Users.IUserService, UserService>();
+      // Add infrastructure services using DI (excluding auth module to avoid conflicts)
+      services.AddInfrastructure(configuration, excludeAuth: true);
 
-      // Register HttpClient for OAuth service
-      services.AddHttpClient();
-
-      // Register Auth module services
-      services.AddScoped<IAuthService, AuthService>();
-      services.AddScoped<IJwtTokenService, JwtTokenService>();
-      services.AddScoped<IOAuthService, OAuthService>();
-      services.AddScoped<IWeb3Service, Web3Service>();
-      services.AddScoped<IEmailVerificationService, EmailVerificationService>();
-      services.AddScoped<ITenantAuthService, TenantAuthService>();
-
-      // Register Tenant module services - using existing mock implementations for test simplicity
-      services.AddScoped<ITenantService, MockTenantService>();
-      services.AddScoped<ITenantContextService, Helpers.MockTenantContextService>();
+      // Add GraphQL infrastructure using DI with test-friendly configuration
+      services.AddGraphQLInfrastructure(DependencyInjection.GraphQLOptionsFactory.ForTesting());
 
       // Add controllers from the main application assembly
       services.AddControllers()
               .AddApplicationPart(typeof(GameGuild.Modules.Users.UsersController).Assembly);
-              
-      // Add GraphQL for testing with explicit schema only
-      services.AddGraphQLServer()
-              .AddQueryType<GameGuild.Common.GraphQL.Query>()
-              .AddTypeExtension<GameGuild.Modules.Users.UserQueries>()
-              .AddMutationType<GameGuild.Common.GraphQL.Mutation>()
-              .AddTypeExtension<GameGuild.Modules.Users.UserMutations>()
-              .AddType<GameGuild.Modules.Users.UserType>()
-              .AddGlobalObjectIdentification(false)
-              .ModifyOptions(opt => { 
-                opt.RemoveUnreachableTypes = true;
-                opt.EnsureAllNodesCanBeResolved = false;
-                opt.StrictValidation = false;
-                opt.EnableDirectiveIntrospection = false;
-              });
     }
 
     public HttpClient CreateClient() { return Server.CreateClient(); }
@@ -168,7 +138,7 @@ namespace GameGuild.API.Tests.Fixtures {
       using var scope = Server.Services.CreateScope();
       var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-      // Create a user entity with profile for testing using real models
+      // Create a user entity for testing using the real User model
       var user = new User {
         Id = Guid.Parse(userId),
         Email = email,
@@ -179,6 +149,21 @@ namespace GameGuild.API.Tests.Fixtures {
       };
 
       dbContext.Users.Add(user);
+      await dbContext.SaveChangesAsync();
+
+      // Create a user profile for testing using the real UserProfile model
+      var userProfile = new GameGuild.Modules.UserProfiles.UserProfile {
+        Id = Guid.Parse(userId), // UserProfile ID should match User ID for 1:1 relationship
+        GivenName = name.Split(' ').FirstOrDefault() ?? string.Empty,
+        FamilyName = name.Split(' ').Skip(1).FirstOrDefault() ?? string.Empty,
+        DisplayName = name,
+        Description = bio,
+        Title = "Test Profile",
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+      };
+
+      dbContext.Resources.Add(userProfile);
       await dbContext.SaveChangesAsync();
     }
 
