@@ -107,7 +107,7 @@ test.describe('🎮 Game Guild: Complete Frontend-to-API Integration', () => {
     console.log(`📊 API Requests: ${metrics.apiRequests.length}`);
     console.log(`⚠️ Console Errors: ${metrics.consoleErrors.length}`);
     console.log(`🚫 Network Errors: ${metrics.networkErrors.length}`);
-    
+
     if (metrics.apiRequests.length > 0) {
       const avgResponseTime =
         metrics.apiRequests.filter((req) => req.responseTime).reduce((sum, req) => sum + (req.responseTime || 0), 0) /
@@ -120,27 +120,27 @@ test.describe('🎮 Game Guild: Complete Frontend-to-API Integration', () => {
 
   test('🏠 Course Catalog: Complete Load and Interaction Journey', async () => {
     console.log('\n🎯 Testing complete course catalog workflow...');
-    
+
     const startTime = Date.now();
 
     // Step 1: Navigate to course catalog
     console.log('📍 Step 1: Navigating to course catalog...');
     await page.goto('/courses', { waitUntil: 'networkidle' });
-    
+
     metrics.pageLoadTime = Date.now() - startTime;
     console.log(`⏱️ Page load time: ${metrics.pageLoadTime}ms`);
 
     // Step 2: Verify page loaded correctly
     console.log('📍 Step 2: Verifying page structure...');
     await expect(page).toHaveTitle(/Course/i);
-    
+
     // Check for main content areas
     const mainContent = page.locator('main, [role="main"], .course-catalog, .courses-container');
     await expect(mainContent).toBeVisible({ timeout: 10000 });
 
     // Step 3: Wait for API data to load
     console.log('📍 Step 3: Waiting for API data...');
-    
+
     // Wait for either course cards or empty state
     const courseCards = page.locator('[data-testid="course-card"], .course-card, [class*="course"], .grid > div');
     const emptyState = page.locator('[data-testid="empty-state"], .empty-state, [class*="empty"]');
@@ -157,11 +157,11 @@ test.describe('🎮 Game Guild: Complete Frontend-to-API Integration', () => {
     // Step 4: Verify API communication occurred
     console.log('📍 Step 4: Verifying API communication...');
     expect(metrics.apiRequests.length).toBeGreaterThan(0);
-    
+
     // Check for programs/courses API call
     const programsApiCall = metrics.apiRequests.find((req) => req.url.includes('/api/programs') || req.url.includes('/courses'));
     expect(programsApiCall).toBeDefined();
-    
+
     if (programsApiCall?.status) {
       expect(programsApiCall.status).toBe(200);
     }
@@ -239,41 +239,41 @@ test.describe('🎮 Game Guild: Complete Frontend-to-API Integration', () => {
 
   test('🔗 Slug-Based Navigation: Direct URL Access', async () => {
     console.log('\n🎯 Testing direct slug-based navigation...');
-    
+
     // Test valid course slug
     console.log('📍 Testing valid course slug navigation...');
     const testSlug = 'introduction-to-game-development';
-    
+
     await page.goto(`/course/${testSlug}`, { waitUntil: 'networkidle' });
-    
+
     // Verify API call for specific course
     const courseApiCall = metrics.apiRequests.find(
       (req) => req.url.includes(`/api/programs/${testSlug}`) || (req.url.includes(`/api/programs`) && req.url.includes(testSlug)),
     );
-    
+
     if (courseApiCall) {
       console.log(`✅ API call made for course: ${courseApiCall.url}`);
       expect(courseApiCall.status).toBe(200);
     }
-    
+
     // Check if we're on the right page (either loaded or 404)
     const pageContent = page.locator('main, [role="main"]');
     await expect(pageContent).toBeVisible();
-    
+
     // Test invalid course slug
     console.log('📍 Testing invalid course slug navigation...');
     await page.goto('/course/invalid-course-slug-12345', { waitUntil: 'networkidle' });
-    
+
     // Should show 404 or error state
     const errorState = page.locator('[data-testid="error-state"], .error, .not-found, h1');
     await expect(errorState).toBeVisible();
-    
+
     console.log('✅ Slug navigation tests completed!');
   });
 
   test('🔄 API Error Handling and Resilience', async () => {
     console.log('\n🎯 Testing API error handling...');
-    
+
     // Intercept API calls to simulate errors
     await page.route('**/api/programs**', (route) => {
       // Simulate server error
@@ -283,31 +283,31 @@ test.describe('🎮 Game Guild: Complete Frontend-to-API Integration', () => {
         body: JSON.stringify({ error: 'Internal Server Error' }),
       });
     });
-    
+
     await page.goto('/courses', { waitUntil: 'networkidle' });
-    
+
     // Should show error state
     const errorState = page.locator('[data-testid="error-state"], .error-message, .error');
     await expect(errorState).toBeVisible({ timeout: 10000 });
-    
+
     console.log('✅ Error handling test completed!');
   });
 
   test('📱 Mobile Responsive Frontend-API Integration', async () => {
     console.log('\n🎯 Testing mobile responsive integration...');
-    
+
     // Switch to mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
-    
+
     await page.goto('/courses', { waitUntil: 'networkidle' });
-    
+
     // Verify mobile layout
     const content = page.locator('main, [role="main"]');
     await expect(content).toBeVisible();
-    
+
     // Verify API calls still work on mobile
     expect(metrics.apiRequests.length).toBeGreaterThan(0);
-    
+
     // Test mobile navigation
     const courseCards = page.locator('[data-testid="course-card"], .course-card, [class*="course"]');
     if ((await courseCards.count()) > 0) {
@@ -315,56 +315,56 @@ test.describe('🎮 Game Guild: Complete Frontend-to-API Integration', () => {
       await firstCard.tap();
       await page.waitForLoadState('networkidle');
     }
-    
+
     console.log('✅ Mobile responsive test completed!');
   });
 
   test('🚀 Performance Under Load Simulation', async () => {
     console.log('\n🎯 Testing performance under load...');
-    
+
     // Simulate slow network
     await context.route('**/*', (route) => {
       const delay = Math.random() * 1000; // Random delay 0-1s
       setTimeout(() => route.continue(), delay);
     });
-    
+
     const startTime = Date.now();
     await page.goto('/courses', { waitUntil: 'networkidle' });
     const loadTime = Date.now() - startTime;
-    
+
     console.log(`⏱️ Load time with network delay: ${loadTime}ms`);
-    
+
     // Should still complete within reasonable time
     expect(loadTime).toBeLessThan(15000); // 15s max with delays
-    
+
     // Verify content still loads
     const content = page.locator('main, [role="main"]');
     await expect(content).toBeVisible();
-    
+
     console.log('✅ Performance test completed!');
   });
 
   test('♿ Accessibility and Frontend-API Data Flow', async () => {
     console.log('\n🎯 Testing accessibility with API data...');
-    
+
     await page.goto('/courses', { waitUntil: 'networkidle' });
-    
+
     // Check for proper ARIA labels and roles
     const mainContent = page.locator('[role="main"], main');
     await expect(mainContent).toBeVisible();
-    
+
     // Check for proper heading structure
     const headings = page.locator('h1, h2, h3, h4, h5, h6');
     expect(await headings.count()).toBeGreaterThan(0);
-    
+
     // Test keyboard navigation
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
-    
+
     // Check focus indicators
     const focusedElement = page.locator(':focus');
     await expect(focusedElement).toBeVisible();
-    
+
     console.log('✅ Accessibility test completed!');
   });
 });

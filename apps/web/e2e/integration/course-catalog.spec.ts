@@ -38,7 +38,7 @@ test.describe('Course Catalog - Slug-based Navigation', () => {
       // Get the first course title and click it
       const firstCourseCard = courseCards.first();
       const courseTitle = await firstCourseCard.locator('[data-testid="course-title"]').textContent();
-      
+
       await firstCourseCard.click();
 
       // Should navigate to course detail page with slug in URL
@@ -98,7 +98,7 @@ test.describe('Course Catalog - Slug-based Navigation', () => {
       // Verify course information is displayed
       await expect(firstCourseCard.locator('[data-testid="course-title"]')).toBeVisible();
       await expect(firstCourseCard.locator('[data-testid="course-description"]')).toBeVisible();
-      
+
       // Check for difficulty badge
       const difficultyBadge = firstCourseCard.locator('[data-testid="difficulty-badge"]');
       if (await difficultyBadge.isVisible()) {
@@ -114,7 +114,7 @@ test.describe('Course Catalog - Slug-based Navigation', () => {
 
     // Should show 404 or redirect to courses page
     await page.waitForLoadState('networkidle');
-    
+
     // Check if we're on a 404 page or courses page
     const currentUrl = page.url();
     const isOnCoursesPage = currentUrl.includes('/courses');
@@ -132,7 +132,7 @@ test.describe('Course Catalog - Slug-based Navigation', () => {
 
     if (courseCount > 0) {
       const firstCourseCard = courseCards.first();
-      
+
       // Get course information from catalog
       const catalogTitle = await firstCourseCard.locator('[data-testid="course-title"]').textContent();
       const catalogDescription = await firstCourseCard.locator('[data-testid="course-description"]').textContent();
@@ -145,7 +145,7 @@ test.describe('Course Catalog - Slug-based Navigation', () => {
       if (catalogTitle) {
         await expect(page.locator('h1')).toContainText(catalogTitle);
       }
-      
+
       if (catalogDescription) {
         await expect(page.locator('[data-testid="course-detail-description"]')).toContainText(catalogDescription);
       }
@@ -158,7 +158,7 @@ test.describe('Course Catalog - Slug-based Navigation', () => {
 
     // Should show loading state initially
     const loadingIndicator = page.locator('[data-testid="loading"]');
-    
+
     // Loading might be very fast, so we don't require it to be visible
     // but if it is visible, it should have proper content
     if (await loadingIndicator.isVisible({ timeout: 1000 })) {
@@ -167,7 +167,7 @@ test.describe('Course Catalog - Slug-based Navigation', () => {
 
     // Eventually courses should load
     await page.waitForSelector('[data-testid="course-grid"]', { timeout: 10000 });
-    
+
     // Loading should be gone
     await expect(loadingIndicator).not.toBeVisible();
   });
