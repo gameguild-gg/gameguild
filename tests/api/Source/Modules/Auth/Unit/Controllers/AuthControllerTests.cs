@@ -1,285 +1,314 @@
-using System.Security.Claims;
-using GameGuild.Modules.Authentication;
-using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using MediatR;
 using Moq;
-
-namespace GameGuild.API.Tests.Modules.Auth.Unit.Controllers;
-
-public class AuthControllerTests {
-  private readonly Mock<IAuthService> _mockAuthService;
-
-  private readonly Mock<IMediator> _mockMediator;
-
-  private readonly AuthController _controller;
-
-  public AuthControllerTests() {
-    _mockAuthService = new Mock<IAuthService>();
-    _mockMediator = new Mock<IMediator>();
-    _controller = new AuthController(_mockAuthService.Object, _mockMediator.Object);
-
-    // Setup HTTP context
-    var httpContext = new DefaultHttpContext { Connection = { RemoteIpAddress = System.Net.IPAddress.Parse("127.0.0.1") } };
-    _controller.ControllerContext = new ControllerContext() { HttpContext = httpContext };
-  }
-
-  [Fact]
-  public async Task LocalSignIn_ValidRequest_ReturnsOkWithSignInResponse() {
-    // Arrange
-    var request = new LocalSignInRequestDto { Email = "test@example.com", Password = "P455W0RD" };
-
-    var expectedResponse = new SignInResponseDto { AccessToken = "mock-access-token", RefreshToken = "mock-refresh-token", User = new UserDto { Email = "test@example.com", Username = "testuser" } };
-
-    // Mock the MediatR response for the LocalSignInCommand
-    _mockMediator.Setup(x => x.Send(It.IsAny<LocalSignInCommand>(), It.IsAny<CancellationToken>()))
-                 .ReturnsAsync(expectedResponse);
-
-    // Act
-    var result = await _controller.LocalSignIn(request);
-
-    // Assert
-    var okResult = Assert.IsType<OkObjectResult>(result.Result);
-    var response = Assert.IsType<SignInResponseDto>(okResult.Value);
-    Assert.Equal("mock-access-token", response.AccessToken);
-    Assert.Equal("test@example.com", response.User.Email);
-  }
-
-  [Fact]
-  public async Task LocalSignUp_ValidRequest_ReturnsOkWithSignInResponse() {
-    // Arrange
-    var tenantId = Guid.NewGuid();
-    var request = new LocalSignUpRequestDto { Email = "test@example.com", Password = "P455W0RD", Username = "testuser", TenantId = tenantId };
-
-    var expectedResponse = new SignInResponseDto {
-      AccessToken = "mock-access-token",
-      RefreshToken = "mock-refresh-token",
-      User = new UserDto { Email = "test@example.com", Username = "testuser" },
-      TenantId = tenantId,
-      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } }
-    };
-
-    // Mock the MediatR response for the LocalSignUpCommand
-    _mockMediator.Setup(x =>
-                          x.Send(
-                            It.Is<LocalSignUpCommand>(cmd =>
-                                                        cmd.Email == request.Email &&
-                                                        cmd.Password == request.Password &&
-                                                        cmd.Username == request.Username &&
-                                                        cmd.TenantId == request.TenantId
-                            ),
-                            It.IsAny<CancellationToken>()
-                          )
-                 )
-                 .ReturnsAsync(expectedResponse);
-
-    // Act
-    var result = await _controller.LocalSignUp(request);
-
-    // Assert
-    var okResult = Assert.IsType<OkObjectResult>(result.Result);
-    var response = Assert.IsType<SignInResponseDto>(okResult.Value);
-    Assert.Equal("mock-access-token", response.AccessToken);
-  }
-
-  [Fact]
-  public async Task RefreshToken_ValidRequest_ReturnsOkWithNewTokens() {
-    // Arrange
-    var request = new RefreshTokenRequestDto { RefreshToken = "valid-refresh-token" };
-
-    var expectedResponse = new RefreshTokenResponseDto { AccessToken = "new-access-token", RefreshToken = "new-refresh-token" };
-
-    _mockAuthService.Setup(x => x.RefreshTokenAsync(request)).ReturnsAsync(expectedResponse);
-
-    // Act
-    var result = await _controller.RefreshToken(request);
-
-    // Assert
-    var okResult = Assert.IsType<OkObjectResult>(result.Result);
-    var response = Assert.IsType<RefreshTokenResponseDto>(okResult.Value);
-    Assert.Equal("new-access-token", response.AccessToken);
-    Assert.Equal("new-refresh-token", response.RefreshToken);
-  }
-
-  [Fact]
-  public async Task RevokeToken_ValidRequest_ReturnsOkWithSuccessMessage() {
-    // Arrange
-    var request = new RefreshTokenRequestDto { RefreshToken = "valid-refresh-token" };
-
-    _mockAuthService.Setup(x => x.RevokeRefreshTokenAsync(request.RefreshToken, It.IsAny<string>()))
-                    .Returns(Task.CompletedTask);
-
-    // Act
-    var result = await _controller.RevokeToken(request);
-
-    // Assert
-    var okResult = Assert.IsType<OkObjectResult>(result);
-    var response = okResult.Value;
-    Assert.NotNull(response);
-  }
-
-  [Fact]
-  public async Task GitHubSignIn_ValidRedirectUri_ReturnsOkWithAuthUrl() {
-    // Arrange
-    var redirectUri = "https://example.com/callback";
-    var expectedAuthUrl = "https://github.com/login/oauth/authorize?client_id=test&redirect_uri=" + redirectUri;
-
-    _mockAuthService.Setup(x => x.GetGitHubAuthUrlAsync(redirectUri)).ReturnsAsync(expectedAuthUrl);
-
-    // Act
-    var result = await _controller.GitHubSignIn(redirectUri);
-
-    // Assert
-    var okResult = Assert.IsType<OkObjectResult>(result);
-    var response = okResult.Value;
-    Assert.NotNull(response);
-  }
-
-  [Fact]
-  public async Task GitHubCallback_ValidRequest_ReturnsOkWithSignInResponse() {
-    // Arrange
-    var request = new OAuthSignInRequestDto { Code = "github-auth-code", RedirectUri = "https://example.com/callback" };
-
-    var expectedResponse = new SignInResponseDto { AccessToken = "mock-access-token", RefreshToken = "mock-refresh-token", User = new UserDto { Email = "github@example.com", Username = "githubuser" } };
-
-    _mockAuthService.Setup(x => x.GitHubSignInAsync(request)).ReturnsAsync(expectedResponse);
-
-    // Act
-    var result = await _controller.GitHubCallback(request);
-
-    // Assert
-    var okResult = Assert.IsType<OkObjectResult>(result);
-    var response = Assert.IsType<SignInResponseDto>(okResult.Value);
-    Assert.Equal("mock-access-token", response.AccessToken);
-  }
-
-  [Fact]
-  public async Task GitHubCallback_ServiceThrowsException_ReturnsBadRequest() {
-    // Arrange
-    var request = new OAuthSignInRequestDto { Code = "invalid-code", RedirectUri = "https://example.com/callback" };
-
-    _mockAuthService.Setup(x => x.GitHubSignInAsync(request)).ThrowsAsync(new Exception("OAuth failed"));
-
-    // Act
-    var result = await _controller.GitHubCallback(request);
-
-    // Assert
-    var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-    Assert.NotNull(badRequestResult.Value);
-  }
-
-  [Fact]
-  public async Task GenerateWeb3Challenge_ValidRequest_ReturnsOkWithChallenge() {
-    // Arrange
-    var request = new Web3ChallengeRequestDto { WalletAddress = "0x742d35Cc6634C0532925a3b8D".ToLower(), ChainId = "1" };
-
-    var expectedResponse = new Web3ChallengeResponseDto { Challenge = "mock-challenge", Nonce = "mock-nonce", ExpiresAt = DateTime.UtcNow.AddMinutes(15) };
-
-    _mockAuthService.Setup(x => x.GenerateWeb3ChallengeAsync(request)).ReturnsAsync(expectedResponse);
-
-    // Act
-    var result = await _controller.GenerateWeb3Challenge(request);
-
-    // Assert
-    var okResult = Assert.IsType<OkObjectResult>(result.Result);
-    var response = Assert.IsType<Web3ChallengeResponseDto>(okResult.Value);
-    Assert.Equal("mock-challenge", response.Challenge);
-    Assert.Equal("mock-nonce", response.Nonce);
-  }
-
-  [Fact]
-  public async Task VerifyWeb3Signature_ValidRequest_ReturnsOkWithSignInResponse() {
-    // Arrange
-    var request = new Web3VerifyRequestDto { WalletAddress = "0x742d35Cc6634C0532925a3b8D".ToLower(), Signature = "mock-signature", Nonce = "mock-nonce", ChainId = "1" };
-
-    var expectedResponse = new SignInResponseDto { AccessToken = "mock-access-token", RefreshToken = "mock-refresh-token", User = new UserDto { Email = "web3@example.com", Username = "web3user" } };
-
-    _mockAuthService.Setup(x => x.VerifyWeb3SignatureAsync(request)).ReturnsAsync(expectedResponse);
-
-    // Act
-    var result = await _controller.VerifyWeb3Signature(request);
-
-    // Assert
-    var okResult = Assert.IsType<OkObjectResult>(result.Result);
-    var response = Assert.IsType<SignInResponseDto>(okResult.Value);
-    Assert.Equal("mock-access-token", response.AccessToken);
-  }
-
-  [Fact]
-  public async Task VerifyWeb3Signature_ServiceThrowsException_ReturnsBadRequest() {
-    // Arrange
-    var request = new Web3VerifyRequestDto { WalletAddress = "0x742d35Cc6634C0532925a3b8D".ToLower(), Signature = "invalid-signature", Nonce = "mock-nonce", ChainId = "1" };
-
-    _mockAuthService.Setup(x => x.VerifyWeb3SignatureAsync(request))
-                    .ThrowsAsync(new UnauthorizedAccessException("Invalid signature"));
-
-    // Act
-    var result = await _controller.VerifyWeb3Signature(request);
-
-    // Assert
-    var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
-    Assert.NotNull(badRequestResult.Value);
-  }
-
-  [Fact]
-  public async Task SendEmailVerification_ValidRequest_ReturnsOk() {
-    // Arrange
-    var request = new SendEmailVerificationRequestDto { Email = "test@example.com" };
-
-    var expectedResponse = new EmailOperationResponseDto { Success = true, Message = "Email verification sent" };
-
-    _mockAuthService.Setup(x => x.SendEmailVerificationAsync(request)).ReturnsAsync(expectedResponse);
-
-    // Act
-    var result = await _controller.SendEmailVerification(request);
-
-    // Assert
-    var okResult = Assert.IsType<OkObjectResult>(result.Result);
-    var response = Assert.IsType<EmailOperationResponseDto>(okResult.Value);
-    Assert.True(response.Success);
-  }
-
-  [Fact]
-  public async Task VerifyEmail_ValidToken_ReturnsOk() {
-    // Arrange
-    var request = new VerifyEmailRequestDto { Token = "valid-verification-token" };
-
-    var expectedResponse = new EmailOperationResponseDto { Success = true, Message = "Email verified successfully" };
-
-    _mockAuthService.Setup(x => x.VerifyEmailAsync(request)).ReturnsAsync(expectedResponse);
-
-    // Act
-    var result = await _controller.VerifyEmail(request);
-
-    // Assert
-    var okResult = Assert.IsType<OkObjectResult>(result.Result);
-    var response = Assert.IsType<EmailOperationResponseDto>(okResult.Value);
-    Assert.True(response.Success);
-  }
-
-  [Fact]
-  public async Task ChangePassword_ValidRequest_ReturnsOk() {
-    // Arrange
-    var request = new ChangePasswordRequestDto { CurrentPassword = "oldpassword", NewPassword = "newP455W0RD" };
-
-    var expectedResponse = new EmailOperationResponseDto { Success = true, Message = "Password changed successfully" };
-
-    // Setup authenticated user
-    var userId = Guid.NewGuid();
-    var claims = new List<Claim> { new Claim("sub", userId.ToString()) };
-    var identity = new ClaimsIdentity(claims, "test");
-    var principal = new ClaimsPrincipal(identity);
-
-    _controller.ControllerContext.HttpContext.User = principal;
-
-    _mockAuthService.Setup(x => x.ChangePasswordAsync(request, userId)).ReturnsAsync(expectedResponse);
-
-    // Act
-    var result = await _controller.ChangePassword(request);
-
-    // Assert
-    var okResult = Assert.IsType<OkObjectResult>(result.Result);
-    var response = Assert.IsType<EmailOperationResponseDto>(okResult.Value);
-    Assert.True(response.Success);
-  }
+using Xunit;
+using FluentValidation;
+using System.Security.Claims;
+
+namespace GameGuild.Modules.Authentication.Tests.Unit.Controllers;
+
+/// <summary>
+/// Unit tests for AuthController using CQRS pattern
+/// </summary>
+public class AuthControllerTests
+{
+    private readonly Mock<IMediator> _mediatorMock;
+    private readonly Mock<ILogger<AuthController>> _loggerMock;
+    private readonly AuthController _controller;
+
+    public AuthControllerTests()
+    {
+        _mediatorMock = new Mock<IMediator>();
+        _loggerMock = new Mock<ILogger<AuthController>>();
+        _controller = new AuthController(_mediatorMock.Object, _loggerMock.Object);
+    }
+
+    [Fact]
+    public void Constructor_WithValidParameters_CreatesInstance()
+    {
+        // Act & Assert
+        Assert.NotNull(_controller);
+    }
+
+    [Fact]
+    public void Constructor_WithNullMediator_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new AuthController(null!, _loggerMock.Object));
+    }
+
+    [Fact]
+    public void Constructor_WithNullLogger_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new AuthController(_mediatorMock.Object, null!));
+    }
+
+    [Fact]
+    public async Task LocalSignUp_ValidRequest_ReturnsCreatedResult()
+    {
+        // Arrange
+        var request = new LocalSignUpRequestDto
+        {
+            Email = "test@example.com",
+            Password = "TestPassword123!",
+            Username = "testuser"
+        };
+
+        var expectedResponse = new SignInResponseDto
+        {
+            AccessToken = "access-token",
+            RefreshToken = "refresh-token",
+            Expires = DateTime.UtcNow.AddHours(1)
+        };
+
+        _mediatorMock.Setup(m => m.Send(It.IsAny<LocalSignUpCommand>(), default))
+                    .ReturnsAsync(expectedResponse);
+
+        // Act
+        var result = await _controller.LocalSignUp(request);
+
+        // Assert
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        Assert.Equal(expectedResponse, createdResult.Value);
+        _mediatorMock.Verify(m => m.Send(It.IsAny<LocalSignUpCommand>(), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task LocalSignUp_ValidationException_ReturnsBadRequest()
+    {
+        // Arrange
+        var request = new LocalSignUpRequestDto { Email = "invalid-email" };
+        var validationException = new ValidationException("Validation failed");
+
+        _mediatorMock.Setup(m => m.Send(It.IsAny<LocalSignUpCommand>(), default))
+                    .ThrowsAsync(validationException);
+
+        // Act
+        var result = await _controller.LocalSignUp(request);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+        var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+        Assert.Equal(400, problemDetails.Status);
+        Assert.Equal("Validation Error", problemDetails.Title);
+    }
+
+    [Fact]
+    public async Task LocalSignIn_ValidRequest_ReturnsOkResult()
+    {
+        // Arrange
+        var request = new LocalSignInRequestDto
+        {
+            Email = "test@example.com",
+            Password = "TestPassword123!"
+        };
+
+        var expectedResponse = new SignInResponseDto
+        {
+            AccessToken = "access-token",
+            RefreshToken = "refresh-token",
+            Expires = DateTime.UtcNow.AddHours(1)
+        };
+
+        _mediatorMock.Setup(m => m.Send(It.IsAny<LocalSignInCommand>(), default))
+                    .ReturnsAsync(expectedResponse);
+
+        // Act
+        var result = await _controller.LocalSignIn(request);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Equal(expectedResponse, okResult.Value);
+        _mediatorMock.Verify(m => m.Send(It.IsAny<LocalSignInCommand>(), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task LocalSignIn_UnauthorizedAccessException_ReturnsUnauthorized()
+    {
+        // Arrange
+        var request = new LocalSignInRequestDto
+        {
+            Email = "test@example.com",
+            Password = "wrong-password"
+        };
+
+        _mediatorMock.Setup(m => m.Send(It.IsAny<LocalSignInCommand>(), default))
+                    .ThrowsAsync(new UnauthorizedAccessException("Invalid credentials"));
+
+        // Act
+        var result = await _controller.LocalSignIn(request);
+
+        // Assert
+        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
+        var problemDetails = Assert.IsType<ProblemDetails>(unauthorizedResult.Value);
+        Assert.Equal(401, problemDetails.Status);
+        Assert.Equal("Authentication Failed", problemDetails.Title);
+    }
+
+    [Fact]
+    public async Task RefreshToken_ValidRequest_ReturnsOkResult()
+    {
+        // Arrange
+        var request = new RefreshTokenRequestDto
+        {
+            RefreshToken = "valid-refresh-token"
+        };
+
+        var expectedResponse = new SignInResponseDto
+        {
+            AccessToken = "new-access-token",
+            RefreshToken = "new-refresh-token",
+            Expires = DateTime.UtcNow.AddHours(1)
+        };
+
+        _mediatorMock.Setup(m => m.Send(It.IsAny<RefreshTokenCommand>(), default))
+                    .ReturnsAsync(expectedResponse);
+
+        // Act
+        var result = await _controller.RefreshToken(request);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Equal(expectedResponse, okResult.Value);
+        _mediatorMock.Verify(m => m.Send(It.IsAny<RefreshTokenCommand>(), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task RefreshToken_UnauthorizedAccessException_ReturnsUnauthorized()
+    {
+        // Arrange
+        var request = new RefreshTokenRequestDto
+        {
+            RefreshToken = "invalid-refresh-token"
+        };
+
+        _mediatorMock.Setup(m => m.Send(It.IsAny<RefreshTokenCommand>(), default))
+                    .ThrowsAsync(new UnauthorizedAccessException("Invalid refresh token"));
+
+        // Act
+        var result = await _controller.RefreshToken(request);
+
+        // Assert
+        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
+        var problemDetails = Assert.IsType<ProblemDetails>(unauthorizedResult.Value);
+        Assert.Equal(401, problemDetails.Status);
+        Assert.Equal("Token Refresh Failed", problemDetails.Title);
+    }
+
+    [Fact]
+    public async Task RevokeToken_ValidRequest_ReturnsNoContent()
+    {
+        // Arrange
+        var request = new RevokeTokenRequestDto
+        {
+            RefreshToken = "valid-refresh-token"
+        };
+
+        _mediatorMock.Setup(m => m.Send(It.IsAny<RevokeTokenCommand>(), default))
+                    .ReturnsAsync(MediatR.Unit.Value);
+
+        // Setup HttpContext for IP address
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext()
+        };
+
+        // Act
+        var result = await _controller.RevokeToken(request);
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+        _mediatorMock.Verify(m => m.Send(It.IsAny<RevokeTokenCommand>(), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task RevokeToken_ValidationException_ReturnsBadRequest()
+    {
+        // Arrange
+        var request = new RevokeTokenRequestDto
+        {
+            RefreshToken = ""
+        };
+
+        // Setup HttpContext for IP address
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext()
+        };
+
+        _mediatorMock.Setup(m => m.Send(It.IsAny<RevokeTokenCommand>(), default))
+                    .ThrowsAsync(new ValidationException("Validation failed"));
+
+        // Act
+        var result = await _controller.RevokeToken(request);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+        Assert.Equal(400, problemDetails.Status);
+        Assert.Equal("Validation Error", problemDetails.Title);
+    }
+
+    [Fact]
+    public async Task GetProfile_ValidUser_ReturnsOkResult()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var expectedProfile = new UserProfileDto
+        {
+            Id = userId,
+            Email = "test@example.com",
+            Username = "testuser"
+        };
+
+        _mediatorMock.Setup(m => m.Send(It.IsAny<GetUserProfileQuery>(), default))
+                    .ReturnsAsync(expectedProfile);
+
+        // Setup user claims
+        var claims = new List<Claim>
+        {
+            new Claim("sub", userId.ToString())
+        };
+        var identity = new ClaimsIdentity(claims, "test");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
+
+        // Act
+        var result = await _controller.GetProfile();
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Equal(expectedProfile, okResult.Value);
+        _mediatorMock.Verify(m => m.Send(It.IsAny<GetUserProfileQuery>(), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetProfile_InvalidUserClaims_ReturnsUnauthorized()
+    {
+        // Arrange
+        var claims = new List<Claim>(); // No user ID claim
+        var identity = new ClaimsIdentity(claims, "test");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
+
+        // Act
+        var result = await _controller.GetProfile();
+
+        // Assert
+        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
+        var problemDetails = Assert.IsType<ProblemDetails>(unauthorizedResult.Value);
+        Assert.Equal(401, problemDetails.Status);
+        Assert.Equal("Unauthorized", problemDetails.Title);
+    }
 }
