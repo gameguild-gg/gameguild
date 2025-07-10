@@ -1,7 +1,4 @@
-﻿using HotChocolate;
-
-
-namespace GameGuild.Modules.Users.Inputs;
+﻿namespace GameGuild.Modules.Users.Inputs;
 
 /// <summary>
 /// Input for retrieving user statistics with optional date filtering

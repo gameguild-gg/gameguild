@@ -2,7 +2,6 @@ using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.UserProfiles.Commands;
 using GameGuild.Modules.UserProfiles.Entities;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.UserProfiles.Handlers;
