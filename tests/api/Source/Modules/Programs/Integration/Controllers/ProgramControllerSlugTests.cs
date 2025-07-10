@@ -29,8 +29,12 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
     {
         _factory = factory;
         _output = output;
-        _client = factory.CreateClient();
-        _scope = factory.Services.CreateScope();
+        
+        // Use the IntegrationTestHelper to get the test factory
+        var uniqueDbName = $"ProgramControllerSlugTests_{Guid.NewGuid()}";
+        var testFactory = IntegrationTestHelper.GetTestFactory(uniqueDbName);
+        _client = testFactory.CreateClient();
+        _scope = testFactory.Services.CreateScope();
 
         // Get database context for test setup
         _context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -43,14 +47,11 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
     public async Task GetProgramBySlug_WithValidSlug_ReturnsProgram()
     {
         // Arrange
-        var tenantUser = await CreateTenantWithUserAsync();
-        var authToken = await AuthenticateUserAsync(tenantUser.User.Email, "password123");
-        var program = await CreateTestProgramAsync(tenantUser.Tenant.Id, "test-program-slug");
-
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(IntegrationTestHelper.GetTestFactory());
+        var program = await CreateTestProgramAsync(tenantId, "test-program-slug");
 
         // Act
-        var response = await _client.GetAsync($"/api/program/slug/{program.Slug}");
+        var response = await authenticatedClient.GetAsync($"/api/program/slug/{program.Slug}");
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -71,13 +72,10 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
     public async Task GetProgramBySlug_WithInvalidSlug_ReturnsNotFound()
     {
         // Arrange
-        var tenantUser = await CreateTenantWithUserAsync();
-        var authToken = await AuthenticateUserAsync(tenantUser.User.Email, "password123");
-
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(IntegrationTestHelper.GetTestFactory());
 
         // Act
-        var response = await _client.GetAsync("/api/program/slug/non-existent-slug");
+        var response = await authenticatedClient.GetAsync("/api/program/slug/non-existent-slug");
 
         // Assert
         Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
@@ -87,11 +85,11 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
     public async Task GetProgramBySlug_WithPublishedProgram_ReturnsSuccessWithoutAuth()
     {
         // Arrange
-        var tenantUser = await CreateTenantWithUserAsync();
-        var program = await CreateTestProgramAsync(tenantUser.Tenant.Id, "public-program-slug",
+        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(IntegrationTestHelper.GetTestFactory());
+        var program = await CreateTestProgramAsync(tenantId, "public-program-slug",
             status: ContentStatus.Published, visibility: AccessLevel.Public);
 
-        // Act - No authentication header
+        // Act - No authentication header (use regular client)
         var response = await _client.GetAsync($"/api/program/slug/{program.Slug}");
 
         // Assert
@@ -111,11 +109,11 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
     public async Task GetProgramBySlug_WithDraftProgram_RequiresAuthentication()
     {
         // Arrange
-        var tenantUser = await CreateTenantWithUserAsync();
-        var program = await CreateTestProgramAsync(tenantUser.Tenant.Id, "draft-program-slug",
+        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(IntegrationTestHelper.GetTestFactory());
+        var program = await CreateTestProgramAsync(tenantId, "draft-program-slug",
             status: ContentStatus.Draft, visibility: AccessLevel.Private);
 
-        // Act - No authentication header
+        // Act - No authentication header (use regular client)
         var response = await _client.GetAsync($"/api/program/slug/{program.Slug}");
 
         // Assert
@@ -126,14 +124,14 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
     public async Task GetPublishedPrograms_ReturnsOnlyPublishedPrograms()
     {
         // Arrange
-        var tenantUser = await CreateTenantWithUserAsync();
+        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(IntegrationTestHelper.GetTestFactory());
 
         // Create multiple programs with different statuses
-        var publishedProgram1 = await CreateTestProgramAsync(tenantUser.Tenant.Id, "published-1",
+        var publishedProgram1 = await CreateTestProgramAsync(tenantId, "published-1",
             status: ContentStatus.Published, visibility: AccessLevel.Public);
-        var publishedProgram2 = await CreateTestProgramAsync(tenantUser.Tenant.Id, "published-2",
+        var publishedProgram2 = await CreateTestProgramAsync(tenantId, "published-2",
             status: ContentStatus.Published, visibility: AccessLevel.Public);
-        var draftProgram = await CreateTestProgramAsync(tenantUser.Tenant.Id, "draft-1",
+        var draftProgram = await CreateTestProgramAsync(tenantId, "draft-1",
             status: ContentStatus.Draft, visibility: AccessLevel.Private);
 
         // Act
@@ -159,14 +157,11 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
     public async Task GetProgramBySlug_WithSpecialCharactersInSlug_HandlesCorrectly()
     {
         // Arrange
-        var tenantUser = await CreateTenantWithUserAsync();
-        var authToken = await AuthenticateUserAsync(tenantUser.User.Email, "password123");
-        var program = await CreateTestProgramAsync(tenantUser.Tenant.Id, "unity-3d-game-development-2024");
-
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(IntegrationTestHelper.GetTestFactory());
+        var program = await CreateTestProgramAsync(tenantId, "unity-3d-game-development-2024");
 
         // Act
-        var response = await _client.GetAsync($"/api/program/slug/{program.Slug}");
+        var response = await authenticatedClient.GetAsync($"/api/program/slug/{program.Slug}");
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -194,65 +189,6 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
         {
             _output.WriteLine($"Warning: Could not clear database: {ex.Message}");
         }
-    }
-
-    private async Task<(Tenant Tenant, User User)> CreateTenantWithUserAsync()
-    {
-        var tenant = new Tenant
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Tenant",
-            Slug = $"test-tenant-{Guid.NewGuid():N}",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Name = $"testuser_{Guid.NewGuid():N}",
-            Email = $"test_{Guid.NewGuid():N}@example.com",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        // Create user tenant relationship
-        var userTenant = new UserTenant
-        {
-            UserId = user.Id,
-            TenantId = tenant.Id,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        // Set password using the proper service
-        var userManager = _scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<User>>();
-        await userManager.CreateAsync(user, "password123");
-
-        _context.Set<Tenant>().Add(tenant);
-        _context.Set<User>().Add(user);
-        _context.Set<UserTenant>().Add(userTenant);
-        await _context.SaveChangesAsync();
-
-        return (tenant, user);
-    }
-
-    private async Task<string> AuthenticateUserAsync(string email, string password)
-    {
-        var authService = _scope.ServiceProvider.GetRequiredService<IAuthService>();
-
-        var loginRequest = new LocalSignInRequestDto { Email = email, Password = password };
-
-        var result = await authService.LocalSignInAsync(loginRequest);
-
-        if (result == null || string.IsNullOrEmpty(result.AccessToken))
-        {
-            throw new InvalidOperationException($"Authentication failed");
-        }
-
-        return result.AccessToken;
     }
 
     private async Task<GameGuild.Modules.Programs.Models.Program> CreateTestProgramAsync(Guid tenantId, string slug,
