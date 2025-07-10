@@ -1,5 +1,5 @@
 using GameGuild.Common;
-using GameGuild.Modules.Authentication.Dtos;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions.Models;
 using Microsoft.AspNetCore.Mvc;
 

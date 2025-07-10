@@ -1,8 +1,5 @@
 using System.Security.Claims;
-using GameGuild.Modules.Authentication.Commands;
-using GameGuild.Modules.Authentication.Controllers;
-using GameGuild.Modules.Authentication.Dtos;
-using GameGuild.Modules.Authentication.Services;
+using GameGuild.Modules.Authentication;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

@@ -2,7 +2,7 @@ using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Users;
+namespace GameGuild.Modules.Credentials;
 
 /// <summary>
 /// Service implementation for managing user credentials

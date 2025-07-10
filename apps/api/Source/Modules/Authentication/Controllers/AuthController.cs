@@ -1,12 +1,8 @@
-using GameGuild.Modules.Authentication.Attributes;
-using GameGuild.Modules.Authentication.Commands;
-using GameGuild.Modules.Authentication.Dtos;
-using GameGuild.Modules.Authentication.Services;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Modules.Authentication.Controllers {
+namespace GameGuild.Modules.Authentication {
   [ApiController]
   [Route("[controller]")]
   public class AuthController(IAuthService authService, IMediator mediator) : ControllerBase {

@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.Json;
 using GameGuild.API.Tests.Helpers;
 using GameGuild.Database;
-using GameGuild.Modules.Authentication.Dtos;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Tenants;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;

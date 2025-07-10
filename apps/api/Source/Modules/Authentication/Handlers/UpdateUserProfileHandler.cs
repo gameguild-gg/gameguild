@@ -1,11 +1,10 @@
 using GameGuild.Database;
-using GameGuild.Modules.Authentication.Commands;
 using GameGuild.Modules.Users;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Authentication.Handlers;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Handler for updating user profile with business logic and validation

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
 
-namespace GameGuild.Modules.Users;
+namespace GameGuild.Modules.Credentials;
 
 /// <summary>
 /// Input type for creating a new credential

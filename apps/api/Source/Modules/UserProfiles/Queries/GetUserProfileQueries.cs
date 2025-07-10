@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using GameGuild.Modules.UserProfiles.Entities;
 using MediatR;
 
 namespace GameGuild.Modules.UserProfiles.Queries;
@@ -6,7 +7,7 @@ namespace GameGuild.Modules.UserProfiles.Queries;
 /// <summary>
 /// Query to get all user profiles with optional filtering
 /// </summary>
-public class GetAllUserProfilesQuery : IRequest<IEnumerable<Models.UserProfile>>
+public class GetAllUserProfilesQuery : IRequest<IEnumerable<UserProfile>>
 {
     public bool IncludeDeleted { get; set; } = false;
 
@@ -23,7 +24,7 @@ public class GetAllUserProfilesQuery : IRequest<IEnumerable<Models.UserProfile>>
 /// <summary>
 /// Query to get user profile by ID
 /// </summary>
-public class GetUserProfileByIdQuery : IRequest<Models.UserProfile?>
+public class GetUserProfileByIdQuery : IRequest<UserProfile?>
 {
     [Required]
     public Guid UserProfileId { get; set; }

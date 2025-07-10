@@ -1,10 +1,7 @@
-using GameGuild.Modules.Authentication.Commands;
-using GameGuild.Modules.Authentication.Dtos;
-using GameGuild.Modules.Authentication.Services;
 using MediatR;
 
 
-namespace GameGuild.Modules.Authentication.Handlers;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Handler for generating Web3 challenge

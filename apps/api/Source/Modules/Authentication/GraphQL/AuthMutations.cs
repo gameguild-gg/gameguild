@@ -1,10 +1,8 @@
-using GameGuild.Modules.Authentication.Commands;
-using GameGuild.Modules.Authentication.Dtos;
 using GameGuild.Modules.Users;
 using MediatR;
 
 
-namespace GameGuild.Modules.Authentication.GraphQL;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// GraphQL mutations for Auth module using CQRS pattern

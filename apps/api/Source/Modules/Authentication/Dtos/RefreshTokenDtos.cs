@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Authentication.Dtos {
+namespace GameGuild.Modules.Authentication {
   /// <summary>
   /// Request DTO for refreshing authentication tokens
   /// </summary>

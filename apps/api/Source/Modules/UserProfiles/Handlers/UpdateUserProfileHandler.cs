@@ -1,5 +1,6 @@
 using GameGuild.Database;
 using GameGuild.Modules.UserProfiles.Commands;
+using GameGuild.Modules.UserProfiles.Entities;
 using GameGuild.Modules.UserProfiles.Notifications;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +13,11 @@ namespace GameGuild.Modules.UserProfiles.Handlers;
 public class UpdateUserProfileHandler(
     ApplicationDbContext context, 
     ILogger<UpdateUserProfileHandler> logger,
-    IMediator mediator) : IRequestHandler<UpdateUserProfileCommand, Models.UserProfile>
+    IMediator mediator) : IRequestHandler<UpdateUserProfileCommand, UserProfile>
 {
-    public async Task<Models.UserProfile> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken)
+    public async Task<UserProfile> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken)
     {
-        var userProfile = await context.Resources.OfType<Models.UserProfile>()
+        var userProfile = await context.Resources.OfType<UserProfile>()
             .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 
         if (userProfile == null) throw new InvalidOperationException($"User profile with ID {request.UserProfileId} not found");

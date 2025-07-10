@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using GameGuild.Modules.Authentication.Constants;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using GameGuild.Modules.UserProfiles.Entities;
 using MediatR;
 
 namespace GameGuild.Modules.UserProfiles.Commands;
@@ -6,7 +7,7 @@ namespace GameGuild.Modules.UserProfiles.Commands;
 /// <summary>
 /// Command to update user profile with validation and business logic
 /// </summary>
-public class UpdateUserProfileCommand : IRequest<Models.UserProfile>
+public class UpdateUserProfileCommand : IRequest<UserProfile>
 {
     [Required]
     public Guid UserProfileId { get; set; }
