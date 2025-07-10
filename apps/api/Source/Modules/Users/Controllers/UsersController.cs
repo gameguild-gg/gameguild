@@ -265,6 +265,7 @@ public class UsersController(IMediator mediator) : ControllerBase {
   public async Task<ActionResult<BulkOperationResult>> BulkCreateUsers([FromBody] List<CreateUserDto> users, [FromQuery] string? reason = null) {
     var command = new BulkCreateUsersCommand { Users = users, Reason = reason };
     var result = await mediator.Send(command);
+
     return Ok(result);
   }
 
@@ -275,6 +276,7 @@ public class UsersController(IMediator mediator) : ControllerBase {
   public async Task<ActionResult<BulkOperationResult>> BulkActivateUsers([FromBody] List<Guid> userIds, [FromQuery] string? reason = null) {
     var command = new BulkActivateUsersCommand { UserIds = userIds, Reason = reason };
     var result = await mediator.Send(command);
+
     return Ok(result);
   }
 
@@ -285,6 +287,7 @@ public class UsersController(IMediator mediator) : ControllerBase {
   public async Task<ActionResult<BulkOperationResult>> BulkDeactivateUsers([FromBody] List<Guid> userIds, [FromQuery] string? reason = null) {
     var command = new BulkDeactivateUsersCommand { UserIds = userIds, Reason = reason };
     var result = await mediator.Send(command);
+
     return Ok(result);
   }
 }
