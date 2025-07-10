@@ -1,9 +1,7 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using GameGuild.API.Tests.Fixtures;
-using GameGuild.Modules.Users;
 
 
 // using GameGuild.API.Models;

@@ -1,6 +1,5 @@
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Products.Services;
-using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
 using ProductTypeEnum = GameGuild.Common.ProductType;

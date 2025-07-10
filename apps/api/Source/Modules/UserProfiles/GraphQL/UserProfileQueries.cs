@@ -1,4 +1,3 @@
-using GameGuild.Modules.Users;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
