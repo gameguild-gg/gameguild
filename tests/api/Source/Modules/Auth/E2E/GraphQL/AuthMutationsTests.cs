@@ -22,7 +22,7 @@ public class AuthMutationsTests {
       RefreshToken = "mock-refresh-token",
       User = new UserDto { Id = Guid.NewGuid(), Email = "test@example.com", Username = "testuser" },
       TenantId = tenantId,
-      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } },
+      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } }
     };
 
     // Setup mediator to capture the command and return expected response
@@ -59,7 +59,7 @@ public class AuthMutationsTests {
       RefreshToken = "mock-refresh-token",
       User = new UserDto { Id = Guid.NewGuid(), Email = "test@example.com", Username = "testuser" },
       TenantId = tenantId,
-      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } },
+      AvailableTenants = new List<TenantInfoDto> { new TenantInfoDto { Id = tenantId, Name = "Test Tenant", IsActive = true } }
     };
 
     // Setup mediator to capture the command and return expected response

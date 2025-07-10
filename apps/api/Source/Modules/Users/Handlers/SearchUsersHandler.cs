@@ -3,6 +3,7 @@ using GameGuild.Common.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace GameGuild.Modules.Users;
 
 /// <summary>

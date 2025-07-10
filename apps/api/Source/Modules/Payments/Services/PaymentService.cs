@@ -51,7 +51,7 @@ public class PaymentService(ApplicationDbContext context) : IPaymentService
             ExpiryMonth = createDto.ExpiryMonth?.ToString(),
             ExpiryYear = createDto.ExpiryYear?.ToString(),
             IsDefault = createDto.IsDefault,
-            IsActive = true
+            IsActive = true,
         };
 
         context.UserFinancialMethods.Add(paymentMethod);
@@ -108,7 +108,7 @@ public class PaymentService(ApplicationDbContext context) : IPaymentService
             Status = TransactionStatus.Pending,
             PaymentMethodId = createDto.PaymentMethodId,
             Description = createDto.Description,
-            Metadata = createDto.Metadata
+            Metadata = createDto.Metadata,
         };
 
         context.FinancialTransactions.Add(transaction);
@@ -175,7 +175,7 @@ public class PaymentService(ApplicationDbContext context) : IPaymentService
             FailedTransactions = transactions.Count(t => t.Status == TransactionStatus.Failed),
             AverageTransactionAmount = successfulTransactions.Any() ? successfulTransactions.Average(t => t.Amount) : 0,
             FromDate = fromDate,
-            ToDate = toDate
+            ToDate = toDate,
         };
     }
 
@@ -197,7 +197,7 @@ public class PaymentService(ApplicationDbContext context) : IPaymentService
             Currency = transaction.Currency,
             Status = TransactionStatus.Completed,
             Description = $"Refund for transaction {transaction.Id}",
-            ProcessedAt = DateTime.UtcNow
+            ProcessedAt = DateTime.UtcNow,
         };
 
         context.FinancialTransactions.Add(refundTransaction);

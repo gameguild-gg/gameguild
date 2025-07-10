@@ -184,8 +184,8 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
                                     UserId = m.UserId,
                                     GroupId = m.UserGroupId,
                                     IsAutoAssigned = m.IsAutoAssigned,
-                                    CreatedAt = m.CreatedAt
-                                  }
+                                    CreatedAt = m.CreatedAt,
+      }
     );
 
     return Ok(dtos);

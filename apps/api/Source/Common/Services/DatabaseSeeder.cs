@@ -152,7 +152,7 @@ public class DatabaseSeeder(
         Email = "admin@gameguild.local",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       };
 
       createdUser = await userService.CreateUserAsync(superAdmin);
@@ -220,7 +220,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Python for Game Development",
@@ -233,7 +233,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "JavaScript Game Development",
@@ -246,7 +246,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
 
       // Programming Courses (Intermediate)
@@ -261,7 +261,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Unreal Engine C++ Programming",
@@ -274,7 +274,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Mobile Game Development with Flutter",
@@ -287,7 +287,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
 
       // Programming Courses (Advanced)
@@ -302,7 +302,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Multiplayer Networking in Games",
@@ -315,7 +315,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
 
       // Art and Design Courses (Beginner)
@@ -330,7 +330,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Pixel Art Fundamentals",
@@ -343,7 +343,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "UI/UX Design for Games",
@@ -356,7 +356,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
 
       // Art and Design Courses (Intermediate)
@@ -371,7 +371,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Character Animation for Games",
@@ -384,7 +384,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Environment Art and Level Design",
@@ -397,7 +397,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
 
       // Game Design Courses
@@ -412,7 +412,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Advanced Game Design Principles",
@@ -425,7 +425,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Narrative Design for Games",
@@ -438,7 +438,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Game Analytics and Monetization",
@@ -451,7 +451,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
 
       // Audio Courses
@@ -466,7 +466,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Music Composition for Games",
@@ -479,7 +479,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
 
       // VR/AR Courses
@@ -494,7 +494,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Augmented Reality Games",
@@ -507,7 +507,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
 
       // Specialized Courses
@@ -522,7 +522,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Procedural Generation in Games",
@@ -535,7 +535,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Game Physics Programming",
@@ -548,7 +548,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Game Security and Anti-Cheat",
@@ -561,7 +561,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
 
       // Business and Production
@@ -576,7 +576,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Game Project Management",
@@ -589,7 +589,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Game Publishing and Distribution",
@@ -602,7 +602,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
 
       // Retro and Indie Focus
@@ -617,7 +617,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Game Jam Survival Guide",
@@ -630,7 +630,7 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new GameGuild.Modules.Programs.Models.Program {
         Title = "Building Your Game Development Portfolio",
@@ -643,8 +643,8 @@ public class DatabaseSeeder(
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
-      }
+        UpdatedAt = DateTime.UtcNow,
+      },
     };
 
     await context.Set<GameGuild.Modules.Programs.Models.Program>().AddRangeAsync(samplePrograms);
@@ -695,7 +695,7 @@ public class DatabaseSeeder(
       Visibility = AccessLevel.Public,
       Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     // Add related courses to beginner track as ProgramContent
@@ -719,7 +719,7 @@ public class DatabaseSeeder(
         IsRequired = true,
         Visibility = Visibility.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       });
     }
 
@@ -736,7 +736,7 @@ public class DatabaseSeeder(
       Visibility = AccessLevel.Public,
       Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     // Add related courses to intermediate track
@@ -762,7 +762,7 @@ public class DatabaseSeeder(
         IsRequired = i < 4, // First 4 courses are required
         Visibility = Visibility.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       });
     }
 
@@ -779,7 +779,7 @@ public class DatabaseSeeder(
       Visibility = AccessLevel.Public,
       Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     // Add related courses to advanced track
@@ -802,7 +802,7 @@ public class DatabaseSeeder(
         IsRequired = i < 5, // First 5 courses are required
         Visibility = Visibility.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       });
     }
 
@@ -819,7 +819,7 @@ public class DatabaseSeeder(
       Visibility = AccessLevel.Public,
       Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     // Add AI-related courses
@@ -843,7 +843,7 @@ public class DatabaseSeeder(
         IsRequired = true,
         Visibility = Visibility.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       });
     }
 
@@ -860,7 +860,7 @@ public class DatabaseSeeder(
       Visibility = AccessLevel.Public,
       Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     // Add creative arts courses
@@ -881,7 +881,7 @@ public class DatabaseSeeder(
         IsRequired = i < 4, // First 4 courses are required
         Visibility = Visibility.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       });
     }
 
@@ -898,7 +898,7 @@ public class DatabaseSeeder(
       Visibility = AccessLevel.Public,
       Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     // Add business courses
@@ -922,7 +922,7 @@ public class DatabaseSeeder(
         IsRequired = true,
         Visibility = Visibility.Published,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       });
     }
 
@@ -933,7 +933,7 @@ public class DatabaseSeeder(
       advancedTrack,
       aiTrack,
       creativeTrack,
-      businessTrack
+      businessTrack,
     });
 
     // Save track programs and their content

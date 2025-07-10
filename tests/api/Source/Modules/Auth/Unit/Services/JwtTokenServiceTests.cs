@@ -17,7 +17,7 @@ public class JwtTokenServiceTests {
       { "Jwt:Issuer", "test-issuer" },
       { "Jwt:Audience", "test-audience" },
       { "Jwt:ExpiryInMinutes", "15" },
-      { "Jwt:RefreshTokenExpiryInDays", "7" },
+      { "Jwt:RefreshTokenExpiryInDays", "7" }
     };
 
     _configuration = new ConfigurationBuilder().AddInMemoryCollection(configData!).Build();
@@ -107,7 +107,7 @@ public class JwtTokenServiceTests {
       { "Jwt:Issuer", "test-issuer" },
       { "Jwt:Audience", "test-audience" },
       { "Jwt:ExpiryInMinutes", "-10" }, // Expired by 10 minutes (beyond 5-minute clock skew)
-      { "Jwt:RefreshTokenExpiryInDays", "7" },
+      { "Jwt:RefreshTokenExpiryInDays", "7" }
     };
 
     var expiredConfig = new ConfigurationBuilder().AddInMemoryCollection(expiredConfigData!).Build();
@@ -133,7 +133,7 @@ public class JwtTokenServiceTests {
       { "Jwt:Issuer", "test-issuer" },
       { "Jwt:Audience", "test-audience" },
       { "Jwt:ExpiryInMinutes", "-1" }, // Expired
-      { "Jwt:RefreshTokenExpiryInDays", "7" },
+      { "Jwt:RefreshTokenExpiryInDays", "7" }
     };
 
     var expiredConfig = new ConfigurationBuilder().AddInMemoryCollection(expiredConfigData!).Build();
@@ -257,7 +257,7 @@ public class JwtTokenServiceTests {
       { "Jwt:Issuer", "test-issuer" },
       { "Jwt:Audience", "test-audience" },
       { "Jwt:ExpiryInMinutes", "-1" }, // Expired
-      { "Jwt:RefreshTokenExpiryInDays", "7" },
+      { "Jwt:RefreshTokenExpiryInDays", "7" }
     };
 
     var expiredConfig = new ConfigurationBuilder().AddInMemoryCollection(expiredConfigData!).Build();

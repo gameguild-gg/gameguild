@@ -46,7 +46,7 @@ public class ContentInteractionService : IContentInteractionService {
       Status = ProgressStatus.InProgress,
       FirstAccessedAt = DateTime.UtcNow,
       LastAccessedAt = DateTime.UtcNow,
-      CompletionPercentage = 0
+      CompletionPercentage = 0,
     };
 
     _context.ContentInteractions.Add(newInteraction);
@@ -182,7 +182,7 @@ public class ContentInteractionService : IContentInteractionService {
       LastAccessedAt = DateTime.UtcNow,
       CompletionPercentage = 0,
       // Initialize with previous submission data as starting point
-      SubmissionData = previousInteraction.SubmissionData
+      SubmissionData = previousInteraction.SubmissionData,
     };
 
     _context.ContentInteractions.Add(newInteraction);

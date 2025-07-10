@@ -91,7 +91,7 @@ builder.Services.AddSwaggerGen(c => {
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Enter your JWT token in the format: Bearer {your token}"
+        Description = "Enter your JWT token in the format: Bearer {your token}",
       }
     );
 

@@ -84,7 +84,7 @@ namespace GameGuild.API.Tests.Helpers {
           UserId = userId,
           TenantId = tenantId,
           // Set some default permissions
-          PermissionFlags1 = 0x000000000000000F, // First 4 permissions enabled
+          PermissionFlags1 = 0x000000000000000F // First 4 permissions enabled
         };
 
         _permissions[(userId, tenantId)] = newPermission;

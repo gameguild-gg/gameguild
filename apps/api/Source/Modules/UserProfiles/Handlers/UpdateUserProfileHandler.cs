@@ -74,7 +74,7 @@ public class UpdateUserProfileHandler(
                 UserProfileId = userProfile.Id,
                 UserId = userProfile.Id, // Assuming 1:1 relationship
                 UpdatedAt = userProfile.UpdatedAt,
-                Changes = changes
+                Changes = changes,
             }, cancellationToken);
         }
 

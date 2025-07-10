@@ -114,7 +114,7 @@ public class ContentInteractionQueries {
       SubmittedInteractions = 0,
       InProgressInteractions = 0,
       AverageCompletionPercentage = 0,
-      AverageTimeSpentMinutes = 0
+      AverageTimeSpentMinutes = 0,
     });
   }
 }

@@ -57,7 +57,7 @@ namespace GameGuild.API.Tests.Helpers {
                   { "Jwt:ExpiryInMinutes", "15" },
                   { "Jwt:RefreshTokenExpiryInDays", "7" },
                   { "OAuth:GitHub:ClientId", "test-github-client-id" },
-                  { "OAuth:GitHub:ClientSecret", "test-github-client-secret" },
+                  { "OAuth:GitHub:ClientSecret", "test-github-client-secret" }
                 }
               );
             }

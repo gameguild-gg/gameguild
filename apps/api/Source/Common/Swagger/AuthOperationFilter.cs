@@ -25,7 +25,7 @@ public class AuthOperationFilter : IOperationFilter {
     // If neither the method nor the controller has [Public] attribute, require authentication
     if (!hasPublicAttribute && !controllerHasPublicAttribute)
       operation.Security = new List<OpenApiSecurityRequirement> {
-        new OpenApiSecurityRequirement { { new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }, Array.Empty<string>() } }
+        new OpenApiSecurityRequirement { { new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }, Array.Empty<string>() } },
       };
     // If the endpoint is public, explicitly clear any security requirements
     else

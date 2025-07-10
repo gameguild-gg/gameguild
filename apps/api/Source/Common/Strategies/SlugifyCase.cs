@@ -148,7 +148,7 @@ public static class SlugCase
         return Transformer.Transform(text, new CaseTransformOptions 
         { 
             MaxLength = maxLength, 
-            CustomSeparator = separator 
+            CustomSeparator = separator,
         });
     }
 

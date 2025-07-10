@@ -25,7 +25,7 @@ public static class CustomResults
             ErrorType.Problem => "https://tools.ietf.org/html/rfc7231#section-6.5.1",
             ErrorType.NotFound => "https://tools.ietf.org/html/rfc7231#section-6.5.4",
             ErrorType.Conflict => "https://tools.ietf.org/html/rfc7231#section-6.5.8",
-            _ => "https://tools.ietf.org/html/rfc7231#section-6.6.1"
+            _ => "https://tools.ietf.org/html/rfc7231#section-6.6.1",
           };
         }
 
@@ -34,7 +34,7 @@ public static class CustomResults
             ErrorType.Validation or ErrorType.Problem => StatusCodes.Status400BadRequest,
             ErrorType.NotFound => StatusCodes.Status404NotFound,
             ErrorType.Conflict => StatusCodes.Status409Conflict,
-            _ => StatusCodes.Status500InternalServerError
+            _ => StatusCodes.Status500InternalServerError,
           };
         }
 
@@ -44,7 +44,7 @@ public static class CustomResults
 
             return new Dictionary<string, object?>
             {
-                { "errors", validationError.Errors }
+                { "errors", validationError.Errors },
             };
         }
     }

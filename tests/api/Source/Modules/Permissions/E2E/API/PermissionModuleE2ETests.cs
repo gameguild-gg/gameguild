@@ -435,7 +435,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
 
   private async Task<Comment> CreateTestCommentAsync() {
     var comment = new Comment {
-      Id = Guid.NewGuid(), Content = "Test comment content",
+      Id = Guid.NewGuid(), Content = "Test comment content"
       // Note: Comment entity doesn't have IsEdited property
     };
 
@@ -460,7 +460,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     PermissionType[] permissions
   ) {
     var contentTypePermission = new ContentTypePermission {
-      UserId = userId, TenantId = tenantId, ContentType = contentTypeName, // The correct property name is ContentType, not ContentTypeName
+      UserId = userId, TenantId = tenantId, ContentType = contentTypeName // The correct property name is ContentType, not ContentTypeName
     };
 
     foreach (var permission in permissions) contentTypePermission.AddPermission(permission);

@@ -37,8 +37,8 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
                 Detail = validationException.Message,
                 Extensions = new Dictionary<string, object?>
                 {
-                    ["errors"] = new[] { validationException.Message }
-                }
+                    ["errors"] = new[] { validationException.Message },
+                },
             },
             
             ArgumentException argumentException => new ProblemDetails
@@ -46,7 +46,7 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
                 Status = StatusCodes.Status400BadRequest,
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
                 Title = "Bad Request",
-                Detail = argumentException.Message
+                Detail = argumentException.Message,
             },
             
             InvalidOperationException invalidOperationException when 
@@ -55,7 +55,7 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
                 Status = StatusCodes.Status404NotFound,
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
                 Title = "Not Found",
-                Detail = invalidOperationException.Message
+                Detail = invalidOperationException.Message,
             },
             
             InvalidOperationException invalidOperationException when 
@@ -64,7 +64,7 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
                 Status = StatusCodes.Status409Conflict,
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.8",
                 Title = "Conflict",
-                Detail = invalidOperationException.Message
+                Detail = invalidOperationException.Message,
             },
             
             InvalidOperationException invalidOperationException when 
@@ -73,7 +73,7 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
                 Status = StatusCodes.Status409Conflict,
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.8",
                 Title = "Conflict",
-                Detail = invalidOperationException.Message
+                Detail = invalidOperationException.Message,
             },
             
             UnauthorizedAccessException => new ProblemDetails
@@ -81,7 +81,7 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
                 Status = StatusCodes.Status401Unauthorized,
                 Type = "https://tools.ietf.org/html/rfc7235#section-3.1",
                 Title = "Unauthorized",
-                Detail = "Authentication is required to access this resource"
+                Detail = "Authentication is required to access this resource",
             },
             
             _ => new ProblemDetails
@@ -89,8 +89,8 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
                 Status = StatusCodes.Status500InternalServerError,
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
                 Title = "Server Error",
-                Detail = "An unexpected error occurred while processing your request"
-            }
+                Detail = "An unexpected error occurred while processing your request",
+            },
         };
     }
 }

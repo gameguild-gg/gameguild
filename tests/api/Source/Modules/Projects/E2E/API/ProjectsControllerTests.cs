@@ -102,7 +102,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Type = ProjectType.Game,
       DevelopmentStatus = DevelopmentStatus.InDevelopment,
       CreatedById = user.Id, // Associate with the test user
-      TenantId = tenant.Id,
+      TenantId = tenant.Id
     };
 
     var project2 = new Project {
@@ -113,7 +113,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Type = ProjectType.Tool,
       DevelopmentStatus = DevelopmentStatus.Released,
       CreatedById = user.Id, // Associate with the test user
-      TenantId = tenant.Id,
+      TenantId = tenant.Id
     };
 
     _context.Projects.AddRange(project1, project2);
@@ -160,7 +160,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       WebsiteUrl = "https://example.com",
       RepositoryUrl = "https://github.com/test/repo",
       CreatedById = user.Id,
-      TenantId = tenant.Id,
+      TenantId = tenant.Id
     };
 
     var json = JsonSerializer.Serialize(project);
@@ -241,7 +241,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       CreatedById = user.Id,
-      TenantId = tenant.Id,
+      TenantId = tenant.Id
     };
 
     _context.Projects.Add(project);
@@ -298,7 +298,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Description = "This project tests slug functionality",
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
-      CreatedById = user.Id,
+      CreatedById = user.Id
     };
 
     // Manually set the slug using the Project's GenerateSlug method
@@ -372,7 +372,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       CreatedById = user.Id,
-      TenantId = tenant.Id,
+      TenantId = tenant.Id
     };
 
     var project2 = new Project {
@@ -381,7 +381,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       CreatedById = user.Id,
-      TenantId = tenant.Id,
+      TenantId = tenant.Id
     };
 
     var project3 = new Project {
@@ -390,7 +390,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       CreatedById = user.Id,
-      TenantId = tenant.Id,
+      TenantId = tenant.Id
     };
 
     _context.Projects.AddRange(project1, project2, project3);
@@ -432,7 +432,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       CreatedById = user.Id,
-      TenantId = tenant.Id,
+      TenantId = tenant.Id
     };
 
     var draftProject = new Project {
@@ -440,7 +440,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Draft,
       Visibility = AccessLevel.Public,
       CreatedById = user.Id,
-      TenantId = tenant.Id,
+      TenantId = tenant.Id
     };
 
     _context.Projects.AddRange(publishedProject, draftProject);
@@ -483,7 +483,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       Tenant = null, // Make it global - accessible across all tenants
-      CreatedById = user.Id,
+      CreatedById = user.Id
     };
 
     var privateProject = new Project {
@@ -492,7 +492,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Private,
       Tenant = null, // Make it global - accessible across all tenants
-      CreatedById = user.Id,
+      CreatedById = user.Id
     };
 
     var draftProject = new Project {
@@ -501,7 +501,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Draft,
       Visibility = AccessLevel.Public,
       Tenant = null, // Make it global - accessible across all tenants
-      CreatedById = user.Id,
+      CreatedById = user.Id
     };
 
     _context.Projects.AddRange(publicProject, privateProject, draftProject);

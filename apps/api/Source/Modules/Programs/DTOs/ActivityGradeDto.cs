@@ -181,20 +181,20 @@ public static class ActivityGradeExtensions {
             Content =
               grade.ContentInteraction.Content != null
                 ? new ContentSummaryDto {
-                  Id = grade.ContentInteraction.Content.Id, Title = grade.ContentInteraction.Content.Title, ContentType = grade.ContentInteraction.Content.Type.ToString(), EstimatedMinutes = grade.ContentInteraction.Content.EstimatedMinutes
+                  Id = grade.ContentInteraction.Content.Id, Title = grade.ContentInteraction.Content.Title, ContentType = grade.ContentInteraction.Content.Type.ToString(), EstimatedMinutes = grade.ContentInteraction.Content.EstimatedMinutes,
                 }
                 : null,
             Student =
               grade.ContentInteraction.ProgramUser?.User != null
                 ? new StudentSummaryDto { Id = grade.ContentInteraction.ProgramUser.User.Id, UserDisplayName = grade.ContentInteraction.ProgramUser.User.Name, UserEmail = grade.ContentInteraction.ProgramUser.User.Email }
-                : null
+                : null,
           }
           : null,
       Grader = grade.GraderProgramUser?.User != null
                  ? new GraderSummaryDto {
-                   Id = grade.GraderProgramUser.User.Id, UserDisplayName = grade.GraderProgramUser.User.Name, UserEmail = grade.GraderProgramUser.User.Email, Role = "Grader" // Default role since ProgramUser doesn't have a Role property
+                   Id = grade.GraderProgramUser.User.Id, UserDisplayName = grade.GraderProgramUser.User.Name, UserEmail = grade.GraderProgramUser.User.Email, Role = "Grader", // Default role since ProgramUser doesn't have a Role property
                  }
-                 : null
+                 : null,
     };
   }
 
@@ -206,7 +206,7 @@ public static class ActivityGradeExtensions {
       AverageGrade = statistics.AverageGrade,
       MinGrade = statistics.MinGrade,
       MaxGrade = statistics.MaxGrade,
-      PassingRate = statistics.PassingRate
+      PassingRate = statistics.PassingRate,
     };
   }
 }

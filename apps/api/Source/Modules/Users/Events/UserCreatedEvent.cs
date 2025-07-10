@@ -10,9 +10,9 @@ public sealed class UserCreatedEvent(Guid userId, string email, string name, Dat
   : DomainEventBase(userId, nameof(User)) {
   public Guid UserId { get; } = userId;
 
-    public string Email { get; } = email;
+  public string Email { get; } = email;
 
-    public string Name { get; } = name;
+  public string Name { get; } = name;
 
-    public DateTime CreatedAt { get; } = createdAt;
+  public DateTime CreatedAt { get; } = createdAt;
 }

@@ -116,7 +116,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       maxTesters = 10,
       startDate = DateTime.UtcNow.AddDays(1).ToString("O"),
       endDate = DateTime.UtcNow.AddDays(7).ToString("O"),
-      status = 1, // TestingRequestStatus.Open = 1
+      status = 1 // TestingRequestStatus.Open = 1
     };
 
     var json = JsonSerializer.Serialize(newRequest);
@@ -144,7 +144,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
 
     var invalidRequest = new {
       // Missing required fields like projectVersionId, title, etc.
-      description = "Description without required fields",
+      description = "Description without required fields"
     };
 
     var json = JsonSerializer.Serialize(invalidRequest);
@@ -277,7 +277,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       EndDate = DateTime.UtcNow.AddDays(7),
       Status = TestingRequestStatus.Open,
       CreatedById = user.Id,
-      CreatedAt = DateTime.UtcNow,
+      CreatedAt = DateTime.UtcNow
     };
 
     context.TestingRequests.Add(testingRequest);
@@ -295,7 +295,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       MaxTestersCapacity = 10,
       MaxProjectsCapacity = 5,
       Status = LocationStatus.Active,
-      CreatedAt = DateTime.UtcNow,
+      CreatedAt = DateTime.UtcNow
     };
 
     context.TestingLocations.Add(location);
@@ -312,7 +312,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       Status = SessionStatus.Scheduled,
       ManagerUserId = user.Id,
       CreatedById = user.Id,
-      CreatedAt = DateTime.UtcNow,
+      CreatedAt = DateTime.UtcNow
     };
 
     context.TestingSessions.Add(testingSession);
@@ -327,7 +327,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       Name = "Test Tenant",
       Slug = "test-tenant",
       IsActive = true,
-      CreatedAt = DateTime.UtcNow,
+      CreatedAt = DateTime.UtcNow
     };
 
     context.Tenants.Add(tenant);
@@ -337,7 +337,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       Name = "testuser",
       Email = "test@example.com",
       IsActive = true,
-      CreatedAt = DateTime.UtcNow,
+      CreatedAt = DateTime.UtcNow
     };
 
     context.Users.Add(user);
@@ -353,7 +353,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       Title = "Test Project",
       Description = "Test project for testing lab",
       CreatedById = userId,
-      CreatedAt = DateTime.UtcNow,
+      CreatedAt = DateTime.UtcNow
     };
 
     context.Projects.Add(project);
@@ -371,7 +371,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       ProjectId = projectId,
       VersionNumber = "1.0.0",
       CreatedById = userId,
-      CreatedAt = DateTime.UtcNow,
+      CreatedAt = DateTime.UtcNow
     };
 
     context.Set<ProjectVersionModel>().Add(version);

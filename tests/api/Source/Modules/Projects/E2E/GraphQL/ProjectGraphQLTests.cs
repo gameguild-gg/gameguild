@@ -66,7 +66,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
       Description = "First test project for GraphQL",
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
-      Type = ProjectType.Game,
+      Type = ProjectType.Game
     };
 
     var project2 = new Project {
@@ -74,7 +74,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
       Description = "Second test project for GraphQL",
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
-      Type = ProjectType.Tool,
+      Type = ProjectType.Tool
     };
 
     _context.Projects.AddRange(project1, project2);
@@ -137,7 +137,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       WebsiteUrl = "https://example.com",
-      RepositoryUrl = "https://github.com/test/repo",
+      RepositoryUrl = "https://github.com/test/repo"
     };
 
     _context.Projects.Add(project);
@@ -549,7 +549,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
       Email = "test@example.com",
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow,
+      UpdatedAt = DateTime.UtcNow
     };
 
     _context.Users.Add(user);
@@ -568,7 +568,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
       Slug = "test-tenant",
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow,
+      UpdatedAt = DateTime.UtcNow
     };
 
     _context.Tenants.Add(tenant);

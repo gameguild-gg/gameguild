@@ -103,7 +103,7 @@ public static class ContentInteractionExtensions {
         interaction.Content != null
           ? new ContentSummaryDto { Id = interaction.Content.Id, Title = interaction.Content.Title, ContentType = interaction.Content.Type.ToString(), EstimatedMinutes = interaction.Content.EstimatedMinutes }
           : null,
-      ProgramUser = interaction.ProgramUser?.User != null ? new ProgramUserSummaryDto { Id = interaction.ProgramUser.User.Id, UserDisplayName = interaction.ProgramUser.User.Name, UserEmail = interaction.ProgramUser.User.Email } : null
+      ProgramUser = interaction.ProgramUser?.User != null ? new ProgramUserSummaryDto { Id = interaction.ProgramUser.User.Id, UserDisplayName = interaction.ProgramUser.User.Name, UserEmail = interaction.ProgramUser.User.Email } : null,
     };
   }
 
