@@ -20,10 +20,7 @@ public class GetTenantBySlugHandler(
       var query = context.Resources.OfType<Tenant>()
                          .Where(t => t.Slug == request.Slug);
 
-      if (!request.IncludeDeleted)
-      {
-        query = query.Where(t => t.DeletedAt == null);
-      }
+      if (!request.IncludeDeleted) query = query.Where(t => t.DeletedAt == null);
 
       var tenant = await query.FirstOrDefaultAsync(cancellationToken);
 

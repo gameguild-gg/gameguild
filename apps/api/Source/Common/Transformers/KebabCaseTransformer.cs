@@ -23,7 +23,8 @@ public partial class KebabCaseTransformer : CachedCaseTransformer {
 
     // Apply custom replacements if provided
     if (options.StringReplacements != null)
-      foreach (var replacement in options.StringReplacements) { result = result.Replace(replacement.Key, replacement.Value); }
+      foreach (var replacement in options.StringReplacements)
+        result = result.Replace(replacement.Key, replacement.Value);
 
     // Trim whitespace if requested
     if (options.TrimWhitespace) result = result.Trim();

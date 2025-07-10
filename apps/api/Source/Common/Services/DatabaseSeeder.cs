@@ -675,7 +675,7 @@ public class DatabaseSeeder(
 
     logger.LogInformation("Found {CourseCount} course programs for track creation", coursePrograms.Count);
 
-    if (!coursePrograms.Any()) {
+    if (coursePrograms.Count == 0) {
       logger.LogWarning("No course programs found. Make sure to seed courses before tracks.");
       return;
     }

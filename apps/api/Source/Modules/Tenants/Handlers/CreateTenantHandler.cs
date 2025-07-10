@@ -15,21 +15,19 @@ public class CreateTenantHandler(ApplicationDbContext context, ILogger<CreateTen
       var existingTenant = await context.Resources.OfType<Tenant>()
                                         .FirstOrDefaultAsync(t => t.Name == request.Name && t.DeletedAt == null, cancellationToken);
 
-      if (existingTenant != null) {
+      if (existingTenant != null)
         return Result.Failure<Tenant>(
           Common.Error.Conflict("Tenant.NameExists", $"Tenant with name '{request.Name}' already exists")
         );
-      }
 
       // Check if tenant with same slug already exists
       var existingSlug = await context.Resources.OfType<Tenant>()
                                       .FirstOrDefaultAsync(t => t.Slug == request.Slug && t.DeletedAt == null, cancellationToken);
 
-      if (existingSlug != null) {
+      if (existingSlug != null)
         return Result.Failure<Tenant>(
           Common.Error.Conflict("Tenant.SlugExists", $"Tenant with slug '{request.Slug}' already exists")
         );
-      }
 
       var tenant = new Tenant {
         Name = request.Name, Description = request.Description, IsActive = request.IsActive, Slug = request.Slug,

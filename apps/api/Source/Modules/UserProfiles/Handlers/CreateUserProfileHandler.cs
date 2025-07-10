@@ -19,11 +19,10 @@ public class CreateUserProfileHandler(
       var existingProfile = await context.Resources.OfType<UserProfile>()
                                          .FirstOrDefaultAsync(up => up.Id == request.UserId && up.DeletedAt == null, cancellationToken);
 
-      if (existingProfile != null) {
+      if (existingProfile != null)
         return Result.Failure<UserProfile>(
           Common.Error.Conflict("UserProfile.AlreadyExists", $"User profile already exists for user {request.UserId}")
         );
-      }
 
       // Create new user profile
       var userProfile = new UserProfile {

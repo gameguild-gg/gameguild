@@ -18,11 +18,10 @@ public class RestoreTenantHandler(
       var tenant = await context.Resources.OfType<Tenant>()
                                 .FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt != null, cancellationToken);
 
-      if (tenant == null) {
+      if (tenant == null)
         return Result.Failure<bool>(
           Common.Error.NotFound("Tenant.NotFound", $"Deleted tenant with ID {request.Id} not found")
         );
-      }
 
       tenant.Restore();
       await context.SaveChangesAsync(cancellationToken);

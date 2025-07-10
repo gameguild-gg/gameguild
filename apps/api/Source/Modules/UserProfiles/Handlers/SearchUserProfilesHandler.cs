@@ -8,18 +8,13 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Handler for searching user profiles with advanced filtering
 /// </summary>
-public class SearchUserProfilesHandler(ApplicationDbContext context, ILogger<SearchUserProfilesHandler> logger)
-  : IQueryHandler<SearchUserProfilesQuery, Common.Result<IEnumerable<UserProfile>>> {
+public class SearchUserProfilesHandler(ApplicationDbContext context, ILogger<SearchUserProfilesHandler> logger) : IQueryHandler<SearchUserProfilesQuery, Common.Result<IEnumerable<UserProfile>>> {
   public async Task<Common.Result<IEnumerable<UserProfile>>> Handle(SearchUserProfilesQuery request, CancellationToken cancellationToken) {
     try {
-      IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>()
-                                             .Include(up => up.Metadata);
+      IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>().Include(up => up.Metadata);
 
       // Apply deletion filter
-      if (!request.IncludeDeleted)
-        query = query.Where(up => up.DeletedAt == null);
-      else
-        query = query.IgnoreQueryFilters();
+      query = !request.IncludeDeleted ? query.Where(up => up.DeletedAt == null) : query.IgnoreQueryFilters();
 
       // Apply tenant filter
       if (request.TenantId.HasValue) query = query.Where(up => EF.Property<Guid?>(up, "TenantId") == request.TenantId);

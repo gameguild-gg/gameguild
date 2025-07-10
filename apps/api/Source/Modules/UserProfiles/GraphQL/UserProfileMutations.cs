@@ -13,10 +13,7 @@ public class UserProfileMutations {
   /// <summary>
   /// Create a new user profile using CQRS pattern
   /// </summary>
-  public async Task<UserProfile> CreateUserProfile(
-    [Service] IMediator mediator,
-    CreateUserProfileInput input
-  ) {
+  public async Task<UserProfile> CreateUserProfile([Service] IMediator mediator, CreateUserProfileInput input) {
     var command = new CreateUserProfileCommand {
       GivenName = input.GivenName ?? string.Empty,
       FamilyName = input.FamilyName ?? string.Empty,
@@ -28,7 +25,7 @@ public class UserProfileMutations {
 
     var result = await mediator.Send(command);
 
-    if (!result.IsSuccess) { throw new GraphQLException(result.Error.Description); }
+    if (!result.IsSuccess) throw new GraphQLException(result.Error.Description);
 
     return result.Value;
   }
@@ -36,10 +33,7 @@ public class UserProfileMutations {
   /// <summary>
   /// Update an existing user profile using CQRS pattern
   /// </summary>
-  public async Task<UserProfile> UpdateUserProfile(
-    [Service] IMediator mediator,
-    UpdateUserProfileInput input
-  ) {
+  public async Task<UserProfile> UpdateUserProfile([Service] IMediator mediator, UpdateUserProfileInput input) {
     var command = new UpdateUserProfileCommand {
       UserProfileId = input.Id,
       GivenName = input.GivenName,
@@ -51,7 +45,7 @@ public class UserProfileMutations {
 
     var result = await mediator.Send(command);
 
-    if (!result.IsSuccess) { throw new GraphQLException(result.Error.Description); }
+    if (!result.IsSuccess) throw new GraphQLException(result.Error.Description);
 
     return result.Value;
   }
@@ -59,16 +53,12 @@ public class UserProfileMutations {
   /// <summary>
   /// Delete a user profile using CQRS pattern
   /// </summary>
-  public async Task<bool> DeleteUserProfile(
-    [Service] IMediator mediator,
-    Guid id,
-    bool softDelete = true
-  ) {
+  public async Task<bool> DeleteUserProfile([Service] IMediator mediator, Guid id, bool softDelete = true) {
     var command = new DeleteUserProfileCommand { UserProfileId = id, SoftDelete = softDelete, };
 
     var result = await mediator.Send(command);
 
-    if (!result.IsSuccess) { throw new GraphQLException(result.Error.Description); }
+    if (!result.IsSuccess) throw new GraphQLException(result.Error.Description);
 
     return result.Value;
   }
@@ -76,15 +66,12 @@ public class UserProfileMutations {
   /// <summary>
   /// Restore a soft-deleted user profile using CQRS pattern
   /// </summary>
-  public async Task<bool> RestoreUserProfile(
-    [Service] IMediator mediator,
-    Guid id
-  ) {
+  public async Task<bool> RestoreUserProfile([Service] IMediator mediator, Guid id) {
     var command = new RestoreUserProfileCommand { UserProfileId = id, };
 
     var result = await mediator.Send(command);
 
-    if (!result.IsSuccess) { throw new GraphQLException(result.Error.Description); }
+    if (!result.IsSuccess) throw new GraphQLException(result.Error.Description);
 
     return result.Value;
   }

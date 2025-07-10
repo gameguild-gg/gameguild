@@ -19,19 +19,13 @@ public class BulkRestoreTenantsHandler(
     try
     {
       var tenantIds = request.TenantIds.ToList();
-      if (!tenantIds.Any())
-      {
-        return Result.Success(0);
-      }
+      if (tenantIds.Count == 0) return Result.Success(0);
 
       var tenants = await context.Resources.OfType<Tenant>()
                                  .Where(t => tenantIds.Contains(t.Id) && t.DeletedAt != null)
                                  .ToListAsync(cancellationToken);
 
-      if (!tenants.Any())
-      {
-        return Result.Success(0);
-      }
+      if (tenants.Count == 0) return Result.Success(0);
 
       foreach (var tenant in tenants)
       {

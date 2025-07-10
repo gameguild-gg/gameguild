@@ -196,7 +196,7 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
         }
     }
 
-    private async Task<(GameGuild.Modules.Tenants.Tenant Tenant, User User)> CreateTenantWithUserAsync()
+    private async Task<(Tenant Tenant, User User)> CreateTenantWithUserAsync()
     {
         var tenant = new Tenant
         {

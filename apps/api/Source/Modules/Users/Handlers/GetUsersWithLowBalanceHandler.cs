@@ -14,18 +14,17 @@ public class GetUsersWithLowBalanceHandler(ApplicationDbContext context) : IRequ
     var query = context.Users.AsQueryable();
 
     // Include deleted users if requested
-    if (request.IncludeDeleted) { query = query.IgnoreQueryFilters(); }
+    if (request.IncludeDeleted) query = query.IgnoreQueryFilters();
 
     // Filter by low balance
     query = query.Where(u => u.AvailableBalance <= request.ThresholdBalance);
 
     // Apply search term if provided
-    if (!string.IsNullOrWhiteSpace(request.SearchTerm)) {
+    if (!string.IsNullOrWhiteSpace(request.SearchTerm))
       query = query.Where(u =>
                             u.Name.Contains(request.SearchTerm) ||
                             u.Email.Contains(request.SearchTerm)
       );
-    }
 
     // Get total count for pagination
     var totalCount = await query.CountAsync(cancellationToken);

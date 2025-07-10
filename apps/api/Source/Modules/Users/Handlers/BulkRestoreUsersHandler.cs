@@ -42,7 +42,7 @@ public class BulkRestoreUsersHandler(
     var foundUserIds = users.Select(u => u.Id).ToHashSet();
     var notFoundIds = request.UserIds.Where(id => !foundUserIds.Contains(id));
 
-    foreach (var notFoundId in notFoundIds) { errors.Add($"User {notFoundId} not found or not deleted"); }
+    foreach (var notFoundId in notFoundIds) errors.Add($"User {notFoundId} not found or not deleted");
 
     await context.SaveChangesAsync(cancellationToken);
 
@@ -50,7 +50,7 @@ public class BulkRestoreUsersHandler(
     var result = new BulkOperationResult(request.UserIds.Count, successCount, failedCount);
 
     // Add all errors to the result
-    foreach (var error in errors) { result.AddError(error); }
+    foreach (var error in errors) result.AddError(error);
 
     logger.LogInformation(
       "Bulk restore completed: {SuccessCount}/{TotalCount} users restored. Reason: {Reason}",

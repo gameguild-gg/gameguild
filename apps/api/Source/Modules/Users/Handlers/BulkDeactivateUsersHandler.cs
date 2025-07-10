@@ -47,16 +47,16 @@ public class BulkDeactivateUsersHandler(
       }
     }
 
-    if (deactivatedUsers.Any()) {
+    if (deactivatedUsers.Count != 0) {
       await context.SaveChangesAsync(cancellationToken);
 
       // Publish domain events for deactivated users
-      foreach (var user in deactivatedUsers) { await mediator.Publish(new UserDeactivatedEvent(user.Id), cancellationToken); }
+      foreach (var user in deactivatedUsers) await mediator.Publish(new UserDeactivatedEvent(user.Id), cancellationToken);
     }
 
     var result = new BulkOperationResult(request.UserIds.Count, successfulCount, errors.Count);
 
-    foreach (var error in errors) { result.AddError(error); }
+    foreach (var error in errors) result.AddError(error);
 
     logger.LogInformation(
       "Bulk deactivate completed: {Successful}/{Total} users deactivated. Reason: {Reason}",
