@@ -1,16 +1,16 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Modules.Localizations.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Localization;
 
 
-namespace GameGuild.Modules.Resources.Models;
+namespace GameGuild.Modules.Resources;
 
 /// <summary>
 /// Entity for storing localized content for resources
 /// Provides multi-language support for resources
 /// </summary>
-/// todo: field should be the one coming from the resource as a generic origin, and not a plain string. revist the others entries too, such as resource type.
-public class ResourceLocalization : BaseEntity {
+/// todo: field should be the one coming from the resource as a generic origin, and not a plain string. revisit the others entries too, such as resource type.
+public class ResourceLocalization : Entity {
   // todo: apply polymorphism
   /// <summary>
   /// Type of the resource being localized

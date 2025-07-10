@@ -1,10 +1,9 @@
-using GameGuild.Common.Application.Services;
-using GameGuild.Data;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Common;
+using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenants.Services;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Service implementation for managing tenants

@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 
 
 namespace GameGuild.Modules.GameJams.Models {
-  public class JamSubmission : BaseEntity {
+  public class JamSubmission : Entity {
     [Required] public Guid JamId { get; set; }
 
     [Required] public Guid ProjectVersionId { get; set; }

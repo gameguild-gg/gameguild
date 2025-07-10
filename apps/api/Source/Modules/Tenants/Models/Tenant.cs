@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenants.Models;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Represents a tenant in a multi-tenant system
@@ -12,7 +12,7 @@ namespace GameGuild.Modules.Tenants.Models;
 /// </summary>
 [Table("Tenants")]
 [Index(nameof(Name), IsUnique = true)]
-public class Tenant : BaseEntity {
+public class Tenant : Entity {
   /// <summary>
   /// Name of the tenant
   /// </summary>

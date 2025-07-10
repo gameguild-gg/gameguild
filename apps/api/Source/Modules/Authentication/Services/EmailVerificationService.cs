@@ -1,8 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
-using GameGuild.Data;
+using GameGuild.Database;
 using GameGuild.Modules.Authentication.Dtos;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 

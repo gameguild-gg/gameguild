@@ -1,12 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using GameGuild.Data;
+using GameGuild.Database;
 using GameGuild.Modules.Authentication.Services;
-using GameGuild.Modules.Tenants.Models;
-using GameGuild.Modules.Tenants.Services;
-using GameGuild.Modules.Users.Models;
-using GameGuild.Modules.Users.Services;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -84,7 +82,7 @@ namespace GameGuild.API.Tests.Fixtures {
               );
 
       // Register User module services
-      services.AddScoped<GameGuild.Modules.Users.Services.IUserService, UserService>();
+      services.AddScoped<GameGuild.Modules.Users.IUserService, UserService>();
 
       // Register HttpClient for OAuth service
       services.AddHttpClient();

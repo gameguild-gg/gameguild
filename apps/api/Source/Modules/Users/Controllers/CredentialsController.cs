@@ -1,10 +1,7 @@
-using GameGuild.Modules.Users.Dtos;
-using GameGuild.Modules.Users.Models;
-using GameGuild.Modules.Users.Services;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Modules.Users.Controllers;
+namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// REST API controller for managing user credentials
@@ -29,7 +26,7 @@ public class CredentialsController(ICredentialService credentialService, IUserSe
   /// </summary>
   /// <param name="userId">User ID</param>
   /// <returns>List of user credentials</returns>
-  [HttpGet("user/{userId}")]
+  [HttpGet("user/{userId:guid}")]
   public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetCredentialsByUserId(Guid userId) {
     var credentials = await credentialService.GetCredentialsByUserIdAsync(userId);
     var response = credentials.Select(MapToResponseDto);
@@ -42,7 +39,7 @@ public class CredentialsController(ICredentialService credentialService, IUserSe
   /// </summary>
   /// <param name="id">Credential ID</param>
   /// <returns>Credential details</returns>
-  [HttpGet("{id}")]
+  [HttpGet("{id:guid}")]
   public async Task<ActionResult<CredentialResponseDto>> GetCredential(Guid id) {
     var credential = await credentialService.GetCredentialByIdAsync(id);
 

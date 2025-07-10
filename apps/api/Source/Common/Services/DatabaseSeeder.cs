@@ -1,14 +1,13 @@
 using System.Security.Cryptography;
 using System.Text;
-using GameGuild.Common.Domain.Enums;
-using GameGuild.Data;
+using GameGuild.Database;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Users.Models;
-using GameGuild.Modules.Users.Services;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Common.Application.Services;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Database seeder for initial data setup
@@ -218,8 +217,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Programming,
         Difficulty = ProgramDifficulty.Beginner,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -231,8 +230,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Programming,
         Difficulty = ProgramDifficulty.Beginner,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -244,8 +243,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Programming,
         Difficulty = ProgramDifficulty.Beginner,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -259,8 +258,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Programming,
         Difficulty = ProgramDifficulty.Intermediate,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -272,8 +271,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Programming,
         Difficulty = ProgramDifficulty.Intermediate,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -285,8 +284,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.MobileDevelopment,
         Difficulty = ProgramDifficulty.Intermediate,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -300,8 +299,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Programming,
         Difficulty = ProgramDifficulty.Advanced,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -313,8 +312,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Programming,
         Difficulty = ProgramDifficulty.Advanced,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -328,8 +327,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.CreativeArts,
         Difficulty = ProgramDifficulty.Beginner,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -341,8 +340,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.CreativeArts,
         Difficulty = ProgramDifficulty.Beginner,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -354,8 +353,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Design,
         Difficulty = ProgramDifficulty.Beginner,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -369,8 +368,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.CreativeArts,
         Difficulty = ProgramDifficulty.Intermediate,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -382,8 +381,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.CreativeArts,
         Difficulty = ProgramDifficulty.Intermediate,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -395,8 +394,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.CreativeArts,
         Difficulty = ProgramDifficulty.Intermediate,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -410,8 +409,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Design,
         Difficulty = ProgramDifficulty.Beginner,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -423,8 +422,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Design,
         Difficulty = ProgramDifficulty.Intermediate,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -436,8 +435,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Design,
         Difficulty = ProgramDifficulty.Intermediate,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -449,8 +448,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Business,
         Difficulty = ProgramDifficulty.Intermediate,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -464,8 +463,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.CreativeArts,
         Difficulty = ProgramDifficulty.Beginner,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -477,8 +476,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.CreativeArts,
         Difficulty = ProgramDifficulty.Intermediate,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -492,8 +491,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.GameDevelopment,
         Difficulty = ProgramDifficulty.Advanced,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -505,8 +504,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.GameDevelopment,
         Difficulty = ProgramDifficulty.Advanced,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -520,8 +519,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.AI,
         Difficulty = ProgramDifficulty.Advanced,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -533,8 +532,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Programming,
         Difficulty = ProgramDifficulty.Advanced,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -546,8 +545,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Programming,
         Difficulty = ProgramDifficulty.Advanced,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -559,8 +558,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Cybersecurity,
         Difficulty = ProgramDifficulty.Expert,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -574,8 +573,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Marketing,
         Difficulty = ProgramDifficulty.Beginner,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -587,8 +586,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.ProjectManagement,
         Difficulty = ProgramDifficulty.Intermediate,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -600,8 +599,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.Business,
         Difficulty = ProgramDifficulty.Intermediate,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -615,8 +614,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.GameDevelopment,
         Difficulty = ProgramDifficulty.Intermediate,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -628,8 +627,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.GameDevelopment,
         Difficulty = ProgramDifficulty.Beginner,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
@@ -641,8 +640,8 @@ public class DatabaseSeeder(
         Thumbnail = "/placeholder.svg",
         Category = ProgramCategory.PersonalDevelopment,
         Difficulty = ProgramDifficulty.Beginner,
-        Visibility = Modules.Contents.Models.AccessLevel.Public,
-        Status = Modules.Contents.Models.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       }
@@ -693,8 +692,8 @@ public class DatabaseSeeder(
       Thumbnail = "/placeholder.svg",
       Category = ProgramCategory.GameDevelopment,
       Difficulty = ProgramDifficulty.Beginner,
-      Visibility = Modules.Contents.Models.AccessLevel.Public,
-      Status = Modules.Contents.Models.ContentStatus.Published,
+      Visibility = AccessLevel.Public,
+      Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };
@@ -734,8 +733,8 @@ public class DatabaseSeeder(
       Thumbnail = "/placeholder.svg",
       Category = ProgramCategory.GameDevelopment,
       Difficulty = ProgramDifficulty.Intermediate,
-      Visibility = Modules.Contents.Models.AccessLevel.Public,
-      Status = Modules.Contents.Models.ContentStatus.Published,
+      Visibility = AccessLevel.Public,
+      Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };
@@ -777,8 +776,8 @@ public class DatabaseSeeder(
       Thumbnail = "/placeholder.svg",
       Category = ProgramCategory.GameDevelopment,
       Difficulty = ProgramDifficulty.Advanced,
-      Visibility = Modules.Contents.Models.AccessLevel.Public,
-      Status = Modules.Contents.Models.ContentStatus.Published,
+      Visibility = AccessLevel.Public,
+      Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };
@@ -817,8 +816,8 @@ public class DatabaseSeeder(
       Thumbnail = "/placeholder.svg",
       Category = ProgramCategory.AI,
       Difficulty = ProgramDifficulty.Advanced,
-      Visibility = Modules.Contents.Models.AccessLevel.Public,
-      Status = Modules.Contents.Models.ContentStatus.Published,
+      Visibility = AccessLevel.Public,
+      Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };
@@ -858,8 +857,8 @@ public class DatabaseSeeder(
       Thumbnail = "/placeholder.svg",
       Category = ProgramCategory.CreativeArts,
       Difficulty = ProgramDifficulty.Intermediate,
-      Visibility = Modules.Contents.Models.AccessLevel.Public,
-      Status = Modules.Contents.Models.ContentStatus.Published,
+      Visibility = AccessLevel.Public,
+      Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };
@@ -896,8 +895,8 @@ public class DatabaseSeeder(
       Thumbnail = "/placeholder.svg",
       Category = ProgramCategory.Business,
       Difficulty = ProgramDifficulty.Intermediate,
-      Visibility = Modules.Contents.Models.AccessLevel.Public,
-      Status = Modules.Contents.Models.ContentStatus.Published,
+      Visibility = AccessLevel.Public,
+      Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };

@@ -1,4 +1,4 @@
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 
 
 namespace GameGuild.Modules.Reputations.Models;

@@ -1,16 +1,12 @@
-﻿using GameGuild.Common.Extensions;
-using MediatR;
-using System.Reflection;
-using GameGuild.Common.Abstractions;
-using GameGuild.Common.Infrastructure;
+﻿using System.Reflection;
 using GameGuild.Modules.Authentication.Configuration;
+using MediatR;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using GameGuild.Common.Application.Behaviors;
+using Microsoft.OpenApi.Models;
 
 
-namespace GameGuild.Common.Configuration;
+namespace GameGuild.Common;
 
 public static class DependencyInjection {
   public static IServiceCollection AddPresentation(this IServiceCollection services) {
@@ -23,7 +19,7 @@ public static class DependencyInjection {
         var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
 
-        if (System.IO.File.Exists(xmlPath)) { c.IncludeXmlComments(xmlPath); }
+        if (System.IO.File.Exists(xmlPath)) c.IncludeXmlComments(xmlPath);
       }
     );
 
@@ -129,10 +125,10 @@ public static class DependencyInjection {
     services.AddCommonServices();
 
     // Add Auth module if configuration is provided
-    if (configuration != null) { services.AddAuthModule(configuration); }
+    if (configuration != null) services.AddAuthModule(configuration);
 
     // Add database seeder
-    services.AddScoped<Application.Services.IDatabaseSeeder, Application.Services.DatabaseSeeder>();
+    services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 
     // Add HTTP context accessor for GraphQL authorization
     services.AddHttpContextAccessor();
@@ -141,7 +137,7 @@ public static class DependencyInjection {
     services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
     // Background Services
-    services.AddScoped<Abstractions.IDomainEventPublisher, DomainEventPublisher>();
+    services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
 
     return services;
   }

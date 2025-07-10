@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.TestingLab.Models {
-  public class TestingSession : BaseEntity {
+  public class TestingSession : Entity {
     /// <summary>
     /// Foreign key to the testing request
     /// </summary>

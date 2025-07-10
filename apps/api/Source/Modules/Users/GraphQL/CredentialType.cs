@@ -1,7 +1,4 @@
-using GameGuild.Modules.Users.Models;
-
-
-namespace GameGuild.Modules.Users.GraphQL;
+namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// GraphQL type definition for Credential entity
@@ -18,9 +15,7 @@ public class CredentialType : ObjectType<Credential> {
 
     descriptor.Field(c => c.Type).Description("Type of credential (e.g., password, api_key, oauth_token, 2fa_secret)");
 
-    descriptor.Field(c => c.Value)
-              .Description("The credential value (redacted for security)")
-              .Resolve(context => "***REDACTED***"); // Don't expose actual credential values
+    descriptor.Field(c => c.Value).Description("The credential value (redacted for security)").Resolve(context => "***REDACTED***"); // Don't expose actual credential values
 
     descriptor.Field(c => c.Metadata).Description("Additional metadata for the credential (JSON format)");
 

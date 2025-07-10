@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -15,7 +14,7 @@ namespace GameGuild.Modules.Payments.Models;
 [Index(nameof(Status))]
 [Index(nameof(IsDefault))]
 [Index(nameof(ExternalId))]
-public class UserFinancialMethod : BaseEntity {
+public class UserFinancialMethod : Entity {
   public Guid UserId { get; set; }
 
   public PaymentMethodType Type { get; set; }

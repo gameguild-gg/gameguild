@@ -1,4 +1,4 @@
-using GameGuild.Data;
+using GameGuild.Database;
 using GameGuild.Modules.UserProfiles.Commands;
 using GameGuild.Modules.UserProfiles.Notifications;
 using MediatR;
@@ -20,10 +20,7 @@ public class CreateUserProfileHandler(
         var existingProfile = await context.Resources.OfType<Models.UserProfile>()
             .FirstOrDefaultAsync(up => up.Id == request.UserId && up.DeletedAt == null, cancellationToken);
 
-        if (existingProfile != null)
-        {
-            throw new InvalidOperationException($"User profile already exists for user {request.UserId}");
-        }
+        if (existingProfile != null) throw new InvalidOperationException($"User profile already exists for user {request.UserId}");
 
         // Create new user profile
         var userProfile = new Models.UserProfile

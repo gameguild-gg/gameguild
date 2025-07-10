@@ -1,4 +1,4 @@
-using GameGuild.Data;
+using GameGuild.Database;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
 using Microsoft.EntityFrameworkCore;
@@ -22,13 +22,13 @@ public class ActivityGradeService(ApplicationDbContext context) : IActivityGrade
                                           .Include(ci => ci.ProgramUser)
                                           .FirstOrDefaultAsync(ci => ci.Id == contentInteractionId);
 
-    if (contentInteraction == null) { throw new ArgumentException("Content interaction not found", nameof(contentInteractionId)); }
+    if (contentInteraction == null) throw new ArgumentException("Content interaction not found", nameof(contentInteractionId));
 
     // Validate the grader is part of the same program
     var graderProgramUser = await context.ProgramUsers
                                          .FirstOrDefaultAsync(pu => pu.Id == graderProgramUserId && pu.ProgramId == contentInteraction.Content.ProgramId);
 
-    if (graderProgramUser == null) { throw new ArgumentException("Grader is not a member of this program", nameof(graderProgramUserId)); }
+    if (graderProgramUser == null) throw new ArgumentException("Grader is not a member of this program", nameof(graderProgramUserId));
 
     // Check if a grade already exists for this interaction
     var existingGrade = await context.ActivityGrades
@@ -179,7 +179,7 @@ public class ActivityGradeService(ApplicationDbContext context) : IActivityGrade
                               .Select(ag => ag.Grade)
                               .ToListAsync();
 
-    if (!grades.Any()) {
+    if (!grades.Any())
       return new GradeStatistics {
         TotalGrades = 0,
         AverageGrade = 0,
@@ -187,7 +187,6 @@ public class ActivityGradeService(ApplicationDbContext context) : IActivityGrade
         MaxGrade = 0,
         PassingRate = 0
       };
-    }
 
     return new GradeStatistics {
       TotalGrades = grades.Count,

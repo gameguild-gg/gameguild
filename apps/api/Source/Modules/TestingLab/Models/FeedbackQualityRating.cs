@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 
 
 namespace GameGuild.Modules.TestingLab.Models {
-  public class FeedbackQualityRating : BaseEntity {
+  public class FeedbackQualityRating : Entity {
     [Required] public Guid FeedbackId { get; set; }
 
     [Required] public Guid RatedByUserId { get; set; }

@@ -1,11 +1,12 @@
-using GameGuild.Common.Entities;
-using GameGuild.Data;
+using GameGuild.Database;
+using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Resources;
+using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Common.Application.Services;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Implementation of the three-layer permission service

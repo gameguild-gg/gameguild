@@ -1,8 +1,8 @@
-using GameGuild.Common.Presentation.GraphQL.Authorization;
+using GameGuild.Common.Authorization;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Users.GraphQL;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Programs.GraphQL;
@@ -30,7 +30,7 @@ public class ContentInteractionMutations {
       // Verify content belongs to the specified program
       var content = await programContentService.GetContentByIdAsync(input.ContentId);
 
-      if (content == null || content.ProgramId != programId) { return new ContentInteractionResult { Success = false, ErrorMessage = "Content does not belong to the specified program.", Interaction = null }; }
+      if (content == null || content.ProgramId != programId) return new ContentInteractionResult { Success = false, ErrorMessage = "Content does not belong to the specified program.", Interaction = null };
 
       var interaction = await contentInteractionService.StartContentAsync(
                           input.ProgramUserId,
@@ -60,7 +60,7 @@ public class ContentInteractionMutations {
                         );
 
       // Verify the interaction belongs to the specified program
-      if (interaction.Content.ProgramId != programId) { return new ContentInteractionResult { Success = false, ErrorMessage = "Interaction does not belong to the specified program.", Interaction = null }; }
+      if (interaction.Content.ProgramId != programId) return new ContentInteractionResult { Success = false, ErrorMessage = "Interaction does not belong to the specified program.", Interaction = null };
 
       return new ContentInteractionResult { Success = true, ErrorMessage = null, Interaction = interaction };
     }
@@ -86,7 +86,7 @@ public class ContentInteractionMutations {
                         );
 
       // Verify the interaction belongs to the specified program
-      if (interaction.Content.ProgramId != programId) { return new ContentInteractionResult { Success = false, ErrorMessage = "Interaction does not belong to the specified program.", Interaction = null }; }
+      if (interaction.Content.ProgramId != programId) return new ContentInteractionResult { Success = false, ErrorMessage = "Interaction does not belong to the specified program.", Interaction = null };
 
       return new ContentInteractionResult { Success = true, ErrorMessage = null, Interaction = interaction };
     }
@@ -109,7 +109,7 @@ public class ContentInteractionMutations {
       var interaction = await contentInteractionService.CompleteContentAsync(input.InteractionId);
 
       // Verify the interaction belongs to the specified program
-      if (interaction.Content.ProgramId != programId) { return new ContentInteractionResult { Success = false, ErrorMessage = "Interaction does not belong to the specified program.", Interaction = null }; }
+      if (interaction.Content.ProgramId != programId) return new ContentInteractionResult { Success = false, ErrorMessage = "Interaction does not belong to the specified program.", Interaction = null };
 
       return new ContentInteractionResult { Success = true, ErrorMessage = null, Interaction = interaction };
     }
@@ -135,7 +135,7 @@ public class ContentInteractionMutations {
                         );
 
       // Verify the interaction belongs to the specified program
-      if (interaction.Content.ProgramId != programId) { return new ContentInteractionResult { Success = false, ErrorMessage = "Interaction does not belong to the specified program.", Interaction = null }; }
+      if (interaction.Content.ProgramId != programId) return new ContentInteractionResult { Success = false, ErrorMessage = "Interaction does not belong to the specified program.", Interaction = null };
 
       return new ContentInteractionResult { Success = true, ErrorMessage = null, Interaction = interaction };
     }

@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -14,7 +13,7 @@ namespace GameGuild.Modules.Tags.Models;
 [Index(nameof(IsActive))]
 [Index(nameof(TenantId))]
 [Index(nameof(Name), nameof(TenantId), IsUnique = true)]
-public class Tag : BaseEntity, ITenantable {
+public class Tag : Entity, ITenantable {
   [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
 
   [MaxLength(500)] public string? Description { get; set; }

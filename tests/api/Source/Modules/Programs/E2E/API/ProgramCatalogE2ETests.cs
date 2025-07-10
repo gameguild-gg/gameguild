@@ -2,15 +2,15 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using GameGuild.API.Tests.Fixtures;
 using GameGuild.API.Tests.Helpers;
-using GameGuild.Common.Enums;
-using GameGuild.Data;
+using GameGuild.Common;
+using GameGuild.Database;
 using GameGuild.Modules.Authentication.Dtos;
 using GameGuild.Modules.Authentication.Services;
-using GameGuild.Modules.Contents.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Contents;
+using GameGuild.Modules.Users;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
-using TenantModel = GameGuild.Modules.Tenants.Models.Tenant;
+using TenantModel = GameGuild.Modules.Tenants.Tenant;
 using ProgramEntity = GameGuild.Modules.Programs.Models.Program;
 
 namespace GameGuild.API.Tests.Modules.Programs.E2E.API;
@@ -280,7 +280,7 @@ public class ProgramCatalogE2ETests : IClassFixture<TestWebApplicationFactory>, 
         }
     }
 
-    private async Task<(TenantModel Tenant, User User)> CreateTenantWithUserAsync()
+    private async Task<(TenantModel Tenant, GameGuild.Modules.Users.User User)> CreateTenantWithUserAsync()
     {
         var tenant = new TenantModel
         {

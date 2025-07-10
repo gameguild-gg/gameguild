@@ -1,9 +1,8 @@
 using System.Diagnostics;
-using GameGuild.Common.Domain;
 using MediatR;
 
 
-namespace GameGuild.Common.Application.Behaviors;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Unified logging behavior that supports both MediatR and Result patterns
@@ -33,15 +32,14 @@ public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TReque
 
       // Handle Result pattern logging
       if (response is Result result) {
-        if (result.IsSuccess) {
+        if (result.IsSuccess)
           logger.LogInformation(
             "Successfully completed {RequestName} in {ElapsedMilliseconds}ms (RequestId: {RequestId})",
             requestName,
             stopwatch.ElapsedMilliseconds,
             requestId
           );
-        }
-        else {
+        else
           logger.LogWarning(
             "Completed {RequestName} with error in {ElapsedMilliseconds}ms: {ErrorCode} - {ErrorDescription} (RequestId: {RequestId})",
             requestName,
@@ -50,7 +48,6 @@ public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TReque
             result.Error.Description,
             requestId
           );
-        }
       }
       else {
         logger.LogInformation(
@@ -62,14 +59,13 @@ public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TReque
       }
 
       // Performance warning for slow requests
-      if (stopwatch.ElapsedMilliseconds > 1000) {
+      if (stopwatch.ElapsedMilliseconds > 1000)
         logger.LogWarning(
           "Slow request detected: {RequestName} took {ElapsedMilliseconds}ms (RequestId: {RequestId})",
           requestName,
           stopwatch.ElapsedMilliseconds,
           requestId
         );
-      }
 
       return response;
     }

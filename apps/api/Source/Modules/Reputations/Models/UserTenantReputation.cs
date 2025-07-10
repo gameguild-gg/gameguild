@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Resources.Models;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Modules.Resources;
+using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -16,7 +16,7 @@ namespace GameGuild.Modules.Reputations.Models;
 [Index(nameof(TenantPermissionId), IsUnique = true)]
 [Index(nameof(Score))]
 [Index(nameof(CurrentLevelId))]
-public class UserTenantReputation : ResourceBase, IReputation {
+public class UserTenantReputation : Resource, IReputation {
   /// <summary>
   /// The user-tenant relationship this reputation belongs to
   /// </summary>

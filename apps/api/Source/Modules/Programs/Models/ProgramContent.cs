@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -18,7 +17,7 @@ namespace GameGuild.Modules.Programs.Models;
 [Index(nameof(ProgramId), nameof(SortOrder))]
 [Index(nameof(ParentId), nameof(SortOrder))]
 [Index(nameof(IsRequired))]
-public class ProgramContent : BaseEntity {
+public class ProgramContent : Entity {
   [Required]
   [ForeignKey(nameof(Program))]
   public Guid ProgramId { get; set; }

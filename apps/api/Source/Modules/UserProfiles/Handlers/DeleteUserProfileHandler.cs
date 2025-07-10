@@ -1,4 +1,4 @@
-using GameGuild.Data;
+using GameGuild.Database;
 using GameGuild.Modules.UserProfiles.Commands;
 using GameGuild.Modules.UserProfiles.Notifications;
 using MediatR;
@@ -19,17 +19,11 @@ public class DeleteUserProfileHandler(
         var userProfile = await context.Resources.OfType<Models.UserProfile>()
             .FirstOrDefaultAsync(up => up.Id == request.UserProfileId, cancellationToken);
 
-        if (userProfile == null)
-        {
-            return false;
-        }
+        if (userProfile == null) return false;
 
         if (request.SoftDelete)
         {
-            if (userProfile.DeletedAt != null)
-            {
-                return false; // Already soft deleted
-            }
+            if (userProfile.DeletedAt != null) return false; // Already soft deleted
 
             userProfile.SoftDelete();
             logger.LogInformation("User profile {UserProfileId} soft deleted", request.UserProfileId);
@@ -69,10 +63,7 @@ public class RestoreUserProfileHandler(
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(up => up.Id == request.UserProfileId, cancellationToken);
 
-        if (userProfile == null || userProfile.DeletedAt == null)
-        {
-            return false;
-        }
+        if (userProfile == null || userProfile.DeletedAt == null) return false;
 
         userProfile.Restore();
         await context.SaveChangesAsync(cancellationToken);

@@ -1,6 +1,6 @@
-using GameGuild.Common.Domain.Enums;
-using GameGuild.Modules.Contents.Models;
-using PromoCodeTypeEnum = GameGuild.Common.Domain.Enums.PromoCodeType;
+using GameGuild.Common;
+using GameGuild.Modules.Contents;
+using PromoCodeTypeEnum = GameGuild.Common.PromoCodeType;
 
 
 namespace GameGuild.Modules.Products.GraphQL;
@@ -10,7 +10,7 @@ public class CreateProductInput {
 
   public string? ShortDescription { get; set; }
 
-  public required Common.Domain.Enums.ProductType Type { get; set; }
+  public required Common.ProductType Type { get; set; }
 
   public bool IsBundle { get; set; } = false;
 
@@ -26,7 +26,7 @@ public class UpdateProductInput {
 
   public string? Description { get; set; }
 
-  public Common.Domain.Enums.ProductType? Type { get; set; }
+  public Common.ProductType? Type { get; set; }
 
   public bool? IsBundle { get; set; }
 

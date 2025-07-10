@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Modules.Tenants.Models;
 
 
-namespace GameGuild.Modules.Tenants.Dtos;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// DTO for creating a new tenant domain

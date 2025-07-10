@@ -1,6 +1,6 @@
 using GameGuild.Modules.Projects.Models;
 using GameGuild.Modules.TestingLab.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.TestingLab.GraphQL;

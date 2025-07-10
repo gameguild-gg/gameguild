@@ -1,12 +1,11 @@
 using System.Security.Claims;
-using GameGuild.Common.Application.Services;
 using GameGuild.Modules.Authentication.Constants;
 using GameGuild.Modules.Permissions.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 
-namespace GameGuild.Common.Application.Attributes;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Attribute for tenant-level permission checks. Validates that the user has the specified 

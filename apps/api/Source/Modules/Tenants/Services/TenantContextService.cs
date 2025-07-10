@@ -1,10 +1,9 @@
 using System.Security.Claims;
-using GameGuild.Data;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenants.Services;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Service for managing tenant context in requests

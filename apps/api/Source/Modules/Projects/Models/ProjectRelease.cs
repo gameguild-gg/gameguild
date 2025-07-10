@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Contents.Models;
-using GameGuild.Modules.Resources.Models;
+using GameGuild.Modules.Contents;
+using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -14,7 +14,7 @@ namespace GameGuild.Modules.Projects.Models;
 [Index(nameof(ProjectId), nameof(ReleaseVersion), IsUnique = true, Name = "IX_ProjectReleases_Project_Version")]
 [Index(nameof(ProjectId), nameof(ReleasedAt), Name = "IX_ProjectReleases_Project_Date")]
 [Index(nameof(IsLatest), Name = "IX_ProjectReleases_Latest")]
-public class ProjectRelease : ResourceBase {
+public class ProjectRelease : Resource {
   /// <summary>
   /// Project this release belongs to
   /// </summary>

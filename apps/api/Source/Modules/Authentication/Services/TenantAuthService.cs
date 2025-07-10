@@ -1,9 +1,8 @@
 using System.Security.Claims;
 using GameGuild.Modules.Authentication.Constants;
 using GameGuild.Modules.Authentication.Dtos;
-using GameGuild.Modules.Tenants.Models;
-using GameGuild.Modules.Tenants.Services;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Authentication.Services;

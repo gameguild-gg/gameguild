@@ -1,6 +1,6 @@
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
+using GameGuild.Database;
 using GameGuild.Modules.Subscriptions.Models;
-using GameGuild.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Subscriptions.Services;
@@ -42,16 +42,13 @@ public class SubscriptionService(ApplicationDbContext context) : ISubscriptionSe
             .Include(s => s.User)
             .AsQueryable();
 
-        if (status.HasValue)
-        {
-            query = query.Where(s => s.Status == status.Value);
-        }
+        if (status.HasValue) query = query.Where(s => s.Status == status.Value);
 
         return await query
-            .Skip(skip)
-            .Take(take)
-            .OrderByDescending(s => s.CreatedAt)
-            .ToListAsync();
+                     .Skip(skip)
+                     .Take(take)
+                     .OrderByDescending(s => s.CreatedAt)
+                     .ToListAsync();
     }
 
     public async Task<UserSubscription> CreateSubscriptionAsync(Guid userId, CreateSubscriptionDto createDto)
@@ -79,10 +76,7 @@ public class SubscriptionService(ApplicationDbContext context) : ISubscriptionSe
         var subscription = await context.UserSubscriptions
             .FirstOrDefaultAsync(s => s.Id == subscriptionId && s.UserId == userId);
 
-        if (subscription == null)
-        {
-            return null;
-        }
+        if (subscription == null) return null;
 
         subscription.Status = SubscriptionStatus.Canceled;
         subscription.CanceledAt = DateTime.UtcNow;
@@ -97,10 +91,7 @@ public class SubscriptionService(ApplicationDbContext context) : ISubscriptionSe
         var subscription = await context.UserSubscriptions
             .FirstOrDefaultAsync(s => s.Id == subscriptionId && s.UserId == userId);
 
-        if (subscription == null)
-        {
-            return null;
-        }
+        if (subscription == null) return null;
 
         subscription.Status = SubscriptionStatus.Active;
         subscription.CanceledAt = null;
@@ -116,10 +107,7 @@ public class SubscriptionService(ApplicationDbContext context) : ISubscriptionSe
         var subscription = await context.UserSubscriptions
             .FirstOrDefaultAsync(s => s.Id == subscriptionId && s.UserId == userId);
 
-        if (subscription == null)
-        {
-            return null;
-        }
+        if (subscription == null) return null;
 
         // Note: You'll need to add PaymentMethodId to UserSubscription model if needed
         // subscription.PaymentMethodId = paymentMethodId;
@@ -133,10 +121,7 @@ public class SubscriptionService(ApplicationDbContext context) : ISubscriptionSe
         var subscription = await context.UserSubscriptions
             .FirstOrDefaultAsync(s => s.Id == subscriptionId);
 
-        if (subscription == null)
-        {
-            return null;
-        }
+        if (subscription == null) return null;
 
         subscription.CurrentPeriodStart = subscription.CurrentPeriodEnd;
         subscription.CurrentPeriodEnd = subscription.CurrentPeriodEnd.AddMonths(1);
@@ -171,10 +156,7 @@ public class SubscriptionService(ApplicationDbContext context) : ISubscriptionSe
         var subscription = await context.UserSubscriptions
             .FirstOrDefaultAsync(s => s.Id == subscriptionId);
 
-        if (subscription == null)
-        {
-            return null;
-        }
+        if (subscription == null) return null;
 
         subscription.ExternalSubscriptionId = externalId;
         await context.SaveChangesAsync();
@@ -186,10 +168,7 @@ public class SubscriptionService(ApplicationDbContext context) : ISubscriptionSe
         var subscription = await context.UserSubscriptions
             .FirstOrDefaultAsync(s => s.Id == subscriptionId);
 
-        if (subscription == null)
-        {
-            return null;
-        }
+        if (subscription == null) return null;
 
         subscription.LastPaymentAt = DateTime.UtcNow;
         subscription.Status = SubscriptionStatus.Active;
@@ -203,10 +182,7 @@ public class SubscriptionService(ApplicationDbContext context) : ISubscriptionSe
         var subscription = await context.UserSubscriptions
             .FirstOrDefaultAsync(s => s.Id == subscriptionId);
 
-        if (subscription == null)
-        {
-            return null;
-        }
+        if (subscription == null) return null;
 
         subscription.Status = SubscriptionStatus.PastDue;
         // You might want to add a PaymentFailureReason field to the model

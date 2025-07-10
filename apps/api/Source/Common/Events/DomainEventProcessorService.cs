@@ -1,4 +1,7 @@
-namespace GameGuild.Common.Messaging;
+using GameGuild.Database;
+
+
+namespace GameGuild.Common;
 
 /// <summary>
 /// Background service for processing domain events
@@ -27,7 +30,7 @@ public class DomainEventProcessorService(ILogger<DomainEventProcessorService> lo
 
   private async Task ProcessPendingEvents(CancellationToken cancellationToken) {
     using var scope = serviceProvider.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<Data.ApplicationDbContext>();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
     // Get entities with pending domain events
     var entitiesWithEvents = dbContext.ChangeTracker.Entries()

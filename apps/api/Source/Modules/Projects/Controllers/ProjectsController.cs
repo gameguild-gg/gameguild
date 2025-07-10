@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using GameGuild.Common.Application.Attributes;
+using GameGuild.Common;
 using GameGuild.Modules.Authentication.Attributes;
-using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Projects.Services;
 using Microsoft.AspNetCore.Mvc;

@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Modules.Tenants.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Users.Models;
+namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// Represents a user credential (password, API key, OAuth token, etc.)
@@ -13,7 +13,7 @@ namespace GameGuild.Modules.Users.Models;
 /// </summary>
 [Table("Credentials")]
 [Index(nameof(UserId), nameof(Type))]
-public class Credential : BaseEntity, ITenantable {
+public class Credential : Entity, ITenantable {
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>

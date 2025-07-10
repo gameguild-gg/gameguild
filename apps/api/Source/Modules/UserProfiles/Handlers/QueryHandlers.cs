@@ -1,4 +1,4 @@
-using GameGuild.Data;
+using GameGuild.Database;
 using GameGuild.Modules.UserProfiles.Queries;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -18,18 +18,11 @@ public class GetAllUserProfilesHandler(ApplicationDbContext context)
 
         // Apply filters
         if (!request.IncludeDeleted)
-        {
-            query = query.Where(up => up.DeletedAt == null);
-        }
+          query = query.Where(up => up.DeletedAt == null);
         else
-        {
-            query = query.IgnoreQueryFilters();
-        }
+          query = query.IgnoreQueryFilters();
 
-        if (request.TenantId.HasValue)
-        {
-            query = query.Where(up => EF.Property<Guid?>(up, "TenantId") == request.TenantId);
-        }
+        if (request.TenantId.HasValue) query = query.Where(up => EF.Property<Guid?>(up, "TenantId") == request.TenantId);
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
@@ -59,13 +52,9 @@ public class GetUserProfileByIdHandler(ApplicationDbContext context)
             .Include(up => up.Metadata);
 
         if (!request.IncludeDeleted)
-        {
-            query = query.Where(up => up.DeletedAt == null);
-        }
+          query = query.Where(up => up.DeletedAt == null);
         else
-        {
-            query = query.IgnoreQueryFilters();
-        }
+          query = query.IgnoreQueryFilters();
 
         return await query.FirstOrDefaultAsync(up => up.Id == request.UserProfileId, cancellationToken);
     }
@@ -83,13 +72,9 @@ public class GetUserProfileByUserIdHandler(ApplicationDbContext context)
             .Include(up => up.Metadata);
 
         if (!request.IncludeDeleted)
-        {
-            query = query.Where(up => up.DeletedAt == null);
-        }
+          query = query.Where(up => up.DeletedAt == null);
         else
-        {
-            query = query.IgnoreQueryFilters();
-        }
+          query = query.IgnoreQueryFilters();
 
         return await query.FirstOrDefaultAsync(up => up.Id == request.UserId, cancellationToken);
     }

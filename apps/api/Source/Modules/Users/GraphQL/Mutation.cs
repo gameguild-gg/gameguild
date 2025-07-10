@@ -1,15 +1,14 @@
-using GameGuild.Modules.Users.Commands;
-using GameGuild.Modules.Users.Services;
+using GameGuild.Modules.Users.Inputs;
 using MediatR;
 
 
-namespace GameGuild.Modules.Users.GraphQL;
+namespace GameGuild.Modules.Users;
 
 public class Mutation {
   /// <summary>
   /// Creates a new user using CQRS pattern with MediatR.
   /// </summary>
-  public async Task<Models.User> CreateUser(CreateUserInput input, [Service] IMediator mediator) {
+  public async Task<User> CreateUser(CreateUserInput input, [Service] IMediator mediator) {
     var command = new CreateUserCommand { Name = input.Name, Email = input.Email, IsActive = input.IsActive };
 
     return await mediator.Send(command);
@@ -18,9 +17,9 @@ public class Mutation {
   /// <summary>
   /// Creates a new user using traditional service pattern (for comparison).
   /// </summary>
-  public async Task<Models.User> CreateUserLegacy(CreateUserInput input, [Service] IUserService userService) {
+  public async Task<User> CreateUserLegacy(CreateUserInput input, [Service] IUserService userService) {
     // Use BaseEntity constructor pattern for consistent creation
-    var user = new Models.User(new { input.Name, input.Email, input.IsActive });
+    var user = new User(new { input.Name, input.Email, input.IsActive });
 
     return await userService.CreateUserAsync(user);
   }
@@ -28,7 +27,7 @@ public class Mutation {
   /// <summary>
   /// Updates an existing user with partial data.
   /// </summary>
-  public async Task<Models.User?> UpdateUser(UpdateUserInput input, [Service] IUserService userService) {
+  public async Task<User?> UpdateUser(UpdateUserInput input, [Service] IUserService userService) {
     var existingUser = await userService.GetUserByIdAsync(input.Id);
 
     if (existingUser == null) return null;

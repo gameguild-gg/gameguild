@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Application.Services;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Interface for seeding the database with initial data

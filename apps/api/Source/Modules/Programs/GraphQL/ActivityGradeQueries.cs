@@ -1,8 +1,8 @@
-using GameGuild.Common.Presentation.GraphQL.Authorization;
+using GameGuild.Common.Authorization;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Users.GraphQL;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Programs.GraphQL;
@@ -28,7 +28,7 @@ public class ActivityGradeQueries {
     var interactions = await contentInteractionService.GetUserInteractionsAsync(Guid.Empty);
     var interaction = interactions.FirstOrDefault(i => i.Id == contentInteractionId);
 
-    if (interaction?.Content?.ProgramId != programId) { return null; }
+    if (interaction?.Content?.ProgramId != programId) return null;
 
     return await activityGradeService.GetGradeAsync(contentInteractionId);
   }
@@ -46,7 +46,7 @@ public class ActivityGradeQueries {
     var grade = await activityGradeService.GetGradeByIdAsync(gradeId);
 
     // Verify the grade belongs to the specified program
-    if (grade?.ContentInteraction?.Content?.ProgramId != programId) { return null; }
+    if (grade?.ContentInteraction?.Content?.ProgramId != programId) return null;
 
     return grade;
   }
@@ -97,7 +97,7 @@ public class ActivityGradeQueries {
     // Verify content belongs to the specified program
     var content = await programContentService.GetContentByIdAsync(contentId);
 
-    if (content?.ProgramId != programId) { return Enumerable.Empty<ActivityGrade>(); }
+    if (content?.ProgramId != programId) return Enumerable.Empty<ActivityGrade>();
 
     return await activityGradeService.GetGradesByContentAsync(contentId);
   }

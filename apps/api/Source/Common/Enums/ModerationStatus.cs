@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Common.Enums;
+namespace GameGuild.Common;
 
 public enum ModerationStatus {
   [Description("Moderation request submitted but not yet reviewed")]

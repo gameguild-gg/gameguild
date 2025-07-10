@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Votes.Models;
@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Votes.Models;
 /// <summary>
 /// Represents a vote (upvote/downvote) on a voteable entity.
 /// </summary>
-public class Vote : BaseEntity {
+public class Vote : Entity {
   /// <summary>
   /// Navigation property to the user who cast this vote
   /// Entity Framework will automatically create the UserId foreign key

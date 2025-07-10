@@ -1,5 +1,5 @@
-using GameGuild.Common.Domain.Enums;
-using GameGuild.Modules.Contents.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Contents;
 
 
 namespace GameGuild.Modules.Programs.DTOs;

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Common.Enums;
+namespace GameGuild.Common;
 
 public enum KycVerificationStatus {
   [Description("Verification request has been submitted but not completed")]

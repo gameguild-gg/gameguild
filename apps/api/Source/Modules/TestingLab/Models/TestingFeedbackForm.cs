@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Domain.Entities;
+using GameGuild.Common;
 
 
 namespace GameGuild.Modules.TestingLab.Models {
-  public class TestingFeedbackForm : BaseEntity {
+  public class TestingFeedbackForm : Entity {
     [Required] public Guid TestingRequestId { get; set; }
 
     [Required] public string FormSchema { get; set; } = string.Empty; // JSON

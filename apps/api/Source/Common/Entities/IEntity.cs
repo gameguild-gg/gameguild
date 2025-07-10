@@ -1,9 +1,8 @@
-namespace GameGuild.Common.Domain.Entities;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Interface that defines the contract for all entities in the system.
 /// Provides the basic structure that all domain entities should implement.
-/// Mirrors the NestJS EntityDto interface.
 /// </summary>
 public interface IEntity {
   /// <summary>

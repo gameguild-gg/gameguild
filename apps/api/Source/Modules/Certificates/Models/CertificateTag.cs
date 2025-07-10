@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using GameGuild.Modules.Tags.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -13,7 +12,7 @@ namespace GameGuild.Modules.Certificates.Models;
 [Index(nameof(CertificateId))]
 [Index(nameof(TagId))]
 [Index(nameof(RelationshipType))]
-public class CertificateTag : BaseEntity {
+public class CertificateTag : Entity {
   public Guid CertificateId { get; set; }
 
   public Guid TagId { get; set; }

@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Messaging;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Implementation of domain event publisher using MediatR

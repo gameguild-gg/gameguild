@@ -1,7 +1,6 @@
-using GameGuild.Modules.Authentication.Queries;
-using GameGuild.Modules.Users.GraphQL;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
 using MediatR;
+using GetUserByEmailQuery = GameGuild.Modules.Authentication.Queries.GetUserByEmailQuery;
 
 
 namespace GameGuild.Modules.Authentication.GraphQL;

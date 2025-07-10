@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Projects.Models;
@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Projects.Models;
 /// <summary>
 /// Represents a version/release of a project
 /// </summary>
-public class ProjectVersion : BaseEntity {
+public class ProjectVersion : Entity {
   /// <summary>
   /// The project this version belongs to
   /// </summary>

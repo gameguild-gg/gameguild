@@ -1,7 +1,4 @@
-using GameGuild.Modules.Users.Models;
-
-
-namespace GameGuild.Modules.Users.Services;
+namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// Service interface for managing user credentials

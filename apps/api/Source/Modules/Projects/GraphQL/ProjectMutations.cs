@@ -1,8 +1,8 @@
-using GameGuild.Common.Application.Attributes;
-using GameGuild.Modules.Contents.Models;
+using GameGuild.Common;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Projects.Services;
-using GameGuild.Modules.Users.GraphQL;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Projects.GraphQL;

@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Common.Domain.Entities;
-using GameGuild.Common.Domain.Enums;
+using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,7 +12,7 @@ namespace GameGuild.Modules.Tags.Models;
 [Index(nameof(SourceId))]
 [Index(nameof(TargetId))]
 [Index(nameof(Type))]
-public class TagRelationship : BaseEntity {
+public class TagRelationship : Entity {
   public Guid SourceId { get; set; }
 
   public Guid TargetId { get; set; }

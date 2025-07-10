@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Resources.Models;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Resources;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -15,7 +15,7 @@ namespace GameGuild.Modules.Reputations.Models;
 [Index(nameof(UserId), IsUnique = true)]
 [Index(nameof(Score))]
 [Index(nameof(CurrentLevelId))]
-public class UserReputation : ResourceBase, IReputation {
+public class UserReputation : Resource, IReputation {
   /// <summary>
   /// The user this reputation belongs to
   /// </summary>
