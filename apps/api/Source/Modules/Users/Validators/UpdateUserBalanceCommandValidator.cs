@@ -42,7 +42,7 @@ public class UpdateUserBalanceCommandValidator : AbstractValidator<UpdateUserBal
 
   private async Task<bool> UserExists(Guid userId, CancellationToken cancellationToken)
   {
-    return await _context.Resources.OfType<User>()
+    return await _context.Users
                          .AnyAsync(x => x.Id == userId && x.DeletedAt == null, cancellationToken);
   }
 }
