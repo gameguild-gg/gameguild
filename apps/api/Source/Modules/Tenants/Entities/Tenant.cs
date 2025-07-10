@@ -4,7 +4,7 @@ using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenants;
+namespace GameGuild.Modules.Tenants.Entities;
 
 /// <summary>
 /// Represents a tenant in a multi-tenant system

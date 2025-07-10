@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Tenants.Entities;
 using GameGuild.Modules.Users;
 
 

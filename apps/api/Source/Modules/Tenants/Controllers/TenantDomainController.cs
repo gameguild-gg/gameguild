@@ -1,6 +1,7 @@
 using GameGuild.Common;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Tenants.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -180,11 +181,11 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   public async Task<ActionResult<IEnumerable<TenantUserGroupMembershipDto>>> GetUserMemberships(Guid userId) {
     var memberships = await tenantDomainService.GetUserGroupMembershipsAsync(userId);
     var dtos = memberships.Select(m => new TenantUserGroupMembershipDto {
-                                    Id = m.Id,
-                                    UserId = m.UserId,
-                                    GroupId = m.UserGroupId,
-                                    IsAutoAssigned = m.IsAutoAssigned,
-                                    CreatedAt = m.CreatedAt,
+        Id = m.Id,
+        UserId = m.UserId,
+        GroupId = m.UserGroupId,
+        IsAutoAssigned = m.IsAutoAssigned,
+        CreatedAt = m.CreatedAt,
       }
     );
 
@@ -270,7 +271,6 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
       };
 
       return CreatedAtAction(nameof(GetUserGroups), new { userId = firstMembership.UserId }, membershipDto);
-
     }
     catch (Exception ex) { return BadRequest($"Error during auto-assignment: {ex.Message}"); }
   }

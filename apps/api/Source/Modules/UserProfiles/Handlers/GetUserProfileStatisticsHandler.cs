@@ -11,8 +11,8 @@ namespace GameGuild.Modules.UserProfiles.Handlers;
 /// Handler for getting user profile statistics
 /// </summary>
 public class GetUserProfileStatisticsHandler(ApplicationDbContext context, ILogger<GetUserProfileStatisticsHandler> logger)
-  : IQueryHandler<GetUserProfileStatisticsQuery, GameGuild.Common.Result<UserProfileStatistics>> {
-  public async Task<GameGuild.Common.Result<UserProfileStatistics>> Handle(GetUserProfileStatisticsQuery request, CancellationToken cancellationToken) {
+  : IQueryHandler<GetUserProfileStatisticsQuery, Common.Result<UserProfileStatistics>> {
+  public async Task<Common.Result<UserProfileStatistics>> Handle(GetUserProfileStatisticsQuery request, CancellationToken cancellationToken) {
     try {
       var fromDate = request.FromDate ?? DateTime.MinValue;
       var toDate = request.ToDate ?? DateTime.MaxValue;
@@ -89,13 +89,13 @@ public class GetUserProfileStatisticsHandler(ApplicationDbContext context, ILogg
         statistics.NewUserProfiles
       );
 
-      return GameGuild.Common.Result.Success(statistics);
+      return Result.Success(statistics);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error generating user profile statistics");
 
-      return GameGuild.Common.Result.Failure<UserProfileStatistics>(
-        GameGuild.Common.Error.Failure("UserProfile.StatisticsFailed", "Failed to generate user profile statistics")
+      return Result.Failure<UserProfileStatistics>(
+        Common.Error.Failure("UserProfile.StatisticsFailed", "Failed to generate user profile statistics")
       );
     }
   }

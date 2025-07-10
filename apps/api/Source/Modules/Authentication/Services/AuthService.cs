@@ -4,6 +4,7 @@ using System.Text;
 using GameGuild.Database;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Tenants.Entities;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 

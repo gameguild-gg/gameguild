@@ -45,7 +45,7 @@ public static class DependencyInjection {
           var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
           var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
 
-          if (System.IO.File.Exists(xmlPath)) {
+          if (File.Exists(xmlPath)) {
             c.IncludeXmlComments(xmlPath);
           }
         }

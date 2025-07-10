@@ -17,7 +17,7 @@ using GameGuild.Modules.Reputations.Models;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Subscriptions.Models;
 using GameGuild.Modules.Tags.Models;
-using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Tenants.Entities;
 using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
