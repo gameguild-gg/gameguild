@@ -518,3 +518,4 @@ W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\GameGuild.API.T
 W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\ref\GameGuild.API.Tests.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\FluentValidation.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\Serilog.dll
+W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\FluentValidation.DependencyInjectionExtensions.dll
