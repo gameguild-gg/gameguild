@@ -81,6 +81,12 @@ namespace GameGuild.API.Tests.Fixtures {
                 }
               );
 
+      // Add required services for authorization behaviors
+      services.AddHttpContextAccessor();
+
+      // Add date time provider
+      services.AddSingleton<GameGuild.Common.IDateTimeProvider, GameGuild.Common.DateTimeProvider>();
+
       // Add application services (includes IDomainEventPublisher registration)
       services.AddApplication();
 
@@ -102,8 +108,15 @@ namespace GameGuild.API.Tests.Fixtures {
       services.AddScoped<ITenantService, MockTenantService>();
       services.AddScoped<ITenantContextService, Helpers.MockTenantContextService>();
 
-      // Add controllers
-      services.AddControllers();
+      // Add controllers from the main application assembly
+      services.AddControllers()
+              .AddApplicationPart(typeof(GameGuild.Modules.Users.UsersController).Assembly);
+              
+      // Add GraphQL for testing
+      services.AddGraphQLServer()
+              .AddQueryType<GameGuild.Modules.Users.Query>()
+              .AddMutationType<GameGuild.Modules.Users.Mutation>()
+              .AddType<GameGuild.Modules.Users.UserType>();
     }
 
     public HttpClient CreateClient() { return Server.CreateClient(); }

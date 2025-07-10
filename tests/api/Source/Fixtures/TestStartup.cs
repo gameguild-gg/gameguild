@@ -25,7 +25,7 @@ public class TestStartup {
 
         app.UseEndpoints(endpoints => {
                 endpoints.MapControllers();
-                // endpoints.MapGraphQL("/graphql"); // Commented out to avoid dependency issues
+                endpoints.MapGraphQL("/graphql");
             }
         );
     }

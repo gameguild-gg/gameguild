@@ -105,6 +105,15 @@ namespace GameGuild.API.Tests.Modules.Users.E2E.GraphQL {
       // Act
       var response = await _client.PostAsync("/graphql", content);
       var responseString = await response.Content.ReadAsStringAsync();
+      
+      // Debug: Log the actual response
+      if (string.IsNullOrEmpty(responseString)) {
+        Assert.True(false, $"Response content is empty. Status: {response.StatusCode}, Headers: {response.Headers}");
+      }
+      
+      Console.WriteLine($"GraphQL Response: {responseString}");
+      Console.WriteLine($"Response Status: {response.StatusCode}");
+      
       var result = JsonDocument.Parse(responseString);
 
       // Get data from GraphQL response

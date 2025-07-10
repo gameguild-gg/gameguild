@@ -34,13 +34,13 @@ public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
 
   private async Task<bool> UserExists(Guid userId, CancellationToken cancellationToken)
   {
-    return await _context.Resources.OfType<User>()
+    return await _context.Users
                          .AnyAsync(x => x.Id == userId && x.DeletedAt == null, cancellationToken);
   }
 
   private async Task<bool> BeUniqueEmailForUpdate(UpdateUserCommand command, string email, CancellationToken cancellationToken)
   {
-    return !await _context.Resources.OfType<User>()
+    return !await _context.Users
                           .AnyAsync(x => x.Email == email && x.Id != command.UserId && x.DeletedAt == null, cancellationToken);
   }
 }

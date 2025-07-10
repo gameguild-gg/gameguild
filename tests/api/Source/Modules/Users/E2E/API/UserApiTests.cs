@@ -1,7 +1,9 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using GameGuild.API.Tests.Fixtures;
+using GameGuild.Modules.Users;
 
 
 // using GameGuild.API.Models;
@@ -51,19 +53,27 @@ namespace GameGuild.API.Tests.Modules.Users.E2E.API {
 
     [Fact]
     public async Task Should_Get_User_By_Id() {
-      // Arrange - Create and seed test user
+      // Arrange - Seed user directly to database
       var userId = Guid.NewGuid().ToString();
       var email = $"get-user-{Guid.NewGuid()}@example.com";
-      await _fixture.SeedTestUser(userId, email, "Get Test User");
-
+      var name = "Get Test User";
+      
+      await _fixture.SeedTestUser(userId, email, name);
+      
       // Set authentication token
       var token = _fixture.GenerateTestToken(userId);
       _client.DefaultRequestHeaders.Authorization =
         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
       // Act
-      var response = await _client.GetAsync($"/users/{userId}");
+      var response = await _client.GetAsync($"/api/users/{userId}");
       var content = await response.Content.ReadAsStringAsync();
+      
+      // Debug: Log the actual response
+      if (string.IsNullOrEmpty(content)) {
+        Assert.True(false, $"Response content is empty. Status: {response.StatusCode}, Headers: {response.Headers}");
+      }
+      
       var result = JsonDocument.Parse(content);
 
       // Assert
@@ -88,10 +98,16 @@ namespace GameGuild.API.Tests.Modules.Users.E2E.API {
 
       // Act
       var response = await _client.PutAsync(
-                       $"/users/{userId}",
+                       $"/api/users/{userId}",
                        new StringContent(JsonSerializer.Serialize(updatePayload), Encoding.UTF8, "application/json")
                      );
       var content = await response.Content.ReadAsStringAsync();
+      
+      // Debug: Log the actual response
+      if (string.IsNullOrEmpty(content)) {
+        Assert.True(false, $"Response content is empty. Status: {response.StatusCode}, Headers: {response.Headers}");
+      }
+      
       var result = JsonDocument.Parse(content);
 
       // Assert
@@ -112,13 +128,13 @@ namespace GameGuild.API.Tests.Modules.Users.E2E.API {
         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
       // Act - Delete
-      var deleteResponse = await _client.DeleteAsync($"/users/{userId}");
+      var deleteResponse = await _client.DeleteAsync($"/api/users/{userId}");
 
       // Assert - Delete
       Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
       // Act - Try to get deleted user
-      var getResponse = await _client.GetAsync($"/users/{userId}");
+      var getResponse = await _client.GetAsync($"/api/users/{userId}");
 
       // Assert - Should not find deleted user
       Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
