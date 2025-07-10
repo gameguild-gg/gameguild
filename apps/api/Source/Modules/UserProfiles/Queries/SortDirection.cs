@@ -3,8 +3,4 @@
 /// <summary>
 /// Sort direction options
 /// </summary>
-public enum SortDirection
-{
-  Ascending,
-  Descending
-}
+public enum SortDirection { Ascending, Descending }

@@ -7,10 +7,8 @@ namespace GameGuild.Modules.UserProfiles.Commands;
 /// <summary>
 /// Command to delete a user profile
 /// </summary>
-public class DeleteUserProfileCommand : ICommand<GameGuild.Common.Result<bool>>
-{
-    [Required]
-    public Guid UserProfileId { get; set; }
+public class DeleteUserProfileCommand : ICommand<GameGuild.Common.Result<bool>> {
+  [Required] public Guid UserProfileId { get; set; }
 
-    public bool SoftDelete { get; set; } = true;
+  public bool SoftDelete { get; set; } = true;
 }
