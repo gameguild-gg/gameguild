@@ -89,7 +89,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     // Create test user and tenant for authentication
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Read });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
     var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
@@ -145,7 +145,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     var tenant = await CreateTestTenantAsync();
     var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token); // Grant the user permission to create projects
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Create });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Create]);
 
     // Create a proper Project object instead of an anonymous object
     var project = new Project {
@@ -205,7 +205,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     // Create test user and tenant for authentication
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Create });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Create]);
     var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
@@ -230,7 +230,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     // Create test user and tenant for authentication
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Read });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
     var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
@@ -271,7 +271,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     // Create test user and tenant for authentication
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Read });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
     var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
@@ -359,7 +359,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     // Create test user and tenant for authentication
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Read });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
     var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
@@ -422,7 +422,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
     // Create test user and tenant for authentication
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Read });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
     var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 

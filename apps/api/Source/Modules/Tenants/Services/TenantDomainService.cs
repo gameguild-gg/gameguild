@@ -1,5 +1,4 @@
 using GameGuild.Database;
-using GameGuild.Modules.Tenants.Entities;
 using Microsoft.EntityFrameworkCore;
 using UserModel = GameGuild.Modules.Users.User;
 
@@ -250,7 +249,7 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
   public async Task<IEnumerable<TenantUserGroupMembership>> AutoAssignUserToGroupsAsync(string userEmail) {
     var user = await context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
 
-    if (user == null) return Enumerable.Empty<TenantUserGroupMembership>();
+    if (user == null) return [];
 
     return await AutoAssignUserToGroupsAsync(user.Id);
   }
@@ -258,11 +257,11 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
   public async Task<IEnumerable<TenantUserGroupMembership>> AutoAssignUserToGroupsAsync(Guid userId) {
     var user = await context.Users.FindAsync(userId);
 
-    if (user == null) return Enumerable.Empty<TenantUserGroupMembership>();
+    if (user == null) return [];
 
     var matchingDomain = await FindMatchingDomainAsync(user.Email);
 
-    if (matchingDomain?.UserGroupId == null) return Enumerable.Empty<TenantUserGroupMembership>();
+    if (matchingDomain?.UserGroupId == null) return [];
 
     var memberships = new List<TenantUserGroupMembership>();
 

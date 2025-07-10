@@ -97,7 +97,7 @@ public class ActivityGradeQueries {
     // Verify content belongs to the specified program
     var content = await programContentService.GetContentByIdAsync(contentId);
 
-    if (content?.ProgramId != programId) return Enumerable.Empty<ActivityGrade>();
+    if (content?.ProgramId != programId) return [];
 
     return await activityGradeService.GetGradesByContentAsync(contentId);
   }

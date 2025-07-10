@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using UserModel = GameGuild.Modules.Users.User;
 
 
-namespace GameGuild.Modules.Tenants.Entities;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Represents a user's membership in a tenant user group

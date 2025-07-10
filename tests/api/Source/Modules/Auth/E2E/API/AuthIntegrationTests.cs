@@ -6,7 +6,6 @@ using GameGuild.API.Tests.Helpers;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Tenants.Entities;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

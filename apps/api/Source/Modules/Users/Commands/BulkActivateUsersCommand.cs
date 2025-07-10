@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Users;
 /// Command to activate multiple users at once
 /// </summary>
 public sealed class BulkActivateUsersCommand : ICommand<BulkOperationResult> {
-  [Required] public List<Guid> UserIds { get; set; } = new();
+  [Required] public List<Guid> UserIds { get; init; } = [];
 
-  public string? Reason { get; set; }
+  public string? Reason { get; init; }
 }

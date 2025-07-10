@@ -249,7 +249,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
                                    .Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.UserId == userId)
                                    .FirstOrDefaultAsync();
 
-    if (programUser == null) return Enumerable.Empty<ContentInteraction>();
+    if (programUser == null) return [];
 
     return await context.ContentInteractions.Include(ci => ci.Content)
                         .Where(ci => !ci.IsDeleted && ci.ProgramUserId == programUser.Id)
@@ -957,7 +957,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     if (program == null) return null;
 
     // Stub implementation
-    return new CompletionRatesDto(id, 0, new Dictionary<Guid, decimal>(), new List<CompletionTrendDto>());
+    return new CompletionRatesDto(id, 0, new Dictionary<Guid, decimal>(), []);
   }
 
   public async Task<EngagementMetricsDto?> GetEngagementMetricsAsync(Guid id) {
@@ -992,7 +992,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
       0, // Total and monthly purchases
       0,
       0, // ARPU and conversion rate
-      new List<RevenueChartDto>()
+      []
     );
   }
 

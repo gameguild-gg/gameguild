@@ -1,25 +1,17 @@
 ﻿using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Tenants.Commands;
-using GameGuild.Modules.Tenants.Entities;
-using GameGuild.Modules.Tenants.Events;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenants.Handlers;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Handler for updating an existing tenant
 /// </summary>
-public class UpdateTenantHandler(
-  ApplicationDbContext context,
-  ILogger<UpdateTenantHandler> logger,
-  IDomainEventPublisher eventPublisher
-) : ICommandHandler<UpdateTenantCommand, Common.Result<Tenant>> {
+public class UpdateTenantHandler(ApplicationDbContext context, ILogger<UpdateTenantHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<UpdateTenantCommand, Common.Result<Tenant>> {
   public async Task<Common.Result<Tenant>> Handle(UpdateTenantCommand request, CancellationToken cancellationToken) {
     try {
-      var tenant = await context.Resources.OfType<Tenant>()
-                                .FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
+      var tenant = await context.Resources.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
 
       if (tenant == null) {
         return Result.Failure<Tenant>(

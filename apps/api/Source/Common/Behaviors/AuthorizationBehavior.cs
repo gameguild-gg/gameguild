@@ -89,10 +89,10 @@ public class AuthorizationBehavior<TRequest, TResponse>(IHttpContextAccessor htt
 
     if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Result<>)) {
       var resultType = typeof(T).GetGenericArguments()[0];
-      var failureMethod = typeof(Result).GetMethod("Failure", new[] { typeof(Error) })!
+      var failureMethod = typeof(Result).GetMethod("Failure", [typeof(Error)])!
                                         .MakeGenericMethod(resultType);
 
-      return (TResponse)failureMethod.Invoke(null, new object[] { error })!;
+      return (TResponse)failureMethod.Invoke(null, [error])!;
     }
 
     // Fallback - throw exception for non-Result responses

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Tenants.Entities;
+using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 

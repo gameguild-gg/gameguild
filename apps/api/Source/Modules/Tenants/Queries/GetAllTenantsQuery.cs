@@ -1,7 +1,7 @@
 using GameGuild.Common;
-using GameGuild.Modules.Tenants.Entities;
 
-namespace GameGuild.Modules.Tenants.Queries;
+
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Query to get all tenants
