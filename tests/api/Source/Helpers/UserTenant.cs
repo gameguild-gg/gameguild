@@ -17,5 +17,10 @@ namespace GameGuild.API.Tests.Helpers
         /// The ID of the tenant
         /// </summary>
         public Guid TenantId { get; init; }
+
+        /// <summary>
+        /// Whether this user-tenant relationship is active
+        /// </summary>
+        public bool IsActive { get; init; }
     }
 }

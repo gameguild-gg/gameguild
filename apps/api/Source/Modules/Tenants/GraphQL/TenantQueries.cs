@@ -3,7 +3,7 @@ using GameGuild.Modules.Users;
 using MediatR;
 
 
-namespace GameGuild.Modules.Tenants.GraphQL;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// GraphQL queries for Tenant module using CQRS pattern

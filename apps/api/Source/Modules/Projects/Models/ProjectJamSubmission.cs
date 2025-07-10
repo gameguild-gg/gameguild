@@ -15,7 +15,7 @@ namespace GameGuild.Modules.Projects.Models;
 [Index(nameof(JamId), Name = "IX_ProjectJamSubmissions_Jam")]
 [Index(nameof(SubmittedAt), Name = "IX_ProjectJamSubmissions_Date")]
 [Index(nameof(FinalScore), Name = "IX_ProjectJamSubmissions_Score")]
-public class ProjectJamSubmission : Resource {
+public sealed class ProjectJamSubmission : Resource {
   /// <summary>
   /// Project being submitted
   /// </summary>
@@ -24,7 +24,7 @@ public class ProjectJamSubmission : Resource {
   /// <summary>
   /// Navigation property to project
   /// </summary>
-  public virtual Project Project { get; set; } = null!;
+  public Project Project { get; set; } = null!;
 
   /// <summary>
   /// Jam the project is submitted to
@@ -34,7 +34,7 @@ public class ProjectJamSubmission : Resource {
   /// <summary>
   /// Navigation property to jam
   /// </summary>
-  public virtual Jam Jam { get; set; } = null!;
+  public Jam Jam { get; set; } = null!;
 
   /// <summary>
   /// Date when the project was submitted to the jam
@@ -65,7 +65,7 @@ public class ProjectJamSubmission : Resource {
   /// <summary>
   /// Whether this submission won an award
   /// </summary>
-  public bool HasAward { get; set; } = false;
+  public bool HasAward { get; set; }
 
   /// <summary>
   /// Award details (JSON)
@@ -73,14 +73,14 @@ public class ProjectJamSubmission : Resource {
   [MaxLength(1000)]
   public string? AwardDetails { get; set; }
 
-  /// <summary>
-  /// Additional submission metadata
-  /// </summary>
-  [MaxLength(2000)]
-  public new string? Metadata { get; set; }
+  // /// <summary>
+  // /// Additional submission metadata
+  // /// </summary>
+  // [MaxLength(2000)]
+  // public new string? Metadata { get; set; }
 
   /// <summary>
   /// Navigation property to jam scores
   /// </summary>
-  public virtual ICollection<JamScore> Scores { get; set; } = new List<JamScore>();
+  public ICollection<JamScore> Scores { get; set; } = new List<JamScore>();
 }
