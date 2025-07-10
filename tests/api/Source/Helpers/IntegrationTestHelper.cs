@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Security.Claims;
 
 namespace GameGuild.API.Tests.Helpers {
   /// <summary>
@@ -22,6 +23,7 @@ namespace GameGuild.API.Tests.Helpers {
       // Use InMemory connection string instead of SQLite to avoid provider conflicts
       Environment.SetEnvironmentVariable("DB_CONNECTION_STRING", "InMemory");
       Environment.SetEnvironmentVariable("USE_IN_MEMORY_DB", "true");
+      Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
 
       // Add JWT environment variables
       Environment.SetEnvironmentVariable(
@@ -121,6 +123,111 @@ namespace GameGuild.API.Tests.Helpers {
       );
 
       return factory;
+    }
+
+    /// <summary>
+    /// Creates an authenticated HTTP client with a valid JWT token for the specified user
+    /// </summary>
+    /// <param name="factory">The WebApplicationFactory instance</param>
+    /// <param name="userId">The user ID for the token</param>
+    /// <param name="tenantId">Optional tenant ID for the token</param>
+    /// <param name="roles">User roles for the token</param>
+    /// <returns>Authenticated HttpClient</returns>
+    public static HttpClient CreateAuthenticatedClient(
+      WebApplicationFactory<Program> factory,
+      Guid userId,
+      Guid? tenantId = null,
+      string[]? roles = null
+    ) {
+      var client = factory.CreateClient();
+      
+      using var scope = factory.Services.CreateScope();
+      var jwtService = scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
+      
+      var userDto = new UserDto {
+        Id = userId,
+        Username = $"testuser-{userId}",
+        Email = $"test-{userId}@example.com"
+      };
+      
+      var claims = new List<Claim>();
+      if (tenantId.HasValue) {
+        claims.Add(new Claim(JwtClaimTypes.TenantId, tenantId.Value.ToString()));
+      }
+      
+      var token = jwtService.GenerateAccessToken(userDto, roles ?? new[] { "User" }, claims);
+      client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+      
+      return client;
+    }
+
+    /// <summary>
+    /// Creates a test user with permissions in the database and returns an authenticated client
+    /// </summary>
+    /// <param name="factory">The WebApplicationFactory instance</param>
+    /// <param name="userId">Optional user ID. If not provided, a new GUID will be generated</param>
+    /// <param name="tenantId">Optional tenant ID. If not provided, a new GUID will be generated</param>
+    /// <param name="permissionFlags1">Permission flags for the user in the tenant (default: grant all permissions)</param>
+    /// <param name="permissionFlags2">Permission flags for the user in the tenant (default: grant all permissions)</param>
+    /// <returns>Tuple containing the authenticated HttpClient, userId, and tenantId</returns>
+    public static async Task<(HttpClient client, Guid userId, Guid tenantId)> CreateAuthenticatedTestUserAsync(
+      WebApplicationFactory<Program> factory,
+      Guid? userId = null,
+      Guid? tenantId = null,
+      ulong permissionFlags1 = ulong.MaxValue, // Grant all permissions by default
+      ulong permissionFlags2 = ulong.MaxValue
+    ) {
+      var actualUserId = userId ?? Guid.NewGuid();
+      var actualTenantId = tenantId ?? Guid.NewGuid();
+      
+      using var scope = factory.Services.CreateScope();
+      var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+      
+      // Create test user if it doesn't exist
+      if (!await context.Users.AnyAsync(u => u.Id == actualUserId)) {
+        var user = new GameGuild.Modules.Users.User {
+          Id = actualUserId,
+          Name = $"testuser-{actualUserId}",
+          Email = $"test-{actualUserId}@example.com",
+          IsActive = true,
+          CreatedAt = DateTime.UtcNow,
+          UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(user);
+      }
+      
+      // Create test tenant if it doesn't exist
+      if (!await context.Tenants.AnyAsync(t => t.Id == actualTenantId)) {
+        var tenant = new GameGuild.Modules.Tenants.Tenant {
+          Id = actualTenantId,
+          Name = $"Test Tenant {actualTenantId}",
+          IsActive = true,
+          CreatedAt = DateTime.UtcNow,
+          UpdatedAt = DateTime.UtcNow
+        };
+        context.Tenants.Add(tenant);
+      }
+      
+      // Create tenant permission for the user (if it doesn't exist)
+      if (!await context.TenantPermissions.AnyAsync(tp => tp.UserId == actualUserId && tp.TenantId == actualTenantId)) {
+        var tenantPermission = new GameGuild.Modules.Tenants.TenantPermission {
+          Id = Guid.NewGuid(),
+          UserId = actualUserId,
+          TenantId = actualTenantId,
+          PermissionFlags1 = permissionFlags1,
+          PermissionFlags2 = permissionFlags2,
+          CreatedAt = DateTime.UtcNow,
+          UpdatedAt = DateTime.UtcNow
+        };
+        context.TenantPermissions.Add(tenantPermission);
+      }
+      
+      await context.SaveChangesAsync();
+      
+      // Create authenticated client
+      var client = CreateAuthenticatedClient(factory, actualUserId, actualTenantId);
+      
+      return (client, actualUserId, actualTenantId);
     }
   }
 }

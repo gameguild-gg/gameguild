@@ -82,11 +82,6 @@ public static class DependencyInjection {
       }
     );
 
-    // Health Checks
-    if (options.EnableHealthChecks)
-      services.AddHealthChecks()
-              .AddCheck("database", () => HealthCheckResult.Healthy(), ["database"]);
-
     // Response Compression
     if (options.EnableResponseCompression)
       services.AddResponseCompression(compressionOptions => {
