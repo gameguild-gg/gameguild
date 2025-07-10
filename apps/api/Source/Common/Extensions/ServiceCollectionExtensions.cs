@@ -8,6 +8,7 @@ using GameGuild.Modules.Tenants;
 using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
+using GameGuild.Modules.Credentials;
 using IProgramService = GameGuild.Modules.Programs.Services.IProgramService;
 
 
@@ -95,6 +96,13 @@ public static class ServiceCollectionExtensions {
   public static IServiceCollection AddPaymentModule(this IServiceCollection services) {
     // Register Payment module services
     services.AddScoped<IPaymentService, PaymentService>();
+
+    return services;
+  }
+
+  public static IServiceCollection AddCredentialsModule(this IServiceCollection services) {
+    // Register Credentials module services
+    services.AddScoped<ICredentialService, CredentialService>();
 
     return services;
   }

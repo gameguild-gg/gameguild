@@ -5,12 +5,16 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace GameGuild.Modules.Authentication {
   /// <summary>
-  /// Extension methods for configuring authentication services
+  /// Extension methods for configuring authentication services.
+  /// DEPRECATED: Use AuthModuleDependencyInjection instead for better CQRS and modular design.
   /// </summary>
+  [Obsolete("Use AuthModuleDependencyInjection.AddAuthModule instead. This will be removed in future versions.")]
   public static class AuthConfiguration {
     /// <summary>
-    /// Add authentication services to the service collection
+    /// Add authentication services to the service collection.
+    /// DEPRECATED: Use AuthModuleDependencyInjection.AddAuthModule instead.
     /// </summary>
+    [Obsolete("Use AuthModuleDependencyInjection.AddAuthModule instead.")]
     public static IServiceCollection AddAuthModule(this IServiceCollection services, IConfiguration configuration) {
       // Register auth services
       services.AddScoped<IAuthService, AuthService>();

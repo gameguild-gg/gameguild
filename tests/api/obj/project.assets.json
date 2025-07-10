@@ -82,6 +82,23 @@
           }
         }
       },
+      "FluentValidation.DependencyInjectionExtensions/12.0.0": {
+        "type": "package",
+        "dependencies": {
+          "FluentValidation": "12.0.0",
+          "Microsoft.Extensions.Dependencyinjection.Abstractions": "2.1.0"
+        },
+        "compile": {
+          "lib/net8.0/FluentValidation.DependencyInjectionExtensions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/FluentValidation.DependencyInjectionExtensions.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "GreenDonut/14.0.0": {
         "type": "package",
         "dependencies": {
@@ -3919,6 +3936,7 @@
           "BCrypt.Net-Next": "4.0.3",
           "DotNetEnv": "3.1.1",
           "FluentValidation": "12.0.0",
+          "FluentValidation.DependencyInjectionExtensions": "12.0.0",
           "HotChocolate.AspNetCore": "14.0.0",
           "HotChocolate.Data.EntityFramework": "14.0.0",
           "HotChocolate.Types.Analyzers": "14.0.0",
@@ -4117,6 +4135,21 @@
         "fluentvalidation.nuspec",
         "lib/net8.0/FluentValidation.dll",
         "lib/net8.0/FluentValidation.xml"
+      ]
+    },
+    "FluentValidation.DependencyInjectionExtensions/12.0.0": {
+      "sha512": "B28fBRL1UjhGsBC8fwV6YBZosh+SiU1FxdD7l7p5dGPgRlVI7UnM+Lgzmg+unZtV1Zxzpaw96UY2MYfMaAd8cg==",
+      "type": "package",
+      "path": "fluentvalidation.dependencyinjectionextensions/12.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "fluent-validation-icon.png",
+        "fluentvalidation.dependencyinjectionextensions.12.0.0.nupkg.sha512",
+        "fluentvalidation.dependencyinjectionextensions.nuspec",
+        "lib/net8.0/FluentValidation.DependencyInjectionExtensions.dll",
+        "lib/net8.0/FluentValidation.DependencyInjectionExtensions.xml"
       ]
     },
     "GreenDonut/14.0.0": {

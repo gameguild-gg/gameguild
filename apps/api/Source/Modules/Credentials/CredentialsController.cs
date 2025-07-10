@@ -1,102 +1,163 @@
 using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Mvc;
-
+using MediatR;
 
 namespace GameGuild.Modules.Credentials;
 
 /// <summary>
-/// REST API controller for managing user credentials
+/// REST API controller for managing user credentials using CQRS pattern
 /// </summary>
 [ApiController]
 [Route("[controller]")]
-public class CredentialsController(ICredentialService credentialService, IUserService userService) : ControllerBase {
-  /// <summary>
-  /// Get all credentials
-  /// </summary>
-  /// <returns>List of credentials</returns>
-  [HttpGet]
-  public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetCredentials() {
-    var credentials = await credentialService.GetAllCredentialsAsync();
-    var response = credentials.Select(MapToResponseDto);
+public class CredentialsController : ControllerBase
+{
+    private readonly IMediator _mediator;
+    private readonly ILogger<CredentialsController> _logger;
 
-    return Ok(response);
-  }
+    public CredentialsController(IMediator mediator, ILogger<CredentialsController> logger)
+    {
+        _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    /// <summary>
+    /// Get all credentials using CQRS pattern
+    /// </summary>
+    /// <returns>List of credentials</returns>
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetCredentials()
+    {
+        try
+        {
+            _logger.LogInformation("Getting all credentials");
+
+            var query = new GetAllCredentialsQuery();
+            var credentials = await _mediator.Send(query);
+            var response = credentials.Select(MapToResponseDto);
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get credentials");
+            return StatusCode(500, "Internal server error");
+        }
+    }
 
   /// <summary>
-  /// Get credentials by user ID
+  /// Get credentials by user ID using CQRS pattern
   /// </summary>
   /// <param name="userId">User ID</param>
   /// <returns>List of user credentials</returns>
   [HttpGet("user/{userId:guid}")]
-  public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetCredentialsByUserId(Guid userId) {
-    var credentials = await credentialService.GetCredentialsByUserIdAsync(userId);
-    var response = credentials.Select(MapToResponseDto);
+  public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetCredentialsByUserId(Guid userId)
+  {
+    try
+    {
+      _logger.LogInformation("Getting credentials for user {UserId}", userId);
 
-    return Ok(response);
+      var query = new GetCredentialsByUserIdQuery(userId);
+      var credentials = await _mediator.Send(query);
+      var response = credentials.Select(MapToResponseDto);
+
+      return Ok(response);
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Failed to get credentials for user {UserId}", userId);
+      return StatusCode(500, "Internal server error");
+    }
   }
 
   /// <summary>
-  /// Get a specific credential by ID
+  /// Get a specific credential by ID using CQRS pattern
   /// </summary>
   /// <param name="id">Credential ID</param>
   /// <returns>Credential details</returns>
   [HttpGet("{id:guid}")]
-  public async Task<ActionResult<CredentialResponseDto>> GetCredential(Guid id) {
-    var credential = await credentialService.GetCredentialByIdAsync(id);
+  public async Task<ActionResult<CredentialResponseDto>> GetCredential(Guid id)
+  {
+    try
+    {
+      _logger.LogInformation("Getting credential {CredentialId}", id);
 
-    if (credential == null) return NotFound($"Credential with ID {id} not found");
+      var query = new GetCredentialByIdQuery(id);
+      var credential = await _mediator.Send(query);
 
-    return Ok(MapToResponseDto(credential));
+      if (credential == null) return NotFound($"Credential with ID {id} not found");
+
+      return Ok(MapToResponseDto(credential));
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Failed to get credential {CredentialId}", id);
+      return StatusCode(500, "Internal server error");
+    }
   }
 
   /// <summary>
-  /// Get a credential by user ID and type
+  /// Get a credential by user ID and type using CQRS pattern
   /// </summary>
   /// <param name="userId">User ID</param>
   /// <param name="type">Credential type</param>
   /// <returns>Credential details</returns>
   [HttpGet("user/{userId}/type/{type}")]
-  public async Task<ActionResult<CredentialResponseDto>> GetCredentialByUserIdAndType(Guid userId, string type) {
-    var credential = await credentialService.GetCredentialByUserIdAndTypeAsync(userId, type);
+  public async Task<ActionResult<CredentialResponseDto>> GetCredentialByUserIdAndType(Guid userId, string type)
+  {
+    try
+    {
+      _logger.LogInformation("Getting credential of type {Type} for user {UserId}", type, userId);
 
-    if (credential == null) return NotFound($"Credential of type '{type}' for user {userId} not found");
+      var query = new GetCredentialByUserIdAndTypeQuery(userId, type);
+      var credential = await _mediator.Send(query);
 
-    return Ok(MapToResponseDto(credential));
-  }
+      if (credential == null) return NotFound($"Credential of type '{type}' for user {userId} not found");
 
-  /// <summary>
-  /// Create a new credential
+      return Ok(MapToResponseDto(credential));
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Failed to get credential of type {Type} for user {UserId}", type, userId);
+      return StatusCode(500, "Internal server error");
+    }
+  }  /// <summary>
+  /// Create a new credential using CQRS pattern
   /// </summary>
   /// <param name="createDto">Credential data</param>
   /// <returns>Created credential</returns>
   [HttpPost]
-  public async Task<ActionResult<CredentialResponseDto>> CreateCredential([FromBody] CreateCredentialDto createDto) {
-    if (!ModelState.IsValid) return BadRequest(ModelState);
+  public async Task<ActionResult<CredentialResponseDto>> CreateCredential([FromBody] CreateCredentialDto createDto)
+  {
+    try
+    {
+      if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    // Verify that the user exists
-    var user = await userService.GetUserByIdAsync(createDto.UserId);
+      _logger.LogInformation("Creating credential for user {UserId}", createDto.UserId);
 
-    if (user == null) return BadRequest($"User with ID {createDto.UserId} not found");
+      var command = new CreateCredentialCommand
+      {
+        UserId = createDto.UserId,
+        Type = createDto.Type,
+        Value = createDto.Value,
+        Metadata = createDto.Metadata,
+        ExpiresAt = createDto.ExpiresAt,
+        IsActive = createDto.IsActive
+      };
 
-    var credential = new Credential(
-      new {
-        createDto.UserId,
-        createDto.Type,
-        createDto.Value,
-        createDto.Metadata,
-        createDto.ExpiresAt,
-        createDto.IsActive,
-      }
-    );
+      var createdCredential = await _mediator.Send(command);
+      var response = MapToResponseDto(createdCredential);
 
-    var createdCredential = await credentialService.CreateCredentialAsync(credential);
-    var response = MapToResponseDto(createdCredential);
-
-    return CreatedAtAction(nameof(GetCredential), new { id = createdCredential.Id }, response);
+      return CreatedAtAction(nameof(GetCredential), new { id = createdCredential.Id }, response);
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Failed to create credential for user {UserId}", createDto.UserId);
+      return StatusCode(500, "Internal server error");
+    }
   }
 
   /// <summary>
-  /// Update an existing credential
+  /// Update an existing credential using CQRS pattern
   /// </summary>
   /// <param name="id">Credential ID</param>
   /// <param name="updateDto">Updated credential data</param>
@@ -105,123 +166,218 @@ public class CredentialsController(ICredentialService credentialService, IUserSe
   public async Task<ActionResult<CredentialResponseDto>> UpdateCredential(
     Guid id,
     [FromBody] UpdateCredentialDto updateDto
-  ) {
-    if (!ModelState.IsValid) return BadRequest(ModelState);
+  )
+  {
+    try
+    {
+      if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var existingCredential = await credentialService.GetCredentialByIdAsync(id);
+      _logger.LogInformation("Updating credential {CredentialId}", id);
 
-    if (existingCredential == null) return NotFound($"Credential with ID {id} not found");
+      var command = new UpdateCredentialCommand
+      {
+        Id = id,
+        Type = updateDto.Type,
+        Value = updateDto.Value,
+        Metadata = updateDto.Metadata,
+        ExpiresAt = updateDto.ExpiresAt,
+        IsActive = updateDto.IsActive
+      };
 
-    // Update the credential properties
-    existingCredential.Type = updateDto.Type;
-    existingCredential.Value = updateDto.Value;
-    existingCredential.Metadata = updateDto.Metadata;
-    existingCredential.ExpiresAt = updateDto.ExpiresAt;
-    existingCredential.IsActive = updateDto.IsActive;
-
-    try {
-      var updatedCredential = await credentialService.UpdateCredentialAsync(existingCredential);
+      var updatedCredential = await _mediator.Send(command);
       var response = MapToResponseDto(updatedCredential);
 
       return Ok(response);
     }
-    catch (InvalidOperationException ex) { return NotFound(ex.Message); }
+    catch (ArgumentException ex)
+    {
+      return NotFound(ex.Message);
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Failed to update credential {CredentialId}", id);
+      return StatusCode(500, "Internal server error");
+    }
   }
 
   /// <summary>
-  /// Soft delete a credential
+  /// Soft delete a credential using CQRS pattern
   /// </summary>
   /// <param name="id">Credential ID to delete</param>
   /// <returns>No content if successful</returns>
   [HttpDelete("{id}")]
-  public async Task<IActionResult> SoftDeleteCredential(Guid id) {
-    var result = await credentialService.SoftDeleteCredentialAsync(id);
+  public async Task<IActionResult> SoftDeleteCredential(Guid id)
+  {
+    try
+    {
+      _logger.LogInformation("Soft deleting credential {CredentialId}", id);
 
-    if (!result) return NotFound($"Credential with ID {id} not found");
+      var command = new SoftDeleteCredentialCommand(id);
+      var result = await _mediator.Send(command);
 
-    return NoContent();
+      if (!result) return NotFound($"Credential with ID {id} not found");
+
+      return NoContent();
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Failed to soft delete credential {CredentialId}", id);
+      return StatusCode(500, "Internal server error");
+    }
   }
 
   /// <summary>
-  /// Restore a soft-deleted credential
+  /// Restore a soft-deleted credential using CQRS pattern
   /// </summary>
   /// <param name="id">Credential ID to restore</param>
   /// <returns>No content if successful</returns>
   [HttpPost("{id}/restore")]
-  public async Task<IActionResult> RestoreCredential(Guid id) {
-    var result = await credentialService.RestoreCredentialAsync(id);
+  public async Task<IActionResult> RestoreCredential(Guid id)
+  {
+    try
+    {
+      _logger.LogInformation("Restoring credential {CredentialId}", id);
 
-    if (!result) return NotFound($"Deleted credential with ID {id} not found");
+      var command = new RestoreCredentialCommand(id);
+      var result = await _mediator.Send(command);
 
-    return NoContent();
+      if (!result) return NotFound($"Deleted credential with ID {id} not found");
+
+      return NoContent();
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Failed to restore credential {CredentialId}", id);
+      return StatusCode(500, "Internal server error");
+    }
   }
 
   /// <summary>
-  /// Permanently delete a credential
+  /// Permanently delete a credential using CQRS pattern
   /// </summary>
   /// <param name="id">Credential ID to delete</param>
   /// <returns>No content if successful</returns>
   [HttpDelete("{id}/hard")]
-  public async Task<IActionResult> HardDeleteCredential(Guid id) {
-    var result = await credentialService.HardDeleteCredentialAsync(id);
+  public async Task<IActionResult> HardDeleteCredential(Guid id)
+  {
+    try
+    {
+      _logger.LogInformation("Hard deleting credential {CredentialId}", id);
 
-    if (!result) return NotFound($"Credential with ID {id} not found");
+      var command = new HardDeleteCredentialCommand(id);
+      var result = await _mediator.Send(command);
 
-    return NoContent();
+      if (!result) return NotFound($"Credential with ID {id} not found");
+
+      return NoContent();
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Failed to hard delete credential {CredentialId}", id);
+      return StatusCode(500, "Internal server error");
+    }
   }
 
   /// <summary>
-  /// Mark a credential as used
+  /// Mark a credential as used using CQRS pattern
   /// </summary>
   /// <param name="id">Credential ID</param>
   /// <returns>No content if successful</returns>
   [HttpPost("{id}/mark-used")]
-  public async Task<IActionResult> MarkCredentialAsUsed(Guid id) {
-    var result = await credentialService.MarkCredentialAsUsedAsync(id);
+  public async Task<IActionResult> MarkCredentialAsUsed(Guid id)
+  {
+    try
+    {
+      _logger.LogInformation("Marking credential {CredentialId} as used", id);
 
-    if (!result) return NotFound($"Credential with ID {id} not found");
+      var command = new MarkCredentialAsUsedCommand(id);
+      var result = await _mediator.Send(command);
 
-    return NoContent();
+      if (!result) return NotFound($"Credential with ID {id} not found");
+
+      return NoContent();
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Failed to mark credential {CredentialId} as used", id);
+      return StatusCode(500, "Internal server error");
+    }
   }
 
   /// <summary>
-  /// Deactivate a credential
+  /// Deactivate a credential using CQRS pattern
   /// </summary>
   /// <param name="id">Credential ID</param>
   /// <returns>No content if successful</returns>
   [HttpPost("{id}/deactivate")]
-  public async Task<IActionResult> DeactivateCredential(Guid id) {
-    var result = await credentialService.DeactivateCredentialAsync(id);
+  public async Task<IActionResult> DeactivateCredential(Guid id)
+  {
+    try
+    {
+      _logger.LogInformation("Deactivating credential {CredentialId}", id);
 
-    if (!result) return NotFound($"Credential with ID {id} not found");
+      var command = new DeactivateCredentialCommand(id);
+      var result = await _mediator.Send(command);
 
-    return NoContent();
+      if (!result) return NotFound($"Credential with ID {id} not found");
+
+      return NoContent();
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Failed to deactivate credential {CredentialId}", id);
+      return StatusCode(500, "Internal server error");
+    }
   }
 
   /// <summary>
-  /// Activate a credential
+  /// Activate a credential using CQRS pattern
   /// </summary>
   /// <param name="id">Credential ID</param>
   /// <returns>No content if successful</returns>
   [HttpPost("{id}/activate")]
-  public async Task<IActionResult> ActivateCredential(Guid id) {
-    var result = await credentialService.ActivateCredentialAsync(id);
+  public async Task<IActionResult> ActivateCredential(Guid id)
+  {
+    try
+    {
+      _logger.LogInformation("Activating credential {CredentialId}", id);
 
-    if (!result) return NotFound($"Credential with ID {id} not found");
+      var command = new ActivateCredentialCommand(id);
+      var result = await _mediator.Send(command);
 
-    return NoContent();
+      if (!result) return NotFound($"Credential with ID {id} not found");
+
+      return NoContent();
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Failed to activate credential {CredentialId}", id);
+      return StatusCode(500, "Internal server error");
+    }
   }
 
   /// <summary>
-  /// Get soft-deleted credentials
+  /// Get soft-deleted credentials using CQRS pattern
   /// </summary>
   /// <returns>List of soft-deleted credentials</returns>
   [HttpGet("deleted")]
-  public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetDeletedCredentials() {
-    var credentials = await credentialService.GetDeletedCredentialsAsync();
-    var response = credentials.Select(MapToResponseDto);
+  public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetDeletedCredentials()
+  {
+    try
+    {
+      _logger.LogInformation("Getting deleted credentials");
 
-    return Ok(response);
+      var query = new GetDeletedCredentialsQuery();
+      var credentials = await _mediator.Send(query);
+      var response = credentials.Select(MapToResponseDto);
+
+      return Ok(response);
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Failed to get deleted credentials");
+      return StatusCode(500, "Internal server error");
+    }
   }
 
   /// <summary>

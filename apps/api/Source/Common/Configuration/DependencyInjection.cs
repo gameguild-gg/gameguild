@@ -197,6 +197,7 @@ public static class DependencyInjection {
     services
       .AddUserModule()
       .AddUserProfileModule()
+      .AddCredentialsModule()
       .AddTenantModule()
       .AddProjectModule()
       .AddProgramModule()
@@ -216,8 +217,8 @@ public static class DependencyInjection {
     bool excludeAuth = false
   ) {
     if (configuration != null && !excludeAuth) {
-      services.AddAuthModule(configuration);
-      // Note: AddDACAuthorizationServices should be called from the module that defines it
+      // Use the new modular Auth configuration
+      services = AuthModuleDependencyInjection.AddAuthModule(services, configuration);
     }
 
     return services;

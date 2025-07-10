@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "+lHissWgWeU=",
+  "dgSpecHash": "UTiyvAb9drI=",
   "success": true,
   "projectFilePath": "W:\\repositories\\game-guild\\game-guild\\tests\\api\\GameGuild.API.Tests.csproj",
   "expectedPackageFiles": [
@@ -10,6 +10,7 @@
     "C:\\Users\\MatheusMartins\\.nuget\\packages\\coverlet.collector\\6.0.2\\coverlet.collector.6.0.2.nupkg.sha512",
     "C:\\Users\\MatheusMartins\\.nuget\\packages\\dotnetenv\\3.1.1\\dotnetenv.3.1.1.nupkg.sha512",
     "C:\\Users\\MatheusMartins\\.nuget\\packages\\fluentvalidation\\12.0.0\\fluentvalidation.12.0.0.nupkg.sha512",
+    "C:\\Users\\MatheusMartins\\.nuget\\packages\\fluentvalidation.dependencyinjectionextensions\\12.0.0\\fluentvalidation.dependencyinjectionextensions.12.0.0.nupkg.sha512",
     "C:\\Users\\MatheusMartins\\.nuget\\packages\\greendonut\\14.0.0\\greendonut.14.0.0.nupkg.sha512",
     "C:\\Users\\MatheusMartins\\.nuget\\packages\\hotchocolate\\14.0.0\\hotchocolate.14.0.0.nupkg.sha512",
     "C:\\Users\\MatheusMartins\\.nuget\\packages\\hotchocolate.abstractions\\14.0.0\\hotchocolate.abstractions.14.0.0.nupkg.sha512",

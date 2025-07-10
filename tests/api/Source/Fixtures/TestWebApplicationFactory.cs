@@ -126,7 +126,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
         services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName));
 
         // Configure JWT for testing - ensure consistent configuration
-        // This should match the configuration expected by AuthConfiguration
+        // This should match the configuration expected by AuthModuleDependencyInjection
         var testJwtConfig = new ConfigurationBuilder().AddInMemoryCollection(
                                                         new Dictionary<string, string?> {
                                                           { "Jwt:SecretKey", "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters" },
