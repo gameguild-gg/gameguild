@@ -55,7 +55,7 @@ public class ActivityGradeService(ApplicationDbContext context) : IActivityGrade
         Grade = grade,
         Feedback = feedback,
         GradingDetails = gradingDetails ?? "{}",
-        GradedAt = DateTime.UtcNow
+        GradedAt = DateTime.UtcNow,
       };
 
       context.ActivityGrades.Add(newGrade);
@@ -185,7 +185,7 @@ public class ActivityGradeService(ApplicationDbContext context) : IActivityGrade
         AverageGrade = 0,
         MinGrade = 0,
         MaxGrade = 0,
-        PassingRate = 0
+        PassingRate = 0,
       };
 
     return new GradeStatistics {
@@ -193,7 +193,7 @@ public class ActivityGradeService(ApplicationDbContext context) : IActivityGrade
       AverageGrade = grades.Average(),
       MinGrade = grades.Min(),
       MaxGrade = grades.Max(),
-      PassingRate = grades.Count(g => g >= 60) / (decimal)grades.Count * 100 // Assuming 60 is passing
+      PassingRate = grades.Count(g => g >= 60) / (decimal)grades.Count * 100, // Assuming 60 is passing
     };
   }
 

@@ -2,6 +2,7 @@ using GameGuild.Common.Models;
 using GameGuild.Modules.Users.Inputs;
 using MediatR;
 
+
 namespace GameGuild.Modules.Users;
 
 public class Query {
@@ -13,14 +14,9 @@ public class Query {
     bool includeDeleted = false,
     bool? isActive = null,
     int skip = 0,
-    int take = 50) {
-    var query = new GetAllUsersQuery 
-    { 
-      IncludeDeleted = includeDeleted,
-      IsActive = isActive,
-      Skip = skip,
-      Take = take
-    };
+    int take = 50
+  ) {
+    var query = new GetAllUsersQuery { IncludeDeleted = includeDeleted, IsActive = isActive, Skip = skip, Take = take };
 
     return await mediator.Send(query);
   }
@@ -29,14 +25,11 @@ public class Query {
   /// Gets a user by their unique identifier using CQRS pattern
   /// </summary>
   public async Task<User?> GetUserById(
-    [Service] IMediator mediator, 
-    Guid id, 
-    bool includeDeleted = false) {
-    var query = new GetUserByIdQuery 
-    { 
-      UserId = id, 
-      IncludeDeleted = includeDeleted 
-    };
+    [Service] IMediator mediator,
+    Guid id,
+    bool includeDeleted = false
+  ) {
+    var query = new GetUserByIdQuery { UserId = id, IncludeDeleted = includeDeleted };
 
     return await mediator.Send(query);
   }
@@ -45,14 +38,11 @@ public class Query {
   /// Gets a user by their email address using CQRS pattern
   /// </summary>
   public async Task<User?> GetUserByEmail(
-    [Service] IMediator mediator, 
-    string email, 
-    bool includeDeleted = false) {
-    var query = new GetUserByEmailQuery 
-    { 
-      Email = email, 
-      IncludeDeleted = includeDeleted 
-    };
+    [Service] IMediator mediator,
+    string email,
+    bool includeDeleted = false
+  ) {
+    var query = new GetUserByEmailQuery { Email = email, IncludeDeleted = includeDeleted };
 
     return await mediator.Send(query);
   }
@@ -62,9 +52,9 @@ public class Query {
   /// </summary>
   public async Task<PagedResult<User>> SearchUsers(
     [Service] IMediator mediator,
-    SearchUsersInput input) {
-    var query = new SearchUsersQuery
-    {
+    SearchUsersInput input
+  ) {
+    var query = new SearchUsersQuery {
       SearchTerm = input.SearchTerm,
       IsActive = input.IsActive,
       MinBalance = input.MinBalance,
@@ -77,7 +67,7 @@ public class Query {
       Skip = input.Skip,
       Take = input.Take,
       SortBy = input.SortBy,
-      SortDirection = input.SortDirection
+      SortDirection = input.SortDirection,
     };
 
     return await mediator.Send(query);
@@ -88,13 +78,9 @@ public class Query {
   /// </summary>
   public async Task<UserStatistics> GetUserStatistics(
     [Service] IMediator mediator,
-    UserStatisticsInput input) {
-    var query = new GetUserStatisticsQuery
-    {
-      FromDate = input.FromDate,
-      ToDate = input.ToDate,
-      IncludeDeleted = input.IncludeDeleted
-    };
+    UserStatisticsInput input
+  ) {
+    var query = new GetUserStatisticsQuery { FromDate = input.FromDate, ToDate = input.ToDate, IncludeDeleted = input.IncludeDeleted };
 
     return await mediator.Send(query);
   }
@@ -107,14 +93,9 @@ public class Query {
     decimal threshold = 10m,
     bool includeDeleted = false,
     int skip = 0,
-    int take = 50) {
-    var query = new GetUsersWithLowBalanceQuery
-    {
-      ThresholdBalance = threshold,
-      IncludeDeleted = includeDeleted,
-      Skip = skip,
-      Take = take
-    };
+    int take = 50
+  ) {
+    var query = new GetUsersWithLowBalanceQuery { ThresholdBalance = threshold, IncludeDeleted = includeDeleted, Skip = skip, Take = take };
 
     return await mediator.Send(query);
   }
@@ -124,6 +105,7 @@ public class Query {
   /// </summary>
   public async Task<IEnumerable<User>> GetActiveUsers([Service] IMediator mediator) {
     var query = new GetAllUsersQuery { IsActive = true };
+
     return await mediator.Send(query);
   }
 
@@ -133,6 +115,7 @@ public class Query {
   public async Task<IEnumerable<User>> GetDeletedUsers([Service] IMediator mediator) {
     var query = new GetAllUsersQuery { IncludeDeleted = true };
     var users = await mediator.Send(query);
+
     return users.Where(u => u.DeletedAt != null);
   }
 
@@ -140,7 +123,5 @@ public class Query {
   /// Legacy method - Gets all users using traditional service pattern (deprecated)
   /// </summary>
   [Obsolete("Use GetUsers with IMediator instead")]
-  public async Task<IEnumerable<User>> GetUsersLegacy([Service] IUserService userService) { 
-    return await userService.GetAllUsersAsync(); 
-  }
+  public async Task<IEnumerable<User>> GetUsersLegacy([Service] IUserService userService) { return await userService.GetAllUsersAsync(); }
 }

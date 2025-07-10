@@ -60,7 +60,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
             { "Jwt:ExpiryInMinutes", "60" },
             { "Jwt:RefreshTokenExpiryInDays", "7" },
             { "OAuth:GitHub:ClientId", "test-github-client-id" },
-            { "OAuth:GitHub:ClientSecret", "test-github-client-secret" },
+            { "OAuth:GitHub:ClientSecret", "test-github-client-secret" }
           }
         );
       }
@@ -133,7 +133,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
                                                           { "Jwt:SecretKey", "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters" },
                                                           { "Jwt:Issuer", "TestIssuer" },
                                                           { "Jwt:Audience", "TestAudience" },
-                                                          { "Jwt:ExpiryInMinutes", "60" },
+                                                          { "Jwt:ExpiryInMinutes", "60" }
                                                         }
                                                       )
                                                       .Build();
@@ -167,7 +167,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
                 ),
               ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
               RequireSignedTokens = true,
-              TryAllIssuerSigningKeys = true,
+              TryAllIssuerSigningKeys = true
             };
 
             // Add event handlers for debugging
@@ -199,7 +199,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
                 logger.LogDebug("JWT message received: {HasToken}", !string.IsNullOrEmpty(context.Token));
 
                 return Task.CompletedTask;
-              },
+              }
             };
           }
         );

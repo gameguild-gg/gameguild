@@ -257,4 +257,34 @@ public class UsersController(IMediator mediator) : ControllerBase {
 
     return Ok(new PagedResult<UserResponseDto>(userDtos, users.TotalCount, users.Skip, users.Take));
   }
+
+  /// <summary>
+  /// Bulk create multiple users
+  /// </summary>
+  [HttpPost("bulk")]
+  public async Task<ActionResult<BulkOperationResult>> BulkCreateUsers([FromBody] List<CreateUserDto> users, [FromQuery] string? reason = null) {
+    var command = new BulkCreateUsersCommand { Users = users, Reason = reason };
+    var result = await mediator.Send(command);
+    return Ok(result);
+  }
+
+  /// <summary>
+  /// Bulk activate multiple users
+  /// </summary>
+  [HttpPatch("bulk/activate")]
+  public async Task<ActionResult<BulkOperationResult>> BulkActivateUsers([FromBody] List<Guid> userIds, [FromQuery] string? reason = null) {
+    var command = new BulkActivateUsersCommand { UserIds = userIds, Reason = reason };
+    var result = await mediator.Send(command);
+    return Ok(result);
+  }
+
+  /// <summary>
+  /// Bulk deactivate multiple users
+  /// </summary>
+  [HttpPatch("bulk/deactivate")]
+  public async Task<ActionResult<BulkOperationResult>> BulkDeactivateUsers([FromBody] List<Guid> userIds, [FromQuery] string? reason = null) {
+    var command = new BulkDeactivateUsersCommand { UserIds = userIds, Reason = reason };
+    var result = await mediator.Send(command);
+    return Ok(result);
+  }
 }

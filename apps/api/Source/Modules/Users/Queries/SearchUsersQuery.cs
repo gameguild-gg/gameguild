@@ -6,12 +6,11 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Query to search users with filtering and pagination
 /// </summary>
-public sealed class SearchUsersQuery : PaginatedQuery<User>
-{
+public sealed class SearchUsersQuery : PaginatedQuery<User> {
   public bool? IsActive { get; set; }
-    
+
   public decimal? MinBalance { get; set; }
-    
+
   public decimal? MaxBalance { get; set; }
 
   public DateTime? CreatedAfter { get; set; }

@@ -62,7 +62,7 @@ public class SubscriptionService(ApplicationDbContext context) : ISubscriptionSe
             CurrentPeriodStart = DateTime.UtcNow,
             CurrentPeriodEnd = DateTime.UtcNow.AddMonths(1), // Default to monthly
             TrialEndsAt = createDto.TrialEndsAt,
-            NextBillingAt = createDto.TrialEndsAt ?? DateTime.UtcNow.AddMonths(1)
+            NextBillingAt = createDto.TrialEndsAt ?? DateTime.UtcNow.AddMonths(1),
         };
 
         context.UserSubscriptions.Add(subscription);

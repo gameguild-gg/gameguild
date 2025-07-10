@@ -33,7 +33,7 @@ public class Mutation {
       Balance = input.Balance,
       AvailableBalance = input.AvailableBalance,
       Reason = input.Reason,
-      ExpectedVersion = input.ExpectedVersion
+      ExpectedVersion = input.ExpectedVersion,
     };
 
     return await mediator.Send(command);
@@ -89,6 +89,33 @@ public class Mutation {
   /// </summary>
   public async Task<BulkOperationResult> BulkRestoreUsers(BulkRestoreUsersInput input, [Service] IMediator mediator) {
     var command = new BulkRestoreUsersCommand { UserIds = input.UserIds, Reason = input.Reason };
+
+    return await mediator.Send(command);
+  }
+
+  /// <summary>
+  /// Bulk create users using CQRS pattern
+  /// </summary>
+  public async Task<BulkOperationResult> BulkCreateUsers(BulkCreateUsersInput input, [Service] IMediator mediator) {
+    var command = new BulkCreateUsersCommand { Users = input.Users.Select(u => new CreateUserDto { Name = u.Name, Email = u.Email, IsActive = u.IsActive }).ToList(), Reason = input.Reason };
+
+    return await mediator.Send(command);
+  }
+
+  /// <summary>
+  /// Bulk activate users using CQRS pattern
+  /// </summary>
+  public async Task<BulkOperationResult> BulkActivateUsers(BulkActivateUsersInput input, [Service] IMediator mediator) {
+    var command = new BulkActivateUsersCommand { UserIds = input.UserIds, Reason = input.Reason };
+
+    return await mediator.Send(command);
+  }
+
+  /// <summary>
+  /// Bulk deactivate users using CQRS pattern
+  /// </summary>
+  public async Task<BulkOperationResult> BulkDeactivateUsers(BulkDeactivateUsersInput input, [Service] IMediator mediator) {
+    var command = new BulkDeactivateUsersCommand { UserIds = input.UserIds, Reason = input.Reason };
 
     return await mediator.Send(command);
   }

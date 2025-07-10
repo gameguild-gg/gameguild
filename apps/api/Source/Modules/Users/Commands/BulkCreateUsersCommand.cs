@@ -1,0 +1,15 @@
+using System.ComponentModel.DataAnnotations;
+using GameGuild.Common;
+using GameGuild.Common.Models;
+
+
+namespace GameGuild.Modules.Users;
+
+/// <summary>
+/// Command to create multiple users at once
+/// </summary>
+public sealed class BulkCreateUsersCommand : ICommand<BulkOperationResult> {
+  [Required] public List<CreateUserDto> Users { get; set; } = new();
+
+  public string? Reason { get; set; }
+}
