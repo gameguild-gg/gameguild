@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
+using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;

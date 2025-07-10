@@ -1,8 +1,6 @@
 using System.Security.Claims;
 using GameGuild.Database;
-using GameGuild.Modules.Authentication.Constants;
-using GameGuild.Modules.Authentication.Dtos;
-using GameGuild.Modules.Authentication.Services;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Moq;

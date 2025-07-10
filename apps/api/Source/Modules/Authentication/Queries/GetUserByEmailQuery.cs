@@ -2,7 +2,7 @@ using GameGuild.Modules.Users;
 using MediatR;
 
 
-namespace GameGuild.Modules.Authentication.Queries;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Query to get user by email

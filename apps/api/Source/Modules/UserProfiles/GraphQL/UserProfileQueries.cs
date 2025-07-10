@@ -1,3 +1,4 @@
+using GameGuild.Modules.UserProfiles.Entities;
 using GameGuild.Modules.UserProfiles.Services;
 using GameGuild.Modules.Users;
 
@@ -12,17 +13,17 @@ public class UserProfileQueries {
   /// <summary>
   /// Get all user profiles (non-deleted only)
   /// </summary>
-  public async Task<IEnumerable<Models.UserProfile>> GetUserProfiles([Service] IUserProfileService userProfileService) { return await userProfileService.GetAllUserProfilesAsync(); }
+  public async Task<IEnumerable<UserProfile>> GetUserProfiles([Service] IUserProfileService userProfileService) { return await userProfileService.GetAllUserProfilesAsync(); }
 
   /// <summary>
   /// Get a user profile by ID
   /// </summary>
-  public async Task<Models.UserProfile?> GetUserProfileById([Service] IUserProfileService userProfileService, Guid id) { return await userProfileService.GetUserProfileByIdAsync(id); }
+  public async Task<UserProfile?> GetUserProfileById([Service] IUserProfileService userProfileService, Guid id) { return await userProfileService.GetUserProfileByIdAsync(id); }
 
   /// <summary>
   /// Get a user profile by user ID
   /// </summary>
-  public async Task<Models.UserProfile?> GetUserProfileByUserId(
+  public async Task<UserProfile?> GetUserProfileByUserId(
     [Service] IUserProfileService userProfileService,
     Guid userId
   ) {
@@ -32,7 +33,7 @@ public class UserProfileQueries {
   /// <summary>
   /// Get soft-deleted user profiles
   /// </summary>
-  public async Task<IEnumerable<Models.UserProfile>> GetDeletedUserProfiles(
+  public async Task<IEnumerable<UserProfile>> GetDeletedUserProfiles(
     [Service] IUserProfileService userProfileService
   ) {
     return await userProfileService.GetDeletedUserProfilesAsync();

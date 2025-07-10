@@ -1,8 +1,7 @@
-using GameGuild.Modules.Authentication.Notifications;
 using MediatR;
 
 
-namespace GameGuild.Modules.Authentication.Handlers;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Handler for user signed up notifications - sends welcome email

@@ -1,8 +1,7 @@
-using GameGuild.Modules.Authentication.Dtos;
 using MediatR;
 
 
-namespace GameGuild.Modules.Authentication.Commands;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Command to generate a Web3 challenge for wallet authentication

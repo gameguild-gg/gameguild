@@ -1,5 +1,5 @@
 using System.Reflection;
-using GameGuild.Modules.Authentication.Attributes;
+using GameGuild.Modules.Authentication;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 

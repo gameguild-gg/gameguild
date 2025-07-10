@@ -1,5 +1,5 @@
 using GameGuild.Common;
-using GameGuild.Modules.Authentication.Attributes;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.DTOs;
 using GameGuild.Modules.Programs.Models;

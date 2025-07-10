@@ -1,4 +1,5 @@
 using GameGuild.Database;
+using GameGuild.Modules.UserProfiles.Entities;
 using GameGuild.Modules.UserProfiles.Queries;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -9,12 +10,12 @@ namespace GameGuild.Modules.UserProfiles.Handlers;
 /// Handler for getting all user profiles with filtering and pagination
 /// </summary>
 public class GetAllUserProfilesHandler(ApplicationDbContext context) 
-    : IRequestHandler<GetAllUserProfilesQuery, IEnumerable<Models.UserProfile>>
+    : IRequestHandler<GetAllUserProfilesQuery, IEnumerable<UserProfile>>
 {
-    public async Task<IEnumerable<Models.UserProfile>> Handle(GetAllUserProfilesQuery request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<UserProfile>> Handle(GetAllUserProfilesQuery request, CancellationToken cancellationToken)
     {
-        IQueryable<Models.UserProfile> query = context.Resources.OfType<Models.UserProfile>()
-            .Include(up => up.Metadata);
+        IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>()
+                                               .Include(up => up.Metadata);
 
         // Apply filters
         if (!request.IncludeDeleted)
@@ -44,12 +45,12 @@ public class GetAllUserProfilesHandler(ApplicationDbContext context)
 /// Handler for getting user profile by ID
 /// </summary>
 public class GetUserProfileByIdHandler(ApplicationDbContext context) 
-    : IRequestHandler<GetUserProfileByIdQuery, Models.UserProfile?>
+    : IRequestHandler<GetUserProfileByIdQuery, UserProfile?>
 {
-    public async Task<Models.UserProfile?> Handle(GetUserProfileByIdQuery request, CancellationToken cancellationToken)
+    public async Task<UserProfile?> Handle(GetUserProfileByIdQuery request, CancellationToken cancellationToken)
     {
-        IQueryable<Models.UserProfile> query = context.Resources.OfType<Models.UserProfile>()
-            .Include(up => up.Metadata);
+        IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>()
+                                               .Include(up => up.Metadata);
 
         if (!request.IncludeDeleted)
           query = query.Where(up => up.DeletedAt == null);
@@ -64,12 +65,12 @@ public class GetUserProfileByIdHandler(ApplicationDbContext context)
 /// Handler for getting user profile by user ID
 /// </summary>
 public class GetUserProfileByUserIdHandler(ApplicationDbContext context) 
-    : IRequestHandler<GetUserProfileByUserIdQuery, Models.UserProfile?>
+    : IRequestHandler<GetUserProfileByUserIdQuery, UserProfile?>
 {
-    public async Task<Models.UserProfile?> Handle(GetUserProfileByUserIdQuery request, CancellationToken cancellationToken)
+    public async Task<UserProfile?> Handle(GetUserProfileByUserIdQuery request, CancellationToken cancellationToken)
     {
-        IQueryable<Models.UserProfile> query = context.Resources.OfType<Models.UserProfile>()
-            .Include(up => up.Metadata);
+        IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>()
+                                               .Include(up => up.Metadata);
 
         if (!request.IncludeDeleted)
           query = query.Where(up => up.DeletedAt == null);
