@@ -1,6 +1,6 @@
 using System.Reflection;
 using GameGuild.Common;
-using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Auth;
 using GameGuild.Modules.Certificates;
 using GameGuild.Modules.Comments;
 using GameGuild.Modules.Contents;

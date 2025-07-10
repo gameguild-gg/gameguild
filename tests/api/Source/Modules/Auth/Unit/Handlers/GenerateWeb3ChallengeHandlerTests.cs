@@ -1,4 +1,4 @@
-using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Auth;
 using Moq;
 
 namespace GameGuild.API.Tests.Modules.Auth.Unit.Handlers;

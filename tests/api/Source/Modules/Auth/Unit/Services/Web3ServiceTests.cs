@@ -1,5 +1,5 @@
 using GameGuild.Database;
-using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Auth;
 using GameGuild.Modules.Credentials;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

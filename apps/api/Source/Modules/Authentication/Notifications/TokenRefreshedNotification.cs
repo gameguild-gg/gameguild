@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace GameGuild.Modules.Authentication;
+namespace GameGuild.Modules.Auth;
 
 /// <summary>
 /// Domain notification published when a user token is refreshed

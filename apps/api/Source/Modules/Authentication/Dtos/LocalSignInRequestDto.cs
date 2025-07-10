@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
 
-namespace GameGuild.Modules.Authentication {
+namespace GameGuild.Modules.Auth {
   public class LocalSignInRequestDto {
     public string? Username { get; set; }
 

@@ -4,7 +4,7 @@ using GameGuild.Common.GraphQL;
 using MediatR;
 
 
-namespace GameGuild.Modules.Authentication;
+namespace GameGuild.Modules.Auth;
 
 /// <summary>
 /// Authentication module dependency injection configuration following CQRS, GraphQL, and REST best practices.

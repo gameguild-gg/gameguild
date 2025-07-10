@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Authentication;
+﻿namespace GameGuild.Modules.Auth;
 
 /// <summary>
 /// Extension method to register JWT middleware

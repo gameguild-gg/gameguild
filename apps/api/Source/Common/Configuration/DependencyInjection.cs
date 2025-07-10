@@ -3,7 +3,7 @@ using System.Reflection;
 using FluentValidation;
 using GameGuild.Common.Configuration;
 using GameGuild.Database;
-using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Auth;
 using HotChocolate.Execution.Configuration;
 using MediatR;
 using Microsoft.AspNetCore.RateLimiting;
@@ -404,7 +404,7 @@ public static class DependencyInjection {
         builder,
         "Authentication",
         () => {
-          SafeAddGraphQLTypes(builder, new[] { ("AuthQueries", typeof(GameGuild.Modules.Authentication.AuthQueries)), ("AuthMutations", typeof(GameGuild.Modules.Authentication.AuthMutations)) }, logger, isExtension: new[] { true, true });
+          SafeAddGraphQLTypes(builder, new[] { ("AuthQueries", typeof(GameGuild.Modules.Auth.AuthQueries)), ("AuthMutations", typeof(GameGuild.Modules.Auth.AuthMutations)) }, logger, isExtension: new[] { true, true });
 
           // Try to add CredentialType if it exists
           SafeAddGraphQLTypes(builder, new[] { ("CredentialType", typeof(GameGuild.Modules.Credentials.CredentialType)) }, logger, isExtension: new[] { false }, isOptional: true);

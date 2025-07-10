@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Authentication;
+﻿namespace GameGuild.Modules.Auth;
 
 /// <summary>
 /// Generic response DTO for email operations

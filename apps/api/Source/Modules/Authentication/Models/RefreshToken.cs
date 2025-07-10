@@ -1,7 +1,7 @@
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Authentication {
+namespace GameGuild.Modules.Auth {
   /// <summary>
   /// Refresh token entity for managing user sessions
   /// </summary>

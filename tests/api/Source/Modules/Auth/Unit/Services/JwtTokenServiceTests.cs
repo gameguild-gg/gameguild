@@ -1,6 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Auth;
 using Microsoft.Extensions.Configuration;
 
 namespace GameGuild.API.Tests.Modules.Auth.Unit.Services;
