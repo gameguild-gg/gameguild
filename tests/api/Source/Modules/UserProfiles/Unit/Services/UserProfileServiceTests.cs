@@ -223,41 +223,4 @@ namespace GameGuild.API.Tests.Modules.UserProfiles.Unit.Services {
   }
 
   // Mock classes for testing
-  public class User {
-    public Guid Id { get; set; }
-
-    public string Name { get; set; }
-  }
-
-  public class UserProfile {
-    public Guid Id { get; set; }
-
-    public Guid UserId { get; set; }
-
-    public User User { get; set; }
-
-    public string Bio { get; set; }
-
-    public string AvatarUrl { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime UpdatedAt { get; set; }
-  }
-
-  public interface IUserProfileRepository {
-    Task<UserProfile> GetByIdAsync(Guid id);
-
-    Task<UserProfile> GetByUserIdAsync(Guid userId);
-
-    Task<UserProfile> AddAsync(UserProfile profile);
-
-    Task<UserProfile> UpdateAsync(UserProfile profile);
-
-    Task<bool> DeleteAsync(Guid id);
-  }
-
-  public interface IUserRepository {
-    Task<User> GetByIdAsync(Guid id);
-  }
 }

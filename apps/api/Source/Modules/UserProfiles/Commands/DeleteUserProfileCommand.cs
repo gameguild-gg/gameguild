@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
-using MediatR;
+
 
 namespace GameGuild.Modules.UserProfiles.Commands;
 

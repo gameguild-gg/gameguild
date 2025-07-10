@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using HotChocolate;
 
 
 namespace GameGuild.Modules.Users.Inputs;

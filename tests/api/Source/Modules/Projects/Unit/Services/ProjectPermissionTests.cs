@@ -1,4 +1,3 @@
-using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Projects.Models;
 using GameGuild.Modules.Resources;

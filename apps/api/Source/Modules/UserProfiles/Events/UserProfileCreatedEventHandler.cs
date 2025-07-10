@@ -1,5 +1,5 @@
 using GameGuild.Common;
-using GameGuild.Modules.UserProfiles;
+
 
 namespace GameGuild.Modules.UserProfiles.Events;
 

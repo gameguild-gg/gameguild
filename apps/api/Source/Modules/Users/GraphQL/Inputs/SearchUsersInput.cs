@@ -1,6 +1,3 @@
-using HotChocolate;
-
-
 namespace GameGuild.Modules.Users.Inputs;
 
 /// <summary>

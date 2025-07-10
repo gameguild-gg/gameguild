@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
 using GameGuild.Modules.UserProfiles.Entities;
-using MediatR;
+
 
 namespace GameGuild.Modules.UserProfiles.Commands;
 

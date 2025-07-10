@@ -187,49 +187,4 @@ namespace GameGuild.API.Tests.Modules.UserProfiles.Unit.Controllers {
   }
 
   // Mock classes for testing purposes
-  public class UserProfile {
-    public Guid Id { get; set; }
-
-    public Guid UserId { get; set; }
-
-    public string Bio { get; set; }
-
-    public string AvatarUrl { get; set; }
-  }
-
-  public class CreateUserProfileDto {
-    public string Bio { get; set; }
-
-    public string AvatarUrl { get; set; }
-  }
-
-  public class UpdateUserProfileDto {
-    public string Bio { get; set; }
-
-    public string AvatarUrl { get; set; }
-  }
-
-  public class UserProfileDto {
-    public Guid Id { get; set; }
-
-    public Guid UserId { get; set; }
-
-    public string Bio { get; set; }
-
-    public string AvatarUrl { get; set; }
-  }
-
-  public interface IUserProfileService {
-    Task<UserProfile> GetUserProfileByIdAsync(Guid id);
-
-    Task<UserProfile> GetUserProfileByUserIdAsync(Guid userId);
-
-    Task<UserProfile> CreateUserProfileAsync(UserProfile profile);
-
-    Task<UserProfile> UpdateUserProfileAsync(UserProfile profile);
-
-    Task<bool> DeleteUserProfileAsync(Guid id);
-  }
-
-  public class ProfileAlreadyExistsException(string message) : Exception(message);
 }
