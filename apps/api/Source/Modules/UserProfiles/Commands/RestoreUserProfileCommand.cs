@@ -7,8 +7,7 @@ namespace GameGuild.Modules.UserProfiles.Commands;
 /// <summary>
 /// Command to restore a soft-deleted user profile
 /// </summary>
-public class RestoreUserProfileCommand : ICommand<GameGuild.Common.Result<bool>>
-{
-  [Required]
-  public Guid UserProfileId { get; set; }
+public class RestoreUserProfileCommand : ICommand<GameGuild.Common.Result<bool>> {
+  [Required] public Guid UserProfileId { get; set; }
 }
+

@@ -22,3 +22,4 @@ public interface IUserProfileService {
 
   Task<IEnumerable<UserProfile>> GetDeletedUserProfilesAsync();
 }
+

@@ -29,3 +29,4 @@ public class UserProfileResponseDto {
 
   public bool IsDeleted { get; set; }
 }
+
