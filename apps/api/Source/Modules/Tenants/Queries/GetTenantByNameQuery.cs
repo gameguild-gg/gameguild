@@ -7,14 +7,8 @@ namespace GameGuild.Modules.Tenants.Queries;
 /// <summary>
 /// Query to get a tenant by name
 /// </summary>
-public class GetTenantByNameQuery : IQuery<Common.Result<Tenant?>>
-{
-  public string Name { get; init; } = string.Empty;
-  public bool IncludeDeleted { get; init; }
+public class GetTenantByNameQuery(string name, bool includeDeleted = false) : IQuery<Common.Result<Tenant?>> {
+  public string Name { get; init; } = name;
 
-  public GetTenantByNameQuery(string name, bool includeDeleted = false)
-  {
-    Name = name;
-    IncludeDeleted = includeDeleted;
-  }
+  public bool IncludeDeleted { get; init; } = includeDeleted;
 }

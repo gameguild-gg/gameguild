@@ -1,7 +1,7 @@
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.UserProfiles.Commands;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Command to bulk restore multiple soft-deleted user profiles

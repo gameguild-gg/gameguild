@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
 
-namespace GameGuild.Modules.Tenants;
+namespace GameGuild.Modules.Tenants.Inputs;
 
 /// <summary>
 /// Input type for removing a user from a tenant

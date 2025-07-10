@@ -232,7 +232,7 @@ namespace GameGuild.Migrations
                     DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     Role = table.Column<int>(type: "INTEGER", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    Version = table.Column<int>(type: "INTEGER", nullable: false)
+                    Version = table.Column<int>(type: "INTEGER", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -269,7 +269,7 @@ namespace GameGuild.Migrations
                     Name = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     Permissions = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    Version = table.Column<int>(type: "INTEGER", nullable: false)
+                    Version = table.Column<int>(type: "INTEGER", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -296,7 +296,7 @@ namespace GameGuild.Migrations
                     ExpiresAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    Version = table.Column<int>(type: "INTEGER", nullable: false)
+                    Version = table.Column<int>(type: "INTEGER", nullable: false),
                 },
                 constraints: table =>
                 {

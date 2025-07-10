@@ -1,11 +1,8 @@
-using GameGuild.Common;
-using GameGuild.Modules.UserProfiles.Entities;
-using GameGuild.Modules.UserProfiles.Queries;
 using GameGuild.Modules.Users;
 using MediatR;
 
 
-namespace GameGuild.Modules.UserProfiles.GraphQL;
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// GraphQL queries for UserProfile module using CQRS pattern
