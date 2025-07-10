@@ -18,11 +18,9 @@ public class HardDeleteTenantHandler(ApplicationDbContext context, ILogger<HardD
                                 .FirstOrDefaultAsync(t => t.Id == request.Id, cancellationToken);
 
       if (tenant == null)
-      {
         return Result.Failure<bool>(
           Common.Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found")
         );
-      }
 
       context.Resources.Remove(tenant);
       await context.SaveChangesAsync(cancellationToken);

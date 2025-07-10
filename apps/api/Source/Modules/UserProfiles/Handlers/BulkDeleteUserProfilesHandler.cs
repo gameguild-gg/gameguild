@@ -8,19 +8,16 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Handler for bulk deleting user profiles
 /// </summary>
-public class BulkDeleteUserProfilesHandler(ApplicationDbContext context, ILogger<BulkDeleteUserProfilesHandler> logger)
-  : ICommandHandler<BulkDeleteUserProfilesCommand, Common.Result<int>> {
+public class BulkDeleteUserProfilesHandler(ApplicationDbContext context, ILogger<BulkDeleteUserProfilesHandler> logger) : ICommandHandler<BulkDeleteUserProfilesCommand, Common.Result<int>> {
   public async Task<Common.Result<int>> Handle(BulkDeleteUserProfilesCommand request, CancellationToken cancellationToken) {
     try {
       var userProfileIds = request.UserProfileIds.ToList();
 
-      if (!userProfileIds.Any()) { return Result.Success(0); }
+      if (userProfileIds.Count == 0) return Result.Success(0);
 
-      var userProfiles = await context.Resources.OfType<UserProfile>()
-                                      .Where(up => userProfileIds.Contains(up.Id) && up.DeletedAt == null)
-                                      .ToListAsync(cancellationToken);
+      var userProfiles = await context.Resources.OfType<UserProfile>().Where(up => userProfileIds.Contains(up.Id) && up.DeletedAt == null).ToListAsync(cancellationToken);
 
-      if (!userProfiles.Any()) {
+      if (userProfiles.Count == 0) {
         logger.LogWarning(
           "No active user profiles found for bulk deletion with IDs: {UserProfileIds}",
           string.Join(", ", userProfileIds)

@@ -18,7 +18,7 @@ public class ResourceMetadata : Entity {
   /// </summary>
   [Required]
   [MaxLength(100)]
-  public string ResourceType { get; set; } = string.Empty;
+  public string ResourceType { get; init; } = string.Empty;
 
   /// <summary>
   /// Additional metadata stored as JSON
@@ -30,11 +30,11 @@ public class ResourceMetadata : Entity {
   /// Tags associated with this resource
   /// </summary>
   [MaxLength(500)]
-  public string? Tags { get; set; }
+  public string? Tags { get; init; }
 
   /// <summary>
   /// SEO metadata like meta description, keywords, etc.
   /// </summary>
   [Column(TypeName = "jsonb")]
-  public string? SeoMetadata { get; set; }
+  public string? SeoMetadata { get; init; }
 }

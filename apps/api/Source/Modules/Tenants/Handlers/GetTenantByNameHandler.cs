@@ -20,10 +20,7 @@ public class GetTenantByNameHandler(
       var query = context.Resources.OfType<Tenant>()
                          .Where(t => t.Name == request.Name);
 
-      if (!request.IncludeDeleted)
-      {
-        query = query.Where(t => t.DeletedAt == null);
-      }
+      if (!request.IncludeDeleted) query = query.Where(t => t.DeletedAt == null);
 
       var tenant = await query.FirstOrDefaultAsync(cancellationToken);
 

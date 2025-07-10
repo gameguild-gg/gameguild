@@ -49,16 +49,16 @@ public class BulkCreateUsersHandler(
       }
     }
 
-    if (createdUsers.Any()) {
+    if (createdUsers.Count != 0) {
       await context.SaveChangesAsync(cancellationToken);
 
       // Publish domain events for created users
-      foreach (var user in createdUsers) { await mediator.Publish(new UserCreatedEvent(user.Id, user.Email, user.Name, user.CreatedAt), cancellationToken); }
+      foreach (var user in createdUsers) await mediator.Publish(new UserCreatedEvent(user.Id, user.Email, user.Name, user.CreatedAt), cancellationToken);
     }
 
     var result = new BulkOperationResult(request.Users.Count, successfulCount, errors.Count);
 
-    foreach (var error in errors) { result.AddError(error); }
+    foreach (var error in errors) result.AddError(error);
 
     logger.LogInformation(
       "Bulk create completed: {Successful}/{Total} users created. Reason: {Reason}",

@@ -20,16 +20,10 @@ public class SearchTenantsHandler(
             var query = context.Resources.OfType<Tenant>().AsQueryable();
 
             // Filter by deleted status
-            if (!request.IncludeDeleted)
-            {
-                query = query.Where(t => t.DeletedAt == null);
-            }
+            if (!request.IncludeDeleted) query = query.Where(t => t.DeletedAt == null);
 
             // Filter by active status
-            if (request.IsActive.HasValue)
-            {
-                query = query.Where(t => t.IsActive == request.IsActive.Value);
-            }
+            if (request.IsActive.HasValue) query = query.Where(t => t.IsActive == request.IsActive.Value);
 
             // Search term filtering
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
@@ -55,15 +49,9 @@ public class SearchTenantsHandler(
             };
 
             // Apply pagination
-            if (request.Offset.HasValue)
-            {
-                query = query.Skip(request.Offset.Value);
-            }
+            if (request.Offset.HasValue) query = query.Skip(request.Offset.Value);
 
-            if (request.Limit.HasValue)
-            {
-                query = query.Take(request.Limit.Value);
-            }
+            if (request.Limit.HasValue) query = query.Take(request.Limit.Value);
 
             var tenants = await query.ToListAsync(cancellationToken);
 

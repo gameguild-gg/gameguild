@@ -47,16 +47,16 @@ public class BulkActivateUsersHandler(
       }
     }
 
-    if (activatedUsers.Any()) {
+    if (activatedUsers.Count != 0) {
       await context.SaveChangesAsync(cancellationToken);
 
       // Publish domain events for activated users
-      foreach (var user in activatedUsers) { await mediator.Publish(new UserActivatedEvent(user.Id), cancellationToken); }
+      foreach (var user in activatedUsers) await mediator.Publish(new UserActivatedEvent(user.Id), cancellationToken);
     }
 
     var result = new BulkOperationResult(request.UserIds.Count, successfulCount, errors.Count);
 
-    foreach (var error in errors) { result.AddError(error); }
+    foreach (var error in errors) result.AddError(error);
 
     logger.LogInformation(
       "Bulk activate completed: {Successful}/{Total} users activated. Reason: {Reason}",

@@ -20,10 +20,7 @@ public class GetTenantByIdHandler(
       var query = context.Resources.OfType<Tenant>()
                          .Where(t => t.Id == request.Id);
 
-      if (!request.IncludeDeleted)
-      {
-        query = query.Where(t => t.DeletedAt == null);
-      }
+      if (!request.IncludeDeleted) query = query.Where(t => t.DeletedAt == null);
 
       var tenant = await query.FirstOrDefaultAsync(cancellationToken);
 

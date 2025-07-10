@@ -33,7 +33,7 @@ public class UnifiedValidationBehavior<TRequest, TResponse>(
     validationErrors.AddRange(fluentValidationErrors);
 
     // If there are validation errors, handle them appropriately
-    if (validationErrors.Any()) {
+    if (validationErrors.Count != 0) {
       var errorMessage = string.Join("; ", validationErrors);
       logger.LogWarning(
         "Validation failed for {RequestName}: {ValidationErrors}",

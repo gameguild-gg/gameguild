@@ -13,41 +13,38 @@ public class UpdateTenantHandler(ApplicationDbContext context, ILogger<UpdateTen
     try {
       var tenant = await context.Resources.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
 
-      if (tenant == null) {
+      if (tenant == null)
         return Result.Failure<Tenant>(
           Common.Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found")
         );
-      }
 
       // Check if new name conflicts with another tenant
-      if (tenant.Name != request.Name) {
+      if (!string.IsNullOrEmpty(request.Name) && tenant.Name != request.Name) {
         var existingTenant = await context.Resources.OfType<Tenant>()
                                           .FirstOrDefaultAsync(t => t.Name == request.Name && t.Id != request.Id && t.DeletedAt == null, cancellationToken);
 
-        if (existingTenant != null) {
+        if (existingTenant != null)
           return Result.Failure<Tenant>(
             Common.Error.Conflict("Tenant.NameExists", $"Tenant with name '{request.Name}' already exists")
           );
-        }
       }
 
       // Check if new slug conflicts with another tenant
-      if (tenant.Slug != request.Slug) {
+      if (!string.IsNullOrEmpty(request.Slug) && tenant.Slug != request.Slug) {
         var existingSlug = await context.Resources.OfType<Tenant>()
                                         .FirstOrDefaultAsync(t => t.Slug == request.Slug && t.Id != request.Id && t.DeletedAt == null, cancellationToken);
 
-        if (existingSlug != null) {
+        if (existingSlug != null)
           return Result.Failure<Tenant>(
             Common.Error.Conflict("Tenant.SlugExists", $"Tenant with slug '{request.Slug}' already exists")
           );
-        }
       }
 
-      // Update tenant properties
-      tenant.Name = request.Name;
-      tenant.Description = request.Description;
-      tenant.IsActive = request.IsActive;
-      tenant.Slug = request.Slug;
+      // Update tenant properties (only if provided)
+      if (!string.IsNullOrEmpty(request.Name)) tenant.Name = request.Name;
+      if (request.Description != null) tenant.Description = request.Description;
+      if (request.IsActive.HasValue) tenant.IsActive = request.IsActive.Value;
+      if (!string.IsNullOrEmpty(request.Slug)) tenant.Slug = request.Slug;
       tenant.Touch();
 
       await context.SaveChangesAsync(cancellationToken);
