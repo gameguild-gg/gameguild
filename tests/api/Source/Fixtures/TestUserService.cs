@@ -1,7 +1,9 @@
 ﻿namespace GameGuild.API.Tests.Fixtures;
 
 public class TestUserService(TestDbContext dbContext) : IUserService {
-    public async Task<TestUserEntity> GetByIdAsync(string id) { return await dbContext.Users.FindAsync(id); }
+    public async Task<TestUserEntity> GetByIdAsync(string id) { 
+        return await dbContext.Users.FindAsync(id) ?? throw new InvalidOperationException($"User with ID {id} not found"); 
+    }
 
     public async Task<TestUserEntity> CreateAsync(TestUserEntity user) {
         dbContext.Users.Add(user);

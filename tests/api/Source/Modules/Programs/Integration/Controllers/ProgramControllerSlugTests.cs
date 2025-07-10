@@ -223,7 +223,6 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
         {
             UserId = user.Id,
             TenantId = tenant.Id,
-            IsActive = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

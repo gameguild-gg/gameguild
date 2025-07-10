@@ -3,11 +3,14 @@
 namespace GameGuild.API.Tests.Fixtures;
 
 public class TestUserProfileService(TestDbContext dbContext) : IUserProfileService {
-    public async Task<TestUserProfileEntity> GetByIdAsync(string id) { return await dbContext.UserProfiles.FindAsync(id); }
+    public async Task<TestUserProfileEntity> GetByIdAsync(string id) { 
+        return await dbContext.UserProfiles.FindAsync(id) ?? throw new InvalidOperationException($"UserProfile with ID {id} not found"); 
+    }
 
     public async Task<TestUserProfileEntity> GetByUserIdAsync(string userId) {
         // Use LINQ to find by UserId
-        return await dbContext.UserProfiles.FirstOrDefaultAsync(p => p.UserId == userId)!;
+        return await dbContext.UserProfiles.FirstOrDefaultAsync(p => p.UserId == userId) 
+            ?? throw new InvalidOperationException($"UserProfile with UserId {userId} not found");
     }
 
     public async Task<TestUserProfileEntity> CreateAsync(TestUserProfileEntity profile) {
@@ -20,7 +23,7 @@ public class TestUserProfileService(TestDbContext dbContext) : IUserProfileServi
     public async Task<TestUserProfileEntity> UpdateAsync(string id, TestUserProfileEntity profile) {
         var existingProfile = await dbContext.UserProfiles.FindAsync(id);
 
-        if (existingProfile == null) return null;
+        if (existingProfile == null) throw new InvalidOperationException($"UserProfile with ID {id} not found");
 
         existingProfile.Bio = profile.Bio;
         existingProfile.AvatarUrl = profile.AvatarUrl;
