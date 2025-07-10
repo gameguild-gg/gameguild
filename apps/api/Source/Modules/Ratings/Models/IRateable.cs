@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Ratings.Models;
+namespace GameGuild.Modules.Ratings;
 
 /// <summary>
 /// Interface for entities that support ratings (e.g., 1-5 stars).

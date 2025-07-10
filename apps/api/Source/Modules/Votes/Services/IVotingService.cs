@@ -1,7 +1,4 @@
-using GameGuild.Modules.Votes.Models;
-
-
-namespace GameGuild.Modules.Votes.Services;
+namespace GameGuild.Modules.Votes;
 
 /// <summary>
 /// Interface for the service that manages votes and voting operations

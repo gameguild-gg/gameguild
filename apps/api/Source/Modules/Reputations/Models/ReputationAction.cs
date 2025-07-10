@@ -4,7 +4,7 @@ using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Reputations.Models;
+namespace GameGuild.Modules.Reputations;
 
 /// <summary>
 /// Defines actions that can affect user reputation

@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using GameGuild.Modules.Authentication;
-using GameGuild.Modules.Comments.Models;
+using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Programs.Models;
