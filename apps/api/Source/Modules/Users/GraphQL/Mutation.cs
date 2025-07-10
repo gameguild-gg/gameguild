@@ -10,7 +10,7 @@ public class Mutation {
   /// Creates a new user using CQRS pattern
   /// </summary>
   public async Task<User> CreateUser(CreateUserInput input, [Service] IMediator mediator) {
-    var command = new CreateUserCommand { Name = input.Name, Email = input.Email, IsActive = input.IsActive };
+    var command = new CreateUserCommand { Name = input.Name, Email = input.Email, IsActive = input.IsActive, InitialBalance = input.InitialBalance };
 
     return await mediator.Send(command);
   }
@@ -97,7 +97,7 @@ public class Mutation {
   /// Bulk create users using CQRS pattern
   /// </summary>
   public async Task<BulkOperationResult> BulkCreateUsers(BulkCreateUsersInput input, [Service] IMediator mediator) {
-    var command = new BulkCreateUsersCommand { Users = input.Users.Select(u => new CreateUserDto { Name = u.Name, Email = u.Email, IsActive = u.IsActive }).ToList(), Reason = input.Reason };
+    var command = new BulkCreateUsersCommand { Users = input.Users.Select(u => new CreateUserDto { Name = u.Name, Email = u.Email, IsActive = u.IsActive, InitialBalance = u.InitialBalance }).ToList(), Reason = input.Reason };
 
     return await mediator.Send(command);
   }
