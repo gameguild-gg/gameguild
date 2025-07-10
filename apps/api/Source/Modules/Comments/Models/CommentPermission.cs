@@ -4,7 +4,7 @@ using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Comments.Models;
+namespace GameGuild.Modules.Comments;
 
 /// <summary>
 /// Resource-specific permissions for Comment entities (Layer 3 of DAC permission system)

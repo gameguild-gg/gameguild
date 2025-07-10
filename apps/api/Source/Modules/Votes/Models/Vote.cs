@@ -3,10 +3,10 @@ using GameGuild.Common;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.Votes.Models;
+namespace GameGuild.Modules.Votes;
 
 /// <summary>
-/// Represents a vote (upvote/downvote) on a voteable entity.
+/// Represents a vote (upvote/downvote) on a votable entity.
 /// </summary>
 public class Vote : Entity {
   /// <summary>

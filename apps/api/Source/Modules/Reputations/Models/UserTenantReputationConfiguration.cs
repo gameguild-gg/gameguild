@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Reputations.Models;
+namespace GameGuild.Modules.Reputations;
 
 public class UserTenantReputationConfiguration : IEntityTypeConfiguration<UserTenantReputation> {
   public void Configure(EntityTypeBuilder<UserTenantReputation> builder) {

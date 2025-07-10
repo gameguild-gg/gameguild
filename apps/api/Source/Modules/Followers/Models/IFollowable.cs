@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Followers.Models;
+namespace GameGuild.Modules.Followers;
 
 /// <summary>
 /// Interface for entities that can be followed by users.

@@ -3,7 +3,7 @@ using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.Followers.Models;
+namespace GameGuild.Modules.Followers;
 
 /// <summary>
 /// Represents a follower of a followable entity.

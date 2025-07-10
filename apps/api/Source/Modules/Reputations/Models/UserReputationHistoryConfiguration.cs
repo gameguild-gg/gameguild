@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Reputations.Models;
+namespace GameGuild.Modules.Reputations;
 
 public class UserReputationHistoryConfiguration : IEntityTypeConfiguration<UserReputationHistory> {
   public void Configure(EntityTypeBuilder<UserReputationHistory> builder) {

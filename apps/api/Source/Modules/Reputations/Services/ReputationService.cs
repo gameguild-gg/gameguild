@@ -1,9 +1,8 @@
 using GameGuild.Database;
-using GameGuild.Modules.Reputations.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Reputations.Services;
+namespace GameGuild.Modules.Reputations;
 
 /// <summary>
 /// Service implementation for managing user reputation with polymorphic support

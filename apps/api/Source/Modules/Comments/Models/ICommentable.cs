@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Comments.Models;
+namespace GameGuild.Modules.Comments;
 
 /// <summary>
 /// Interface for entities that support comments.

@@ -1,7 +1,7 @@
 using GameGuild.API.Tests.Fixtures;
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Comments.Models;
+using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
