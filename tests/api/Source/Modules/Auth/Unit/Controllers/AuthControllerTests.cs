@@ -7,7 +7,7 @@ using Xunit;
 using FluentValidation;
 using System.Security.Claims;
 
-namespace GameGuild.Modules.Authentication.Tests.Unit.Controllers;
+namespace GameGuild.Modules.Auth.Tests.Unit.Controllers;
 
 /// <summary>
 /// Unit tests for AuthController using CQRS pattern

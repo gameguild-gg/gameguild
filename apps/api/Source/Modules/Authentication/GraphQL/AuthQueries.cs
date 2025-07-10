@@ -4,7 +4,7 @@ using HotChocolate.Authorization;
 using MediatR;
 
 
-namespace GameGuild.Modules.Authentication;
+namespace GameGuild.Modules.Auth;
 
 /// <summary>
 /// GraphQL queries for Authentication module using CQRS pattern.

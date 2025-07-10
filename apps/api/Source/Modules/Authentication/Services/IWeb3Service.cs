@@ -1,7 +1,7 @@
 ﻿using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.Authentication;
+namespace GameGuild.Modules.Auth;
 
 public interface IWeb3Service {
   Task<Web3ChallengeResponseDto> GenerateChallengeAsync(Web3ChallengeRequestDto request);

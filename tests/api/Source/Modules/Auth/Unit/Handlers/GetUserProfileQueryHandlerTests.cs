@@ -1,4 +1,4 @@
-using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Auth;
 using GameGuild.Modules.Users;
 using Microsoft.Extensions.Logging;
 using Moq;
