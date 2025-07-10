@@ -43,7 +43,7 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
       setLoading(true);
       const data = await apiClient.getDomains(tenantId);
       // Filter out any null or invalid domains
-      const validDomains = data.filter(domain => domain && domain.id);
+      const validDomains = data.filter((domain) => domain && domain.id);
       setDomains(validDomains);
     } catch (error) {
       toast.error('Failed to fetch domains');
@@ -61,8 +61,8 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
 
   useEffect(() => {
     if (isAdminView && accessToken) {
-      TenantService.getAllTenants(accessToken).then(tenants => {
-        setAllTenants(tenants.map(t => ({ id: t.id, name: t.name })));
+      TenantService.getAllTenants(accessToken).then((tenants) => {
+        setAllTenants(tenants.map((t) => ({ id: t.id, name: t.name })));
       });
     }
   }, [isAdminView, accessToken]);
@@ -131,7 +131,7 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
       toast.error('No tenant ID available for setting main domain');
       return;
     }
-    
+
     try {
       await apiClient.setMainDomain(tenantId, domain.id);
       toast.success('Main domain updated successfully');
@@ -180,9 +180,7 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Domain Management</h2>
-          <p className="text-muted-foreground">
-            Manage domains and auto-assignment rules for your tenant
-          </p>
+          <p className="text-muted-foreground">Manage domains and auto-assignment rules for your tenant</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -194,23 +192,18 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Domain</DialogTitle>
-              <DialogDescription>
-                Add a new domain to your tenant for user auto-assignment
-              </DialogDescription>
+              <DialogDescription>Add a new domain to your tenant for user auto-assignment</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               {isAdminView && (
                 <div>
                   <Label htmlFor="tenant">Tenant *</Label>
-                  <select
-                    id="tenant"
-                    className="w-full p-2 border rounded-md"
-                    value={selectedTenantId}
-                    onChange={e => setSelectedTenantId(e.target.value)}
-                  >
+                  <select id="tenant" className="w-full p-2 border rounded-md" value={selectedTenantId} onChange={(e) => setSelectedTenantId(e.target.value)}>
                     <option value="">Global (no tenant)</option>
-                    {allTenants.map(t => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
+                    {allTenants.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -226,12 +219,7 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
               </div>
               <div>
                 <Label htmlFor="subdomain">Subdomain (optional)</Label>
-                <Input
-                  id="subdomain"
-                  placeholder="cs"
-                  value={formData.subdomain}
-                  onChange={(e) => setFormData({ ...formData, subdomain: e.target.value })}
-                />
+                <Input id="subdomain" placeholder="cs" value={formData.subdomain} onChange={(e) => setFormData({ ...formData, subdomain: e.target.value })} />
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -276,14 +264,10 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
                       Main
                     </Badge>
                   )}
-                  {domain.isSecondaryDomain && (
-                    <Badge variant="secondary">Secondary</Badge>
-                  )}
+                  {domain.isSecondaryDomain && <Badge variant="secondary">Secondary</Badge>}
                 </div>
               </div>
-              <CardDescription>
-                Created on {new Date(domain.createdAt).toLocaleDateString()}
-              </CardDescription>
+              <CardDescription>Created on {new Date(domain.createdAt).toLocaleDateString()}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
@@ -298,29 +282,17 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => openEditDialog(domain)}
-              >
+              <Button variant="outline" size="sm" onClick={() => openEditDialog(domain)}>
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
               </Button>
               <div className="flex gap-2">
                 {!domain.isMainDomain && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSetMainDomain(domain)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => handleSetMainDomain(domain)}>
                     Set as Main
                   </Button>
                 )}
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDeleteDomain(domain)}
-                >
+                <Button variant="destructive" size="sm" onClick={() => handleDeleteDomain(domain)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -333,9 +305,7 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
         <div className="text-center py-12">
           <Globe className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-4 text-lg font-medium">No domains found</h3>
-          <p className="mt-2 text-sm text-gray-500">
-            Get started by adding your first domain for user auto-assignment.
-          </p>
+          <p className="mt-2 text-sm text-gray-500">Get started by adding your first domain for user auto-assignment.</p>
         </div>
       )}
 
@@ -343,9 +313,7 @@ export function TenantDomainManager({ tenantId, apiBaseUrl, accessToken }: Tenan
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Domain</DialogTitle>
-            <DialogDescription>
-              Update domain configuration settings
-            </DialogDescription>
+            <DialogDescription>Update domain configuration settings</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>

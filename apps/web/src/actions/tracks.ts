@@ -43,12 +43,12 @@ function extractToolsFromProgram(program: { category: number; [key: string]: unk
 // Helper function to sanitize image paths
 function sanitizeImagePath(thumbnail: string | null | undefined): string {
   if (!thumbnail) return '/placeholder.svg';
-  
+
   // If the thumbnail path starts with /images/ but the image doesn't exist, use placeholder
   if (thumbnail.startsWith('/images/')) {
     return '/placeholder.svg';
   }
-  
+
   return thumbnail;
 }
 
@@ -140,7 +140,7 @@ export async function getTracksData(): Promise<TracksData> {
             'data-science-track': ['Python', 'Statistics', 'Machine Learning', 'Data Visualization', 'Analytics'],
             'ai-development-track': ['Neural Networks', 'Deep Learning', 'NLP', 'Computer Vision', 'Ethics'],
           };
-          
+
           const trackKnowledges = fallbackKnowledges[program.slug as keyof typeof fallbackKnowledges] || [
             'Fundamentals',
             'Intermediate',

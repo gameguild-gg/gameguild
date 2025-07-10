@@ -10,14 +10,10 @@ export default function TrackNotFound() {
           <div className="mb-8">
             <Search className="h-24 w-24 text-gray-600 mx-auto mb-4" />
           </div>
-          
-          <h1 className="text-4xl font-bold text-red-400 mb-4">
-            Track Not Found
-          </h1>
-          
-          <p className="text-gray-300 mb-8 text-lg">
-            The learning track you&apos;re looking for doesn&apos;t exist or may have been moved.
-          </p>
+
+          <h1 className="text-4xl font-bold text-red-400 mb-4">Track Not Found</h1>
+
+          <p className="text-gray-300 mb-8 text-lg">The learning track you&apos;re looking for doesn&apos;t exist or may have been moved.</p>
 
           <div className="bg-gray-800/50 rounded-lg p-6 mb-8">
             <h2 className="text-xl font-semibold text-white mb-3">Available Learning Tracks:</h2>
@@ -38,11 +34,9 @@ export default function TrackNotFound() {
                 Back to Learning Tracks
               </Link>
             </Button>
-            
+
             <Button asChild className="bg-blue-600 hover:bg-blue-700">
-              <Link href="/courses/catalog">
-                Browse All Courses
-              </Link>
+              <Link href="/courses/catalog">Browse All Courses</Link>
             </Button>
           </div>
         </div>

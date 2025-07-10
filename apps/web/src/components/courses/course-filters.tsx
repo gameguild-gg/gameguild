@@ -26,7 +26,7 @@ export function CourseFilters() {
             ))}
           </SelectContent>
         </Select>
-        
+
         <Select value={filters.level} onValueChange={setLevel}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select Level" />
@@ -40,7 +40,7 @@ export function CourseFilters() {
             ))}
           </SelectContent>
         </Select>
-        
+
         <Select value={filters.tool} onValueChange={setTool}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select Tool" />
@@ -55,7 +55,7 @@ export function CourseFilters() {
           </SelectContent>
         </Select>
       </div>
-      
+
       <div className="w-full sm:w-64">
         <Input type="text" placeholder="Search courses..." value={filters.searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full" />
       </div>

@@ -44,7 +44,7 @@ export default function CreateCoursePage() {
       // Here you would typically call an API to create the course
       // For now, we'll simulate a delay and show success
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+
       // Redirect to courses list with success message
       router.push('/dashboard/courses?created=true');
     } catch (err) {
@@ -75,11 +75,7 @@ export default function CreateCoursePage() {
         </div>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-          {error}
-        </div>
-      )}
+      {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
@@ -90,13 +86,7 @@ export default function CreateCoursePage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="title">Course Title *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                placeholder="Enter course title"
-                required
-              />
+              <Input id="title" value={formData.title} onChange={(e) => handleInputChange('title', e.target.value)} placeholder="Enter course title" required />
             </div>
 
             <div className="space-y-2">
@@ -173,9 +163,7 @@ export default function CreateCoursePage() {
                 onChange={(e) => handleInputChange('tools', e.target.value)}
                 placeholder="Comma-separated list (e.g., Unity, C#, Blender)"
               />
-              <p className="text-sm text-muted-foreground">
-                Enter tools and technologies used in this course, separated by commas
-              </p>
+              <p className="text-sm text-muted-foreground">Enter tools and technologies used in this course, separated by commas</p>
             </div>
           </CardContent>
         </Card>
@@ -188,27 +176,22 @@ export default function CreateCoursePage() {
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg p-4 bg-muted/30">
-              <h3 className="font-semibold text-lg mb-2">
-                {formData.title || 'Course Title'}
-              </h3>
-              <p className="text-muted-foreground mb-3">
-                {formData.description || 'Course description will appear here...'}
-              </p>
+              <h3 className="font-semibold text-lg mb-2">{formData.title || 'Course Title'}</h3>
+              <p className="text-muted-foreground mb-3">{formData.description || 'Course description will appear here...'}</p>
               <div className="flex gap-2 mb-2">
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                  {formData.area.charAt(0).toUpperCase() + formData.area.slice(1)}
-                </span>
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">{formData.area.charAt(0).toUpperCase() + formData.area.slice(1)}</span>
                 <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
-                  {formData.level === '1' ? 'Beginner' : 
-                   formData.level === '2' ? 'Intermediate' : 
-                   formData.level === '3' ? 'Advanced' : 
-                   formData.level === '4' ? 'Arcane' : 'Unknown'}
+                  {formData.level === '1'
+                    ? 'Beginner'
+                    : formData.level === '2'
+                      ? 'Intermediate'
+                      : formData.level === '3'
+                        ? 'Advanced'
+                        : formData.level === '4'
+                          ? 'Arcane'
+                          : 'Unknown'}
                 </span>
-                {formData.estimatedHours && (
-                  <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">
-                    {formData.estimatedHours}h
-                  </span>
-                )}
+                {formData.estimatedHours && <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">{formData.estimatedHours}h</span>}
               </div>
               {formData.tools && (
                 <div className="flex flex-wrap gap-1">

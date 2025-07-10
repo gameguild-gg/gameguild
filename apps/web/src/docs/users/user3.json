@@ -4,7 +4,5 @@
   "firstName": "Alice",
   "middleName": "Grace",
   "lastName": "Johnson",
-  "idCourses": [
-    1
-  ]
+  "idCourses": [1]
 }

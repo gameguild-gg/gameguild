@@ -25,7 +25,7 @@ export default function CoursesPage() {
       try {
         setLoading(true);
         setError(null);
-        
+
         const courseData = await getCourseData();
         setCourses(courseData.courses);
         setFilteredCourses(courseData.courses);
@@ -202,9 +202,7 @@ export default function CoursesPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-muted-foreground">Beginner</p>
-                <p className="text-2xl font-bold">
-                  {courses.filter((c) => c.level === 1).length}
-                </p>
+                <p className="text-2xl font-bold">{courses.filter((c) => c.level === 1).length}</p>
               </div>
             </div>
           </CardContent>
@@ -217,9 +215,7 @@ export default function CoursesPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-muted-foreground">Intermediate</p>
-                <p className="text-2xl font-bold">
-                  {courses.filter((c) => c.level === 2).length}
-                </p>
+                <p className="text-2xl font-bold">{courses.filter((c) => c.level === 2).length}</p>
               </div>
             </div>
           </CardContent>
@@ -232,9 +228,7 @@ export default function CoursesPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-muted-foreground">Advanced</p>
-                <p className="text-2xl font-bold">
-                  {courses.filter((c) => c.level === 3).length}
-                </p>
+                <p className="text-2xl font-bold">{courses.filter((c) => c.level === 3).length}</p>
               </div>
             </div>
           </CardContent>
@@ -264,18 +258,12 @@ export default function CoursesPage() {
                   </Button>
                 </div>
               </div>
-              <CardDescription className="line-clamp-3">
-                {course.description}
-              </CardDescription>
+              <CardDescription className="line-clamp-3">{course.description}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2 mb-3">
-                <Badge className={getLevelColor(course.level)}>
-                  {getLevelText(course.level)}
-                </Badge>
-                <Badge className={getAreaColor(course.area)}>
-                  {course.area.charAt(0).toUpperCase() + course.area.slice(1)}
-                </Badge>
+                <Badge className={getLevelColor(course.level)}>{getLevelText(course.level)}</Badge>
+                <Badge className={getAreaColor(course.area)}>{course.area.charAt(0).toUpperCase() + course.area.slice(1)}</Badge>
               </div>
               {course.tools && course.tools.length > 0 && (
                 <div className="flex flex-wrap gap-1">
@@ -301,11 +289,9 @@ export default function CoursesPage() {
           <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">No courses found</h3>
           <p className="text-muted-foreground mb-4">
-            {searchTerm || selectedArea !== 'all'
-              ? 'Try adjusting your search criteria'
-              : 'Get started by creating your first course'}
+            {searchTerm || selectedArea !== 'all' ? 'Try adjusting your search criteria' : 'Get started by creating your first course'}
           </p>
-          {(!searchTerm && selectedArea === 'all') && (
+          {!searchTerm && selectedArea === 'all' && (
             <Link href="/dashboard/courses/create">
               <Button>
                 <Plus className="w-4 h-4 mr-2" />

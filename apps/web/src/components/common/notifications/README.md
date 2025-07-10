@@ -19,17 +19,21 @@ A complete notification system has been implemented for your Next.js 15+ app wit
 ## Files Created
 
 ### Types
+
 - `src/types/notification.ts` - TypeScript definitions for notifications
 
 ### Server Actions
+
 - `src/lib/actions/notification-actions.ts` - Server-side CRUD operations
 
 ### Components
+
 - `src/components/common/notifications/notification-dropdown.tsx` - Main notification dropdown
 - `src/components/common/notifications/notification-provider.tsx` - Context provider for state management
 - `src/components/common/notifications/index.tsx` - Export file
 
 ### Integration
+
 - Updated `src/components/common/header/index.tsx` to include the notification dropdown
 
 ## Usage
@@ -42,7 +46,7 @@ The notification system is already integrated into your header component:
 import { NotificationDropdown } from '@/components/common/notifications';
 
 // In your header component
-<NotificationDropdown />
+<NotificationDropdown />;
 ```
 
 ### With Context Provider (Optional)
@@ -53,11 +57,7 @@ For more advanced state management across components:
 import { NotificationProvider } from '@/components/common/notifications';
 
 function App({ children }) {
-  return (
-    <NotificationProvider refreshInterval={30000}>
-      {children}
-    </NotificationProvider>
-  );
+  return <NotificationProvider refreshInterval={30000}>{children}</NotificationProvider>;
 }
 ```
 
@@ -69,7 +69,7 @@ import { useNotifications, useUnreadNotificationsCount } from '@/components/comm
 function MyComponent() {
   const { notifications, unreadCount, refreshNotifications } = useNotifications();
   const unreadCount = useUnreadNotificationsCount();
-  
+
   // Use the data...
 }
 ```
@@ -129,6 +129,7 @@ Currently uses mock data. To connect to a real backend:
 ## Demo Data
 
 The system includes realistic demo data with:
+
 - Comments from John on Project Alpha
 - Project invitation from John to Project Beta
 - New follower (Jennifer Lee)
@@ -149,6 +150,7 @@ The system includes realistic demo data with:
 ## Code Quality
 
 The implementation follows Next.js 15+ best practices:
+
 - Server Actions for data mutations
 - Client Components for interactivity
 - Proper TypeScript typing

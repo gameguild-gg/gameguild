@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export default async function CoursesPage() {
   try {
     const courseData = await getCourseData();
-    
+
     return (
       <CourseErrorBoundary>
         <CourseProvider initialData={courseData}>

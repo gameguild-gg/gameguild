@@ -68,7 +68,7 @@ export function useAvailableTools(): string[] {
 
 export function useCourseData() {
   const { state } = useCourseContext();
-  
+
   return {
     data: state.data,
     isLoading: state.isLoading,

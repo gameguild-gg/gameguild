@@ -133,7 +133,7 @@ function transformRealCoursesToCurriculum(realCourses: RealCourse[]): TrackBlock
   const beginnerCourses = realCourses.filter((course) => course.difficulty === 0);
   const intermediateCourses = realCourses.filter((course) => course.difficulty === 1);
   const advancedCourses = realCourses.filter((course) => course.difficulty === 2 || course.difficulty === 3);
-  
+
   const getDifficultyName = (difficulty: number) => {
     switch (difficulty) {
       case 0:
@@ -469,7 +469,7 @@ export default async function TrackDetailPage({ params }: { params: { slug: stri
               <Image src={track.image || '/placeholder.svg'} alt={track.title} fill className="object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
             </div>
-            
+
             {/* Floating stats card */}
             <Card className="absolute bottom-4 right-4 bg-black/80 border-white/20 backdrop-blur">
               <CardContent className="p-4">
@@ -499,7 +499,7 @@ export default async function TrackDetailPage({ params }: { params: { slug: stri
                 <div className="space-y-6">
                   <p className="text-lg text-gray-300 leading-relaxed">{trackData.industryContext.overview}</p>
                   <p className="text-gray-400 leading-relaxed">{trackData.industryContext.roleDescription}</p>
-                  
+
                   <div className="grid md:grid-cols-2 gap-6 mt-8">
                     <div>
                       <h3 className="text-xl font-semibold mb-4 text-blue-400">Career Paths</h3>
@@ -556,7 +556,7 @@ export default async function TrackDetailPage({ params }: { params: { slug: stri
                           <p className="text-gray-400">{block.description}</p>
                         </div>
                       </div>
-                      
+
                       <div className="grid gap-6">
                         {block.courses.map((course: Course) => (
                           <Card
@@ -653,7 +653,7 @@ export default async function TrackDetailPage({ params }: { params: { slug: stri
                       <p className="text-gray-300">Receive a verified certificate upon completion, recognized by leading game development studios worldwide.</p>
                     </CardContent>
                   </Card>
-                  
+
                   <Card className="bg-gray-800 border-gray-700">
                     <CardContent className="p-6">
                       <div className="flex items-center gap-3 mb-4">
@@ -663,7 +663,7 @@ export default async function TrackDetailPage({ params }: { params: { slug: stri
                       <p className="text-gray-300">Join our exclusive community of developers, participate in game jams, and collaborate on projects.</p>
                     </CardContent>
                   </Card>
-                  
+
                   <Card className="bg-gray-800 border-gray-700">
                     <CardContent className="p-6">
                       <div className="flex items-center gap-3 mb-4">
@@ -673,7 +673,7 @@ export default async function TrackDetailPage({ params }: { params: { slug: stri
                       <p className="text-gray-300">Learn at your own pace with self-paced modules and optional live sessions with instructors.</p>
                     </CardContent>
                   </Card>
-                  
+
                   <Card className="bg-gray-800 border-gray-700">
                     <CardContent className="p-6">
                       <div className="flex items-center gap-3 mb-4">
@@ -791,7 +791,7 @@ export default async function TrackDetailPage({ params }: { params: { slug: stri
                       <Button className="w-full mt-4 bg-green-600 hover:bg-green-700">Enroll Now</Button>
                     </CardContent>
                   </Card>
-                  
+
                   <Card className="bg-gray-800 border-gray-700">
                     <CardHeader>
                       <CardTitle className="text-blue-400">Summer 2025</CardTitle>
@@ -813,7 +813,7 @@ export default async function TrackDetailPage({ params }: { params: { slug: stri
                       </Button>
                     </CardContent>
                   </Card>
-                  
+
                   <Card className="bg-gray-800 border-gray-700">
                     <CardHeader>
                       <CardTitle className="text-orange-400">Fall 2025</CardTitle>
@@ -835,7 +835,7 @@ export default async function TrackDetailPage({ params }: { params: { slug: stri
                       </Button>
                     </CardContent>
                   </Card>
-                  
+
                   <Card className="bg-gray-800 border-gray-700">
                     <CardHeader>
                       <CardTitle className="text-purple-400">Winter 2026</CardTitle>
@@ -879,7 +879,7 @@ export default async function TrackDetailPage({ params }: { params: { slug: stri
                         <Progress value={track.progress} className="w-full" />
                       </div>
                     )}
-                    
+
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Total Duration:</span>
