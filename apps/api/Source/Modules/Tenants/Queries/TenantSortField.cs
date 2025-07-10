@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Tenants.Queries;
+﻿namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Available sort fields for tenant queries

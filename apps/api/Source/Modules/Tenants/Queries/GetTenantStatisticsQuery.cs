@@ -1,7 +1,7 @@
 ﻿using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Tenants.Queries;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Query to get tenant statistics

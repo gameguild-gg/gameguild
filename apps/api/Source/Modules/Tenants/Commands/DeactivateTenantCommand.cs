@@ -1,7 +1,7 @@
 ﻿using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Tenants.Commands;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Command to deactivate a tenant

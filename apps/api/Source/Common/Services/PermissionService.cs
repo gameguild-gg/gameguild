@@ -2,7 +2,7 @@ using GameGuild.Database;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Resources;
-using GameGuild.Modules.Tenants.Entities;
+using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 

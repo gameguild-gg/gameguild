@@ -61,7 +61,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
       userId,
       tenantId,
       contentType,
-      new[] { PermissionType.Read }
+      [PermissionType.Read]
     );
 
     // Act - Grant additional permissions
@@ -69,7 +69,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
       userId,
       tenantId,
       contentType,
-      new[] { PermissionType.Edit }
+      [PermissionType.Edit]
     );
 
     // Assert
@@ -179,7 +179,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
       userId,
       tenantId,
       contentType,
-      new[] { PermissionType.Read }
+      [PermissionType.Read]
     );
 
     // Act
@@ -217,7 +217,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
       null,
       tenantId,
       contentType,
-      new[] { PermissionType.Read }
+      [PermissionType.Read]
     );
 
     // Act
@@ -240,7 +240,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
       null,
       null,
       contentType,
-      new[] { PermissionType.Read }
+      [PermissionType.Read]
     );
 
     // Act
@@ -263,7 +263,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
       null,
       tenantId,
       contentType,
-      new[] { PermissionType.Read }
+      [PermissionType.Read]
     );
 
     // Grant user-specific permissions without Read
@@ -271,7 +271,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
       userId,
       tenantId,
       contentType,
-      new[] { PermissionType.Comment }
+      [PermissionType.Comment]
     );
 
     // Act
@@ -459,7 +459,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
       userId,
       tenantId,
       contentType,
-      new[] { PermissionType.Read }
+      [PermissionType.Read]
     );
 
     // Act
@@ -506,13 +506,13 @@ public class PermissionServiceContentTypeTests : IDisposable {
       userId,
       tenantId,
       articleType,
-      new[] { PermissionType.Read, PermissionType.Edit }
+      [PermissionType.Read, PermissionType.Edit]
     );
     await _permissionService.GrantContentTypePermissionAsync(
       userId,
       tenantId,
       videoType,
-      new[] { PermissionType.Read, PermissionType.Delete }
+      [PermissionType.Read, PermissionType.Delete]
     );
 
     // Act & Assert
@@ -544,7 +544,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
       userId,
       tenantId,
       articleType,
-      new[] { PermissionType.Read }
+      [PermissionType.Read]
     );
 
     // Act & Assert

@@ -1,19 +1,14 @@
 ﻿using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Tenants.Commands;
-using GameGuild.Modules.Tenants.Entities;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenants.Handlers;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Handler for permanently deleting a tenant
 /// </summary>
-public class LHardDeleteTenantHandler(
-  ApplicationDbContext context,
-  ILogger<HardDeleteTenantHandler> logger
-) : ICommandHandler<HardDeleteTenantCommand, Common.Result<bool>>
+public class HardDeleteTenantHandler(ApplicationDbContext context, ILogger<HardDeleteTenantHandler> logger) : ICommandHandler<HardDeleteTenantCommand, Common.Result<bool>>
 {
   public async Task<Common.Result<bool>> Handle(HardDeleteTenantCommand request, CancellationToken cancellationToken)
   {

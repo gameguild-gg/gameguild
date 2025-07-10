@@ -1,5 +1,4 @@
-﻿using GameGuild.Modules.Tenants.Entities;
-using GameGuild.Modules.Users;
+﻿using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Tenants;

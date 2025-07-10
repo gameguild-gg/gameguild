@@ -1,21 +1,14 @@
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Tenants.Commands;
-using GameGuild.Modules.Tenants.Entities;
-using GameGuild.Modules.Tenants.Events;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenants.Handlers;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Handler for creating a new tenant
 /// </summary>
-public class CreateTenantHandler(
-  ApplicationDbContext context,
-  ILogger<CreateTenantHandler> logger,
-  IDomainEventPublisher eventPublisher
-) : ICommandHandler<CreateTenantCommand, Common.Result<Tenant>> {
+public class CreateTenantHandler(ApplicationDbContext context, ILogger<CreateTenantHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<CreateTenantCommand, Common.Result<Tenant>> {
   public async Task<Common.Result<Tenant>> Handle(CreateTenantCommand request, CancellationToken cancellationToken) {
     try {
       // Check if tenant with same name already exists

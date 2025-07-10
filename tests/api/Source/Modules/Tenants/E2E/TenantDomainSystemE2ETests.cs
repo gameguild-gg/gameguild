@@ -9,7 +9,6 @@ using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Tenants.Entities;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -614,7 +613,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       user.Id,
       tenant.Id,
       "TenantDomain",
-      new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete }
+      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
     );
 
     // Grant permissions for TenantUserGroup operations
@@ -622,7 +621,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       user.Id,
       tenant.Id,
       "TenantUserGroup",
-      new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete }
+      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
     );
 
     // Grant permissions for TenantUserGroupMembership operations
@@ -630,7 +629,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       user.Id,
       tenant.Id,
       "TenantUserGroupMembership",
-      new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete }
+      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
     );
 
     // Generate JWT token

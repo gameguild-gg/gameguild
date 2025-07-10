@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Tenants.Queries;
+﻿namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Statistics for tenant data

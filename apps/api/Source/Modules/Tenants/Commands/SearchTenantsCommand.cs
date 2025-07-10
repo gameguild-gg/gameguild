@@ -1,8 +1,7 @@
 using GameGuild.Common;
-using GameGuild.Modules.Tenants.Entities;
-using GameGuild.Modules.Tenants.Queries;
 
-namespace GameGuild.Modules.Tenants.Commands;
+
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Command to search tenants with advanced filtering

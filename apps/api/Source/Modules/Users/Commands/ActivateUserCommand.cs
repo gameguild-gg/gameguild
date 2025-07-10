@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Users;
 /// Command to activate a user
 /// </summary>
 public sealed class ActivateUserCommand : IRequest<bool> {
-  [Required] public Guid UserId { get; set; }
+  [Required] public Guid UserId { get; init; }
 
-  public string? Reason { get; set; }
+  public string? Reason { get; init; }
 }

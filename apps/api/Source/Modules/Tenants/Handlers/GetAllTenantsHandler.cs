@@ -1,10 +1,9 @@
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Tenants.Entities;
-using GameGuild.Modules.Tenants.Queries;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Tenants.Handlers;
+
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Handler for getting all tenants

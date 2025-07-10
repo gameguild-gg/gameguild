@@ -1,7 +1,4 @@
 using GameGuild.Common;
-using GameGuild.Modules.Tenants.Commands;
-using GameGuild.Modules.Tenants.Entities;
-using GameGuild.Modules.Tenants.Queries;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -37,13 +34,25 @@ public class TenantsController(
   /// <param name="includeDeleted">Include soft-deleted tenants</param>
   /// <returns>List of tenants</returns>
   [HttpGet]
-  public async Task<ActionResult<IEnumerable<Tenant>>> GetAllTenants([FromQuery] bool includeDeleted = false) {
+  public async Task<ActionResult<IEnumerable<TenantResponseDtoV2>>> GetAllTenants([FromQuery] bool includeDeleted = false) {
     var query = new GetAllTenantsQuery(includeDeleted);
     var result = await getAllTenantsHandler.Handle(query, CancellationToken.None);
 
     if (!result.IsSuccess) { return BadRequest(result.Error); }
 
-    return Ok(result.Value);
+    var tenantDtos = result.Value.Select(t => new TenantResponseDtoV2 {
+      Id = t.Id,
+      Name = t.Name,
+      Description = t.Description,
+      IsActive = t.IsActive,
+      Slug = t.Slug,
+      CreatedAt = t.CreatedAt,
+      UpdatedAt = t.UpdatedAt,
+      DeletedAt = t.DeletedAt,
+      IsDeleted = t.DeletedAt != null
+    });
+
+    return Ok(tenantDtos);
   }
 
   /// <summary>
@@ -53,7 +62,7 @@ public class TenantsController(
   /// <param name="includeDeleted">Include soft-deleted tenants</param>
   /// <returns>Tenant details</returns>
   [HttpGet("{id:guid}")]
-  public async Task<ActionResult<Tenant>> GetTenantById(Guid id, [FromQuery] bool includeDeleted = false) {
+  public async Task<ActionResult<TenantResponseDtoV2>> GetTenantById(Guid id, [FromQuery] bool includeDeleted = false) {
     var query = new GetTenantByIdQuery(id, includeDeleted);
     var result = await getTenantByIdHandler.Handle(query, CancellationToken.None);
 
@@ -61,7 +70,19 @@ public class TenantsController(
 
     if (result.Value == null) { return NotFound($"Tenant with ID {id} not found"); }
 
-    return Ok(result.Value);
+    var tenantDto = new TenantResponseDtoV2 {
+      Id = result.Value.Id,
+      Name = result.Value.Name,
+      Description = result.Value.Description,
+      IsActive = result.Value.IsActive,
+      Slug = result.Value.Slug,
+      CreatedAt = result.Value.CreatedAt,
+      UpdatedAt = result.Value.UpdatedAt,
+      DeletedAt = result.Value.DeletedAt,
+      IsDeleted = result.Value.DeletedAt != null
+    };
+
+    return Ok(tenantDto);
   }
 
   /// <summary>

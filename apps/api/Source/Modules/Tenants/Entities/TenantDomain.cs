@@ -4,7 +4,7 @@ using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Tenants.Entities;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Represents a domain (top-level or subdomain) associated with a tenant for automatic user grouping.

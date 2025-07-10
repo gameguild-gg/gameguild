@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using GameGuild.Modules.Tenants.Entities;
 
 
 namespace GameGuild.Modules.Tenants;

@@ -3,7 +3,7 @@ using GameGuild.Common;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Tenants.Entities;
+using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
 

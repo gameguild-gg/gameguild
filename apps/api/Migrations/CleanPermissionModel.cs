@@ -358,7 +358,7 @@ namespace GameGuild.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_TenantRoles_TenantId_Name",
                 table: "TenantRoles",
-                columns: new[] { "TenantId", "Name" },
+                columns: ["TenantId", "Name"],
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -384,7 +384,7 @@ namespace GameGuild.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_UserTenantRoles_UserTenantId_TenantRoleId",
                 table: "UserTenantRoles",
-                columns: new[] { "UserTenantId", "TenantRoleId" },
+                columns: ["UserTenantId", "TenantRoleId"],
                 unique: true);
         }
     }

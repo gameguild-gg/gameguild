@@ -55,7 +55,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     var tenant = await CreateTestTenantAsync();
 
     // Grant content-type permission to read projects
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Read });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
 
     var token = await GenerateJwtTokenAsync(user, tenant);
     SetAuthorizationHeader(token);
@@ -125,7 +125,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     var tenant = await CreateTestTenantAsync();
 
     // Grant content-type permission to read projects
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Read });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
 
     var token = await GenerateJwtTokenAsync(user, tenant);
     SetAuthorizationHeader(token);
@@ -187,7 +187,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     var tenant = await CreateTestTenantAsync();
 
     // Grant content-type permission to read projects
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Read });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
 
     var token = await GenerateJwtTokenAsync(user, tenant);
     SetAuthorizationHeader(token);
@@ -242,7 +242,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     var tenant = await CreateTestTenantAsync();
 
     // Grant content-type permission to create projects
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Create });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Create]);
 
     var token = await GenerateJwtTokenAsync(user, tenant);
     SetAuthorizationHeader(token);
@@ -309,7 +309,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     var tenant = await CreateTestTenantAsync();
 
     // Grant content-type permission to update projects
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Edit });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Edit]);
 
     var token = await GenerateJwtTokenAsync(user, tenant);
     SetAuthorizationHeader(token);
@@ -374,7 +374,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     var tenant = await CreateTestTenantAsync();
 
     // Grant content-type permission to delete projects
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Delete });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Delete]);
 
     var token = await GenerateJwtTokenAsync(user, tenant);
     SetAuthorizationHeader(token);
@@ -426,7 +426,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     var tenant = await CreateTestTenantAsync();
 
     // Grant content-type permission to read projects
-    await GrantContentTypePermissions(user, tenant, "Project", new[] { PermissionType.Read });
+    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
 
     var token = await GenerateJwtTokenAsync(user, tenant);
     SetAuthorizationHeader(token);

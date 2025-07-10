@@ -5,7 +5,6 @@ using GameGuild.Modules.Programs.Services;
 using GameGuild.Modules.Projects.Services;
 using GameGuild.Modules.Subscriptions.Services;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Tenants.Entities;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using IProgramService = GameGuild.Modules.Programs.Services.IProgramService;

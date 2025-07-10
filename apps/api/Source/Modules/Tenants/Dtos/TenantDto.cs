@@ -1,9 +1,11 @@
+using System;
+
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Data Transfer Object for Tenant information
 /// </summary>
-public record TenantDto
+public record TenantResponseDtoV2
 {
     /// <summary>
     /// Unique identifier for the tenant

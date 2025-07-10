@@ -1,6 +1,4 @@
-using GameGuild.Modules.Tenants.Entities;
 using GameGuild.Modules.Tenants.Inputs;
-using GameGuild.Modules.Tenants.Queries;
 using GameGuild.Modules.Users;
 using MediatR;
 

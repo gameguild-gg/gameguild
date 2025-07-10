@@ -1,8 +1,7 @@
 using GameGuild.Common;
-using GameGuild.Modules.Tenants.Entities;
 
 
-namespace GameGuild.Modules.Tenants.Commands;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Command to create a new tenant

@@ -928,14 +928,16 @@ public class DatabaseSeeder(
     }
 
     // Add all tracks to the list
-    trackPrograms.AddRange(new[] {
+    trackPrograms.AddRange(
+    [
       beginnerTrack,
       intermediateTrack,
       advancedTrack,
       aiTrack,
       creativeTrack,
       businessTrack,
-    });
+    ]
+    );
 
     // Save track programs and their content
     logger.LogInformation("Saving {TrackCount} tracks and {ContentCount} track content items to database", 
