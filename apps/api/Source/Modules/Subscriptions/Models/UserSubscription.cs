@@ -4,7 +4,6 @@ using GameGuild.Common;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
 namespace GameGuild.Modules.Subscriptions.Models;
@@ -72,17 +71,4 @@ public class UserSubscription : Entity {
   public virtual ProductSubscriptionPlan SubscriptionPlan { get; set; } = null!;
 
   public virtual ICollection<UserProduct> UserProducts { get; set; } = new List<UserProduct>();
-}
-
-public class UserSubscriptionConfiguration : IEntityTypeConfiguration<UserSubscription> {
-  public void Configure(EntityTypeBuilder<UserSubscription> builder) {
-    // Configure relationship with User (can't be done with annotations)
-    builder.HasOne(us => us.User).WithMany().HasForeignKey(us => us.UserId).OnDelete(DeleteBehavior.Cascade);
-
-    // Configure relationship with SubscriptionPlan (can't be done with annotations)
-    builder.HasOne(us => us.SubscriptionPlan)
-           .WithMany()
-           .HasForeignKey(us => us.SubscriptionPlanId)
-           .OnDelete(DeleteBehavior.Restrict);
-  }
 }

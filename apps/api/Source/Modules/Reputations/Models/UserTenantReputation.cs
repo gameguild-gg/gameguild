@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
 namespace GameGuild.Modules.Reputations.Models;
@@ -63,20 +62,4 @@ public class UserTenantReputation : Resource, IReputation {
   /// History of reputation changes for this user-tenant
   /// </summary>
   public ICollection<UserReputationHistory> History { get; set; } = new List<UserReputationHistory>();
-}
-
-public class UserTenantReputationConfiguration : IEntityTypeConfiguration<UserTenantReputation> {
-  public void Configure(EntityTypeBuilder<UserTenantReputation> builder) {
-    // Configure a relationship with UserTenant (can't be done with annotations)
-    builder.HasOne(utr => utr.TenantPermission)
-           .WithMany()
-           .HasForeignKey(utr => utr.TenantPermissionId)
-           .OnDelete(DeleteBehavior.Cascade);
-
-    // Configure a relationship with CurrentLevel (can't be done with annotations)
-    builder.HasOne(utr => utr.CurrentLevel)
-           .WithMany()
-           .HasForeignKey(utr => utr.CurrentLevelId)
-           .OnDelete(DeleteBehavior.SetNull);
-  }
 }
