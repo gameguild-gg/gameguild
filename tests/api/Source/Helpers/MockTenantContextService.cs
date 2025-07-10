@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Auth;
 using GameGuild.Modules.Tenants;
 
 namespace GameGuild.API.Tests.Helpers {
