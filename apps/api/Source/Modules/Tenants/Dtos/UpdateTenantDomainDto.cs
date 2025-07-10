@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using GameGuild.Modules.Tenants.Entities;
 
 
 namespace GameGuild.Modules.Tenants;
@@ -49,3 +50,4 @@ public class UpdateTenantDomainDto {
     if (UserGroupId.HasValue) domain.UserGroupId = UserGroupId.Value;
   }
 }
+

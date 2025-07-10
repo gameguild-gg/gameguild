@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Tenants;
+﻿namespace GameGuild.Modules.Tenants.Entities;
 
 /// <summary>
 /// Interface for resources that can belong to a specific tenant

@@ -1,4 +1,5 @@
 using GameGuild.Database;
+using GameGuild.Modules.Tenants.Entities;
 using Microsoft.EntityFrameworkCore;
 using UserModel = GameGuild.Modules.Users.User;
 

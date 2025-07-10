@@ -1,6 +1,6 @@
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Resources;
-using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Tenants.Entities;
 
 
 namespace GameGuild.Common;

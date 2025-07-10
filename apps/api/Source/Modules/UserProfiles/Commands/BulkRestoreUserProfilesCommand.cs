@@ -6,7 +6,7 @@ namespace GameGuild.Modules.UserProfiles.Commands;
 /// <summary>
 /// Command to bulk restore multiple soft-deleted user profiles
 /// </summary>
-public sealed class BulkRestoreUserProfilesCommand : ICommand<GameGuild.Common.Result<int>> {
+public sealed class BulkRestoreUserProfilesCommand : ICommand<Common.Result<int>> {
   /// <summary>
   /// User profile IDs to restore
   /// </summary>

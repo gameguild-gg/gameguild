@@ -1,4 +1,7 @@
-﻿namespace GameGuild.Modules.Tenants;
+﻿using GameGuild.Modules.Tenants.Entities;
+
+
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// DTO for tenant user group membership response

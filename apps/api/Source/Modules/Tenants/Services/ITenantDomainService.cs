@@ -1,3 +1,4 @@
+using GameGuild.Modules.Tenants.Entities;
 using UserModel = GameGuild.Modules.Users.User;
 
 
