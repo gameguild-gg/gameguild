@@ -19,7 +19,7 @@ async function getUserExists(username: string): Promise<boolean> {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { username } = await params;
   const userExists = await getUserExists(username);
-  
+
   if (!userExists) {
     return {
       title: 'User Not Found',
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function UserProfilePage({ params }: PageProps) {
   const { username } = await params;
   const userExists = await getUserExists(username);
-  
+
   if (!userExists) {
     notFound();
   }

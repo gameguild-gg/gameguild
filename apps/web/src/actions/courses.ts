@@ -5,12 +5,12 @@ import { CourseData, Course, CourseArea, CourseLevel } from '@/types/courses';
 // Helper function to sanitize image paths
 function sanitizeImagePath(thumbnail: string | null | undefined): string {
   if (!thumbnail) return '/placeholder.svg';
-  
+
   // If the thumbnail path starts with /images/ but the image doesn't exist, use placeholder
   if (thumbnail.startsWith('/images/')) {
     return '/placeholder.svg';
   }
-  
+
   return thumbnail;
 }
 
@@ -80,7 +80,7 @@ function transformProgramToCourse(program: {
 export async function getCourseData(): Promise<CourseData> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-    
+
     // Fetch courses from the public published programs API
     const response = await fetch(`${apiUrl}/api/program/published`, {
       headers: {
@@ -98,7 +98,7 @@ export async function getCourseData(): Promise<CourseData> {
     }
 
     const data = await response.json();
-    
+
     // The API returns a flat array of programs, not an object with courses property
     if (!Array.isArray(data)) {
       throw new Error('Invalid course data structure - expected array');
@@ -149,7 +149,7 @@ export async function getCourseBySlug(slug: string): Promise<CourseData['courses
     // Get all published courses and find the one with the matching slug
     const courseData = await getCourseData();
     const course = courseData.courses.find((c) => c.slug === slug);
-    
+
     if (!course) {
       console.log(`Course not found with slug: ${slug}`);
       return null;
@@ -174,7 +174,7 @@ export async function getCourseById(id: string): Promise<CourseData['courses'][0
     // Get all published courses and find the one with the matching ID
     const courseData = await getCourseData();
     const course = courseData.courses.find((c) => c.id === id);
-    
+
     if (!course) {
       console.log(`Course not found with ID: ${id}`);
       return null;
@@ -207,7 +207,7 @@ export interface CreateCourseRequest {
 export async function createCourse(courseData: CreateCourseRequest): Promise<CourseData['courses'][0]> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-    
+
     const response = await fetch(`${apiUrl}/api/program`, {
       method: 'POST',
       headers: {
@@ -221,10 +221,10 @@ export async function createCourse(courseData: CreateCourseRequest): Promise<Cou
     }
 
     const createdCourse = await response.json();
-    
+
     // Revalidate the course data after creation
     await revalidateCourseData();
-    
+
     return createdCourse;
   } catch (error) {
     console.error('Error in createCourse:', error);

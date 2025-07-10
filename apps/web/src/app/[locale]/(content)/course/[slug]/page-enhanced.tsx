@@ -14,7 +14,7 @@ interface CourseDetailPageProps {
 
 export default async function CourseDetailPage({ params }: CourseDetailPageProps) {
   const { slug } = await params;
-  
+
   const courseResult = await getCourseBySlug(slug);
 
   if (!courseResult.success) {
@@ -28,7 +28,7 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <CourseHeader course={course} />
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
@@ -45,10 +45,7 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
             <div className="sticky top-8 space-y-6">
               <ErrorBoundary fallback={<div>Failed to load course access</div>}>
                 <Suspense fallback={<Loading />}>
-                  <CourseAccessCard 
-                    courseSlug={course.slug} 
-                    courseTitle={course.title}
-                  />
+                  <CourseAccessCard courseSlug={course.slug} courseTitle={course.title} />
                 </Suspense>
               </ErrorBoundary>
 
@@ -66,11 +63,7 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
 // Generate static params for better performance
 export async function generateStaticParams() {
   // This would ideally come from your CMS or API
-  return [
-    { slug: 'game-dev-portfolio' },
-    { slug: 'game-jam-survival' },
-    { slug: 'retro-game-development' },
-  ];
+  return [{ slug: 'game-dev-portfolio' }, { slug: 'game-jam-survival' }, { slug: 'retro-game-development' }];
 }
 
 // Metadata generation

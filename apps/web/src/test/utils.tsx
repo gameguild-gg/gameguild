@@ -49,7 +49,7 @@ const AllTheProviders = ({ children, courseData = mockCourseData }: AllTheProvid
 
 const customRender = (ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'> & { courseData?: CourseData }) => {
   const { courseData, ...renderOptions } = options ?? {};
-  
+
   return render(ui, {
     wrapper: ({ children }) => <AllTheProviders courseData={courseData}>{children}</AllTheProviders>,
     ...renderOptions,

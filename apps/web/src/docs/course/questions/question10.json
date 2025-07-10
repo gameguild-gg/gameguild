@@ -2,19 +2,9 @@
   "id": 10,
   "format_ver": "1.0.0",
   "type": "code",
-  "rules": [
-    "inputs: n",
-    "outputs: y",
-    "chars: 5000",
-    "files: 5"
-  ],
+  "rules": ["inputs: n", "outputs: y", "chars: 5000", "files: 5"],
   "status": 1,
-  "subject": [
-    "html",
-    "css",
-    "bootstrap",
-    "landing page"
-  ],
+  "subject": ["html", "css", "bootstrap", "landing page"],
   "title": "Bootstrap 5 Landing Page",
   "description": "Create a complete landing page using Bootstrap 5. The page should include a navigation bar, hero section, features section, a footer, and two SVG images. Organize your code into separate HTML, CSS, and SVG files within appropriate folders.",
   "initialCode": {
@@ -52,35 +42,16 @@
   ],
   "inputs": {},
   "outputs": {
-    "/index.html": [
-      "<!DOCTYPE html>"
-    ],
-    "/css/styles.css": [
-      ".hero-section {"
-    ],
-    "/js/main.js": [
-      "document.addEventListener"
-    ],
-    "/images/hero-image.svg": [
-      "<svg width=\"400\""
-    ],
-    "/images/feature-image1.svg": [
-      "<svg width=\"100\""
-    ]
+    "/index.html": ["<!DOCTYPE html>"],
+    "/css/styles.css": [".hero-section {"],
+    "/js/main.js": ["document.addEventListener"],
+    "/images/hero-image.svg": ["<svg width=\"400\""],
+    "/images/feature-image1.svg": ["<svg width=\"100\""]
   },
   "outputsScore": {
-    "/index.html": [
-      4
-    ],
-    "/css/styles.css": [
-      3
-    ],
-    "/js/main.js": [
-      3
-    ]
+    "/index.html": [4],
+    "/css/styles.css": [3],
+    "/js/main.js": [3]
   },
-  "score": [
-    10,
-    0
-  ]
+  "score": [10, 0]
 }

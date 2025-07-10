@@ -75,7 +75,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ username }) => {
                   className="w-32 h-32 rounded-full object-cover border-4 border-green-500"
                 />
               </div>
-              
+
               <div className="flex-1">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                   <div>
@@ -86,7 +86,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ username }) => {
                       <span>📅 Joined {new Date(mockUser.joinDate).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2 mt-4 md:mt-0">
                     <Button variant="outline" size="sm">
                       Edit Profile
@@ -96,7 +96,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ username }) => {
                     </Button>
                   </div>
                 </div>
-                
+
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
@@ -144,7 +144,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ username }) => {
                     <h3 className="font-semibold text-lg line-clamp-2">{course.title}</h3>
                     <Badge variant={course.status === 'Completed' ? 'default' : 'secondary'}>{course.status}</Badge>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm text-zinc-600 dark:text-zinc-400">
                       <span>Progress</span>
@@ -152,7 +152,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ username }) => {
                     </div>
                     <Progress value={course.progress} className="h-2" />
                   </div>
-                  
+
                   <div className="mt-4 flex justify-between items-center">
                     <span className="text-sm text-zinc-500">Enrolled: {new Date(course.enrolledAt).toLocaleDateString()}</span>
                     <Button asChild size="sm">
@@ -173,7 +173,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ username }) => {
               <Link href="/projects/new">Create New Project</Link>
             </Button>
           </div>
-          
+
           <div className="text-center py-12">
             <p className="text-zinc-500">No projects yet. Create your first project!</p>
           </div>

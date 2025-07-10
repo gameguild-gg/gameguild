@@ -25,7 +25,7 @@ export default function CourseLoading() {
             <Skeleton className="h-6 w-3/4 bg-gray-800" />
             <Skeleton className="h-4 w-full bg-gray-800" />
             <Skeleton className="h-4 w-5/6 bg-gray-800" />
-            
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="text-center">
@@ -36,7 +36,7 @@ export default function CourseLoading() {
               ))}
             </div>
           </div>
-          
+
           <div className="relative">
             <Skeleton className="w-full h-80 rounded-lg bg-gray-800" />
           </div>
@@ -84,7 +84,7 @@ export default function CourseLoading() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-gray-800 border-gray-700">
               <CardContent className="p-6">
                 <Skeleton className="h-8 w-32 mb-4 bg-gray-700" />

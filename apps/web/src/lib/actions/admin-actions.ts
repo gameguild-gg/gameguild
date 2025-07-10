@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 export async function adminLogin() {
   const cookieStore = await cookies();
-  
+
   // Set a simple admin session cookie for development
   cookieStore.set('admin-session', 'true', {
     httpOnly: true,

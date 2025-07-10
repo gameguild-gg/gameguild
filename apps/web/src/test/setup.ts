@@ -74,7 +74,7 @@ beforeAll(() => {
     unobserve = jest.fn();
     disconnect = jest.fn();
   };
-  
+
   Object.defineProperty(window, 'IntersectionObserver', {
     writable: true,
     configurable: true,

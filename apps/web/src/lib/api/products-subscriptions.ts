@@ -91,7 +91,7 @@ export enum TransactionType {
   Refund = 'Refund',
   Subscription = 'Subscription',
   Commission = 'Commission',
-  Withdrawal = 'Withdrawal'
+  Withdrawal = 'Withdrawal',
 }
 
 export enum TransactionStatus {
@@ -99,7 +99,7 @@ export enum TransactionStatus {
   Completed = 'Completed',
   Failed = 'Failed',
   Canceled = 'Canceled',
-  Refunded = 'Refunded'
+  Refunded = 'Refunded',
 }
 
 // API Client helper
@@ -154,7 +154,7 @@ export const productsApi = {
           affiliateCommissionPercentage: 30,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        }
+        },
       ];
     }
   },
@@ -175,7 +175,7 @@ export const productsApi = {
       console.error(`Error fetching products by type ${type}:`, error);
       return [];
     }
-  }
+  },
 };
 
 // Subscriptions API
@@ -185,7 +185,7 @@ export const subscriptionsApi = {
     try {
       // This endpoint might not exist yet, so we'll implement mock data
       console.log('Fetching user subscription...');
-      
+
       // Mock subscription data based on user
       return {
         id: 'sub-1',
@@ -202,13 +202,8 @@ export const subscriptionsApi = {
           currency: 'USD',
           intervalType: SubscriptionInterval.Month,
           intervalCount: 1,
-          features: [
-            'Unlimited projects',
-            'Advanced analytics',
-            'Priority support',
-            'Custom domains'
-          ]
-        }
+          features: ['Unlimited projects', 'Advanced analytics', 'Priority support', 'Custom domains'],
+        },
       };
     } catch (error) {
       console.error('Error fetching user subscription:', error);
@@ -229,7 +224,7 @@ export const subscriptionsApi = {
           currency: 'USD',
           intervalType: SubscriptionInterval.Month,
           intervalCount: 1,
-          features: ['5 projects', 'Basic support']
+          features: ['5 projects', 'Basic support'],
         },
         {
           id: 'plan-pro',
@@ -239,12 +234,7 @@ export const subscriptionsApi = {
           currency: 'USD',
           intervalType: SubscriptionInterval.Month,
           intervalCount: 1,
-          features: [
-            'Unlimited projects',
-            'Advanced analytics',
-            'Priority support',
-            'Custom domains'
-          ]
+          features: ['Unlimited projects', 'Advanced analytics', 'Priority support', 'Custom domains'],
         },
         {
           id: 'plan-enterprise',
@@ -254,19 +244,14 @@ export const subscriptionsApi = {
           currency: 'USD',
           intervalType: SubscriptionInterval.Month,
           intervalCount: 1,
-          features: [
-            'Everything in Pro',
-            'Team management',
-            'SSO integration',
-            'Dedicated support'
-          ]
-        }
+          features: ['Everything in Pro', 'Team management', 'SSO integration', 'Dedicated support'],
+        },
       ];
     } catch (error) {
       console.error('Error fetching subscription plans:', error);
       return [];
     }
-  }
+  },
 };
 
 // Payments API
@@ -287,11 +272,11 @@ export const paymentsApi = {
           description: 'Pro Plan Monthly Subscription',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        }
+        },
       ];
     } catch (error) {
       console.error('Error fetching user transactions:', error);
       return [];
     }
-  }
+  },
 };

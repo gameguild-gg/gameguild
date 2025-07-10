@@ -15,14 +15,14 @@ export default function CoursesBanner() {
     <section className="relative w-screen h-[600px] overflow-hidden left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
       {/* Background with gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-purple-900/90 via-blue-900/80 to-cyan-900/90" />
-      
+
       {/* Animated background pattern with more elements */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-10 left-10 w-32 h-32 bg-purple-500/20 rounded-full blur-xl animate-pulse" />
         <div className="absolute top-40 right-20 w-48 h-48 bg-blue-500/20 rounded-full blur-xl animate-pulse delay-1000" />
         <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-cyan-500/20 rounded-full blur-xl animate-pulse delay-2000" />
         <div className="absolute bottom-10 right-10 w-24 h-24 bg-pink-500/20 rounded-full blur-xl animate-pulse delay-500" />
-        
+
         {/* Additional floating particles */}
         <div className="absolute top-1/3 left-1/3 w-16 h-16 bg-yellow-500/10 rounded-full blur-lg animate-pulse delay-3000" />
         <div className="absolute top-1/2 right-1/3 w-20 h-20 bg-green-500/10 rounded-full blur-lg animate-pulse delay-1500" />

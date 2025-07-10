@@ -32,7 +32,7 @@ export class CourseErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) {
         return this.props.fallback;
       }
-      
+
       return <CourseError message={this.state.error?.message || 'Something went wrong'} onRetry={() => this.setState({ hasError: false, error: undefined })} />;
     }
 

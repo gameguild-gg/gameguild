@@ -8,15 +8,14 @@ and CMS backend authentication flows**:
 ### The Problem
 
 1. **NextAuth.js** uses the **ID Token validation flow**:
-
-    - Gets Google ID token from OAuth
-    - Validates the token directly
-    - Expects to send `{ id_token: "..." }` to the backend
+   - Gets Google ID token from OAuth
+   - Validates the token directly
+   - Expects to send `{ id_token: "..." }` to the backend
 
 2. **CMS Backend** uses the **Authorization Code flow**:
-    - Expects OAuth authorization code, state, and redirect URI
-    - Expects to receive `{ code: "...", state: "...", redirectUri: "..." }`
-    - The endpoint `/auth/google/callback` expects `OAuthSignInRequestDto`
+   - Expects OAuth authorization code, state, and redirect URI
+   - Expects to receive `{ code: "...", state: "...", redirectUri: "..." }`
+   - The endpoint `/auth/google/callback` expects `OAuthSignInRequestDto`
 
 ### Why This Happens
 

@@ -2,18 +2,10 @@
   "id": 7,
   "format_ver": "1.0.0",
   "type": "essay",
-  "rules": [
-    "maxWords: 500"
-  ],
+  "rules": ["maxWords: 500"],
   "status": 1,
-  "subject": [
-    "javascript",
-    "history"
-  ],
-  "score": [
-    20,
-    0
-  ],
+  "subject": ["javascript", "history"],
+  "score": [20, 0],
   "title": "The History of JavaScript",
   "description": "Discuss the history and evolution of JavaScript, including its key milestones and influences.",
   "question": "Provide a comprehensive overview of the history of JavaScript, from its inception to its current state. Include key figures, important dates, and major developments that have shaped the language.",

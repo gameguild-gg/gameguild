@@ -22,7 +22,7 @@ export default function CourseDetailPage() {
       try {
         setLoading(true);
         setError(null);
-        
+
         const courseData = await getCourseBySlug(slug);
         setCourse(courseData);
       } catch (err) {
@@ -153,14 +153,10 @@ export default function CourseDetailPage() {
                   <h3 className="font-medium mb-2">Description</h3>
                   <p className="text-muted-foreground">{course.description}</p>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-2">
-                  <Badge className={getLevelColor(course.level)}>
-                    {getLevelText(course.level)}
-                  </Badge>
-                  <Badge className={getAreaColor(course.area)}>
-                    {course.area.charAt(0).toUpperCase() + course.area.slice(1)}
-                  </Badge>
+                  <Badge className={getLevelColor(course.level)}>{getLevelText(course.level)}</Badge>
+                  <Badge className={getAreaColor(course.area)}>{course.area.charAt(0).toUpperCase() + course.area.slice(1)}</Badge>
                 </div>
 
                 {course.tools && course.tools.length > 0 && (
