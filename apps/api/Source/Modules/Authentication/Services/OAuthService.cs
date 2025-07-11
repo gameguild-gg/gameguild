@@ -1,7 +1,7 @@
 using System.Text.Json;
 
 
-namespace GameGuild.Modules.Auth {
+namespace GameGuild.Modules.Authentication {
   public class OAuthService(HttpClient httpClient, IConfiguration configuration) : IOAuthService {
     public async Task<string> ExchangeGitHubCodeAsync(string code, string redirectUri) {
       var clientId = configuration["OAuth:GitHub:ClientId"];

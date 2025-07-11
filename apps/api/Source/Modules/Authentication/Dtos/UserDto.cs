@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Auth {
+namespace GameGuild.Modules.Authentication {
   /// <summary>
   /// DTO for user information
   /// </summary>

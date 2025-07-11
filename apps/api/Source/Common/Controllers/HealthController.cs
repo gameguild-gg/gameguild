@@ -1,5 +1,5 @@
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

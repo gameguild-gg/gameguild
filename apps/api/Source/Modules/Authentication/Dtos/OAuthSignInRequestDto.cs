@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Auth {
+namespace GameGuild.Modules.Authentication {
   /// <summary>
   /// Request DTO for OAuth sign-in
   /// </summary>

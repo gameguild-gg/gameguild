@@ -1,6 +1,8 @@
+using GameGuild.Modules.Credentials.Queries;
 using MediatR;
 
-namespace GameGuild.Modules.Credentials;
+
+namespace GameGuild.Modules.Credentials.Handlers;
 
 /// <summary>
 /// Handler for GetCredentialByUserIdAndTypeQuery using CQRS pattern

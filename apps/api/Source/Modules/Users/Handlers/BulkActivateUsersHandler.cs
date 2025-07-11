@@ -22,7 +22,7 @@ public class BulkActivateUsersHandler(
 
     foreach (var userId in request.UserIds) {
       try {
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null, cancellationToken);
 
         if (user == null) {
           errors.Add($"User with ID {userId} not found");

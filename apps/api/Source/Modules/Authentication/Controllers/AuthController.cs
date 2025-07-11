@@ -1,9 +1,10 @@
+using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MediatR;
-using FluentValidation;
 
-namespace GameGuild.Modules.Auth;
+
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// REST API controller for authentication operations using CQRS pattern.

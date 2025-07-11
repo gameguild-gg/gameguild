@@ -5,7 +5,7 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Auth {
+namespace GameGuild.Modules.Authentication {
   public class Web3Service(ApplicationDbContext context, ILogger<Web3Service> logger) : IWeb3Service {
     private readonly Dictionary<string, Web3ChallengeResponseDto> _challenges = new();
 
