@@ -14,7 +14,7 @@ public class ActivateUserHandler(
   IMediator mediator
 ) : IRequestHandler<ActivateUserCommand, bool> {
   public async Task<bool> Handle(ActivateUserCommand request, CancellationToken cancellationToken) {
-    var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
+    var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
 
     if (user == null) return false;
 

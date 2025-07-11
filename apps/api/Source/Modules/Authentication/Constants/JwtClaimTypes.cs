@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Auth;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Constants for custom JWT claim types used throughout the GameGuild application.

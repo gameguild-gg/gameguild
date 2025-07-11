@@ -1,6 +1,7 @@
 using MediatR;
 
-namespace GameGuild.Modules.Credentials;
+
+namespace GameGuild.Modules.Credentials.Queries;
 
 /// <summary>
 /// Query to get all credentials using CQRS pattern

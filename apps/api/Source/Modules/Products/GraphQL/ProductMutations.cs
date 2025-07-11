@@ -1,4 +1,4 @@
-using GameGuild.Common.GraphQL;
+using GameGuild.Common;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Products.Services;
 using ProductEntity = GameGuild.Modules.Products.Models.Product;

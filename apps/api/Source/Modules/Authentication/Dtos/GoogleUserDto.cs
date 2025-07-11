@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Auth;
+﻿namespace GameGuild.Modules.Authentication;
 
 public class GoogleUserDto {
   public string Id { get; set; } = string.Empty;

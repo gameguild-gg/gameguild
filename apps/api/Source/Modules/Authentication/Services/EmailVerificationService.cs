@@ -5,7 +5,7 @@ using GameGuild.Modules.Credentials;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Auth {
+namespace GameGuild.Modules.Authentication {
   public class EmailVerificationService(
     ApplicationDbContext context,
     ILogger<EmailVerificationService> logger,

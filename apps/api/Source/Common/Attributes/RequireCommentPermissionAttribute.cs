@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions.Models;
 using Microsoft.AspNetCore.Mvc;

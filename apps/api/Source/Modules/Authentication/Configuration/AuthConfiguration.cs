@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
 
-namespace GameGuild.Modules.Auth {
+namespace GameGuild.Modules.Authentication {
   /// <summary>
   /// Extension methods for configuring authentication services.
   /// DEPRECATED: Use AuthModuleDependencyInjection instead for better CQRS and modular design.

@@ -1,10 +1,10 @@
-using GameGuild.Common.GraphQL;
+using GameGuild.Common;
 using GameGuild.Modules.Users;
 using HotChocolate.Authorization;
 using MediatR;
 
 
-namespace GameGuild.Modules.Auth;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// GraphQL queries for Authentication module using CQRS pattern.

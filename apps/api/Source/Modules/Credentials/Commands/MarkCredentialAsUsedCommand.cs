@@ -1,6 +1,7 @@
 using MediatR;
 
-namespace GameGuild.Modules.Credentials;
+
+namespace GameGuild.Modules.Credentials.Commands;
 
 /// <summary>
 /// Command to mark a credential as used using CQRS pattern

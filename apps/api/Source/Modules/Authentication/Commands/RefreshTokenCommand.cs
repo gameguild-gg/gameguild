@@ -1,6 +1,7 @@
 using MediatR;
 
-namespace GameGuild.Modules.Auth;
+
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Command to handle token refresh using CQRS pattern

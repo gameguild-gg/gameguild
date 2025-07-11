@@ -1,6 +1,7 @@
 using FluentValidation;
 
-namespace GameGuild.Modules.Auth;
+
+namespace GameGuild.Modules.Authentication.Validators;
 
 /// <summary>
 /// Validator for LocalSignInCommand following CQRS and DRY principles

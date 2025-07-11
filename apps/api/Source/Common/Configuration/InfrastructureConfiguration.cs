@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Common.Configuration;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Contains infrastructure-specific configuration methods for dependency injection.

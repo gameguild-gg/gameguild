@@ -1,7 +1,8 @@
-using MediatR;
 using GameGuild.Modules.Users;
+using MediatR;
 
-namespace GameGuild.Modules.Auth;
+
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Handler for get user profile query using CQRS pattern

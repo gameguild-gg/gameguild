@@ -1,6 +1,8 @@
+using GameGuild.Modules.Credentials.Commands;
 using MediatR;
 
-namespace GameGuild.Modules.Credentials;
+
+namespace GameGuild.Modules.Credentials.Handlers;
 
 /// <summary>
 /// Handler for UpdateCredentialCommand using CQRS pattern
