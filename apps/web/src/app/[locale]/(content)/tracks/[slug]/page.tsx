@@ -1,5 +1,5 @@
-import { getTrackBySlug } from '@/actions/tracks';
-import { getCourseData } from '@/actions/courses';
+import { getTrackBySlug } from '@/lib/actions/tracks.ts';
+import { getCourseData } from '@/lib/actions/courses.ts';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';

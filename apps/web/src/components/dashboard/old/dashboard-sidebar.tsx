@@ -32,7 +32,7 @@ export default function DashboardSidebar() {
           <Package2 className="h-4 w-4 transition-all group-hover:scale-110" />
           <span className="sr-only">Acme Inc</span>
         </Link>
-        {/* eslint-disable-next-line react/jsx-no-undef */}
+        {}
         <Tooltip>
           <TooltipTrigger asChild>
             <Link

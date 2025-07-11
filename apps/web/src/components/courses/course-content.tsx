@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CourseProvider } from '@/contexts/course-context';
+import { CourseProvider } from '@/lib/courses/course-context.tsx';
 import { CourseErrorBoundary } from './course-error-boundary';
 import { CourseFilters } from './course-filters';
 import { CourseGrid } from './course-grid';
