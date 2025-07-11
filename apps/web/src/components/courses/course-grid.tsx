@@ -1,6 +1,32 @@
 import React from 'react';
 import { CourseCard } from './course-card';
-import { CourseGridProps } from '@/lib/courses/courses.types';
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  duration: string;
+  enrolledStudents: number;
+  rating: number;
+  price: number;
+  image: string;
+  instructor: {
+    name: string;
+    avatar: string;
+  };
+  isEnrolled?: boolean;
+  progress?: number;
+  certification?: boolean;
+}
+
+interface CourseGridProps {
+  courses: Course[];
+  variant?: 'default' | 'compact' | 'featured';
+  columns?: 1 | 2 | 3 | 4;
+  loading?: boolean;
+}
 
 export function CourseGrid({ courses, variant = 'default', columns = 3, loading = false }: CourseGridProps) {
   const gridClass = {
