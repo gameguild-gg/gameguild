@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Auth;
+﻿namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Response DTO with refreshed authentication tokens

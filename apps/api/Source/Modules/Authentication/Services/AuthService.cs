@@ -8,7 +8,7 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Auth {
+namespace GameGuild.Modules.Authentication {
   public class AuthService(
     ApplicationDbContext context,
     IJwtTokenService jwtTokenService,

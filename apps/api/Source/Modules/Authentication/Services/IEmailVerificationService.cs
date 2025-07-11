@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Auth;
+﻿namespace GameGuild.Modules.Authentication;
 
 public interface IEmailVerificationService {
   Task<EmailOperationResponseDto> SendEmailVerificationAsync(string email);

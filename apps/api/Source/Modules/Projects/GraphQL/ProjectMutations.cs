@@ -1,5 +1,4 @@
 using GameGuild.Common;
-using GameGuild.Common.GraphQL;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
 

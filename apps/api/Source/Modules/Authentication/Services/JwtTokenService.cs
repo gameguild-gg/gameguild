@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
 
-namespace GameGuild.Modules.Auth {
+namespace GameGuild.Modules.Authentication {
   public class JwtTokenService(IConfiguration configuration) : IJwtTokenService {
     public string GenerateAccessToken(UserDto user, string[] roles) { return GenerateAccessToken(user, roles, null); }
 

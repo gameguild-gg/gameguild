@@ -1,4 +1,4 @@
-namespace GameGuild.Common.GraphQL;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Root GraphQL Mutation type - entry point for all GraphQL mutations

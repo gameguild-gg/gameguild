@@ -1,8 +1,10 @@
 using GameGuild.Database;
+using GameGuild.Modules.Credentials.Queries;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Credentials;
+
+namespace GameGuild.Modules.Credentials.Handlers;
 
 /// <summary>
 /// Handler for getting credential by ID query using CQRS pattern

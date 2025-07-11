@@ -15,9 +15,9 @@ public class DeleteUserHandler(
 ) : IRequestHandler<DeleteUserCommand, bool> {
   public async Task<bool> Handle(DeleteUserCommand request, CancellationToken cancellationToken) {
     var user = await context.Users
-                            .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
+                            .FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
 
-    if (user == null) return false;
+    if (user == null) throw new InvalidOperationException($"User with ID {request.UserId} not found");
 
     if (request.SoftDelete) {
       if (user.DeletedAt != null) return false; // Already soft deleted

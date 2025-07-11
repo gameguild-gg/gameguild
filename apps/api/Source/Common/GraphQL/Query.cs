@@ -1,4 +1,4 @@
-namespace GameGuild.Common.GraphQL;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Root GraphQL Query type - entry point for all GraphQL queries

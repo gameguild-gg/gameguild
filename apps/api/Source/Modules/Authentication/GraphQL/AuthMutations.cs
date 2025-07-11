@@ -1,10 +1,10 @@
-using FluentValidation;
-using GameGuild.Common.GraphQL;
+using GameGuild.Common;
 using HotChocolate.Authorization;
 using MediatR;
+using ValidationException = FluentValidation.ValidationException;
 
 
-namespace GameGuild.Modules.Auth;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// GraphQL mutations for Authentication module using CQRS pattern.

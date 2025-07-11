@@ -1,9 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using FluentValidation;
-using GameGuild.Common.Configuration;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using HotChocolate.Execution.Configuration;
 using MediatR;
 using Microsoft.AspNetCore.RateLimiting;
@@ -274,8 +273,8 @@ public static class DependencyInjection {
 
       // Initialize GraphQL server with base types
       var graphqlBuilder = services.AddGraphQLServer()
-                                   .AddQueryType<GameGuild.Common.GraphQL.Query>()
-                                   .AddMutationType<GameGuild.Common.GraphQL.Mutation>();
+                                   .AddQueryType<Query>()
+                                   .AddMutationType<Mutation>();
 
       // Configure core GraphQL features
       ConfigureGraphQLFeatures(graphqlBuilder, options);
@@ -399,7 +398,7 @@ public static class DependencyInjection {
         builder,
         "Authentication",
         () => {
-          SafeAddGraphQLTypes(builder, new[] { ("AuthQueries", typeof(GameGuild.Modules.Auth.AuthQueries)), ("AuthMutations", typeof(GameGuild.Modules.Auth.AuthMutations)) }, logger, isExtension: new[] { true, true });
+          SafeAddGraphQLTypes(builder, new[] { ("AuthQueries", typeof(AuthQueries)), ("AuthMutations", typeof(AuthMutations)) }, logger, isExtension: new[] { true, true });
 
           // Try to add CredentialType if it exists
           SafeAddGraphQLTypes(builder, new[] { ("CredentialType", typeof(GameGuild.Modules.Credentials.CredentialType)) }, logger, isExtension: new[] { false }, isOptional: true);

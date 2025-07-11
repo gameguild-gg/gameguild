@@ -1,6 +1,7 @@
 using MediatR;
 
-namespace GameGuild.Modules.Credentials;
+
+namespace GameGuild.Modules.Credentials.Commands;
 
 /// <summary>
 /// Command to restore a soft-deleted credential using CQRS pattern

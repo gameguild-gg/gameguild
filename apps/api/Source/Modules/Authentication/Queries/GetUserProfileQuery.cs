@@ -1,6 +1,7 @@
 using MediatR;
 
-namespace GameGuild.Modules.Auth;
+
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Query to get current user profile using CQRS pattern

@@ -1,6 +1,7 @@
 using MediatR;
 
-namespace GameGuild.Modules.Auth;
+
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Domain notification published when a user token is revoked

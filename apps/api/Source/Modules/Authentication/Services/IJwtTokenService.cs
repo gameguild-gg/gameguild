@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 
 
-namespace GameGuild.Modules.Auth;
+namespace GameGuild.Modules.Authentication;
 
 public interface IJwtTokenService {
   string GenerateAccessToken(UserDto user, string[] roles);

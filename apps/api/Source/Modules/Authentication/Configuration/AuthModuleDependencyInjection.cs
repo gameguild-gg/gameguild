@@ -1,10 +1,9 @@
-using System.Reflection;
 using FluentValidation;
-using GameGuild.Common.GraphQL;
+using GameGuild.Modules.Authentication.Validators;
 using MediatR;
 
 
-namespace GameGuild.Modules.Auth;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Authentication module dependency injection configuration following CQRS, GraphQL, and REST best practices.

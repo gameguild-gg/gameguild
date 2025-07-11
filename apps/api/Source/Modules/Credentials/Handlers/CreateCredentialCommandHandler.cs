@@ -1,7 +1,9 @@
+using GameGuild.Modules.Credentials.Commands;
+using GameGuild.Modules.Credentials.Notifications;
 using MediatR;
-using GameGuild.Modules.Users;
 
-namespace GameGuild.Modules.Credentials;
+
+namespace GameGuild.Modules.Credentials.Handlers;
 
 /// <summary>
 /// Handler for creating credential command using CQRS pattern

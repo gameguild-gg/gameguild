@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
 
-namespace GameGuild.Modules.Auth {
+namespace GameGuild.Modules.Authentication {
   /// <summary>
   /// Request DTO for Web3 authentication challenge generation
   /// </summary>

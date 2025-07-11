@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.IdentityModel.Tokens;
 
 
-namespace GameGuild.Modules.Auth {
+namespace GameGuild.Modules.Authentication {
   /// <summary>
   /// JWT Authentication filter that validates tokens and sets user context
   /// </summary>

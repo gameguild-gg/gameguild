@@ -1,7 +1,7 @@
 using MediatR;
 
 
-namespace GameGuild.Modules.Auth;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Handler for verifying Web3 signature
