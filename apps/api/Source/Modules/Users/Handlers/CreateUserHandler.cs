@@ -20,12 +20,15 @@ public class CreateUserHandler(
 
     if (existingUser != null) throw new InvalidOperationException($"User with email {request.Email} already exists");
 
+    // Normalize negative balance to zero - business rule
+    var normalizedBalance = Math.Max(0, request.InitialBalance);
+
     var user = new User {
       Name = request.Name,
       Email = request.Email,
       IsActive = request.IsActive,
-      Balance = request.InitialBalance,
-      AvailableBalance = request.InitialBalance,
+      Balance = normalizedBalance,
+      AvailableBalance = normalizedBalance,
     };
 
     context.Users.Add(user);

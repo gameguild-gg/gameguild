@@ -37,6 +37,7 @@ public class AuthController : ControllerBase
         try
         {
             _logger.LogInformation("Local sign-up attempt for email: {Email}", request.Email);
+            _logger.LogInformation("DEBUG: Received username: '{Username}', email: '{Email}'", request.Username, request.Email);
 
             var command = new LocalSignUpCommand
             {
@@ -45,6 +46,8 @@ public class AuthController : ControllerBase
                 Username = request.Username ?? request.Email,
                 TenantId = request.TenantId
             };
+
+            _logger.LogInformation("DEBUG: Command username: '{Username}', email: '{Email}'", command.Username, command.Email);
 
             var result = await _mediator.Send(command);
 

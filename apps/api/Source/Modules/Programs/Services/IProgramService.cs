@@ -24,6 +24,11 @@ public interface IProgramService {
   Task<ProgramEntity?> GetProgramBySlugAsync(string slug);
 
   /// <summary>
+  /// Get a published program by slug (publicly accessible)
+  /// </summary>
+  Task<ProgramEntity?> GetPublishedProgramBySlugAsync(string slug);
+
+  /// <summary>
   /// Get a program by ID with all content included
   /// </summary>
   Task<ProgramEntity?> GetProgramWithContentAsync(Guid id);
