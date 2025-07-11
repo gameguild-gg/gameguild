@@ -1,5 +1,6 @@
 using GameGuild.Common;
 using GameGuild.Modules.Auth;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.DTOs;
 using GameGuild.Modules.Programs.Models;
@@ -223,7 +224,26 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   [HttpGet("slug/{slug}")]
   [Public]
   public async Task<ActionResult<ProgramEntity>> GetProgramBySlug(string slug) {
-    var program = await programService.GetProgramBySlugAsync(slug);
+    // Check if user is authenticated
+    var isAuthenticated = HttpContext.User.Identity?.IsAuthenticated == true;
+    
+    ProgramEntity? program;
+    
+    if (isAuthenticated) {
+      // Authenticated users can access any program (subject to permission checks)
+      program = await programService.GetProgramBySlugAsync(slug);
+    } else {
+      // For unauthenticated users, first check if the program exists at all
+      program = await programService.GetProgramBySlugAsync(slug);
+      
+      if (program != null) {
+        // If program exists but is not published/public, return Unauthorized
+        if (program.Status != ContentStatus.Published || program.Visibility != AccessLevel.Public) {
+          return Unauthorized("Authentication required to access this program");
+        }
+      }
+      // If program is published and public, it will be returned; if not found, null will be returned
+    }
 
     if (program == null) return NotFound();
 

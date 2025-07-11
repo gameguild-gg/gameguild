@@ -21,6 +21,12 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return await context.Programs.Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Slug == slug); 
   }
 
+  public async Task<ProgramEntity?> GetPublishedProgramBySlugAsync(string slug) { 
+    return await context.Programs
+      .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public)
+      .FirstOrDefaultAsync(p => p.Slug == slug); 
+  }
+
   public async Task<ProgramEntity?> GetProgramWithContentAsync(Guid id) {
     return await context.Programs.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted))
                         .Include(p => p.ProgramUsers.Where(pu => !pu.IsDeleted))
