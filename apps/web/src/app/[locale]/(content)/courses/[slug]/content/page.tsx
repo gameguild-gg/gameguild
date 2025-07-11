@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import { getCourseBySlug } from '@/lib/actions/courses.ts';
+import { getCourseBySlug } from '@/lib/courses/actions';
 import { redirect } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';

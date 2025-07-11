@@ -1,4 +1,4 @@
-import ErrorBoundary from '@/components/error-boundary';
+import ErrorBoundary from '@/components/error-boundary.tsx';
 
 export default function AuthError({ error, reset }: { error: Error; reset: () => void }) {
   return (

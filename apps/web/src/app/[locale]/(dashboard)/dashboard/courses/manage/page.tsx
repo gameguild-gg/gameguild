@@ -1,7 +1,7 @@
 import { Suspense } from 'next';
 import { Metadata } from 'next';
-import { getEnhancedCourseData } from '@/lib/actions/courses-enhanced.ts';
-import { CourseProvider } from '@/lib/courses/course-enhanced-context.tsx';
+import { getEnhancedCourseData } from '@/lib/courses/actions';
+import { CourseProvider } from '@/lib/courses';
 import { CourseManagementContent } from '@/components/dashboard/courses/course-management-content';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
