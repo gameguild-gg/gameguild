@@ -19,6 +19,7 @@ using GameGuild.Modules.Subscriptions.Models;
 using GameGuild.Modules.Tags.Models;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.TestingLab;
+using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Tag = GameGuild.Modules.Tags.Models.Tag;
@@ -30,6 +31,8 @@ namespace GameGuild.Database;
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options) {
   // DbSets
   public DbSet<User> Users { get; set; }
+
+  public DbSet<UserProfile> UserProfiles { get; set; }
 
   public DbSet<Credential> Credentials { get; set; }
 
