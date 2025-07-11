@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect } from 'react';
-import { useCourseContext, useCourseFilters, useCourseSelection, useCoursePagination } from '@/lib/courses/course-enhanced-context.tsx';
+import { useCourseContext, useCourseFilters, useCourseSelection, useCoursePagination } from '@/lib/courses';
 import {
   createCourse,
   updateCourse,
@@ -10,7 +10,7 @@ import {
   duplicateCourse,
   bulkUpdateCourses,
   revalidateCoursesData,
-} from '@/lib/actions/courses-enhanced.ts';
+} from '@/lib/courses/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

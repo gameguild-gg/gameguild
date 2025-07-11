@@ -1,5 +1,5 @@
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton.tsx';
+import { Card, CardContent, CardHeader } from '@/components/ui/card.tsx';
 
 export default function DashboardLoading() {
   return (

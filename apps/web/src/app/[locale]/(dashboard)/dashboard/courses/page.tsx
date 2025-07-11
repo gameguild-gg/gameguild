@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getCourseData, revalidateCourseData } from '@/lib/actions/courses.ts';
+import { getCourseData, revalidateCourseData } from '@/lib/courses/actions';
 import { Course } from '@/types/courses';
 import { BookOpen, Plus, Search, Edit, Eye, Trash } from 'lucide-react';
 import Link from 'next/link';
@@ -243,7 +243,7 @@ export default function CoursesPage() {
               <div className="flex justify-between items-start">
                 <CardTitle className="text-lg line-clamp-2">{course.title}</CardTitle>
                 <div className="flex gap-1">
-                  <Link href={`/course/${course.slug}`}>
+                  <Link href={`/courses/${course.slug}`}>
                     <Button variant="ghost" size="sm">
                       <Eye className="w-4 h-4" />
                     </Button>

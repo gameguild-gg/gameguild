@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getCourseBySlug } from '@/lib/actions/courses.ts';
+import { getCourseBySlug } from '@/lib/courses/actions';
 import { Course } from '@/types/courses';
 import { ArrowLeft, Edit, Eye, Users, Clock, BookOpen } from 'lucide-react';
 import Link from 'next/link';
@@ -124,7 +124,7 @@ export default function CourseDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Link href={`/course/${course.slug}`}>
+          <Link href={`/courses/${course.slug}`}>
             <Button variant="outline">
               <Eye className="w-4 h-4 mr-2" />
               View Public
