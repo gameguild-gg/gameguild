@@ -1,5 +1,5 @@
-import { getTrackBySlug } from '@/lib/actions/tracks.ts';
-import { getCourseData } from '@/lib/actions/courses.ts';
+import { getTrackBySlug } from '@/lib/tracks/actions';
+import { getCourseData } from '@/lib/courses/actions';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -567,7 +567,7 @@ export default async function TrackDetailPage({ params }: { params: { slug: stri
                           >
                             <CardContent className="p-6">
                               {course.isReal && course.slug ? (
-                                <Link href={`/course/${course.slug}`} className="block">
+                                <Link href={`/courses/${course.slug}`} className="block">
                                   <div className="flex items-start gap-4">
                                     <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
                                       <Image src={course.image} alt={course.title} fill className="object-cover" />

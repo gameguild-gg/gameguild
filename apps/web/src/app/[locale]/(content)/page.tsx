@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
-import { useTenant } from '@/lib/tenant/tenant-provider';
-import { TenantSelector } from '@/components/auth/TenantSelector';
-import { getUserTenants } from '@/lib/auth/actions/tenant.actions';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { environment } from '@/configs/environment';
+import { useTenant } from '@/lib/tenant/tenant-provider.tsx';
+import { TenantSelector } from '@/components/auth/TenantSelector.tsx';
+import { getUserTenants } from '@/lib/auth/actions/tenant.actions.ts';
+import { Button } from '@/components/ui/button.tsx';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.tsx';
+import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
+import { Badge } from '@/components/ui/badge.tsx';
+import { Separator } from '@/components/ui/separator.tsx';
+import { environment } from '@/configs/environment.ts';
 
 export default function Page(): React.JSX.Element {
   const { data: session, status } = useSession();
