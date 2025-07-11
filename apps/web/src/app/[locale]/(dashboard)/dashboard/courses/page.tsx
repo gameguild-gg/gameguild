@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getCourseData, revalidateCourseData } from '@/actions/courses';
+import { getCourseData, revalidateCourseData } from '@/lib/actions/courses.ts';
 import { Course } from '@/types/courses';
 import { BookOpen, Plus, Search, Edit, Eye, Trash } from 'lucide-react';
 import Link from 'next/link';

@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { getCourseBySlug, getCourseLevelConfig } from '@/services/course.service';
+import { getCourseBySlug, getCourseLevelConfig } from '@/lib/courses/services/course.service';
 import { CourseHeader } from '@/components/course/CourseHeader';
 import { CourseOverview } from '@/components/course/CourseOverview';
 import { CourseSidebar } from '@/components/course/CourseSidebar';

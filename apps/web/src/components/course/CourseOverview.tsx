@@ -1,7 +1,7 @@
 import type { Course } from '@/types/course-enhanced';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Target } from 'lucide-react';
-import { getCourseLevelConfig } from '@/services/course.service';
+import { getCourseLevelConfig } from '@/lib/courses/services/course.service';
 
 interface CourseOverviewProps {
   readonly course: Course;

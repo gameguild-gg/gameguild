@@ -117,7 +117,7 @@ export class App {
   args_sizes_get(argc_out: number, argv_buf_size_out: number): number {
     this.mem.check();
     let size = 0;
-    for (let arg of this.argv) {
+    for (const arg of this.argv) {
       size += arg.length + 1; // "arg\0".
     }
     this.mem.write64(argc_out, this.argv.length);
@@ -127,7 +127,7 @@ export class App {
 
   args_get(argv_ptrs: number, argv_buf: number): number {
     this.mem.check();
-    for (let arg of this.argv) {
+    for (const arg of this.argv) {
       this.mem.write32(argv_ptrs, argv_buf);
       argv_ptrs += 4;
       argv_buf += this.mem.writeStr(argv_buf, arg);

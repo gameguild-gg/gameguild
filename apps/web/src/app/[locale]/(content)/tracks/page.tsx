@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
-import { getTracksData } from '@/actions/tracks';
-import { TrackProvider } from '@/contexts/track-context';
+import { getTracksData } from '@/lib/actions/tracks.ts';
+import { TrackProvider } from '@/lib/tracks/track-context.tsx';
 import { TrackFilters } from '@/components/tracks/track-filters';
 import { TrackGrid } from '@/components/tracks/track-grid';
 

@@ -14,21 +14,42 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Package, Send, Settings, Building2, BookOpen } from 'lucide-react';
+import { Package, Send, Settings, Building2, BookOpen, LayoutDashboard, Users, BarChart3, FileText } from 'lucide-react';
 import { cookies } from 'next/headers';
+import { DashboardHeader } from './layout/dashboard-header';
 
 const data = {
   navigation: {
     primary: [
       {
-        title: 'Projects',
-        url: '/dashboard/projects',
-        icon: Package,
+        title: 'Overview',
+        url: '/dashboard/overview',
+        icon: LayoutDashboard,
+      },
+      {
+        title: 'Users',
+        url: '/dashboard/users',
+        icon: Users,
       },
       {
         title: 'Courses',
         url: '/dashboard/courses',
         icon: BookOpen,
+      },
+      {
+        title: 'Analytics',
+        url: '/dashboard/analytics',
+        icon: BarChart3,
+      },
+      {
+        title: 'Reports',
+        url: '/dashboard/reports',
+        icon: FileText,
+      },
+      {
+        title: 'Projects',
+        url: '/dashboard/projects',
+        icon: Package,
       },
       {
         title: 'Tenant Management',
@@ -39,7 +60,7 @@ const data = {
     secondary: [
       {
         title: 'Settings',
-        url: '#',
+        url: '/dashboard/settings',
         icon: Settings,
       },
       {
@@ -58,7 +79,12 @@ export const Dashboard = async ({ children }: PropsWithChildren) => {
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <DashboardSidebar />
-      <SidebarInset className="flex flex-col flex-1">{children}</SidebarInset>
+      <SidebarInset className="flex flex-col flex-1">
+        <DashboardHeader />
+        <main className="flex-1 overflow-auto">
+          <div className="container mx-auto p-6">{children}</div>
+        </main>
+      </SidebarInset>
     </SidebarProvider>
   );
 };
@@ -66,7 +92,17 @@ export const Dashboard = async ({ children }: PropsWithChildren) => {
 export const DashboardSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader></SidebarHeader>
+      <SidebarHeader>
+        <div className="flex items-center gap-2 px-4 py-2">
+          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-sm">GG</span>
+          </div>
+          <div className="group-data-[collapsible=icon]:hidden">
+            <h1 className="font-semibold">Game Guild</h1>
+            <p className="text-xs text-muted-foreground">Dashboard</p>
+          </div>
+        </div>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>

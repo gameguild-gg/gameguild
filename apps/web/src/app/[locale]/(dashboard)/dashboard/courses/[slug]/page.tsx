@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getCourseBySlug } from '@/actions/courses';
+import { getCourseBySlug } from '@/lib/actions/courses.ts';
 import { Course } from '@/types/courses';
 import { ArrowLeft, Edit, Eye, Users, Clock, BookOpen } from 'lucide-react';
 import Link from 'next/link';

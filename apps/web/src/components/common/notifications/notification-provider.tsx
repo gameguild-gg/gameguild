@@ -2,7 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { Notification, NotificationResponse } from '@/types/notification';
-import { getNotifications } from '@/lib/actions/notification-actions';
+import { getNotifications } from '@/lib/notifications/actions/notifications.actions';
 
 interface NotificationContextValue {
   notifications: Notification[];

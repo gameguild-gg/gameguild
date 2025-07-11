@@ -14,7 +14,7 @@ import {
   getProductsContainingCourse,
   type EnrollmentStatus,
   type Product,
-} from '@/actions/enrollment';
+} from '@/lib/actions/enrollment.ts';
 import { Users, Trophy, Star, Lock, CreditCard, Gift, BookOpen, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';

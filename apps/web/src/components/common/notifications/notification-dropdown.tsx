@@ -18,7 +18,7 @@ import {
   getNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
-} from '@/lib/actions/notification-actions';
+} from '@/lib/notifications/actions/notifications.actions';
 import { useToast } from '@/hooks/use-toast';
 
 interface NotificationDropdownProps {
@@ -179,7 +179,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
         const response = await getNotifications(filters);
         setNotifications(response.notifications);
         setUnreadCount(response.unreadCount);
-      } catch (error) {
+      } catch {
         toast({
           title: 'Error',
           description: 'Failed to load notifications',

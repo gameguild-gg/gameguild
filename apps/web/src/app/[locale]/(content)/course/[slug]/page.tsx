@@ -1,4 +1,4 @@
-import { getCourseBySlug } from '@/services/course.service';
+import { getCourseBySlug } from '@/lib/courses/services/course.service';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { CourseHeader } from '@/components/course/CourseHeader';
