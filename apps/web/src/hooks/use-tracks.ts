@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { useTrackContext } from '@/contexts/track-context';
+import { useTrackContext } from '@/lib/tracks/track-context.tsx';
 
 export function useFilteredTracks() {
   const { state, dispatch } = useTrackContext();

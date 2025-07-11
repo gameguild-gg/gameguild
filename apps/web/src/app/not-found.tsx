@@ -1,30 +1,45 @@
-'use client';
-
+import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileQuestion, Home, ArrowLeft, Search } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <div className="flex flex-grow flex-col min-h-[100vh] items-center justify-center space-y-4 text-center">
-      <Image
-        src={'/assets/images/placeholder.svg'}
-        alt={'Acme Inc'}
-        height="150"
-        width="300"
-        className="mx-auto aspect-[2/1] overflow-hidden rounded-lg object-contain object-center"
-      />
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Uh oh! You&apos;re lost.</h1>
-        <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-          It looks like you found a glitch in the matrix. Don&apos;t worry, we&apos;ll get you back to safety.
-        </p>
-      </div>
-      <Link
-        className="inline-flex h-10 items-center justify-center rounded-md border border-gray-200 bg-white px-8 text-sm font-medium shadow-sm gap-1 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-800  dark:bg-gray-950 dark:hover:bg-gray-800 dark:hover:text-gray-50 dark:focus-visible:ring-gray-300"
-        href="/"
-      >
-        Back to Safety
-      </Link>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+            <FileQuestion className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <CardTitle className="text-2xl">Page Not Found</CardTitle>
+          <p className="text-muted-foreground">The page you're looking for doesn't exist or has been moved.</p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild>
+              <Link href="/">
+                <Home className="h-4 w-4 mr-2" />
+                Go Home
+              </Link>
+            </Button>
+            <Button variant="outline" onClick={() => window.history.back()}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Go Back
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/search">
+                <Search className="h-4 w-4 mr-2" />
+                Search
+              </Link>
+            </Button>
+          </div>
+
+          <div className="text-center text-sm text-muted-foreground">
+            <p>Try searching for what you need or return to the homepage.</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

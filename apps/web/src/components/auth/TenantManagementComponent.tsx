@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useActionState, useEffect, useState } from 'react';
-import { createTenant, deleteTenant, getUserTenants, TenantActionState } from '@/lib/auth/tenant-actions';
+import { createTenant, deleteTenant, getUserTenants, TenantActionState } from '@/lib/auth/actions/tenant.actions';
 import { TenantResponse } from '@/lib/tenant/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

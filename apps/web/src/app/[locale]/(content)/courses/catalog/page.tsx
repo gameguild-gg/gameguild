@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
-import { getCourseData } from '@/actions/courses';
-import { CourseProvider } from '@/contexts/course-context';
+import { getCourseData } from '@/lib/actions/courses.ts';
+import { CourseProvider } from '@/lib/courses/course-context.tsx';
 import { CourseFilters } from '@/components/courses/course-filters';
 import { CourseGrid } from '@/components/courses/course-grid';
 import { CourseStates } from '@/components/courses/course-states';

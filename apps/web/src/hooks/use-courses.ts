@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useCourseContext } from '@/contexts/course-context';
+import { useCourseContext } from '@/lib/courses/course-context.tsx';
 import { Course, COURSE_LEVEL_NAMES } from '@/types/courses';
 
 export function useCourseFilters() {

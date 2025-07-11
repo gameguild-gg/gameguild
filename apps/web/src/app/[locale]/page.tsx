@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useTenant } from '@/lib/tenant/tenant-provider';
 import { TenantSelector } from '@/components/auth/TenantSelector';
-import { getUserTenants } from '@/lib/auth/tenant-actions';
+import { getUserTenants } from '@/lib/auth/actions/tenant.actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';

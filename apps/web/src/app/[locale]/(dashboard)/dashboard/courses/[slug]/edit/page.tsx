@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getCourseBySlug } from '@/actions/courses';
+import { getCourseBySlug } from '@/lib/actions/courses.ts';
 import { Course } from '@/types/courses';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';

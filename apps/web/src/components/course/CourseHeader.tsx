@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
-import { getCourseLevelConfig } from '@/services/course.service';
+import { getCourseLevelConfig } from '@/lib/courses/services/course.service';
 
 interface CourseHeaderProps {
   readonly course: Course;
