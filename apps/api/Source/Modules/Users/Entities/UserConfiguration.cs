@@ -30,7 +30,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User> {
     builder.HasQueryFilter(user => user.DeletedAt == null);
 
     // Relationships
-    builder.HasMany(user => user.Credentials).WithOne().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade);
+    builder.HasMany(user => user.Credentials).WithOne(c => c.User).HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade);
 
     builder.HasMany(user => user.TenantPermissions).WithOne().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade);
 
