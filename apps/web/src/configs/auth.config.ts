@@ -7,6 +7,9 @@ import { SignInResponse } from '@/types/auth';
 import { getJwtExpiryDate } from '@/lib/utils/jwt-utils';
 
 export const authConfig: NextAuthConfig = {
+  pages: {
+    signIn: '/sign-in',
+  },
   providers: [
     Google({
       clientId: environment.googleClientId,
