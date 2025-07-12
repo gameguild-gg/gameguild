@@ -25,7 +25,7 @@ namespace GameGuild.Tests.Fixtures {
     public TestServer Server { get; }
 
     private readonly IHost _host;
-    private readonly string _testSecret = "THIS_IS_A_TEST_SECRET_DO_NOT_USE_IN_PRODUCTION_ENVIRONMENT";
+    private readonly string _testSecret = "game-guild-super-secret-key-for-development-only-minimum-32-characters";
 
     public TestServerFixture() {
       var hostBuilder = new HostBuilder()
@@ -55,11 +55,11 @@ namespace GameGuild.Tests.Fixtures {
     }
 
     private void ConfigureServices(IServiceCollection services) {
-      // Configure test configuration
+      // Configure test configuration - must match development API configuration
       var configData = new Dictionary<string, string?> {
         { "Jwt:SecretKey", _testSecret },
-        { "Jwt:Issuer", "GameGuild.Test" },
-        { "Jwt:Audience", "GameGuild.Test.Users" },
+        { "Jwt:Issuer", "GameGuild.CMS" },
+        { "Jwt:Audience", "GameGuild.Users" },
         { "Jwt:ExpiryInMinutes", "15" },
         { "Jwt:RefreshTokenExpiryInDays", "7" },
         { "OAuth:GitHub:ClientId", "test-github-client" },

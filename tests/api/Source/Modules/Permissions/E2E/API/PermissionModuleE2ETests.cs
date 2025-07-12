@@ -116,8 +116,8 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
 
-    // Create JWT token for user
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    // Create JWT token for user WITHOUT CREATE permission
+    var token = await CreateJwtTokenForUserAsync(user, tenant, "Read");
     SetAuthorizationHeader(token);
 
     var mutation = @"
@@ -135,8 +135,11 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     var response = await PostGraphQlAsync(request);
 
     // Assert - Should be forbidden due to missing permissions
+    var content = await response.Content.ReadAsStringAsync();
+    Console.WriteLine($"DEBUG GraphQL Response Status: {response.StatusCode}");
+    Console.WriteLine($"DEBUG GraphQL Response Content: {content}");
+
     if (response.IsSuccessStatusCode) {
-      var content = await response.Content.ReadAsStringAsync();
       var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
 
       // Check if there are permission-related errors
@@ -156,6 +159,8 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
                                   )
                                   .ToList();
 
+        Console.WriteLine($"DEBUG GraphQL Error Messages: {string.Join(", ", errorMessages)}");
+
         Assert.Contains(
           errorMessages,
           m => (m.Contains("permission", StringComparison.OrdinalIgnoreCase) ||
@@ -163,6 +168,10 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
                 m.Contains("forbidden", StringComparison.OrdinalIgnoreCase) ||
                 m.Contains("Insufficient permissions", StringComparison.OrdinalIgnoreCase))
         );
+      }
+      else {
+        Console.WriteLine("DEBUG: No errors found in GraphQL response but should have authorization error");
+        Assert.True(false, "Expected GraphQL errors for missing permissions but found none");
       }
     }
     else { Assert.True(response.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized); }
@@ -177,7 +186,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     // Grant tenant permissions to user
     await GrantTenantPermissionsAsync(user.Id, tenant.Id, [PermissionType.Read, PermissionType.Draft]);
 
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant, "Read", "Draft");
     SetAuthorizationHeader(token);
 
     var query = @"
@@ -237,7 +246,8 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
 
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    // Create JWT token WITHOUT CREATE permission
+    var token = await CreateJwtTokenForUserAsync(user, tenant, "Read");
     SetAuthorizationHeader(token);
 
     var createTenantDto = new { name = "Test Tenant REST", description = "Created via REST API", isActive = true, slug = "test-tenant-rest" };
@@ -268,7 +278,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     // Grant necessary permissions
     await GrantTenantPermissionsAsync(user.Id, tenant.Id, [PermissionType.Read, PermissionType.Edit]);
 
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant, "Read", "Edit");
     SetAuthorizationHeader(token);
 
     // Act - Get tenants (should work with Read permission)
@@ -298,7 +308,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     await GrantContentTypePermissionsAsync(user.Id, tenant.Id, "Comment", [PermissionType.Comment]);
     await GrantResourcePermissionsAsync(user.Id, tenant.Id, comment.Id, [PermissionType.Edit]);
 
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant, "Read", "Comment", "Edit");
     SetAuthorizationHeader(token);
 
     // Act & Assert - Test different permission levels through API
@@ -352,7 +362,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     // Resource-level permission should override content-type denial
     await GrantResourcePermissionsAsync(user.Id, tenant.Id, comment.Id, [PermissionType.Edit, PermissionType.Delete]);
 
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    var token = await CreateJwtTokenForUserAsync(user, tenant, "Read", "Comment", "Edit", "Delete");
     SetAuthorizationHeader(token);
 
     // Act - Try to perform actions that should be allowed by resource-level permissions
@@ -388,7 +398,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     await GrantTenantPermissionsAsync(user2.Id, tenant2.Id, [PermissionType.Read, PermissionType.Edit]);
 
     // Act - User1 tries to access Tenant2's resources
-    var token1 = await CreateJwtTokenForUserAsync(user1, tenant2); // Wrong tenant context
+    var token1 = await CreateJwtTokenForUserAsync(user1, tenant2, "Read", "Edit"); // Wrong tenant context
     SetAuthorizationHeader(token1);
 
     var response = await _client.GetAsync($"/tenants/{tenant2.Id}");
@@ -471,7 +481,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     await _context.SaveChangesAsync();
   }
 
-  private Task<string> CreateJwtTokenForUserAsync(UserModel user, TenantModel tenant) {
+  private Task<string> CreateJwtTokenForUserAsync(UserModel user, TenantModel tenant, params string[] permissions) {
     // In a real implementation, you would use the actual JWT service
     // For E2E tests, we'll create a mock token or use the real service
     var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
@@ -480,12 +490,16 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
 
     var roles = new[] { "User" };
 
-    var additionalClaims = new[] { 
-      new System.Security.Claims.Claim("tenant_id", tenant.Id.ToString()),
-      new System.Security.Claims.Claim("permission", "CREATE") // Add CREATE permission for testing
+    var additionalClaims = new List<System.Security.Claims.Claim> { 
+      new System.Security.Claims.Claim("tenant_id", tenant.Id.ToString())
     };
+    
+    // Add custom permissions if provided
+    foreach (var permission in permissions) {
+      additionalClaims.Add(new System.Security.Claims.Claim("permission", permission));
+    }
 
-    return Task.FromResult(jwtService.GenerateAccessToken(userDto, roles, additionalClaims));
+    return Task.FromResult(jwtService.GenerateAccessToken(userDto, roles, additionalClaims.ToArray()));
   }
 
   private void SetAuthorizationHeader(string token) { _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token); }

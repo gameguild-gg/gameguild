@@ -29,10 +29,10 @@ namespace GameGuild.Tests.Helpers {
       Environment.SetEnvironmentVariable("USE_IN_MEMORY_DB", "true");
       Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
 
-      // Add JWT environment variables
+      // Add JWT environment variables - must match development API configuration
       Environment.SetEnvironmentVariable(
         "JWT_SECRET",
-        "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters"
+        "game-guild-super-secret-key-for-development-only-minimum-32-characters"
       );
       Environment.SetEnvironmentVariable(
         "JWT_REFRESH_SECRET",
@@ -52,13 +52,13 @@ namespace GameGuild.Tests.Helpers {
 
           // Override configuration settings for testing
           builder.ConfigureAppConfiguration((context, config) => {
-              // Add test-specific configuration settings
+              // Add test-specific configuration settings - must match development API configuration
               config.AddInMemoryCollection(
                 new Dictionary<string, string?> {
-                  { "Jwt:Key", "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters" },
-                  { "Jwt:SecretKey", "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters" },
-                  { "Jwt:Issuer", "TestIssuer" },
-                  { "Jwt:Audience", "TestAudience" },
+                  { "Jwt:Key", "game-guild-super-secret-key-for-development-only-minimum-32-characters" },
+                  { "Jwt:SecretKey", "game-guild-super-secret-key-for-development-only-minimum-32-characters" },
+                  { "Jwt:Issuer", "GameGuild.CMS" },
+                  { "Jwt:Audience", "GameGuild.Users" },
                   { "Jwt:AccessTokenExpiryMinutes", "15" },
                   { "Jwt:ExpiryInMinutes", "15" },
                   { "Jwt:RefreshTokenExpiryInDays", "7" },
@@ -175,15 +175,15 @@ namespace GameGuild.Tests.Helpers {
         claims.Add(new Claim(JwtClaimTypes.TenantId, tenantId.Value.ToString()));
       }
       
-      // Create JWT token manually with same settings as test factory
+      // Create JWT token manually with same settings as development API configuration
       var key = new SymmetricSecurityKey(
-        Encoding.UTF8.GetBytes("test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters")
+        Encoding.UTF8.GetBytes("game-guild-super-secret-key-for-development-only-minimum-32-characters")
       );
       var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
       
       var token = new JwtSecurityToken(
-        issuer: "TestIssuer",
-        audience: "TestAudience",
+        issuer: "GameGuild.CMS",
+        audience: "GameGuild.Users",
         claims: claims,
         expires: DateTime.UtcNow.AddMinutes(60),
         signingCredentials: creds

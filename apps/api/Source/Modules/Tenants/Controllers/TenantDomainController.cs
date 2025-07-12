@@ -41,7 +41,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
 
   // POST: api/tenant-domains
   [HttpPost]
-  [RequireResourcePermission<TenantDomain>(PermissionType.Create)]
+  [RequireContentTypePermission<TenantDomain>(PermissionType.Create)]
   public async Task<ActionResult<TenantDomain>> CreateDomain([FromBody] CreateTenantDomainDto request) {
     try {
       // Validate domain ownership (in a real implementation)

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using FluentValidation;
+using GameGuild.Common.Extensions;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using HotChocolate.Execution.Configuration;
@@ -271,6 +272,9 @@ public static class DependencyInjection {
     try {
       var stopwatch = Stopwatch.StartNew();
 
+      // Add DAC authorization services first
+      services.AddDACAuthorizationServices();
+
       // Initialize GraphQL server with base types
       var graphqlBuilder = services.AddGraphQLServer()
                                    .AddQueryType<Query>()
@@ -320,8 +324,7 @@ public static class DependencyInjection {
     // Add authorization if enabled
     if (options.EnableAuthorization) {
       try {
-        // Note: AddDACAuthorization might not be available in all environments
-        // This is handled gracefully in test scenarios
+        builder.AddDACAuthorization();
       }
       catch (Exception ex) {
         // In test environments, DAC authorization might not be available
@@ -360,9 +363,14 @@ public static class DependencyInjection {
       ["Tenants"] = b => {
         SafeAddGraphQLTypes(
           b,
-          new[] { ("TenantQueries", typeof(GameGuild.Modules.Tenants.TenantQueries)), ("TenantType", typeof(GameGuild.Modules.Tenants.TenantType)), ("TenantPermissionType", typeof(GameGuild.Modules.Tenants.TenantPermissionType)) },
+          new[] { 
+            ("TenantQueries", typeof(GameGuild.Modules.Tenants.TenantQueries)), 
+            ("TenantMutations", typeof(GameGuild.Modules.Tenants.TenantMutations)),
+            ("TenantType", typeof(GameGuild.Modules.Tenants.TenantType)), 
+            ("TenantPermissionType", typeof(GameGuild.Modules.Tenants.TenantPermissionType)) 
+          },
           logger,
-          isExtension: new[] { true, false, false }
+          isExtension: new[] { true, true, false, false }
         );
       },
       ["Projects"] = b => {
