@@ -1,5 +1,5 @@
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Credentials;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -7,7 +7,7 @@ using Moq;
 using UserModel = GameGuild.Modules.Users.User;
 
 
-namespace GameGuild.API.Tests.Modules.Auth.Unit.Services;
+namespace GameGuild.Tests.Modules.Auth.Unit.Services;
 
 public class Web3ServiceTests : IDisposable {
   private readonly ApplicationDbContext _context;

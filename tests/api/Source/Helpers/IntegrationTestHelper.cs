@@ -1,5 +1,8 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Tenants;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Authorization;
@@ -7,9 +10,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
 
-namespace GameGuild.API.Tests.Helpers {
+
+namespace GameGuild.Tests.Helpers {
   /// <summary>
   /// Helper class for running integration tests with a mock database
   /// </summary>
@@ -142,21 +146,51 @@ namespace GameGuild.API.Tests.Helpers {
       var client = factory.CreateClient();
       
       using var scope = factory.Services.CreateScope();
-      var jwtService = scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
+      var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+      
+      // Get user from database to ensure we have proper data
+      var user = context.Users.FirstOrDefault(u => u.Id == userId);
       
       var userDto = new UserDto {
         Id = userId,
-        Username = $"testuser-{userId}",
-        Email = $"test-{userId}@example.com"
+        Username = user?.Name ?? $"testuser-{userId}",
+        Email = user?.Email ?? $"test-{userId}@example.com"
       };
       
-      var claims = new List<Claim>();
+      var claims = new List<Claim> {
+        new(ClaimTypes.NameIdentifier, userId.ToString()),
+        new(ClaimTypes.Email, userDto.Email),
+        new(ClaimTypes.Name, userDto.Username),
+        new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+        new(JwtRegisteredClaimNames.Email, userDto.Email),
+        new("username", userDto.Username)
+      };
+      
+      // Add roles
+      foreach (var role in roles ?? new[] { "User" }) {
+        claims.Add(new Claim(ClaimTypes.Role, role));
+      }
+      
       if (tenantId.HasValue) {
         claims.Add(new Claim(JwtClaimTypes.TenantId, tenantId.Value.ToString()));
       }
       
-      var token = jwtService.GenerateAccessToken(userDto, roles ?? new[] { "User" }, claims);
-      client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+      // Create JWT token manually with same settings as test factory
+      var key = new SymmetricSecurityKey(
+        Encoding.UTF8.GetBytes("test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters")
+      );
+      var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+      
+      var token = new JwtSecurityToken(
+        issuer: "TestIssuer",
+        audience: "TestAudience",
+        claims: claims,
+        expires: DateTime.UtcNow.AddMinutes(60),
+        signingCredentials: creds
+      );
+      
+      var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+      client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenString);
       
       return client;
     }

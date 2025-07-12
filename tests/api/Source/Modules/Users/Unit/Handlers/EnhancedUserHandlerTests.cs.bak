@@ -1,0 +1,463 @@
+using GameGuild.Common;
+using GameGuild.Database;
+using GameGuild.Modules.Users;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
+
+namespace GameGuild.API.Tests.Modules.Users.Unit.Handlers;
+
+/// <summary>
+/// Enhanced unit tests for User CQRS handlers
+/// </summary>
+public class EnhancedUserHandlerTests : IDisposable {
+  private readonly ApplicationDbContext _context;
+  private readonly Mock<ILogger<CreateUserHandler>> _mockCreateLogger;
+  private readonly Mock<ILogger<GetUserByIdHandler>> _mockGetLogger;
+  private readonly Mock<ILogger<UpdateUserHandler>> _mockUpdateLogger;
+  private readonly Mock<ILogger<DeleteUserHandler>> _mockDeleteLogger;
+  private readonly Mock<ILogger<SearchUsersHandler>> _mockSearchLogger;
+  private readonly Mock<IMediator> _mockMediator;
+
+  public EnhancedUserHandlerTests() {
+    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                  .Options;
+    _context = new ApplicationDbContext(options);
+
+    _mockCreateLogger = new Mock<ILogger<CreateUserHandler>>();
+    _mockGetLogger = new Mock<ILogger<GetUserByIdHandler>>();
+    _mockUpdateLogger = new Mock<ILogger<UpdateUserHandler>>();
+    _mockDeleteLogger = new Mock<ILogger<DeleteUserHandler>>();
+    _mockSearchLogger = new Mock<ILogger<SearchUsersHandler>>();
+    _mockMediator = new Mock<IMediator>();
+  }
+
+  #region CreateUserHandler Tests
+
+  [Fact]
+  public async Task CreateUserHandler_WithValidData_ShouldCreateUser() {
+    // Arrange
+    var handler = new CreateUserHandler(_context, _mockCreateLogger.Object, _mockMediator.Object);
+    var command = new CreateUserCommand {
+      Name = "Test User",
+      Email = "test@example.com",
+      IsActive = true,
+      InitialBalance = 100.00m
+    };
+
+    // Act
+    var result = await handler.Handle(command, CancellationToken.None);
+
+    // Assert
+    Assert.NotNull(result);
+    Assert.Equal("Test User", result.Name);
+    Assert.Equal("test@example.com", result.Email);
+    Assert.True(result.IsActive);
+    Assert.Equal(100.00m, result.Balance);
+    Assert.Equal(100.00m, result.AvailableBalance);
+
+    // Verify it was saved to database
+    var savedUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == result.Id);
+    Assert.NotNull(savedUser);
+    Assert.Equal("Test User", savedUser.Name);
+
+    // Verify event was published
+    _mockMediator.Verify(
+      x => x.Publish(It.IsAny<UserCreatedEvent>(), It.IsAny<CancellationToken>()),
+      Times.Once
+    );
+  }
+
+  [Fact]
+  public async Task CreateUserHandler_WithDuplicateEmail_ShouldThrowException() {
+    // Arrange
+    var existingUser = new User {
+      Name = "Existing User",
+      Email = "duplicate@example.com",
+      IsActive = true
+    };
+    _context.Users.Add(existingUser);
+    await _context.SaveChangesAsync();
+
+    var handler = new CreateUserHandler(_context, _mockCreateLogger.Object, _mockMediator.Object);
+    var command = new CreateUserCommand {
+      Name = "New User",
+      Email = "duplicate@example.com", // Same email
+      IsActive = true,
+      InitialBalance = 50.00m
+    };
+
+    // Act & Assert
+    var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+      () => handler.Handle(command, CancellationToken.None)
+    );
+    Assert.Contains("already exists", exception.Message);
+
+    // Verify no event was published
+    _mockMediator.Verify(
+      x => x.Publish(It.IsAny<UserCreatedEvent>(), It.IsAny<CancellationToken>()),
+      Times.Never
+    );
+  }
+
+  [Fact]
+  public async Task CreateUserHandler_WithZeroInitialBalance_ShouldCreateUserWithZeroBalance() {
+    // Arrange
+    var handler = new CreateUserHandler(_context, _mockCreateLogger.Object, _mockMediator.Object);
+    var command = new CreateUserCommand {
+      Name = "Zero Balance User",
+      Email = "zero@example.com",
+      IsActive = true,
+      InitialBalance = 0.00m
+    };
+
+    // Act
+    var result = await handler.Handle(command, CancellationToken.None);
+
+    // Assert
+    Assert.NotNull(result);
+    Assert.Equal(0.00m, result.Balance);
+    Assert.Equal(0.00m, result.AvailableBalance);
+  }
+
+  #endregion
+
+  #region GetUserByIdHandler Tests
+
+  [Fact]
+  public async Task GetUserByIdHandler_WithExistingUser_ShouldReturnUser() {
+    // Arrange
+    var user = new User {
+      Name = "Test User",
+      Email = "test@example.com",
+      IsActive = true,
+      Balance = 250.00m
+    };
+    _context.Users.Add(user);
+    await _context.SaveChangesAsync();
+
+    var handler = new GetUserByIdHandler(_context, _mockGetLogger.Object);
+    var query = new GetUserByIdQuery { Id = user.Id };
+
+    // Act
+    var result = await handler.Handle(query, CancellationToken.None);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.NotNull(result.Value);
+    Assert.Equal(user.Id, result.Value.Id);
+    Assert.Equal("Test User", result.Value.Name);
+    Assert.Equal("test@example.com", result.Value.Email);
+    Assert.Equal(250.00m, result.Value.Balance);
+  }
+
+  [Fact]
+  public async Task GetUserByIdHandler_WithNonExistentUser_ShouldReturnNotFound() {
+    // Arrange
+    var handler = new GetUserByIdHandler(_context, _mockGetLogger.Object);
+    var query = new GetUserByIdQuery { Id = Guid.NewGuid() };
+
+    // Act
+    var result = await handler.Handle(query, CancellationToken.None);
+
+    // Assert
+    Assert.False(result.IsSuccess);
+    Assert.Equal("User.NotFound", result.Error.Code);
+  }
+
+  [Fact]
+  public async Task GetUserByIdHandler_WithDeletedUser_ShouldReturnNotFound() {
+    // Arrange
+    var user = new User {
+      Name = "Deleted User",
+      Email = "deleted@example.com",
+      IsActive = true,
+      DeletedAt = DateTime.UtcNow // Soft deleted
+    };
+    _context.Users.Add(user);
+    await _context.SaveChangesAsync();
+
+    var handler = new GetUserByIdHandler(_context, _mockGetLogger.Object);
+    var query = new GetUserByIdQuery { Id = user.Id };
+
+    // Act
+    var result = await handler.Handle(query, CancellationToken.None);
+
+    // Assert
+    Assert.False(result.IsSuccess);
+    Assert.Equal("User.NotFound", result.Error.Code);
+  }
+
+  #endregion
+
+  #region UpdateUserHandler Tests
+
+  [Fact]
+  public async Task UpdateUserHandler_WithValidData_ShouldUpdateUser() {
+    // Arrange
+    var user = new User {
+      Name = "Original Name",
+      Email = "original@example.com",
+      IsActive = true,
+      Balance = 100.00m
+    };
+    _context.Users.Add(user);
+    await _context.SaveChangesAsync();
+
+    var handler = new UpdateUserHandler(_context, _mockUpdateLogger.Object, _mockMediator.Object);
+    var command = new UpdateUserCommand {
+      Id = user.Id,
+      Name = "Updated Name",
+      Email = "updated@example.com",
+      IsActive = false
+    };
+
+    // Act
+    var result = await handler.Handle(command, CancellationToken.None);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.NotNull(result.Value);
+    Assert.Equal("Updated Name", result.Value.Name);
+    Assert.Equal("updated@example.com", result.Value.Email);
+    Assert.False(result.Value.IsActive);
+
+    // Verify database was updated
+    var updatedUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
+    Assert.NotNull(updatedUser);
+    Assert.Equal("Updated Name", updatedUser.Name);
+    Assert.Equal("updated@example.com", updatedUser.Email);
+    Assert.False(updatedUser.IsActive);
+
+    // Verify event was published
+    _mockMediator.Verify(
+      x => x.Publish(It.IsAny<UserUpdatedEvent>(), It.IsAny<CancellationToken>()),
+      Times.Once
+    );
+  }
+
+  [Fact]
+  public async Task UpdateUserHandler_WithNonExistentUser_ShouldReturnNotFound() {
+    // Arrange
+    var handler = new UpdateUserHandler(_context, _mockUpdateLogger.Object, _mockMediator.Object);
+    var command = new UpdateUserCommand {
+      Id = Guid.NewGuid(),
+      Name = "Non-existent",
+      Email = "nonexistent@example.com",
+      IsActive = true
+    };
+
+    // Act
+    var result = await handler.Handle(command, CancellationToken.None);
+
+    // Assert
+    Assert.False(result.IsSuccess);
+    Assert.Equal("User.NotFound", result.Error.Code);
+
+    // Verify no event was published
+    _mockMediator.Verify(
+      x => x.Publish(It.IsAny<UserUpdatedEvent>(), It.IsAny<CancellationToken>()),
+      Times.Never
+    );
+  }
+
+  [Fact]
+  public async Task UpdateUserHandler_WithDuplicateEmail_ShouldReturnConflict() {
+    // Arrange
+    var existingUser1 = new User {
+      Name = "User 1",
+      Email = "user1@example.com",
+      IsActive = true
+    };
+    var existingUser2 = new User {
+      Name = "User 2",
+      Email = "user2@example.com",
+      IsActive = true
+    };
+    _context.Users.AddRange(existingUser1, existingUser2);
+    await _context.SaveChangesAsync();
+
+    var handler = new UpdateUserHandler(_context, _mockUpdateLogger.Object, _mockMediator.Object);
+    var command = new UpdateUserCommand {
+      Id = existingUser1.Id,
+      Name = "Updated User 1",
+      Email = "user2@example.com", // Email of user2
+      IsActive = true
+    };
+
+    // Act
+    var result = await handler.Handle(command, CancellationToken.None);
+
+    // Assert
+    Assert.False(result.IsSuccess);
+    Assert.Equal("User.EmailExists", result.Error.Code);
+
+    // Verify no event was published
+    _mockMediator.Verify(
+      x => x.Publish(It.IsAny<UserUpdatedEvent>(), It.IsAny<CancellationToken>()),
+      Times.Never
+    );
+  }
+
+  #endregion
+
+  #region DeleteUserHandler Tests
+
+  [Fact]
+  public async Task DeleteUserHandler_WithExistingUser_ShouldSoftDeleteUser() {
+    // Arrange
+    var user = new User {
+      Name = "To Delete",
+      Email = "delete@example.com",
+      IsActive = true
+    };
+    _context.Users.Add(user);
+    await _context.SaveChangesAsync();
+
+    var handler = new DeleteUserHandler(_context, _mockDeleteLogger.Object, _mockMediator.Object);
+    var command = new DeleteUserCommand { Id = user.Id };
+
+    // Act
+    var result = await handler.Handle(command, CancellationToken.None);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+
+    // Verify user was soft deleted
+    var deletedUser = await _context.Users
+                                   .IgnoreQueryFilters()
+                                   .FirstOrDefaultAsync(u => u.Id == user.Id);
+    Assert.NotNull(deletedUser);
+    Assert.NotNull(deletedUser.DeletedAt);
+
+    // Verify event was published
+    _mockMediator.Verify(
+      x => x.Publish(It.IsAny<UserDeletedEvent>(), It.IsAny<CancellationToken>()),
+      Times.Once
+    );
+  }
+
+  [Fact]
+  public async Task DeleteUserHandler_WithNonExistentUser_ShouldReturnNotFound() {
+    // Arrange
+    var handler = new DeleteUserHandler(_context, _mockDeleteLogger.Object, _mockMediator.Object);
+    var command = new DeleteUserCommand { Id = Guid.NewGuid() };
+
+    // Act
+    var result = await handler.Handle(command, CancellationToken.None);
+
+    // Assert
+    Assert.False(result.IsSuccess);
+    Assert.Equal("User.NotFound", result.Error.Code);
+
+    // Verify no event was published
+    _mockMediator.Verify(
+      x => x.Publish(It.IsAny<UserDeletedEvent>(), It.IsAny<CancellationToken>()),
+      Times.Never
+    );
+  }
+
+  #endregion
+
+  #region SearchUsersHandler Tests
+
+  [Fact]
+  public async Task SearchUsersHandler_WithValidQuery_ShouldReturnMatchingUsers() {
+    // Arrange
+    var users = new[] {
+      new User { Name = "John Doe", Email = "john@example.com", IsActive = true },
+      new User { Name = "Jane Smith", Email = "jane@example.com", IsActive = true },
+      new User { Name = "Bob Johnson", Email = "bob@example.com", IsActive = false },
+      new User { Name = "Alice Brown", Email = "alice@example.com", IsActive = true }
+    };
+    _context.Users.AddRange(users);
+    await _context.SaveChangesAsync();
+
+    var handler = new SearchUsersHandler(_context, _mockSearchLogger.Object);
+    var query = new SearchUsersQuery {
+      SearchTerm = "John", // Should match "John Doe" and "Bob Johnson"
+      PageNumber = 1,
+      PageSize = 10,
+      IncludeInactive = true
+    };
+
+    // Act
+    var result = await handler.Handle(query, CancellationToken.None);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.NotNull(result.Value);
+    Assert.Equal(2, result.Value.Items.Count);
+    Assert.Contains(result.Value.Items, u => u.Name == "John Doe");
+    Assert.Contains(result.Value.Items, u => u.Name == "Bob Johnson");
+  }
+
+  [Fact]
+  public async Task SearchUsersHandler_WithActiveOnlyFilter_ShouldReturnOnlyActiveUsers() {
+    // Arrange
+    var users = new[] {
+      new User { Name = "Active User", Email = "active@example.com", IsActive = true },
+      new User { Name = "Inactive User", Email = "inactive@example.com", IsActive = false }
+    };
+    _context.Users.AddRange(users);
+    await _context.SaveChangesAsync();
+
+    var handler = new SearchUsersHandler(_context, _mockSearchLogger.Object);
+    var query = new SearchUsersQuery {
+      SearchTerm = "User",
+      PageNumber = 1,
+      PageSize = 10,
+      IncludeInactive = false // Only active users
+    };
+
+    // Act
+    var result = await handler.Handle(query, CancellationToken.None);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.NotNull(result.Value);
+    Assert.Single(result.Value.Items);
+    Assert.Equal("Active User", result.Value.Items.First().Name);
+  }
+
+  [Fact]
+  public async Task SearchUsersHandler_WithPagination_ShouldReturnCorrectPage() {
+    // Arrange
+    var users = Enumerable.Range(1, 25)
+                          .Select(i => new User {
+                            Name = $"User {i:D2}",
+                            Email = $"user{i:D2}@example.com",
+                            IsActive = true
+                          })
+                          .ToArray();
+    _context.Users.AddRange(users);
+    await _context.SaveChangesAsync();
+
+    var handler = new SearchUsersHandler(_context, _mockSearchLogger.Object);
+    var query = new SearchUsersQuery {
+      SearchTerm = "User",
+      PageNumber = 2,
+      PageSize = 10,
+      IncludeInactive = true
+    };
+
+    // Act
+    var result = await handler.Handle(query, CancellationToken.None);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.NotNull(result.Value);
+    Assert.Equal(10, result.Value.Items.Count);
+    Assert.Equal(25, result.Value.TotalCount);
+    Assert.Equal(3, result.Value.TotalPages);
+    Assert.Equal(2, result.Value.CurrentPage);
+  }
+
+  #endregion
+
+  public void Dispose() {
+    _context.Dispose();
+  }
+}

@@ -1,10 +1,11 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Fixtures;
+using GameGuild.Tests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace GameGuild.API.Tests.Modules.UserProfiles.E2E.API {
+
+namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
   public class UserProfileApiTests : IClassFixture<TestServerFixture> {
     private readonly TestServerFixture _fixture;
     private readonly HttpClient _client;

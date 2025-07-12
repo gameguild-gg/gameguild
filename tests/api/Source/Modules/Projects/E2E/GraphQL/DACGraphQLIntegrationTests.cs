@@ -1,4 +1,4 @@
-namespace GameGuild.API.Tests.Modules.Projects.E2E.GraphQL;
+namespace GameGuild.Tests.Modules.Projects.E2E.GraphQL;
 
 /// <summary>
 /// Integration tests for DAC permission system with GraphQL

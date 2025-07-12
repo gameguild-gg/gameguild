@@ -4,7 +4,8 @@ using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.API.Tests.Modules.Permissions.Unit.Services;
+
+namespace GameGuild.Tests.Modules.Permissions.Unit.Services;
 
 /// <summary>
 /// Unit tests for PermissionService - Layer 2 (Content-Type permissions)

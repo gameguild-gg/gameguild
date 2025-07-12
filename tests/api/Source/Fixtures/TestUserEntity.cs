@@ -1,4 +1,4 @@
-﻿namespace GameGuild.API.Tests.Fixtures;
+﻿namespace GameGuild.Tests.Fixtures;
 
 public class TestUserEntity {
     public string Id { get; set; } = string.Empty;

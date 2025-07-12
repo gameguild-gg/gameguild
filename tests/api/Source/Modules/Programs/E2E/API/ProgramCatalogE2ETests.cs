@@ -1,18 +1,19 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
-using GameGuild.API.Tests.Fixtures;
-using GameGuild.API.Tests.Helpers;
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Contents;
+using GameGuild.Modules.Credentials;
+using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
+using GameGuild.Tests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 using TenantModel = GameGuild.Modules.Tenants.Tenant;
 using ProgramEntity = GameGuild.Modules.Programs.Models.Program;
 
-namespace GameGuild.API.Tests.Modules.Programs.E2E.API;
+namespace GameGuild.Tests.Modules.Programs.E2E.API;
 
 /// <summary>
 /// End-to-end tests for Program course catalog and enrollment workflows
@@ -302,22 +303,29 @@ public class ProgramCatalogE2ETests : IClassFixture<TestWebApplicationFactory>, 
         };
 
         // Create user tenant relationship
-        var userTenant = new UserTenant
+        var tenantPermission = new TenantPermission
         {
             UserId = user.Id,
             TenantId = tenant.Id,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        // Create password credential for the user
+        var passwordCredential = new Credential {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Type = "password",
+            Value = HashPassword("password123"),
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        // Set password using the proper service
-        var userManager = _scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<User>>();
-        await userManager.CreateAsync(user, "password123");
-
         _context.Set<TenantModel>().Add(tenant);
         _context.Set<User>().Add(user);
-        _context.Set<UserTenant>().Add(userTenant);
+        _context.Set<TenantPermission>().Add(tenantPermission);
+        _context.Set<Credential>().Add(passwordCredential);
         await _context.SaveChangesAsync();
 
         return (tenant, user);
@@ -365,6 +373,13 @@ public class ProgramCatalogE2ETests : IClassFixture<TestWebApplicationFactory>, 
     }
 
     #endregion
+
+    private static string HashPassword(string password) {
+        // Simple SHA256 hash for demonstration (replace with a secure hash in production)
+        using var sha = System.Security.Cryptography.SHA256.Create();
+        var bytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+        return Convert.ToBase64String(bytes);
+    }
 
     public void Dispose()
     {

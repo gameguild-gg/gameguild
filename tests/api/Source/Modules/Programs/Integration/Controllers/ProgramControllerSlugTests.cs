@@ -1,40 +1,34 @@
-using System.Net.Http.Headers;
 using System.Text.Json;
-using GameGuild.API.Tests.Fixtures;
-using GameGuild.API.Tests.Helpers;
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Users;
+using GameGuild.Tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Modules.Programs.Integration.Controllers;
+
+namespace GameGuild.Tests.Modules.Programs.Integration.Controllers;
 
 /// <summary>
 /// Integration tests for ProgramController focusing on slug-based operations
 /// Tests HTTP endpoints with real database and full application stack
 /// </summary>
-public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactory>, IDisposable
+public class ProgramControllerSlugTests : IDisposable
 {
-    private readonly TestWebApplicationFactory _factory;
-    private readonly HttpClient _client;
+    private readonly Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<GameGuild.Program> _factory;
     private readonly ApplicationDbContext _context;
     private readonly IServiceScope _scope;
     private readonly ITestOutputHelper _output;
 
-    public ProgramControllerSlugTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public ProgramControllerSlugTests(ITestOutputHelper output)
     {
-        _factory = factory;
         _output = output;
         
         // Use the IntegrationTestHelper to get the test factory
         var uniqueDbName = $"ProgramControllerSlugTests_{Guid.NewGuid()}";
-        var testFactory = IntegrationTestHelper.GetTestFactory(uniqueDbName);
-        _client = testFactory.CreateClient();
-        _scope = testFactory.Services.CreateScope();
+        _factory = IntegrationTestHelper.GetTestFactory(uniqueDbName);
+        _scope = _factory.Services.CreateScope();
 
         // Get database context for test setup
         _context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -46,8 +40,8 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
     [Fact]
     public async Task GetProgramBySlug_WithValidSlug_ReturnsProgram()
     {
-        // Arrange
-        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(IntegrationTestHelper.GetTestFactory());
+        // Arrange - use the same test factory as the test setup
+        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(_factory);
         var program = await CreateTestProgramAsync(tenantId, "test-program-slug");
 
         // Act
@@ -72,7 +66,7 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
     public async Task GetProgramBySlug_WithInvalidSlug_ReturnsNotFound()
     {
         // Arrange
-        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(IntegrationTestHelper.GetTestFactory());
+        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(_factory);
 
         // Act
         var response = await authenticatedClient.GetAsync("/api/program/slug/non-existent-slug");
@@ -85,12 +79,13 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
     public async Task GetProgramBySlug_WithPublishedProgram_ReturnsSuccessWithoutAuth()
     {
         // Arrange
-        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(IntegrationTestHelper.GetTestFactory());
+        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(_factory);
         var program = await CreateTestProgramAsync(tenantId, "public-program-slug",
             status: ContentStatus.Published, visibility: AccessLevel.Public);
 
-        // Act - No authentication header (use regular client)
-        var response = await _client.GetAsync($"/api/program/slug/{program.Slug}");
+        // Act - Create unauthenticated client for this test
+        var unauthenticatedClient = _factory.CreateClient();
+        var response = await unauthenticatedClient.GetAsync($"/api/program/slug/{program.Slug}");
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -109,12 +104,13 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
     public async Task GetProgramBySlug_WithDraftProgram_RequiresAuthentication()
     {
         // Arrange
-        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(IntegrationTestHelper.GetTestFactory());
+        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(_factory);
         var program = await CreateTestProgramAsync(tenantId, "draft-program-slug",
             status: ContentStatus.Draft, visibility: AccessLevel.Private);
 
-        // Act - No authentication header (use regular client)
-        var response = await _client.GetAsync($"/api/program/slug/{program.Slug}");
+        // Act - Create unauthenticated client for this test
+        var unauthenticatedClient = _factory.CreateClient();
+        var response = await unauthenticatedClient.GetAsync($"/api/program/slug/{program.Slug}");
 
         // Assert
         Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
@@ -124,7 +120,7 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
     public async Task GetPublishedPrograms_ReturnsOnlyPublishedPrograms()
     {
         // Arrange
-        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(IntegrationTestHelper.GetTestFactory());
+        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(_factory);
 
         // Create multiple programs with different statuses
         var publishedProgram1 = await CreateTestProgramAsync(tenantId, "published-1",
@@ -134,8 +130,9 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
         var draftProgram = await CreateTestProgramAsync(tenantId, "draft-1",
             status: ContentStatus.Draft, visibility: AccessLevel.Private);
 
-        // Act
-        var response = await _client.GetAsync("/api/program/published");
+        // Act - This endpoint might be public, but use unauthenticated client to test
+        var unauthenticatedClient = _factory.CreateClient();
+        var response = await unauthenticatedClient.GetAsync("/api/program/published");
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -195,6 +192,21 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
         ContentStatus status = ContentStatus.Draft,
         AccessLevel visibility = AccessLevel.Private)
     {
+        // First, create or find the tenant
+        var tenant = await _context.Tenants.FindAsync(tenantId);
+        if (tenant == null)
+        {
+            tenant = new Tenant
+            {
+                Id = tenantId,
+                Name = "Test Tenant",
+                Description = "Test tenant for integration tests",
+                IsActive = true
+            };
+            _context.Tenants.Add(tenant);
+            await _context.SaveChangesAsync();
+        }
+
         var program = new GameGuild.Modules.Programs.Models.Program
         {
             Id = Guid.NewGuid(),
@@ -208,7 +220,8 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
             EstimatedHours = 10.0f,
             EnrollmentStatus = EnrollmentStatus.Open,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            Tenant = tenant
         };
 
         _context.Set<GameGuild.Modules.Programs.Models.Program>().Add(program);
@@ -222,6 +235,6 @@ public class ProgramControllerSlugTests : IClassFixture<TestWebApplicationFactor
     public void Dispose()
     {
         _scope?.Dispose();
-        _client?.Dispose();
+        _factory?.Dispose();
     }
 }

@@ -1,12 +1,12 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
-using GameGuild.API.Tests.Fixtures;
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.TestingLab;
+using GameGuild.Tests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;
 using ProjectModel = GameGuild.Modules.Projects.Project;
 using ProjectVersionModel = GameGuild.Modules.Projects.ProjectVersion;
@@ -14,7 +14,7 @@ using TenantModel = GameGuild.Modules.Tenants.Tenant;
 using UserModel = GameGuild.Modules.Users.User;
 
 
-namespace GameGuild.API.Tests.Modules.TestingLab.E2E.API;
+namespace GameGuild.Tests.Modules.TestingLab.E2E.API;
 
 public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory>, IDisposable {
   private readonly TestWebApplicationFactory _factory;
