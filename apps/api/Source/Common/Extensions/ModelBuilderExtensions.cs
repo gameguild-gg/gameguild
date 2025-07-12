@@ -40,8 +40,11 @@ public static class ModelBuilderExtensions {
 
             // Version configuration for optimistic concurrency
             // Use ConcurrencyCheck instead of IsRowVersion for cross-database compatibility
-            // No database default - application controls versioning (0 = new, 1+ = saved)
-            builder.Property(nameof(Entity.Version)).IsConcurrencyToken();
+            // Database default ensures new entities start with Version = 1
+            builder.Property(nameof(Entity.Version))
+                   .IsConcurrencyToken()
+                   .HasDefaultValue(1)
+                   .ValueGeneratedOnAdd();
 
             // Timestamp and soft delete configuration - for all concrete types in TPC
             builder.Property(nameof(Entity.CreatedAt))
