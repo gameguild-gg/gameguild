@@ -1,6 +1,7 @@
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Products.Services;
-using Microsoft.EntityFrameworkCore;
+using GameGuild.Common;
+using MediatR;
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
 using ProductTypeEnum = GameGuild.Common.ProductType;
 
@@ -8,24 +9,35 @@ using ProductTypeEnum = GameGuild.Common.ProductType;
 namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary>
-/// GraphQL queries for Product module
+/// GraphQL queries for Product module using CQRS pattern
 /// </summary>
-[ExtendObjectType<DbLoggerCategory.Query>]
+[ExtendObjectType<Query>]
 public class ProductQueries {
   /// <summary>
-  /// Gets all products accessible to the current user
+  /// Gets all products accessible to the current user using CQRS pattern
   /// </summary>
   public async Task<IEnumerable<ProductEntity>> GetProducts(
-    [Service] IProductService productService, int skip = 0,
-    int take = 50
+    [Service] IMediator mediator, [Service] IProductService productService, int skip = 0, int take = 50
   ) {
+    // TODO: Replace with proper CQRS query when GetAllProductsQuery is implemented
+    // var query = new GetAllProductsQuery { Skip = skip, Take = take };
+    // return await mediator.Send(query);
+    
+    // Temporary fallback to service until CQRS queries are implemented
     return await productService.GetProductsAsync(skip, take);
   }
 
   /// <summary>
-  /// Gets a product by its unique identifier
+  /// Gets a product by its unique identifier using CQRS pattern
   /// </summary>
-  public async Task<ProductEntity?> GetProductById(Guid id, [Service] IProductService productService) { return await productService.GetProductByIdAsync(id); }
+  public async Task<ProductEntity?> GetProductById(Guid id, [Service] IMediator mediator, [Service] IProductService productService) { 
+    // TODO: Replace with proper CQRS query when GetProductByIdQuery is implemented
+    // var query = new GetProductByIdQuery { ProductId = id };
+    // return await mediator.Send(query);
+    
+    // Temporary fallback to service until CQRS queries are implemented
+    return await productService.GetProductByIdAsync(id); 
+  }
 
   /// <summary>
   /// Gets products by type

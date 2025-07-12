@@ -1,6 +1,6 @@
+using GameGuild.Common;
 using GameGuild.Modules.Tenants.Inputs;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Tenants;
@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// GraphQL queries for Tenant module using CQRS pattern
 /// </summary>
-[ExtendObjectType<DbLoggerCategory.Query>]
+[ExtendObjectType<Query>]
 public class TenantQueries {
   /// <summary>
   /// Get all tenants (non-deleted only)
@@ -20,7 +20,9 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) {
+      throw new GraphQLException("Authentication required to access tenant data.");
+    }
 
     var query = new GetAllTenantsQuery(false);
     var result = await mediator.Send(query);

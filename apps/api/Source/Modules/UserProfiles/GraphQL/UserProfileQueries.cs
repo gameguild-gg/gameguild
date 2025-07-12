@@ -1,5 +1,5 @@
+using GameGuild.Common;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.UserProfiles;
@@ -7,7 +7,7 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// GraphQL queries for UserProfile module using CQRS pattern
 /// </summary>
-[ExtendObjectType<DbLoggerCategory.Query>]
+[ExtendObjectType<Query>]
 public class UserProfileQueries {
   /// <summary>
   /// Get all user profiles with optional filtering using CQRS pattern
