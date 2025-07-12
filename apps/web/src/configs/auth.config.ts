@@ -9,6 +9,7 @@ import { getJwtExpiryDate } from '@/lib/utils/jwt-utils';
 export const authConfig: NextAuthConfig = {
   pages: {
     signIn: '/sign-in',
+    error: '/auth/error', // Error code passed in query string as ?error=
   },
   providers: [
     Google({

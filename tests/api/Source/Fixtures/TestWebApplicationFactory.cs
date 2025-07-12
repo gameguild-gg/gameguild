@@ -37,10 +37,10 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
     Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
     Environment.SetEnvironmentVariable("ASPNETCORE_DETAILEDERRORS", "true");
 
-    // Add JWT environment variables
+    // Add JWT environment variables - must match development API configuration
     Environment.SetEnvironmentVariable(
       "JWT_SECRET",
-      "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters"
+      "game-guild-super-secret-key-for-development-only-minimum-32-characters"
     );
     Environment.SetEnvironmentVariable(
       "JWT_REFRESH_SECRET",
@@ -57,12 +57,12 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
 
     // Override configuration settings for testing
     builder.ConfigureAppConfiguration((context, config) => {
-        // Add test-specific configuration settings
+        // Add test-specific configuration settings - must match development API configuration
         config.AddInMemoryCollection(
           new Dictionary<string, string?> {
-            { "Jwt:SecretKey", "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters" },
-            { "Jwt:Issuer", "TestIssuer" },
-            { "Jwt:Audience", "TestAudience" },
+            { "Jwt:SecretKey", "game-guild-super-secret-key-for-development-only-minimum-32-characters" },
+            { "Jwt:Issuer", "GameGuild.CMS" },
+            { "Jwt:Audience", "GameGuild.Users" },
             { "Jwt:ExpiryInMinutes", "60" },
             { "Jwt:RefreshTokenExpiryInDays", "7" },
             { "OAuth:GitHub:ClientId", "test-github-client-id" },
@@ -149,13 +149,13 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
         // Re-add GraphQL with test-friendly configuration
         services.AddGraphQLInfrastructure(DependencyInjection.GraphQLOptionsFactory.ForTesting());
 
-        // Configure JWT for testing - ensure consistent configuration
+        // Configure JWT for testing - must match the development API configuration
         // This should match the configuration expected by AuthModuleDependencyInjection
         var testJwtConfig = new ConfigurationBuilder().AddInMemoryCollection(
                                                         new Dictionary<string, string?> {
-                                                          { "Jwt:SecretKey", "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters" },
-                                                          { "Jwt:Issuer", "TestIssuer" },
-                                                          { "Jwt:Audience", "TestAudience" },
+                                                          { "Jwt:SecretKey", "game-guild-super-secret-key-for-development-only-minimum-32-characters" },
+                                                          { "Jwt:Issuer", "GameGuild.CMS" },
+                                                          { "Jwt:Audience", "GameGuild.Users" },
                                                           { "Jwt:ExpiryInMinutes", "60" }
                                                         }
                                                       )
