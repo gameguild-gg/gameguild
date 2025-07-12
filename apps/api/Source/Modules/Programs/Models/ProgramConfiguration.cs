@@ -9,6 +9,10 @@ namespace GameGuild.Modules.Programs.Models;
 /// </summary>
 public class ProgramConfiguration : IEntityTypeConfiguration<Program> {
   public void Configure(EntityTypeBuilder<Program> builder) {
-    // Additional configuration can be added here if needed
+    // Ignore computed properties that shouldn't be mapped by EF Core
+    builder.Ignore(p => p.SkillsRequired);
+    builder.Ignore(p => p.SkillsProvided);
+    builder.Ignore(p => p.AverageRating);
+    builder.Ignore(p => p.TotalRatings);
   }
 }

@@ -5,6 +5,7 @@ export type AccessLevel = 0 | 1 | 2 | 5 | 6;
 export type ActivityGradeReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -82,16 +83,45 @@ export type AttendanceStatus = 0 | 1 | 2 | 3;
 export type AutoAssignUserDto = {
   userId: string;
   email: string;
+  emailDomain: string;
+  tenantId: string;
 };
 
 export type AutoAssignUsersDto = {
-  tenantId?: string | null;
+  userIds?: Array<string> | null;
   userEmails?: Array<string> | null;
+  tenantId?: string | null;
+  forceReassignment?: boolean;
+};
+
+export type BulkDeleteTenantsDto = {
+  tenantIds: Array<string>;
+};
+
+export type BulkOperationResultReadable = {
+  totalRequested?: number;
+  successful?: number;
+  failed?: number;
+  readonly errors?: Array<string> | null;
+  readonly isCompletelySuccessful?: boolean;
+  readonly isPartiallySuccessful?: boolean;
+  readonly isCompletelyFailed?: boolean;
+};
+
+export type BulkOperationResultWritable = {
+  totalRequested?: number;
+  successful?: number;
+  failed?: number;
+};
+
+export type BulkRestoreTenantsDto = {
+  tenantIds: Array<string>;
 };
 
 export type CertificateReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -151,6 +181,7 @@ export type CertificateWritable = {
 export type CertificateBlockchainAnchorReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -196,6 +227,7 @@ export type CertificateStatus = 0 | 1 | 2 | 3;
 export type CertificateTagReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -228,11 +260,6 @@ export type CertificateTagRelationshipType = 0 | 1 | 2;
 
 export type CertificateType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
-export type ChangePasswordRequestDto = {
-  currentPassword: string;
-  newPassword: string;
-};
-
 export type CloneProgramDto = {
   newTitle?: string | null;
   newDescription?: string | null;
@@ -261,6 +288,7 @@ export type CompletionTrendDto = {
 
 export type ContentReadable = {
   readonly isNew?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -299,6 +327,7 @@ export type ContentWritable = {
 export type ContentInteractionReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -395,6 +424,7 @@ export type ContentInteractionSummaryDto = {
 
 export type ContentLicenseReadable = {
   readonly isNew?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -474,6 +504,7 @@ export type ContentSummaryDto = {
 export type ContentTypePermissionReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -538,6 +569,17 @@ export type CreateCredentialDto = {
   isActive?: boolean;
 };
 
+export type CreatePaymentMethodDto = {
+  type?: string | null;
+  externalId?: string | null;
+  displayName?: string | null;
+  lastFourDigits?: string | null;
+  brand?: string | null;
+  expiryMonth?: number | null;
+  expiryYear?: number | null;
+  isDefault?: boolean;
+};
+
 export type CreateProductFromProgramDto = {
   name?: string | null;
   description?: string | null;
@@ -567,18 +609,26 @@ export type CreateProgramDto = {
   thumbnail?: string | null;
 };
 
+export type CreateSubscriptionDto = {
+  subscriptionPlanId?: string;
+  paymentMethodId?: string | null;
+  externalSubscriptionId?: string | null;
+  trialEndsAt?: string | null;
+};
+
 export type CreateTenantDomainDto = {
+  tenantId: string;
   topLevelDomain: string;
   subdomain?: string | null;
   isMainDomain?: boolean;
   isSecondaryDomain?: boolean;
-  tenantId: string;
   userGroupId?: string | null;
 };
 
 export type CreateTenantDto = {
   name: string;
   description?: string | null;
+  slug: string;
   isActive?: boolean;
 };
 
@@ -587,8 +637,8 @@ export type CreateTenantUserGroupDto = {
   description?: string | null;
   tenantId: string;
   parentGroupId?: string | null;
-  isDefault?: boolean;
   isActive?: boolean;
+  isDefault?: boolean;
 };
 
 export type CreateTestingRequestDto = {
@@ -605,23 +655,37 @@ export type CreateTestingRequestDto = {
   status: TestingRequestStatus;
 };
 
+export type CreateTransactionDto = {
+  toUserId?: string | null;
+  type?: TransactionType;
+  amount?: number;
+  currency?: string | null;
+  paymentMethodId?: string | null;
+  description?: string | null;
+  metadata?: string | null;
+};
+
 export type CreateUserDto = {
   name: string;
   email: string;
+  isActive?: boolean;
+  initialBalance?: number;
 };
 
 export type CreateUserProfileDto = {
-  givenName?: string | null;
-  familyName?: string | null;
-  displayName?: string | null;
+  givenName: string;
+  familyName: string;
+  displayName: string;
   title?: string | null;
   description?: string | null;
   slug?: string | null;
+  userId: string;
   tenantId?: string | null;
 };
 
 export type CredentialReadable = {
   readonly isNew?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -698,11 +762,6 @@ export type CredentialResponseDtoWritable = {
 
 export type DevelopmentStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
-export type EmailOperationResponseDto = {
-  success?: boolean;
-  message?: string | null;
-};
-
 export type EngagementMetricsDto = {
   programId?: string;
   dailyActiveUsers?: number;
@@ -729,6 +788,7 @@ export type FeedbackRequest = {
 export type FinancialTransactionReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -753,6 +813,7 @@ export type FinancialTransactionReadable = {
   processedAt?: string | null;
   failedAt?: string | null;
   errorMessage?: string | null;
+  failureReason?: string | null;
   fromUser?: UserReadable;
   toUser?: UserReadable;
   paymentMethod?: UserFinancialMethodReadable;
@@ -784,20 +845,12 @@ export type FinancialTransactionWritable = {
   processedAt?: string | null;
   failedAt?: string | null;
   errorMessage?: string | null;
+  failureReason?: string | null;
   fromUser?: UserWritable;
   toUser?: UserWritable;
   paymentMethod?: UserFinancialMethodWritable;
   promoCode?: PromoCodeWritable;
   promoCodeUses?: Array<PromoCodeUseWritable> | null;
-};
-
-export type ForgotPasswordRequestDto = {
-  email: string;
-};
-
-export type GoogleIdTokenRequestDto = {
-  idToken?: string | null;
-  tenantId?: string | null;
 };
 
 export type GradeStatisticsDtoReadable = {
@@ -835,11 +888,20 @@ export type GrantAccessRequest = {
   expiresAt?: string | null;
 };
 
+export type IDomainEvent = {
+  readonly eventId?: string;
+  readonly occurredAt?: string;
+  readonly version?: number;
+  readonly aggregateId?: string;
+  readonly aggregateType?: string | null;
+};
+
 export type InstructionType = 0 | 1 | 2;
 
 export type JamReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -887,6 +949,7 @@ export type JamWritable = {
 export type JamScoreReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -920,6 +983,7 @@ export type JamStatus = 0 | 1 | 2 | 3 | 4;
 export type LanguageReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -981,16 +1045,25 @@ export type MoveContentDto = {
   newSortOrder: number;
 };
 
-export type OAuthSignInRequestDto = {
-  code?: string | null;
-  state?: string | null;
-  redirectUri?: string | null;
-  tenantId?: string | null;
-};
-
 export type PaymentMethodStatus = 0 | 1 | 2 | 3;
 
 export type PaymentMethodType = 0 | 1 | 2 | 3 | 4;
+
+export type PaymentStatisticsDto = {
+  totalRevenue?: number;
+  totalTransactions?: number;
+  successfulTransactions?: number;
+  failedTransactions?: number;
+  averageTransactionAmount?: number;
+  revenueByMethod?: {
+    [key: string]: number;
+  } | null;
+  transactionsByStatus?: {
+    [key: string]: number;
+  } | null;
+  fromDate?: string | null;
+  toDate?: string | null;
+};
 
 export type PricingDto = {
   price?: number;
@@ -1000,8 +1073,25 @@ export type PricingDto = {
   isMonetizationEnabled?: boolean;
 };
 
+export type ProblemDetails = {
+  type?: string | null;
+  title?: string | null;
+  status?: number | null;
+  detail?: string | null;
+  instance?: string | null;
+  [key: string]: unknown | (string | null) | (string | null) | (number | null) | (string | null) | (string | null) | undefined;
+};
+
+export type ProcessPaymentDto = {
+  paymentMethodId?: string;
+  externalTransactionId?: string | null;
+  paymentIntentId?: string | null;
+  metadata?: string | null;
+};
+
 export type ProductReadable = {
   readonly isNew?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1076,6 +1166,7 @@ export type ProductAcquisitionType = 0 | 1 | 2 | 3;
 export type ProductPricingReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1115,6 +1206,7 @@ export type ProductPricingWritable = {
 export type ProductProgramReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1146,6 +1238,7 @@ export type ProductProgramWritable = {
 export type ProductSubscriptionPlanReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1192,6 +1285,7 @@ export type ProductType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 export type ProgramReadable = {
   readonly isNew?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1283,6 +1377,7 @@ export type ProgramCategory = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 
 export type ProgramContentReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1362,6 +1457,7 @@ export type ProgramDifficulty = 0 | 1 | 2 | 3;
 export type ProgramFeedbackSubmissionReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1409,6 +1505,7 @@ export type ProgramFeedbackSubmissionWritable = {
 export type ProgramRatingReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1470,6 +1567,7 @@ export type ProgramRatingWritable = {
 export type ProgramUserReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1531,6 +1629,7 @@ export type ProgramUserSummaryDto = {
 export type ProgramWishlistReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1565,6 +1664,7 @@ export type ProgressStatus = 0 | 1 | 2 | 3;
 
 export type ProjectReadable = {
   readonly isNew?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1654,6 +1754,7 @@ export type ProjectWritable = {
 
 export type ProjectCategoryReadable = {
   readonly isNew?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1689,6 +1790,7 @@ export type ProjectCategoryWritable = {
 
 export type ProjectCollaboratorReadable = {
   readonly isNew?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1738,6 +1840,7 @@ export type ProjectCollaboratorWritable = {
 
 export type ProjectFeedbackReadable = {
   readonly isNew?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1797,6 +1900,7 @@ export type ProjectFeedbackWritable = {
 
 export type ProjectFollowerReadable = {
   readonly isNew?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1844,6 +1948,7 @@ export type ProjectFollowerWritable = {
 
 export type ProjectJamSubmissionReadable = {
   readonly isNew?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1853,7 +1958,7 @@ export type ProjectJamSubmissionReadable = {
   title: string;
   description?: string | null;
   visibility: AccessLevel;
-  metadata?: string | null;
+  metadata?: ResourceMetadataReadable;
   tenant?: TenantReadable;
   readonly isGlobal?: boolean;
   localizations?: Array<ResourceLocalizationReadable> | null;
@@ -1880,7 +1985,7 @@ export type ProjectJamSubmissionWritable = {
   title: string;
   description?: string | null;
   visibility: AccessLevel;
-  metadata?: string | null;
+  metadata?: ResourceMetadataWritable;
   tenant?: TenantWritable;
   localizations?: Array<ResourceLocalizationWritable> | null;
   projectId?: string;
@@ -1917,6 +2022,7 @@ export type ProjectMetadataWritable = {
 
 export type ProjectReleaseReadable = {
   readonly isNew?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -1980,6 +2086,7 @@ export type ProjectReleaseWritable = {
 
 export type ProjectTeamReadable = {
   readonly isNew?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2036,6 +2143,7 @@ export type ProjectType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 99;
 export type ProjectVersionReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2073,6 +2181,7 @@ export type ProjectVersionWritable = {
 export type PromoCodeReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2134,6 +2243,7 @@ export type PromoCodeType = 0 | 1 | 2 | 3;
 export type PromoCodeUseReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2171,13 +2281,6 @@ export type RefreshTokenRequestDto = {
   tenantId?: string | null;
 };
 
-export type RefreshTokenResponseDto = {
-  accessToken?: string | null;
-  refreshToken?: string | null;
-  expiresAt?: string;
-  tenantId?: string | null;
-};
-
 export type RegistrationType = 0 | 1;
 
 export type RejectProgramDto = {
@@ -2188,14 +2291,10 @@ export type ReorderContentDto = {
   contentIds?: Array<string> | null;
 };
 
-export type ResetPasswordRequestDto = {
-  token: string;
-  newPassword: string;
-};
-
 export type ResourceLocalizationReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2231,6 +2330,7 @@ export type ResourceLocalizationWritable = {
 export type ResourceMetadataReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2274,6 +2374,10 @@ export type RevenueChartDto = {
   purchases?: number;
 };
 
+export type RevokeTokenRequestDto = {
+  refreshToken?: string | null;
+};
+
 export type ScheduleProgramDto = {
   publishAt?: string;
 };
@@ -2287,13 +2391,10 @@ export type SearchContentDto = {
   parentId?: string | null;
 };
 
-export type SendEmailVerificationRequestDto = {
-  email: string;
-};
-
 export type SessionRegistrationReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2340,6 +2441,7 @@ export type SessionStatus = 0 | 1 | 2 | 3;
 export type SessionWaitlistReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2388,6 +2490,8 @@ export type SignInResponseDto = {
 
 export type SkillProficiencyLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
+export type SortDirection = 0 | 1;
+
 export type StartContentRequest = {
   programUserId?: string;
   contentId?: string;
@@ -2412,6 +2516,7 @@ export type SubscriptionStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export type TagProficiencyReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2465,6 +2570,7 @@ export type TeamWritable = {
 export type TeamMemberReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2499,16 +2605,21 @@ export type TeamRole = 0 | 1 | 2;
 
 export type TenantReadable = {
   readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string | null;
   readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  name: string;
+  title: string;
   description?: string | null;
+  visibility: AccessLevel;
+  metadata?: ResourceMetadataReadable;
+  tenant?: TenantReadable;
+  readonly isGlobal?: boolean;
+  localizations?: Array<ResourceLocalizationReadable> | null;
+  name: string;
   isActive?: boolean;
   slug: string;
   tenantPermissions?: Array<TenantPermissionReadable> | null;
@@ -2520,9 +2631,13 @@ export type TenantWritable = {
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string | null;
-  tenant?: TenantWritable;
-  name: string;
+  title: string;
   description?: string | null;
+  visibility: AccessLevel;
+  metadata?: ResourceMetadataWritable;
+  tenant?: TenantWritable;
+  localizations?: Array<ResourceLocalizationWritable> | null;
+  name: string;
   isActive?: boolean;
   slug: string;
   tenantPermissions?: Array<TenantPermissionWritable> | null;
@@ -2531,6 +2646,7 @@ export type TenantWritable = {
 export type TenantDomainReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2574,6 +2690,7 @@ export type TenantInfoDto = {
 export type TenantPermissionReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2612,67 +2729,22 @@ export type TenantPermissionWritable = {
   contentTypePermissions?: Array<ContentTypePermissionWritable> | null;
 };
 
-export type TenantPermissionResponseDtoReadable = {
-  id?: string;
-  userId?: string | null;
-  tenantId?: string | null;
-  isValid?: boolean;
-  expiresAt?: string | null;
-  permissionFlags1?: number;
-  permissionFlags2?: number;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  user?: UserResponseDto;
-  tenant?: TenantResponseDtoReadable;
-};
+export type TenantSortField = 0 | 1 | 2 | 3 | 4 | 5;
 
-export type TenantPermissionResponseDtoWritable = {
-  id?: string;
-  userId?: string | null;
-  tenantId?: string | null;
-  isValid?: boolean;
-  expiresAt?: string | null;
-  permissionFlags1?: number;
-  permissionFlags2?: number;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  user?: UserResponseDto;
-  tenant?: TenantResponseDtoWritable;
-};
-
-export type TenantResponseDtoReadable = {
-  id?: string;
-  name?: string | null;
-  description?: string | null;
-  isActive?: boolean;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenantPermissions?: Array<TenantPermissionResponseDtoReadable> | null;
-};
-
-export type TenantResponseDtoWritable = {
-  id?: string;
-  name?: string | null;
-  description?: string | null;
-  isActive?: boolean;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenantPermissions?: Array<TenantPermissionResponseDtoWritable> | null;
+export type TenantStatistics = {
+  totalTenants?: number;
+  activeTenants?: number;
+  inactiveTenants?: number;
+  deletedTenants?: number;
+  oldestTenantCreatedAt?: string | null;
+  newestTenantCreatedAt?: string | null;
+  lastUpdatedAt?: string;
 };
 
 export type TenantUserGroupReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2715,10 +2787,10 @@ export type TenantUserGroupDto = {
   id?: string;
   name?: string | null;
   description?: string | null;
-  isDefault?: boolean;
-  parentGroupId?: string | null;
   tenantId?: string;
+  parentGroupId?: string | null;
   isActive?: boolean;
+  isDefault?: boolean;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -2726,6 +2798,7 @@ export type TenantUserGroupDto = {
 export type TenantUserGroupMembershipReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2759,7 +2832,9 @@ export type TenantUserGroupMembershipWritable = {
 export type TenantUserGroupMembershipDto = {
   id?: string;
   userId?: string;
+  userGroupId?: string;
   groupId?: string;
+  joinedAt?: string;
   isAutoAssigned?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -2770,6 +2845,7 @@ export type TestingContext = 0 | 1;
 export type TestingFeedbackReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2813,6 +2889,7 @@ export type TestingFeedbackWritable = {
 export type TestingFeedbackFormReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2842,6 +2919,7 @@ export type TestingFeedbackFormWritable = {
 export type TestingLocationReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2877,6 +2955,7 @@ export type TestingLocationWritable = {
 export type TestingParticipantReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2914,6 +2993,7 @@ export type TestingParticipantWritable = {
 export type TestingRequestReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -2967,6 +3047,7 @@ export type TestingRequestStatus = 0 | 1 | 2 | 3 | 4;
 export type TestingSessionReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -3046,6 +3127,10 @@ export type UpdateCredentialDto = {
   isActive?: boolean;
 };
 
+export type UpdatePaymentMethodDto = {
+  paymentMethodId?: string;
+};
+
 export type UpdatePricingDto = {
   price?: number | null;
   currency?: string | null;
@@ -3096,9 +3181,10 @@ export type UpdateTenantDomainDto = {
 };
 
 export type UpdateTenantDto = {
-  name: string;
+  name?: string | null;
   description?: string | null;
-  isActive?: boolean;
+  slug?: string | null;
+  isActive?: boolean | null;
 };
 
 export type UpdateTenantUserGroupDto = {
@@ -3106,6 +3192,7 @@ export type UpdateTenantUserGroupDto = {
   description?: string | null;
   parentGroupId?: string | null;
   isActive?: boolean | null;
+  isDefault?: boolean | null;
 };
 
 export type UpdateTimeSpentRequest = {
@@ -3114,9 +3201,18 @@ export type UpdateTimeSpentRequest = {
   additionalMinutes?: number;
 };
 
+export type UpdateUserBalanceDto = {
+  balance?: number;
+  availableBalance?: number;
+  reason?: string | null;
+  expectedVersion?: number | null;
+};
+
 export type UpdateUserDto = {
   name?: string | null;
   email?: string | null;
+  isActive?: boolean | null;
+  expectedVersion?: number | null;
 };
 
 export type UpdateUserProfileDto = {
@@ -3132,6 +3228,7 @@ export type UpdateUserProfileDto = {
 export type UserReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -3169,6 +3266,7 @@ export type UserWritable = {
 export type UserCertificateReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -3234,6 +3332,7 @@ export type UserDto = {
 export type UserFinancialMethodReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -3251,6 +3350,9 @@ export type UserFinancialMethodReadable = {
   brand?: string | null;
   status?: PaymentMethodStatus;
   isDefault?: boolean;
+  isActive?: boolean;
+  displayName?: string | null;
+  readonly lastFourDigits?: string | null;
   user?: UserReadable;
 };
 
@@ -3271,12 +3373,15 @@ export type UserFinancialMethodWritable = {
   brand?: string | null;
   status?: PaymentMethodStatus;
   isDefault?: boolean;
+  isActive?: boolean;
+  displayName?: string | null;
   user?: UserWritable;
 };
 
 export type UserProductReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -3323,6 +3428,22 @@ export type UserProductWritable = {
   giftedByUser?: UserWritable;
 };
 
+export type UserProfileDto = {
+  id?: string;
+  email?: string | null;
+  username?: string | null;
+  givenName?: string | null;
+  familyName?: string | null;
+  displayName?: string | null;
+  title?: string | null;
+  description?: string | null;
+  isEmailVerified?: boolean;
+  createdAt?: string;
+  updatedAt?: string | null;
+  currentTenant?: TenantInfoDto;
+  availableTenants?: Array<TenantInfoDto> | null;
+};
+
 export type UserProfileResponseDto = {
   id?: string;
   version?: number;
@@ -3354,15 +3475,53 @@ export type UserResponseDto = {
   name?: string | null;
   email?: string | null;
   isActive?: boolean;
+  balance?: number;
+  availableBalance?: number;
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string | null;
   isDeleted?: boolean;
+  activeSubscription?: UserSubscriptionSummaryDto;
+  role?: string | null;
+  subscriptionType?: string | null;
+};
+
+export type UserResponseDtoPagedResultReadable = {
+  items?: Array<UserResponseDto> | null;
+  totalCount?: number;
+  skip?: number;
+  take?: number;
+  readonly pageNumber?: number;
+  readonly totalPages?: number;
+  readonly hasNextPage?: boolean;
+  readonly hasPreviousPage?: boolean;
+};
+
+export type UserResponseDtoPagedResultWritable = {
+  items?: Array<UserResponseDto> | null;
+  totalCount?: number;
+  skip?: number;
+  take?: number;
+};
+
+export type UserSortField = 0 | 1 | 2 | 3 | 4 | 5;
+
+export type UserStatistics = {
+  totalUsers?: number;
+  activeUsers?: number;
+  inactiveUsers?: number;
+  deletedUsers?: number;
+  totalBalance?: number;
+  averageBalance?: number;
+  usersCreatedToday?: number;
+  usersCreatedThisWeek?: number;
+  usersCreatedThisMonth?: number;
 };
 
 export type UserSubscriptionReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
   id?: string;
   version?: number;
   createdAt?: string;
@@ -3409,32 +3568,21 @@ export type UserSubscriptionWritable = {
   userProducts?: Array<UserProductWritable> | null;
 };
 
+export type UserSubscriptionSummaryDto = {
+  id?: string;
+  status?: SubscriptionStatus;
+  planName?: string | null;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  trialEndsAt?: string | null;
+  nextBillingAt?: string | null;
+  isTrialActive?: boolean;
+  isActive?: boolean;
+};
+
 export type VerificationMethod = 0 | 1 | 2;
 
-export type VerifyEmailRequestDto = {
-  token: string;
-};
-
 export type Visibility = 0 | 1 | 2;
-
-export type Web3ChallengeRequestDto = {
-  walletAddress: string;
-  chainId?: string | null;
-};
-
-export type Web3ChallengeResponseDto = {
-  challenge?: string | null;
-  nonce?: string | null;
-  expiresAt?: string;
-};
-
-export type Web3VerifyRequestDto = {
-  walletAddress: string;
-  signature: string;
-  nonce: string;
-  chainId?: string | null;
-  tenantId?: string | null;
-};
 
 export type PostApiProgramsByProgramIdActivityGradesData = {
   body?: CreateActivityGradeDto;
@@ -3610,253 +3758,146 @@ export type GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses =
 export type GetApiProgramsByProgramIdActivityGradesContentByContentIdResponse =
   GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses[keyof GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses];
 
-export type PostAuthSignInData = {
-  body?: LocalSignInRequestDto;
-  path?: never;
-  query?: never;
-  url: '/auth/sign-in';
-};
-
-export type PostAuthSignInResponses = {
-  /**
-   * OK
-   */
-  200: SignInResponseDto;
-};
-
-export type PostAuthSignInResponse = PostAuthSignInResponses[keyof PostAuthSignInResponses];
-
-export type PostAuthSignUpData = {
+export type PostApiAuthSignupData = {
   body?: LocalSignUpRequestDto;
   path?: never;
   query?: never;
-  url: '/auth/sign-up';
+  url: '/api/Auth/signup';
 };
 
-export type PostAuthSignUpResponses = {
+export type PostApiAuthSignupErrors = {
+  /**
+   * Bad Request
+   */
+  400: ProblemDetails;
+  /**
+   * Conflict
+   */
+  409: ProblemDetails;
+};
+
+export type PostApiAuthSignupError = PostApiAuthSignupErrors[keyof PostApiAuthSignupErrors];
+
+export type PostApiAuthSignupResponses = {
+  /**
+   * Created
+   */
+  201: SignInResponseDto;
+};
+
+export type PostApiAuthSignupResponse = PostApiAuthSignupResponses[keyof PostApiAuthSignupResponses];
+
+export type PostApiAuthSigninData = {
+  body?: LocalSignInRequestDto;
+  path?: never;
+  query?: never;
+  url: '/api/Auth/signin';
+};
+
+export type PostApiAuthSigninErrors = {
+  /**
+   * Bad Request
+   */
+  400: ProblemDetails;
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+};
+
+export type PostApiAuthSigninError = PostApiAuthSigninErrors[keyof PostApiAuthSigninErrors];
+
+export type PostApiAuthSigninResponses = {
   /**
    * OK
    */
   200: SignInResponseDto;
 };
 
-export type PostAuthSignUpResponse = PostAuthSignUpResponses[keyof PostAuthSignUpResponses];
+export type PostApiAuthSigninResponse = PostApiAuthSigninResponses[keyof PostApiAuthSigninResponses];
 
-export type PostAuthRefreshTokenData = {
+export type PostApiAuthRefreshData = {
   body?: RefreshTokenRequestDto;
   path?: never;
   query?: never;
-  url: '/auth/refresh-token';
+  url: '/api/Auth/refresh';
 };
 
-export type PostAuthRefreshTokenResponses = {
+export type PostApiAuthRefreshErrors = {
   /**
-   * OK
+   * Bad Request
    */
-  200: RefreshTokenResponseDto;
-};
-
-export type PostAuthRefreshTokenResponse = PostAuthRefreshTokenResponses[keyof PostAuthRefreshTokenResponses];
-
-export type PostAuthRevokeTokenData = {
-  body?: RefreshTokenRequestDto;
-  path?: never;
-  query?: never;
-  url: '/auth/revoke-token';
-};
-
-export type PostAuthRevokeTokenResponses = {
+  400: ProblemDetails;
   /**
-   * OK
+   * Unauthorized
    */
-  200: unknown;
+  401: ProblemDetails;
 };
 
-export type GetAuthGithubSigninData = {
-  body?: never;
-  path?: never;
-  query?: {
-    redirectUri?: string;
-  };
-  url: '/auth/github/signin';
-};
+export type PostApiAuthRefreshError = PostApiAuthRefreshErrors[keyof PostApiAuthRefreshErrors];
 
-export type GetAuthGithubSigninResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type PostAuthGithubCallbackData = {
-  body?: OAuthSignInRequestDto;
-  path?: never;
-  query?: never;
-  url: '/auth/github/callback';
-};
-
-export type PostAuthGithubCallbackResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type GetAuthGoogleSigninData = {
-  body?: never;
-  path?: never;
-  query?: {
-    redirectUri?: string;
-  };
-  url: '/auth/google/signin';
-};
-
-export type GetAuthGoogleSigninResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type PostAuthGoogleCallbackData = {
-  body?: OAuthSignInRequestDto;
-  path?: never;
-  query?: never;
-  url: '/auth/google/callback';
-};
-
-export type PostAuthGoogleCallbackResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type PostAuthGoogleIdTokenData = {
-  body?: GoogleIdTokenRequestDto;
-  path?: never;
-  query?: never;
-  url: '/auth/google/id-token';
-};
-
-export type PostAuthGoogleIdTokenResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type PostAuthWeb3ChallengeData = {
-  body?: Web3ChallengeRequestDto;
-  path?: never;
-  query?: never;
-  url: '/auth/web3/challenge';
-};
-
-export type PostAuthWeb3ChallengeResponses = {
-  /**
-   * OK
-   */
-  200: Web3ChallengeResponseDto;
-};
-
-export type PostAuthWeb3ChallengeResponse = PostAuthWeb3ChallengeResponses[keyof PostAuthWeb3ChallengeResponses];
-
-export type PostAuthWeb3VerifyData = {
-  body?: Web3VerifyRequestDto;
-  path?: never;
-  query?: never;
-  url: '/auth/web3/verify';
-};
-
-export type PostAuthWeb3VerifyResponses = {
+export type PostApiAuthRefreshResponses = {
   /**
    * OK
    */
   200: SignInResponseDto;
 };
 
-export type PostAuthWeb3VerifyResponse = PostAuthWeb3VerifyResponses[keyof PostAuthWeb3VerifyResponses];
+export type PostApiAuthRefreshResponse = PostApiAuthRefreshResponses[keyof PostApiAuthRefreshResponses];
 
-export type PostAuthSendEmailVerificationData = {
-  body?: SendEmailVerificationRequestDto;
+export type PostApiAuthRevokeData = {
+  body?: RevokeTokenRequestDto;
   path?: never;
   query?: never;
-  url: '/auth/send-email-verification';
+  url: '/api/Auth/revoke';
 };
 
-export type PostAuthSendEmailVerificationResponses = {
+export type PostApiAuthRevokeErrors = {
+  /**
+   * Bad Request
+   */
+  400: ProblemDetails;
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+};
+
+export type PostApiAuthRevokeError = PostApiAuthRevokeErrors[keyof PostApiAuthRevokeErrors];
+
+export type PostApiAuthRevokeResponses = {
+  /**
+   * No Content
+   */
+  204: void;
+};
+
+export type PostApiAuthRevokeResponse = PostApiAuthRevokeResponses[keyof PostApiAuthRevokeResponses];
+
+export type GetApiAuthProfileData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/Auth/profile';
+};
+
+export type GetApiAuthProfileErrors = {
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+};
+
+export type GetApiAuthProfileError = GetApiAuthProfileErrors[keyof GetApiAuthProfileErrors];
+
+export type GetApiAuthProfileResponses = {
   /**
    * OK
    */
-  200: EmailOperationResponseDto;
+  200: UserProfileDto;
 };
 
-export type PostAuthSendEmailVerificationResponse = PostAuthSendEmailVerificationResponses[keyof PostAuthSendEmailVerificationResponses];
-
-export type PostAuthVerifyEmailData = {
-  body?: VerifyEmailRequestDto;
-  path?: never;
-  query?: never;
-  url: '/auth/verify-email';
-};
-
-export type PostAuthVerifyEmailResponses = {
-  /**
-   * OK
-   */
-  200: EmailOperationResponseDto;
-};
-
-export type PostAuthVerifyEmailResponse = PostAuthVerifyEmailResponses[keyof PostAuthVerifyEmailResponses];
-
-export type PostAuthForgotPasswordData = {
-  body?: ForgotPasswordRequestDto;
-  path?: never;
-  query?: never;
-  url: '/auth/forgot-password';
-};
-
-export type PostAuthForgotPasswordResponses = {
-  /**
-   * OK
-   */
-  200: EmailOperationResponseDto;
-};
-
-export type PostAuthForgotPasswordResponse = PostAuthForgotPasswordResponses[keyof PostAuthForgotPasswordResponses];
-
-export type PostAuthResetPasswordData = {
-  body?: ResetPasswordRequestDto;
-  path?: never;
-  query?: never;
-  url: '/auth/reset-password';
-};
-
-export type PostAuthResetPasswordResponses = {
-  /**
-   * OK
-   */
-  200: EmailOperationResponseDto;
-};
-
-export type PostAuthResetPasswordResponse = PostAuthResetPasswordResponses[keyof PostAuthResetPasswordResponses];
-
-export type PostAuthChangePasswordData = {
-  body?: ChangePasswordRequestDto;
-  path?: never;
-  query?: never;
-  url: '/auth/change-password';
-};
-
-export type PostAuthChangePasswordResponses = {
-  /**
-   * OK
-   */
-  200: EmailOperationResponseDto;
-};
-
-export type PostAuthChangePasswordResponse = PostAuthChangePasswordResponses[keyof PostAuthChangePasswordResponses];
+export type GetApiAuthProfileResponse = GetApiAuthProfileResponses[keyof GetApiAuthProfileResponses];
 
 export type PostApiContentInteractionStartData = {
   body?: StartContentRequest;
@@ -3864,7 +3905,7 @@ export type PostApiContentInteractionStartData = {
   query?: {
     programId?: string;
   };
-  url: '/api/content-interaction/start';
+  url: '/api/ContentInteraction/start';
 };
 
 export type PostApiContentInteractionStartResponses = {
@@ -3884,7 +3925,7 @@ export type PutApiContentInteractionByInteractionIdProgressData = {
   query?: {
     programId?: string;
   };
-  url: '/api/content-interaction/{interactionId}/progress';
+  url: '/api/ContentInteraction/{interactionId}/progress';
 };
 
 export type PutApiContentInteractionByInteractionIdProgressResponses = {
@@ -3905,7 +3946,7 @@ export type PostApiContentInteractionByInteractionIdSubmitData = {
   query?: {
     programId?: string;
   };
-  url: '/api/content-interaction/{interactionId}/submit';
+  url: '/api/ContentInteraction/{interactionId}/submit';
 };
 
 export type PostApiContentInteractionByInteractionIdSubmitResponses = {
@@ -3926,7 +3967,7 @@ export type PostApiContentInteractionByInteractionIdCompleteData = {
   query?: {
     programId?: string;
   };
-  url: '/api/content-interaction/{interactionId}/complete';
+  url: '/api/ContentInteraction/{interactionId}/complete';
 };
 
 export type PostApiContentInteractionByInteractionIdCompleteResponses = {
@@ -3948,7 +3989,7 @@ export type GetApiContentInteractionUserByProgramUserIdContentByContentIdData = 
   query?: {
     programId?: string;
   };
-  url: '/api/content-interaction/user/{programUserId}/content/{contentId}';
+  url: '/api/ContentInteraction/user/{programUserId}/content/{contentId}';
 };
 
 export type GetApiContentInteractionUserByProgramUserIdContentByContentIdResponses = {
@@ -3969,7 +4010,7 @@ export type GetApiContentInteractionUserByProgramUserIdData = {
   query?: {
     programId?: string;
   };
-  url: '/api/content-interaction/user/{programUserId}';
+  url: '/api/ContentInteraction/user/{programUserId}';
 };
 
 export type GetApiContentInteractionUserByProgramUserIdResponses = {
@@ -3990,7 +4031,7 @@ export type PutApiContentInteractionByInteractionIdTimeSpentData = {
   query?: {
     programId?: string;
   };
-  url: '/api/content-interaction/{interactionId}/time-spent';
+  url: '/api/ContentInteraction/{interactionId}/time-spent';
 };
 
 export type PutApiContentInteractionByInteractionIdTimeSpentResponses = {
@@ -4007,7 +4048,7 @@ export type GetCredentialsData = {
   body?: never;
   path?: never;
   query?: never;
-  url: '/credentials';
+  url: '/Credentials';
 };
 
 export type GetCredentialsResponses = {
@@ -4023,7 +4064,7 @@ export type PostCredentialsData = {
   body?: CreateCredentialDto;
   path?: never;
   query?: never;
-  url: '/credentials';
+  url: '/Credentials';
 };
 
 export type PostCredentialsResponses = {
@@ -4041,7 +4082,7 @@ export type GetCredentialsUserByUserIdData = {
     userId: string;
   };
   query?: never;
-  url: '/credentials/user/{userId}';
+  url: '/Credentials/user/{userId}';
 };
 
 export type GetCredentialsUserByUserIdResponses = {
@@ -4059,7 +4100,7 @@ export type DeleteCredentialsByIdData = {
     id: string;
   };
   query?: never;
-  url: '/credentials/{id}';
+  url: '/Credentials/{id}';
 };
 
 export type DeleteCredentialsByIdResponses = {
@@ -4075,7 +4116,7 @@ export type GetCredentialsByIdData = {
     id: string;
   };
   query?: never;
-  url: '/credentials/{id}';
+  url: '/Credentials/{id}';
 };
 
 export type GetCredentialsByIdResponses = {
@@ -4093,7 +4134,7 @@ export type PutCredentialsByIdData = {
     id: string;
   };
   query?: never;
-  url: '/credentials/{id}';
+  url: '/Credentials/{id}';
 };
 
 export type PutCredentialsByIdResponses = {
@@ -4112,7 +4153,7 @@ export type GetCredentialsUserByUserIdTypeByTypeData = {
     type: string;
   };
   query?: never;
-  url: '/credentials/user/{userId}/type/{type}';
+  url: '/Credentials/user/{userId}/type/{type}';
 };
 
 export type GetCredentialsUserByUserIdTypeByTypeResponses = {
@@ -4130,7 +4171,7 @@ export type PostCredentialsByIdRestoreData = {
     id: string;
   };
   query?: never;
-  url: '/credentials/{id}/restore';
+  url: '/Credentials/{id}/restore';
 };
 
 export type PostCredentialsByIdRestoreResponses = {
@@ -4146,7 +4187,7 @@ export type DeleteCredentialsByIdHardData = {
     id: string;
   };
   query?: never;
-  url: '/credentials/{id}/hard';
+  url: '/Credentials/{id}/hard';
 };
 
 export type DeleteCredentialsByIdHardResponses = {
@@ -4162,7 +4203,7 @@ export type PostCredentialsByIdMarkUsedData = {
     id: string;
   };
   query?: never;
-  url: '/credentials/{id}/mark-used';
+  url: '/Credentials/{id}/mark-used';
 };
 
 export type PostCredentialsByIdMarkUsedResponses = {
@@ -4178,7 +4219,7 @@ export type PostCredentialsByIdDeactivateData = {
     id: string;
   };
   query?: never;
-  url: '/credentials/{id}/deactivate';
+  url: '/Credentials/{id}/deactivate';
 };
 
 export type PostCredentialsByIdDeactivateResponses = {
@@ -4194,7 +4235,7 @@ export type PostCredentialsByIdActivateData = {
     id: string;
   };
   query?: never;
-  url: '/credentials/{id}/activate';
+  url: '/Credentials/{id}/activate';
 };
 
 export type PostCredentialsByIdActivateResponses = {
@@ -4208,7 +4249,7 @@ export type GetCredentialsDeletedData = {
   body?: never;
   path?: never;
   query?: never;
-  url: '/credentials/deleted';
+  url: '/Credentials/deleted';
 };
 
 export type GetCredentialsDeletedResponses = {
@@ -4224,7 +4265,7 @@ export type GetHealthData = {
   body?: never;
   path?: never;
   query?: never;
-  url: '/health';
+  url: '/Health';
 };
 
 export type GetHealthResponses = {
@@ -4238,7 +4279,7 @@ export type GetHealthDatabaseData = {
   body?: never;
   path?: never;
   query?: never;
-  url: '/health/database';
+  url: '/Health/database';
 };
 
 export type GetHealthDatabaseResponses = {
@@ -4248,6 +4289,186 @@ export type GetHealthDatabaseResponses = {
   200: unknown;
 };
 
+export type GetApiPaymentMethodsMeData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/Payment/methods/me';
+};
+
+export type GetApiPaymentMethodsMeResponses = {
+  /**
+   * OK
+   */
+  200: Array<UserFinancialMethodReadable>;
+};
+
+export type GetApiPaymentMethodsMeResponse = GetApiPaymentMethodsMeResponses[keyof GetApiPaymentMethodsMeResponses];
+
+export type PostApiPaymentMethodsData = {
+  body?: CreatePaymentMethodDto;
+  path?: never;
+  query?: never;
+  url: '/api/Payment/methods';
+};
+
+export type PostApiPaymentMethodsResponses = {
+  /**
+   * OK
+   */
+  200: UserFinancialMethodReadable;
+};
+
+export type PostApiPaymentMethodsResponse = PostApiPaymentMethodsResponses[keyof PostApiPaymentMethodsResponses];
+
+export type DeleteApiPaymentMethodsByIdData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Payment/methods/{id}';
+};
+
+export type DeleteApiPaymentMethodsByIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetApiPaymentMethodsByIdData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Payment/methods/{id}';
+};
+
+export type GetApiPaymentMethodsByIdResponses = {
+  /**
+   * OK
+   */
+  200: UserFinancialMethodReadable;
+};
+
+export type GetApiPaymentMethodsByIdResponse = GetApiPaymentMethodsByIdResponses[keyof GetApiPaymentMethodsByIdResponses];
+
+export type GetApiPaymentTransactionsMeData = {
+  body?: never;
+  path?: never;
+  query?: {
+    skip?: number;
+    take?: number;
+    type?: TransactionType;
+    status?: TransactionStatus;
+  };
+  url: '/api/Payment/transactions/me';
+};
+
+export type GetApiPaymentTransactionsMeResponses = {
+  /**
+   * OK
+   */
+  200: Array<FinancialTransactionReadable>;
+};
+
+export type GetApiPaymentTransactionsMeResponse = GetApiPaymentTransactionsMeResponses[keyof GetApiPaymentTransactionsMeResponses];
+
+export type GetApiPaymentTransactionsByIdData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Payment/transactions/{id}';
+};
+
+export type GetApiPaymentTransactionsByIdResponses = {
+  /**
+   * OK
+   */
+  200: FinancialTransactionReadable;
+};
+
+export type GetApiPaymentTransactionsByIdResponse = GetApiPaymentTransactionsByIdResponses[keyof GetApiPaymentTransactionsByIdResponses];
+
+export type GetApiPaymentTransactionsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    skip?: number;
+    take?: number;
+    type?: TransactionType;
+    status?: TransactionStatus;
+  };
+  url: '/api/Payment/transactions';
+};
+
+export type GetApiPaymentTransactionsResponses = {
+  /**
+   * OK
+   */
+  200: Array<FinancialTransactionReadable>;
+};
+
+export type GetApiPaymentTransactionsResponse = GetApiPaymentTransactionsResponses[keyof GetApiPaymentTransactionsResponses];
+
+export type PostApiPaymentTransactionsData = {
+  body?: CreateTransactionDto;
+  path?: never;
+  query?: never;
+  url: '/api/Payment/transactions';
+};
+
+export type PostApiPaymentTransactionsResponses = {
+  /**
+   * OK
+   */
+  200: FinancialTransactionReadable;
+};
+
+export type PostApiPaymentTransactionsResponse = PostApiPaymentTransactionsResponses[keyof PostApiPaymentTransactionsResponses];
+
+export type PostApiPaymentTransactionsByIdProcessData = {
+  body?: ProcessPaymentDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Payment/transactions/{id}/process';
+};
+
+export type PostApiPaymentTransactionsByIdProcessResponses = {
+  /**
+   * OK
+   */
+  200: FinancialTransactionReadable;
+};
+
+export type PostApiPaymentTransactionsByIdProcessResponse =
+  PostApiPaymentTransactionsByIdProcessResponses[keyof PostApiPaymentTransactionsByIdProcessResponses];
+
+export type GetApiPaymentStatisticsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    fromDate?: string;
+    toDate?: string;
+  };
+  url: '/api/Payment/statistics';
+};
+
+export type GetApiPaymentStatisticsResponses = {
+  /**
+   * OK
+   */
+  200: PaymentStatisticsDto;
+};
+
+export type GetApiPaymentStatisticsResponse = GetApiPaymentStatisticsResponses[keyof GetApiPaymentStatisticsResponses];
+
 export type GetApiProductData = {
   body?: never;
   path?: never;
@@ -4255,7 +4476,7 @@ export type GetApiProductData = {
     skip?: number;
     take?: number;
   };
-  url: '/api/product';
+  url: '/api/Product';
 };
 
 export type GetApiProductResponses = {
@@ -4271,7 +4492,7 @@ export type PostApiProductData = {
   body?: ProductWritable;
   path?: never;
   query?: never;
-  url: '/api/product';
+  url: '/api/Product';
 };
 
 export type PostApiProductResponses = {
@@ -4292,7 +4513,7 @@ export type GetApiProductTypeByTypeData = {
     skip?: number;
     take?: number;
   };
-  url: '/api/product/type/{type}';
+  url: '/api/Product/type/{type}';
 };
 
 export type GetApiProductTypeByTypeResponses = {
@@ -4311,7 +4532,7 @@ export type GetApiProductPublishedData = {
     skip?: number;
     take?: number;
   };
-  url: '/api/product/published';
+  url: '/api/Product/published';
 };
 
 export type GetApiProductPublishedResponses = {
@@ -4331,7 +4552,7 @@ export type GetApiProductSearchData = {
     skip?: number;
     take?: number;
   };
-  url: '/api/product/search';
+  url: '/api/Product/search';
 };
 
 export type GetApiProductSearchResponses = {
@@ -4352,7 +4573,7 @@ export type GetApiProductCreatorByCreatorIdData = {
     skip?: number;
     take?: number;
   };
-  url: '/api/product/creator/{creatorId}';
+  url: '/api/Product/creator/{creatorId}';
 };
 
 export type GetApiProductCreatorByCreatorIdResponses = {
@@ -4374,7 +4595,7 @@ export type GetApiProductPriceRangeData = {
     skip?: number;
     take?: number;
   };
-  url: '/api/product/price-range';
+  url: '/api/Product/price-range';
 };
 
 export type GetApiProductPriceRangeResponses = {
@@ -4392,7 +4613,7 @@ export type GetApiProductPopularData = {
   query?: {
     count?: number;
   };
-  url: '/api/product/popular';
+  url: '/api/Product/popular';
 };
 
 export type GetApiProductPopularResponses = {
@@ -4410,7 +4631,7 @@ export type GetApiProductRecentData = {
   query?: {
     count?: number;
   };
-  url: '/api/product/recent';
+  url: '/api/Product/recent';
 };
 
 export type GetApiProductRecentResponses = {
@@ -4428,7 +4649,7 @@ export type DeleteApiProductByIdData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}';
+  url: '/api/Product/{id}';
 };
 
 export type DeleteApiProductByIdResponses = {
@@ -4444,7 +4665,7 @@ export type GetApiProductByIdData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}';
+  url: '/api/Product/{id}';
 };
 
 export type GetApiProductByIdResponses = {
@@ -4462,7 +4683,7 @@ export type PutApiProductByIdData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}';
+  url: '/api/Product/{id}';
 };
 
 export type PutApiProductByIdResponses = {
@@ -4480,7 +4701,7 @@ export type GetApiProductByIdDetailsData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}/details';
+  url: '/api/Product/{id}/details';
 };
 
 export type GetApiProductByIdDetailsResponses = {
@@ -4498,7 +4719,7 @@ export type PostApiProductByIdPublishData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}/publish';
+  url: '/api/Product/{id}/publish';
 };
 
 export type PostApiProductByIdPublishResponses = {
@@ -4516,7 +4737,7 @@ export type PostApiProductByIdUnpublishData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}/unpublish';
+  url: '/api/Product/{id}/unpublish';
 };
 
 export type PostApiProductByIdUnpublishResponses = {
@@ -4534,7 +4755,7 @@ export type PostApiProductByIdArchiveData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}/archive';
+  url: '/api/Product/{id}/archive';
 };
 
 export type PostApiProductByIdArchiveResponses = {
@@ -4552,7 +4773,7 @@ export type PutApiProductByIdVisibilityData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}/visibility';
+  url: '/api/Product/{id}/visibility';
 };
 
 export type PutApiProductByIdVisibilityResponses = {
@@ -4570,7 +4791,7 @@ export type GetApiProductByIdBundleItemsData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}/bundle-items';
+  url: '/api/Product/{id}/bundle-items';
 };
 
 export type GetApiProductByIdBundleItemsResponses = {
@@ -4589,7 +4810,7 @@ export type DeleteApiProductByBundleIdBundleItemsByProductIdData = {
     productId: string;
   };
   query?: never;
-  url: '/api/product/{bundleId}/bundle-items/{productId}';
+  url: '/api/Product/{bundleId}/bundle-items/{productId}';
 };
 
 export type DeleteApiProductByBundleIdBundleItemsByProductIdResponses = {
@@ -4609,7 +4830,7 @@ export type PostApiProductByBundleIdBundleItemsByProductIdData = {
     productId: string;
   };
   query?: never;
-  url: '/api/product/{bundleId}/bundle-items/{productId}';
+  url: '/api/Product/{bundleId}/bundle-items/{productId}';
 };
 
 export type PostApiProductByBundleIdBundleItemsByProductIdResponses = {
@@ -4628,7 +4849,7 @@ export type GetApiProductByIdPricingCurrentData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}/pricing/current';
+  url: '/api/Product/{id}/pricing/current';
 };
 
 export type GetApiProductByIdPricingCurrentResponses = {
@@ -4646,7 +4867,7 @@ export type GetApiProductByIdPricingHistoryData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}/pricing/history';
+  url: '/api/Product/{id}/pricing/history';
 };
 
 export type GetApiProductByIdPricingHistoryResponses = {
@@ -4664,7 +4885,7 @@ export type PostApiProductByIdPricingData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}/pricing';
+  url: '/api/Product/{id}/pricing';
 };
 
 export type PostApiProductByIdPricingResponses = {
@@ -4682,7 +4903,7 @@ export type GetApiProductByIdSubscriptionPlansData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}/subscription-plans';
+  url: '/api/Product/{id}/subscription-plans';
 };
 
 export type GetApiProductByIdSubscriptionPlansResponses = {
@@ -4700,7 +4921,7 @@ export type PostApiProductByIdSubscriptionPlansData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}/subscription-plans';
+  url: '/api/Product/{id}/subscription-plans';
 };
 
 export type PostApiProductByIdSubscriptionPlansResponses = {
@@ -4718,7 +4939,7 @@ export type GetApiProductSubscriptionPlansByPlanIdData = {
     planId: string;
   };
   query?: never;
-  url: '/api/product/subscription-plans/{planId}';
+  url: '/api/Product/subscription-plans/{planId}';
 };
 
 export type GetApiProductSubscriptionPlansByPlanIdResponses = {
@@ -4738,7 +4959,7 @@ export type DeleteApiProductByIdAccessByUserIdData = {
     userId: string;
   };
   query?: never;
-  url: '/api/product/{id}/access/{userId}';
+  url: '/api/Product/{id}/access/{userId}';
 };
 
 export type DeleteApiProductByIdAccessByUserIdResponses = {
@@ -4755,7 +4976,7 @@ export type GetApiProductByIdAccessByUserIdData = {
     userId: string;
   };
   query?: never;
-  url: '/api/product/{id}/access/{userId}';
+  url: '/api/Product/{id}/access/{userId}';
 };
 
 export type GetApiProductByIdAccessByUserIdResponses = {
@@ -4774,7 +4995,7 @@ export type PostApiProductByIdAccessByUserIdData = {
     userId: string;
   };
   query?: never;
-  url: '/api/product/{id}/access/{userId}';
+  url: '/api/Product/{id}/access/{userId}';
 };
 
 export type PostApiProductByIdAccessByUserIdResponses = {
@@ -4793,7 +5014,7 @@ export type GetApiProductByIdUserProductByUserIdData = {
     userId: string;
   };
   query?: never;
-  url: '/api/product/{id}/user-product/{userId}';
+  url: '/api/Product/{id}/user-product/{userId}';
 };
 
 export type GetApiProductByIdUserProductByUserIdResponses = {
@@ -4812,7 +5033,7 @@ export type GetApiProductAnalyticsCountData = {
     type?: ProductType;
     visibility?: AccessLevel;
   };
-  url: '/api/product/analytics/count';
+  url: '/api/Product/analytics/count';
 };
 
 export type GetApiProductAnalyticsCountResponses = {
@@ -4830,7 +5051,7 @@ export type GetApiProductByIdAnalyticsUserCountData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}/analytics/user-count';
+  url: '/api/Product/{id}/analytics/user-count';
 };
 
 export type GetApiProductByIdAnalyticsUserCountResponses = {
@@ -4848,7 +5069,7 @@ export type GetApiProductByIdAnalyticsRevenueData = {
     id: string;
   };
   query?: never;
-  url: '/api/product/{id}/analytics/revenue';
+  url: '/api/Product/{id}/analytics/revenue';
 };
 
 export type GetApiProductByIdAnalyticsRevenueResponses = {
@@ -4867,7 +5088,7 @@ export type GetApiProgramData = {
     skip?: number;
     take?: number;
   };
-  url: '/api/program';
+  url: '/api/Program';
 };
 
 export type GetApiProgramResponses = {
@@ -4883,7 +5104,7 @@ export type PostApiProgramData = {
   body?: CreateProgramDto;
   path?: never;
   query?: never;
-  url: '/api/program';
+  url: '/api/Program';
 };
 
 export type PostApiProgramResponses = {
@@ -4902,7 +5123,7 @@ export type GetApiProgramPublishedData = {
     skip?: number;
     take?: number;
   };
-  url: '/api/program/published';
+  url: '/api/Program/published';
 };
 
 export type GetApiProgramPublishedResponses = {
@@ -4923,7 +5144,7 @@ export type GetApiProgramCategoryByCategoryData = {
     skip?: number;
     take?: number;
   };
-  url: '/api/program/category/{category}';
+  url: '/api/Program/category/{category}';
 };
 
 export type GetApiProgramCategoryByCategoryResponses = {
@@ -4944,7 +5165,7 @@ export type GetApiProgramDifficultyByDifficultyData = {
     skip?: number;
     take?: number;
   };
-  url: '/api/program/difficulty/{difficulty}';
+  url: '/api/Program/difficulty/{difficulty}';
 };
 
 export type GetApiProgramDifficultyByDifficultyResponses = {
@@ -4964,7 +5185,7 @@ export type GetApiProgramSearchData = {
     skip?: number;
     take?: number;
   };
-  url: '/api/program/search';
+  url: '/api/Program/search';
 };
 
 export type GetApiProgramSearchResponses = {
@@ -4985,7 +5206,7 @@ export type GetApiProgramCreatorByCreatorIdData = {
     skip?: number;
     take?: number;
   };
-  url: '/api/program/creator/{creatorId}';
+  url: '/api/Program/creator/{creatorId}';
 };
 
 export type GetApiProgramCreatorByCreatorIdResponses = {
@@ -5003,7 +5224,7 @@ export type GetApiProgramPopularData = {
   query?: {
     count?: number;
   };
-  url: '/api/program/popular';
+  url: '/api/Program/popular';
 };
 
 export type GetApiProgramPopularResponses = {
@@ -5021,7 +5242,7 @@ export type GetApiProgramRecentData = {
   query?: {
     count?: number;
   };
-  url: '/api/program/recent';
+  url: '/api/Program/recent';
 };
 
 export type GetApiProgramRecentResponses = {
@@ -5039,7 +5260,7 @@ export type DeleteApiProgramByIdData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}';
+  url: '/api/Program/{id}';
 };
 
 export type DeleteApiProgramByIdResponses = {
@@ -5055,7 +5276,7 @@ export type GetApiProgramByIdData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}';
+  url: '/api/Program/{id}';
 };
 
 export type GetApiProgramByIdResponses = {
@@ -5073,7 +5294,7 @@ export type PutApiProgramByIdData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}';
+  url: '/api/Program/{id}';
 };
 
 export type PutApiProgramByIdResponses = {
@@ -5091,7 +5312,7 @@ export type GetApiProgramByIdWithContentData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/with-content';
+  url: '/api/Program/{id}/with-content';
 };
 
 export type GetApiProgramByIdWithContentResponses = {
@@ -5109,7 +5330,7 @@ export type PostApiProgramByIdCloneData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/clone';
+  url: '/api/Program/{id}/clone';
 };
 
 export type PostApiProgramByIdCloneResponses = {
@@ -5127,7 +5348,7 @@ export type GetApiProgramSlugBySlugData = {
     slug: string;
   };
   query?: never;
-  url: '/api/program/slug/{slug}';
+  url: '/api/Program/slug/{slug}';
 };
 
 export type GetApiProgramSlugBySlugResponses = {
@@ -5145,7 +5366,7 @@ export type PostApiProgramByIdContentData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/content';
+  url: '/api/Program/{id}/content';
 };
 
 export type PostApiProgramByIdContentResponses = {
@@ -5164,7 +5385,7 @@ export type DeleteApiProgramByIdContentByContentIdData = {
     contentId: string;
   };
   query?: never;
-  url: '/api/program/{id}/content/{contentId}';
+  url: '/api/Program/{id}/content/{contentId}';
 };
 
 export type DeleteApiProgramByIdContentByContentIdResponses = {
@@ -5181,7 +5402,7 @@ export type PutApiProgramByIdContentByContentIdData = {
     contentId: string;
   };
   query?: never;
-  url: '/api/program/{id}/content/{contentId}';
+  url: '/api/Program/{id}/content/{contentId}';
 };
 
 export type PutApiProgramByIdContentByContentIdResponses = {
@@ -5199,7 +5420,7 @@ export type PostApiProgramByIdContentReorderData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/content/reorder';
+  url: '/api/Program/{id}/content/reorder';
 };
 
 export type PostApiProgramByIdContentReorderResponses = {
@@ -5216,7 +5437,7 @@ export type DeleteApiProgramByIdUsersByUserIdData = {
     userId: string;
   };
   query?: never;
-  url: '/api/program/{id}/users/{userId}';
+  url: '/api/Program/{id}/users/{userId}';
 };
 
 export type DeleteApiProgramByIdUsersByUserIdResponses = {
@@ -5233,7 +5454,7 @@ export type PostApiProgramByIdUsersByUserIdData = {
     userId: string;
   };
   query?: never;
-  url: '/api/program/{id}/users/{userId}';
+  url: '/api/Program/{id}/users/{userId}';
 };
 
 export type PostApiProgramByIdUsersByUserIdResponses = {
@@ -5254,7 +5475,7 @@ export type GetApiProgramByIdUsersData = {
     skip?: number;
     take?: number;
   };
-  url: '/api/program/{id}/users';
+  url: '/api/Program/{id}/users';
 };
 
 export type GetApiProgramByIdUsersResponses = {
@@ -5273,7 +5494,7 @@ export type GetApiProgramByIdUsersByUserIdProgressData = {
     userId: string;
   };
   query?: never;
-  url: '/api/program/{id}/users/{userId}/progress';
+  url: '/api/Program/{id}/users/{userId}/progress';
 };
 
 export type GetApiProgramByIdUsersByUserIdProgressResponses = {
@@ -5293,7 +5514,7 @@ export type PutApiProgramByIdUsersByUserIdProgressData = {
     userId: string;
   };
   query?: never;
-  url: '/api/program/{id}/users/{userId}/progress';
+  url: '/api/Program/{id}/users/{userId}/progress';
 };
 
 export type PutApiProgramByIdUsersByUserIdProgressResponses = {
@@ -5314,7 +5535,7 @@ export type PostApiProgramByIdUsersByUserIdContentByContentIdCompleteData = {
     contentId: string;
   };
   query?: never;
-  url: '/api/program/{id}/users/{userId}/content/{contentId}/complete';
+  url: '/api/Program/{id}/users/{userId}/content/{contentId}/complete';
 };
 
 export type PostApiProgramByIdUsersByUserIdContentByContentIdCompleteResponses = {
@@ -5331,7 +5552,7 @@ export type PostApiProgramByIdUsersByUserIdResetData = {
     userId: string;
   };
   query?: never;
-  url: '/api/program/{id}/users/{userId}/reset';
+  url: '/api/Program/{id}/users/{userId}/reset';
 };
 
 export type PostApiProgramByIdUsersByUserIdResetResponses = {
@@ -5347,7 +5568,7 @@ export type PostApiProgramByIdSubmitData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/submit';
+  url: '/api/Program/{id}/submit';
 };
 
 export type PostApiProgramByIdSubmitResponses = {
@@ -5365,7 +5586,7 @@ export type PostApiProgramByIdApproveData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/approve';
+  url: '/api/Program/{id}/approve';
 };
 
 export type PostApiProgramByIdApproveResponses = {
@@ -5383,7 +5604,7 @@ export type PostApiProgramByIdRejectData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/reject';
+  url: '/api/Program/{id}/reject';
 };
 
 export type PostApiProgramByIdRejectResponses = {
@@ -5401,7 +5622,7 @@ export type PostApiProgramByIdWithdrawData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/withdraw';
+  url: '/api/Program/{id}/withdraw';
 };
 
 export type PostApiProgramByIdWithdrawResponses = {
@@ -5419,7 +5640,7 @@ export type PostApiProgramByIdArchiveData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/archive';
+  url: '/api/Program/{id}/archive';
 };
 
 export type PostApiProgramByIdArchiveResponses = {
@@ -5437,7 +5658,7 @@ export type PostApiProgramByIdRestoreData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/restore';
+  url: '/api/Program/{id}/restore';
 };
 
 export type PostApiProgramByIdRestoreResponses = {
@@ -5455,7 +5676,7 @@ export type PostApiProgramByIdPublishData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/publish';
+  url: '/api/Program/{id}/publish';
 };
 
 export type PostApiProgramByIdPublishResponses = {
@@ -5473,7 +5694,7 @@ export type PostApiProgramByIdUnpublishData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/unpublish';
+  url: '/api/Program/{id}/unpublish';
 };
 
 export type PostApiProgramByIdUnpublishResponses = {
@@ -5491,7 +5712,7 @@ export type PostApiProgramByIdScheduleData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/schedule';
+  url: '/api/Program/{id}/schedule';
 };
 
 export type PostApiProgramByIdScheduleResponses = {
@@ -5509,7 +5730,7 @@ export type PostApiProgramByIdMonetizeData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/monetize';
+  url: '/api/Program/{id}/monetize';
 };
 
 export type PostApiProgramByIdMonetizeResponses = {
@@ -5527,7 +5748,7 @@ export type PostApiProgramByIdDisableMonetizationData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/disable-monetization';
+  url: '/api/Program/{id}/disable-monetization';
 };
 
 export type PostApiProgramByIdDisableMonetizationResponses = {
@@ -5546,7 +5767,7 @@ export type GetApiProgramByIdPricingData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/pricing';
+  url: '/api/Program/{id}/pricing';
 };
 
 export type GetApiProgramByIdPricingResponses = {
@@ -5564,7 +5785,7 @@ export type PutApiProgramByIdPricingData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/pricing';
+  url: '/api/Program/{id}/pricing';
 };
 
 export type PutApiProgramByIdPricingResponses = {
@@ -5582,7 +5803,7 @@ export type GetApiProgramByIdAnalyticsData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/analytics';
+  url: '/api/Program/{id}/analytics';
 };
 
 export type GetApiProgramByIdAnalyticsResponses = {
@@ -5600,7 +5821,7 @@ export type GetApiProgramByIdAnalyticsCompletionRatesData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/analytics/completion-rates';
+  url: '/api/Program/{id}/analytics/completion-rates';
 };
 
 export type GetApiProgramByIdAnalyticsCompletionRatesResponses = {
@@ -5619,7 +5840,7 @@ export type GetApiProgramByIdAnalyticsEngagementData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/analytics/engagement';
+  url: '/api/Program/{id}/analytics/engagement';
 };
 
 export type GetApiProgramByIdAnalyticsEngagementResponses = {
@@ -5637,7 +5858,7 @@ export type GetApiProgramByIdAnalyticsRevenueData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/analytics/revenue';
+  url: '/api/Program/{id}/analytics/revenue';
 };
 
 export type GetApiProgramByIdAnalyticsRevenueResponses = {
@@ -5655,7 +5876,7 @@ export type PostApiProgramByIdCreateProductData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/create-product';
+  url: '/api/Program/{id}/create-product';
 };
 
 export type PostApiProgramByIdCreateProductResponses = {
@@ -5674,7 +5895,7 @@ export type DeleteApiProgramByIdLinkProductByProductIdData = {
     productId: string;
   };
   query?: never;
-  url: '/api/program/{id}/link-product/{productId}';
+  url: '/api/Program/{id}/link-product/{productId}';
 };
 
 export type DeleteApiProgramByIdLinkProductByProductIdResponses = {
@@ -5691,7 +5912,7 @@ export type PostApiProgramByIdLinkProductByProductIdData = {
     productId: string;
   };
   query?: never;
-  url: '/api/program/{id}/link-product/{productId}';
+  url: '/api/Program/{id}/link-product/{productId}';
 };
 
 export type PostApiProgramByIdLinkProductByProductIdResponses = {
@@ -5707,7 +5928,7 @@ export type GetApiProgramByIdProductsData = {
     id: string;
   };
   query?: never;
-  url: '/api/program/{id}/products';
+  url: '/api/Program/{id}/products';
 };
 
 export type GetApiProgramByIdProductsResponses = {
@@ -5983,7 +6204,7 @@ export type GetProjectsData = {
   body?: never;
   path?: never;
   query?: never;
-  url: '/projects';
+  url: '/Projects';
 };
 
 export type GetProjectsResponses = {
@@ -5999,7 +6220,7 @@ export type PostProjectsData = {
   body?: ProjectWritable;
   path?: never;
   query?: never;
-  url: '/projects';
+  url: '/Projects';
 };
 
 export type PostProjectsResponses = {
@@ -6017,7 +6238,7 @@ export type DeleteProjectsByIdData = {
     id: string;
   };
   query?: never;
-  url: '/projects/{id}';
+  url: '/Projects/{id}';
 };
 
 export type DeleteProjectsByIdResponses = {
@@ -6033,7 +6254,7 @@ export type GetProjectsByIdData = {
     id: string;
   };
   query?: never;
-  url: '/projects/{id}';
+  url: '/Projects/{id}';
 };
 
 export type GetProjectsByIdResponses = {
@@ -6051,7 +6272,7 @@ export type PutProjectsByIdData = {
     id: string;
   };
   query?: never;
-  url: '/projects/{id}';
+  url: '/Projects/{id}';
 };
 
 export type PutProjectsByIdResponses = {
@@ -6069,7 +6290,7 @@ export type GetProjectsSlugBySlugData = {
     slug: string;
   };
   query?: never;
-  url: '/projects/slug/{slug}';
+  url: '/Projects/slug/{slug}';
 };
 
 export type GetProjectsSlugBySlugResponses = {
@@ -6087,7 +6308,7 @@ export type GetProjectsCategoryByCategoryIdData = {
     categoryId: string;
   };
   query?: never;
-  url: '/projects/category/{categoryId}';
+  url: '/Projects/category/{categoryId}';
 };
 
 export type GetProjectsCategoryByCategoryIdResponses = {
@@ -6105,7 +6326,7 @@ export type GetProjectsCreatorByCreatorIdData = {
     creatorId: string;
   };
   query?: never;
-  url: '/projects/creator/{creatorId}';
+  url: '/Projects/creator/{creatorId}';
 };
 
 export type GetProjectsCreatorByCreatorIdResponses = {
@@ -6123,7 +6344,7 @@ export type GetProjectsStatusByStatusData = {
     status: ContentStatus;
   };
   query?: never;
-  url: '/projects/status/{status}';
+  url: '/Projects/status/{status}';
 };
 
 export type GetProjectsStatusByStatusResponses = {
@@ -6141,7 +6362,7 @@ export type PostProjectsByIdRestoreData = {
     id: string;
   };
   query?: never;
-  url: '/projects/{id}/restore';
+  url: '/Projects/{id}/restore';
 };
 
 export type PostProjectsByIdRestoreResponses = {
@@ -6155,7 +6376,7 @@ export type GetProjectsDeletedData = {
   body?: never;
   path?: never;
   query?: never;
-  url: '/projects/deleted';
+  url: '/Projects/deleted';
 };
 
 export type GetProjectsDeletedResponses = {
@@ -6171,7 +6392,7 @@ export type GetProjectsPublicData = {
   body?: never;
   path?: never;
   query?: never;
-  url: '/projects/public';
+  url: '/Projects/public';
 };
 
 export type GetProjectsPublicResponses = {
@@ -6182,6 +6403,146 @@ export type GetProjectsPublicResponses = {
 };
 
 export type GetProjectsPublicResponse = GetProjectsPublicResponses[keyof GetProjectsPublicResponses];
+
+export type GetApiSubscriptionMeData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/Subscription/me';
+};
+
+export type GetApiSubscriptionMeResponses = {
+  /**
+   * OK
+   */
+  200: Array<UserSubscriptionReadable>;
+};
+
+export type GetApiSubscriptionMeResponse = GetApiSubscriptionMeResponses[keyof GetApiSubscriptionMeResponses];
+
+export type GetApiSubscriptionMeActiveData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/Subscription/me/active';
+};
+
+export type GetApiSubscriptionMeActiveResponses = {
+  /**
+   * OK
+   */
+  200: UserSubscriptionReadable;
+};
+
+export type GetApiSubscriptionMeActiveResponse = GetApiSubscriptionMeActiveResponses[keyof GetApiSubscriptionMeActiveResponses];
+
+export type GetApiSubscriptionByIdData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Subscription/{id}';
+};
+
+export type GetApiSubscriptionByIdResponses = {
+  /**
+   * OK
+   */
+  200: UserSubscriptionReadable;
+};
+
+export type GetApiSubscriptionByIdResponse = GetApiSubscriptionByIdResponses[keyof GetApiSubscriptionByIdResponses];
+
+export type GetApiSubscriptionData = {
+  body?: never;
+  path?: never;
+  query?: {
+    skip?: number;
+    take?: number;
+    status?: SubscriptionStatus;
+  };
+  url: '/api/Subscription';
+};
+
+export type GetApiSubscriptionResponses = {
+  /**
+   * OK
+   */
+  200: Array<UserSubscriptionReadable>;
+};
+
+export type GetApiSubscriptionResponse = GetApiSubscriptionResponses[keyof GetApiSubscriptionResponses];
+
+export type PostApiSubscriptionData = {
+  body?: CreateSubscriptionDto;
+  path?: never;
+  query?: never;
+  url: '/api/Subscription';
+};
+
+export type PostApiSubscriptionResponses = {
+  /**
+   * OK
+   */
+  200: UserSubscriptionReadable;
+};
+
+export type PostApiSubscriptionResponse = PostApiSubscriptionResponses[keyof PostApiSubscriptionResponses];
+
+export type PostApiSubscriptionByIdCancelData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Subscription/{id}/cancel';
+};
+
+export type PostApiSubscriptionByIdCancelResponses = {
+  /**
+   * OK
+   */
+  200: UserSubscriptionReadable;
+};
+
+export type PostApiSubscriptionByIdCancelResponse = PostApiSubscriptionByIdCancelResponses[keyof PostApiSubscriptionByIdCancelResponses];
+
+export type PostApiSubscriptionByIdResumeData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Subscription/{id}/resume';
+};
+
+export type PostApiSubscriptionByIdResumeResponses = {
+  /**
+   * OK
+   */
+  200: UserSubscriptionReadable;
+};
+
+export type PostApiSubscriptionByIdResumeResponse = PostApiSubscriptionByIdResumeResponses[keyof PostApiSubscriptionByIdResumeResponses];
+
+export type PutApiSubscriptionByIdPaymentMethodData = {
+  body?: UpdatePaymentMethodDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Subscription/{id}/payment-method';
+};
+
+export type PutApiSubscriptionByIdPaymentMethodResponses = {
+  /**
+   * OK
+   */
+  200: UserSubscriptionReadable;
+};
+
+export type PutApiSubscriptionByIdPaymentMethodResponse = PutApiSubscriptionByIdPaymentMethodResponses[keyof PutApiSubscriptionByIdPaymentMethodResponses];
 
 export type GetApiTenantDomainsData = {
   body?: never;
@@ -6547,241 +6908,301 @@ export type PostApiTenantDomainsMembershipsResponses = {
 
 export type PostApiTenantDomainsMembershipsResponse = PostApiTenantDomainsMembershipsResponses[keyof PostApiTenantDomainsMembershipsResponses];
 
-export type GetTenantsData = {
+export type GetApiTenantsData = {
   body?: never;
   path?: never;
-  query?: never;
-  url: '/tenants';
+  query?: {
+    includeDeleted?: boolean;
+  };
+  url: '/api/Tenants';
 };
 
-export type GetTenantsResponses = {
+export type GetApiTenantsResponses = {
   /**
    * OK
    */
-  200: Array<TenantResponseDtoReadable>;
+  200: Array<TenantReadable>;
 };
 
-export type GetTenantsResponse = GetTenantsResponses[keyof GetTenantsResponses];
+export type GetApiTenantsResponse = GetApiTenantsResponses[keyof GetApiTenantsResponses];
 
-export type PostTenantsData = {
+export type PostApiTenantsData = {
   body?: CreateTenantDto;
   path?: never;
   query?: never;
-  url: '/tenants';
+  url: '/api/Tenants';
 };
 
-export type PostTenantsResponses = {
+export type PostApiTenantsResponses = {
   /**
    * OK
    */
-  200: TenantResponseDtoReadable;
+  200: TenantReadable;
 };
 
-export type PostTenantsResponse = PostTenantsResponses[keyof PostTenantsResponses];
+export type PostApiTenantsResponse = PostApiTenantsResponses[keyof PostApiTenantsResponses];
 
-export type DeleteTenantsByIdData = {
+export type DeleteApiTenantsByIdData = {
   body?: never;
   path: {
     id: string;
   };
   query?: never;
-  url: '/tenants/{id}';
+  url: '/api/Tenants/{id}';
 };
 
-export type DeleteTenantsByIdResponses = {
+export type DeleteApiTenantsByIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetTenantsByIdData = {
+export type GetApiTenantsByIdData = {
   body?: never;
   path: {
     id: string;
   };
-  query?: never;
-  url: '/tenants/{id}';
+  query?: {
+    includeDeleted?: boolean;
+  };
+  url: '/api/Tenants/{id}';
 };
 
-export type GetTenantsByIdResponses = {
+export type GetApiTenantsByIdResponses = {
   /**
    * OK
    */
-  200: TenantResponseDtoReadable;
+  200: TenantReadable;
 };
 
-export type GetTenantsByIdResponse = GetTenantsByIdResponses[keyof GetTenantsByIdResponses];
+export type GetApiTenantsByIdResponse = GetApiTenantsByIdResponses[keyof GetApiTenantsByIdResponses];
 
-export type PutTenantsByIdData = {
+export type PutApiTenantsByIdData = {
   body?: UpdateTenantDto;
   path: {
     id: string;
   };
   query?: never;
-  url: '/tenants/{id}';
+  url: '/api/Tenants/{id}';
 };
 
-export type PutTenantsByIdResponses = {
+export type PutApiTenantsByIdResponses = {
   /**
    * OK
    */
-  200: TenantResponseDtoReadable;
+  200: TenantReadable;
 };
 
-export type PutTenantsByIdResponse = PutTenantsByIdResponses[keyof PutTenantsByIdResponses];
+export type PutApiTenantsByIdResponse = PutApiTenantsByIdResponses[keyof PutApiTenantsByIdResponses];
 
-export type GetTenantsByNameByNameData = {
+export type GetApiTenantsByNameByNameData = {
   body?: never;
   path: {
     name: string;
   };
-  query?: never;
-  url: '/tenants/by-name/{name}';
+  query?: {
+    includeDeleted?: boolean;
+  };
+  url: '/api/Tenants/by-name/{name}';
 };
 
-export type GetTenantsByNameByNameResponses = {
+export type GetApiTenantsByNameByNameResponses = {
   /**
    * OK
    */
-  200: TenantResponseDtoReadable;
+  200: TenantReadable;
 };
 
-export type GetTenantsByNameByNameResponse = GetTenantsByNameByNameResponses[keyof GetTenantsByNameByNameResponses];
+export type GetApiTenantsByNameByNameResponse = GetApiTenantsByNameByNameResponses[keyof GetApiTenantsByNameByNameResponses];
 
-export type PostTenantsByIdRestoreData = {
+export type GetApiTenantsBySlugBySlugData = {
   body?: never;
   path: {
-    id: string;
+    slug: string;
   };
-  query?: never;
-  url: '/tenants/{id}/restore';
+  query?: {
+    includeDeleted?: boolean;
+  };
+  url: '/api/Tenants/by-slug/{slug}';
 };
 
-export type PostTenantsByIdRestoreResponses = {
+export type GetApiTenantsBySlugBySlugResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: TenantReadable;
 };
 
-export type DeleteTenantsByIdHardData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/tenants/{id}/hard';
-};
+export type GetApiTenantsBySlugBySlugResponse = GetApiTenantsBySlugBySlugResponses[keyof GetApiTenantsBySlugBySlugResponses];
 
-export type DeleteTenantsByIdHardResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type PostTenantsByIdActivateData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/tenants/{id}/activate';
-};
-
-export type PostTenantsByIdActivateResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type PostTenantsByIdDeactivateData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/tenants/{id}/deactivate';
-};
-
-export type PostTenantsByIdDeactivateResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type GetTenantsDeletedData = {
+export type GetApiTenantsDeletedData = {
   body?: never;
   path?: never;
   query?: never;
-  url: '/tenants/deleted';
+  url: '/api/Tenants/deleted';
 };
 
-export type GetTenantsDeletedResponses = {
+export type GetApiTenantsDeletedResponses = {
   /**
    * OK
    */
-  200: Array<TenantResponseDtoReadable>;
+  200: Array<TenantReadable>;
 };
 
-export type GetTenantsDeletedResponse = GetTenantsDeletedResponses[keyof GetTenantsDeletedResponses];
+export type GetApiTenantsDeletedResponse = GetApiTenantsDeletedResponses[keyof GetApiTenantsDeletedResponses];
 
-export type DeleteTenantsByIdUsersByUserIdData = {
+export type GetApiTenantsActiveData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/Tenants/active';
+};
+
+export type GetApiTenantsActiveResponses = {
+  /**
+   * OK
+   */
+  200: Array<TenantReadable>;
+};
+
+export type GetApiTenantsActiveResponse = GetApiTenantsActiveResponses[keyof GetApiTenantsActiveResponses];
+
+export type GetApiTenantsSearchData = {
+  body?: never;
+  path?: never;
+  query?: {
+    searchTerm?: string;
+    isActive?: boolean;
+    includeDeleted?: boolean;
+    sortBy?: TenantSortField;
+    sortDescending?: boolean;
+    limit?: number;
+    offset?: number;
+  };
+  url: '/api/Tenants/search';
+};
+
+export type GetApiTenantsSearchResponses = {
+  /**
+   * OK
+   */
+  200: Array<TenantReadable>;
+};
+
+export type GetApiTenantsSearchResponse = GetApiTenantsSearchResponses[keyof GetApiTenantsSearchResponses];
+
+export type GetApiTenantsStatisticsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/Tenants/statistics';
+};
+
+export type GetApiTenantsStatisticsResponses = {
+  /**
+   * OK
+   */
+  200: TenantStatistics;
+};
+
+export type GetApiTenantsStatisticsResponse = GetApiTenantsStatisticsResponses[keyof GetApiTenantsStatisticsResponses];
+
+export type PostApiTenantsByIdRestoreData = {
   body?: never;
   path: {
     id: string;
-    userId: string;
   };
   query?: never;
-  url: '/tenants/{id}/users/{userId}';
+  url: '/api/Tenants/{id}/restore';
 };
 
-export type DeleteTenantsByIdUsersByUserIdResponses = {
+export type PostApiTenantsByIdRestoreResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PostTenantsByIdUsersByUserIdData = {
-  body?: never;
-  path: {
-    id: string;
-    userId: string;
-  };
-  query?: never;
-  url: '/tenants/{id}/users/{userId}';
-};
-
-export type PostTenantsByIdUsersByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: TenantPermissionResponseDtoReadable;
-};
-
-export type PostTenantsByIdUsersByUserIdResponse = PostTenantsByIdUsersByUserIdResponses[keyof PostTenantsByIdUsersByUserIdResponses];
-
-export type GetTenantsByIdUsersData = {
+export type DeleteApiTenantsByIdPermanentData = {
   body?: never;
   path: {
     id: string;
   };
   query?: never;
-  url: '/tenants/{id}/users';
+  url: '/api/Tenants/{id}/permanent';
 };
 
-export type GetTenantsByIdUsersResponses = {
+export type DeleteApiTenantsByIdPermanentResponses = {
   /**
    * OK
    */
-  200: Array<TenantPermissionResponseDtoReadable>;
+  200: unknown;
 };
 
-export type GetTenantsByIdUsersResponse = GetTenantsByIdUsersResponses[keyof GetTenantsByIdUsersResponses];
+export type PostApiTenantsByIdActivateData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Tenants/{id}/activate';
+};
+
+export type PostApiTenantsByIdActivateResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PostApiTenantsByIdDeactivateData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Tenants/{id}/deactivate';
+};
+
+export type PostApiTenantsByIdDeactivateResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PostApiTenantsBulkDeleteData = {
+  body?: BulkDeleteTenantsDto;
+  path?: never;
+  query?: never;
+  url: '/api/Tenants/bulk-delete';
+};
+
+export type PostApiTenantsBulkDeleteResponses = {
+  /**
+   * OK
+   */
+  200: number;
+};
+
+export type PostApiTenantsBulkDeleteResponse = PostApiTenantsBulkDeleteResponses[keyof PostApiTenantsBulkDeleteResponses];
+
+export type PostApiTenantsBulkRestoreData = {
+  body?: BulkRestoreTenantsDto;
+  path?: never;
+  query?: never;
+  url: '/api/Tenants/bulk-restore';
+};
+
+export type PostApiTenantsBulkRestoreResponses = {
+  /**
+   * OK
+   */
+  200: number;
+};
+
+export type PostApiTenantsBulkRestoreResponse = PostApiTenantsBulkRestoreResponses[keyof PostApiTenantsBulkRestoreResponses];
 
 export type GetTestingRequestsData = {
   body?: never;
@@ -6790,7 +7211,7 @@ export type GetTestingRequestsData = {
     skip?: number;
     take?: number;
   };
-  url: '/testing/requests';
+  url: '/Testing/requests';
 };
 
 export type GetTestingRequestsResponses = {
@@ -6806,7 +7227,7 @@ export type PostTestingRequestsData = {
   body?: CreateTestingRequestDto;
   path?: never;
   query?: never;
-  url: '/testing/requests';
+  url: '/Testing/requests';
 };
 
 export type PostTestingRequestsResponses = {
@@ -6824,7 +7245,7 @@ export type DeleteTestingRequestsByIdData = {
     id: string;
   };
   query?: never;
-  url: '/testing/requests/{id}';
+  url: '/Testing/requests/{id}';
 };
 
 export type DeleteTestingRequestsByIdResponses = {
@@ -6840,7 +7261,7 @@ export type GetTestingRequestsByIdData = {
     id: string;
   };
   query?: never;
-  url: '/testing/requests/{id}';
+  url: '/Testing/requests/{id}';
 };
 
 export type GetTestingRequestsByIdResponses = {
@@ -6858,7 +7279,7 @@ export type PutTestingRequestsByIdData = {
     id: string;
   };
   query?: never;
-  url: '/testing/requests/{id}';
+  url: '/Testing/requests/{id}';
 };
 
 export type PutTestingRequestsByIdResponses = {
@@ -6876,7 +7297,7 @@ export type GetTestingRequestsByIdDetailsData = {
     id: string;
   };
   query?: never;
-  url: '/testing/requests/{id}/details';
+  url: '/Testing/requests/{id}/details';
 };
 
 export type GetTestingRequestsByIdDetailsResponses = {
@@ -6894,7 +7315,7 @@ export type PostTestingRequestsByIdRestoreData = {
     id: string;
   };
   query?: never;
-  url: '/testing/requests/{id}/restore';
+  url: '/Testing/requests/{id}/restore';
 };
 
 export type PostTestingRequestsByIdRestoreResponses = {
@@ -6911,7 +7332,7 @@ export type GetTestingSessionsData = {
     skip?: number;
     take?: number;
   };
-  url: '/testing/sessions';
+  url: '/Testing/sessions';
 };
 
 export type GetTestingSessionsResponses = {
@@ -6927,7 +7348,7 @@ export type PostTestingSessionsData = {
   body?: TestingSessionWritable;
   path?: never;
   query?: never;
-  url: '/testing/sessions';
+  url: '/Testing/sessions';
 };
 
 export type PostTestingSessionsResponses = {
@@ -6945,7 +7366,7 @@ export type DeleteTestingSessionsByIdData = {
     id: string;
   };
   query?: never;
-  url: '/testing/sessions/{id}';
+  url: '/Testing/sessions/{id}';
 };
 
 export type DeleteTestingSessionsByIdResponses = {
@@ -6961,7 +7382,7 @@ export type GetTestingSessionsByIdData = {
     id: string;
   };
   query?: never;
-  url: '/testing/sessions/{id}';
+  url: '/Testing/sessions/{id}';
 };
 
 export type GetTestingSessionsByIdResponses = {
@@ -6979,7 +7400,7 @@ export type PutTestingSessionsByIdData = {
     id: string;
   };
   query?: never;
-  url: '/testing/sessions/{id}';
+  url: '/Testing/sessions/{id}';
 };
 
 export type PutTestingSessionsByIdResponses = {
@@ -6997,7 +7418,7 @@ export type GetTestingSessionsByIdDetailsData = {
     id: string;
   };
   query?: never;
-  url: '/testing/sessions/{id}/details';
+  url: '/Testing/sessions/{id}/details';
 };
 
 export type GetTestingSessionsByIdDetailsResponses = {
@@ -7015,7 +7436,7 @@ export type PostTestingSessionsByIdRestoreData = {
     id: string;
   };
   query?: never;
-  url: '/testing/sessions/{id}/restore';
+  url: '/Testing/sessions/{id}/restore';
 };
 
 export type PostTestingSessionsByIdRestoreResponses = {
@@ -7031,7 +7452,7 @@ export type GetTestingRequestsByProjectVersionByProjectVersionIdData = {
     projectVersionId: string;
   };
   query?: never;
-  url: '/testing/requests/by-project-version/{projectVersionId}';
+  url: '/Testing/requests/by-project-version/{projectVersionId}';
 };
 
 export type GetTestingRequestsByProjectVersionByProjectVersionIdResponses = {
@@ -7050,7 +7471,7 @@ export type GetTestingRequestsByCreatorByCreatorIdData = {
     creatorId: string;
   };
   query?: never;
-  url: '/testing/requests/by-creator/{creatorId}';
+  url: '/Testing/requests/by-creator/{creatorId}';
 };
 
 export type GetTestingRequestsByCreatorByCreatorIdResponses = {
@@ -7069,7 +7490,7 @@ export type GetTestingRequestsByStatusByStatusData = {
     status: TestingRequestStatus;
   };
   query?: never;
-  url: '/testing/requests/by-status/{status}';
+  url: '/Testing/requests/by-status/{status}';
 };
 
 export type GetTestingRequestsByStatusByStatusResponses = {
@@ -7087,7 +7508,7 @@ export type GetTestingSessionsByRequestByTestingRequestIdData = {
     testingRequestId: string;
   };
   query?: never;
-  url: '/testing/sessions/by-request/{testingRequestId}';
+  url: '/Testing/sessions/by-request/{testingRequestId}';
 };
 
 export type GetTestingSessionsByRequestByTestingRequestIdResponses = {
@@ -7106,7 +7527,7 @@ export type GetTestingSessionsByLocationByLocationIdData = {
     locationId: string;
   };
   query?: never;
-  url: '/testing/sessions/by-location/{locationId}';
+  url: '/Testing/sessions/by-location/{locationId}';
 };
 
 export type GetTestingSessionsByLocationByLocationIdResponses = {
@@ -7125,7 +7546,7 @@ export type GetTestingSessionsByStatusByStatusData = {
     status: SessionStatus;
   };
   query?: never;
-  url: '/testing/sessions/by-status/{status}';
+  url: '/Testing/sessions/by-status/{status}';
 };
 
 export type GetTestingSessionsByStatusByStatusResponses = {
@@ -7143,7 +7564,7 @@ export type GetTestingSessionsByManagerByManagerIdData = {
     managerId: string;
   };
   query?: never;
-  url: '/testing/sessions/by-manager/{managerId}';
+  url: '/Testing/sessions/by-manager/{managerId}';
 };
 
 export type GetTestingSessionsByManagerByManagerIdResponses = {
@@ -7162,7 +7583,7 @@ export type GetTestingRequestsSearchData = {
   query?: {
     searchTerm?: string;
   };
-  url: '/testing/requests/search';
+  url: '/Testing/requests/search';
 };
 
 export type GetTestingRequestsSearchResponses = {
@@ -7180,7 +7601,7 @@ export type GetTestingSessionsSearchData = {
   query?: {
     searchTerm?: string;
   };
-  url: '/testing/sessions/search';
+  url: '/Testing/sessions/search';
 };
 
 export type GetTestingSessionsSearchResponses = {
@@ -7199,7 +7620,7 @@ export type DeleteTestingRequestsByRequestIdParticipantsByUserIdData = {
     userId: string;
   };
   query?: never;
-  url: '/testing/requests/{requestId}/participants/{userId}';
+  url: '/Testing/requests/{requestId}/participants/{userId}';
 };
 
 export type DeleteTestingRequestsByRequestIdParticipantsByUserIdResponses = {
@@ -7216,7 +7637,7 @@ export type PostTestingRequestsByRequestIdParticipantsByUserIdData = {
     userId: string;
   };
   query?: never;
-  url: '/testing/requests/{requestId}/participants/{userId}';
+  url: '/Testing/requests/{requestId}/participants/{userId}';
 };
 
 export type PostTestingRequestsByRequestIdParticipantsByUserIdResponses = {
@@ -7235,7 +7656,7 @@ export type GetTestingRequestsByRequestIdParticipantsData = {
     requestId: string;
   };
   query?: never;
-  url: '/testing/requests/{requestId}/participants';
+  url: '/Testing/requests/{requestId}/participants';
 };
 
 export type GetTestingRequestsByRequestIdParticipantsResponses = {
@@ -7255,7 +7676,7 @@ export type GetTestingRequestsByRequestIdParticipantsByUserIdCheckData = {
     userId: string;
   };
   query?: never;
-  url: '/testing/requests/{requestId}/participants/{userId}/check';
+  url: '/Testing/requests/{requestId}/participants/{userId}/check';
 };
 
 export type GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses = {
@@ -7274,7 +7695,7 @@ export type DeleteTestingSessionsBySessionIdRegisterData = {
     sessionId: string;
   };
   query?: never;
-  url: '/testing/sessions/{sessionId}/register';
+  url: '/Testing/sessions/{sessionId}/register';
 };
 
 export type DeleteTestingSessionsBySessionIdRegisterResponses = {
@@ -7290,7 +7711,7 @@ export type PostTestingSessionsBySessionIdRegisterData = {
     sessionId: string;
   };
   query?: never;
-  url: '/testing/sessions/{sessionId}/register';
+  url: '/Testing/sessions/{sessionId}/register';
 };
 
 export type PostTestingSessionsBySessionIdRegisterResponses = {
@@ -7309,7 +7730,7 @@ export type GetTestingSessionsBySessionIdRegistrationsData = {
     sessionId: string;
   };
   query?: never;
-  url: '/testing/sessions/{sessionId}/registrations';
+  url: '/Testing/sessions/{sessionId}/registrations';
 };
 
 export type GetTestingSessionsBySessionIdRegistrationsResponses = {
@@ -7328,7 +7749,7 @@ export type DeleteTestingSessionsBySessionIdWaitlistData = {
     sessionId: string;
   };
   query?: never;
-  url: '/testing/sessions/{sessionId}/waitlist';
+  url: '/Testing/sessions/{sessionId}/waitlist';
 };
 
 export type DeleteTestingSessionsBySessionIdWaitlistResponses = {
@@ -7344,7 +7765,7 @@ export type GetTestingSessionsBySessionIdWaitlistData = {
     sessionId: string;
   };
   query?: never;
-  url: '/testing/sessions/{sessionId}/waitlist';
+  url: '/Testing/sessions/{sessionId}/waitlist';
 };
 
 export type GetTestingSessionsBySessionIdWaitlistResponses = {
@@ -7363,7 +7784,7 @@ export type PostTestingSessionsBySessionIdWaitlistData = {
     sessionId: string;
   };
   query?: never;
-  url: '/testing/sessions/{sessionId}/waitlist';
+  url: '/Testing/sessions/{sessionId}/waitlist';
 };
 
 export type PostTestingSessionsBySessionIdWaitlistResponses = {
@@ -7382,7 +7803,7 @@ export type GetTestingRequestsByRequestIdFeedbackData = {
     requestId: string;
   };
   query?: never;
-  url: '/testing/requests/{requestId}/feedback';
+  url: '/Testing/requests/{requestId}/feedback';
 };
 
 export type GetTestingRequestsByRequestIdFeedbackResponses = {
@@ -7401,7 +7822,7 @@ export type PostTestingRequestsByRequestIdFeedbackData = {
     requestId: string;
   };
   query?: never;
-  url: '/testing/requests/{requestId}/feedback';
+  url: '/Testing/requests/{requestId}/feedback';
 };
 
 export type PostTestingRequestsByRequestIdFeedbackResponses = {
@@ -7420,7 +7841,7 @@ export type GetTestingFeedbackByUserByUserIdData = {
     userId: string;
   };
   query?: never;
-  url: '/testing/feedback/by-user/{userId}';
+  url: '/Testing/feedback/by-user/{userId}';
 };
 
 export type GetTestingFeedbackByUserByUserIdResponses = {
@@ -7438,7 +7859,7 @@ export type GetTestingRequestsByRequestIdStatisticsData = {
     requestId: string;
   };
   query?: never;
-  url: '/testing/requests/{requestId}/statistics';
+  url: '/Testing/requests/{requestId}/statistics';
 };
 
 export type GetTestingRequestsByRequestIdStatisticsResponses = {
@@ -7454,7 +7875,7 @@ export type GetTestingSessionsBySessionIdStatisticsData = {
     sessionId: string;
   };
   query?: never;
-  url: '/testing/sessions/{sessionId}/statistics';
+  url: '/Testing/sessions/{sessionId}/statistics';
 };
 
 export type GetTestingSessionsBySessionIdStatisticsResponses = {
@@ -7470,7 +7891,7 @@ export type GetTestingUsersByUserIdActivityData = {
     userId: string;
   };
   query?: never;
-  url: '/testing/users/{userId}/activity';
+  url: '/Testing/users/{userId}/activity';
 };
 
 export type GetTestingUsersByUserIdActivityResponses = {
@@ -7480,303 +7901,370 @@ export type GetTestingUsersByUserIdActivityResponses = {
   200: unknown;
 };
 
-export type GetUserProfilesData = {
+export type GetApiUserProfilesData = {
   body?: never;
   path?: never;
-  query?: never;
-  url: '/user-profiles';
+  query?: {
+    includeDeleted?: boolean;
+    skip?: number;
+    take?: number;
+    searchTerm?: string;
+    tenantId?: string;
+  };
+  url: '/api/UserProfiles';
 };
 
-export type GetUserProfilesResponses = {
+export type GetApiUserProfilesResponses = {
   /**
    * OK
    */
   200: Array<UserProfileResponseDto>;
 };
 
-export type GetUserProfilesResponse = GetUserProfilesResponses[keyof GetUserProfilesResponses];
+export type GetApiUserProfilesResponse = GetApiUserProfilesResponses[keyof GetApiUserProfilesResponses];
 
-export type PostUserProfilesData = {
+export type PostApiUserProfilesData = {
   body?: CreateUserProfileDto;
   path?: never;
   query?: never;
-  url: '/user-profiles';
+  url: '/api/UserProfiles';
 };
 
-export type PostUserProfilesResponses = {
+export type PostApiUserProfilesResponses = {
   /**
    * OK
    */
   200: UserProfileResponseDto;
 };
 
-export type PostUserProfilesResponse = PostUserProfilesResponses[keyof PostUserProfilesResponses];
+export type PostApiUserProfilesResponse = PostApiUserProfilesResponses[keyof PostApiUserProfilesResponses];
 
-export type GetUserProfilesDeletedData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/user-profiles/deleted';
-};
-
-export type GetUserProfilesDeletedResponses = {
-  /**
-   * OK
-   */
-  200: Array<UserProfileResponseDto>;
-};
-
-export type GetUserProfilesDeletedResponse = GetUserProfilesDeletedResponses[keyof GetUserProfilesDeletedResponses];
-
-export type DeleteUserProfilesByIdData = {
+export type DeleteApiUserProfilesByIdData = {
   body?: never;
   path: {
     id: string;
   };
-  query?: never;
-  url: '/user-profiles/{id}';
+  query?: {
+    permanent?: boolean;
+  };
+  url: '/api/UserProfiles/{id}';
 };
 
-export type DeleteUserProfilesByIdResponses = {
+export type DeleteApiUserProfilesByIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetUserProfilesByIdData = {
+export type GetApiUserProfilesByIdData = {
   body?: never;
   path: {
     id: string;
   };
-  query?: never;
-  url: '/user-profiles/{id}';
+  query?: {
+    includeDeleted?: boolean;
+  };
+  url: '/api/UserProfiles/{id}';
 };
 
-export type GetUserProfilesByIdResponses = {
+export type GetApiUserProfilesByIdResponses = {
   /**
    * OK
    */
   200: UserProfileResponseDto;
 };
 
-export type GetUserProfilesByIdResponse = GetUserProfilesByIdResponses[keyof GetUserProfilesByIdResponses];
+export type GetApiUserProfilesByIdResponse = GetApiUserProfilesByIdResponses[keyof GetApiUserProfilesByIdResponses];
 
-export type PutUserProfilesByIdData = {
+export type PutApiUserProfilesByIdData = {
   body?: UpdateUserProfileDto;
+  headers?: {
+    'If-Match'?: number;
+  };
   path: {
     id: string;
   };
   query?: never;
-  url: '/user-profiles/{id}';
+  url: '/api/UserProfiles/{id}';
 };
 
-export type PutUserProfilesByIdResponses = {
+export type PutApiUserProfilesByIdResponses = {
   /**
    * OK
    */
   200: UserProfileResponseDto;
 };
 
-export type PutUserProfilesByIdResponse = PutUserProfilesByIdResponses[keyof PutUserProfilesByIdResponses];
+export type PutApiUserProfilesByIdResponse = PutApiUserProfilesByIdResponses[keyof PutApiUserProfilesByIdResponses];
 
-export type GetUserProfilesUserByUserIdData = {
+export type GetApiUserProfilesUserByUserIdData = {
   body?: never;
   path: {
     userId: string;
   };
-  query?: never;
-  url: '/user-profiles/user/{userId}';
+  query?: {
+    includeDeleted?: boolean;
+  };
+  url: '/api/UserProfiles/user/{userId}';
 };
 
-export type GetUserProfilesUserByUserIdResponses = {
+export type GetApiUserProfilesUserByUserIdResponses = {
   /**
    * OK
    */
   200: UserProfileResponseDto;
 };
 
-export type GetUserProfilesUserByUserIdResponse = GetUserProfilesUserByUserIdResponses[keyof GetUserProfilesUserByUserIdResponses];
+export type GetApiUserProfilesUserByUserIdResponse = GetApiUserProfilesUserByUserIdResponses[keyof GetApiUserProfilesUserByUserIdResponses];
 
-export type DeleteUserProfilesByIdSoftData = {
+export type PostApiUserProfilesByIdRestoreData = {
   body?: never;
   path: {
     id: string;
   };
   query?: never;
-  url: '/user-profiles/{id}/soft';
+  url: '/api/UserProfiles/{id}/restore';
 };
 
-export type DeleteUserProfilesByIdSoftResponses = {
+export type PostApiUserProfilesByIdRestoreResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PostUserProfilesByIdRestoreData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/user-profiles/{id}/restore';
-};
-
-export type PostUserProfilesByIdRestoreResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type GetUsersData = {
+export type GetApiUsersData = {
   body?: never;
   path?: never;
-  query?: never;
-  url: '/users';
+  query?: {
+    includeDeleted?: boolean;
+    skip?: number;
+    take?: number;
+    isActive?: boolean;
+  };
+  url: '/api/Users';
 };
 
-export type GetUsersResponses = {
+export type GetApiUsersResponses = {
   /**
    * OK
    */
   200: Array<UserResponseDto>;
 };
 
-export type GetUsersResponse = GetUsersResponses[keyof GetUsersResponses];
+export type GetApiUsersResponse = GetApiUsersResponses[keyof GetApiUsersResponses];
 
-export type PostUsersData = {
+export type PostApiUsersData = {
   body?: CreateUserDto;
   path?: never;
   query?: never;
-  url: '/users';
+  url: '/api/Users';
 };
 
-export type PostUsersResponses = {
+export type PostApiUsersResponses = {
   /**
    * OK
    */
   200: UserResponseDto;
 };
 
-export type PostUsersResponse = PostUsersResponses[keyof PostUsersResponses];
+export type PostApiUsersResponse = PostApiUsersResponses[keyof PostApiUsersResponses];
 
-export type GetUsersDeletedData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/users/deleted';
-};
-
-export type GetUsersDeletedResponses = {
-  /**
-   * OK
-   */
-  200: Array<UserResponseDto>;
-};
-
-export type GetUsersDeletedResponse = GetUsersDeletedResponses[keyof GetUsersDeletedResponses];
-
-export type DeleteUsersByIdData = {
+export type DeleteApiUsersByIdData = {
   body?: never;
   path: {
     id: string;
   };
-  query?: never;
-  url: '/users/{id}';
+  query?: {
+    softDelete?: boolean;
+    reason?: string;
+  };
+  url: '/api/Users/{id}';
 };
 
-export type DeleteUsersByIdResponses = {
+export type DeleteApiUsersByIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetUsersByIdData = {
+export type GetApiUsersByIdData = {
   body?: never;
   path: {
     id: string;
   };
-  query?: never;
-  url: '/users/{id}';
+  query?: {
+    includeDeleted?: boolean;
+  };
+  url: '/api/Users/{id}';
 };
 
-export type GetUsersByIdResponses = {
+export type GetApiUsersByIdResponses = {
   /**
    * OK
    */
   200: UserResponseDto;
 };
 
-export type GetUsersByIdResponse = GetUsersByIdResponses[keyof GetUsersByIdResponses];
+export type GetApiUsersByIdResponse = GetApiUsersByIdResponses[keyof GetApiUsersByIdResponses];
 
-export type PutUsersByIdData = {
+export type PutApiUsersByIdData = {
   body?: UpdateUserDto;
   path: {
     id: string;
   };
   query?: never;
-  url: '/users/{id}';
+  url: '/api/Users/{id}';
 };
 
-export type PutUsersByIdResponses = {
+export type PutApiUsersByIdResponses = {
   /**
    * OK
    */
   200: UserResponseDto;
 };
 
-export type PutUsersByIdResponse = PutUsersByIdResponses[keyof PutUsersByIdResponses];
+export type PutApiUsersByIdResponse = PutApiUsersByIdResponses[keyof PutApiUsersByIdResponses];
 
-export type DeleteUsersByIdSoftData = {
+export type PostApiUsersByIdRestoreData = {
   body?: never;
   path: {
     id: string;
   };
-  query?: never;
-  url: '/users/{id}/soft';
+  query?: {
+    reason?: string;
+  };
+  url: '/api/Users/{id}/restore';
 };
 
-export type DeleteUsersByIdSoftResponses = {
+export type PostApiUsersByIdRestoreResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PostUsersByIdRestoreData = {
-  body?: never;
+export type PutApiUsersByIdBalanceData = {
+  body?: UpdateUserBalanceDto;
   path: {
     id: string;
   };
   query?: never;
-  url: '/users/{id}/restore';
+  url: '/api/Users/{id}/balance';
 };
 
-export type PostUsersByIdRestoreResponses = {
+export type PutApiUsersByIdBalanceResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: UserResponseDto;
 };
 
-export type GetUsersMeData = {
+export type PutApiUsersByIdBalanceResponse = PutApiUsersByIdBalanceResponses[keyof PutApiUsersByIdBalanceResponses];
+
+export type GetApiUsersStatisticsData = {
   body?: never;
   path?: never;
-  query?: never;
-  url: '/users/me';
+  query?: {
+    fromDate?: string;
+    toDate?: string;
+    includeDeleted?: boolean;
+  };
+  url: '/api/Users/statistics';
 };
 
-export type GetUsersMeResponses = {
+export type GetApiUsersStatisticsResponses = {
   /**
    * OK
    */
-  200: UserResponseDto;
+  200: UserStatistics;
 };
 
-export type GetUsersMeResponse = GetUsersMeResponses[keyof GetUsersMeResponses];
+export type GetApiUsersStatisticsResponse = GetApiUsersStatisticsResponses[keyof GetApiUsersStatisticsResponses];
+
+export type GetApiUsersSearchData = {
+  body?: never;
+  path?: never;
+  query?: {
+    searchTerm?: string;
+    isActive?: boolean;
+    minBalance?: number;
+    maxBalance?: number;
+    createdAfter?: string;
+    createdBefore?: string;
+    includeDeleted?: boolean;
+    skip?: number;
+    take?: number;
+    sortBy?: UserSortField;
+    sortDirection?: SortDirection;
+  };
+  url: '/api/Users/search';
+};
+
+export type GetApiUsersSearchResponses = {
+  /**
+   * OK
+   */
+  200: UserResponseDtoPagedResultReadable;
+};
+
+export type GetApiUsersSearchResponse = GetApiUsersSearchResponses[keyof GetApiUsersSearchResponses];
+
+export type PostApiUsersBulkData = {
+  body?: Array<CreateUserDto>;
+  path?: never;
+  query?: {
+    reason?: string;
+  };
+  url: '/api/Users/bulk';
+};
+
+export type PostApiUsersBulkResponses = {
+  /**
+   * OK
+   */
+  200: BulkOperationResultReadable;
+};
+
+export type PostApiUsersBulkResponse = PostApiUsersBulkResponses[keyof PostApiUsersBulkResponses];
+
+export type PatchApiUsersBulkActivateData = {
+  body?: Array<string>;
+  path?: never;
+  query?: {
+    reason?: string;
+  };
+  url: '/api/Users/bulk/activate';
+};
+
+export type PatchApiUsersBulkActivateResponses = {
+  /**
+   * OK
+   */
+  200: BulkOperationResultReadable;
+};
+
+export type PatchApiUsersBulkActivateResponse = PatchApiUsersBulkActivateResponses[keyof PatchApiUsersBulkActivateResponses];
+
+export type PatchApiUsersBulkDeactivateData = {
+  body?: Array<string>;
+  path?: never;
+  query?: {
+    reason?: string;
+  };
+  url: '/api/Users/bulk/deactivate';
+};
+
+export type PatchApiUsersBulkDeactivateResponses = {
+  /**
+   * OK
+   */
+  200: BulkOperationResultReadable;
+};
+
+export type PatchApiUsersBulkDeactivateResponse = PatchApiUsersBulkDeactivateResponses[keyof PatchApiUsersBulkDeactivateResponses];
 
 export type ClientOptions = {
   baseUrl: `${string}://${string}` | (string & {});
