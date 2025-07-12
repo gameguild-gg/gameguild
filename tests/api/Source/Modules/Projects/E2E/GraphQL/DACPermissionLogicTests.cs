@@ -3,7 +3,8 @@ using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions.Models;
 using Moq;
 
-namespace GameGuild.API.Tests.Modules.Projects.E2E.GraphQL;
+
+namespace GameGuild.Tests.Modules.Projects.E2E.GraphQL;
 
 /// <summary>
 /// Unit tests for DAC permission checking logic in GraphQL resolvers

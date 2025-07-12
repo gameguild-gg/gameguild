@@ -1,13 +1,13 @@
 using System.Security.Claims;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using UserModel = GameGuild.Modules.Users.User;
 
 
-namespace GameGuild.API.Tests.Modules.Auth.Unit.Services;
+namespace GameGuild.Tests.Modules.Auth.Unit.Services;
 
 public class TenantAuthServiceTests : IDisposable {
   private readonly ApplicationDbContext _context;

@@ -1,4 +1,4 @@
-﻿namespace GameGuild.API.Tests.Fixtures;
+﻿namespace GameGuild.Tests.Fixtures;
 
 public class TestMutation {
     // GraphQL mutation resolvers would be defined here

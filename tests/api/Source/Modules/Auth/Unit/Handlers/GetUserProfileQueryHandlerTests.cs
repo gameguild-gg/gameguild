@@ -1,9 +1,10 @@
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Users;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace GameGuild.API.Tests.Modules.Auth.Unit.Handlers;
+
+namespace GameGuild.Tests.Modules.Auth.Unit.Handlers;
 
 public class GetUserProfileQueryHandlerTests
 {

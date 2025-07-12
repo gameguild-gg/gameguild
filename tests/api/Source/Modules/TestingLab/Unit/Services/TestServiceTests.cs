@@ -6,7 +6,7 @@ using ProjectModel = GameGuild.Modules.Projects.Project;
 using ProjectVersionModel = GameGuild.Modules.Projects.ProjectVersion;
 
 
-namespace GameGuild.API.Tests.Modules.TestingLab.Unit.Services;
+namespace GameGuild.Tests.Modules.TestingLab.Unit.Services;
 
 public class TestServiceTests : IDisposable {
   private readonly ApplicationDbContext _context;

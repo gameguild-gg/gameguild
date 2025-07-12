@@ -1,44 +1,36 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Fixtures;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Tenants;
+using GameGuild.Tests.Fixtures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TenantModel = GameGuild.Modules.Tenants.Tenant;
 using UserModel = GameGuild.Modules.Users.User;
 
 
-namespace GameGuild.API.Tests.Modules.Permissions.E2E.API;
+namespace GameGuild.Tests.Modules.Permissions.E2E.API;
 
 /// <summary>
 /// End-to-end tests for Permission Module APIs
 /// Test permission-protected endpoints via GraphQL and REST APIs
 /// </summary>
-public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>, IDisposable {
+public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDisposable {
   private readonly HttpClient _client;
-
   private readonly IServiceScope _scope;
-
   private readonly ApplicationDbContext _context;
+  private readonly TestServerFixture _fixture;
 
-  public PermissionModuleE2ETests(TestWebApplicationFactory factory) {
-    _client = factory.CreateClient();
-    _scope = factory.Services.CreateScope();
-
-    // Use a separate in-memory database for E2E tests
-    var services = new ServiceCollection();
-    services.AddDbContext<ApplicationDbContext>(options =>
-                                                  options.UseInMemoryDatabase(Guid.NewGuid().ToString())
-    );
-
-    var serviceProvider = services.BuildServiceProvider();
-    _context = serviceProvider.GetRequiredService<ApplicationDbContext>();
+  public PermissionModuleE2ETests(TestServerFixture fixture) {
+    _fixture = fixture;
+    _client = fixture.CreateClient();
+    _scope = fixture.Server.Services.CreateScope();
+    _context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
   }
 
   public void Dispose() {
@@ -75,7 +67,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     // Now try the actual query
     var query = @"
             query {
-                tenants {
+                getTenants {
                     id
                     name
                     description
@@ -233,7 +225,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
   [Fact]
   public async Task REST_TenantEndpoints_RequireAuthentication() {
     // Act - Request without authentication
-    var response = await _client.GetAsync("/tenants");
+    var response = await _client.GetAsync("/api/tenants");
 
     // Assert
     Assert.True(response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden);
@@ -248,13 +240,13 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
     var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
-    var createTenantDto = new { name = "Test Tenant REST", description = "Created via REST API", isActive = true };
+    var createTenantDto = new { name = "Test Tenant REST", description = "Created via REST API", isActive = true, slug = "test-tenant-rest" };
 
     var json = JsonSerializer.Serialize(createTenantDto);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act - Request without CREATE permission
-    var response = await _client.PostAsync("/tenants", content);
+    var response = await _client.PostAsync("/api/tenants", content);
 
     // Debug: Log the actual response
     var responseContent = await response.Content.ReadAsStringAsync();
@@ -488,7 +480,10 @@ public class PermissionModuleE2ETests : IClassFixture<TestWebApplicationFactory>
 
     var roles = new[] { "User" };
 
-    var additionalClaims = new[] { new System.Security.Claims.Claim("tenant_id", tenant.Id.ToString()) };
+    var additionalClaims = new[] { 
+      new System.Security.Claims.Claim("tenant_id", tenant.Id.ToString()),
+      new System.Security.Claims.Claim("permission", "CREATE") // Add CREATE permission for testing
+    };
 
     return Task.FromResult(jwtService.GenerateAccessToken(userDto, roles, additionalClaims));
   }

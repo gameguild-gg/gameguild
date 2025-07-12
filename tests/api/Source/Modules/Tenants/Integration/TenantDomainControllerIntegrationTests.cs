@@ -1,22 +1,19 @@
 using System.Net;
-using System.Net.Http.Headers;
-using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Helpers;
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Tenants;
+using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using TenantModel = GameGuild.Modules.Tenants.Tenant;
 using UserModel = GameGuild.Modules.Users.User;
 
 
-namespace GameGuild.API.Tests.Modules.Tenants.Integration;
+namespace GameGuild.Tests.Modules.Tenants.Integration;
 
 public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable {
   private readonly WebApplicationFactory<Program> _factory;
@@ -44,7 +41,26 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     _userId = userId;
     _tenantId = tenantId;
     
+    // Grant necessary content type permissions for TenantDomain operations
+    await GrantContentTypePermissions(_userId, _tenantId, "TenantDomain", [
+      PermissionType.Create, 
+      PermissionType.Read, 
+      PermissionType.Edit, 
+      PermissionType.Delete
+    ]);
+    
     return client;
+  }
+  
+  private async Task GrantContentTypePermissions(
+    Guid userId,
+    Guid tenantId,
+    string contentTypeName,
+    PermissionType[] permissions
+  ) {
+    using var scope = _factory.Services.CreateScope();
+    var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
+    await permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentTypeName, permissions);
   }
 
   #region Domain API Tests
@@ -718,6 +734,46 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     Assert.Equal(2, result.Count);
     Assert.Contains(result, g => g.Id == group1.Id);
     Assert.Contains(result, g => g.Id == group2.Id);
+  }
+
+  #endregion
+
+  #region Debug Tests
+
+  [Fact]
+  public async Task Debug_CheckContentTypePermissions() {
+    // Arrange
+    _client = await GetAuthenticatedClientAsync();
+
+    // Debug: Check if content type permissions were actually granted
+    using var scope = _factory.Services.CreateScope();
+    var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
+    
+    var hasPermission = await permissionService.HasContentTypePermissionAsync(
+      _userId, 
+      _tenantId, 
+      "TenantDomain", 
+      PermissionType.Create
+    );
+    
+    // Assert
+    Assert.True(hasPermission, $"User {_userId} should have TenantDomain Create permission for tenant {_tenantId}");
+  }
+
+  [Fact]
+  public async Task Debug_CheckJwtClaims() {
+    // Arrange
+    _client = await GetAuthenticatedClientAsync();
+
+    // Debug: Make a request and check what's in the response headers or try a simple endpoint
+    var response = await _client.GetAsync("/api/users");
+    
+    // If we get unauthorized, let's see the exact status
+    var content = await response.Content.ReadAsStringAsync();
+    
+    // Assert or debug info
+    Assert.True(response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Unauthorized, 
+      $"Response: {response.StatusCode}, Content: {content}");
   }
 
   #endregion

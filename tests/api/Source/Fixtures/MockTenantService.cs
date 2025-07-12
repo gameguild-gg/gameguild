@@ -1,6 +1,7 @@
 ﻿using GameGuild.Modules.Tenants;
 
-namespace GameGuild.API.Tests.Fixtures;
+
+namespace GameGuild.Tests.Fixtures;
 
 public class MockTenantService : ITenantService {
     private readonly Dictionary<Guid, Tenant> _tenants = new();

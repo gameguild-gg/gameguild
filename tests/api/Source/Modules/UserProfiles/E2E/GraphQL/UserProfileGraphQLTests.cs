@@ -1,9 +1,10 @@
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Fixtures;
+using GameGuild.Tests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace GameGuild.API.Tests.Modules.UserProfiles.E2E.GraphQL {
+
+namespace GameGuild.Tests.Modules.UserProfiles.E2E.GraphQL {
   public class UserProfileGraphQLTests : IClassFixture<TestServerFixture> {
     private readonly TestServerFixture _fixture;
     private readonly HttpClient _client;

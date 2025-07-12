@@ -5,7 +5,8 @@ using GameGuild.Modules.Projects;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 
-namespace GameGuild.API.Tests.Modules.Projects.E2E.API;
+
+namespace GameGuild.Tests.Modules.Projects.E2E.API;
 
 /// <summary>
 /// Integration tests for Project DAC (Data Access Control) permission system

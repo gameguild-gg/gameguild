@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.API.Tests.Fixtures;
+
+namespace GameGuild.Tests.Fixtures;
 
 public class TestUserProfileService(TestDbContext dbContext) : IUserProfileService {
     public async Task<TestUserProfileEntity> GetByIdAsync(string id) { 

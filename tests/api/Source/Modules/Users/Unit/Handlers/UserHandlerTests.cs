@@ -1,12 +1,12 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using GameGuild.Database;
 using GameGuild.Modules.Users;
-using Moq;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 
-namespace GameGuild.API.Tests.Modules.Users.Unit.Handlers {
+namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
   public class UserHandlerTests : IDisposable {
     private readonly ApplicationDbContext _context;
     private readonly Mock<ILogger<CreateUserHandler>> _createLogger;

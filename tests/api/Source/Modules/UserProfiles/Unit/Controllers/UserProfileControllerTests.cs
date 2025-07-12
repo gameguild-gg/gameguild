@@ -1,10 +1,11 @@
+using GameGuild.Common;
+using GameGuild.Modules.UserProfiles;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using GameGuild.Modules.UserProfiles;
-using GameGuild.Common;
 
-namespace GameGuild.API.Tests.Modules.UserProfiles.Unit.Controllers {
+
+namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
   public class UserProfileControllerTests {
     private readonly Mock<IMediator> _mockMediator;
     private readonly UserProfilesController _controller;
