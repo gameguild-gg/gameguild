@@ -6,9 +6,9 @@ namespace GameGuild.Modules.Certificates;
 
 public class UserCertificateConfiguration : IEntityTypeConfiguration<UserCertificate> {
   public void Configure(EntityTypeBuilder<UserCertificate> builder) {
-    // Configure relationship with Certificate (can't be done with annotations)
+    // Configure relationship with Certificate (specify navigation property)
     builder.HasOne(uc => uc.Certificate)
-           .WithMany()
+           .WithMany(c => c.UserCertificates)
            .HasForeignKey(uc => uc.CertificateId)
            .OnDelete(DeleteBehavior.Cascade);
 

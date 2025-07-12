@@ -20,38 +20,21 @@ import type {
   GetApiProgramsByProgramIdActivityGradesStatisticsResponses,
   GetApiProgramsByProgramIdActivityGradesContentByContentIdData,
   GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses,
-  PostAuthSignInData,
-  PostAuthSignInResponses,
-  PostAuthSignUpData,
-  PostAuthSignUpResponses,
-  PostAuthRefreshTokenData,
-  PostAuthRefreshTokenResponses,
-  PostAuthRevokeTokenData,
-  PostAuthRevokeTokenResponses,
-  GetAuthGithubSigninData,
-  GetAuthGithubSigninResponses,
-  PostAuthGithubCallbackData,
-  PostAuthGithubCallbackResponses,
-  GetAuthGoogleSigninData,
-  GetAuthGoogleSigninResponses,
-  PostAuthGoogleCallbackData,
-  PostAuthGoogleCallbackResponses,
-  PostAuthGoogleIdTokenData,
-  PostAuthGoogleIdTokenResponses,
-  PostAuthWeb3ChallengeData,
-  PostAuthWeb3ChallengeResponses,
-  PostAuthWeb3VerifyData,
-  PostAuthWeb3VerifyResponses,
-  PostAuthSendEmailVerificationData,
-  PostAuthSendEmailVerificationResponses,
-  PostAuthVerifyEmailData,
-  PostAuthVerifyEmailResponses,
-  PostAuthForgotPasswordData,
-  PostAuthForgotPasswordResponses,
-  PostAuthResetPasswordData,
-  PostAuthResetPasswordResponses,
-  PostAuthChangePasswordData,
-  PostAuthChangePasswordResponses,
+  PostApiAuthSignupData,
+  PostApiAuthSignupResponses,
+  PostApiAuthSignupErrors,
+  PostApiAuthSigninData,
+  PostApiAuthSigninResponses,
+  PostApiAuthSigninErrors,
+  PostApiAuthRefreshData,
+  PostApiAuthRefreshResponses,
+  PostApiAuthRefreshErrors,
+  PostApiAuthRevokeData,
+  PostApiAuthRevokeResponses,
+  PostApiAuthRevokeErrors,
+  GetApiAuthProfileData,
+  GetApiAuthProfileResponses,
+  GetApiAuthProfileErrors,
   PostApiContentInteractionStartData,
   PostApiContentInteractionStartResponses,
   PutApiContentInteractionByInteractionIdProgressData,
@@ -96,6 +79,26 @@ import type {
   GetHealthResponses,
   GetHealthDatabaseData,
   GetHealthDatabaseResponses,
+  GetApiPaymentMethodsMeData,
+  GetApiPaymentMethodsMeResponses,
+  PostApiPaymentMethodsData,
+  PostApiPaymentMethodsResponses,
+  DeleteApiPaymentMethodsByIdData,
+  DeleteApiPaymentMethodsByIdResponses,
+  GetApiPaymentMethodsByIdData,
+  GetApiPaymentMethodsByIdResponses,
+  GetApiPaymentTransactionsMeData,
+  GetApiPaymentTransactionsMeResponses,
+  GetApiPaymentTransactionsByIdData,
+  GetApiPaymentTransactionsByIdResponses,
+  GetApiPaymentTransactionsData,
+  GetApiPaymentTransactionsResponses,
+  PostApiPaymentTransactionsData,
+  PostApiPaymentTransactionsResponses,
+  PostApiPaymentTransactionsByIdProcessData,
+  PostApiPaymentTransactionsByIdProcessResponses,
+  GetApiPaymentStatisticsData,
+  GetApiPaymentStatisticsResponses,
   GetApiProductData,
   GetApiProductResponses,
   PostApiProductData,
@@ -308,6 +311,22 @@ import type {
   GetProjectsDeletedResponses,
   GetProjectsPublicData,
   GetProjectsPublicResponses,
+  GetApiSubscriptionMeData,
+  GetApiSubscriptionMeResponses,
+  GetApiSubscriptionMeActiveData,
+  GetApiSubscriptionMeActiveResponses,
+  GetApiSubscriptionByIdData,
+  GetApiSubscriptionByIdResponses,
+  GetApiSubscriptionData,
+  GetApiSubscriptionResponses,
+  PostApiSubscriptionData,
+  PostApiSubscriptionResponses,
+  PostApiSubscriptionByIdCancelData,
+  PostApiSubscriptionByIdCancelResponses,
+  PostApiSubscriptionByIdResumeData,
+  PostApiSubscriptionByIdResumeResponses,
+  PutApiSubscriptionByIdPaymentMethodData,
+  PutApiSubscriptionByIdPaymentMethodResponses,
   GetApiTenantDomainsData,
   GetApiTenantDomainsResponses,
   PostApiTenantDomainsData,
@@ -350,34 +369,40 @@ import type {
   GetApiTenantDomainsDomainMatchResponses,
   PostApiTenantDomainsMembershipsData,
   PostApiTenantDomainsMembershipsResponses,
-  GetTenantsData,
-  GetTenantsResponses,
-  PostTenantsData,
-  PostTenantsResponses,
-  DeleteTenantsByIdData,
-  DeleteTenantsByIdResponses,
-  GetTenantsByIdData,
-  GetTenantsByIdResponses,
-  PutTenantsByIdData,
-  PutTenantsByIdResponses,
-  GetTenantsByNameByNameData,
-  GetTenantsByNameByNameResponses,
-  PostTenantsByIdRestoreData,
-  PostTenantsByIdRestoreResponses,
-  DeleteTenantsByIdHardData,
-  DeleteTenantsByIdHardResponses,
-  PostTenantsByIdActivateData,
-  PostTenantsByIdActivateResponses,
-  PostTenantsByIdDeactivateData,
-  PostTenantsByIdDeactivateResponses,
-  GetTenantsDeletedData,
-  GetTenantsDeletedResponses,
-  DeleteTenantsByIdUsersByUserIdData,
-  DeleteTenantsByIdUsersByUserIdResponses,
-  PostTenantsByIdUsersByUserIdData,
-  PostTenantsByIdUsersByUserIdResponses,
-  GetTenantsByIdUsersData,
-  GetTenantsByIdUsersResponses,
+  GetApiTenantsData,
+  GetApiTenantsResponses,
+  PostApiTenantsData,
+  PostApiTenantsResponses,
+  DeleteApiTenantsByIdData,
+  DeleteApiTenantsByIdResponses,
+  GetApiTenantsByIdData,
+  GetApiTenantsByIdResponses,
+  PutApiTenantsByIdData,
+  PutApiTenantsByIdResponses,
+  GetApiTenantsByNameByNameData,
+  GetApiTenantsByNameByNameResponses,
+  GetApiTenantsBySlugBySlugData,
+  GetApiTenantsBySlugBySlugResponses,
+  GetApiTenantsDeletedData,
+  GetApiTenantsDeletedResponses,
+  GetApiTenantsActiveData,
+  GetApiTenantsActiveResponses,
+  GetApiTenantsSearchData,
+  GetApiTenantsSearchResponses,
+  GetApiTenantsStatisticsData,
+  GetApiTenantsStatisticsResponses,
+  PostApiTenantsByIdRestoreData,
+  PostApiTenantsByIdRestoreResponses,
+  DeleteApiTenantsByIdPermanentData,
+  DeleteApiTenantsByIdPermanentResponses,
+  PostApiTenantsByIdActivateData,
+  PostApiTenantsByIdActivateResponses,
+  PostApiTenantsByIdDeactivateData,
+  PostApiTenantsByIdDeactivateResponses,
+  PostApiTenantsBulkDeleteData,
+  PostApiTenantsBulkDeleteResponses,
+  PostApiTenantsBulkRestoreData,
+  PostApiTenantsBulkRestoreResponses,
   GetTestingRequestsData,
   GetTestingRequestsResponses,
   PostTestingRequestsData,
@@ -456,42 +481,44 @@ import type {
   GetTestingSessionsBySessionIdStatisticsResponses,
   GetTestingUsersByUserIdActivityData,
   GetTestingUsersByUserIdActivityResponses,
-  GetUserProfilesData,
-  GetUserProfilesResponses,
-  PostUserProfilesData,
-  PostUserProfilesResponses,
-  GetUserProfilesDeletedData,
-  GetUserProfilesDeletedResponses,
-  DeleteUserProfilesByIdData,
-  DeleteUserProfilesByIdResponses,
-  GetUserProfilesByIdData,
-  GetUserProfilesByIdResponses,
-  PutUserProfilesByIdData,
-  PutUserProfilesByIdResponses,
-  GetUserProfilesUserByUserIdData,
-  GetUserProfilesUserByUserIdResponses,
-  DeleteUserProfilesByIdSoftData,
-  DeleteUserProfilesByIdSoftResponses,
-  PostUserProfilesByIdRestoreData,
-  PostUserProfilesByIdRestoreResponses,
-  GetUsersData,
-  GetUsersResponses,
-  PostUsersData,
-  PostUsersResponses,
-  GetUsersDeletedData,
-  GetUsersDeletedResponses,
-  DeleteUsersByIdData,
-  DeleteUsersByIdResponses,
-  GetUsersByIdData,
-  GetUsersByIdResponses,
-  PutUsersByIdData,
-  PutUsersByIdResponses,
-  DeleteUsersByIdSoftData,
-  DeleteUsersByIdSoftResponses,
-  PostUsersByIdRestoreData,
-  PostUsersByIdRestoreResponses,
-  GetUsersMeData,
-  GetUsersMeResponses,
+  GetApiUserProfilesData,
+  GetApiUserProfilesResponses,
+  PostApiUserProfilesData,
+  PostApiUserProfilesResponses,
+  DeleteApiUserProfilesByIdData,
+  DeleteApiUserProfilesByIdResponses,
+  GetApiUserProfilesByIdData,
+  GetApiUserProfilesByIdResponses,
+  PutApiUserProfilesByIdData,
+  PutApiUserProfilesByIdResponses,
+  GetApiUserProfilesUserByUserIdData,
+  GetApiUserProfilesUserByUserIdResponses,
+  PostApiUserProfilesByIdRestoreData,
+  PostApiUserProfilesByIdRestoreResponses,
+  GetApiUsersData,
+  GetApiUsersResponses,
+  PostApiUsersData,
+  PostApiUsersResponses,
+  DeleteApiUsersByIdData,
+  DeleteApiUsersByIdResponses,
+  GetApiUsersByIdData,
+  GetApiUsersByIdResponses,
+  PutApiUsersByIdData,
+  PutApiUsersByIdResponses,
+  PostApiUsersByIdRestoreData,
+  PostApiUsersByIdRestoreResponses,
+  PutApiUsersByIdBalanceData,
+  PutApiUsersByIdBalanceResponses,
+  GetApiUsersStatisticsData,
+  GetApiUsersStatisticsResponses,
+  GetApiUsersSearchData,
+  GetApiUsersSearchResponses,
+  PostApiUsersBulkData,
+  PostApiUsersBulkResponses,
+  PatchApiUsersBulkActivateData,
+  PatchApiUsersBulkActivateResponses,
+  PatchApiUsersBulkDeactivateData,
+  PatchApiUsersBulkDeactivateResponses,
 } from './types.gen.js';
 import { client as _heyApiClient } from './client.gen.js';
 
@@ -513,12 +540,6 @@ export const postApiProgramsByProgramIdActivityGrades = <ThrowOnError extends bo
   options: Options<PostApiProgramsByProgramIdActivityGradesData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdActivityGradesResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/activity-grades',
     ...options,
     headers: {
@@ -532,12 +553,6 @@ export const getApiProgramsByProgramIdActivityGradesInteractionByContentInteract
   options: Options<GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/activity-grades/interaction/{contentInteractionId}',
     ...options,
   });
@@ -547,12 +562,6 @@ export const getApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserId 
   options: Options<GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/activity-grades/grader/{graderProgramUserId}',
     ...options,
   });
@@ -562,12 +571,6 @@ export const getApiProgramsByProgramIdActivityGradesStudentByProgramUserId = <Th
   options: Options<GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/activity-grades/student/{programUserId}',
     ...options,
   });
@@ -577,12 +580,6 @@ export const deleteApiProgramsByProgramIdActivityGradesByGradeId = <ThrowOnError
   options: Options<DeleteApiProgramsByProgramIdActivityGradesByGradeIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProgramsByProgramIdActivityGradesByGradeIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/activity-grades/{gradeId}',
     ...options,
   });
@@ -592,12 +589,6 @@ export const putApiProgramsByProgramIdActivityGradesByGradeId = <ThrowOnError ex
   options: Options<PutApiProgramsByProgramIdActivityGradesByGradeIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).put<PutApiProgramsByProgramIdActivityGradesByGradeIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/activity-grades/{gradeId}',
     ...options,
     headers: {
@@ -611,12 +602,6 @@ export const getApiProgramsByProgramIdActivityGradesPending = <ThrowOnError exte
   options: Options<GetApiProgramsByProgramIdActivityGradesPendingData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesPendingResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/activity-grades/pending',
     ...options,
   });
@@ -626,12 +611,6 @@ export const getApiProgramsByProgramIdActivityGradesStatistics = <ThrowOnError e
   options: Options<GetApiProgramsByProgramIdActivityGradesStatisticsData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesStatisticsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/activity-grades/statistics',
     ...options,
   });
@@ -641,20 +620,14 @@ export const getApiProgramsByProgramIdActivityGradesContentByContentId = <ThrowO
   options: Options<GetApiProgramsByProgramIdActivityGradesContentByContentIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/activity-grades/content/{contentId}',
     ...options,
   });
 };
 
-export const postAuthSignIn = <ThrowOnError extends boolean = false>(options?: Options<PostAuthSignInData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthSignInResponses, unknown, ThrowOnError>({
-    url: '/auth/sign-in',
+export const postApiAuthSignup = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSignupData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiAuthSignupResponses, PostApiAuthSignupErrors, ThrowOnError>({
+    url: '/api/Auth/signup',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -663,9 +636,9 @@ export const postAuthSignIn = <ThrowOnError extends boolean = false>(options?: O
   });
 };
 
-export const postAuthSignUp = <ThrowOnError extends boolean = false>(options?: Options<PostAuthSignUpData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthSignUpResponses, unknown, ThrowOnError>({
-    url: '/auth/sign-up',
+export const postApiAuthSignin = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSigninData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiAuthSigninResponses, PostApiAuthSigninErrors, ThrowOnError>({
+    url: '/api/Auth/signin',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -674,9 +647,9 @@ export const postAuthSignUp = <ThrowOnError extends boolean = false>(options?: O
   });
 };
 
-export const postAuthRefreshToken = <ThrowOnError extends boolean = false>(options?: Options<PostAuthRefreshTokenData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthRefreshTokenResponses, unknown, ThrowOnError>({
-    url: '/auth/refresh-token',
+export const postApiAuthRefresh = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthRefreshData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiAuthRefreshResponses, PostApiAuthRefreshErrors, ThrowOnError>({
+    url: '/api/Auth/refresh',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -685,15 +658,9 @@ export const postAuthRefreshToken = <ThrowOnError extends boolean = false>(optio
   });
 };
 
-export const postAuthRevokeToken = <ThrowOnError extends boolean = false>(options?: Options<PostAuthRevokeTokenData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthRevokeTokenResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/auth/revoke-token',
+export const postApiAuthRevoke = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthRevokeData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiAuthRevokeResponses, PostApiAuthRevokeErrors, ThrowOnError>({
+    url: '/api/Auth/revoke',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -702,145 +669,16 @@ export const postAuthRevokeToken = <ThrowOnError extends boolean = false>(option
   });
 };
 
-export const getAuthGithubSignin = <ThrowOnError extends boolean = false>(options?: Options<GetAuthGithubSigninData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetAuthGithubSigninResponses, unknown, ThrowOnError>({
-    url: '/auth/github/signin',
+export const getApiAuthProfile = <ThrowOnError extends boolean = false>(options?: Options<GetApiAuthProfileData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiAuthProfileResponses, GetApiAuthProfileErrors, ThrowOnError>({
+    url: '/api/Auth/profile',
     ...options,
-  });
-};
-
-export const postAuthGithubCallback = <ThrowOnError extends boolean = false>(options?: Options<PostAuthGithubCallbackData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthGithubCallbackResponses, unknown, ThrowOnError>({
-    url: '/auth/github/callback',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const getAuthGoogleSignin = <ThrowOnError extends boolean = false>(options?: Options<GetAuthGoogleSigninData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetAuthGoogleSigninResponses, unknown, ThrowOnError>({
-    url: '/auth/google/signin',
-    ...options,
-  });
-};
-
-export const postAuthGoogleCallback = <ThrowOnError extends boolean = false>(options?: Options<PostAuthGoogleCallbackData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthGoogleCallbackResponses, unknown, ThrowOnError>({
-    url: '/auth/google/callback',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postAuthGoogleIdToken = <ThrowOnError extends boolean = false>(options?: Options<PostAuthGoogleIdTokenData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthGoogleIdTokenResponses, unknown, ThrowOnError>({
-    url: '/auth/google/id-token',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postAuthWeb3Challenge = <ThrowOnError extends boolean = false>(options?: Options<PostAuthWeb3ChallengeData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthWeb3ChallengeResponses, unknown, ThrowOnError>({
-    url: '/auth/web3/challenge',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postAuthWeb3Verify = <ThrowOnError extends boolean = false>(options?: Options<PostAuthWeb3VerifyData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthWeb3VerifyResponses, unknown, ThrowOnError>({
-    url: '/auth/web3/verify',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postAuthSendEmailVerification = <ThrowOnError extends boolean = false>(options?: Options<PostAuthSendEmailVerificationData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthSendEmailVerificationResponses, unknown, ThrowOnError>({
-    url: '/auth/send-email-verification',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postAuthVerifyEmail = <ThrowOnError extends boolean = false>(options?: Options<PostAuthVerifyEmailData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthVerifyEmailResponses, unknown, ThrowOnError>({
-    url: '/auth/verify-email',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postAuthForgotPassword = <ThrowOnError extends boolean = false>(options?: Options<PostAuthForgotPasswordData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthForgotPasswordResponses, unknown, ThrowOnError>({
-    url: '/auth/forgot-password',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postAuthResetPassword = <ThrowOnError extends boolean = false>(options?: Options<PostAuthResetPasswordData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthResetPasswordResponses, unknown, ThrowOnError>({
-    url: '/auth/reset-password',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postAuthChangePassword = <ThrowOnError extends boolean = false>(options?: Options<PostAuthChangePasswordData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostAuthChangePasswordResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/auth/change-password',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
   });
 };
 
 export const postApiContentInteractionStart = <ThrowOnError extends boolean = false>(options?: Options<PostApiContentInteractionStartData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostApiContentInteractionStartResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/content-interaction/start',
+    url: '/api/ContentInteraction/start',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -853,13 +691,7 @@ export const putApiContentInteractionByInteractionIdProgress = <ThrowOnError ext
   options: Options<PutApiContentInteractionByInteractionIdProgressData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).put<PutApiContentInteractionByInteractionIdProgressResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/content-interaction/{interactionId}/progress',
+    url: '/api/ContentInteraction/{interactionId}/progress',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -872,13 +704,7 @@ export const postApiContentInteractionByInteractionIdSubmit = <ThrowOnError exte
   options: Options<PostApiContentInteractionByInteractionIdSubmitData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiContentInteractionByInteractionIdSubmitResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/content-interaction/{interactionId}/submit',
+    url: '/api/ContentInteraction/{interactionId}/submit',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -891,13 +717,7 @@ export const postApiContentInteractionByInteractionIdComplete = <ThrowOnError ex
   options: Options<PostApiContentInteractionByInteractionIdCompleteData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiContentInteractionByInteractionIdCompleteResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/content-interaction/{interactionId}/complete',
+    url: '/api/ContentInteraction/{interactionId}/complete',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -910,13 +730,7 @@ export const getApiContentInteractionUserByProgramUserIdContentByContentId = <Th
   options: Options<GetApiContentInteractionUserByProgramUserIdContentByContentIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiContentInteractionUserByProgramUserIdContentByContentIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/content-interaction/user/{programUserId}/content/{contentId}',
+    url: '/api/ContentInteraction/user/{programUserId}/content/{contentId}',
     ...options,
   });
 };
@@ -925,13 +739,7 @@ export const getApiContentInteractionUserByProgramUserId = <ThrowOnError extends
   options: Options<GetApiContentInteractionUserByProgramUserIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiContentInteractionUserByProgramUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/content-interaction/user/{programUserId}',
+    url: '/api/ContentInteraction/user/{programUserId}',
     ...options,
   });
 };
@@ -940,13 +748,7 @@ export const putApiContentInteractionByInteractionIdTimeSpent = <ThrowOnError ex
   options: Options<PutApiContentInteractionByInteractionIdTimeSpentData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).put<PutApiContentInteractionByInteractionIdTimeSpentResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/content-interaction/{interactionId}/time-spent',
+    url: '/api/ContentInteraction/{interactionId}/time-spent',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -957,26 +759,14 @@ export const putApiContentInteractionByInteractionIdTimeSpent = <ThrowOnError ex
 
 export const getCredentials = <ThrowOnError extends boolean = false>(options?: Options<GetCredentialsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetCredentialsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/credentials',
+    url: '/Credentials',
     ...options,
   });
 };
 
 export const postCredentials = <ThrowOnError extends boolean = false>(options?: Options<PostCredentialsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostCredentialsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/credentials',
+    url: '/Credentials',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -987,52 +777,28 @@ export const postCredentials = <ThrowOnError extends boolean = false>(options?: 
 
 export const getCredentialsUserByUserId = <ThrowOnError extends boolean = false>(options: Options<GetCredentialsUserByUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetCredentialsUserByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/credentials/user/{userId}',
+    url: '/Credentials/user/{userId}',
     ...options,
   });
 };
 
 export const deleteCredentialsById = <ThrowOnError extends boolean = false>(options: Options<DeleteCredentialsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteCredentialsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/credentials/{id}',
+    url: '/Credentials/{id}',
     ...options,
   });
 };
 
 export const getCredentialsById = <ThrowOnError extends boolean = false>(options: Options<GetCredentialsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetCredentialsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/credentials/{id}',
+    url: '/Credentials/{id}',
     ...options,
   });
 };
 
 export const putCredentialsById = <ThrowOnError extends boolean = false>(options: Options<PutCredentialsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutCredentialsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/credentials/{id}',
+    url: '/Credentials/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1045,137 +811,161 @@ export const getCredentialsUserByUserIdTypeByType = <ThrowOnError extends boolea
   options: Options<GetCredentialsUserByUserIdTypeByTypeData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetCredentialsUserByUserIdTypeByTypeResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/credentials/user/{userId}/type/{type}',
+    url: '/Credentials/user/{userId}/type/{type}',
     ...options,
   });
 };
 
 export const postCredentialsByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostCredentialsByIdRestoreData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostCredentialsByIdRestoreResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/credentials/{id}/restore',
+    url: '/Credentials/{id}/restore',
     ...options,
   });
 };
 
 export const deleteCredentialsByIdHard = <ThrowOnError extends boolean = false>(options: Options<DeleteCredentialsByIdHardData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteCredentialsByIdHardResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/credentials/{id}/hard',
+    url: '/Credentials/{id}/hard',
     ...options,
   });
 };
 
 export const postCredentialsByIdMarkUsed = <ThrowOnError extends boolean = false>(options: Options<PostCredentialsByIdMarkUsedData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostCredentialsByIdMarkUsedResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/credentials/{id}/mark-used',
+    url: '/Credentials/{id}/mark-used',
     ...options,
   });
 };
 
 export const postCredentialsByIdDeactivate = <ThrowOnError extends boolean = false>(options: Options<PostCredentialsByIdDeactivateData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostCredentialsByIdDeactivateResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/credentials/{id}/deactivate',
+    url: '/Credentials/{id}/deactivate',
     ...options,
   });
 };
 
 export const postCredentialsByIdActivate = <ThrowOnError extends boolean = false>(options: Options<PostCredentialsByIdActivateData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostCredentialsByIdActivateResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/credentials/{id}/activate',
+    url: '/Credentials/{id}/activate',
     ...options,
   });
 };
 
 export const getCredentialsDeleted = <ThrowOnError extends boolean = false>(options?: Options<GetCredentialsDeletedData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetCredentialsDeletedResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/credentials/deleted',
+    url: '/Credentials/deleted',
     ...options,
   });
 };
 
 export const getHealth = <ThrowOnError extends boolean = false>(options?: Options<GetHealthData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetHealthResponses, unknown, ThrowOnError>({
-    url: '/health',
+    url: '/Health',
     ...options,
   });
 };
 
 export const getHealthDatabase = <ThrowOnError extends boolean = false>(options?: Options<GetHealthDatabaseData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetHealthDatabaseResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/health/database',
+    url: '/Health/database',
+    ...options,
+  });
+};
+
+export const getApiPaymentMethodsMe = <ThrowOnError extends boolean = false>(options?: Options<GetApiPaymentMethodsMeData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiPaymentMethodsMeResponses, unknown, ThrowOnError>({
+    url: '/api/Payment/methods/me',
+    ...options,
+  });
+};
+
+export const postApiPaymentMethods = <ThrowOnError extends boolean = false>(options?: Options<PostApiPaymentMethodsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiPaymentMethodsResponses, unknown, ThrowOnError>({
+    url: '/api/Payment/methods',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const deleteApiPaymentMethodsById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiPaymentMethodsByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiPaymentMethodsByIdResponses, unknown, ThrowOnError>({
+    url: '/api/Payment/methods/{id}',
+    ...options,
+  });
+};
+
+export const getApiPaymentMethodsById = <ThrowOnError extends boolean = false>(options: Options<GetApiPaymentMethodsByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiPaymentMethodsByIdResponses, unknown, ThrowOnError>({
+    url: '/api/Payment/methods/{id}',
+    ...options,
+  });
+};
+
+export const getApiPaymentTransactionsMe = <ThrowOnError extends boolean = false>(options?: Options<GetApiPaymentTransactionsMeData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiPaymentTransactionsMeResponses, unknown, ThrowOnError>({
+    url: '/api/Payment/transactions/me',
+    ...options,
+  });
+};
+
+export const getApiPaymentTransactionsById = <ThrowOnError extends boolean = false>(options: Options<GetApiPaymentTransactionsByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiPaymentTransactionsByIdResponses, unknown, ThrowOnError>({
+    url: '/api/Payment/transactions/{id}',
+    ...options,
+  });
+};
+
+export const getApiPaymentTransactions = <ThrowOnError extends boolean = false>(options?: Options<GetApiPaymentTransactionsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiPaymentTransactionsResponses, unknown, ThrowOnError>({
+    url: '/api/Payment/transactions',
+    ...options,
+  });
+};
+
+export const postApiPaymentTransactions = <ThrowOnError extends boolean = false>(options?: Options<PostApiPaymentTransactionsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiPaymentTransactionsResponses, unknown, ThrowOnError>({
+    url: '/api/Payment/transactions',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiPaymentTransactionsByIdProcess = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiPaymentTransactionsByIdProcessData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiPaymentTransactionsByIdProcessResponses, unknown, ThrowOnError>({
+    url: '/api/Payment/transactions/{id}/process',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiPaymentStatistics = <ThrowOnError extends boolean = false>(options?: Options<GetApiPaymentStatisticsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiPaymentStatisticsResponses, unknown, ThrowOnError>({
+    url: '/api/Payment/statistics',
     ...options,
   });
 };
 
 export const getApiProduct = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiProductResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product',
+    url: '/api/Product',
     ...options,
   });
 };
 
 export const postApiProduct = <ThrowOnError extends boolean = false>(options?: Options<PostApiProductData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostApiProductResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product',
+    url: '/api/Product',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1186,130 +976,70 @@ export const postApiProduct = <ThrowOnError extends boolean = false>(options?: O
 
 export const getApiProductTypeByType = <ThrowOnError extends boolean = false>(options: Options<GetApiProductTypeByTypeData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProductTypeByTypeResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/type/{type}',
+    url: '/api/Product/type/{type}',
     ...options,
   });
 };
 
 export const getApiProductPublished = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductPublishedData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiProductPublishedResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/published',
+    url: '/api/Product/published',
     ...options,
   });
 };
 
 export const getApiProductSearch = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductSearchData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiProductSearchResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/search',
+    url: '/api/Product/search',
     ...options,
   });
 };
 
 export const getApiProductCreatorByCreatorId = <ThrowOnError extends boolean = false>(options: Options<GetApiProductCreatorByCreatorIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProductCreatorByCreatorIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/creator/{creatorId}',
+    url: '/api/Product/creator/{creatorId}',
     ...options,
   });
 };
 
 export const getApiProductPriceRange = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductPriceRangeData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiProductPriceRangeResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/price-range',
+    url: '/api/Product/price-range',
     ...options,
   });
 };
 
 export const getApiProductPopular = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductPopularData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiProductPopularResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/popular',
+    url: '/api/Product/popular',
     ...options,
   });
 };
 
 export const getApiProductRecent = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductRecentData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiProductRecentResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/recent',
+    url: '/api/Product/recent',
     ...options,
   });
 };
 
 export const deleteApiProductById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiProductByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProductByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}',
+    url: '/api/Product/{id}',
     ...options,
   });
 };
 
 export const getApiProductById = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}',
+    url: '/api/Product/{id}',
     ...options,
   });
 };
 
 export const putApiProductById = <ThrowOnError extends boolean = false>(options: Options<PutApiProductByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiProductByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}',
+    url: '/api/Product/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1320,65 +1050,35 @@ export const putApiProductById = <ThrowOnError extends boolean = false>(options:
 
 export const getApiProductByIdDetails = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdDetailsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdDetailsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/details',
+    url: '/api/Product/{id}/details',
     ...options,
   });
 };
 
 export const postApiProductByIdPublish = <ThrowOnError extends boolean = false>(options: Options<PostApiProductByIdPublishData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProductByIdPublishResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/publish',
+    url: '/api/Product/{id}/publish',
     ...options,
   });
 };
 
 export const postApiProductByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostApiProductByIdUnpublishData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProductByIdUnpublishResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/unpublish',
+    url: '/api/Product/{id}/unpublish',
     ...options,
   });
 };
 
 export const postApiProductByIdArchive = <ThrowOnError extends boolean = false>(options: Options<PostApiProductByIdArchiveData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProductByIdArchiveResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/archive',
+    url: '/api/Product/{id}/archive',
     ...options,
   });
 };
 
 export const putApiProductByIdVisibility = <ThrowOnError extends boolean = false>(options: Options<PutApiProductByIdVisibilityData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiProductByIdVisibilityResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/visibility',
+    url: '/api/Product/{id}/visibility',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1389,13 +1089,7 @@ export const putApiProductByIdVisibility = <ThrowOnError extends boolean = false
 
 export const getApiProductByIdBundleItems = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdBundleItemsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdBundleItemsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/bundle-items',
+    url: '/api/Product/{id}/bundle-items',
     ...options,
   });
 };
@@ -1404,13 +1098,7 @@ export const deleteApiProductByBundleIdBundleItemsByProductId = <ThrowOnError ex
   options: Options<DeleteApiProductByBundleIdBundleItemsByProductIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProductByBundleIdBundleItemsByProductIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{bundleId}/bundle-items/{productId}',
+    url: '/api/Product/{bundleId}/bundle-items/{productId}',
     ...options,
   });
 };
@@ -1419,52 +1107,28 @@ export const postApiProductByBundleIdBundleItemsByProductId = <ThrowOnError exte
   options: Options<PostApiProductByBundleIdBundleItemsByProductIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProductByBundleIdBundleItemsByProductIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{bundleId}/bundle-items/{productId}',
+    url: '/api/Product/{bundleId}/bundle-items/{productId}',
     ...options,
   });
 };
 
 export const getApiProductByIdPricingCurrent = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdPricingCurrentData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdPricingCurrentResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/pricing/current',
+    url: '/api/Product/{id}/pricing/current',
     ...options,
   });
 };
 
 export const getApiProductByIdPricingHistory = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdPricingHistoryData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdPricingHistoryResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/pricing/history',
+    url: '/api/Product/{id}/pricing/history',
     ...options,
   });
 };
 
 export const postApiProductByIdPricing = <ThrowOnError extends boolean = false>(options: Options<PostApiProductByIdPricingData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProductByIdPricingResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/pricing',
+    url: '/api/Product/{id}/pricing',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1477,13 +1141,7 @@ export const getApiProductByIdSubscriptionPlans = <ThrowOnError extends boolean 
   options: Options<GetApiProductByIdSubscriptionPlansData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdSubscriptionPlansResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/subscription-plans',
+    url: '/api/Product/{id}/subscription-plans',
     ...options,
   });
 };
@@ -1492,13 +1150,7 @@ export const postApiProductByIdSubscriptionPlans = <ThrowOnError extends boolean
   options: Options<PostApiProductByIdSubscriptionPlansData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProductByIdSubscriptionPlansResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/subscription-plans',
+    url: '/api/Product/{id}/subscription-plans',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1511,13 +1163,7 @@ export const getApiProductSubscriptionPlansByPlanId = <ThrowOnError extends bool
   options: Options<GetApiProductSubscriptionPlansByPlanIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProductSubscriptionPlansByPlanIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/subscription-plans/{planId}',
+    url: '/api/Product/subscription-plans/{planId}',
     ...options,
   });
 };
@@ -1526,26 +1172,14 @@ export const deleteApiProductByIdAccessByUserId = <ThrowOnError extends boolean 
   options: Options<DeleteApiProductByIdAccessByUserIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProductByIdAccessByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/access/{userId}',
+    url: '/api/Product/{id}/access/{userId}',
     ...options,
   });
 };
 
 export const getApiProductByIdAccessByUserId = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdAccessByUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdAccessByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/access/{userId}',
+    url: '/api/Product/{id}/access/{userId}',
     ...options,
   });
 };
@@ -1554,13 +1188,7 @@ export const postApiProductByIdAccessByUserId = <ThrowOnError extends boolean = 
   options: Options<PostApiProductByIdAccessByUserIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProductByIdAccessByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/access/{userId}',
+    url: '/api/Product/{id}/access/{userId}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1573,26 +1201,14 @@ export const getApiProductByIdUserProductByUserId = <ThrowOnError extends boolea
   options: Options<GetApiProductByIdUserProductByUserIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdUserProductByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/user-product/{userId}',
+    url: '/api/Product/{id}/user-product/{userId}',
     ...options,
   });
 };
 
 export const getApiProductAnalyticsCount = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductAnalyticsCountData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiProductAnalyticsCountResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/analytics/count',
+    url: '/api/Product/analytics/count',
     ...options,
   });
 };
@@ -1601,13 +1217,7 @@ export const getApiProductByIdAnalyticsUserCount = <ThrowOnError extends boolean
   options: Options<GetApiProductByIdAnalyticsUserCountData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdAnalyticsUserCountResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/analytics/user-count',
+    url: '/api/Product/{id}/analytics/user-count',
     ...options,
   });
 };
@@ -1616,39 +1226,21 @@ export const getApiProductByIdAnalyticsRevenue = <ThrowOnError extends boolean =
   options: Options<GetApiProductByIdAnalyticsRevenueData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdAnalyticsRevenueResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/product/{id}/analytics/revenue',
+    url: '/api/Product/{id}/analytics/revenue',
     ...options,
   });
 };
 
 export const getApiProgram = <ThrowOnError extends boolean = false>(options?: Options<GetApiProgramData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiProgramResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program',
+    url: '/api/Program',
     ...options,
   });
 };
 
 export const postApiProgram = <ThrowOnError extends boolean = false>(options?: Options<PostApiProgramData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostApiProgramResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program',
+    url: '/api/Program',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1659,20 +1251,14 @@ export const postApiProgram = <ThrowOnError extends boolean = false>(options?: O
 
 export const getApiProgramPublished = <ThrowOnError extends boolean = false>(options?: Options<GetApiProgramPublishedData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiProgramPublishedResponses, unknown, ThrowOnError>({
-    url: '/api/program/published',
+    url: '/api/Program/published',
     ...options,
   });
 };
 
 export const getApiProgramCategoryByCategory = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramCategoryByCategoryData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramCategoryByCategoryResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/category/{category}',
+    url: '/api/Program/category/{category}',
     ...options,
   });
 };
@@ -1681,104 +1267,56 @@ export const getApiProgramDifficultyByDifficulty = <ThrowOnError extends boolean
   options: Options<GetApiProgramDifficultyByDifficultyData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramDifficultyByDifficultyResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/difficulty/{difficulty}',
+    url: '/api/Program/difficulty/{difficulty}',
     ...options,
   });
 };
 
 export const getApiProgramSearch = <ThrowOnError extends boolean = false>(options?: Options<GetApiProgramSearchData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiProgramSearchResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/search',
+    url: '/api/Program/search',
     ...options,
   });
 };
 
 export const getApiProgramCreatorByCreatorId = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramCreatorByCreatorIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramCreatorByCreatorIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/creator/{creatorId}',
+    url: '/api/Program/creator/{creatorId}',
     ...options,
   });
 };
 
 export const getApiProgramPopular = <ThrowOnError extends boolean = false>(options?: Options<GetApiProgramPopularData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiProgramPopularResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/popular',
+    url: '/api/Program/popular',
     ...options,
   });
 };
 
 export const getApiProgramRecent = <ThrowOnError extends boolean = false>(options?: Options<GetApiProgramRecentData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiProgramRecentResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/recent',
+    url: '/api/Program/recent',
     ...options,
   });
 };
 
 export const deleteApiProgramById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiProgramByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProgramByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}',
+    url: '/api/Program/{id}',
     ...options,
   });
 };
 
 export const getApiProgramById = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}',
+    url: '/api/Program/{id}',
     ...options,
   });
 };
 
 export const putApiProgramById = <ThrowOnError extends boolean = false>(options: Options<PutApiProgramByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiProgramByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}',
+    url: '/api/Program/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1789,26 +1327,14 @@ export const putApiProgramById = <ThrowOnError extends boolean = false>(options:
 
 export const getApiProgramByIdWithContent = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdWithContentData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdWithContentResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/with-content',
+    url: '/api/Program/{id}/with-content',
     ...options,
   });
 };
 
 export const postApiProgramByIdClone = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdCloneData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdCloneResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/clone',
+    url: '/api/Program/{id}/clone',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1819,26 +1345,14 @@ export const postApiProgramByIdClone = <ThrowOnError extends boolean = false>(op
 
 export const getApiProgramSlugBySlug = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramSlugBySlugData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramSlugBySlugResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/slug/{slug}',
+    url: '/api/Program/slug/{slug}',
     ...options,
   });
 };
 
 export const postApiProgramByIdContent = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdContentData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdContentResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/content',
+    url: '/api/Program/{id}/content',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1851,13 +1365,7 @@ export const deleteApiProgramByIdContentByContentId = <ThrowOnError extends bool
   options: Options<DeleteApiProgramByIdContentByContentIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProgramByIdContentByContentIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/content/{contentId}',
+    url: '/api/Program/{id}/content/{contentId}',
     ...options,
   });
 };
@@ -1866,13 +1374,7 @@ export const putApiProgramByIdContentByContentId = <ThrowOnError extends boolean
   options: Options<PutApiProgramByIdContentByContentIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).put<PutApiProgramByIdContentByContentIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/content/{contentId}',
+    url: '/api/Program/{id}/content/{contentId}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1885,13 +1387,7 @@ export const postApiProgramByIdContentReorder = <ThrowOnError extends boolean = 
   options: Options<PostApiProgramByIdContentReorderData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdContentReorderResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/content/reorder',
+    url: '/api/Program/{id}/content/reorder',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1904,39 +1400,21 @@ export const deleteApiProgramByIdUsersByUserId = <ThrowOnError extends boolean =
   options: Options<DeleteApiProgramByIdUsersByUserIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProgramByIdUsersByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/users/{userId}',
+    url: '/api/Program/{id}/users/{userId}',
     ...options,
   });
 };
 
 export const postApiProgramByIdUsersByUserId = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdUsersByUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdUsersByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/users/{userId}',
+    url: '/api/Program/{id}/users/{userId}',
     ...options,
   });
 };
 
 export const getApiProgramByIdUsers = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdUsersData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdUsersResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/users',
+    url: '/api/Program/{id}/users',
     ...options,
   });
 };
@@ -1945,13 +1423,7 @@ export const getApiProgramByIdUsersByUserIdProgress = <ThrowOnError extends bool
   options: Options<GetApiProgramByIdUsersByUserIdProgressData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdUsersByUserIdProgressResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/users/{userId}/progress',
+    url: '/api/Program/{id}/users/{userId}/progress',
     ...options,
   });
 };
@@ -1960,13 +1432,7 @@ export const putApiProgramByIdUsersByUserIdProgress = <ThrowOnError extends bool
   options: Options<PutApiProgramByIdUsersByUserIdProgressData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).put<PutApiProgramByIdUsersByUserIdProgressResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/users/{userId}/progress',
+    url: '/api/Program/{id}/users/{userId}/progress',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1979,13 +1445,7 @@ export const postApiProgramByIdUsersByUserIdContentByContentIdComplete = <ThrowO
   options: Options<PostApiProgramByIdUsersByUserIdContentByContentIdCompleteData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdUsersByUserIdContentByContentIdCompleteResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/users/{userId}/content/{contentId}/complete',
+    url: '/api/Program/{id}/users/{userId}/content/{contentId}/complete',
     ...options,
   });
 };
@@ -1994,52 +1454,28 @@ export const postApiProgramByIdUsersByUserIdReset = <ThrowOnError extends boolea
   options: Options<PostApiProgramByIdUsersByUserIdResetData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdUsersByUserIdResetResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/users/{userId}/reset',
+    url: '/api/Program/{id}/users/{userId}/reset',
     ...options,
   });
 };
 
 export const postApiProgramByIdSubmit = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdSubmitData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdSubmitResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/submit',
+    url: '/api/Program/{id}/submit',
     ...options,
   });
 };
 
 export const postApiProgramByIdApprove = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdApproveData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdApproveResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/approve',
+    url: '/api/Program/{id}/approve',
     ...options,
   });
 };
 
 export const postApiProgramByIdReject = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdRejectData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdRejectResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/reject',
+    url: '/api/Program/{id}/reject',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2050,78 +1486,42 @@ export const postApiProgramByIdReject = <ThrowOnError extends boolean = false>(o
 
 export const postApiProgramByIdWithdraw = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdWithdrawData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdWithdrawResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/withdraw',
+    url: '/api/Program/{id}/withdraw',
     ...options,
   });
 };
 
 export const postApiProgramByIdArchive = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdArchiveData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdArchiveResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/archive',
+    url: '/api/Program/{id}/archive',
     ...options,
   });
 };
 
 export const postApiProgramByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdRestoreData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdRestoreResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/restore',
+    url: '/api/Program/{id}/restore',
     ...options,
   });
 };
 
 export const postApiProgramByIdPublish = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdPublishData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdPublishResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/publish',
+    url: '/api/Program/{id}/publish',
     ...options,
   });
 };
 
 export const postApiProgramByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdUnpublishData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdUnpublishResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/unpublish',
+    url: '/api/Program/{id}/unpublish',
     ...options,
   });
 };
 
 export const postApiProgramByIdSchedule = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdScheduleData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdScheduleResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/schedule',
+    url: '/api/Program/{id}/schedule',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2132,13 +1532,7 @@ export const postApiProgramByIdSchedule = <ThrowOnError extends boolean = false>
 
 export const postApiProgramByIdMonetize = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdMonetizeData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdMonetizeResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/monetize',
+    url: '/api/Program/{id}/monetize',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2151,39 +1545,21 @@ export const postApiProgramByIdDisableMonetization = <ThrowOnError extends boole
   options: Options<PostApiProgramByIdDisableMonetizationData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdDisableMonetizationResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/disable-monetization',
+    url: '/api/Program/{id}/disable-monetization',
     ...options,
   });
 };
 
 export const getApiProgramByIdPricing = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdPricingData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdPricingResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/pricing',
+    url: '/api/Program/{id}/pricing',
     ...options,
   });
 };
 
 export const putApiProgramByIdPricing = <ThrowOnError extends boolean = false>(options: Options<PutApiProgramByIdPricingData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiProgramByIdPricingResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/pricing',
+    url: '/api/Program/{id}/pricing',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2194,13 +1570,7 @@ export const putApiProgramByIdPricing = <ThrowOnError extends boolean = false>(o
 
 export const getApiProgramByIdAnalytics = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdAnalyticsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdAnalyticsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/analytics',
+    url: '/api/Program/{id}/analytics',
     ...options,
   });
 };
@@ -2209,13 +1579,7 @@ export const getApiProgramByIdAnalyticsCompletionRates = <ThrowOnError extends b
   options: Options<GetApiProgramByIdAnalyticsCompletionRatesData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdAnalyticsCompletionRatesResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/analytics/completion-rates',
+    url: '/api/Program/{id}/analytics/completion-rates',
     ...options,
   });
 };
@@ -2224,13 +1588,7 @@ export const getApiProgramByIdAnalyticsEngagement = <ThrowOnError extends boolea
   options: Options<GetApiProgramByIdAnalyticsEngagementData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdAnalyticsEngagementResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/analytics/engagement',
+    url: '/api/Program/{id}/analytics/engagement',
     ...options,
   });
 };
@@ -2239,26 +1597,14 @@ export const getApiProgramByIdAnalyticsRevenue = <ThrowOnError extends boolean =
   options: Options<GetApiProgramByIdAnalyticsRevenueData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdAnalyticsRevenueResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/analytics/revenue',
+    url: '/api/Program/{id}/analytics/revenue',
     ...options,
   });
 };
 
 export const postApiProgramByIdCreateProduct = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdCreateProductData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdCreateProductResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/create-product',
+    url: '/api/Program/{id}/create-product',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2271,13 +1617,7 @@ export const deleteApiProgramByIdLinkProductByProductId = <ThrowOnError extends 
   options: Options<DeleteApiProgramByIdLinkProductByProductIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProgramByIdLinkProductByProductIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/link-product/{productId}',
+    url: '/api/Program/{id}/link-product/{productId}',
     ...options,
   });
 };
@@ -2286,26 +1626,14 @@ export const postApiProgramByIdLinkProductByProductId = <ThrowOnError extends bo
   options: Options<PostApiProgramByIdLinkProductByProductIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdLinkProductByProductIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/link-product/{productId}',
+    url: '/api/Program/{id}/link-product/{productId}',
     ...options,
   });
 };
 
 export const getApiProgramByIdProducts = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdProductsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdProductsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/program/{id}/products',
+    url: '/api/Program/{id}/products',
     ...options,
   });
 };
@@ -2314,12 +1642,6 @@ export const getApiProgramsByProgramIdContent = <ThrowOnError extends boolean = 
   options: Options<GetApiProgramsByProgramIdContentData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content',
     ...options,
   });
@@ -2329,12 +1651,6 @@ export const postApiProgramsByProgramIdContent = <ThrowOnError extends boolean =
   options: Options<PostApiProgramsByProgramIdContentData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content',
     ...options,
     headers: {
@@ -2348,12 +1664,6 @@ export const getApiProgramsByProgramIdContentTopLevel = <ThrowOnError extends bo
   options: Options<GetApiProgramsByProgramIdContentTopLevelData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentTopLevelResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content/top-level',
     ...options,
   });
@@ -2363,12 +1673,6 @@ export const deleteApiProgramsByProgramIdContentById = <ThrowOnError extends boo
   options: Options<DeleteApiProgramsByProgramIdContentByIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProgramsByProgramIdContentByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content/{id}',
     ...options,
   });
@@ -2378,12 +1682,6 @@ export const getApiProgramsByProgramIdContentById = <ThrowOnError extends boolea
   options: Options<GetApiProgramsByProgramIdContentByIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content/{id}',
     ...options,
   });
@@ -2393,12 +1691,6 @@ export const putApiProgramsByProgramIdContentById = <ThrowOnError extends boolea
   options: Options<PutApiProgramsByProgramIdContentByIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).put<PutApiProgramsByProgramIdContentByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content/{id}',
     ...options,
     headers: {
@@ -2412,12 +1704,6 @@ export const getApiProgramsByProgramIdContentByParentIdChildren = <ThrowOnError 
   options: Options<GetApiProgramsByProgramIdContentByParentIdChildrenData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByParentIdChildrenResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content/{parentId}/children',
     ...options,
   });
@@ -2427,12 +1713,6 @@ export const postApiProgramsByProgramIdContentReorder = <ThrowOnError extends bo
   options: Options<PostApiProgramsByProgramIdContentReorderData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentReorderResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content/reorder',
     ...options,
     headers: {
@@ -2446,12 +1726,6 @@ export const postApiProgramsByProgramIdContentByIdMove = <ThrowOnError extends b
   options: Options<PostApiProgramsByProgramIdContentByIdMoveData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentByIdMoveResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content/{id}/move',
     ...options,
     headers: {
@@ -2465,12 +1739,6 @@ export const getApiProgramsByProgramIdContentRequired = <ThrowOnError extends bo
   options: Options<GetApiProgramsByProgramIdContentRequiredData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentRequiredResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content/required',
     ...options,
   });
@@ -2480,12 +1748,6 @@ export const getApiProgramsByProgramIdContentByTypeByType = <ThrowOnError extend
   options: Options<GetApiProgramsByProgramIdContentByTypeByTypeData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByTypeByTypeResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content/by-type/{type}',
     ...options,
   });
@@ -2495,12 +1757,6 @@ export const getApiProgramsByProgramIdContentByVisibilityByVisibility = <ThrowOn
   options: Options<GetApiProgramsByProgramIdContentByVisibilityByVisibilityData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content/by-visibility/{visibility}',
     ...options,
   });
@@ -2510,12 +1766,6 @@ export const postApiProgramsByProgramIdContentSearch = <ThrowOnError extends boo
   options: Options<PostApiProgramsByProgramIdContentSearchData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentSearchResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content/search',
     ...options,
     headers: {
@@ -2529,12 +1779,6 @@ export const getApiProgramsByProgramIdContentStats = <ThrowOnError extends boole
   options: Options<GetApiProgramsByProgramIdContentStatsData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentStatsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/programs/{programId}/content/stats',
     ...options,
   });
@@ -2542,26 +1786,14 @@ export const getApiProgramsByProgramIdContentStats = <ThrowOnError extends boole
 
 export const getProjects = <ThrowOnError extends boolean = false>(options?: Options<GetProjectsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetProjectsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/projects',
+    url: '/Projects',
     ...options,
   });
 };
 
 export const postProjects = <ThrowOnError extends boolean = false>(options?: Options<PostProjectsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostProjectsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/projects',
+    url: '/Projects',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2572,39 +1804,21 @@ export const postProjects = <ThrowOnError extends boolean = false>(options?: Opt
 
 export const deleteProjectsById = <ThrowOnError extends boolean = false>(options: Options<DeleteProjectsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteProjectsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/projects/{id}',
+    url: '/Projects/{id}',
     ...options,
   });
 };
 
 export const getProjectsById = <ThrowOnError extends boolean = false>(options: Options<GetProjectsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetProjectsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/projects/{id}',
+    url: '/Projects/{id}',
     ...options,
   });
 };
 
 export const putProjectsById = <ThrowOnError extends boolean = false>(options: Options<PutProjectsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutProjectsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/projects/{id}',
+    url: '/Projects/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2615,91 +1829,121 @@ export const putProjectsById = <ThrowOnError extends boolean = false>(options: O
 
 export const getProjectsSlugBySlug = <ThrowOnError extends boolean = false>(options: Options<GetProjectsSlugBySlugData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetProjectsSlugBySlugResponses, unknown, ThrowOnError>({
-    url: '/projects/slug/{slug}',
+    url: '/Projects/slug/{slug}',
     ...options,
   });
 };
 
 export const getProjectsCategoryByCategoryId = <ThrowOnError extends boolean = false>(options: Options<GetProjectsCategoryByCategoryIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetProjectsCategoryByCategoryIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/projects/category/{categoryId}',
+    url: '/Projects/category/{categoryId}',
     ...options,
   });
 };
 
 export const getProjectsCreatorByCreatorId = <ThrowOnError extends boolean = false>(options: Options<GetProjectsCreatorByCreatorIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetProjectsCreatorByCreatorIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/projects/creator/{creatorId}',
+    url: '/Projects/creator/{creatorId}',
     ...options,
   });
 };
 
 export const getProjectsStatusByStatus = <ThrowOnError extends boolean = false>(options: Options<GetProjectsStatusByStatusData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetProjectsStatusByStatusResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/projects/status/{status}',
+    url: '/Projects/status/{status}',
     ...options,
   });
 };
 
 export const postProjectsByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostProjectsByIdRestoreData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostProjectsByIdRestoreResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/projects/{id}/restore',
+    url: '/Projects/{id}/restore',
     ...options,
   });
 };
 
 export const getProjectsDeleted = <ThrowOnError extends boolean = false>(options?: Options<GetProjectsDeletedData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetProjectsDeletedResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/projects/deleted',
+    url: '/Projects/deleted',
     ...options,
   });
 };
 
 export const getProjectsPublic = <ThrowOnError extends boolean = false>(options?: Options<GetProjectsPublicData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetProjectsPublicResponses, unknown, ThrowOnError>({
-    url: '/projects/public',
+    url: '/Projects/public',
     ...options,
+  });
+};
+
+export const getApiSubscriptionMe = <ThrowOnError extends boolean = false>(options?: Options<GetApiSubscriptionMeData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiSubscriptionMeResponses, unknown, ThrowOnError>({
+    url: '/api/Subscription/me',
+    ...options,
+  });
+};
+
+export const getApiSubscriptionMeActive = <ThrowOnError extends boolean = false>(options?: Options<GetApiSubscriptionMeActiveData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiSubscriptionMeActiveResponses, unknown, ThrowOnError>({
+    url: '/api/Subscription/me/active',
+    ...options,
+  });
+};
+
+export const getApiSubscriptionById = <ThrowOnError extends boolean = false>(options: Options<GetApiSubscriptionByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiSubscriptionByIdResponses, unknown, ThrowOnError>({
+    url: '/api/Subscription/{id}',
+    ...options,
+  });
+};
+
+export const getApiSubscription = <ThrowOnError extends boolean = false>(options?: Options<GetApiSubscriptionData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiSubscriptionResponses, unknown, ThrowOnError>({
+    url: '/api/Subscription',
+    ...options,
+  });
+};
+
+export const postApiSubscription = <ThrowOnError extends boolean = false>(options?: Options<PostApiSubscriptionData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiSubscriptionResponses, unknown, ThrowOnError>({
+    url: '/api/Subscription',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiSubscriptionByIdCancel = <ThrowOnError extends boolean = false>(options: Options<PostApiSubscriptionByIdCancelData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiSubscriptionByIdCancelResponses, unknown, ThrowOnError>({
+    url: '/api/Subscription/{id}/cancel',
+    ...options,
+  });
+};
+
+export const postApiSubscriptionByIdResume = <ThrowOnError extends boolean = false>(options: Options<PostApiSubscriptionByIdResumeData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiSubscriptionByIdResumeResponses, unknown, ThrowOnError>({
+    url: '/api/Subscription/{id}/resume',
+    ...options,
+  });
+};
+
+export const putApiSubscriptionByIdPaymentMethod = <ThrowOnError extends boolean = false>(
+  options: Options<PutApiSubscriptionByIdPaymentMethodData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutApiSubscriptionByIdPaymentMethodResponses, unknown, ThrowOnError>({
+    url: '/api/Subscription/{id}/payment-method',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
   });
 };
 
 export const getApiTenantDomains = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantDomainsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiTenantDomainsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains',
     ...options,
   });
@@ -2707,12 +1951,6 @@ export const getApiTenantDomains = <ThrowOnError extends boolean = false>(option
 
 export const postApiTenantDomains = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantDomainsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains',
     ...options,
     headers: {
@@ -2724,12 +1962,6 @@ export const postApiTenantDomains = <ThrowOnError extends boolean = false>(optio
 
 export const deleteApiTenantDomainsById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiTenantDomainsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiTenantDomainsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/{id}',
     ...options,
   });
@@ -2737,12 +1969,6 @@ export const deleteApiTenantDomainsById = <ThrowOnError extends boolean = false>
 
 export const getApiTenantDomainsById = <ThrowOnError extends boolean = false>(options: Options<GetApiTenantDomainsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiTenantDomainsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/{id}',
     ...options,
   });
@@ -2750,12 +1976,6 @@ export const getApiTenantDomainsById = <ThrowOnError extends boolean = false>(op
 
 export const putApiTenantDomainsById = <ThrowOnError extends boolean = false>(options: Options<PutApiTenantDomainsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiTenantDomainsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/{id}',
     ...options,
     headers: {
@@ -2769,12 +1989,6 @@ export const postApiTenantDomainsByTenantIdSetMainByDomainId = <ThrowOnError ext
   options: Options<PostApiTenantDomainsByTenantIdSetMainByDomainIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiTenantDomainsByTenantIdSetMainByDomainIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/{tenantId}/set-main/{domainId}',
     ...options,
   });
@@ -2782,12 +1996,6 @@ export const postApiTenantDomainsByTenantIdSetMainByDomainId = <ThrowOnError ext
 
 export const getApiTenantDomainsUserGroups = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantDomainsUserGroupsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiTenantDomainsUserGroupsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/user-groups',
     ...options,
   });
@@ -2795,12 +2003,6 @@ export const getApiTenantDomainsUserGroups = <ThrowOnError extends boolean = fal
 
 export const postApiTenantDomainsUserGroups = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantDomainsUserGroupsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsUserGroupsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/user-groups',
     ...options,
     headers: {
@@ -2814,12 +2016,6 @@ export const deleteApiTenantDomainsUserGroupsById = <ThrowOnError extends boolea
   options: Options<DeleteApiTenantDomainsUserGroupsByIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiTenantDomainsUserGroupsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/user-groups/{id}',
     ...options,
   });
@@ -2829,12 +2025,6 @@ export const getApiTenantDomainsUserGroupsById = <ThrowOnError extends boolean =
   options: Options<GetApiTenantDomainsUserGroupsByIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiTenantDomainsUserGroupsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/user-groups/{id}',
     ...options,
   });
@@ -2844,12 +2034,6 @@ export const putApiTenantDomainsUserGroupsById = <ThrowOnError extends boolean =
   options: Options<PutApiTenantDomainsUserGroupsByIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).put<PutApiTenantDomainsUserGroupsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/user-groups/{id}',
     ...options,
     headers: {
@@ -2863,12 +2047,6 @@ export const getApiTenantDomainsMembershipsUserByUserId = <ThrowOnError extends 
   options: Options<GetApiTenantDomainsMembershipsUserByUserIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiTenantDomainsMembershipsUserByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/memberships/user/{userId}',
     ...options,
   });
@@ -2878,12 +2056,6 @@ export const deleteApiTenantDomainsUserGroupsMemberships = <ThrowOnError extends
   options?: Options<DeleteApiTenantDomainsUserGroupsMembershipsData, ThrowOnError>,
 ) => {
   return (options?.client ?? _heyApiClient).delete<DeleteApiTenantDomainsUserGroupsMembershipsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/user-groups/memberships',
     ...options,
   });
@@ -2893,12 +2065,6 @@ export const postApiTenantDomainsUserGroupsMemberships = <ThrowOnError extends b
   options?: Options<PostApiTenantDomainsUserGroupsMembershipsData, ThrowOnError>,
 ) => {
   return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsUserGroupsMembershipsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/user-groups/memberships',
     ...options,
     headers: {
@@ -2912,12 +2078,6 @@ export const getApiTenantDomainsUserGroupsByGroupIdMembers = <ThrowOnError exten
   options: Options<GetApiTenantDomainsUserGroupsByGroupIdMembersData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiTenantDomainsUserGroupsByGroupIdMembersResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/user-groups/{groupId}/members',
     ...options,
   });
@@ -2927,12 +2087,6 @@ export const getApiTenantDomainsUsersByUserIdGroups = <ThrowOnError extends bool
   options: Options<GetApiTenantDomainsUsersByUserIdGroupsData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiTenantDomainsUsersByUserIdGroupsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/users/{userId}/groups',
     ...options,
   });
@@ -2942,12 +2096,6 @@ export const getApiTenantDomainsGroupsByGroupIdUsers = <ThrowOnError extends boo
   options: Options<GetApiTenantDomainsGroupsByGroupIdUsersData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiTenantDomainsGroupsByGroupIdUsersResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/groups/{groupId}/users',
     ...options,
   });
@@ -2955,12 +2103,6 @@ export const getApiTenantDomainsGroupsByGroupIdUsers = <ThrowOnError extends boo
 
 export const postApiTenantDomainsAutoAssign = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantDomainsAutoAssignData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsAutoAssignResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/auto-assign',
     ...options,
     headers: {
@@ -2974,12 +2116,6 @@ export const postApiTenantDomainsAutoAssignBulk = <ThrowOnError extends boolean 
   options?: Options<PostApiTenantDomainsAutoAssignBulkData, ThrowOnError>,
 ) => {
   return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsAutoAssignBulkResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/auto-assign-bulk',
     ...options,
     headers: {
@@ -2991,12 +2127,6 @@ export const postApiTenantDomainsAutoAssignBulk = <ThrowOnError extends boolean 
 
 export const getApiTenantDomainsDomainMatch = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantDomainsDomainMatchData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiTenantDomainsDomainMatchResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/domain-match',
     ...options,
   });
@@ -3004,12 +2134,6 @@ export const getApiTenantDomainsDomainMatch = <ThrowOnError extends boolean = fa
 
 export const postApiTenantDomainsMemberships = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantDomainsMembershipsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsMembershipsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
     url: '/api/tenant-domains/memberships',
     ...options,
     headers: {
@@ -3019,28 +2143,16 @@ export const postApiTenantDomainsMemberships = <ThrowOnError extends boolean = f
   });
 };
 
-export const getTenants = <ThrowOnError extends boolean = false>(options?: Options<GetTenantsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetTenantsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants',
+export const getApiTenants = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiTenantsResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants',
     ...options,
   });
 };
 
-export const postTenants = <ThrowOnError extends boolean = false>(options?: Options<PostTenantsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostTenantsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants',
+export const postApiTenants = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiTenantsResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3049,41 +2161,23 @@ export const postTenants = <ThrowOnError extends boolean = false>(options?: Opti
   });
 };
 
-export const deleteTenantsById = <ThrowOnError extends boolean = false>(options: Options<DeleteTenantsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteTenantsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants/{id}',
+export const deleteApiTenantsById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiTenantsByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiTenantsByIdResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/{id}',
     ...options,
   });
 };
 
-export const getTenantsById = <ThrowOnError extends boolean = false>(options: Options<GetTenantsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetTenantsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants/{id}',
+export const getApiTenantsById = <ThrowOnError extends boolean = false>(options: Options<GetApiTenantsByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiTenantsByIdResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/{id}',
     ...options,
   });
 };
 
-export const putTenantsById = <ThrowOnError extends boolean = false>(options: Options<PutTenantsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutTenantsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants/{id}',
+export const putApiTenantsById = <ThrowOnError extends boolean = false>(options: Options<PutApiTenantsByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiTenantsByIdResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3092,145 +2186,108 @@ export const putTenantsById = <ThrowOnError extends boolean = false>(options: Op
   });
 };
 
-export const getTenantsByNameByName = <ThrowOnError extends boolean = false>(options: Options<GetTenantsByNameByNameData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetTenantsByNameByNameResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants/by-name/{name}',
+export const getApiTenantsByNameByName = <ThrowOnError extends boolean = false>(options: Options<GetApiTenantsByNameByNameData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiTenantsByNameByNameResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/by-name/{name}',
     ...options,
   });
 };
 
-export const postTenantsByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostTenantsByIdRestoreData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostTenantsByIdRestoreResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants/{id}/restore',
+export const getApiTenantsBySlugBySlug = <ThrowOnError extends boolean = false>(options: Options<GetApiTenantsBySlugBySlugData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiTenantsBySlugBySlugResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/by-slug/{slug}',
     ...options,
   });
 };
 
-export const deleteTenantsByIdHard = <ThrowOnError extends boolean = false>(options: Options<DeleteTenantsByIdHardData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteTenantsByIdHardResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants/{id}/hard',
+export const getApiTenantsDeleted = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantsDeletedData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiTenantsDeletedResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/deleted',
     ...options,
   });
 };
 
-export const postTenantsByIdActivate = <ThrowOnError extends boolean = false>(options: Options<PostTenantsByIdActivateData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostTenantsByIdActivateResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants/{id}/activate',
+export const getApiTenantsActive = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantsActiveData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiTenantsActiveResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/active',
     ...options,
   });
 };
 
-export const postTenantsByIdDeactivate = <ThrowOnError extends boolean = false>(options: Options<PostTenantsByIdDeactivateData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostTenantsByIdDeactivateResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants/{id}/deactivate',
+export const getApiTenantsSearch = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantsSearchData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiTenantsSearchResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/search',
     ...options,
   });
 };
 
-export const getTenantsDeleted = <ThrowOnError extends boolean = false>(options?: Options<GetTenantsDeletedData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetTenantsDeletedResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants/deleted',
+export const getApiTenantsStatistics = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantsStatisticsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiTenantsStatisticsResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/statistics',
     ...options,
   });
 };
 
-export const deleteTenantsByIdUsersByUserId = <ThrowOnError extends boolean = false>(options: Options<DeleteTenantsByIdUsersByUserIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteTenantsByIdUsersByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants/{id}/users/{userId}',
+export const postApiTenantsByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostApiTenantsByIdRestoreData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiTenantsByIdRestoreResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/{id}/restore',
     ...options,
   });
 };
 
-export const postTenantsByIdUsersByUserId = <ThrowOnError extends boolean = false>(options: Options<PostTenantsByIdUsersByUserIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostTenantsByIdUsersByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants/{id}/users/{userId}',
+export const deleteApiTenantsByIdPermanent = <ThrowOnError extends boolean = false>(options: Options<DeleteApiTenantsByIdPermanentData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiTenantsByIdPermanentResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/{id}/permanent',
     ...options,
   });
 };
 
-export const getTenantsByIdUsers = <ThrowOnError extends boolean = false>(options: Options<GetTenantsByIdUsersData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetTenantsByIdUsersResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/tenants/{id}/users',
+export const postApiTenantsByIdActivate = <ThrowOnError extends boolean = false>(options: Options<PostApiTenantsByIdActivateData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiTenantsByIdActivateResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/{id}/activate',
     ...options,
+  });
+};
+
+export const postApiTenantsByIdDeactivate = <ThrowOnError extends boolean = false>(options: Options<PostApiTenantsByIdDeactivateData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiTenantsByIdDeactivateResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/{id}/deactivate',
+    ...options,
+  });
+};
+
+export const postApiTenantsBulkDelete = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantsBulkDeleteData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiTenantsBulkDeleteResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/bulk-delete',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiTenantsBulkRestore = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantsBulkRestoreData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiTenantsBulkRestoreResponses, unknown, ThrowOnError>({
+    url: '/api/Tenants/bulk-restore',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
   });
 };
 
 export const getTestingRequests = <ThrowOnError extends boolean = false>(options?: Options<GetTestingRequestsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetTestingRequestsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests',
+    url: '/Testing/requests',
     ...options,
   });
 };
 
 export const postTestingRequests = <ThrowOnError extends boolean = false>(options?: Options<PostTestingRequestsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostTestingRequestsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests',
+    url: '/Testing/requests',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3241,39 +2298,21 @@ export const postTestingRequests = <ThrowOnError extends boolean = false>(option
 
 export const deleteTestingRequestsById = <ThrowOnError extends boolean = false>(options: Options<DeleteTestingRequestsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteTestingRequestsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/{id}',
+    url: '/Testing/requests/{id}',
     ...options,
   });
 };
 
 export const getTestingRequestsById = <ThrowOnError extends boolean = false>(options: Options<GetTestingRequestsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/{id}',
+    url: '/Testing/requests/{id}',
     ...options,
   });
 };
 
 export const putTestingRequestsById = <ThrowOnError extends boolean = false>(options: Options<PutTestingRequestsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutTestingRequestsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/{id}',
+    url: '/Testing/requests/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3284,52 +2323,28 @@ export const putTestingRequestsById = <ThrowOnError extends boolean = false>(opt
 
 export const getTestingRequestsByIdDetails = <ThrowOnError extends boolean = false>(options: Options<GetTestingRequestsByIdDetailsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByIdDetailsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/{id}/details',
+    url: '/Testing/requests/{id}/details',
     ...options,
   });
 };
 
 export const postTestingRequestsByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostTestingRequestsByIdRestoreData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostTestingRequestsByIdRestoreResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/{id}/restore',
+    url: '/Testing/requests/{id}/restore',
     ...options,
   });
 };
 
 export const getTestingSessions = <ThrowOnError extends boolean = false>(options?: Options<GetTestingSessionsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetTestingSessionsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions',
+    url: '/Testing/sessions',
     ...options,
   });
 };
 
 export const postTestingSessions = <ThrowOnError extends boolean = false>(options?: Options<PostTestingSessionsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostTestingSessionsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions',
+    url: '/Testing/sessions',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3340,39 +2355,21 @@ export const postTestingSessions = <ThrowOnError extends boolean = false>(option
 
 export const deleteTestingSessionsById = <ThrowOnError extends boolean = false>(options: Options<DeleteTestingSessionsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteTestingSessionsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/{id}',
+    url: '/Testing/sessions/{id}',
     ...options,
   });
 };
 
 export const getTestingSessionsById = <ThrowOnError extends boolean = false>(options: Options<GetTestingSessionsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/{id}',
+    url: '/Testing/sessions/{id}',
     ...options,
   });
 };
 
 export const putTestingSessionsById = <ThrowOnError extends boolean = false>(options: Options<PutTestingSessionsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutTestingSessionsByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/{id}',
+    url: '/Testing/sessions/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3383,26 +2380,14 @@ export const putTestingSessionsById = <ThrowOnError extends boolean = false>(opt
 
 export const getTestingSessionsByIdDetails = <ThrowOnError extends boolean = false>(options: Options<GetTestingSessionsByIdDetailsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsByIdDetailsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/{id}/details',
+    url: '/Testing/sessions/{id}/details',
     ...options,
   });
 };
 
 export const postTestingSessionsByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostTestingSessionsByIdRestoreData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostTestingSessionsByIdRestoreResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/{id}/restore',
+    url: '/Testing/sessions/{id}/restore',
     ...options,
   });
 };
@@ -3411,13 +2396,7 @@ export const getTestingRequestsByProjectVersionByProjectVersionId = <ThrowOnErro
   options: Options<GetTestingRequestsByProjectVersionByProjectVersionIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByProjectVersionByProjectVersionIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/by-project-version/{projectVersionId}',
+    url: '/Testing/requests/by-project-version/{projectVersionId}',
     ...options,
   });
 };
@@ -3426,13 +2405,7 @@ export const getTestingRequestsByCreatorByCreatorId = <ThrowOnError extends bool
   options: Options<GetTestingRequestsByCreatorByCreatorIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByCreatorByCreatorIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/by-creator/{creatorId}',
+    url: '/Testing/requests/by-creator/{creatorId}',
     ...options,
   });
 };
@@ -3441,13 +2414,7 @@ export const getTestingRequestsByStatusByStatus = <ThrowOnError extends boolean 
   options: Options<GetTestingRequestsByStatusByStatusData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByStatusByStatusResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/by-status/{status}',
+    url: '/Testing/requests/by-status/{status}',
     ...options,
   });
 };
@@ -3456,13 +2423,7 @@ export const getTestingSessionsByRequestByTestingRequestId = <ThrowOnError exten
   options: Options<GetTestingSessionsByRequestByTestingRequestIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsByRequestByTestingRequestIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/by-request/{testingRequestId}',
+    url: '/Testing/sessions/by-request/{testingRequestId}',
     ...options,
   });
 };
@@ -3471,13 +2432,7 @@ export const getTestingSessionsByLocationByLocationId = <ThrowOnError extends bo
   options: Options<GetTestingSessionsByLocationByLocationIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsByLocationByLocationIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/by-location/{locationId}',
+    url: '/Testing/sessions/by-location/{locationId}',
     ...options,
   });
 };
@@ -3486,13 +2441,7 @@ export const getTestingSessionsByStatusByStatus = <ThrowOnError extends boolean 
   options: Options<GetTestingSessionsByStatusByStatusData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsByStatusByStatusResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/by-status/{status}',
+    url: '/Testing/sessions/by-status/{status}',
     ...options,
   });
 };
@@ -3501,39 +2450,21 @@ export const getTestingSessionsByManagerByManagerId = <ThrowOnError extends bool
   options: Options<GetTestingSessionsByManagerByManagerIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsByManagerByManagerIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/by-manager/{managerId}',
+    url: '/Testing/sessions/by-manager/{managerId}',
     ...options,
   });
 };
 
 export const getTestingRequestsSearch = <ThrowOnError extends boolean = false>(options?: Options<GetTestingRequestsSearchData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetTestingRequestsSearchResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/search',
+    url: '/Testing/requests/search',
     ...options,
   });
 };
 
 export const getTestingSessionsSearch = <ThrowOnError extends boolean = false>(options?: Options<GetTestingSessionsSearchData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetTestingSessionsSearchResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/search',
+    url: '/Testing/sessions/search',
     ...options,
   });
 };
@@ -3542,13 +2473,7 @@ export const deleteTestingRequestsByRequestIdParticipantsByUserId = <ThrowOnErro
   options: Options<DeleteTestingRequestsByRequestIdParticipantsByUserIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<DeleteTestingRequestsByRequestIdParticipantsByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/{requestId}/participants/{userId}',
+    url: '/Testing/requests/{requestId}/participants/{userId}',
     ...options,
   });
 };
@@ -3557,13 +2482,7 @@ export const postTestingRequestsByRequestIdParticipantsByUserId = <ThrowOnError 
   options: Options<PostTestingRequestsByRequestIdParticipantsByUserIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostTestingRequestsByRequestIdParticipantsByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/{requestId}/participants/{userId}',
+    url: '/Testing/requests/{requestId}/participants/{userId}',
     ...options,
   });
 };
@@ -3572,13 +2491,7 @@ export const getTestingRequestsByRequestIdParticipants = <ThrowOnError extends b
   options: Options<GetTestingRequestsByRequestIdParticipantsData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByRequestIdParticipantsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/{requestId}/participants',
+    url: '/Testing/requests/{requestId}/participants',
     ...options,
   });
 };
@@ -3587,13 +2500,7 @@ export const getTestingRequestsByRequestIdParticipantsByUserIdCheck = <ThrowOnEr
   options: Options<GetTestingRequestsByRequestIdParticipantsByUserIdCheckData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/{requestId}/participants/{userId}/check',
+    url: '/Testing/requests/{requestId}/participants/{userId}/check',
     ...options,
   });
 };
@@ -3602,13 +2509,7 @@ export const deleteTestingSessionsBySessionIdRegister = <ThrowOnError extends bo
   options: Options<DeleteTestingSessionsBySessionIdRegisterData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<DeleteTestingSessionsBySessionIdRegisterResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/{sessionId}/register',
+    url: '/Testing/sessions/{sessionId}/register',
     ...options,
   });
 };
@@ -3617,13 +2518,7 @@ export const postTestingSessionsBySessionIdRegister = <ThrowOnError extends bool
   options: Options<PostTestingSessionsBySessionIdRegisterData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostTestingSessionsBySessionIdRegisterResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/{sessionId}/register',
+    url: '/Testing/sessions/{sessionId}/register',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3636,13 +2531,7 @@ export const getTestingSessionsBySessionIdRegistrations = <ThrowOnError extends 
   options: Options<GetTestingSessionsBySessionIdRegistrationsData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsBySessionIdRegistrationsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/{sessionId}/registrations',
+    url: '/Testing/sessions/{sessionId}/registrations',
     ...options,
   });
 };
@@ -3651,13 +2540,7 @@ export const deleteTestingSessionsBySessionIdWaitlist = <ThrowOnError extends bo
   options: Options<DeleteTestingSessionsBySessionIdWaitlistData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<DeleteTestingSessionsBySessionIdWaitlistResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/{sessionId}/waitlist',
+    url: '/Testing/sessions/{sessionId}/waitlist',
     ...options,
   });
 };
@@ -3666,13 +2549,7 @@ export const getTestingSessionsBySessionIdWaitlist = <ThrowOnError extends boole
   options: Options<GetTestingSessionsBySessionIdWaitlistData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsBySessionIdWaitlistResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/{sessionId}/waitlist',
+    url: '/Testing/sessions/{sessionId}/waitlist',
     ...options,
   });
 };
@@ -3681,13 +2558,7 @@ export const postTestingSessionsBySessionIdWaitlist = <ThrowOnError extends bool
   options: Options<PostTestingSessionsBySessionIdWaitlistData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostTestingSessionsBySessionIdWaitlistResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/{sessionId}/waitlist',
+    url: '/Testing/sessions/{sessionId}/waitlist',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3700,13 +2571,7 @@ export const getTestingRequestsByRequestIdFeedback = <ThrowOnError extends boole
   options: Options<GetTestingRequestsByRequestIdFeedbackData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByRequestIdFeedbackResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/{requestId}/feedback',
+    url: '/Testing/requests/{requestId}/feedback',
     ...options,
   });
 };
@@ -3715,13 +2580,7 @@ export const postTestingRequestsByRequestIdFeedback = <ThrowOnError extends bool
   options: Options<PostTestingRequestsByRequestIdFeedbackData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostTestingRequestsByRequestIdFeedbackResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/{requestId}/feedback',
+    url: '/Testing/requests/{requestId}/feedback',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3734,13 +2593,7 @@ export const getTestingFeedbackByUserByUserId = <ThrowOnError extends boolean = 
   options: Options<GetTestingFeedbackByUserByUserIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingFeedbackByUserByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/feedback/by-user/{userId}',
+    url: '/Testing/feedback/by-user/{userId}',
     ...options,
   });
 };
@@ -3749,13 +2602,7 @@ export const getTestingRequestsByRequestIdStatistics = <ThrowOnError extends boo
   options: Options<GetTestingRequestsByRequestIdStatisticsData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByRequestIdStatisticsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/requests/{requestId}/statistics',
+    url: '/Testing/requests/{requestId}/statistics',
     ...options,
   });
 };
@@ -3764,52 +2611,28 @@ export const getTestingSessionsBySessionIdStatistics = <ThrowOnError extends boo
   options: Options<GetTestingSessionsBySessionIdStatisticsData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsBySessionIdStatisticsResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/sessions/{sessionId}/statistics',
+    url: '/Testing/sessions/{sessionId}/statistics',
     ...options,
   });
 };
 
 export const getTestingUsersByUserIdActivity = <ThrowOnError extends boolean = false>(options: Options<GetTestingUsersByUserIdActivityData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingUsersByUserIdActivityResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/testing/users/{userId}/activity',
+    url: '/Testing/users/{userId}/activity',
     ...options,
   });
 };
 
-export const getUserProfiles = <ThrowOnError extends boolean = false>(options?: Options<GetUserProfilesData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetUserProfilesResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/user-profiles',
+export const getApiUserProfiles = <ThrowOnError extends boolean = false>(options?: Options<GetApiUserProfilesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiUserProfilesResponses, unknown, ThrowOnError>({
+    url: '/api/UserProfiles',
     ...options,
   });
 };
 
-export const postUserProfiles = <ThrowOnError extends boolean = false>(options?: Options<PostUserProfilesData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostUserProfilesResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/user-profiles',
+export const postApiUserProfiles = <ThrowOnError extends boolean = false>(options?: Options<PostApiUserProfilesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiUserProfilesResponses, unknown, ThrowOnError>({
+    url: '/api/UserProfiles',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3818,54 +2641,23 @@ export const postUserProfiles = <ThrowOnError extends boolean = false>(options?:
   });
 };
 
-export const getUserProfilesDeleted = <ThrowOnError extends boolean = false>(options?: Options<GetUserProfilesDeletedData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetUserProfilesDeletedResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/user-profiles/deleted',
+export const deleteApiUserProfilesById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiUserProfilesByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiUserProfilesByIdResponses, unknown, ThrowOnError>({
+    url: '/api/UserProfiles/{id}',
     ...options,
   });
 };
 
-export const deleteUserProfilesById = <ThrowOnError extends boolean = false>(options: Options<DeleteUserProfilesByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteUserProfilesByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/user-profiles/{id}',
+export const getApiUserProfilesById = <ThrowOnError extends boolean = false>(options: Options<GetApiUserProfilesByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiUserProfilesByIdResponses, unknown, ThrowOnError>({
+    url: '/api/UserProfiles/{id}',
     ...options,
   });
 };
 
-export const getUserProfilesById = <ThrowOnError extends boolean = false>(options: Options<GetUserProfilesByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetUserProfilesByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/user-profiles/{id}',
-    ...options,
-  });
-};
-
-export const putUserProfilesById = <ThrowOnError extends boolean = false>(options: Options<PutUserProfilesByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutUserProfilesByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/user-profiles/{id}',
+export const putApiUserProfilesById = <ThrowOnError extends boolean = false>(options: Options<PutApiUserProfilesByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiUserProfilesByIdResponses, unknown, ThrowOnError>({
+    url: '/api/UserProfiles/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3874,67 +2666,30 @@ export const putUserProfilesById = <ThrowOnError extends boolean = false>(option
   });
 };
 
-export const getUserProfilesUserByUserId = <ThrowOnError extends boolean = false>(options: Options<GetUserProfilesUserByUserIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetUserProfilesUserByUserIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/user-profiles/user/{userId}',
+export const getApiUserProfilesUserByUserId = <ThrowOnError extends boolean = false>(options: Options<GetApiUserProfilesUserByUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiUserProfilesUserByUserIdResponses, unknown, ThrowOnError>({
+    url: '/api/UserProfiles/user/{userId}',
     ...options,
   });
 };
 
-export const deleteUserProfilesByIdSoft = <ThrowOnError extends boolean = false>(options: Options<DeleteUserProfilesByIdSoftData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteUserProfilesByIdSoftResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/user-profiles/{id}/soft',
+export const postApiUserProfilesByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostApiUserProfilesByIdRestoreData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiUserProfilesByIdRestoreResponses, unknown, ThrowOnError>({
+    url: '/api/UserProfiles/{id}/restore',
     ...options,
   });
 };
 
-export const postUserProfilesByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostUserProfilesByIdRestoreData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostUserProfilesByIdRestoreResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/user-profiles/{id}/restore',
+export const getApiUsers = <ThrowOnError extends boolean = false>(options?: Options<GetApiUsersData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiUsersResponses, unknown, ThrowOnError>({
+    url: '/api/Users',
     ...options,
   });
 };
 
-export const getUsers = <ThrowOnError extends boolean = false>(options?: Options<GetUsersData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetUsersResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/users',
-    ...options,
-  });
-};
-
-export const postUsers = <ThrowOnError extends boolean = false>(options?: Options<PostUsersData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostUsersResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/users',
+export const postApiUsers = <ThrowOnError extends boolean = false>(options?: Options<PostApiUsersData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiUsersResponses, unknown, ThrowOnError>({
+    url: '/api/Users',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3943,54 +2698,23 @@ export const postUsers = <ThrowOnError extends boolean = false>(options?: Option
   });
 };
 
-export const getUsersDeleted = <ThrowOnError extends boolean = false>(options?: Options<GetUsersDeletedData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetUsersDeletedResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/users/deleted',
+export const deleteApiUsersById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiUsersByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiUsersByIdResponses, unknown, ThrowOnError>({
+    url: '/api/Users/{id}',
     ...options,
   });
 };
 
-export const deleteUsersById = <ThrowOnError extends boolean = false>(options: Options<DeleteUsersByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteUsersByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/users/{id}',
+export const getApiUsersById = <ThrowOnError extends boolean = false>(options: Options<GetApiUsersByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiUsersByIdResponses, unknown, ThrowOnError>({
+    url: '/api/Users/{id}',
     ...options,
   });
 };
 
-export const getUsersById = <ThrowOnError extends boolean = false>(options: Options<GetUsersByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetUsersByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/users/{id}',
-    ...options,
-  });
-};
-
-export const putUsersById = <ThrowOnError extends boolean = false>(options: Options<PutUsersByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutUsersByIdResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/users/{id}',
+export const putApiUsersById = <ThrowOnError extends boolean = false>(options: Options<PutApiUsersByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiUsersByIdResponses, unknown, ThrowOnError>({
+    url: '/api/Users/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3999,41 +2723,67 @@ export const putUsersById = <ThrowOnError extends boolean = false>(options: Opti
   });
 };
 
-export const deleteUsersByIdSoft = <ThrowOnError extends boolean = false>(options: Options<DeleteUsersByIdSoftData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteUsersByIdSoftResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/users/{id}/soft',
+export const postApiUsersByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostApiUsersByIdRestoreData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiUsersByIdRestoreResponses, unknown, ThrowOnError>({
+    url: '/api/Users/{id}/restore',
     ...options,
   });
 };
 
-export const postUsersByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostUsersByIdRestoreData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostUsersByIdRestoreResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/users/{id}/restore',
+export const putApiUsersByIdBalance = <ThrowOnError extends boolean = false>(options: Options<PutApiUsersByIdBalanceData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiUsersByIdBalanceResponses, unknown, ThrowOnError>({
+    url: '/api/Users/{id}/balance',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiUsersStatistics = <ThrowOnError extends boolean = false>(options?: Options<GetApiUsersStatisticsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiUsersStatisticsResponses, unknown, ThrowOnError>({
+    url: '/api/Users/statistics',
     ...options,
   });
 };
 
-export const getUsersMe = <ThrowOnError extends boolean = false>(options?: Options<GetUsersMeData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetUsersMeResponses, unknown, ThrowOnError>({
-    security: [
-      {
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/users/me',
+export const getApiUsersSearch = <ThrowOnError extends boolean = false>(options?: Options<GetApiUsersSearchData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiUsersSearchResponses, unknown, ThrowOnError>({
+    url: '/api/Users/search',
     ...options,
+  });
+};
+
+export const postApiUsersBulk = <ThrowOnError extends boolean = false>(options?: Options<PostApiUsersBulkData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiUsersBulkResponses, unknown, ThrowOnError>({
+    url: '/api/Users/bulk',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const patchApiUsersBulkActivate = <ThrowOnError extends boolean = false>(options?: Options<PatchApiUsersBulkActivateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).patch<PatchApiUsersBulkActivateResponses, unknown, ThrowOnError>({
+    url: '/api/Users/bulk/activate',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const patchApiUsersBulkDeactivate = <ThrowOnError extends boolean = false>(options?: Options<PatchApiUsersBulkDeactivateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).patch<PatchApiUsersBulkDeactivateResponses, unknown, ThrowOnError>({
+    url: '/api/Users/bulk/deactivate',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
   });
 };

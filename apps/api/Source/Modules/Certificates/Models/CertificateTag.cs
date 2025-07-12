@@ -19,7 +19,7 @@ public class CertificateTag : Entity {
   public CertificateTagRelationshipType RelationshipType { get; set; }
 
   // Navigation properties
-  [ForeignKey(nameof(CertificateId))] public virtual Certificate Certificate { get; set; } = null!;
+  public virtual Certificate Certificate { get; set; } = null!;
 
-  [ForeignKey(nameof(TagId))] public virtual TagProficiency Tag { get; set; } = null!;
+  public virtual TagProficiency Tag { get; set; } = null!;
 }

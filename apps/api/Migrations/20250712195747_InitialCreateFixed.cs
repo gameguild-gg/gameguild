@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GameGuild.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCreateFixed : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -36,7 +36,6 @@ namespace GameGuild.Migrations
                     GradingDetails = table.Column<string>(type: "jsonb", nullable: true),
                     GradedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     ProgramUserId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    ProgramUserId1 = table.Column<Guid>(type: "TEXT", nullable: true),
                     Version = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 1),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -82,9 +81,6 @@ namespace GameGuild.Migrations
                     CertificateId = table.Column<Guid>(type: "TEXT", nullable: false),
                     TagId = table.Column<Guid>(type: "TEXT", nullable: false),
                     RelationshipType = table.Column<int>(type: "INTEGER", nullable: false),
-                    CertificateId1 = table.Column<Guid>(type: "TEXT", nullable: true),
-                    ProgramId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    ProgramId1 = table.Column<Guid>(type: "TEXT", nullable: true),
                     TagProficiencyId = table.Column<Guid>(type: "TEXT", nullable: true),
                     Version = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 1),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -117,7 +113,6 @@ namespace GameGuild.Migrations
                     CertificateTemplate = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
                     TenantId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    ProgramId1 = table.Column<Guid>(type: "TEXT", nullable: true),
                     Version = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 1),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -558,8 +553,6 @@ namespace GameGuild.Migrations
                     Comments = table.Column<string>(type: "TEXT", nullable: true),
                     WouldRecommend = table.Column<bool>(type: "INTEGER", nullable: true),
                     SubmittedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ProgramId1 = table.Column<Guid>(type: "TEXT", nullable: true),
-                    ProgramUserId1 = table.Column<Guid>(type: "TEXT", nullable: true),
                     Version = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 1),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -597,7 +590,6 @@ namespace GameGuild.Migrations
                     ModeratedBy = table.Column<Guid>(type: "TEXT", nullable: true),
                     ModeratedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     SubmittedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ProgramId1 = table.Column<Guid>(type: "TEXT", nullable: true),
                     Version = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 1),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -1777,7 +1769,6 @@ namespace GameGuild.Migrations
                     ExpiresAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     RevokedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     RevocationReason = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    CertificateId1 = table.Column<Guid>(type: "TEXT", nullable: true),
                     Version = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 1),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -1810,11 +1801,6 @@ namespace GameGuild.Migrations
                         principalTable: "certificates",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_user_certificates_certificates_CertificateId1",
-                        column: x => x.CertificateId1,
-                        principalTable: "certificates",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_user_certificates_program_users_ProgramUserId",
                         column: x => x.ProgramUserId,
@@ -2478,11 +2464,6 @@ namespace GameGuild.Migrations
                 column: "ProgramUserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_activity_grades_ProgramUserId1",
-                table: "activity_grades",
-                column: "ProgramUserId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_activity_grades_TenantId",
                 table: "activity_grades",
                 column: "TenantId");
@@ -2540,11 +2521,6 @@ namespace GameGuild.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_certificate_tags_CertificateId1",
-                table: "certificate_tags",
-                column: "CertificateId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_certificate_tags_CreatedAt",
                 table: "certificate_tags",
                 column: "CreatedAt");
@@ -2553,16 +2529,6 @@ namespace GameGuild.Migrations
                 name: "IX_certificate_tags_DeletedAt",
                 table: "certificate_tags",
                 column: "DeletedAt");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_certificate_tags_ProgramId",
-                table: "certificate_tags",
-                column: "ProgramId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_certificate_tags_ProgramId1",
-                table: "certificate_tags",
-                column: "ProgramId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_certificate_tags_RelationshipType",
@@ -2608,11 +2574,6 @@ namespace GameGuild.Migrations
                 name: "IX_certificates_ProgramId",
                 table: "certificates",
                 column: "ProgramId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_certificates_ProgramId1",
-                table: "certificates",
-                column: "ProgramId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_certificates_TenantId",
@@ -3196,19 +3157,9 @@ namespace GameGuild.Migrations
                 column: "ProgramId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_program_feedback_submissions_ProgramId1",
-                table: "program_feedback_submissions",
-                column: "ProgramId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_program_feedback_submissions_ProgramUserId",
                 table: "program_feedback_submissions",
                 column: "ProgramUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_program_feedback_submissions_ProgramUserId1",
-                table: "program_feedback_submissions",
-                column: "ProgramUserId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_program_feedback_submissions_SubmittedAt",
@@ -3260,11 +3211,6 @@ namespace GameGuild.Migrations
                 name: "IX_program_ratings_ProgramId",
                 table: "program_ratings",
                 column: "ProgramId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_program_ratings_ProgramId1",
-                table: "program_ratings",
-                column: "ProgramId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_program_ratings_ProgramUserId",
@@ -4585,11 +4531,6 @@ namespace GameGuild.Migrations
                 column: "CertificateId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_user_certificates_CertificateId1",
-                table: "user_certificates",
-                column: "CertificateId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_user_certificates_CreatedAt",
                 table: "user_certificates",
                 column: "CreatedAt");
@@ -5076,13 +5017,6 @@ namespace GameGuild.Migrations
                 principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_activity_grades_program_users_ProgramUserId1",
-                table: "activity_grades",
-                column: "ProgramUserId1",
-                principalTable: "program_users",
-                principalColumn: "Id");
-
-            migrationBuilder.AddForeignKey(
                 name: "FK_certificate_blockchain_anchors_Tenants_TenantId",
                 table: "certificate_blockchain_anchors",
                 column: "TenantId",
@@ -5111,27 +5045,6 @@ namespace GameGuild.Migrations
                 principalTable: "certificates",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_certificate_tags_certificates_CertificateId1",
-                table: "certificate_tags",
-                column: "CertificateId1",
-                principalTable: "certificates",
-                principalColumn: "Id");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_certificate_tags_programs_ProgramId",
-                table: "certificate_tags",
-                column: "ProgramId",
-                principalTable: "programs",
-                principalColumn: "Id");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_certificate_tags_programs_ProgramId1",
-                table: "certificate_tags",
-                column: "ProgramId1",
-                principalTable: "programs",
-                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_certificate_tags_tag_proficiencies_TagId",
@@ -5171,13 +5084,6 @@ namespace GameGuild.Migrations
                 principalTable: "programs",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.SetNull);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_certificates_programs_ProgramId1",
-                table: "certificates",
-                column: "ProgramId1",
-                principalTable: "programs",
-                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Comment_ResourceMetadata_MetadataId",
@@ -5527,26 +5433,12 @@ namespace GameGuild.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_program_feedback_submissions_program_users_ProgramUserId1",
-                table: "program_feedback_submissions",
-                column: "ProgramUserId1",
-                principalTable: "program_users",
-                principalColumn: "Id");
-
-            migrationBuilder.AddForeignKey(
                 name: "FK_program_feedback_submissions_programs_ProgramId",
                 table: "program_feedback_submissions",
                 column: "ProgramId",
                 principalTable: "programs",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_program_feedback_submissions_programs_ProgramId1",
-                table: "program_feedback_submissions",
-                column: "ProgramId1",
-                principalTable: "programs",
-                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_program_ratings_Tenants_TenantId",
@@ -5585,13 +5477,6 @@ namespace GameGuild.Migrations
                 principalTable: "programs",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_program_ratings_programs_ProgramId1",
-                table: "program_ratings",
-                column: "ProgramId1",
-                principalTable: "programs",
-                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_program_users_Tenants_TenantId",
