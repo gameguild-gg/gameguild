@@ -2,15 +2,7 @@
 
 import { useActionState, useEffect } from 'react';
 import { useCourseContext, useCourseFilters, useCourseSelection, useCoursePagination } from '@/lib/courses';
-import {
-  createCourse,
-  updateCourse,
-  deleteCourse,
-  publishCourse,
-  duplicateCourse,
-  bulkUpdateCourses,
-  revalidateCoursesData,
-} from '@/lib/courses/actions';
+import { createCourse, updateCourse, deleteCourse, publishCourse, duplicateCourse, bulkUpdateCourses, revalidateCoursesData } from '@/lib/courses/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
