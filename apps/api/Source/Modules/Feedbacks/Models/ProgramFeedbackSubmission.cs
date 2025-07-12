@@ -55,13 +55,13 @@ public class ProgramFeedbackSubmission : Entity {
   public DateTime SubmittedAt { get; set; }
 
   // Navigation properties
-  [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;
+  public virtual User User { get; set; } = null!;
 
-  [ForeignKey(nameof(ProgramId))] public virtual Programs.Models.Program Program { get; set; } = null!;
+  public virtual Programs.Models.Program Program { get; set; } = null!;
 
-  [ForeignKey(nameof(ProductId))] public virtual Product? Product { get; set; }
+  public virtual Product? Product { get; set; }
 
-  [ForeignKey(nameof(ProgramUserId))] public virtual ProgramUser ProgramUser { get; set; } = null!;
+  public virtual ProgramUser ProgramUser { get; set; } = null!;
 
   // Helper methods for JSON feedback data
   public T? GetFeedbackResponse<T>(string questionId) where T : class {

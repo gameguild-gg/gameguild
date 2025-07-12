@@ -131,8 +131,7 @@ public static class WebApplicationExtensions {
     app.UseHttpsRedirection();
 
     // CORS (must be before authentication)
-    var corsPolicy = app.Environment.IsDevelopment() ? "Development" : "Production";
-    app.UseCors(corsPolicy);
+    app.UseCors();
 
     // Request context logging
     app.UseRequestContextLogging();
