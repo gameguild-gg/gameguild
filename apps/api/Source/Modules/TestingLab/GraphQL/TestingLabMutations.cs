@@ -1,12 +1,16 @@
 using System.Security.Claims;
 
 
+using GameGuild.Common;
+using MediatR;
+
+
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary>
-/// GraphQL mutations for TestingLab module
+/// GraphQL mutations for TestingLab module using CQRS pattern
 /// </summary>
-[ExtendObjectType("Mutation")]
+[ExtendObjectType<Mutation>]
 public class TestingLabMutations {
   /// <summary>
   /// Create a new testing request

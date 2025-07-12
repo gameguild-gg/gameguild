@@ -1,3 +1,5 @@
+using HotChocolate;
+
 namespace GameGuild.Common;
 
 /// <summary>
@@ -6,6 +8,9 @@ namespace GameGuild.Common;
 /// </summary>
 public class Query
 {
-  // This serves as the root query type that other modules extend
-  // No fields needed here - all functionality comes from type extensions
+  /// <summary>
+  /// Health check query to ensure GraphQL is working
+  /// </summary>
+  [GraphQLDescription("Health check query to ensure GraphQL is working")]
+  public string Health() => "GraphQL API is healthy";
 }

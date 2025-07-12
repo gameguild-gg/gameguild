@@ -6,6 +6,8 @@ namespace GameGuild.Common;
 /// </summary>
 public class Mutation
 {
-  // This serves as the root mutation type that other modules extend
-  // No fields needed here - all functionality comes from type extensions
+  /// <summary>
+  /// Health check mutation to ensure GraphQL mutations are working
+  /// </summary>
+  public string HealthMutation() => "GraphQL mutations are healthy";
 }

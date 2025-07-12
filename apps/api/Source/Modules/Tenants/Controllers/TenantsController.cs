@@ -1,4 +1,5 @@
 using GameGuild.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -9,6 +10,7 @@ namespace GameGuild.Modules.Tenants;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class TenantsController(
   ICommandHandler<CreateTenantCommand, Common.Result<Tenant>> createTenantHandler,
   ICommandHandler<UpdateTenantCommand, Common.Result<Tenant>> updateTenantHandler,
@@ -17,7 +19,7 @@ public class TenantsController(
   ICommandHandler<HardDeleteTenantCommand, Common.Result<bool>> hardDeleteTenantHandler,
   ICommandHandler<ActivateTenantCommand, Common.Result<bool>> activateTenantHandler,
   ICommandHandler<DeactivateTenantCommand, Common.Result<bool>> deactivateTenantHandler,
-  ICommandHandler<SearchTenantsCommand, Common.Result<IEnumerable<Tenant>>> searchTenantsHandler,
+  IQueryHandler<SearchTenantsQuery, Common.Result<IEnumerable<Tenant>>> searchTenantsHandler,
   ICommandHandler<BulkDeleteTenantsCommand, Common.Result<int>> bulkDeleteTenantsHandler,
   ICommandHandler<BulkRestoreTenantsCommand, Common.Result<int>> bulkRestoreTenantsHandler,
   IQueryHandler<GetAllTenantsQuery, Common.Result<IEnumerable<Tenant>>> getAllTenantsHandler,
@@ -140,8 +142,8 @@ public class TenantsController(
     [FromQuery] int? limit = null,
     [FromQuery] int? offset = null
   ) {
-    var command = new SearchTenantsCommand(searchTerm, isActive, includeDeleted, sortBy, sortDescending, limit, offset);
-    var result = await searchTenantsHandler.Handle(command, CancellationToken.None);
+    var query = new SearchTenantsQuery(searchTerm, isActive, includeDeleted, sortBy, sortDescending, limit, offset);
+    var result = await searchTenantsHandler.Handle(query, CancellationToken.None);
 
     if (!result.IsSuccess) return BadRequest(result.Error);
 
