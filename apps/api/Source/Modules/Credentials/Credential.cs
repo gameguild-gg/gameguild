@@ -14,7 +14,7 @@ namespace GameGuild.Modules.Credentials;
 /// </summary>
 [Table("Credentials")]
 [Index(nameof(UserId), nameof(Type))]
-public class Credential : Entity, ITenantable {
+public sealed class Credential : Entity, ITenantable {
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>
@@ -23,9 +23,9 @@ public class Credential : Entity, ITenantable {
 
   /// <summary>
   /// Navigation property to the User entity
+  /// Relationship is configured via CredentialConfiguration fluent API
   /// </summary>
-  [ForeignKey(nameof(UserId))]
-  public virtual User User { get; set; } = null!;
+  public User User { get; set; } = null!;
 
   /// <summary>
   /// Foreign key to the Tenant entity (optional - for tenant-specific credentials)
@@ -36,7 +36,7 @@ public class Credential : Entity, ITenantable {
   /// Navigation property to the Tenant entity (hide base implementation)
   /// </summary>
   [ForeignKey(nameof(TenantId))]
-  public new virtual Tenant? Tenant { get; set; }
+  public new Tenant? Tenant { get; set; }
 
   /// <summary>
   /// Indicates whether this credential is accessible across all tenants
@@ -83,15 +83,27 @@ public class Credential : Entity, ITenantable {
   public DateTime? LastUsedAt { get; set; }
 
   /// <summary>
-  /// Default constructor
+  /// Default parameterless constructor (required by Entity Framework)
   /// </summary>
   public Credential() { }
+
+  /// <summary>
+  /// Constructor with user
+  /// </summary>
+  public Credential(User user) { User = user; }
 
   /// <summary>
   /// Constructor for partial initialization
   /// </summary>
   /// <param name="partial">Partial credential data</param>
   public Credential(object partial) : base(partial) { }
+
+  /// <summary>
+  /// Constructor for partial initialization with user
+  /// </summary>
+  /// <param name="partial">Partial credential data</param>
+  /// <param name="user"></param>
+  public Credential(object partial, User user) : base(partial) { User = user; }
 
   /// <summary>
   /// Check if the credential is expired
