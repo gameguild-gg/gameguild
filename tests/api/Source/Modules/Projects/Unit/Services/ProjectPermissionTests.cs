@@ -2,7 +2,8 @@ using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Resources;
 
-namespace GameGuild.API.Tests.Modules.Projects.Unit.Services;
+
+namespace GameGuild.Tests.Modules.Projects.Unit.Services;
 
 /// <summary>
 /// Unit tests for ProjectPermission model

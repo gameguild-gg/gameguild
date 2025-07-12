@@ -5,7 +5,7 @@ using GameGuild.Modules.Programs.Services;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.API.Tests.Modules.Programs.Unit.Services;
+namespace GameGuild.Tests.Modules.Programs.Unit.Services;
 
 /// <summary>
 /// Unit tests for ProgramService slug-based operations

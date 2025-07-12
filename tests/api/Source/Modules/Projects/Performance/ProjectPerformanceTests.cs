@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using ProjectType = GameGuild.Common.ProjectType;
 
 
-namespace GameGuild.API.Tests.Modules.Projects.Performance;
+namespace GameGuild.Tests.Modules.Projects.Performance;
 
 /// <summary>
 /// Performance tests for Project operations

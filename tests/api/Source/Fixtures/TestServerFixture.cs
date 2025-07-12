@@ -1,10 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using GameGuild.Database;
-using GameGuild.Modules.Users;
+using System.Reflection;
 using GameGuild.Common;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using GameGuild.Database;
+using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Users;
+using GameGuild.Tests.MockModules;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -12,8 +14,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using MediatR;
 
-namespace GameGuild.API.Tests.Fixtures {
+
+namespace GameGuild.Tests.Fixtures {
   /// <summary>
   /// A test fixture that provides a TestServer for E2E tests
   /// </summary>
@@ -38,6 +42,16 @@ namespace GameGuild.API.Tests.Fixtures {
 
       _host = hostBuilder.Start();
       Server = _host.GetTestServer();
+      
+      // Ensure database is created and ready for testing
+      EnsureDatabaseCreated();
+    }
+
+    private async void EnsureDatabaseCreated()
+    {
+      using var scope = Server.Services.CreateScope();
+      var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+      await dbContext.Database.EnsureCreatedAsync();
     }
 
     private void ConfigureServices(IServiceCollection services) {
@@ -60,38 +74,54 @@ namespace GameGuild.API.Tests.Fixtures {
 
       services.AddSingleton<IConfiguration>(configuration);
 
-      // Configure in-memory database
-      services.AddDbContext<TestDbContext>(options =>
-                                             options.UseInMemoryDatabase("GameGuildTestDb")
-      );
-
-      // Configure real ApplicationDbContext for the services
-      services.AddDbContext<ApplicationDbContext>(options =>
-                                                    options.UseInMemoryDatabase("GameGuildTestDb")
-      );
-
-      // Configure JWT authentication for testing
-      services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-              .AddJwtBearer(options => {
-                  options.TokenValidationParameters =
-                    new TokenValidationParameters { ValidateIssuerSigningKey = true, IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_testSecret)), ValidateIssuer = false, ValidateAudience = false };
-                }
-              );
-
-      // Add required services for authorization behaviors
+      // Add HTTP context accessor (required by pipeline behaviors)
       services.AddHttpContextAccessor();
-
-      // Add date time provider
+      
+      // Add IDateTimeProvider for PerformanceBehavior
       services.AddSingleton<GameGuild.Common.IDateTimeProvider, GameGuild.Common.DateTimeProvider>();
+
+      // Add EF Core InMemory database for testing with unique database name
+      var databaseName = $"TestDatabase_{Guid.NewGuid()}";
+      services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName));
 
       // Add application services (includes IDomainEventPublisher registration)
       services.AddApplication();
 
-      // Add infrastructure services using DI (excluding auth module to avoid conflicts)
-      services.AddInfrastructure(configuration, excludeAuth: true);
+      // Add essential domain modules manually  
+      services.AddUserModule();
+      services.AddUserProfileModule();
+      services.AddTenantModule();
+      services.AddProjectModule();
+      services.AddCredentialsModule();
+      services.AddProgramModule();
+      services.AddProductModule();
+      services.AddSubscriptionModule();
+      services.AddPaymentModule();
+      services.AddCommonServices();
 
-      // Add GraphQL infrastructure using DI with test-friendly configuration
-      services.AddGraphQLInfrastructure(DependencyInjection.GraphQLOptionsFactory.ForTesting());
+      // Add test module for infrastructure testing
+      services = GameGuild.Tests.MockModules.TestModuleDependencyInjection.AddTestModule(services);
+
+      // Add authentication module
+      services = AuthModuleDependencyInjection.AddAuthModule(services, configuration);
+      
+      // Replace the IAuthService with a mock for testing (avoids complex dependency chain)
+      services.AddScoped<GameGuild.Modules.Authentication.IAuthService, GameGuild.API.Tests.Infrastructure.Integration.MockAuthService>();
+      
+      // Add GraphQL infrastructure with testing configuration
+      services.AddGraphQLInfrastructure(GameGuild.Common.DependencyInjection.GraphQLOptionsFactory.ForTesting());
+      
+      // Configure GraphQL to return 200 OK for validation errors
+      services.Configure<HotChocolate.AspNetCore.GraphQLHttpOptions>(options =>
+      {
+          // Configure to handle validation errors properly
+          options.EnableGetRequests = true;
+      });
+      
+      // Extend the GraphQL schema with TestModuleQueries for mock tests
+      // This must be done after AddGraphQLInfrastructure to extend the existing schema
+      services.AddGraphQLServer()
+              .AddTypeExtension<TestModuleQueries>();
 
       // Add controllers from the main application assembly
       services.AddControllers()
@@ -106,8 +136,14 @@ namespace GameGuild.API.Tests.Fixtures {
       var tokenHandler = new JwtSecurityTokenHandler();
       var key = Encoding.ASCII.GetBytes(_testSecret);
       var tokenDescriptor = new SecurityTokenDescriptor {
-        Subject = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId), new Claim(ClaimTypes.Email, "test@example.com")
+        Subject = new ClaimsIdentity([
+          new Claim(ClaimTypes.NameIdentifier, userId), 
+          new Claim(ClaimTypes.Email, "test@example.com"),
+          new Claim("sub", userId),
+          new Claim("email", "test@example.com")
         ]),
+        Issuer = "GameGuild.Test",
+        Audience = "GameGuild.Test.Users",
         Expires = DateTime.UtcNow.AddDays(1),
         SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
       };
@@ -119,6 +155,9 @@ namespace GameGuild.API.Tests.Fixtures {
     public async Task SeedTestUser(string userId, string email, string name, string password = "TestPassword123!") {
       using var scope = Server.Services.CreateScope();
       var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+      // Ensure database is created before seeding
+      await dbContext.Database.EnsureCreatedAsync();
 
       // Create a user entity for testing using the real User model
       var user = new User {
@@ -137,6 +176,9 @@ namespace GameGuild.API.Tests.Fixtures {
     public async Task SeedTestUserWithProfile(string userId, string email, string name, string bio, string avatarUrl) {
       using var scope = Server.Services.CreateScope();
       var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+      // Ensure database is created before seeding
+      await dbContext.Database.EnsureCreatedAsync();
 
       // Create a user entity for testing using the real User model
       var user = new User {

@@ -8,7 +8,7 @@ using TenantModel = GameGuild.Modules.Tenants.Tenant;
 using UserModel = GameGuild.Modules.Users.User;
 
 
-namespace GameGuild.API.Tests.Modules.Permissions.Performance;
+namespace GameGuild.Tests.Modules.Permissions.Performance;
 
 /// <summary>
 /// Performance tests for Permission Module

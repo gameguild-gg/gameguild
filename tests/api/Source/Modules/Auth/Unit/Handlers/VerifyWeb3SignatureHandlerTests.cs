@@ -1,7 +1,8 @@
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using Moq;
 
-namespace GameGuild.API.Tests.Modules.Auth.Unit.Handlers;
+
+namespace GameGuild.Tests.Modules.Auth.Unit.Handlers;
 
 public class VerifyWeb3SignatureHandlerTests
 {

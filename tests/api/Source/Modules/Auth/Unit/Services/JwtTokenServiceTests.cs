@@ -1,9 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using Microsoft.Extensions.Configuration;
 
-namespace GameGuild.API.Tests.Modules.Auth.Unit.Services;
+
+namespace GameGuild.Tests.Modules.Auth.Unit.Services;
 
 public class JwtTokenServiceTests {
   private readonly JwtTokenService _jwtTokenService;

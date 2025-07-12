@@ -1,9 +1,10 @@
-using GameGuild.Modules.Auth;
-using Microsoft.Extensions.Logging;
+using GameGuild.Modules.Authentication;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace GameGuild.API.Tests.Modules.Auth.Unit.Handlers;
+
+namespace GameGuild.Tests.Modules.Auth.Unit.Handlers;
 
 public class RevokeTokenHandlerTests
 {

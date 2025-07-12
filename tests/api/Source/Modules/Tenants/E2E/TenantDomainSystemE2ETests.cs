@@ -3,19 +3,19 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Helpers;
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Tenants;
+using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using UserModel = GameGuild.Modules.Users.User;
 
 
-namespace GameGuild.API.Tests.Modules.Tenants.E2E;
+namespace GameGuild.Tests.Modules.Tenants.E2E;
 
 public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Program>> {
   private readonly WebApplicationFactory<Program> _factory;

@@ -1,8 +1,9 @@
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Database;
 using GameGuild.Modules.UserProfiles;
+using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.API.Tests.Modules.UserProfiles.Unit.Services {
+
+namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
   public class UserProfileServiceTests : IDisposable {
     private readonly ApplicationDbContext _context;
     private readonly IUserProfileService _service;

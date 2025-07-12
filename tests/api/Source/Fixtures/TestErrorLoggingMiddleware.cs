@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace GameGuild.API.Tests.Fixtures;
+
+namespace GameGuild.Tests.Fixtures;
 
 /// <summary>
 /// Middleware to capture and log detailed error information during tests

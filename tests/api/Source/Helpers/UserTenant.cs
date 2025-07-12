@@ -1,6 +1,7 @@
 using GameGuild.Common;
 
-namespace GameGuild.API.Tests.Helpers
+
+namespace GameGuild.Tests.Helpers
 {
     /// <summary>
     /// Represents a relationship between a User and a Tenant

@@ -1,11 +1,12 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.UserProfiles;
-using GameGuild.Common;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace GameGuild.API.Tests.Modules.UserProfiles.Unit.Handlers {
+
+namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
   public class UserProfileHandlerTests : IDisposable {
     private readonly ApplicationDbContext _context;
     private readonly Mock<ILogger<CreateUserProfileHandler>> _createLoggerMock;

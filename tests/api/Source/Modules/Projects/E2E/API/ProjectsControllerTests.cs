@@ -1,66 +1,65 @@
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Fixtures;
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Projects;
-using GameGuild.Modules.Users;
+using GameGuild.Tests.Helpers;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 using ProjectType = GameGuild.Common.ProjectType;
-using TenantModel = GameGuild.Modules.Tenants.Tenant;
 
 
-namespace GameGuild.API.Tests.Modules.Projects.E2E.API;
+namespace GameGuild.Tests.Modules.Projects.E2E.API;
 
 /// <summary>
 /// Integration tests for ProjectsController
 /// Tests HTTP endpoints with real database and full application stack
 /// </summary>
-public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>, IDisposable {
-  private readonly TestWebApplicationFactory _factory;
-
-  private readonly HttpClient _client;
-
+public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable {
+  private readonly WebApplicationFactory<Program> _factory;
+  private HttpClient? _client;
   private readonly ApplicationDbContext _context;
-
   private readonly IServiceScope _scope;
-
   private readonly ITestOutputHelper _output;
+  private Guid _tenantId;
+  private Guid _userId;
 
-  public ProjectsControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output) {
-    _factory = factory;
+  public ProjectsControllerTests(WebApplicationFactory<Program> factory, ITestOutputHelper output) {
+    // Use a unique database name for this test class to avoid interference
+    var uniqueDbName = $"ProjectsControllerTests_{Guid.NewGuid()}";
+    _factory = IntegrationTestHelper.GetTestFactory(uniqueDbName);
     _output = output;
-    _client = factory.CreateClient();
-    _scope = factory.Services.CreateScope();
+    _scope = _factory.Services.CreateScope();
 
     // Get database context for test setup
     _context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+  }
 
-    // Clear any existing data to ensure clean test state
-    ClearDatabase();
+  private async Task<HttpClient> GetAuthenticatedClientAsync() {
+    // Create authenticated test user with permissions
+    var (client, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(_factory);
+    
+    // Store the IDs for use in test assertions
+    _userId = userId;
+    _tenantId = tenantId;
+    
+    return client;
   }
 
   [Fact]
   public async Task GetProjects_ShouldReturnEmptyArray_WhenNoProjects() {
-    // Arrange - Clear database to ensure clean state
-    ClearDatabase();
-
-    // Create test user and tenant for authentication
-    var user = await CreateTestUserAsync();
-    var tenant = await CreateTestTenantAsync();
+    // Arrange
+    _client = await GetAuthenticatedClientAsync();
 
     // Grant content-type permission to read projects
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
-    await permissionService.GrantContentTypePermissionAsync(user.Id, tenant.Id, "Project", [PermissionType.Read]);
+    await permissionService.GrantContentTypePermissionAsync(_userId, _tenantId, "Project", [PermissionType.Read]);
 
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
-    SetAuthorizationHeader(token); // Act
+    // Act
     var response = await _client.GetAsync("/projects");
 
     // Debug: Check what we actually got
@@ -84,15 +83,9 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
   [Fact]
   public async Task GetProjects_ShouldReturnProjects_WhenProjectsExist() {
-    // Arrange - Clear database to ensure clean state
-    ClearDatabase();
-
-    // Create test user and tenant for authentication
-    var user = await CreateTestUserAsync();
-    var tenant = await CreateTestTenantAsync();
-    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
-    SetAuthorizationHeader(token);
+    // Arrange
+    _client = await GetAuthenticatedClientAsync();
+    await GrantContentTypePermissions(_userId, _tenantId, "Project", [PermissionType.Read]);
 
     var project1 = new Project {
       Title = "Test Project 1",
@@ -101,8 +94,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Visibility = AccessLevel.Public,
       Type = ProjectType.Game,
       DevelopmentStatus = DevelopmentStatus.InDevelopment,
-      CreatedById = user.Id, // Associate with the test user
-      TenantId = tenant.Id
+      CreatedById = _userId, // Associate with the test user
+      TenantId = _tenantId
     };
 
     var project2 = new Project {
@@ -112,8 +105,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Visibility = AccessLevel.Public,
       Type = ProjectType.Tool,
       DevelopmentStatus = DevelopmentStatus.Released,
-      CreatedById = user.Id, // Associate with the test user
-      TenantId = tenant.Id
+      CreatedById = _userId, // Associate with the test user
+      TenantId = _tenantId
     };
 
     _context.Projects.AddRange(project1, project2);
@@ -138,15 +131,11 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
   [Fact]
   public async Task CreateProject_ShouldCreateProject_WithValidData() {
-    // Arrange - Clear database to ensure clean state
-    ClearDatabase();
+    // Arrange
+    _client = await GetAuthenticatedClientAsync();
 
-    // Create test user and tenant for authentication
-    var user = await CreateTestUserAsync();
-    var tenant = await CreateTestTenantAsync();
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
-    SetAuthorizationHeader(token); // Grant the user permission to create projects
-    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Create]);
+    // Grant the user permission to create projects
+    await GrantContentTypePermissions(_userId, _tenantId, "Project", [PermissionType.Create]);
 
     // Create a proper Project object instead of an anonymous object
     var project = new Project {
@@ -159,8 +148,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       DevelopmentStatus = DevelopmentStatus.Planning,
       WebsiteUrl = "https://example.com",
       RepositoryUrl = "https://github.com/test/repo",
-      CreatedById = user.Id,
-      TenantId = tenant.Id
+      CreatedById = _userId,
+      TenantId = _tenantId
     };
 
     var json = JsonSerializer.Serialize(project);
@@ -200,15 +189,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
   [Fact]
   public async Task CreateProject_ShouldReturnBadRequest_WithInvalidData() {
-    // Arrange - Clear database to ensure clean state
-    ClearDatabase();
-
-    // Create test user and tenant for authentication
-    var user = await CreateTestUserAsync();
-    var tenant = await CreateTestTenantAsync();
-    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Create]);
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
-    SetAuthorizationHeader(token);
+    // Arrange
+    _client = await GetAuthenticatedClientAsync();
 
     // Missing required Title
     var projectData = new { Description = "This is a test project without title" };
@@ -225,23 +207,16 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
   [Fact]
   public async Task GetProject_ShouldReturnProject_WhenExists() {
-    // Arrange - Clear database to ensure clean state
-    ClearDatabase();
-
-    // Create test user and tenant for authentication
-    var user = await CreateTestUserAsync();
-    var tenant = await CreateTestTenantAsync();
-    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
-    SetAuthorizationHeader(token);
+    // Arrange
+    _client = await GetAuthenticatedClientAsync();
 
     var project = new Project {
       Title = "Specific Test Project",
       Description = "This is a specific test project",
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
-      CreatedById = user.Id,
-      TenantId = tenant.Id
+      CreatedById = _userId,
+      TenantId = _tenantId
     };
 
     _context.Projects.Add(project);
@@ -266,15 +241,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
   [Fact]
   public async Task GetProject_ShouldReturnNotFound_WhenNotExists() {
-    // Arrange - Clear database to ensure clean state
-    ClearDatabase();
-
-    // Create test user and tenant for authentication
-    var user = await CreateTestUserAsync();
-    var tenant = await CreateTestTenantAsync();
-    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
-    SetAuthorizationHeader(token);
+    // Arrange
+    _client = await GetAuthenticatedClientAsync();
 
     var nonExistentId = Guid.NewGuid();
 
@@ -287,18 +255,16 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
   [Fact]
   public async Task GetProjectBySlug_ShouldReturnProject_WhenExists() {
-    // Arrange - Clear database to ensure clean state
-    ClearDatabase();
-    // No authentication needed since endpoint is [Public]
-    // Create test user for project ownership
-    var user = await CreateTestUserAsync();
+    // Arrange
+    _client = await GetAuthenticatedClientAsync();
 
     var project = new Project {
       Title = "Slug Test Project",
       Description = "This project tests slug functionality",
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
-      CreatedById = user.Id
+      CreatedById = _userId,
+      TenantId = _tenantId
     };
 
     // Manually set the slug using the Project's GenerateSlug method
@@ -342,8 +308,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
   [Fact]
   public async Task GetProjectBySlug_ShouldReturnNotFound_WhenNotExists() {
-    // Arrange - Clear database to ensure clean state
-    ClearDatabase();
+    // Arrange
+    _client = await GetAuthenticatedClientAsync();
 
     // Act
     var response = await _client.GetAsync("/projects/slug/non-existent-slug");
@@ -354,15 +320,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
   [Fact]
   public async Task GetProjectsByCategory_ShouldReturnProjectsInCategory() {
-    // Arrange - Clear database to ensure clean state
-    ClearDatabase();
-
-    // Create test user and tenant for authentication
-    var user = await CreateTestUserAsync();
-    var tenant = await CreateTestTenantAsync();
-    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
-    SetAuthorizationHeader(token);
+    // Arrange
+    _client = await GetAuthenticatedClientAsync();
 
     var categoryId = Guid.NewGuid();
 
@@ -371,8 +330,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       CategoryId = categoryId,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
-      CreatedById = user.Id,
-      TenantId = tenant.Id
+      CreatedById = _userId,
+      TenantId = _tenantId
     };
 
     var project2 = new Project {
@@ -380,8 +339,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       CategoryId = categoryId,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
-      CreatedById = user.Id,
-      TenantId = tenant.Id
+      CreatedById = _userId,
+      TenantId = _tenantId
     };
 
     var project3 = new Project {
@@ -389,8 +348,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       CategoryId = Guid.NewGuid(), // Different category
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
-      CreatedById = user.Id,
-      TenantId = tenant.Id
+      CreatedById = _userId,
+      TenantId = _tenantId
     };
 
     _context.Projects.AddRange(project1, project2, project3);
@@ -417,30 +376,23 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
   [Fact]
   public async Task GetProjectsByStatus_ShouldReturnProjectsWithStatus() {
-    // Arrange - Clear database to ensure clean state
-    ClearDatabase();
-
-    // Create test user and tenant for authentication
-    var user = await CreateTestUserAsync();
-    var tenant = await CreateTestTenantAsync();
-    await GrantContentTypePermissions(user, tenant, "Project", [PermissionType.Read]);
-    var token = await CreateJwtTokenForUserAsync(user, tenant);
-    SetAuthorizationHeader(token);
+    // Arrange
+    _client = await GetAuthenticatedClientAsync();
 
     var publishedProject = new Project {
       Title = "Published Project",
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
-      CreatedById = user.Id,
-      TenantId = tenant.Id
+      CreatedById = _userId,
+      TenantId = _tenantId
     };
 
     var draftProject = new Project {
       Title = "Draft Project",
       Status = ContentStatus.Draft,
       Visibility = AccessLevel.Public,
-      CreatedById = user.Id,
-      TenantId = tenant.Id
+      CreatedById = _userId,
+      TenantId = _tenantId
     };
 
     _context.Projects.AddRange(publishedProject, draftProject);
@@ -465,17 +417,8 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
   [Fact]
   public async Task GetPublicProjects_ShouldReturnOnlyPublicPublishedProjects() {
-    // Arrange - Clear database to ensure clean state
-    ClearDatabase();
-
-    // Create test user for project ownership
-    var user = await CreateTestUserAsync();
-
-    // Use the default test tenant that MockTenantContextService provides
-    var testTenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-    var tenant = new TenantModel { Id = testTenantId, Name = "Test Tenant", Slug = "test-tenant", IsActive = true };
-
-    _context.Tenants.Add(tenant);
+    // Arrange
+    _client = await GetAuthenticatedClientAsync();
 
     var publicProject = new Project {
       Title = "Public Project",
@@ -483,7 +426,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Public,
       Tenant = null, // Make it global - accessible across all tenants
-      CreatedById = user.Id
+      CreatedById = _userId
     };
 
     var privateProject = new Project {
@@ -492,7 +435,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Published,
       Visibility = AccessLevel.Private,
       Tenant = null, // Make it global - accessible across all tenants
-      CreatedById = user.Id
+      CreatedById = _userId
     };
 
     var draftProject = new Project {
@@ -501,7 +444,7 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
       Status = ContentStatus.Draft,
       Visibility = AccessLevel.Public,
       Tenant = null, // Make it global - accessible across all tenants
-      CreatedById = user.Id
+      CreatedById = _userId
     };
 
     _context.Projects.AddRange(publicProject, privateProject, draftProject);
@@ -540,90 +483,30 @@ public class ProjectsControllerTests : IClassFixture<TestWebApplicationFactory>,
 
   #region Helper Methods
 
-  private async Task<User> CreateTestUserAsync() {
-    var user = new User { Id = Guid.NewGuid(), Name = "Test User", Email = "test@example.com", IsActive = true };
-
-    _context.Users.Add(user);
-    await _context.SaveChangesAsync();
-
-    return user;
-  }
-
-  private async Task<TenantModel> CreateTestTenantAsync() {
-    var tenant = new TenantModel { Id = Guid.NewGuid(), Name = "Test Tenant", Description = "Test tenant for integration tests", IsActive = true };
-
-    _context.Tenants.Add(tenant);
-    await _context.SaveChangesAsync();
-
-    return tenant;
-  }
-
-  private Task<string> CreateJwtTokenForUserAsync(User user, TenantModel tenant) {
-    var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
-
-    var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-
-    var roles = new[] { "User" };
-
-    var additionalClaims = new[] { new System.Security.Claims.Claim("tenant_id", tenant.Id.ToString()) };
-
-    return Task.FromResult(jwtService.GenerateAccessToken(userDto, roles, additionalClaims));
-  }
-
   private async Task GrantProjectPermissions(
-    User user, TenantModel tenant,
+    Guid userId, Guid tenantId,
     Project project, PermissionType[] permissions
   ) {
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
     await permissionService
       .GrantResourcePermissionAsync<ProjectPermission,
-        Project>(user.Id, tenant.Id, project.Id, permissions);
+        Project>(userId, tenantId, project.Id, permissions);
   }
 
   private async Task GrantContentTypePermissions(
-    User user, TenantModel tenant, string contentTypeName,
+    Guid userId, Guid tenantId, string contentTypeName,
     PermissionType[] permissions
   ) {
     var permissionService = _scope.ServiceProvider.GetRequiredService<IPermissionService>();
-    await permissionService.GrantContentTypePermissionAsync(user.Id, tenant.Id, contentTypeName, permissions);
+    await permissionService.GrantContentTypePermissionAsync(userId, tenantId, contentTypeName, permissions);
   }
-
-  private void SetAuthorizationHeader(string token) { _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token); }
-
-  private void ClearAuthorizationHeader() { _client.DefaultRequestHeaders.Authorization = null; }
 
   #endregion
-
-  /// <summary>
-  /// Clear the in-memory database to ensure clean state between tests
-  /// </summary>
-  private void ClearDatabase() {
-    // Remove all projects
-    var existingProjects = _context.Projects.ToList();
-    _context.Projects.RemoveRange(existingProjects);
-
-    // Remove all users
-    var existingUsers = _context.Users.ToList();
-    _context.Users.RemoveRange(existingUsers);
-
-    // Remove all tenants
-    var existingTenants = _context.Tenants.ToList();
-    _context.Tenants.RemoveRange(existingTenants);
-
-    // Remove all permissions
-    var existingContentTypePermissions = _context.ContentTypePermissions.ToList();
-    _context.ContentTypePermissions.RemoveRange(existingContentTypePermissions);
-
-    var existingTenantPermissions = _context.TenantPermissions.ToList();
-    _context.TenantPermissions.RemoveRange(existingTenantPermissions);
-
-    // Save changes
-    _context.SaveChanges();
-  }
 
   public void Dispose() {
     _scope.Dispose();
     _context.Dispose();
-    _client.Dispose();
+    _client?.Dispose();
+    _factory.Dispose();
   }
 }

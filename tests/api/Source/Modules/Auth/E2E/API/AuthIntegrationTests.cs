@@ -2,30 +2,34 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Helpers;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Tenants;
+using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Modules.Auth.E2E.API;
 
-public class AuthIntegrationTests {
+namespace GameGuild.Tests.Modules.Auth.E2E.API;
+
+public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable {
   private readonly ITestOutputHelper _testOutputHelper;
-
   private readonly WebApplicationFactory<Program> _factory;
-
   private readonly HttpClient _client;
+  private readonly IServiceScope _scope;
+  private readonly ApplicationDbContext _context;
 
-  public AuthIntegrationTests(ITestOutputHelper testOutputHelper) {
+  public AuthIntegrationTests(ITestOutputHelper testOutputHelper, WebApplicationFactory<Program> factory) {
     _testOutputHelper = testOutputHelper;
     // Use a unique database name for this test class to avoid interference
     var uniqueDbName = $"AuthIntegrationTests_{Guid.NewGuid()}";
     _factory = IntegrationTestHelper.GetTestFactory(uniqueDbName);
     _client = _factory.CreateClient();
+
+    _scope = _factory.Services.CreateScope();
+    _context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
     // Set up test data in the in-memory database
     SetupTestDataAsync().GetAwaiter().GetResult();
@@ -98,10 +102,10 @@ public class AuthIntegrationTests {
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    var response = await _client.PostAsync("/auth/sign-up", content);
+    var response = await _client.PostAsync("/api/auth/signup", content);
 
-    // Assert - The endpoint should return OK and create a new user
-    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    // Assert - The endpoint should return Created and create a new user
+    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
     var responseData = await response.Content.ReadFromJsonAsync<SignInResponseDto>();
     Assert.NotNull(responseData);
@@ -116,7 +120,7 @@ public class AuthIntegrationTests {
 
     var registerJson = JsonSerializer.Serialize(registerRequest);
     var registerContent = new StringContent(registerJson, Encoding.UTF8, "application/json");
-    await _client.PostAsync("/auth/sign-up", registerContent);
+    await _client.PostAsync("/api/auth/signup", registerContent);
 
     // Now try to log in
     var loginRequest = new LocalSignInRequestDto { Email = "login-test@example.com", Password = "P455W0RD" };
@@ -125,7 +129,7 @@ public class AuthIntegrationTests {
     var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
 
     // Act
-    var response = await _client.PostAsync("/auth/sign-in", loginContent);
+    var response = await _client.PostAsync("/api/auth/signin", loginContent);
 
     // Assert - The endpoint should return OK and provide tokens
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -145,7 +149,7 @@ public class AuthIntegrationTests {
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    var response = await _client.PostAsync("/auth/sign-in", content);
+    var response = await _client.PostAsync("/api/auth/signin", content);
 
     // Assert - In test environments, the endpoint returns Unauthorized due to auth configuration
     Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -158,7 +162,7 @@ public class AuthIntegrationTests {
 
     var registerJson = JsonSerializer.Serialize(registerRequest);
     var registerContent = new StringContent(registerJson, Encoding.UTF8, "application/json");
-    var registerResponse = await _client.PostAsync("/auth/sign-up", registerContent);
+    var registerResponse = await _client.PostAsync("/api/auth/signup", registerContent);
 
     // Registration should now work and return tokens
     Assert.Equal(HttpStatusCode.OK, registerResponse.StatusCode);
@@ -172,7 +176,7 @@ public class AuthIntegrationTests {
     var refreshContent = new StringContent(refreshJson, Encoding.UTF8, "application/json");
 
     // Act
-    var response = await _client.PostAsync("/auth/refresh-token", refreshContent);
+    var response = await _client.PostAsync("/api/auth/refresh", refreshContent);
 
     // Assert - The refresh should work and return new tokens
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -280,9 +284,16 @@ public class AuthIntegrationTests {
     var content2 = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    var response = await _client.PostAsync("/auth/sign-up", content2);
+    var response = await _client.PostAsync("/api/auth/signup", content2);
 
     // Assert - Should return BadRequest for duplicate email
     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  public void Dispose() {
+    _scope.Dispose();
+    _context.Dispose();
+    _client.Dispose();
+    _factory.Dispose();
   }
 }

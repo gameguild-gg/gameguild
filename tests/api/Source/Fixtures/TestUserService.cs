@@ -1,4 +1,4 @@
-﻿namespace GameGuild.API.Tests.Fixtures;
+﻿namespace GameGuild.Tests.Fixtures;
 
 public class TestUserService(TestDbContext dbContext) : IUserService {
     public async Task<TestUserEntity> GetByIdAsync(string id) { 

@@ -1,13 +1,14 @@
+using System.Security.Claims;
+using FluentValidation;
+using GameGuild.Modules.Authentication;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using MediatR;
 using Moq;
-using Xunit;
-using FluentValidation;
-using System.Security.Claims;
 
-namespace GameGuild.Modules.Auth.Tests.Unit.Controllers;
+
+namespace GameGuild.Tests.Modules.Auth.Unit.Controllers;
 
 /// <summary>
 /// Unit tests for AuthController using CQRS pattern

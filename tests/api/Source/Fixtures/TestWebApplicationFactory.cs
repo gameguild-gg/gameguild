@@ -1,19 +1,26 @@
 using System.Security.Claims;
 using System.Text;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Tenants;
+using GameGuild.Tests.Helpers;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using GameGuild.Common;
 
-namespace GameGuild.API.Tests.Fixtures;
+
+// Add this for TestJwtAuthenticationFilter and TestAuthHandler
+
+namespace GameGuild.Tests.Fixtures;
 
 /// <summary>
 /// Custom WebApplicationFactory for integration and E2E tests that properly configures content root and services
@@ -125,6 +132,23 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
         var databaseName = $"TestDatabase_{Guid.NewGuid()}";
         services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName));
 
+        // Override GraphQL configuration for testing
+        // The main application calls AddGraphQLInfrastructure(ForProduction()) but we need ForTesting() options
+        // We need to remove the existing GraphQL configuration and re-add it with test settings
+        
+        // Remove existing GraphQL server registration
+        var graphqlDescriptors = services.Where(d => 
+            d.ServiceType.Namespace?.Contains("HotChocolate") == true ||
+            d.ServiceType.FullName?.Contains("GraphQL") == true).ToList();
+        
+        foreach (var graphqlDescriptor in graphqlDescriptors)
+        {
+            services.Remove(graphqlDescriptor);
+        }
+        
+        // Re-add GraphQL with test-friendly configuration
+        services.AddGraphQLInfrastructure(DependencyInjection.GraphQLOptionsFactory.ForTesting());
+
         // Configure JWT for testing - ensure consistent configuration
         // This should match the configuration expected by AuthModuleDependencyInjection
         var testJwtConfig = new ConfigurationBuilder().AddInMemoryCollection(
@@ -137,71 +161,21 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
                                                       )
                                                       .Build();
 
-        // Remove existing JWT configuration and re-add with test settings
-        var jwtServiceDescriptor =
-          services.SingleOrDefault(d => d.ServiceType == typeof(IJwtTokenService));
+        // Remove existing JWT configuration service and replace with test-compatible version
+        var jwtServiceDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IJwtTokenService));
+        if (jwtServiceDescriptor != null) 
+        {
+            services.Remove(jwtServiceDescriptor);
+            // Add test-compatible JWT service that uses the same configuration as the main app
+            services.AddSingleton<IJwtTokenService>(provider => new JwtTokenService(testJwtConfig));
+        }
 
-        if (jwtServiceDescriptor != null) services.Remove(jwtServiceDescriptor);
+        // Don't remove or re-configure authentication services - let the main application handle them
+        // The application already configures JWT authentication through AuthModuleDependencyInjection
+        // We just need to ensure our test JWT configuration is compatible
 
-        services.AddSingleton<IJwtTokenService>(provider =>
-                                                                                  new JwtTokenService(testJwtConfig)
-        );
-
-        // Configure JWT Bearer options for tests by overriding the existing options
-        services.PostConfigure<JwtBearerOptions>(
-          JwtBearerDefaults.AuthenticationScheme,
-          options => {
-            options.TokenValidationParameters = new TokenValidationParameters {
-              ValidateIssuer = true,
-              ValidateAudience = true,
-              ValidateLifetime = true,
-              ValidateIssuerSigningKey = true,
-              ValidIssuer = "TestIssuer",
-              ValidAudience = "TestAudience",
-              IssuerSigningKey =
-                new SymmetricSecurityKey(
-                  Encoding.UTF8.GetBytes(
-                    "test-jwt-secret-key-for-integration-testing-purposes-only-minimum-32-characters"
-                  )
-                ),
-              ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
-              RequireSignedTokens = true,
-              TryAllIssuerSigningKeys = true
-            };
-
-            // Add event handlers for debugging
-            options.Events = new JwtBearerEvents {
-              OnAuthenticationFailed = context => {
-                var logger =
-                  context.HttpContext.RequestServices.GetRequiredService<ILogger<TestWebApplicationFactory>>();
-                logger.LogError(
-                  "JWT authentication failed: {Exception} for token: {Token}",
-                  context.Exception.Message,
-                  context.Request.Headers.Authorization.FirstOrDefault()
-                );
-
-                return Task.CompletedTask;
-              },
-              OnTokenValidated = context => {
-                var logger =
-                  context.HttpContext.RequestServices.GetRequiredService<ILogger<TestWebApplicationFactory>>();
-                logger.LogInformation(
-                  "JWT token validated successfully for user: {UserId}",
-                  context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                );
-
-                return Task.CompletedTask;
-              },
-              OnMessageReceived = context => {
-                var logger =
-                  context.HttpContext.RequestServices.GetRequiredService<ILogger<TestWebApplicationFactory>>();
-                logger.LogDebug("JWT message received: {HasToken}", !string.IsNullOrEmpty(context.Token));
-
-                return Task.CompletedTask;
-              }
-            };
-          }
-        );
+        // Configure minimal controller setup for tests - let the main app handle authentication filters
+        // This avoids conflicts with the authentication setup done by the main application
       }
     );
   }

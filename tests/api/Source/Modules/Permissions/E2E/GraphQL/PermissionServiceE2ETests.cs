@@ -1,21 +1,17 @@
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Helpers;
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
 using GameGuild.Modules.Comments;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Users;
+using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TenantModel = GameGuild.Modules.Tenants.Tenant;
 
 
-namespace GameGuild.API.Tests.Modules.Permissions.E2E.GraphQL;
+namespace GameGuild.Tests.Modules.Permissions.E2E.GraphQL;
 
 /// <summary>
 /// End-to-end tests for Permission Service API endpoints

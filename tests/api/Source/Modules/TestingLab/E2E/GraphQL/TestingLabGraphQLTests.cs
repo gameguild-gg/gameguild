@@ -1,12 +1,12 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using GameGuild.API.Tests.Fixtures;
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Auth;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.TestingLab;
+using GameGuild.Tests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 using ProjectModel = GameGuild.Modules.Projects.Project;
@@ -15,7 +15,7 @@ using TenantModel = GameGuild.Modules.Tenants.Tenant;
 using UserModel = GameGuild.Modules.Users.User;
 
 
-namespace GameGuild.API.Tests.Modules.TestingLab.E2E.GraphQL;
+namespace GameGuild.Tests.Modules.TestingLab.E2E.GraphQL;
 
 /// <summary>
 /// Integration tests for TestingLab GraphQL operations
