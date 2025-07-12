@@ -11,11 +11,13 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "build:api": "npm run build --workspace=apps/api",
+    "build:storybook": "npm run build --workspace=apps/storybook",
     "build:web": "npm run build --workspace=apps/web",
     "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next package-lock.json",
     "db:diagram": "npm run db:diagram --workspace=apps/api",
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
     "dev:api": "npm run dev --workspace=apps/api",
+    "dev:storybook": "npm run dev --workspace=apps/storybook",
     "dev:web": "npm run dev --workspace=apps/web",
     "format": "npm run format --workspaces --if-present",
     "format:api": "npm run format --workspace=apps/api",

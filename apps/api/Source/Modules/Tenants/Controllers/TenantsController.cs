@@ -1,4 +1,5 @@
 using GameGuild.Common;
+using GameGuild.Modules.Permissions.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -170,6 +171,7 @@ public class TenantsController(
   /// <param name="dto">Tenant creation DTO</param>
   /// <returns>Created tenant</returns>
   [HttpPost]
+  [RequireTenantPermission(PermissionType.Create)]
   public async Task<ActionResult<Tenant>> CreateTenant([FromBody] CreateTenantDto dto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 

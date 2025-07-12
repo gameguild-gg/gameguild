@@ -2,6 +2,8 @@ using System.Security.Claims;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Users;
+using GameGuild.Modules.Permissions.Models;
+using GameGuild.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -164,6 +166,28 @@ namespace GameGuild.Tests.Helpers
             ApplicationDbContext dbContext)
         {
             var user = await CreateUserAsync(dbContext, isAdmin: true);
+            
+            // Grant admin permissions using IPermissionService
+            using var scope = factory.Services.CreateScope();
+            var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
+            
+            // Grant global tenant permissions like the super admin gets
+            var globalPermissions = new PermissionType[] { 
+                PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete, 
+                PermissionType.Publish, PermissionType.Approve, PermissionType.Review 
+            };
+            
+            await permissionService.GrantTenantPermissionAsync(user.Id, null, globalPermissions);
+            
+            // Grant content type permissions for tenant-related entities
+            var contentTypes = new[] { "Project", "TenantDomain", "TenantUserGroup", "TenantUserGroupMembership", "User", "Tenant", "Comment", "Product", "Program" };
+            var contentPermissions = new PermissionType[] { PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete };
+            
+            foreach (var contentType in contentTypes)
+            {
+                await permissionService.GrantContentTypePermissionAsync(user.Id, null, contentType, contentPermissions);
+            }
+            
             var client = CreateAuthenticatedHttpClient(factory);
         
             return (client, user);
