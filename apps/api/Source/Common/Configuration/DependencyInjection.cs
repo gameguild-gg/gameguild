@@ -375,6 +375,32 @@ public static class DependencyInjection {
       }
     };
 
+    // Add test module for testing environments
+    var isTestEnvironment = options.IsTestEnvironment || options.EnableTestingModule || 
+                          AppDomain.CurrentDomain.GetAssemblies()
+                            .Any(a => a.FullName?.Contains("GameGuild.API.Tests") == true);
+    
+    if (isTestEnvironment) {
+      coreModules["TestModule"] = b => {
+        try {
+          // Try to register test module if available
+          var testModuleType = Type.GetType("GameGuild.Tests.MockModules.TestModuleQueries, GameGuild.API.Tests");
+          if (testModuleType != null) {
+            SafeAddGraphQLTypes(
+              b,
+              new[] { ("TestModuleQueries", testModuleType) },
+              logger,
+              isExtension: new[] { true }
+            );
+            logger?.LogDebug("Registered test module: TestModuleQueries");
+          }
+        } catch (Exception ex) {
+          logger?.LogDebug("Test module not available: {Error}", ex.Message);
+          // Ignore test module registration failures
+        }
+      };
+    }
+
     foreach (var (moduleName, registration) in coreModules) {
       try {
         registration(builder);
@@ -542,7 +568,9 @@ public static class DependencyInjection {
     );
 
     // Configure request options for development vs production
-    builder.ModifyRequestOptions(opt => { opt.IncludeExceptionDetails = options.IncludeExceptionDetails; });
+    builder.ModifyRequestOptions(opt => { 
+        opt.IncludeExceptionDetails = options.IncludeExceptionDetails;
+    });
   }
 
   /// <summary>

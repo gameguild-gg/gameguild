@@ -2,16 +2,16 @@ using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
-using Microsoft.EntityFrameworkCore;
+using MediatR;
 
 
 namespace GameGuild.Modules.Programs.GraphQL;
 
 /// <summary>
-/// GraphQL queries for ContentInteraction operations
+/// GraphQL queries for ContentInteraction operations using CQRS pattern
 /// Following permission inheritance: ContentInteraction permissions come from parent Program
 /// </summary>
-[ExtendObjectType<DbLoggerCategory.Query>]
+[ExtendObjectType<Query>]
 public class ContentInteractionQueries {
   /// <summary>
   /// Get content interaction by ID

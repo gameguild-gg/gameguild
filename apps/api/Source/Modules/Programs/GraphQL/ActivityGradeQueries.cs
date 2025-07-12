@@ -1,23 +1,23 @@
-using GameGuild.Common.Authorization;
+using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
-using Microsoft.EntityFrameworkCore;
+using MediatR;
 
 
 namespace GameGuild.Modules.Programs.GraphQL;
 
 /// <summary>
-/// GraphQL queries for ActivityGrade operations
+/// GraphQL queries for ActivityGrade operations using CQRS pattern
 /// Following permission inheritance: ActivityGrade permissions come from parent Program
 /// </summary>
-[ExtendObjectType<DbLoggerCategory.Query>]
+[ExtendObjectType<Query>]
 public class ActivityGradeQueries {
   /// <summary>
-  /// Get grade for a specific content interaction
+  /// Get grade for a specific content interaction using CQRS pattern
   /// Requires Read permission on the parent Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [GameGuild.Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
   public async Task<ActivityGrade?> GetActivityGrade(
     Guid programId,
     Guid contentInteractionId,

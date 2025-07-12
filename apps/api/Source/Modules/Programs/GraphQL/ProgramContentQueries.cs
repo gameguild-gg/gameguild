@@ -2,16 +2,16 @@ using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Models;
-using Microsoft.EntityFrameworkCore;
+using MediatR;
 using ProgramContentEntity = GameGuild.Modules.Programs.Models.ProgramContent;
 
 
 namespace GameGuild.Modules.Programs.GraphQL;
 
 /// <summary>
-/// GraphQL queries for ProgramContent module
+/// GraphQL queries for ProgramContent module using CQRS pattern
 /// </summary>
-[ExtendObjectType<DbLoggerCategory.Query>]
+[ExtendObjectType<Query>]
 public class ProgramContentQueries {
   /// <summary>
   /// Gets a program content by its unique identifier (Resource Level: Read permission required for the parent Program)
