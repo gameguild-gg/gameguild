@@ -30,7 +30,7 @@ class ApiClient {
 
   // Auth endpoints
   async googleSignIn(tokenData: OAuthSignInRequest): Promise<SignInResponse> {
-    return this.request<SignInResponse>('/auth/google/callback', {
+    return this.request<SignInResponse>('/api/auth/google/callback', {
       method: 'POST',
       body: JSON.stringify(tokenData),
     });
@@ -38,14 +38,14 @@ class ApiClient {
 
   // Google ID Token validation for NextAuth.js integration
   async googleIdTokenSignIn(tokenData: { idToken: string; tenantId?: string }): Promise<SignInResponse> {
-    return this.request<SignInResponse>('/auth/google/id-token', {
+    return this.request<SignInResponse>('/api/auth/google/id-token', {
       method: 'POST',
       body: JSON.stringify(tokenData),
     });
   }
 
   async refreshToken(data: RefreshTokenRequest): Promise<RefreshTokenResponse> {
-    return this.request<RefreshTokenResponse>('/auth/refresh-token', {
+    return this.request<RefreshTokenResponse>('/api/auth/refresh-token', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -53,7 +53,7 @@ class ApiClient {
 
   // Admin login for development/testing (uses regular sign-in endpoint)
   async adminLogin(credentials: { email: string; password: string }): Promise<SignInResponse> {
-    return this.request<SignInResponse>('/auth/sign-in', {
+    return this.request<SignInResponse>('/api/auth/sign-in', {
       method: 'POST',
       body: JSON.stringify({
         email: credentials.email,
@@ -64,7 +64,7 @@ class ApiClient {
   }
 
   async revokeToken(refreshToken: string): Promise<void> {
-    await this.request('/auth/revoke-token', {
+    await this.request('/api/auth/revoke-token', {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
     });
