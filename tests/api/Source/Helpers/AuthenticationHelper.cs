@@ -129,10 +129,35 @@ namespace GameGuild.Tests.Helpers
         /// </summary>
         /// <param name="factory">WebApplicationFactory instance</param>
         /// <returns>HttpClient configured for test environment with authentication bypass</returns>
+        [Obsolete("Use CreateAuthenticatedHttpClient(factory, user) or CreateAnonymousHttpClient(factory) instead")]
         public static HttpClient CreateAuthenticatedHttpClient(WebApplicationFactory<Program> factory)
         {
-            // In test environment, authentication is bypassed using AllowAnonymousFilter
-            // and TestJwtAuthenticationFilter, so no special configuration is needed
+            // This method is obsolete - use the overload that takes a User parameter for proper JWT authentication
+            return factory.CreateClient();
+        }
+
+        /// <summary>
+        /// Creates an HTTP client with JWT authentication for the given user
+        /// </summary>
+        public static async Task<HttpClient> CreateAuthenticatedHttpClient(
+            WebApplicationFactory<Program> factory, 
+            User user)
+        {
+            // Create JWT token for the user
+            var (token, _) = await CreateAuthenticatedUserAsync(factory.Services, user.Id, user.Email, new[] { "User" });
+            
+            // Create HTTP client with JWT token
+            var client = factory.CreateClient();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            
+            return client;
+        }
+
+        /// <summary>
+        /// Creates an HTTP client without authentication (for anonymous requests)
+        /// </summary>
+        public static HttpClient CreateAnonymousHttpClient(WebApplicationFactory<Program> factory)
+        {
             return factory.CreateClient();
         }
 
@@ -153,7 +178,7 @@ namespace GameGuild.Tests.Helpers
             string[]? roles = null)
         {
             var user = await CreateUserAsync(dbContext, isAdmin: false, userId, email);
-            var client = CreateAuthenticatedHttpClient(factory);
+            var client = await CreateAuthenticatedHttpClient(factory, user);
         
             return (client, user);
         }
@@ -188,7 +213,12 @@ namespace GameGuild.Tests.Helpers
                 await permissionService.GrantContentTypePermissionAsync(user.Id, null, contentType, contentPermissions);
             }
             
-            var client = CreateAuthenticatedHttpClient(factory);
+            // Create JWT token for the admin user
+            var (token, _) = await CreateAuthenticatedUserAsync(factory.Services, user.Id, user.Email, new[] { "Admin" });
+            
+            // Create HTTP client with JWT token
+            var client = factory.CreateClient();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
         
             return (client, user);
         }
@@ -201,7 +231,7 @@ namespace GameGuild.Tests.Helpers
             ApplicationDbContext dbContext)
         {
             var user = await CreateUserAsync(dbContext, isAdmin: false);
-            var client = CreateAuthenticatedHttpClient(factory);
+            var client = await CreateAuthenticatedHttpClient(factory, user);
         
             return (client, user);
         }

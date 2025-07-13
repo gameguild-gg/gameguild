@@ -93,8 +93,9 @@ public class DatabaseSeeder(
   public async Task SeedTenantDomainDefaultPermissionsAsync() {
     logger.LogInformation("Seeding tenant domain content-type default permissions...");
 
-    // Grant default permissions for TenantDomain, TenantUserGroup, and TenantUserGroupMembership
-    var tenantResourceTypes = new[] { "TenantDomain", "TenantUserGroup", "TenantUserGroupMembership" };
+    // Grant default permissions for TenantUserGroup and TenantUserGroupMembership
+    // Note: TenantDomain permissions should be restricted to admins, not given as defaults
+    var tenantResourceTypes = new[] { "TenantUserGroup", "TenantUserGroupMembership" };
 
     foreach (var resourceType in tenantResourceTypes) {
       var permissions = new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete, };
@@ -106,6 +107,15 @@ public class DatabaseSeeder(
         permissions.Length
       );
     }
+
+    // For TenantDomain, only grant Read permissions by default
+    // Create/Edit/Delete should be restricted to users with explicit admin permissions
+    var tenantDomainPermissions = new[] { PermissionType.Read };
+    await permissionService.GrantContentTypePermissionAsync(null, null, "TenantDomain", tenantDomainPermissions);
+    logger.LogInformation(
+      "Content-type default permissions seeded for TenantDomain with {PermissionsLength} permissions (Read only)",
+      tenantDomainPermissions.Length
+    );
   }
 
   public async Task SeedSuperAdminUserAsync() {
