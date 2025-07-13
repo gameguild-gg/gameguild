@@ -132,22 +132,9 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
         var databaseName = $"TestDatabase_{Guid.NewGuid()}";
         services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName));
 
-        // Override GraphQL configuration for testing
-        // The main application calls AddGraphQLInfrastructure(ForProduction()) but we need ForTesting() options
-        // We need to remove the existing GraphQL configuration and re-add it with test settings
-        
-        // Remove existing GraphQL server registration
-        var graphqlDescriptors = services.Where(d => 
-            d.ServiceType.Namespace?.Contains("HotChocolate") == true ||
-            d.ServiceType.FullName?.Contains("GraphQL") == true).ToList();
-        
-        foreach (var graphqlDescriptor in graphqlDescriptors)
-        {
-            services.Remove(graphqlDescriptor);
-        }
-        
-        // Re-add GraphQL with test-friendly configuration
-        services.AddGraphQLInfrastructure(DependencyInjection.GraphQLOptionsFactory.ForTesting());
+        // Don't override GraphQL configuration - let the main application handle it
+        // The main application already configures GraphQL through AddGraphQLInfrastructure
+        // Trying to reconfigure it here causes duplicate registration issues
 
         // Configure JWT for testing - must match the development API configuration
         // This should match the configuration expected by AuthModuleDependencyInjection
