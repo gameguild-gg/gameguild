@@ -54,6 +54,10 @@ public static class DependencyInjection {
 
     // Controllers (for backward compatibility with existing REST endpoints)
     services.AddControllers()
+            .AddJsonOptions(options => {
+                // Handle circular references in navigation properties
+                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+              })
             .ConfigureApiBehaviorOptions(options => {
                 options.SuppressModelStateInvalidFilter = true; // We handle validation through MediatR
               }

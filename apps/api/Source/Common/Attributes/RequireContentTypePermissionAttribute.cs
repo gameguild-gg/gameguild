@@ -29,10 +29,11 @@ public class RequireContentTypePermissionAttribute<T>(PermissionType requiredPer
 
     var tenantIdClaim = context.HttpContext.User.FindFirst(JwtClaimTypes.TenantId)?.Value;
 
-    if (!Guid.TryParse(tenantIdClaim, out var tenantId)) {
-      context.Result = new UnauthorizedResult();
-
-      return;
+    // Parse tenant ID if present, otherwise use null for global permissions
+    Guid? tenantId = null;
+    if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out var parsedTenantId))
+    {
+      tenantId = parsedTenantId;
     }
 
     // Get content type name from generic type parameter

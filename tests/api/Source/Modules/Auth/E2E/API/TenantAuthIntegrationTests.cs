@@ -127,7 +127,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    var response = await _client.PostAsync("/auth/sign-in", content);
+    var response = await _client.PostAsync("/api/auth/signin", content);
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -155,7 +155,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    var response = await _client.PostAsync("/auth/sign-in", content);
+    var response = await _client.PostAsync("/api/auth/signin", content);
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -182,7 +182,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
     var loginJson = JsonSerializer.Serialize(loginRequest);
     var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
 
-    var loginResponse = await _client.PostAsync("/auth/sign-in", loginContent);
+    var loginResponse = await _client.PostAsync("/api/auth/signin", loginContent);
     var loginData = await loginResponse.Content.ReadFromJsonAsync<SignInResponseDto>();
 
     Assert.NotNull(loginData);
@@ -197,7 +197,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
     var refreshContent = new StringContent(refreshJson, Encoding.UTF8, "application/json");
 
     // Act
-    var refreshResponse = await _client.PostAsync("/auth/refresh-token", refreshContent);
+    var refreshResponse = await _client.PostAsync("/api/auth/refresh", refreshContent);
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, refreshResponse.StatusCode);
