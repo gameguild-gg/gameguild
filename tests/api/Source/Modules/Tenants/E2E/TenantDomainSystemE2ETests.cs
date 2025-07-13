@@ -381,7 +381,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     Assert.Contains(professorGroups, g => g.Id == studentsGroup.Id);
 
     // Step 13: Test getting all domains for tenant
-    response = await _client.GetAsync($"/api/tenant-domains/tenant/{tenantId}");
+    response = await _client.GetAsync($"/api/tenant-domains?tenantId={tenantId}");
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     var tenantDomains = JsonSerializer.Deserialize<List<TenantDomain>>(
       await response.Content.ReadAsStringAsync(),
@@ -394,7 +394,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     Assert.Contains(tenantDomains, d => d is { TopLevelDomain: "university.edu", Subdomain: "faculty" });
 
     // Step 14: Test getting all groups for tenant
-    response = await _client.GetAsync($"/api/tenant-domains/user-groups/tenant/{tenantId}");
+    response = await _client.GetAsync($"/api/tenant-domains/user-groups?tenantId={tenantId}");
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     var tenantGroups = JsonSerializer.Deserialize<List<TenantUserGroupDto>>(
       await response.Content.ReadAsStringAsync(),

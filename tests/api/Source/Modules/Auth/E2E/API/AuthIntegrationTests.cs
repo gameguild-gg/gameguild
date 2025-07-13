@@ -96,7 +96,7 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
   [Fact]
   public async Task Register_ValidUser_ReturnsSuccessAndTokens() {
     // Arrange
-    var registerRequest = new LocalSignUpRequestDto { Email = "integration-test@example.com", Password = "P455W0RD", Username = "integration-user" };
+    var registerRequest = new LocalSignUpRequestDto { Email = "integration-test@example.com", Password = "P@ssW0rd123!", Username = "integration-user" };
 
     var json = JsonSerializer.Serialize(registerRequest);
     var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -116,14 +116,14 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
   [Fact]
   public async Task Login_ValidCredentials_ReturnsSuccessAndTokens() {
     // Arrange - First register a user
-    var registerRequest = new LocalSignUpRequestDto { Email = "login-test@example.com", Password = "P455W0RD", Username = "login-user" };
+    var registerRequest = new LocalSignUpRequestDto { Email = "login-test@example.com", Password = "P@ssW0rd123!", Username = "login-user" };
 
     var registerJson = JsonSerializer.Serialize(registerRequest);
     var registerContent = new StringContent(registerJson, Encoding.UTF8, "application/json");
     await _client.PostAsync("/api/auth/signup", registerContent);
 
     // Now try to log in
-    var loginRequest = new LocalSignInRequestDto { Email = "login-test@example.com", Password = "P455W0RD" };
+    var loginRequest = new LocalSignInRequestDto { Email = "login-test@example.com", Password = "P@ssW0rd123!" };
 
     var loginJson = JsonSerializer.Serialize(loginRequest);
     var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
@@ -158,14 +158,14 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
   [Fact]
   public async Task RefreshToken_ValidToken_ReturnsNewTokens() {
     // Arrange - First register and get tokens
-    var registerRequest = new LocalSignUpRequestDto { Email = "refresh-test@example.com", Password = "P455W0RD", Username = "refresh-user" };
+    var registerRequest = new LocalSignUpRequestDto { Email = "refresh-test@example.com", Password = "P@ssW0rd123!", Username = "refresh-user" };
 
     var registerJson = JsonSerializer.Serialize(registerRequest);
     var registerContent = new StringContent(registerJson, Encoding.UTF8, "application/json");
     var registerResponse = await _client.PostAsync("/api/auth/signup", registerContent);
 
     // Registration should now work and return tokens
-    Assert.Equal(HttpStatusCode.OK, registerResponse.StatusCode);
+      Assert.Equal(HttpStatusCode.Created, registerResponse.StatusCode);
     var registerData = await registerResponse.Content.ReadFromJsonAsync<SignInResponseDto>();
     Assert.NotNull(registerData);
 
@@ -274,11 +274,11 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
   [Fact]
   public async Task Register_DuplicateEmail_ReturnsError() {
     // Arrange - First register a user
-    var registerRequest = new LocalSignUpRequestDto { Email = "duplicate-test@example.com", Password = "P455W0RD", Username = "duplicate-user" };
+    var registerRequest = new LocalSignUpRequestDto { Email = "duplicate-test@example.com", Password = "P@ssW0rd123!", Username = "duplicate-user" };
 
     var json = JsonSerializer.Serialize(registerRequest);
     var content1 = new StringContent(json, Encoding.UTF8, "application/json");
-    await _client.PostAsync("/auth/sign-up", content1);
+    await _client.PostAsync("/api/auth/signup", content1);
 
     // Try to register the same email again
     var content2 = new StringContent(json, Encoding.UTF8, "application/json");
@@ -286,8 +286,8 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
     // Act
     var response = await _client.PostAsync("/api/auth/signup", content2);
 
-    // Assert - Should return BadRequest for duplicate email
-    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    // Assert - Should return Conflict for duplicate email
+    Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
   }
 
   public void Dispose() {
