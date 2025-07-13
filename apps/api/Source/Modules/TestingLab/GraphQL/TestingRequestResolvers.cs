@@ -31,7 +31,7 @@ public class TestingRequestResolvers {
     return await context.TestingParticipants.Where(p => p.TestingRequestId == request.Id).ToListAsync();
   }
 
-  public async Task<IEnumerable<TestingSession>> GetSessions(
+  public static async Task<IEnumerable<TestingSession>> GetSessions(
     [Parent] TestingRequest request,
     [Service] ApplicationDbContext context
   ) {

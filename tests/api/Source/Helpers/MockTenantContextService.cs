@@ -38,26 +38,26 @@ namespace GameGuild.Tests.Helpers {
     /// Get the current tenant ID from the request or claims
     /// </summary>
     public Task<Guid?> GetCurrentTenantIdAsync(ClaimsPrincipal? user = null, string? tenantHeader = null) {
-      // Check header first (highest priority)
+      // Check the header first (the highest priority)
       if (!string.IsNullOrEmpty(tenantHeader) && Guid.TryParse(tenantHeader, out var tenantHeaderId))
         // Verify tenant exists
-        if (_tenants.ContainsKey(tenantHeaderId) && _tenants[tenantHeaderId].IsActive)
+        if (_tenants.TryGetValue(tenantHeaderId, out var value) && value.IsActive)
           return Task.FromResult<Guid?>(tenantHeaderId);
 
       // Check user claims
-      if (user?.Identity?.IsAuthenticated == true) {
+      if (user?.Identity?.IsAuthenticated != true) return _tenants.Any(t => t.Value.IsActive) ? Task.FromResult<Guid?>(_tenants.First(t => t.Value.IsActive).Key) : Task.FromResult<Guid?>(null);
+
+      {
         var tenantClaim = user.FindFirst(JwtClaimTypes.TenantId);
 
-        if (tenantClaim != null && Guid.TryParse(tenantClaim.Value, out var tenantClaimId))
-          // Verify tenant exists
-          if (_tenants.ContainsKey(tenantClaimId) && _tenants[tenantClaimId].IsActive)
-            return Task.FromResult<Guid?>(tenantClaimId);
+        if (tenantClaim == null || !Guid.TryParse(tenantClaim.Value, out var tenantClaimId)) return _tenants.Any(t => t.Value.IsActive) ? Task.FromResult<Guid?>(_tenants.First(t => t.Value.IsActive).Key) : Task.FromResult<Guid?>(null);
+
+        // Verify tenant exists
+        if (_tenants.TryGetValue(tenantClaimId, out var value) && value.IsActive) return Task.FromResult<Guid?>(tenantClaimId);
       }
 
       // Return default test tenant if available
-      if (_tenants.Any(t => t.Value.IsActive)) return Task.FromResult<Guid?>(_tenants.First(t => t.Value.IsActive).Key);
-
-      return Task.FromResult<Guid?>(null);
+      return _tenants.Any(t => t.Value.IsActive) ? Task.FromResult<Guid?>(_tenants.First(t => t.Value.IsActive).Key) : Task.FromResult<Guid?>(null);
     }
 
     /// <summary>
@@ -72,7 +72,7 @@ namespace GameGuild.Tests.Helpers {
     }
 
     /// <summary>
-    /// Get permission data for user in the specified tenant
+    /// Get permission data for the user in the specified tenant
     /// </summary>
     public Task<TenantPermission?> GetTenantPermissionAsync(Guid userId, Guid tenantId) {
       if (_permissions.TryGetValue((userId, tenantId), out var permission) && permission.IsValid) return Task.FromResult<TenantPermission?>(permission);
@@ -97,7 +97,7 @@ namespace GameGuild.Tests.Helpers {
     }
 
     /// <summary>
-    /// Check if user has permission to access the specified tenant
+    /// Check if the user has permission to access the specified tenant
     /// </summary>
     public async Task<bool> CanAccessTenantAsync(ClaimsPrincipal user, Guid tenantId) {
       if (user.Identity?.IsAuthenticated != true ||
