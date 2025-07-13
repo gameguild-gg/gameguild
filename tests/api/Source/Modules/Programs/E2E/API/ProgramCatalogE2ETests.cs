@@ -236,7 +236,7 @@ public class ProgramCatalogE2ETests : IClassFixture<TestWebApplicationFactory>, 
 
         var designCourse = await CreateTestProgramAsync(tenantUser.Tenant.Id, "ui-ux-design-figma-masterclass",
             title: "UI/UX Design with Figma Masterclass",
-            category: ProgramCategory.Other,
+            category: ProgramCategory.Design,
             status: ContentStatus.Published,
             visibility: AccessLevel.Public);
 

@@ -153,8 +153,8 @@ public class ProgramControllerSlugTests : IDisposable
     [Fact]
     public async Task GetProgramBySlug_WithSpecialCharactersInSlug_HandlesCorrectly()
     {
-        // Arrange
-        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(IntegrationTestHelper.GetTestFactory());
+        // Arrange - use the same test factory as the test setup
+        var (authenticatedClient, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(_factory);
         var program = await CreateTestProgramAsync(tenantId, "unity-3d-game-development-2024");
 
         // Act
