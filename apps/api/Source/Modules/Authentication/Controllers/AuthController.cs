@@ -147,6 +147,64 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Authenticate a user using Google ID Token (for NextAuth.js integration).
+    /// </summary>
+    /// <param name="request">Google ID Token validation request</param>
+    /// <returns>Authentication response with tokens</returns>
+    [HttpPost("google/id-token")]
+    [ProducesResponseType(typeof(SignInResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<SignInResponseDto>> GoogleIdTokenSignIn([FromBody] GoogleIdTokenRequestDto request)
+    {
+        try
+        {
+            _logger.LogInformation("Google ID token sign-in attempt");
+
+            var command = new GoogleIdTokenSignInCommand
+            {
+                IdToken = request.IdToken,
+                TenantId = request.TenantId
+            };
+
+            var result = await _mediator.Send(command);
+
+            _logger.LogInformation("Google ID token sign-in successful");
+            return Ok(result);
+        }
+        catch (ValidationException ex)
+        {
+            _logger.LogWarning("Validation failed for Google ID token sign-in: {ValidationErrors}", string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Validation Error",
+                Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)),
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning("Google ID token sign-in failed: {Message}", ex.Message);
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "Authentication Failed",
+                Detail = "Invalid Google ID token",
+                Status = StatusCodes.Status401Unauthorized
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during Google ID token sign-in");
+            return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+            {
+                Title = "Internal Server Error",
+                Detail = "An unexpected error occurred",
+                Status = StatusCodes.Status500InternalServerError
+            });
+        }
+    }
+
+    /// <summary>
     /// Refresh access token using a valid refresh token.
     /// </summary>
     /// <param name="request">Token refresh details</param>

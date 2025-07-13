@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { environment } from '@/configs/environment';
-import { getUsersMe } from '@/lib/api/generated';
+import { getHealth } from '@/lib/api/generated';
 import { createClient } from '@/lib/api/generated/client';
 
 export async function GET(request: NextRequest) {
@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Use the generated API client to call the /users/me endpoint
-    const result = await getUsersMe({
+    // Test the CMS backend connection
+    const result = await getHealth({
       client: apiClient,
     });
 
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       cmsBackendUrl: environment.apiBaseUrl,
       tenantId: tenantId || null,
       sessionHasToken: !!session.accessToken,
-      user: result.data,
+      healthCheck: result.data,
       headers: {
         authorization: `Bearer ${session.accessToken?.substring(0, 20)}...`,
         tenantId: tenantId || null,
