@@ -49,6 +49,9 @@ public class TestingController(ITestService testService) : ControllerBase {
   [RequireResourcePermission<TestingRequest>(PermissionType.Create)]
   public async Task<ActionResult<TestingRequest>> CreateTestingRequest(CreateTestingRequestDto requestDto) {
     try {
+      // Validate model state
+      if (!ModelState.IsValid) return BadRequest(ModelState);
+
       // Get the current authenticated user's ID
       var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 

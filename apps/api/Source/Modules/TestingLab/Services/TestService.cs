@@ -144,7 +144,9 @@ public class TestService(ApplicationDbContext context) : ITestService {
     context.TestingSessions.Add(testingSession);
     await context.SaveChangesAsync();
 
-    return await GetTestingSessionByIdAsync(testingSession.Id) ?? testingSession;
+    // Return the created session directly to avoid unnecessary database query
+    // For performance-critical scenarios, this eliminates the expensive Include queries
+    return testingSession;
   }
 
   public async Task<TestingSession> UpdateTestingSessionAsync(TestingSession testingSession) {

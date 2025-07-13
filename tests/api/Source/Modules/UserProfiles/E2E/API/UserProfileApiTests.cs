@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using GameGuild.Database;
 using GameGuild.Tests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,39 +29,64 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
       // Create profile payload
-      var createPayload = new { bio = "My test bio", avatarUrl = "https://example.com/avatar.jpg", location = "Test City", websiteUrl = "https://example.com" };
+      var createPayload = new { 
+        userId = userId, 
+        givenName = "Test", 
+        familyName = "User", 
+        displayName = "Test User", 
+        title = "Developer",
+        description = "My test bio"
+      };
 
       // Act - Create profile
       var createResponse = await _client.PostAsync(
-                             $"/api/users/{userId}/profile",
+                             "/api/userprofiles",
                              new StringContent(JsonSerializer.Serialize(createPayload), Encoding.UTF8, "application/json")
                            );
 
+      // Assert - Create response status first
       var createContent = await createResponse.Content.ReadAsStringAsync();
+      Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+      
+      // Ensure we have valid JSON content
+      Assert.False(string.IsNullOrWhiteSpace(createContent), $"Expected valid JSON response but got: '{createContent}'");
+      
       var createResult = JsonDocument.Parse(createContent);
       var profileId = createResult.RootElement.GetProperty("id").GetString();
 
-      // Assert - Create
-      Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-      Assert.Equal("My test bio", createResult.RootElement.GetProperty("bio").GetString());
-      Assert.Equal("https://example.com/avatar.jpg", createResult.RootElement.GetProperty("avatarUrl").GetString());
+      // Assert - Create properties
+      Assert.Equal("Test", createResult.RootElement.GetProperty("givenName").GetString());
+      Assert.Equal("User", createResult.RootElement.GetProperty("familyName").GetString());
+      Assert.Equal("Test User", createResult.RootElement.GetProperty("displayName").GetString());
+      Assert.Equal("My test bio", createResult.RootElement.GetProperty("description").GetString());
 
       // Arrange - Update
-      var updatePayload = new { bio = "Updated bio", avatarUrl = "https://example.com/new-avatar.jpg" };
+      var updatePayload = new { 
+        givenName = "Updated", 
+        familyName = "User", 
+        displayName = "Updated User",
+        description = "Updated bio" 
+      };
 
       // Act - Update
       var updateResponse = await _client.PutAsync(
-                             $"/api/profiles/{profileId}",
+                             $"/api/userprofiles/{profileId}",
                              new StringContent(JsonSerializer.Serialize(updatePayload), Encoding.UTF8, "application/json")
                            );
 
+      // Assert - Update response status first
       var updateContent = await updateResponse.Content.ReadAsStringAsync();
+      Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+      
+      // Ensure we have valid JSON content
+      Assert.False(string.IsNullOrWhiteSpace(updateContent), $"Expected valid JSON response but got: '{updateContent}'");
+      
       var updateResult = JsonDocument.Parse(updateContent);
 
-      // Assert - Update
-      Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
-      Assert.Equal("Updated bio", updateResult.RootElement.GetProperty("bio").GetString());
-      Assert.Equal("https://example.com/new-avatar.jpg", updateResult.RootElement.GetProperty("avatarUrl").GetString());
+      // Assert - Update properties
+      Assert.Equal("Updated", updateResult.RootElement.GetProperty("givenName").GetString());
+      Assert.Equal("Updated User", updateResult.RootElement.GetProperty("displayName").GetString());
+      Assert.Equal("Updated bio", updateResult.RootElement.GetProperty("description").GetString());
     }
 
     [Fact]
@@ -80,15 +106,15 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
       // Act
-      var response = await _client.GetAsync($"/api/users/{userId}/profile");
+      var response = await _client.GetAsync($"/api/UserProfiles/user/{userId}");
       var content = await response.Content.ReadAsStringAsync();
       var result = JsonDocument.Parse(content);
 
       // Assert
       Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-      Assert.Equal(userId, result.RootElement.GetProperty("userId").GetString());
-      Assert.Equal(bio, result.RootElement.GetProperty("bio").GetString());
-      Assert.Equal(avatarUrl, result.RootElement.GetProperty("avatarUrl").GetString());
+      Assert.Equal(userId, result.RootElement.GetProperty("id").GetString());
+      Assert.Equal("Get profile bio", result.RootElement.GetProperty("description").GetString());
+      Assert.Equal("Profile Get User", result.RootElement.GetProperty("displayName").GetString());
     }
 
     [Fact]
@@ -102,7 +128,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
       // Act
-      var response = await _client.GetAsync($"/api/profiles/{nonexistentId}");
+      var response = await _client.GetAsync($"/api/UserProfiles/{nonexistentId}");
 
       // Assert
       Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -121,8 +147,10 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
 
       // Get profile ID (in a real scenario, you would query this from the database)
       using var scope = _fixture.Server.Services.CreateScope();
-      var dbContext = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-      var profileId = dbContext.UserProfiles.Find(userId)?.Id ?? throw new Exception("Profile not found");
+      var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+      var userGuid = Guid.Parse(userId);
+      var userProfile = dbContext.UserProfiles.FirstOrDefault(p => p.Id == userGuid);
+      var profileId = userProfile?.Id ?? throw new Exception("Profile not found");
 
       // Set authentication token
       var token = _fixture.GenerateTestToken(userId);
@@ -130,13 +158,13 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
       // Act - Delete
-      var deleteResponse = await _client.DeleteAsync($"/api/profiles/{profileId}");
+      var deleteResponse = await _client.DeleteAsync($"/api/UserProfiles/{profileId}");
 
       // Assert - Delete
-      Assert.Equal(HttpStatusCode.OK, deleteResponse.StatusCode);
+      Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
       // Act - Try to get deleted profile
-      var getResponse = await _client.GetAsync($"/api/profiles/{profileId}");
+      var getResponse = await _client.GetAsync($"/api/UserProfiles/{profileId}");
 
       // Assert - Should not find deleted profile
       Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
