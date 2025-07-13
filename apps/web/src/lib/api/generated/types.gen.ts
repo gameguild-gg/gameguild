@@ -853,6 +853,11 @@ export type FinancialTransactionWritable = {
   promoCodeUses?: Array<PromoCodeUseWritable> | null;
 };
 
+export type GoogleIdTokenRequestDto = {
+  idToken?: string | null;
+  tenantId?: string | null;
+};
+
 export type GradeStatisticsDtoReadable = {
   totalGrades?: number;
   averageGrade?: number;
@@ -3815,6 +3820,35 @@ export type PostApiAuthSigninResponses = {
 };
 
 export type PostApiAuthSigninResponse = PostApiAuthSigninResponses[keyof PostApiAuthSigninResponses];
+
+export type PostApiAuthGoogleIdTokenData = {
+  body?: GoogleIdTokenRequestDto;
+  path?: never;
+  query?: never;
+  url: '/api/Auth/google/id-token';
+};
+
+export type PostApiAuthGoogleIdTokenErrors = {
+  /**
+   * Bad Request
+   */
+  400: ProblemDetails;
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+};
+
+export type PostApiAuthGoogleIdTokenError = PostApiAuthGoogleIdTokenErrors[keyof PostApiAuthGoogleIdTokenErrors];
+
+export type PostApiAuthGoogleIdTokenResponses = {
+  /**
+   * OK
+   */
+  200: SignInResponseDto;
+};
+
+export type PostApiAuthGoogleIdTokenResponse = PostApiAuthGoogleIdTokenResponses[keyof PostApiAuthGoogleIdTokenResponses];
 
 export type PostApiAuthRefreshData = {
   body?: RefreshTokenRequestDto;
