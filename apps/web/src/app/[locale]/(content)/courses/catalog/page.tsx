@@ -1,21 +1,25 @@
 import { Suspense } from 'react';
 import { getCourseData } from '@/lib/courses/actions';
 import { CourseProvider } from '@/lib/courses';
-import { CourseFilters } from '@/components/courses/course-filters';
-import { CourseGrid } from '@/components/courses/course-grid';
+
 import { CourseStates } from '@/components/courses/course-states';
 import { CourseErrorBoundary } from '@/components/courses/course-error-boundary';
 import { CoursePageError } from '@/components/courses/course-page-error';
+import { CourseGridEnhanced } from '@/components/courses/course-grid-enhanced';
 
 export const dynamic = 'force-dynamic';
 
 export default async function CoursesPage() {
   try {
     const courseData = await getCourseData();
+    console.log('CoursesPage - courseData:', {
+      coursesLength: courseData.courses.length,
+      firstCourse: courseData.courses[0],
+    });
 
     return (
       <CourseErrorBoundary>
-        <CourseProvider initialData={courseData}>
+        <CourseProvider initialCourses={courseData.courses}>
           <div className="container mx-auto px-4 py-8">
             <div className="text-center mb-12">
               <h1 className="text-4xl font-bold mb-4 text-primary">Course Catalog</h1>
@@ -25,8 +29,7 @@ export default async function CoursesPage() {
             </div>
 
             <Suspense fallback={<CourseStates.Loading />}>
-              <CourseFilters />
-              <CourseGrid />
+              <CourseGridEnhanced />
             </Suspense>
           </div>
         </CourseProvider>

@@ -1,6 +1,13 @@
 'use server';
 
-import { CourseData, Course, CourseArea, CourseLevel } from '@/types/courses.ts';
+import { CourseArea, CourseLevel, ToolsByArea } from '@/types/courses.ts';
+import { EnhancedCourse } from '@/lib/courses/courses-enhanced.context';
+
+// Enhanced course data interface
+export interface EnhancedCourseData {
+  courses: EnhancedCourse[];
+  toolsByArea: ToolsByArea;
+}
 
 // Helper function to sanitize image paths
 function sanitizeImagePath(thumbnail: string | null | undefined): string {
@@ -54,7 +61,7 @@ function mapDifficultyToLevel(difficulty: number): CourseLevel {
   }
 }
 
-// Transform API program object to our Course interface
+// Transform API program object to our EnhancedCourse interface
 function transformProgramToCourse(program: {
   id: string;
   title: string;
@@ -63,7 +70,7 @@ function transformProgramToCourse(program: {
   difficulty: number;
   thumbnail?: string;
   slug: string;
-}): Course {
+}): EnhancedCourse {
   return {
     id: program.id,
     title: program.title,
@@ -74,10 +81,24 @@ function transformProgramToCourse(program: {
     image: sanitizeImagePath(program.thumbnail),
     slug: program.slug,
     progress: undefined, // Not provided by API
+    // Add the enhanced course properties with defaults
+    status: 'published', // Since we're fetching from published programs
+    publishedAt: new Date().toISOString(), // Default to current date
+    updatedAt: new Date().toISOString(),
+    enrollmentCount: 0,
+    estimatedHours: 10, // Default estimate
+    instructors: [], // Could be populated from program data later
+    tags: [], // Could be populated from program data later
+    analytics: {
+      enrollments: 0,
+      completions: 0,
+      averageRating: 0,
+      revenue: 0,
+    },
   };
 }
 
-export async function getCourseData(): Promise<CourseData> {
+export async function getCourseData(): Promise<EnhancedCourseData> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
@@ -98,6 +119,7 @@ export async function getCourseData(): Promise<CourseData> {
     }
 
     const data = await response.json();
+    console.log('Raw API data length:', data.length);
 
     // The API returns a flat array of programs, not an object with courses property
     if (!Array.isArray(data)) {
@@ -107,11 +129,18 @@ export async function getCourseData(): Promise<CourseData> {
     // Filter out tracks (programs with "track" in slug or title) and transform the API response
     const filteredData = data.filter((program: { slug?: string; title?: string }) => {
       // Exclude programs that are tracks
-      return !(program.slug?.includes('-track-') || program.title?.includes('Track'));
+      const isTrack = program.slug?.includes('-track-') || program.title?.includes('Track');
+      console.log(`Program: ${program.title}, slug: ${program.slug}, isTrack: ${isTrack}`);
+      return !isTrack;
     });
 
+    console.log('Filtered data length:', filteredData.length);
+
+    const transformedCourses = filteredData.map(transformProgramToCourse);
+    console.log('Transformed courses length:', transformedCourses.length);
+
     return {
-      courses: filteredData.map(transformProgramToCourse),
+      courses: transformedCourses,
       toolsByArea: {
         programming: [],
         art: [],
@@ -144,7 +173,7 @@ export async function revalidateCourseData(): Promise<void> {
   revalidateTag('course-data');
 }
 
-export async function getCourseBySlug(slug: string): Promise<CourseData['courses'][0] | null> {
+export async function getCourseBySlug(slug: string): Promise<EnhancedCourse | null> {
   try {
     // Get all published courses and find the one with the matching slug
     const courseData = await getCourseData();
@@ -169,7 +198,7 @@ export async function getCourseBySlug(slug: string): Promise<CourseData['courses
   }
 }
 
-export async function getCourseById(id: string): Promise<CourseData['courses'][0] | null> {
+export async function getCourseById(id: string): Promise<EnhancedCourse | null> {
   try {
     // Get all published courses and find the one with the matching ID
     const courseData = await getCourseData();
@@ -204,7 +233,7 @@ export interface CreateCourseRequest {
   durationHours?: number;
 }
 
-export async function createCourse(courseData: CreateCourseRequest): Promise<CourseData['courses'][0]> {
+export async function createCourse(courseData: CreateCourseRequest): Promise<EnhancedCourse> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 

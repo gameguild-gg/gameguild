@@ -1,37 +1,21 @@
 'use client';
 
 import React from 'react';
-import { CourseProvider, useCourseContext } from '@/lib/courses';
-import { CourseErrorBoundary } from './course-error-boundary';
-import { CourseFilters } from './course-filters';
-import { CourseGrid } from './course-grid';
+import { useCourseContext } from '@/lib/courses';
+import { CourseGrid } from '@/components/courses/course-grid';
 import { EnhancedCourse } from '@/lib/courses/courses-enhanced.context';
 
-interface CourseContentProps {
-  initialData: { courses: EnhancedCourse[]; total: number };
-}
-
-export function CourseContent({ initialData }: CourseContentProps) {
-  return (
-    <CourseErrorBoundary>
-      <CourseProvider initialCourses={initialData.courses}>
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4 text-primary">Explore Game Development Courses</h1>
-            <p className="text-xl text-muted-foreground">Discover and master essential skills and concepts in game development.</p>
-          </div>
-
-          <CourseFilters />
-          <CourseGridEnhanced />
-        </div>
-      </CourseProvider>
-    </CourseErrorBoundary>
-  );
-}
-
 // Enhanced CourseGrid that uses the context
-function CourseGridEnhanced() {
+export function CourseGridEnhanced() {
   const { state, paginatedCourses } = useCourseContext();
+  
+  console.log('CourseGridEnhanced - state:', {
+    isLoading: state.isLoading,
+    coursesCount: state.courses.length,
+    filteredCoursesCount: state.filteredCourses.length,
+    paginatedCoursesCount: paginatedCourses.length,
+    filters: state.filters,
+  });
   
   // Convert EnhancedCourse to Course for the grid component
   const coursesForGrid = paginatedCourses.map((course: EnhancedCourse) => ({
@@ -60,6 +44,8 @@ function CourseGridEnhanced() {
     progress: course.progress || 0,
     certification: false,
   }));
+
+  console.log('CourseGridEnhanced - coursesForGrid:', coursesForGrid.length, coursesForGrid.slice(0, 2));
 
   return <CourseGrid courses={coursesForGrid} loading={state.isLoading} />;
 }

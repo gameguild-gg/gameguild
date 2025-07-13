@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/compon
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSession, signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-import { getUsersMe } from '@/lib/api/generated';
+import { getApiUsersById } from '@/lib/api/generated';
 import { createClient } from '@/lib/api/generated/client';
 import { environment } from '@/configs/environment';
 import { UserResponseDto } from '@/lib/api/generated/types.gen';
@@ -53,9 +53,15 @@ export default function UserProfileDropdown() {
           },
         });
 
-        // Get current user data from CMS
-        const result = await getUsersMe({
+        // Get current user data from CMS using the user ID from session
+        if (!session.user?.id) {
+          console.error('No user ID found in session');
+          return;
+        }
+
+        const result = await getApiUsersById({
           client: apiClient,
+          path: { id: session.user.id },
         });
 
         if (result && result.data) {

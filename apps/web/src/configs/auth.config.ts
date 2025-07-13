@@ -17,7 +17,7 @@ export const authConfig: NextAuthConfig = {
       clientSecret: environment.googleClientSecret,
       authorization: {
         params: {
-          request_uri: environment.signInGoogleCallbackUrl,
+          scope: 'openid email profile',
         },
       },
     }),
