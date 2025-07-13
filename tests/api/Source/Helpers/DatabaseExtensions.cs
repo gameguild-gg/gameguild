@@ -7,7 +7,7 @@ namespace GameGuild.Tests.Helpers {
   /// </summary>
   public static class DatabaseExtensions {
     /// <summary>
-    /// Determines whether the database is a SQLite database
+    /// Determines whether the database is an SQLite database
     /// </summary>
     public static bool IsSqlite(this DatabaseFacade database) { return database.ProviderName?.Contains("Sqlite") ?? false; }
 

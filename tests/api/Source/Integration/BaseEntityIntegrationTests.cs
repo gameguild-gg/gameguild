@@ -18,7 +18,7 @@ public class BaseEntityIntegrationTests {
   [Fact]
   public async Task User_BaseEntityProperties_ShouldWork() {
     // Arrange
-    using var context = GetInMemoryContext();
+    await using var context = GetInMemoryContext();
     var userService = new UserService(context);
 
     // Act - Create user using BaseEntity constructor pattern
@@ -34,14 +34,14 @@ public class BaseEntityIntegrationTests {
     Assert.Null(createdUser.DeletedAt);
     Assert.False(createdUser.IsDeleted);
 
-    // Version is set to 1 when entity is saved to the database by ApplicationDbContext.UpdateTimestamps()
+    // Version is set to 1 when the entity is saved to the database by ApplicationDbContext.UpdateTimestamps()
     Assert.Equal(1, createdUser.Version);
   }
 
   [Fact]
   public async Task User_SoftDelete_ShouldWork() {
     // Arrange
-    using var context = GetInMemoryContext();
+    await using var context = GetInMemoryContext();
     var userService = new UserService(context);
 
     var user = new UserModel(new { Name = "Delete Test", Email = "delete@example.com" });
@@ -55,9 +55,10 @@ public class BaseEntityIntegrationTests {
     var deletedUsers = await userService.GetDeletedUsersAsync();
 
     Assert.DoesNotContain(activeUsers, u => u.Id == createdUser.Id);
-    Assert.Contains(deletedUsers, u => u.Id == createdUser.Id);
+    var collection = deletedUsers as UserModel[] ?? deletedUsers.ToArray();
+    Assert.Contains(collection, u => u.Id == createdUser.Id);
 
-    var deletedUser = deletedUsers.First(u => u.Id == createdUser.Id);
+    var deletedUser = collection.First(u => u.Id == createdUser.Id);
     Assert.True(deletedUser.IsDeleted);
     Assert.NotNull(deletedUser.DeletedAt);
   }
@@ -65,7 +66,7 @@ public class BaseEntityIntegrationTests {
   [Fact]
   public async Task User_RestoreAfterSoftDelete_ShouldWork() {
     // Arrange
-    using var context = GetInMemoryContext();
+    await using var context = GetInMemoryContext();
     var userService = new UserService(context);
 
     var user = new UserModel(new { Name = "Restore Test", Email = "restore@example.com" });
@@ -79,10 +80,12 @@ public class BaseEntityIntegrationTests {
     var activeUsers = await userService.GetAllUsersAsync();
     var deletedUsers = await userService.GetDeletedUsersAsync();
 
-    Assert.Contains(activeUsers, u => u.Id == createdUser.Id);
+    var collection = activeUsers as UserModel[] ?? activeUsers.ToArray();
+
+    Assert.Contains(collection, u => u.Id == createdUser.Id);
     Assert.DoesNotContain(deletedUsers, u => u.Id == createdUser.Id);
 
-    var restoredUser = activeUsers.First(u => u.Id == createdUser.Id);
+    var restoredUser = collection.First(u => u.Id == createdUser.Id);
     Assert.False(restoredUser.IsDeleted);
     Assert.Null(restoredUser.DeletedAt);
   }
