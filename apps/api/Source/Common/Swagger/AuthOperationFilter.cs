@@ -12,15 +12,10 @@ namespace GameGuild.Common;
 public class AuthOperationFilter : IOperationFilter {
   public void Apply(OpenApiOperation operation, OperationFilterContext context) {
     // Check if the endpoint has the [Public] attribute
-    var hasPublicAttribute = context.MethodInfo
-                                    .GetCustomAttributes<PublicAttribute>(true)
-                                    .Any(attr => attr.IsPublic);
+    var hasPublicAttribute = context.MethodInfo.GetCustomAttributes<PublicAttribute>(true).Any(attr => attr.IsPublic);
 
     // Also check if the controller has the [Public] attribute
-    var controllerHasPublicAttribute = context.MethodInfo.DeclaringType?
-                                              .GetCustomAttributes<PublicAttribute>(true)
-                                              .Any(attr => attr.IsPublic) ??
-                                       false;
+    var controllerHasPublicAttribute = context.MethodInfo.DeclaringType?.GetCustomAttributes<PublicAttribute>(true).Any(attr => attr.IsPublic) ?? false;
 
     // If neither the method nor the controller has [Public] attribute, require authentication
     if (!hasPublicAttribute && !controllerHasPublicAttribute)
