@@ -393,13 +393,14 @@ export async function bulkUpdateUsers(
 }
 
 /**
- * Search users
+ * Search users using the backend UserProfiles API
  */
 export async function searchUsers(query: string, limit: number = 10): Promise<User[]> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
-    const response = await fetch(`${apiUrl}/users/search?q=${encodeURIComponent(query)}&limit=${limit}`, {
+    // Use the UserProfiles endpoint with searchTerm parameter
+    const response = await fetch(`${apiUrl}/api/userprofiles?searchTerm=${encodeURIComponent(query)}&take=${limit}&includeDeleted=false`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -414,9 +415,31 @@ export async function searchUsers(query: string, limit: number = 10): Promise<Us
     }
 
     const data = await response.json();
-    return Array.isArray(data) ? data : data.users || [];
+    console.log('🔍 [SEARCH DEBUG] Raw API response:', data);
+
+    // Transform UserProfile data to User format
+    if (Array.isArray(data)) {
+      const users = data.map((profile: any) => ({
+        id: profile.id,
+        version: profile.version,
+        name: profile.displayName || profile.givenName + ' ' + profile.familyName,
+        email: profile.email || `${profile.displayName}@unknown.com`, // UserProfile doesn't have email
+        isActive: !profile.isDeleted,
+        balance: 0, // UserProfile doesn't have balance
+        availableBalance: 0,
+        createdAt: profile.createdAt,
+        updatedAt: profile.updatedAt,
+        deletedAt: profile.deletedAt,
+        isDeleted: profile.isDeleted,
+      }));
+      
+      console.log('✅ [SEARCH DEBUG] Transformed users:', users.length);
+      return users;
+    }
+    
+    return [];
   } catch (error) {
-    console.error('Error searching users:', error);
+    console.error('❌ [SEARCH DEBUG] Error searching users:', error);
     return [];
   }
 }
@@ -533,5 +556,107 @@ export async function bulkDeactivateUsers(userIds: string[], reason?: string): P
       success: false,
       error: error instanceof Error ? error.message : 'Failed to deactivate users',
     };
+  }
+}
+
+/**
+ * Get user by username/displayName search
+ */
+export async function getUserByUsername(username: string): Promise<User | null> {
+  try {
+    console.log('🔍 [USER DEBUG] Searching for user:', username);
+    
+    // Search for users with matching name or email
+    const users = await searchUsers(username, 50);
+    
+    if (!users || users.length === 0) {
+      console.log('❌ [USER DEBUG] No users found in UserProfiles, creating mock user for demonstration');
+      
+      // For demonstration purposes, create a mock user based on the username
+      // In a real app, you would either:
+      // 1. Automatically create a UserProfile when a user registers
+      // 2. Use the authentication user data directly
+      const mockUser: User = {
+        id: `mock-${username}`,
+        version: 1,
+        name: username,
+        email: `${username}@example.com`,
+        isActive: true,
+        balance: 100,
+        availableBalance: 100,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isDeleted: false,
+      };
+      
+      console.log('✅ [USER DEBUG] Created mock user for demonstration:', mockUser.name);
+      return mockUser;
+    }
+
+    console.log('📊 [USER DEBUG] Search found users:', users.length);
+
+    // Look for exact match first (case insensitive)
+    const exactMatch = users.find(
+      (user: User) => user.name?.toLowerCase() === username.toLowerCase() || user.email?.toLowerCase() === username.toLowerCase()
+    );
+
+    if (exactMatch) {
+      console.log('✅ [USER DEBUG] Exact match found:', exactMatch.name || exactMatch.email);
+      return exactMatch;
+    }
+
+    // If no exact match, look for partial matches
+    const partialMatch = users.find(
+      (user: User) => user.name?.toLowerCase().includes(username.toLowerCase()) || user.email?.toLowerCase().includes(username.toLowerCase()),
+    );
+
+    if (partialMatch) {
+      console.log('✅ [USER DEBUG] Partial match found:', partialMatch.name || partialMatch.email);
+      return partialMatch;
+    }
+
+    console.log('❌ [USER DEBUG] No close matches found for:', username);
+    return null;
+  } catch (error) {
+    console.error('❌ [USER DEBUG] Error searching for user:', {
+      username,
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+    });
+    return null;
+  }
+}
+
+/**
+ * Check if a user exists by username
+ */
+export async function userExists(username: string): Promise<boolean> {
+  try {
+    const user = await getUserByUsername(username);
+    const exists = user !== null;
+    console.log('🔍 [USER DEBUG] User exists check:', { username, exists });
+    return exists;
+  } catch (error) {
+    console.error('❌ [USER DEBUG] Error checking if user exists:', error);
+    return false;
+  }
+}
+
+/**
+ * Get current authenticated user
+ */
+export async function getCurrentUser(): Promise<User | null> {
+  try {
+    const result = await getUsersData();
+    if (!result.users || result.users.length === 0) {
+      return null;
+    }
+    
+    // For now, return the first user as current user
+    // In a real app, this would get the current session user
+    return result.users[0];
+  } catch (error) {
+    console.error('❌ [USER DEBUG] Error getting current user:', error);
+    return null;
   }
 }

@@ -2,10 +2,10 @@
 
 import { useActionState, useEffect } from 'react';
 import { useUserContext, useUserFilters, useUserSelection, useUserPagination } from '@/lib/users/user-context.tsx';
-import { createUser, updateUser, deleteUser, toggleUserStatus, revalidateUsersData } from '@/lib/actions/users.ts';
+import { createUserAction, updateUserAction, deleteUserAction, toggleUserStatusAction, revalidateUsersDataAction } from '@/lib/actions/user-management';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -14,9 +14,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Users, Plus, Search, Filter, MoreHorizontal, Edit, Trash2, UserCheck, UserX, Download, Upload, RefreshCw } from 'lucide-react';
+import { Users, Plus, Search, Filter, MoreHorizontal, Edit, Trash2, UserCheck, UserX, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
 interface UserManagementContentProps {
@@ -40,8 +39,8 @@ export function UserManagementContent({ initialPagination }: UserManagementConte
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   // Server action states
-  const [createState, createUserAction, isCreatingUser] = useActionState(createUser, { success: false });
-  const [updateState, updateUserAction, isUpdatingUser] = useActionState(updateUser.bind(null, editingUser?.id || ''), { success: false });
+  const [createState, createFormAction, isCreatingUser] = useActionState(createUserAction, { success: false });
+  const [updateState, updateFormAction, isUpdatingUser] = useActionState(updateUserAction.bind(null, editingUser?.id || ''), { success: false });
 
   // Update pagination from props
   useEffect(() => {
@@ -66,7 +65,7 @@ export function UserManagementContent({ initialPagination }: UserManagementConte
   }, [updateState.success, refreshData]);
 
   const handleDelete = async (userId: string) => {
-    const result = await deleteUser(userId);
+    const result = await deleteUserAction(userId);
     if (result.success) {
       setUserToDelete(null);
       setIsDeleteDialogOpen(false);
@@ -75,14 +74,14 @@ export function UserManagementContent({ initialPagination }: UserManagementConte
   };
 
   const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
-    const result = await toggleUserStatus(userId, currentStatus);
+    const result = await toggleUserStatusAction(userId, currentStatus);
     if (result.success) {
       refreshData();
     }
   };
 
   const handleRefresh = async () => {
-    await revalidateUsersData();
+    await revalidateUsersDataAction();
     refreshData();
   };
 
@@ -116,7 +115,7 @@ export function UserManagementContent({ initialPagination }: UserManagementConte
                 <DialogTitle>Create New User</DialogTitle>
                 <DialogDescription>Add a new user to the platform. They will receive an email invitation.</DialogDescription>
               </DialogHeader>
-              <form action={createUserAction}>
+              <form action={createFormAction}>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
@@ -362,7 +361,7 @@ export function UserManagementContent({ initialPagination }: UserManagementConte
             <DialogDescription>Update user information and settings.</DialogDescription>
           </DialogHeader>
           {editingUser && (
-            <form action={updateUserAction}>
+            <form action={updateFormAction}>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-name">Full Name</Label>

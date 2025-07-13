@@ -8,26 +8,29 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
+import { User } from '@/types/user';
 
 interface UserProfileProps {
-  username: string;
+  user: User;
 }
 
-// Mock data - in a real app, this would come from an API
-const getUserData = (username: string) => ({
-  id: '1',
-  username: username,
-  name: username.charAt(0).toUpperCase() + username.slice(1) + ' User',
-  email: `${username}@example.com`,
+// Transform backend User to display format
+const transformUserData = (user: User) => ({
+  id: user.id,
+  username: user.name, // Use name as username since that's what we have
+  name: user.name,
+  email: user.email,
   avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-  bio: 'Passionate game developer and educator. Love creating interactive experiences and teaching others.',
-  joinDate: '2023-01-15',
-  location: 'San Francisco, CA',
-  website: `https://${username}.dev`,
-  github: username,
-  twitter: `@${username}`,
+  bio: 'Game developer and learner on Game Guild platform.',
+  joinDate: new Date(user.createdAt).toLocaleDateString(),
+  location: 'Unknown', // Not provided by backend
+  website: '', // Not provided by backend
+  github: '', // Not provided by backend
+  twitter: '', // Not provided by backend
+  isActive: user.isActive,
+  balance: user.balance,
   stats: {
-    coursesCompleted: 12,
+    coursesCompleted: 0, // Would need to be fetched from courses API
     projectsCreated: 8,
     totalPoints: 2450,
     rank: 'Expert Developer',
@@ -55,10 +58,9 @@ const mockCourses = [
   },
 ];
 
-const UserProfile: React.FC<UserProfileProps> = ({ username }) => {
-  // In a real app, you would fetch user data based on the username
-  // For now, we'll use mock data but display the username from the URL
-  const mockUser = getUserData(username);
+const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
+  // Transform backend User data to display format
+  const userData = transformUserData(user);
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
       {/* Profile Header */}
@@ -68,8 +70,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ username }) => {
             <div className="flex flex-col md:flex-row gap-6 items-start">
               <div className="flex-shrink-0">
                 <Image
-                  src={mockUser.avatar}
-                  alt={mockUser.name}
+                  src={userData.avatar}
+                  alt={userData.name}
                   width={128}
                   height={128}
                   className="w-32 h-32 rounded-full object-cover border-4 border-green-500"
@@ -79,11 +81,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ username }) => {
               <div className="flex-1">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                   <div>
-                    <h1 className="text-3xl font-bold mb-2">{mockUser.name}</h1>
-                    <p className="text-zinc-600 dark:text-zinc-400 mb-2">{mockUser.bio}</p>
+                    <h1 className="text-3xl font-bold mb-2">{userData.name}</h1>
+                    <p className="text-zinc-600 dark:text-zinc-400 mb-2">{userData.bio}</p>
                     <div className="flex flex-wrap gap-2 text-sm text-zinc-500">
-                      <span>📍 {mockUser.location}</span>
-                      <span>📅 Joined {new Date(mockUser.joinDate).toLocaleDateString()}</span>
+                      <span>📍 {userData.location || 'Unknown'}</span>
+                      <span>📅 Joined {userData.joinDate}</span>
+                      <span>💰 Balance: ${userData.balance}</span>
+                      <span>🎯 Status: {userData.isActive ? 'Active' : 'Inactive'}</span>
                     </div>
                   </div>
 
@@ -100,19 +104,19 @@ const UserProfile: React.FC<UserProfileProps> = ({ username }) => {
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">{mockUser.stats.coursesCompleted}</div>
+                    <div className="text-2xl font-bold text-green-600">{userData.stats.coursesCompleted}</div>
                     <div className="text-sm text-zinc-600 dark:text-zinc-400">Courses</div>
                   </div>
                   <div className="text-center p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">{mockUser.stats.projectsCreated}</div>
+                    <div className="text-2xl font-bold text-blue-600">0</div>
                     <div className="text-sm text-zinc-600 dark:text-zinc-400">Projects</div>
                   </div>
                   <div className="text-center p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">{mockUser.stats.totalPoints}</div>
+                    <div className="text-2xl font-bold text-purple-600">0</div>
                     <div className="text-sm text-zinc-600 dark:text-zinc-400">Points</div>
                   </div>
                   <div className="text-center p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
-                    <div className="text-sm font-bold text-orange-600">{mockUser.stats.rank}</div>
+                    <div className="text-sm font-bold text-orange-600">Beginner</div>
                     <div className="text-sm text-zinc-600 dark:text-zinc-400">Rank</div>
                   </div>
                 </div>
