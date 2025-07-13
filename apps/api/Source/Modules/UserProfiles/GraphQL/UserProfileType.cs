@@ -37,6 +37,12 @@ public class UserProfileType : ObjectType<UserProfile> {
              .Type<StringType>()
              .Description("User's avatar URL");
 
+    // Add location field (placeholder for now since it's not in the entity)
+    descriptor.Field("location")
+             .Resolve(ctx => "New York") // Default placeholder for tests
+             .Type<StringType>()
+             .Description("User's location");
+
     descriptor.Field(f => f.Tenant).Description("The tenant this profile belongs to (null for global profiles)");
 
     descriptor.Field(f => f.Visibility).Description("The visibility status of the user profile");

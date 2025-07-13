@@ -40,7 +40,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.GraphQL {
 
       var query = @"
                 query GetUserProfile($id: ID!) {
-                  userProfile(id: $id) {
+                  getUserProfileById(id: $id) {
                     id
                     bio
                     avatarUrl
@@ -68,12 +68,25 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.GraphQL {
       // Act
       var response = await _client.PostAsync("/graphql", content);
       var responseString = await response.Content.ReadAsStringAsync();
+      
+      // If response is not successful or has errors, throw with details
+      if (!response.IsSuccessStatusCode) {
+        throw new Exception($"HTTP Error {response.StatusCode}. Response: {responseString}");
+      }
+      
       var result = JsonDocument.Parse(responseString);
+      
+      if (result.RootElement.TryGetProperty("errors", out var errors)) {
+        var errorMessage = errors.GetArrayLength() > 0 
+          ? errors[0].GetProperty("message").GetString() 
+          : "Unknown GraphQL error";
+        throw new Exception($"GraphQL Error: {errorMessage}. Response: {responseString}");
+      }
 
       // Get data from GraphQL response
       var profileNode = result.RootElement
                               .GetProperty("data")
-                              .GetProperty("userProfile");
+                              .GetProperty("getUserProfileById");
 
       // Assert
       Assert.True(response.IsSuccessStatusCode);
@@ -157,7 +170,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.GraphQL {
 
       var query = @"
                 query {
-                  userProfiles {
+                  getUserProfiles {
                     id
                     bio
                     user {
@@ -182,7 +195,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.GraphQL {
       // Get data from GraphQL response
       var profilesArray = result.RootElement
                                 .GetProperty("data")
-                                .GetProperty("userProfiles");
+                                .GetProperty("getUserProfiles");
 
       // Assert
       Assert.True(response.IsSuccessStatusCode);
@@ -200,8 +213,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.GraphQL {
         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
       var query = @"
-                query($location: String!) {
-                  userProfilesByLocation(location: $location) {
+                query($searchTerm: String) {
+                  getUserProfiles(searchTerm: $searchTerm) {
                     id
                     bio
                     location
@@ -212,7 +225,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.GraphQL {
                 }
             ";
 
-      var request = new { query = query, variables = new { location = "New York" } };
+      var request = new { query = query, variables = new { searchTerm = "New York" } };
 
       var content = new StringContent(
         JsonSerializer.Serialize(request),
@@ -223,15 +236,29 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.GraphQL {
       // Act
       var response = await _client.PostAsync("/graphql", content);
       var responseString = await response.Content.ReadAsStringAsync();
+      
+      // Parse the response to check for errors
       var result = JsonDocument.Parse(responseString);
+
+      // If response is not successful or has errors, throw with details
+      if (!response.IsSuccessStatusCode) {
+        throw new Exception($"HTTP Error {response.StatusCode}. Response: {responseString}");
+      }
+      
+      if (result.RootElement.TryGetProperty("errors", out var errors)) {
+        var errorMessage = errors.GetArrayLength() > 0 
+          ? errors[0].GetProperty("message").GetString() 
+          : "Unknown GraphQL error";
+        throw new Exception($"GraphQL Error: {errorMessage}. Response: {responseString}");
+      }
+
+      // Assert
+      Assert.True(response.IsSuccessStatusCode);
 
       // Get data from GraphQL response
       var profilesArray = result.RootElement
                                 .GetProperty("data")
-                                .GetProperty("userProfilesByLocation");
-
-      // Assert
-      Assert.True(response.IsSuccessStatusCode);
+                                .GetProperty("getUserProfiles");
 
       // Check all returned profiles have the correct location
       var arrayLength = profilesArray.GetArrayLength();
