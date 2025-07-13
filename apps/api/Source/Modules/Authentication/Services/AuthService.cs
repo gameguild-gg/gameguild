@@ -286,9 +286,19 @@ namespace GameGuild.Modules.Authentication {
       string email, string name, string provider,
       string providerId
     ) {
+      var result = await FindOrCreateOAuthUserWithInfoAsync(email, name, provider, providerId);
+      return result.User;
+    }
+
+    private async Task<(User User, bool IsNewUser)> FindOrCreateOAuthUserWithInfoAsync(
+      string email, string name, string provider,
+      string providerId
+    ) {
       // First try to find user by email
       var user =
         await context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.Email == email);
+
+      bool isNewUser = false;
 
       if (user == null) {
         // Create new user
@@ -301,6 +311,7 @@ namespace GameGuild.Modules.Authentication {
         };
 
         context.Users.Add(user);
+        isNewUser = true;
       }
 
       // Check if OAuth credential exists (using Type field to store provider info)
@@ -326,7 +337,7 @@ namespace GameGuild.Modules.Authentication {
 
       await context.SaveChangesAsync();
 
-      return user;
+      return (user, isNewUser);
     }
 
     private async Task SaveRefreshTokenAsync(Guid userId, string refreshToken) {

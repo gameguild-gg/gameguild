@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Users, UserCheck, UserX, GraduationCap, BookOpen, DollarSign, TrendingUp, TrendingDown, Activity, Eye, Calendar } from 'lucide-react';
-import { getUserStatistics } from '@/lib/actions/users.ts';
+import { fetchUserStatistics } from '@/lib/api/dashboard';
 
 interface DashboardStatsProps {
   className?: string;
@@ -46,7 +46,7 @@ export function DashboardStats({ className }: DashboardStatsProps) {
         setIsLoading(true);
 
         // Fetch user statistics
-        const userStatsResult = await getUserStatistics();
+        const userStatsResult = await fetchUserStatistics();
         if (userStatsResult.success && userStatsResult.statistics) {
           setUserStats(userStatsResult.statistics);
         }
