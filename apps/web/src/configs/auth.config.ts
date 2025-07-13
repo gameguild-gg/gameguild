@@ -17,7 +17,8 @@ export const authConfig: NextAuthConfig = {
       clientSecret: environment.googleClientSecret,
       authorization: {
         params: {
-          scope: 'openid email profile',
+          request_uri: environment.signInGoogleCallbackUrl,
+          // scope: 'openid email profile',
         },
       },
     }),
@@ -75,32 +76,40 @@ export const authConfig: NextAuthConfig = {
   session: { strategy: 'jwt' },
   callbacks: {
     async signIn({ user, account, profile }) {
-      console.log('SignIn callback triggered:', {
+      console.log('🔑 [AUTH DEBUG] SignIn callback triggered:', {
         provider: account?.provider,
         hasIdToken: !!account?.id_token,
         userEmail: user?.email,
+        accountType: account?.type,
+        profileId: profile?.sub,
+        timestamp: new Date().toISOString(),
       });
 
       // Handle admin bypass provider
       if (account?.provider === 'admin-bypass') {
-        console.log('Admin credentials sign in successful');
+        console.log('🔧 [AUTH DEBUG] Admin credentials sign in successful');
         // For admin login, the user object already contains the backend response
         if ((user as any).cmsData) {
-          console.log('Admin login backend response found');
+          console.log('✅ [AUTH DEBUG] Admin login backend response found');
           return true;
         } else {
-          console.error('Admin login missing backend response');
+          console.error('❌ [AUTH DEBUG] Admin login missing backend response');
           return false;
         }
       }
 
       if (account?.provider === 'google') {
+        console.log('🔍 [AUTH DEBUG] Processing Google authentication...');
         if (!account?.id_token) {
-          console.error('No id_token received from Google');
+          console.error('❌ [AUTH DEBUG] No id_token received from Google');
           return false;
         }
+        
+        console.log('📨 [AUTH DEBUG] Google ID token received, length:', account.id_token.length);
+        
         try {
-          console.log('Attempting Google ID token validation with CMS backend:', environment.apiBaseUrl);
+          console.log('🚀 [AUTH DEBUG] Attempting Google ID token validation with CMS backend:', environment.apiBaseUrl);
+          console.log('🔑 [AUTH DEBUG] Making request to: POST /api/auth/google/id-token');
 
           // Try the new Google ID token endpoint
           const response = await apiClient.googleIdTokenSignIn({
@@ -108,10 +117,13 @@ export const authConfig: NextAuthConfig = {
             tenantId: undefined, // Can be set later via tenant switching
           });
 
-          console.log('CMS backend authentication successful:', {
+          console.log('✅ [AUTH DEBUG] CMS backend authentication successful:', {
             userId: response.user?.id,
+            userEmail: response.user?.email,
             tenantId: response.tenantId,
             availableTenants: response.availableTenants?.length,
+            hasAccessToken: !!response.accessToken,
+            hasRefreshToken: !!response.refreshToken,
           });
 
           // Store the backend response in the user object
@@ -123,33 +135,46 @@ export const authConfig: NextAuthConfig = {
 
           return true;
         } catch (error) {
-          console.error('❌ CMS backend authentication failed:', {
+          console.error('❌ [AUTH DEBUG] CMS backend authentication failed:', {
             error: error instanceof Error ? error.message : error,
             apiBaseUrl: environment.apiBaseUrl,
             endpoint: '/auth/google/id-token',
             cause: (error as any)?.cause?.code || 'Unknown',
+            stack: error instanceof Error ? error.stack : 'No stack trace',
             fullError: error,
           });
 
           // Check if it's a connection error
           if ((error as any)?.cause?.code === 'ECONNREFUSED') {
-            console.error('🚨 CMS Backend is not running on:', environment.apiBaseUrl);
-            console.error('💡 Please start the CMS backend with: cd apps/cms && dotnet run');
+            console.error('🚨 [AUTH DEBUG] CMS Backend is not running on:', environment.apiBaseUrl);
+            console.error('💡 [AUTH DEBUG] Please start the CMS backend with: cd apps/cms && dotnet run');
           } else {
-            console.error('🔍 CMS Backend is running but authentication failed. Check CMS logs for details.');
-            console.error('🐛 This might be a Google ID token validation issue in the CMS backend.');
+            console.error('🔍 [AUTH DEBUG] CMS Backend is running but authentication failed. Check CMS logs for details.');
+            console.error('🐛 [AUTH DEBUG] This might be a Google ID token validation issue in the CMS backend.');
           }
 
           return false;
         }
       }
 
-      console.log('SignIn: Provider not supported:', account?.provider);
+      console.log('⚠️ [AUTH DEBUG] SignIn: Provider not supported:', account?.provider);
       return false;
     },
     async jwt({ token, user, account, trigger, session }) {
+      console.log('🔐 [AUTH DEBUG] JWT callback triggered:', {
+        trigger,
+        hasUser: !!user,
+        hasAccount: !!account,
+        hasToken: !!token,
+        hasSession: !!session,
+        userId: user?.id,
+        provider: account?.provider,
+        timestamp: new Date().toISOString(),
+      });
+      
       // If this is a new sign-in, store the CMS data
       if (user && (user as any).cmsData) {
+        console.log('📦 [AUTH DEBUG] Storing CMS data in JWT token...');
         const cmsData = (user as any).cmsData as SignInResponse;
 
         token.id = cmsData.user.id;
@@ -159,10 +184,22 @@ export const authConfig: NextAuthConfig = {
         token.user = cmsData.user;
         token.tenantId = cmsData.tenantId;
         token.availableTenants = cmsData.availableTenants;
+        
+        console.log('✅ [AUTH DEBUG] CMS data stored in token:', {
+          userId: token.id,
+          hasAccessToken: !!token.accessToken,
+          hasRefreshToken: !!token.refreshToken,
+          expires: token.expires,
+          tenantId: token.tenantId,
+        });
       }
 
       // Handle session updates (like tenant switching)
       if (trigger === 'update' && session) {
+        console.log('🔄 [AUTH DEBUG] Session update triggered:', {
+          hasCurrentTenant: !!session.currentTenant,
+          currentTenant: session.currentTenant,
+        });
         if (session.currentTenant) {
           token.currentTenant = session.currentTenant;
         }
@@ -182,22 +219,23 @@ export const authConfig: NextAuthConfig = {
         expiresAt = new Date(token.expires as unknown as string);
       }
 
-      console.log('Token expiry check:', {
+      console.log('⏰ [AUTH DEBUG] Token expiry check:', {
         now: now.toISOString(),
         expiresAt: expiresAt?.toISOString(),
         isExpired: expiresAt ? now > expiresAt : false,
         hasRefreshToken: !!token.refreshToken,
         tokenSource: expiresAt ? (token.accessToken ? 'JWT_DECODE' : 'STORED_VALUE') : 'NONE',
+        willAttemptRefresh: expiresAt && now > expiresAt && !!token.refreshToken,
       });
 
       if (expiresAt && now > expiresAt && token.refreshToken) {
-        console.log('🔄 Token expired, attempting refresh...');
+        console.log('🔄 [AUTH DEBUG] Token expired, attempting refresh...');
         try {
           const refreshResponse = await apiClient.refreshToken({
             refreshToken: token.refreshToken as string,
           });
 
-          console.log('✅ Token refresh successful');
+          console.log('✅ [AUTH DEBUG] Token refresh successful');
           token.accessToken = refreshResponse.accessToken;
           token.refreshToken = refreshResponse.refreshToken;
           token.expires = new Date(refreshResponse.expires);
@@ -206,7 +244,10 @@ export const authConfig: NextAuthConfig = {
           delete token.error;
           delete token.error;
         } catch (error) {
-          console.error('❌ Failed to refresh token:', error);
+          console.error('❌ [AUTH DEBUG] Failed to refresh token:', {
+            error: error instanceof Error ? error.message : error,
+            stack: error instanceof Error ? error.stack : 'No stack trace',
+          });
           // Token refresh failed, user needs to sign in again
           token.error = 'RefreshTokenError';
           token.accessToken = undefined;
@@ -217,6 +258,16 @@ export const authConfig: NextAuthConfig = {
       return token;
     },
     async session({ session, token }) {
+      console.log('📋 [AUTH DEBUG] Session callback triggered:', {
+        hasSession: !!session,
+        hasToken: !!token,
+        tokenId: token.id,
+        hasAccessToken: !!token.accessToken,
+        hasError: !!token.error,
+        sessionUserEmail: session?.user?.email,
+        timestamp: new Date().toISOString(),
+      });
+      
       // Pass token data to the session
       session.accessToken = token.accessToken as string;
       session.user.id = token.id as string;

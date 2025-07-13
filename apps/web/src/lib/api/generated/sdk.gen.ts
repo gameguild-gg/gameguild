@@ -26,6 +26,9 @@ import type {
   PostApiAuthSigninData,
   PostApiAuthSigninResponses,
   PostApiAuthSigninErrors,
+  PostApiAuthGoogleIdTokenData,
+  PostApiAuthGoogleIdTokenResponses,
+  PostApiAuthGoogleIdTokenErrors,
   PostApiAuthRefreshData,
   PostApiAuthRefreshResponses,
   PostApiAuthRefreshErrors,
@@ -639,6 +642,17 @@ export const postApiAuthSignup = <ThrowOnError extends boolean = false>(options?
 export const postApiAuthSignin = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSigninData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostApiAuthSigninResponses, PostApiAuthSigninErrors, ThrowOnError>({
     url: '/api/Auth/signin',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiAuthGoogleIdToken = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthGoogleIdTokenData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiAuthGoogleIdTokenResponses, PostApiAuthGoogleIdTokenErrors, ThrowOnError>({
+    url: '/api/Auth/google/id-token',
     ...options,
     headers: {
       'Content-Type': 'application/json',
