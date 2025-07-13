@@ -77,7 +77,7 @@ public class TestingRequestType : ObjectType<TestingRequest> {
               .Description("Users participating in this testing request.");
 
     descriptor.Field("sessions")
-              .ResolveWith<TestingRequestResolvers>(r => r.GetSessions(default!, default!))
+              .ResolveWith<TestingRequestResolvers>(r => TestingRequestResolvers.GetSessions(default!, default!))
               .Type<ListType<TestingSessionType>>()
               .Description("Testing sessions for this request.");
   }

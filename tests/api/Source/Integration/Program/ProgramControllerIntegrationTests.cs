@@ -19,7 +19,7 @@ public class ProgramControllerIntegrationTests {
   [Fact]
   public async Task ProgramService_CreateProgram_Should_Work() {
     // Arrange
-    using var context = GetInMemoryContext();
+    await using var context = GetInMemoryContext();
     var programService = new ProgramService(context);
 
     var createDto = new CreateProgramDto("Test Program", "Test Description", "test-program");
@@ -38,7 +38,7 @@ public class ProgramControllerIntegrationTests {
   [Fact]
   public async Task ProgramService_GetPrograms_Should_Return_Empty_Initially() {
     // Arrange
-    using var context = GetInMemoryContext();
+    await using var context = GetInMemoryContext();
     var programService = new ProgramService(context);
 
     // Act
@@ -52,7 +52,7 @@ public class ProgramControllerIntegrationTests {
   [Fact]
   public async Task ProgramService_GetPublishedPrograms_Should_Return_Empty_Initially() {
     // Arrange
-    using var context = GetInMemoryContext();
+    await using var context = GetInMemoryContext();
     var programService = new ProgramService(context);
 
     // Act
@@ -66,7 +66,7 @@ public class ProgramControllerIntegrationTests {
   [Fact]
   public async Task ProgramService_CreateAndRetrieveProgram_Should_Work() {
     // Arrange
-    using var context = GetInMemoryContext();
+    await using var context = GetInMemoryContext();
     var programService = new ProgramService(context);
 
     var createDto = new CreateProgramDto(
@@ -90,7 +90,7 @@ public class ProgramControllerIntegrationTests {
   [Fact]
   public async Task ProgramService_UpdateProgram_Should_Work() {
     // Arrange
-    using var context = GetInMemoryContext();
+    await using var context = GetInMemoryContext();
     var programService = new ProgramService(context);
 
     var createDto = new CreateProgramDto("Original Title", "Original Description", "original-slug");
@@ -112,7 +112,7 @@ public class ProgramControllerIntegrationTests {
   [Fact]
   public async Task ProgramService_PublishProgram_Should_ChangeStatus() {
     // Arrange
-    using var context = GetInMemoryContext();
+    await using var context = GetInMemoryContext();
     var programService = new ProgramService(context);
 
     var createDto = new CreateProgramDto("Program To Publish", "This program will be published", "program-to-publish");

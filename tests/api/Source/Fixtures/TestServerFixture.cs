@@ -117,11 +117,6 @@ namespace GameGuild.Tests.Fixtures {
           // Configure to handle validation errors properly
           options.EnableGetRequests = true;
       });
-      
-      // Extend the GraphQL schema with TestModuleQueries for mock tests
-      // This must be done after AddGraphQLInfrastructure to extend the existing schema
-      services.AddGraphQLServer()
-              .AddTypeExtension<TestModuleQueries>();
 
       // Add controllers from the main application assembly
       services.AddControllers()
