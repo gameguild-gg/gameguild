@@ -1,8 +1,9 @@
-import type { ProgrammingLanguage } from "../../components/ui/source-code/types"
+import type { ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
 import type { ExecutionContext, ExecutionResult, LanguageExecutor } from "./types"
-import { getFileContent } from "../../components/ui/source-code/utils"
+import { getFileContent } from "@/components/editor/ui/source-code/utils"
 
 export abstract class CompiledLanguageExecutor implements LanguageExecutor {
+  handleCommand?: ((command: string, context: ExecutionContext) => boolean) | undefined
   protected abstract languageName: string
   protected abstract compilerName: string
   protected abstract fileExtension: string
@@ -15,7 +16,7 @@ export abstract class CompiledLanguageExecutor implements LanguageExecutor {
     sourceFiles: Record<string, string>,
     mainFile: string,
   ): Promise<{ success: boolean; output: string[] }>
-  protected abstract execute(compiledCode: any): Promise<{ success: boolean; output: string[] }>
+  protected abstract executeCompiled(compiledCode: any): Promise<{ success: boolean; output: string[] }>
 
   // Implementation of the LanguageExecutor interface
   execute = async (fileId: string, context: ExecutionContext): Promise<ExecutionResult> => {
@@ -103,7 +104,7 @@ export abstract class CompiledLanguageExecutor implements LanguageExecutor {
 
       // Execute the compiled code
       addOutput(`Running ${this.languageName} program...`)
-      const executionResult = await this.execute(compilationResult)
+      const executionResult = await this.executeCompiled(compilationResult)
 
       // Check if execution was successful
       if (!executionResult.success) {

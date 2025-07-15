@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import type { LanguageType, ProgrammingLanguage } from "../components/ui/source-code/types"
+import type { LanguageType, ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
 
 interface UseLanguageSettingsProps {
   initialAllowedLanguages?: Record<LanguageType, boolean>
@@ -36,8 +36,10 @@ export function useLanguageSettings({
     json: true,
     xml: true,
     yaml: true,
-    bash: true,
-    plaintext: true,
+    text: true,
+    h: false,
+    hpp: false,
+    markdown: false
   },
   initialSelectedLanguage = "javascript",
 }: UseLanguageSettingsProps = {}): UseLanguageSettingsReturn {
