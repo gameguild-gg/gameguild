@@ -15,14 +15,12 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   // Basic CRUD Operations
   public async Task<ProgramEntity?> GetProgramByIdAsync(Guid id) { return await context.Programs.Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id); }
 
-  public async Task<ProgramEntity?> GetProgramBySlugAsync(string slug) { 
-    return await context.Programs.Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Slug == slug); 
-  }
+  public async Task<ProgramEntity?> GetProgramBySlugAsync(string slug) { return await context.Programs.Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Slug == slug); }
 
-  public async Task<ProgramEntity?> GetPublishedProgramBySlugAsync(string slug) { 
+  public async Task<ProgramEntity?> GetPublishedProgramBySlugAsync(string slug) {
     return await context.Programs
-      .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public)
-      .FirstOrDefaultAsync(p => p.Slug == slug); 
+                        .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public)
+                        .FirstOrDefaultAsync(p => p.Slug == slug);
   }
 
   public async Task<ProgramEntity?> GetProgramWithContentAsync(Guid id) {

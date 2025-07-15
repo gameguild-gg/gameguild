@@ -6,10 +6,8 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// Validator for UpdateTenantCommand
 /// </summary>
-public class UpdateTenantCommandValidator : AbstractValidator<UpdateTenantCommand>
-{
-  public UpdateTenantCommandValidator()
-  {
+public class UpdateTenantCommandValidator : AbstractValidator<UpdateTenantCommand> {
+  public UpdateTenantCommandValidator() {
     RuleFor(x => x.Id)
       .NotEmpty()
       .WithMessage("Tenant ID is required");

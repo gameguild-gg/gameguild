@@ -11,17 +11,13 @@ namespace GameGuild.Modules.Tenants;
 public class GetTenantStatisticsHandler(
   ApplicationDbContext context,
   ILogger<GetTenantStatisticsHandler> logger
-) : IQueryHandler<GetTenantStatisticsQuery, Common.Result<TenantStatistics>>
-{
-  public async Task<Common.Result<TenantStatistics>> Handle(GetTenantStatisticsQuery request, CancellationToken cancellationToken)
-  {
-    try
-    {
+) : IQueryHandler<GetTenantStatisticsQuery, Common.Result<TenantStatistics>> {
+  public async Task<Common.Result<TenantStatistics>> Handle(GetTenantStatisticsQuery request, CancellationToken cancellationToken) {
+    try {
       var allTenants = context.Resources.OfType<Tenant>();
       var activeTenants = allTenants.Where(t => t.DeletedAt == null);
 
-      var statistics = new TenantStatistics
-      {
+      var statistics = new TenantStatistics {
         TotalTenants = await activeTenants.CountAsync(cancellationToken),
         ActiveTenants = await activeTenants.CountAsync(t => t.IsActive, cancellationToken),
         InactiveTenants = await activeTenants.CountAsync(t => !t.IsActive, cancellationToken),
@@ -30,14 +26,19 @@ public class GetTenantStatisticsHandler(
         NewestTenantCreatedAt = await activeTenants.MaxAsync(t => (DateTime?)t.CreatedAt, cancellationToken),
       };
 
-      logger.LogInformation("Generated tenant statistics: {Total} total, {Active} active, {Inactive} inactive, {Deleted} deleted", 
-                            statistics.TotalTenants, statistics.ActiveTenants, statistics.InactiveTenants, statistics.DeletedTenants);
+      logger.LogInformation(
+        "Generated tenant statistics: {Total} total, {Active} active, {Inactive} inactive, {Deleted} deleted",
+        statistics.TotalTenants,
+        statistics.ActiveTenants,
+        statistics.InactiveTenants,
+        statistics.DeletedTenants
+      );
 
       return Result.Success(statistics);
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       logger.LogError(ex, "Error generating tenant statistics");
+
       return Result.Failure<TenantStatistics>(
         Common.Error.Failure("Tenant.StatisticsFailed", "Failed to generate tenant statistics")
       );

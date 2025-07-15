@@ -20,7 +20,7 @@ public class ResourceConfiguration : IEntityTypeConfiguration<Resource> {
     builder.Property(r => r.Title).IsRequired().HasMaxLength(255);
     builder.Property(r => r.Description).HasMaxLength(2000);
     builder.Property(r => r.Visibility).IsRequired();
-    
+
     // Ignore computed property - it's calculated from Tenant property
     builder.Ignore(r => r.IsGlobal);
   }

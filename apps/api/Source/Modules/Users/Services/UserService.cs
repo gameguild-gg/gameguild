@@ -5,17 +5,11 @@ using Microsoft.EntityFrameworkCore;
 namespace GameGuild.Modules.Users;
 
 public class UserService(ApplicationDbContext context) : IUserService {
-  public async Task<IEnumerable<User>> GetAllUsersAsync() { 
-    return await context.Users.Where(u => u.DeletedAt == null).ToListAsync(); 
-  }
+  public async Task<IEnumerable<User>> GetAllUsersAsync() { return await context.Users.Where(u => u.DeletedAt == null).ToListAsync(); }
 
-  public async Task<User?> GetUserByIdAsync(Guid id) { 
-    return await context.Users.FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt == null); 
-  }
+  public async Task<User?> GetUserByIdAsync(Guid id) { return await context.Users.FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt == null); }
 
-  public async Task<User?> GetByEmailAsync(string email) { 
-    return await context.Users.FirstOrDefaultAsync(u => u.Email == email && u.DeletedAt == null); 
-  }
+  public async Task<User?> GetByEmailAsync(string email) { return await context.Users.FirstOrDefaultAsync(u => u.Email == email && u.DeletedAt == null); }
 
   public async Task<User> CreateUserAsync(User user) {
     // Check if email already exists

@@ -11,12 +11,9 @@ namespace GameGuild.Modules.Tenants;
 public class GetTenantBySlugHandler(
   ApplicationDbContext context,
   ILogger<GetTenantBySlugHandler> logger
-) : IQueryHandler<GetTenantBySlugQuery, Common.Result<Tenant?>>
-{
-  public async Task<Common.Result<Tenant?>> Handle(GetTenantBySlugQuery request, CancellationToken cancellationToken)
-  {
-    try
-    {
+) : IQueryHandler<GetTenantBySlugQuery, Common.Result<Tenant?>> {
+  public async Task<Common.Result<Tenant?>> Handle(GetTenantBySlugQuery request, CancellationToken cancellationToken) {
+    try {
       var query = context.Resources.OfType<Tenant>()
                          .Where(t => t.Slug == request.Slug);
 
@@ -25,11 +22,12 @@ public class GetTenantBySlugHandler(
       var tenant = await query.FirstOrDefaultAsync(cancellationToken);
 
       logger.LogInformation("Retrieved tenant by slug '{TenantSlug}': {Found}", request.Slug, tenant != null ? "Found" : "Not Found");
+
       return Result.Success(tenant);
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       logger.LogError(ex, "Error retrieving tenant by slug '{TenantSlug}'", request.Slug);
+
       return Result.Failure<Tenant?>(
         Common.Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant by slug")
       );

@@ -26,7 +26,10 @@ public static class ActivityGradeExtensions {
             Content =
               grade.ContentInteraction.Content != null
                 ? new ContentSummaryDto {
-                  Id = grade.ContentInteraction.Content.Id, Title = grade.ContentInteraction.Content.Title, ContentType = grade.ContentInteraction.Content.Type.ToString(), EstimatedMinutes = grade.ContentInteraction.Content.EstimatedMinutes,
+                  Id = grade.ContentInteraction.Content.Id,
+                  Title = grade.ContentInteraction.Content.Title,
+                  ContentType = grade.ContentInteraction.Content.Type.ToString(),
+                  EstimatedMinutes = grade.ContentInteraction.Content.EstimatedMinutes,
                 }
                 : null,
             Student =

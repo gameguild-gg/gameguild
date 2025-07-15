@@ -12,4 +12,3 @@ public class GetUserProfileByIdQuery : IQuery<Common.Result<UserProfile?>> {
 
   public bool IncludeDeleted { get; set; } = false;
 }
-

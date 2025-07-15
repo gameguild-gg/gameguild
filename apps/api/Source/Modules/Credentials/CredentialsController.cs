@@ -4,6 +4,7 @@ using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
 
+
 namespace GameGuild.Modules.Credentials;
 
 /// <summary>
@@ -11,40 +12,36 @@ namespace GameGuild.Modules.Credentials;
 /// </summary>
 [ApiController]
 [Route("[controller]")]
-public class CredentialsController : ControllerBase
-{
-    private readonly IMediator _mediator;
-    private readonly ILogger<CredentialsController> _logger;
+public class CredentialsController : ControllerBase {
+  private readonly IMediator _mediator;
+  private readonly ILogger<CredentialsController> _logger;
 
-    public CredentialsController(IMediator mediator, ILogger<CredentialsController> logger)
-    {
-        _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+  public CredentialsController(IMediator mediator, ILogger<CredentialsController> logger) {
+    _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+    _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+  }
+
+  /// <summary>
+  /// Get all credentials using CQRS pattern
+  /// </summary>
+  /// <returns>List of credentials</returns>
+  [HttpGet]
+  public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetCredentials() {
+    try {
+      _logger.LogInformation("Getting all credentials");
+
+      var query = new GetAllCredentialsQuery();
+      var credentials = await _mediator.Send(query);
+      var response = credentials.Select(MapToResponseDto);
+
+      return Ok(response);
     }
+    catch (Exception ex) {
+      _logger.LogError(ex, "Failed to get credentials");
 
-    /// <summary>
-    /// Get all credentials using CQRS pattern
-    /// </summary>
-    /// <returns>List of credentials</returns>
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetCredentials()
-    {
-        try
-        {
-            _logger.LogInformation("Getting all credentials");
-
-            var query = new GetAllCredentialsQuery();
-            var credentials = await _mediator.Send(query);
-            var response = credentials.Select(MapToResponseDto);
-
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get credentials");
-            return StatusCode(500, "Internal server error");
-        }
+      return StatusCode(500, "Internal server error");
     }
+  }
 
   /// <summary>
   /// Get credentials by user ID using CQRS pattern
@@ -52,10 +49,8 @@ public class CredentialsController : ControllerBase
   /// <param name="userId">User ID</param>
   /// <returns>List of user credentials</returns>
   [HttpGet("user/{userId:guid}")]
-  public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetCredentialsByUserId(Guid userId)
-  {
-    try
-    {
+  public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetCredentialsByUserId(Guid userId) {
+    try {
       _logger.LogInformation("Getting credentials for user {UserId}", userId);
 
       var query = new GetCredentialsByUserIdQuery(userId);
@@ -64,9 +59,9 @@ public class CredentialsController : ControllerBase
 
       return Ok(response);
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Failed to get credentials for user {UserId}", userId);
+
       return StatusCode(500, "Internal server error");
     }
   }
@@ -77,10 +72,8 @@ public class CredentialsController : ControllerBase
   /// <param name="id">Credential ID</param>
   /// <returns>Credential details</returns>
   [HttpGet("{id:guid}")]
-  public async Task<ActionResult<CredentialResponseDto>> GetCredential(Guid id)
-  {
-    try
-    {
+  public async Task<ActionResult<CredentialResponseDto>> GetCredential(Guid id) {
+    try {
       _logger.LogInformation("Getting credential {CredentialId}", id);
 
       var query = new GetCredentialByIdQuery(id);
@@ -90,9 +83,9 @@ public class CredentialsController : ControllerBase
 
       return Ok(MapToResponseDto(credential));
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Failed to get credential {CredentialId}", id);
+
       return StatusCode(500, "Internal server error");
     }
   }
@@ -104,10 +97,8 @@ public class CredentialsController : ControllerBase
   /// <param name="type">Credential type</param>
   /// <returns>Credential details</returns>
   [HttpGet("user/{userId}/type/{type}")]
-  public async Task<ActionResult<CredentialResponseDto>> GetCredentialByUserIdAndType(Guid userId, string type)
-  {
-    try
-    {
+  public async Task<ActionResult<CredentialResponseDto>> GetCredentialByUserIdAndType(Guid userId, string type) {
+    try {
       _logger.LogInformation("Getting credential of type {Type} for user {UserId}", type, userId);
 
       var query = new GetCredentialByUserIdAndTypeQuery(userId, type);
@@ -117,27 +108,26 @@ public class CredentialsController : ControllerBase
 
       return Ok(MapToResponseDto(credential));
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Failed to get credential of type {Type} for user {UserId}", type, userId);
+
       return StatusCode(500, "Internal server error");
     }
-  }  /// <summary>
+  }
+
+  /// <summary>
   /// Create a new credential using CQRS pattern
   /// </summary>
   /// <param name="createDto">Credential data</param>
   /// <returns>Created credential</returns>
   [HttpPost]
-  public async Task<ActionResult<CredentialResponseDto>> CreateCredential([FromBody] CreateCredentialDto createDto)
-  {
-    try
-    {
+  public async Task<ActionResult<CredentialResponseDto>> CreateCredential([FromBody] CreateCredentialDto createDto) {
+    try {
       if (!ModelState.IsValid) return BadRequest(ModelState);
 
       _logger.LogInformation("Creating credential for user {UserId}", createDto.UserId);
 
-      var command = new CreateCredentialCommand
-      {
+      var command = new CreateCredentialCommand {
         UserId = createDto.UserId,
         Type = createDto.Type,
         Value = createDto.Value,
@@ -151,9 +141,9 @@ public class CredentialsController : ControllerBase
 
       return CreatedAtAction(nameof(GetCredential), new { id = createdCredential.Id }, response);
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Failed to create credential for user {UserId}", createDto.UserId);
+
       return StatusCode(500, "Internal server error");
     }
   }
@@ -168,16 +158,13 @@ public class CredentialsController : ControllerBase
   public async Task<ActionResult<CredentialResponseDto>> UpdateCredential(
     Guid id,
     [FromBody] UpdateCredentialDto updateDto
-  )
-  {
-    try
-    {
+  ) {
+    try {
       if (!ModelState.IsValid) return BadRequest(ModelState);
 
       _logger.LogInformation("Updating credential {CredentialId}", id);
 
-      var command = new UpdateCredentialCommand
-      {
+      var command = new UpdateCredentialCommand {
         Id = id,
         Type = updateDto.Type,
         Value = updateDto.Value,
@@ -191,13 +178,10 @@ public class CredentialsController : ControllerBase
 
       return Ok(response);
     }
-    catch (ArgumentException ex)
-    {
-      return NotFound(ex.Message);
-    }
-    catch (Exception ex)
-    {
+    catch (ArgumentException ex) { return NotFound(ex.Message); }
+    catch (Exception ex) {
       _logger.LogError(ex, "Failed to update credential {CredentialId}", id);
+
       return StatusCode(500, "Internal server error");
     }
   }
@@ -208,10 +192,8 @@ public class CredentialsController : ControllerBase
   /// <param name="id">Credential ID to delete</param>
   /// <returns>No content if successful</returns>
   [HttpDelete("{id}")]
-  public async Task<IActionResult> SoftDeleteCredential(Guid id)
-  {
-    try
-    {
+  public async Task<IActionResult> SoftDeleteCredential(Guid id) {
+    try {
       _logger.LogInformation("Soft deleting credential {CredentialId}", id);
 
       var command = new SoftDeleteCredentialCommand(id);
@@ -221,9 +203,9 @@ public class CredentialsController : ControllerBase
 
       return NoContent();
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Failed to soft delete credential {CredentialId}", id);
+
       return StatusCode(500, "Internal server error");
     }
   }
@@ -234,10 +216,8 @@ public class CredentialsController : ControllerBase
   /// <param name="id">Credential ID to restore</param>
   /// <returns>No content if successful</returns>
   [HttpPost("{id}/restore")]
-  public async Task<IActionResult> RestoreCredential(Guid id)
-  {
-    try
-    {
+  public async Task<IActionResult> RestoreCredential(Guid id) {
+    try {
       _logger.LogInformation("Restoring credential {CredentialId}", id);
 
       var command = new RestoreCredentialCommand(id);
@@ -247,9 +227,9 @@ public class CredentialsController : ControllerBase
 
       return NoContent();
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Failed to restore credential {CredentialId}", id);
+
       return StatusCode(500, "Internal server error");
     }
   }
@@ -260,10 +240,8 @@ public class CredentialsController : ControllerBase
   /// <param name="id">Credential ID to delete</param>
   /// <returns>No content if successful</returns>
   [HttpDelete("{id}/hard")]
-  public async Task<IActionResult> HardDeleteCredential(Guid id)
-  {
-    try
-    {
+  public async Task<IActionResult> HardDeleteCredential(Guid id) {
+    try {
       _logger.LogInformation("Hard deleting credential {CredentialId}", id);
 
       var command = new HardDeleteCredentialCommand(id);
@@ -273,9 +251,9 @@ public class CredentialsController : ControllerBase
 
       return NoContent();
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Failed to hard delete credential {CredentialId}", id);
+
       return StatusCode(500, "Internal server error");
     }
   }
@@ -286,10 +264,8 @@ public class CredentialsController : ControllerBase
   /// <param name="id">Credential ID</param>
   /// <returns>No content if successful</returns>
   [HttpPost("{id}/mark-used")]
-  public async Task<IActionResult> MarkCredentialAsUsed(Guid id)
-  {
-    try
-    {
+  public async Task<IActionResult> MarkCredentialAsUsed(Guid id) {
+    try {
       _logger.LogInformation("Marking credential {CredentialId} as used", id);
 
       var command = new MarkCredentialAsUsedCommand(id);
@@ -299,9 +275,9 @@ public class CredentialsController : ControllerBase
 
       return NoContent();
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Failed to mark credential {CredentialId} as used", id);
+
       return StatusCode(500, "Internal server error");
     }
   }
@@ -312,10 +288,8 @@ public class CredentialsController : ControllerBase
   /// <param name="id">Credential ID</param>
   /// <returns>No content if successful</returns>
   [HttpPost("{id}/deactivate")]
-  public async Task<IActionResult> DeactivateCredential(Guid id)
-  {
-    try
-    {
+  public async Task<IActionResult> DeactivateCredential(Guid id) {
+    try {
       _logger.LogInformation("Deactivating credential {CredentialId}", id);
 
       var command = new DeactivateCredentialCommand(id);
@@ -325,9 +299,9 @@ public class CredentialsController : ControllerBase
 
       return NoContent();
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Failed to deactivate credential {CredentialId}", id);
+
       return StatusCode(500, "Internal server error");
     }
   }
@@ -338,10 +312,8 @@ public class CredentialsController : ControllerBase
   /// <param name="id">Credential ID</param>
   /// <returns>No content if successful</returns>
   [HttpPost("{id}/activate")]
-  public async Task<IActionResult> ActivateCredential(Guid id)
-  {
-    try
-    {
+  public async Task<IActionResult> ActivateCredential(Guid id) {
+    try {
       _logger.LogInformation("Activating credential {CredentialId}", id);
 
       var command = new ActivateCredentialCommand(id);
@@ -351,9 +323,9 @@ public class CredentialsController : ControllerBase
 
       return NoContent();
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Failed to activate credential {CredentialId}", id);
+
       return StatusCode(500, "Internal server error");
     }
   }
@@ -363,10 +335,8 @@ public class CredentialsController : ControllerBase
   /// </summary>
   /// <returns>List of soft-deleted credentials</returns>
   [HttpGet("deleted")]
-  public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetDeletedCredentials()
-  {
-    try
-    {
+  public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetDeletedCredentials() {
+    try {
       _logger.LogInformation("Getting deleted credentials");
 
       var query = new GetDeletedCredentialsQuery();
@@ -375,9 +345,9 @@ public class CredentialsController : ControllerBase
 
       return Ok(response);
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Failed to get deleted credentials");
+
       return StatusCode(500, "Internal server error");
     }
   }
