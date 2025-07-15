@@ -1,0 +1,433 @@
+using GameGuild.Common;
+using GameGuild.Database;
+using GameGuild.Modules.Programs;
+using GameGuild.Modules.Contents;
+using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Tests.Modules.Programs;
+
+/// <summary>
+/// Comprehensive tests for Content Progress tracking and program progress calculation
+/// </summary>
+public class ContentProgressTests : IDisposable
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly IContentProgressService _progressService;
+    private readonly IProgramEnrollmentService _enrollmentService;
+
+    public ContentProgressTests()
+    {
+        var services = new ServiceCollection();
+        
+        // Add database context
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+        
+        // Add logging
+        services.AddLogging(builder => builder.AddConsole());
+        
+        // Add services
+        services.AddScoped<IContentProgressService, ContentProgressService>();
+        services.AddScoped<IProgramEnrollmentService, ProgramEnrollmentService>();
+        
+        _serviceProvider = services.BuildServiceProvider();
+        _context = _serviceProvider.GetRequiredService<ApplicationDbContext>();
+        _progressService = _serviceProvider.GetRequiredService<IContentProgressService>();
+        _enrollmentService = _serviceProvider.GetRequiredService<IProgramEnrollmentService>();
+    }
+
+    [Fact]
+    public async Task ContentProgress_Entity_Can_Be_Created_And_Saved()
+    {
+        // Arrange
+        var enrollmentId = Guid.NewGuid();
+        var contentId = Guid.NewGuid();
+        await SeedTestEnrollment(enrollmentId);
+
+        var progress = new ContentProgress
+        {
+            Id = Guid.NewGuid(),
+            EnrollmentId = enrollmentId,
+            ContentId = contentId,
+            Status = ContentCompletionStatus.InProgress,
+            ProgressPercentage = 50,
+            TimeSpentMinutes = 30,
+            FirstAccessDate = DateTime.UtcNow.AddDays(-1),
+            LastAccessDate = DateTime.UtcNow
+        };
+
+        // Act
+        _context.ContentProgress.Add(progress);
+        await _context.SaveChangesAsync();
+
+        // Assert
+        var savedProgress = await _context.ContentProgress.FindAsync(progress.Id);
+        Assert.NotNull(savedProgress);
+        Assert.Equal(enrollmentId, savedProgress.EnrollmentId);
+        Assert.Equal(contentId, savedProgress.ContentId);
+        Assert.Equal(ContentCompletionStatus.InProgress, savedProgress.Status);
+        Assert.Equal(50, savedProgress.ProgressPercentage);
+        Assert.Equal(30, savedProgress.TimeSpentMinutes);
+    }
+
+    [Fact]
+    public async Task ProgressService_Can_Start_Content()
+    {
+        // Arrange
+        var enrollmentId = Guid.NewGuid();
+        var contentId = Guid.NewGuid();
+        await SeedTestEnrollment(enrollmentId);
+
+        // Act
+        var progress = await _progressService.StartContentAsync(enrollmentId, contentId);
+
+        // Assert
+        Assert.NotNull(progress);
+        Assert.Equal(enrollmentId, progress.EnrollmentId);
+        Assert.Equal(contentId, progress.ContentId);
+        Assert.Equal(ContentCompletionStatus.InProgress, progress.Status);
+        Assert.Equal(0, progress.ProgressPercentage);
+        Assert.True(progress.FirstAccessDate <= DateTime.UtcNow);
+        Assert.True(progress.LastAccessDate <= DateTime.UtcNow);
+    }
+
+    [Fact]
+    public async Task ProgressService_Can_Update_Progress()
+    {
+        // Arrange
+        var enrollmentId = Guid.NewGuid();
+        var contentId = Guid.NewGuid();
+        await SeedTestEnrollment(enrollmentId);
+
+        var progress = await _progressService.StartContentAsync(enrollmentId, contentId);
+
+        // Act
+        var updatedProgress = await _progressService.UpdateProgressAsync(progress.Id, 75, 45);
+
+        // Assert
+        Assert.NotNull(updatedProgress);
+        Assert.Equal(75, updatedProgress.ProgressPercentage);
+        Assert.Equal(45, updatedProgress.TimeSpentMinutes);
+        Assert.Equal(ContentCompletionStatus.InProgress, updatedProgress.Status);
+        Assert.True(updatedProgress.LastAccessDate > progress.LastAccessDate);
+    }
+
+    [Fact]
+    public async Task ProgressService_Can_Complete_Content()
+    {
+        // Arrange
+        var enrollmentId = Guid.NewGuid();
+        var contentId = Guid.NewGuid();
+        await SeedTestEnrollment(enrollmentId);
+
+        var progress = await _progressService.StartContentAsync(enrollmentId, contentId);
+
+        // Act
+        var completedProgress = await _progressService.CompleteContentAsync(progress.Id, 90.5);
+
+        // Assert
+        Assert.NotNull(completedProgress);
+        Assert.Equal(ContentCompletionStatus.Completed, completedProgress.Status);
+        Assert.Equal(100, completedProgress.ProgressPercentage);
+        Assert.Equal(90.5, completedProgress.Score);
+        Assert.True(completedProgress.CompletionDate.HasValue);
+        Assert.True(completedProgress.CompletionDate <= DateTime.UtcNow);
+    }
+
+    [Fact]
+    public async Task ProgressService_Can_Get_Enrollment_Progress()
+    {
+        // Arrange
+        var enrollmentId = Guid.NewGuid();
+        await SeedTestEnrollment(enrollmentId);
+
+        // Create multiple content progress items
+        var contentId1 = Guid.NewGuid();
+        var contentId2 = Guid.NewGuid();
+        var contentId3 = Guid.NewGuid();
+
+        await _progressService.StartContentAsync(enrollmentId, contentId1);
+        var progress2 = await _progressService.StartContentAsync(enrollmentId, contentId2);
+        var progress3 = await _progressService.StartContentAsync(enrollmentId, contentId3);
+
+        await _progressService.CompleteContentAsync(progress2.Id, 85.0);
+        await _progressService.UpdateProgressAsync(progress3.Id, 50, 30);
+
+        // Act
+        var allProgress = await _progressService.GetEnrollmentProgressAsync(enrollmentId);
+
+        // Assert
+        Assert.NotNull(allProgress);
+        var progressList = allProgress.ToList();
+        Assert.Equal(3, progressList.Count);
+        
+        var completed = progressList.Where(p => p.Status == ContentCompletionStatus.Completed).ToList();
+        var inProgress = progressList.Where(p => p.Status == ContentCompletionStatus.InProgress).ToList();
+        
+        Assert.Single(completed);
+        Assert.Equal(2, inProgress.Count);
+    }
+
+    [Fact]
+    public async Task ProgressService_Can_Calculate_Program_Progress()
+    {
+        // Arrange
+        var enrollmentId = Guid.NewGuid();
+        await SeedTestEnrollment(enrollmentId);
+
+        // Create content progress: 2 completed, 1 in progress, 1 not started
+        var contentIds = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+
+        var progress1 = await _progressService.StartContentAsync(enrollmentId, contentIds[0]);
+        var progress2 = await _progressService.StartContentAsync(enrollmentId, contentIds[1]);
+        var progress3 = await _progressService.StartContentAsync(enrollmentId, contentIds[2]);
+
+        await _progressService.CompleteContentAsync(progress1.Id, 95.0);
+        await _progressService.CompleteContentAsync(progress2.Id, 87.5);
+        await _progressService.UpdateProgressAsync(progress3.Id, 60, 25);
+
+        // Act
+        var programProgress = await _progressService.CalculateProgramProgressAsync(enrollmentId);
+
+        // Assert
+        // Expected: (100 + 100 + 60 + 0) / 4 = 65%
+        Assert.Equal(65, programProgress);
+    }
+
+    [Fact]
+    public async Task ProgressService_Can_Get_Next_Content()
+    {
+        // Arrange
+        var enrollmentId = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+        await SeedTestEnrollmentWithProgram(enrollmentId, programId);
+
+        // Create ordered content
+        var contentIds = await SeedProgramContent(programId, 3);
+
+        // Complete first content
+        var progress1 = await _progressService.StartContentAsync(enrollmentId, contentIds[0]);
+        await _progressService.CompleteContentAsync(progress1.Id, 92.0);
+
+        // Act
+        var nextContent = await _progressService.GetNextContentAsync(enrollmentId);
+
+        // Assert
+        Assert.NotNull(nextContent);
+        Assert.Equal(contentIds[1], nextContent.ContentId);
+        Assert.Equal(ContentCompletionStatus.NotStarted, nextContent.Status);
+    }
+
+    [Fact]
+    public async Task ProgressService_Can_Check_Prerequisites()
+    {
+        // Arrange
+        var enrollmentId = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+        await SeedTestEnrollmentWithProgram(enrollmentId, programId);
+
+        var contentIds = await SeedProgramContent(programId, 3);
+        var targetContentId = contentIds[2]; // Third content
+
+        // Act - Check prerequisites without completing previous content
+        var hasPrereqs = await _progressService.HasPrerequisitesAsync(enrollmentId, targetContentId);
+
+        // Assert
+        Assert.False(hasPrereqs); // Should not have prerequisites since previous content not completed
+
+        // Complete prerequisite content
+        var progress1 = await _progressService.StartContentAsync(enrollmentId, contentIds[0]);
+        var progress2 = await _progressService.StartContentAsync(enrollmentId, contentIds[1]);
+        await _progressService.CompleteContentAsync(progress1.Id, 85.0);
+        await _progressService.CompleteContentAsync(progress2.Id, 90.0);
+
+        // Act - Check prerequisites after completing previous content
+        var hasPrereqsNow = await _progressService.HasPrerequisitesAsync(enrollmentId, targetContentId);
+
+        // Assert
+        Assert.True(hasPrereqsNow); // Should now have prerequisites
+    }
+
+    [Fact]
+    public async Task ProgressService_Can_Reset_Content_Progress()
+    {
+        // Arrange
+        var enrollmentId = Guid.NewGuid();
+        var contentId = Guid.NewGuid();
+        await SeedTestEnrollment(enrollmentId);
+
+        var progress = await _progressService.StartContentAsync(enrollmentId, contentId);
+        await _progressService.UpdateProgressAsync(progress.Id, 80, 60);
+
+        // Act
+        var resetProgress = await _progressService.ResetContentProgressAsync(progress.Id);
+
+        // Assert
+        Assert.NotNull(resetProgress);
+        Assert.Equal(ContentCompletionStatus.NotStarted, resetProgress.Status);
+        Assert.Equal(0, resetProgress.ProgressPercentage);
+        Assert.Equal(0, resetProgress.TimeSpentMinutes);
+        Assert.Null(resetProgress.Score);
+        Assert.Null(resetProgress.CompletionDate);
+        Assert.True(resetProgress.LastAccessDate > progress.LastAccessDate);
+    }
+
+    [Fact]
+    public async Task ProgressService_Can_Track_Multiple_Attempts()
+    {
+        // Arrange
+        var enrollmentId = Guid.NewGuid();
+        var contentId = Guid.NewGuid();
+        await SeedTestEnrollment(enrollmentId);
+
+        var progress = await _progressService.StartContentAsync(enrollmentId, contentId);
+
+        // Act - Record multiple attempts
+        await _progressService.RecordAttemptAsync(progress.Id, 65.0);
+        await _progressService.RecordAttemptAsync(progress.Id, 78.5);
+        await _progressService.RecordAttemptAsync(progress.Id, 89.0);
+
+        var updatedProgress = await _progressService.GetContentProgressAsync(progress.Id);
+
+        // Assert
+        Assert.NotNull(updatedProgress);
+        Assert.Equal(3, updatedProgress.AttemptCount);
+        Assert.Equal(89.0, updatedProgress.Score); // Should keep the latest/highest score
+    }
+
+    [Fact]
+    public async Task ProgressService_Updates_Program_Progress_When_Content_Completed()
+    {
+        // Arrange
+        var enrollmentId = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+        await SeedTestEnrollmentWithProgram(enrollmentId, programId);
+
+        var contentIds = await SeedProgramContent(programId, 4);
+
+        // Act - Complete half the content
+        var progress1 = await _progressService.StartContentAsync(enrollmentId, contentIds[0]);
+        var progress2 = await _progressService.StartContentAsync(enrollmentId, contentIds[1]);
+
+        await _progressService.CompleteContentAsync(progress1.Id, 95.0);
+        await _progressService.CompleteContentAsync(progress2.Id, 87.0);
+
+        // Assert
+        var enrollment = await _enrollmentService.GetEnrollmentByIdAsync(enrollmentId);
+        Assert.NotNull(enrollment);
+        Assert.Equal(50, enrollment.ProgressPercentage); // 2 out of 4 = 50%
+    }
+
+    #region Helper Methods
+
+    private async Task SeedTestEnrollment(Guid enrollmentId)
+    {
+        var userId = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+
+        await SeedTestUser(userId);
+        await SeedTestProgram(programId);
+
+        var enrollment = new ProgramEnrollment
+        {
+            Id = enrollmentId,
+            UserId = userId,
+            ProgramId = programId,
+            EnrollmentDate = DateTime.UtcNow,
+            Status = EnrollmentStatus.Active,
+            Source = EnrollmentSource.Manual,
+            ProgressPercentage = 0
+        };
+
+        _context.ProgramEnrollments.Add(enrollment);
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task SeedTestEnrollmentWithProgram(Guid enrollmentId, Guid programId)
+    {
+        var userId = Guid.NewGuid();
+
+        await SeedTestUser(userId);
+        await SeedTestProgram(programId);
+
+        var enrollment = new ProgramEnrollment
+        {
+            Id = enrollmentId,
+            UserId = userId,
+            ProgramId = programId,
+            EnrollmentDate = DateTime.UtcNow,
+            Status = EnrollmentStatus.Active,
+            Source = EnrollmentSource.Manual,
+            ProgressPercentage = 0
+        };
+
+        _context.ProgramEnrollments.Add(enrollment);
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task SeedTestUser(Guid userId)
+    {
+        var user = new User
+        {
+            Id = userId,
+            Name = $"Test User {userId:N}",
+            Email = $"test_{userId:N}@example.com",
+            IsActive = true
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task SeedTestProgram(Guid programId)
+    {
+        var program = new Program
+        {
+            Id = programId,
+            Title = "Test Program",
+            Description = "Test program description",
+            Visibility = AccessLevel.Public,
+            AuthorId = Guid.NewGuid()
+        };
+
+        _context.Programs.Add(program);
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task<Guid[]> SeedProgramContent(Guid programId, int count)
+    {
+        var contentIds = new Guid[count];
+
+        for (int i = 0; i < count; i++)
+        {
+            contentIds[i] = Guid.NewGuid();
+            
+            var content = new ProgramContent
+            {
+                Id = Guid.NewGuid(),
+                ProgramId = programId,
+                ContentId = contentIds[i],
+                OrderIndex = i,
+                IsRequired = true
+            };
+
+            _context.ProgramContents.Add(content);
+        }
+
+        await _context.SaveChangesAsync();
+        return contentIds;
+    }
+
+    #endregion
+
+    public void Dispose()
+    {
+        _context.Dispose();
+        if (_serviceProvider is IDisposable disposable)
+            disposable.Dispose();
+    }
+}
