@@ -1,4 +1,4 @@
-using GameGuild.Common.Interfaces;
+using GameGuild.Common;
 using GameGuild.Modules.Contents;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

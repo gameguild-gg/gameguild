@@ -1,6 +1,8 @@
 using GameGuild.Common;
+using GameGuild.Common.Extensions;
+using System.Security.Claims;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Permissions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -91,16 +93,6 @@ public class ProductController(IMediator mediator) : ControllerBase {
     return NoContent();
   }
 
-  [RequireContentTypePermission<Product>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Product>>> GetProducts(
-    [FromQuery] int skip = 0,
-    [FromQuery] int take = 50
-  ) {
-    var products = await mediator.Send(new GetProductsQuery { Skip = skip, Take = take });
-
-    return Ok(products);
-  }
-
   /// <summary>
   /// Get products by type (content-type level read permission)
   /// </summary>
@@ -110,7 +102,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
     Common.ProductType type,
     [FromQuery] int skip = 0, [FromQuery] int take = 50
   ) {
-    var products = await mediator.Send(new GetProductsByTypeQuery(type, skip, take));
+    var products = await mediator.Send(new GetProductsByTypeQuery { Type = type, Skip = skip, Take = take });
 
     return Ok(products);
   }
@@ -123,40 +115,9 @@ public class ProductController(IMediator mediator) : ControllerBase {
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50
   ) {
-    var products = await mediator.Send(new GetPublishedProductsQuery(skip, take));
+    var products = await mediator.Send(new GetPublishedProductsQuery { Skip = skip, Take = take });
 
     return Ok(products);
-  }
-
-  /// <summary>
-  /// Create a new product (content-type level draft permission)
-  /// </summary>
-  [HttpPost]
-  [RequireContentTypePermission<Product>(PermissionType.Draft)]
-  public async Task<ActionResult<Product>> CreateProduct([FromBody] Product product) {
-    if (!ModelState.IsValid) return BadRequest(ModelState);
-
-    var command = new CreateProductCommand {
-      Name = product.Name,
-      Description = product.Description,
-      ShortDescription = product.ShortDescription,
-      ImageUrl = product.ImageUrl,
-      Type = product.Type,
-      IsBundle = product.IsBundle,
-      CreatorId = User.GetUserId() ?? Guid.Empty,
-      BundleItems = product.BundleItems,
-      ReferralCommissionPercentage = product.ReferralCommissionPercentage,
-      MaxAffiliateDiscount = product.MaxAffiliateDiscount,
-      AffiliateCommissionPercentage = product.AffiliateCommissionPercentage,
-      Visibility = product.Visibility,
-      Status = product.Status
-    };
-
-    var result = await mediator.Send(command);
-
-    if (!result.Success) return BadRequest(result.ErrorMessage);
-
-    return CreatedAtAction(nameof(GetProduct), new { id = result.Product?.Id }, result.Product);
   }
 
   /// <summary>
@@ -168,7 +129,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
     [FromQuery] string searchTerm,
     [FromQuery] int skip = 0, [FromQuery] int take = 50
   ) {
-    var products = await mediator.Send(new SearchProductsQuery(searchTerm, skip, take));
+    var products = await mediator.Send(new SearchProductsQuery { SearchTerm = searchTerm, Skip = skip, Take = take });
 
     return Ok(products);
   }
@@ -182,7 +143,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
     Guid creatorId,
     [FromQuery] int skip = 0, [FromQuery] int take = 50
   ) {
-    var products = await mediator.Send(new GetProductsByCreatorQuery(creatorId, skip, take));
+    var products = await mediator.Send(new GetProductsByCreatorQuery { CreatorId = creatorId, Skip = skip, Take = take });
 
     return Ok(products);
   }
@@ -197,7 +158,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
     [FromQuery] decimal maxPrice, [FromQuery] string currency = "USD", [FromQuery] int skip = 0,
     [FromQuery] int take = 50
   ) {
-    var products = await mediator.Send(new GetProductsInPriceRangeQuery(minPrice, maxPrice, currency, skip, take));
+    var products = await mediator.Send(new GetProductsInPriceRangeQuery { MinPrice = minPrice, MaxPrice = maxPrice, Currency = currency, Skip = skip, Take = take });
 
     return Ok(products);
   }
@@ -208,7 +169,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpGet("popular")]
   [RequireContentTypePermission<Product>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<Product>>> GetPopularProducts([FromQuery] int count = 10) {
-    var products = await mediator.Send(new GetPopularProductsQuery(count));
+    var products = await mediator.Send(new GetPopularProductsQuery { Take = count });
 
     return Ok(products);
   }
@@ -219,7 +180,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpGet("recent")]
   [RequireContentTypePermission<Product>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<Product>>> GetRecentProducts([FromQuery] int count = 10) {
-    var products = await mediator.Send(new GetRecentProductsQuery(count));
+    var products = await mediator.Send(new GetRecentProductsQuery { Take = count });
 
     return Ok(products);
   }
@@ -230,7 +191,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpPost("{id}/publish")]
   [RequireResourcePermission<Product>(PermissionType.Publish)]
   public async Task<ActionResult<Product>> PublishProduct(Guid id) {
-    var product = await mediator.Send(new PublishProductCommand(id));
+    var product = await mediator.Send(new PublishProductCommand { ProductId = id, PublishedBy = User.GetUserId() ?? Guid.Empty });
 
     return Ok(product);
   }
@@ -241,7 +202,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpPost("{id}/unpublish")]
   [RequireResourcePermission<Product>(PermissionType.Edit)]
   public async Task<ActionResult<Product>> UnpublishProduct(Guid id) {
-    var product = await mediator.Send(new UnpublishProductCommand(id));
+    var product = await mediator.Send(new UnpublishProductCommand { ProductId = id, UnpublishedBy = User.GetUserId() ?? Guid.Empty });
 
     return Ok(product);
   }
@@ -252,7 +213,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpPost("{id}/archive")]
   [RequireResourcePermission<Product>(PermissionType.Edit)]
   public async Task<ActionResult<Product>> ArchiveProduct(Guid id) {
-    var product = await mediator.Send(new ArchiveProductCommand(id));
+    var product = await mediator.Send(new ArchiveProductCommand { ProductId = id, ArchivedBy = User.GetUserId() ?? Guid.Empty });
 
     return Ok(product);
   }
@@ -266,7 +227,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
     Guid id,
     [FromBody] AccessLevel visibility
   ) {
-    var product = await mediator.Send(new SetProductVisibilityCommand(id, visibility));
+    var product = await mediator.Send(new SetProductVisibilityCommand { ProductId = id, Visibility = visibility, UpdatedBy = User.GetUserId() ?? Guid.Empty });
 
     return Ok(product);
   }
@@ -279,7 +240,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpGet("{id}/bundle-items")]
   [RequireResourcePermission<Product>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<Product>>> GetBundleItems(Guid id) {
-    var products = await mediator.Send(new GetBundleItemsQuery(id));
+    var products = await mediator.Send(new GetBundleItemsQuery { BundleId = id });
 
     return Ok(products);
   }
@@ -290,7 +251,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpPost("{bundleId}/bundle-items/{productId}")]
   [RequireResourcePermission<Product>(PermissionType.Edit, "bundleId")]
   public async Task<ActionResult<Product>> AddToBundle(Guid bundleId, Guid productId) {
-    var bundle = await mediator.Send(new AddToBundleCommand(bundleId, productId));
+    var bundle = await mediator.Send(new AddToBundleCommand { BundleId = bundleId, ProductId = productId, UpdatedBy = User.GetUserId() ?? Guid.Empty });
 
     return Ok(bundle);
   }
@@ -301,7 +262,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpDelete("{bundleId}/bundle-items/{productId}")]
   [RequireResourcePermission<Product>(PermissionType.Edit, "bundleId")]
   public async Task<ActionResult<Product>> RemoveFromBundle(Guid bundleId, Guid productId) {
-    var bundle = await mediator.Send(new RemoveFromBundleCommand(bundleId, productId));
+    var bundle = await mediator.Send(new RemoveFromBundleCommand { BundleId = bundleId, ProductId = productId, UpdatedBy = User.GetUserId() ?? Guid.Empty });
 
     return Ok(bundle);
   }
@@ -314,7 +275,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpGet("{id}/pricing/current")]
   [RequireResourcePermission<Product>(PermissionType.Read)]
   public async Task<ActionResult<ProductPricing>> GetCurrentPricing(Guid id) {
-    var pricing = await mediator.Send(new GetCurrentPricingQuery(id));
+    var pricing = await mediator.Send(new GetCurrentPricingQuery { ProductId = id });
 
     if (pricing == null) return NotFound();
 
@@ -327,7 +288,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpGet("{id}/pricing/history")]
   [RequireResourcePermission<Product>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProductPricing>>> GetPricingHistory(Guid id) {
-    var pricing = await mediator.Send(new GetPricingHistoryQuery(id));
+    var pricing = await mediator.Send(new GetPricingHistoryQuery { ProductId = id });
 
     return Ok(pricing);
   }
@@ -338,7 +299,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpPost("{id}/pricing")]
   [RequireResourcePermission<Product>(PermissionType.Edit)]
   public async Task<ActionResult<ProductPricing>> SetPricing(Guid id, [FromBody] SetPricingRequest request) {
-    var pricing = await mediator.Send(new SetPricingCommand(id, request.BasePrice, request.Currency));
+    var pricing = await mediator.Send(new SetPricingCommand { ProductId = id, Price = request.BasePrice, Currency = request.Currency, UpdatedBy = User.GetUserId() ?? Guid.Empty });
 
     return Ok(pricing);
   }
@@ -351,7 +312,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpGet("{id}/subscription-plans")]
   [RequireResourcePermission<Product>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProductSubscriptionPlan>>> GetSubscriptionPlans(Guid id) {
-    var plans = await mediator.Send(new GetSubscriptionPlansQuery(id));
+    var plans = await mediator.Send(new GetSubscriptionPlansQuery { ProductId = id });
 
     return Ok(plans);
   }
@@ -366,7 +327,17 @@ public class ProductController(IMediator mediator) : ControllerBase {
     [FromBody] ProductSubscriptionPlan plan
   ) {
     plan.ProductId = id; // Ensure the product ID matches the route
-    var createdPlan = await mediator.Send(new CreateSubscriptionPlanCommand(plan));
+    var createdPlan = await mediator.Send(new CreateSubscriptionPlanCommand { 
+      Name = plan.Name, 
+      Description = plan.Description, 
+      Price = plan.Price, 
+      Currency = plan.Currency, 
+      Interval = plan.BillingInterval.ToString().ToLower(), 
+      IntervalCount = plan.IntervalCount, 
+      TrialDays = plan.TrialPeriodDays, 
+      IsActive = plan.IsActive, 
+      CreatedBy = User.GetUserId() ?? Guid.Empty 
+    });
 
     return CreatedAtAction(nameof(GetSubscriptionPlan), new { planId = createdPlan.Id }, createdPlan);
   }
@@ -376,7 +347,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// </summary>
   [HttpGet("subscription-plans/{planId}")]
   public async Task<ActionResult<ProductSubscriptionPlan>> GetSubscriptionPlan(Guid planId) {
-    var plan = await mediator.Send(new GetSubscriptionPlanQuery(planId));
+    var plan = await mediator.Send(new GetSubscriptionPlanQuery { PlanId = planId });
 
     if (plan == null) return NotFound();
 
@@ -391,7 +362,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpGet("{id}/access/{userId}")]
   [RequireResourcePermission<Product>(PermissionType.Read)]
   public async Task<ActionResult<bool>> HasUserAccess(Guid id, Guid userId) {
-    var hasAccess = await mediator.Send(new HasUserAccessQuery(userId, id));
+    var hasAccess = await mediator.Send(new HasUserAccessQuery { UserId = userId, ProductId = id });
 
     return Ok(hasAccess);
   }
@@ -402,7 +373,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpGet("{id}/user-product/{userId}")]
   [RequireResourcePermission<Product>(PermissionType.Read)]
   public async Task<ActionResult<UserProduct>> GetUserProduct(Guid id, Guid userId) {
-    var userProduct = await mediator.Send(new GetUserProductQuery(userId, id));
+    var userProduct = await mediator.Send(new GetUserProductQuery { UserId = userId, ProductId = id });
 
     if (userProduct == null) return NotFound();
 
@@ -419,14 +390,13 @@ public class ProductController(IMediator mediator) : ControllerBase {
     [FromBody] GrantAccessRequest request
   ) {
     var userProduct = await mediator.Send(
-                        new GrantUserAccessCommand(
-                          userId,
-                          id,
-                          request.AcquisitionType,
-                          request.PurchasePrice,
-                          request.Currency,
-                          request.ExpiresAt
-                        )
+                        new GrantUserAccessCommand {
+                          UserId = userId,
+                          ProductId = id,
+                          AcquisitionType = request.AcquisitionType,
+                          ExpiresAt = request.ExpiresAt,
+                          GrantedBy = User.GetUserId() ?? Guid.Empty
+                        }
                       );
 
     return Ok(userProduct);
@@ -438,7 +408,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpDelete("{id}/access/{userId}")]
   [RequireResourcePermission<Product>(PermissionType.Edit)]
   public async Task<ActionResult> RevokeUserAccess(Guid id, Guid userId) {
-    await mediator.Send(new RevokeUserAccessCommand(userId, id));
+    await mediator.Send(new RevokeUserAccessCommand { UserId = userId, ProductId = id });
 
     return NoContent();
   }
@@ -452,9 +422,9 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [RequireContentTypePermission<Product>(PermissionType.Read)]
   public async Task<ActionResult<int>> GetProductCount(
     [FromQuery] Common.ProductType? type = null,
-    [FromQuery] AccessLevel? visibility = null
+    [FromQuery] ContentStatus? status = null
   ) {
-    var count = await mediator.Send(new GetProductCountQuery(type, visibility));
+    var count = await mediator.Send(new GetProductCountQuery { Type = type, Status = status });
 
     return Ok(count);
   }
@@ -465,7 +435,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpGet("{id}/analytics/user-count")]
   [RequireResourcePermission<Product>(PermissionType.Read)]
   public async Task<ActionResult<int>> GetUserCountForProduct(Guid id) {
-    var count = await mediator.Send(new GetUserCountForProductQuery(id));
+    var count = await mediator.Send(new GetUserCountForProductQuery { ProductId = id });
 
     return Ok(count);
   }
@@ -476,7 +446,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpGet("{id}/analytics/revenue")]
   [RequireResourcePermission<Product>(PermissionType.Read)]
   public async Task<ActionResult<decimal>> GetTotalRevenueForProduct(Guid id) {
-    var revenue = await mediator.Send(new GetTotalRevenueForProductQuery(id));
+    var revenue = await mediator.Send(new GetTotalRevenueForProductQuery { ProductId = id });
 
     return Ok(revenue);
   }

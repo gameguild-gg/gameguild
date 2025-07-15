@@ -1,4 +1,4 @@
-using GameGuild.Common.Interfaces;
+using GameGuild.Common;
 using GameGuild.Database;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +26,7 @@ public class GetPaymentByIdQueryHandler : IRequestHandler<GetPaymentByIdQuery, P
 
     // Apply authorization filter
     if (request.UserId.HasValue) { query = query.Where(p => p.UserId == request.UserId.Value); }
-    else { query = query.Where(p => p.UserId == _userContext.UserId); }
+    else if (!_userContext.IsInRole("Admin")) { query = query.Where(p => p.UserId == _userContext.UserId); }
 
     return await query.FirstOrDefaultAsync(cancellationToken);
   }
@@ -45,8 +45,8 @@ public class GetUserPaymentsQueryHandler : IRequestHandler<GetUserPaymentsQuery,
   }
 
   public async Task<IEnumerable<Payment>> Handle(GetUserPaymentsQuery request, CancellationToken cancellationToken) {
-    // Check authorization - only allow users to see their own payments
-    if (_userContext.UserId != request.UserId) { return Enumerable.Empty<Payment>(); }
+    // Check authorization
+    if (_userContext.UserId != request.UserId && !_userContext.IsInRole("Admin")) { return Enumerable.Empty<Payment>(); }
 
     var query = _context.Payments
                         .Include(p => p.Refunds)
@@ -80,8 +80,14 @@ public class GetProductPaymentsQueryHandler : IRequestHandler<GetProductPayments
   }
 
   public async Task<IEnumerable<Payment>> Handle(GetProductPaymentsQuery request, CancellationToken cancellationToken) {
-    // Product payments are restricted
-    return Enumerable.Empty<Payment>();
+    // Only admins can view product payments
+    if (!_userContext.IsInRole("Admin")) { return Enumerable.Empty<Payment>(); }
+
+    var query = _context.Payments
+                        .Include(p => p.Refunds)
+                        .Where(p => p.ProductId == request.ProductId);
+
+    // Apply filters
     if (request.Status.HasValue) { query = query.Where(p => p.Status == request.Status.Value); }
 
     if (request.FromDate.HasValue) { query = query.Where(p => p.CreatedAt >= request.FromDate.Value); }
@@ -119,13 +125,13 @@ public class GetPaymentStatsQueryHandler : IRequestHandler<GetPaymentStatsQuery,
 
     // Apply authorization and filters
     if (request.UserId.HasValue) {
-      if (_userContext.UserId != request.UserId) {
+      if (_userContext.UserId != request.UserId && !_userContext.IsInRole("Admin")) {
         return new PaymentStats(); // Return empty stats for unauthorized access
       }
 
       query = query.Where(p => p.UserId == request.UserId.Value);
     }
-    else { query = query.Where(p => p.UserId == _userContext.UserId); }
+    else if (!_userContext.IsInRole("Admin")) { query = query.Where(p => p.UserId == _userContext.UserId); }
 
     if (request.ProductId.HasValue) { query = query.Where(p => p.ProductId == request.ProductId.Value); }
 
@@ -177,14 +183,20 @@ public class GetRevenueReportQueryHandler : IRequestHandler<GetRevenueReportQuer
   }
 
   public async Task<RevenueReport> Handle(GetRevenueReportQuery request, CancellationToken cancellationToken) {
-    // Revenue reports are restricted - return empty report
-    return new RevenueReport {
-      FromDate = request.FromDate,
-      ToDate = request.ToDate,
-      TotalRevenue = 0,
-      NetRevenue = 0,
-      TotalTransactions = 0
-    };
+    // Only admins can access revenue reports
+    if (!_userContext.IsInRole("Admin")) {
+      return new RevenueReport {
+        FromDate = request.FromDate,
+        ToDate = request.ToDate,
+        TotalRevenue = 0,
+        NetRevenue = 0,
+        TotalTransactions = 0
+      };
+    }
+
+    var query = _context.Payments
+                        .Where(p => p.Status == PaymentStatus.Completed)
+                        .Where(p => p.CreatedAt >= request.FromDate && p.CreatedAt <= request.ToDate);
 
     if (request.ProductId.HasValue) { query = query.Where(p => p.ProductId == request.ProductId.Value); }
 

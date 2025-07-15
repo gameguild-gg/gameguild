@@ -9,7 +9,7 @@ using GameGuild.Modules.Users;
 
 // do not remove this, it's needed for IQueryable extensions
 
-namespace GameGuild.Modules.Permissions.Models;
+namespace GameGuild.Modules.Permissions;
 
 // this is a base permission model that can be used to store permissions for any entity
 [ObjectType]

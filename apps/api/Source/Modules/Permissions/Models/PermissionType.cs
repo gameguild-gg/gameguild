@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Permissions.Models;
+﻿namespace GameGuild.Modules.Permissions;
 
 public enum PermissionType {
   #region Interaction Permissions

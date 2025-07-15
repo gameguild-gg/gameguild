@@ -1,7 +1,6 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Permissions;
-using GameGuild.Modules.Permissions.Models;
 using Microsoft.EntityFrameworkCore;
 
 

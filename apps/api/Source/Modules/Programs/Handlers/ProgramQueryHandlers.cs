@@ -14,15 +14,15 @@ public class ProgramQueryHandlers(
   ApplicationDbContext context,
   ILogger<ProgramQueryHandlers> logger
 ) :
-  IRequestHandler<GetAllProgramsQuery, IEnumerable<GameGuild.Modules.Programs.Program>>,
-  IRequestHandler<GetProgramByIdQuery, GameGuild.Modules.Programs.Program?>,
-  IRequestHandler<GetProgramBySlugQuery, GameGuild.Modules.Programs.Program?>,
-  IRequestHandler<GetPublishedProgramBySlugQuery, GameGuild.Modules.Programs.Program?>,
-  IRequestHandler<SearchProgramsQuery, IEnumerable<GameGuild.Modules.Programs.Program>>,
-  IRequestHandler<GetProgramsByCategoryQuery, IEnumerable<GameGuild.Modules.Programs.Program>>,
-  IRequestHandler<GetProgramsByDifficultyQuery, IEnumerable<GameGuild.Modules.Programs.Program>>,
-  IRequestHandler<GetProgramsByCreatorQuery, IEnumerable<GameGuild.Modules.Programs.Program>>,
-  IRequestHandler<GetUserEnrolledProgramsQuery, IEnumerable<GameGuild.Modules.Programs.Program>>,
+  IRequestHandler<GetAllProgramsQuery, IEnumerable<Program>>,
+  IRequestHandler<GetProgramByIdQuery, Program?>,
+  IRequestHandler<GetProgramBySlugQuery, Program?>,
+  IRequestHandler<GetPublishedProgramBySlugQuery, Program?>,
+  IRequestHandler<SearchProgramsQuery, IEnumerable<Program>>,
+  IRequestHandler<GetProgramsByCategoryQuery, IEnumerable<Program>>,
+  IRequestHandler<GetProgramsByDifficultyQuery, IEnumerable<Program>>,
+  IRequestHandler<GetProgramsByCreatorQuery, IEnumerable<Program>>,
+  IRequestHandler<GetUserEnrolledProgramsQuery, IEnumerable<Program>>,
   IRequestHandler<GetProgramEnrollmentsQuery, IEnumerable<ProgramUser>>,
   IRequestHandler<CheckUserEnrollmentQuery, ProgramUser?>,
   IRequestHandler<GetProgramContentQuery, IEnumerable<ProgramContent>>,
@@ -30,17 +30,17 @@ public class ProgramQueryHandlers(
   IRequestHandler<GetProgramStatisticsQuery, ProgramStatistics>,
   IRequestHandler<GetGlobalProgramStatisticsQuery, GlobalProgramStatistics>,
   IRequestHandler<GetCreatorProgramStatisticsQuery, CreatorProgramStatistics>,
-  IRequestHandler<GetPopularProgramsQuery, IEnumerable<GameGuild.Modules.Programs.Program>>,
-  IRequestHandler<GetRecentProgramsQuery, IEnumerable<GameGuild.Modules.Programs.Program>>,
-  IRequestHandler<GetFeaturedProgramsQuery, IEnumerable<GameGuild.Modules.Programs.Program>>,
-  IRequestHandler<GetRecommendedProgramsQuery, IEnumerable<GameGuild.Modules.Programs.Program>>,
+  IRequestHandler<GetPopularProgramsQuery, IEnumerable<Program>>,
+  IRequestHandler<GetRecentProgramsQuery, IEnumerable<Program>>,
+  IRequestHandler<GetFeaturedProgramsQuery, IEnumerable<Program>>,
+  IRequestHandler<GetRecommendedProgramsQuery, IEnumerable<Program>>,
   IRequestHandler<GetProgramRatingsQuery, IEnumerable<ProgramRating>>,
   IRequestHandler<GetUserProgramRatingQuery, ProgramRating?>,
-  IRequestHandler<GetUserWishlistQuery, IEnumerable<GameGuild.Modules.Programs.Program>>,
+  IRequestHandler<GetUserWishlistQuery, IEnumerable<Program>>,
   IRequestHandler<CheckProgramInWishlistQuery, bool> {
   // ===== BASIC QUERY HANDLERS =====
 
-  public async Task<IEnumerable<GameGuild.Modules.Programs.Program>> Handle(GetAllProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetAllProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting all programs with filters");
 
     var query = context.Programs.Where(p => p.DeletedAt == null);
@@ -87,7 +87,7 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<GameGuild.Modules.Programs.Program?> Handle(GetProgramByIdQuery request, CancellationToken cancellationToken) {
+  public async Task<Program?> Handle(GetProgramByIdQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting program by ID: {ProgramId}", request.Id);
 
     var query = context.Programs.Where(p => p.Id == request.Id && p.DeletedAt == null);
@@ -108,7 +108,7 @@ public class ProgramQueryHandlers(
     return program;
   }
 
-  public async Task<GameGuild.Modules.Programs.Program?> Handle(GetProgramBySlugQuery request, CancellationToken cancellationToken) {
+  public async Task<Program?> Handle(GetProgramBySlugQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting program by slug: {Slug}", request.Slug);
 
     var query = context.Programs.Where(p => p.Slug == request.Slug && p.DeletedAt == null);
@@ -129,7 +129,7 @@ public class ProgramQueryHandlers(
     return program;
   }
 
-  public async Task<GameGuild.Modules.Programs.Program?> Handle(GetPublishedProgramBySlugQuery request, CancellationToken cancellationToken) {
+  public async Task<Program?> Handle(GetPublishedProgramBySlugQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting published program by slug: {Slug}", request.Slug);
 
     var query = context.Programs
@@ -153,7 +153,7 @@ public class ProgramQueryHandlers(
 
   // ===== SEARCH AND FILTER HANDLERS =====
 
-  public async Task<IEnumerable<GameGuild.Modules.Programs.Program>> Handle(SearchProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(SearchProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Searching programs with term: {SearchTerm}", request.SearchTerm);
 
     var query = context.Programs
@@ -200,7 +200,7 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<GameGuild.Modules.Programs.Program>> Handle(GetProgramsByCategoryQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetProgramsByCategoryQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting programs by category: {Category}", request.Category);
 
     var query = context.Programs.Where(p => p.Category == request.Category && p.DeletedAt == null);
@@ -218,7 +218,7 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<GameGuild.Modules.Programs.Program>> Handle(GetProgramsByDifficultyQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetProgramsByDifficultyQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting programs by difficulty: {Difficulty}", request.Difficulty);
 
     var query = context.Programs.Where(p => p.Difficulty == request.Difficulty && p.DeletedAt == null);
@@ -236,7 +236,7 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<GameGuild.Modules.Programs.Program>> Handle(GetProgramsByCreatorQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetProgramsByCreatorQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting programs by creator: {CreatorId}", request.CreatorId);
 
     var query = context.Programs.Where(p => p.CreatorId == request.CreatorId && p.DeletedAt == null);
@@ -256,7 +256,7 @@ public class ProgramQueryHandlers(
 
   // ===== ENROLLMENT QUERY HANDLERS =====
 
-  public async Task<IEnumerable<GameGuild.Modules.Programs.Program>> Handle(GetUserEnrolledProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetUserEnrolledProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting enrolled programs for user: {UserId}", request.UserId);
 
     var query = context.Programs
@@ -503,7 +503,7 @@ public class ProgramQueryHandlers(
 
   // ===== TRENDING AND RECOMMENDATION HANDLERS =====
 
-  public async Task<IEnumerable<GameGuild.Modules.Programs.Program>> Handle(GetPopularProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetPopularProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting popular programs");
 
     var sinceDate = DateTime.UtcNow.AddDays(-request.DaysBack);
@@ -524,7 +524,7 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<GameGuild.Modules.Programs.Program>> Handle(GetRecentProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetRecentProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting recent programs");
 
     var sinceDate = DateTime.UtcNow.AddDays(-request.DaysBack);
@@ -545,7 +545,7 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<GameGuild.Modules.Programs.Program>> Handle(GetFeaturedProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetFeaturedProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting featured programs");
 
     // Note: This is a simplified implementation. You might want to add a "Featured" flag to programs
@@ -565,7 +565,7 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<GameGuild.Modules.Programs.Program>> Handle(GetRecommendedProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetRecommendedProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting recommended programs for user: {UserId}", request.UserId);
 
     // Note: This is a simplified recommendation system. A real implementation would use more sophisticated algorithms
@@ -624,7 +624,7 @@ public class ProgramQueryHandlers(
 
   // ===== WISHLIST QUERY HANDLERS =====
 
-  public async Task<IEnumerable<GameGuild.Modules.Programs.Program>> Handle(GetUserWishlistQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetUserWishlistQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting wishlist for user: {UserId}", request.UserId);
 
     var programs = await context.Programs

@@ -45,8 +45,8 @@ public class PureGraphQLInfrastructureTests
 
         // Act - Add only GraphQL infrastructure without any business modules
         services.AddGraphQLServer()
-            .AddQueryType<GameGuild.Common.Query>()
-            .AddMutationType<GameGuild.Common.Mutation>()
+            .AddQueryType<Query>()
+            .AddMutationType<Mutation>()
             .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true);
 
         // Assert
@@ -83,7 +83,7 @@ public class PureGraphQLInfrastructureTests
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
         services.AddHttpContextAccessor(); // Required for pipeline behaviors
-        services.AddSingleton<GameGuild.Common.IDateTimeProvider, GameGuild.Common.DateTimeProvider>(); // Required for PerformanceBehavior
+        services.AddSingleton<IDateTimeProvider, DateTimeProvider>(); // Required for PerformanceBehavior
 
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"MediatR_{Guid.NewGuid()}"));
@@ -148,8 +148,8 @@ public class PureGraphQLInfrastructureTests
 
                     // Add minimal GraphQL server
                     services.AddGraphQLServer()
-                        .AddQueryType<GameGuild.Common.Query>()
-                        .AddMutationType<GameGuild.Common.Mutation>()
+                        .AddQueryType<Query>()
+                        .AddMutationType<Mutation>()
                         .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true);
                 });
                 webHost.Configure(app =>
@@ -196,7 +196,7 @@ public class PureGraphQLInfrastructureTests
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
         services.AddHttpContextAccessor(); // Required for pipeline behaviors
-        services.AddSingleton<GameGuild.Common.IDateTimeProvider, GameGuild.Common.DateTimeProvider>(); // Required for PerformanceBehavior
+        services.AddSingleton<IDateTimeProvider, DateTimeProvider>(); // Required for PerformanceBehavior
 
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"GraphQLMediatR_{Guid.NewGuid()}"));
@@ -208,8 +208,8 @@ public class PureGraphQLInfrastructureTests
         services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
         
         services.AddGraphQLServer()
-            .AddQueryType<GameGuild.Common.Query>()
-            .AddMutationType<GameGuild.Common.Mutation>()
+            .AddQueryType<Query>()
+            .AddMutationType<Mutation>()
             .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true);
 
         // Assert

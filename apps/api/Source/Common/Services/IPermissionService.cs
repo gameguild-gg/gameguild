@@ -1,4 +1,4 @@
-using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tenants;
 

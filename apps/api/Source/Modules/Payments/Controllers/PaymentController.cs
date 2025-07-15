@@ -9,15 +9,16 @@ namespace GameGuild.Modules.Payments;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class PaymentController(IMediator mediator) : ControllerBase {
+public class PaymentController(IMediator mediator) : ControllerBase 
+{
   /// <summary>
   /// Get current user's payment methods
   /// </summary>
   [HttpGet("methods/me")]
-  public async Task<ActionResult<IEnumerable<UserFinancialMethod>>> GetMyPaymentMethods() {
+  public async Task<ActionResult<IEnumerable<UserFinancialMethod>>> GetMyPaymentMethods() 
+  {
     var query = new GetUserPaymentMethodsQuery();
     var methods = await mediator.Send(query);
-
     return Ok(methods);
   }
 
@@ -25,11 +26,10 @@ public class PaymentController(IMediator mediator) : ControllerBase {
   /// Create a new payment intent
   /// </summary>
   [HttpPost("intent")]
-  public async Task<ActionResult<Payment>> CreatePaymentIntent([FromBody] CreatePaymentCommand command) {
+  public async Task<ActionResult<Payment>> CreatePaymentIntent([FromBody] CreatePaymentCommand command) 
+  {
     var result = await mediator.Send(command);
-
     if (!result.Success) return BadRequest(result.ErrorMessage);
-
     return Ok(result.Payment);
   }
 
@@ -37,12 +37,11 @@ public class PaymentController(IMediator mediator) : ControllerBase {
   /// Process an existing payment
   /// </summary>
   [HttpPost("{id}/process")]
-  public async Task<ActionResult<Payment>> ProcessPayment(Guid id, [FromBody] ProcessPaymentCommand command) {
-    var processCommand = command with { PaymentId = id };
-    var result = await mediator.Send(processCommand);
-
+  public async Task<ActionResult<Payment>> ProcessPayment(Guid id, [FromBody] ProcessPaymentCommand command) 
+  {
+    command.PaymentId = id;
+    var result = await mediator.Send(command);
     if (!result.Success) return BadRequest(result.ErrorMessage);
-
     return Ok(result.Payment);
   }
 
@@ -50,25 +49,23 @@ public class PaymentController(IMediator mediator) : ControllerBase {
   /// Refund a payment
   /// </summary>
   [HttpPost("{id}/refund")]
-  public async Task<ActionResult<PaymentRefund>> RefundPayment(Guid id, [FromBody] RefundPaymentCommand command) {
-    var refundCommand = command with { PaymentId = id };
-    var result = await mediator.Send(refundCommand);
-
+  public async Task<ActionResult<Payment>> RefundPayment(Guid id, [FromBody] RefundPaymentCommand command) 
+  {
+    command.PaymentId = id;
+    var result = await mediator.Send(command);
     if (!result.Success) return BadRequest(result.ErrorMessage);
-
-    return Ok(result.Refund);
+    return Ok(result.Payment);
   }
 
   /// <summary>
   /// Get payment by ID
   /// </summary>
   [HttpGet("{id:guid}")]
-  public async Task<ActionResult<Payment>> GetPayment(Guid id) {
+  public async Task<ActionResult<Payment>> GetPayment(Guid id)
+  {
     var query = new GetPaymentByIdQuery { PaymentId = id };
     var payment = await mediator.Send(query);
-
     if (payment == null) return NotFound();
-
     return Ok(payment);
   }
 
@@ -76,10 +73,10 @@ public class PaymentController(IMediator mediator) : ControllerBase {
   /// Get user's payment history
   /// </summary>
   [HttpGet("user/{userId:guid}")]
-  public async Task<ActionResult<IEnumerable<Payment>>> GetUserPayments(Guid userId) {
+  public async Task<ActionResult<IEnumerable<Payment>>> GetUserPayments(Guid userId)
+  {
     var query = new GetUserPaymentsQuery { UserId = userId };
     var payments = await mediator.Send(query);
-
     return Ok(payments);
   }
 
@@ -87,10 +84,10 @@ public class PaymentController(IMediator mediator) : ControllerBase {
   /// Get payment statistics
   /// </summary>
   [HttpGet("stats")]
-  public async Task<ActionResult<PaymentStats>> GetPaymentStats() {
+  public async Task<ActionResult<PaymentStats>> GetPaymentStats()
+  {
     var query = new GetPaymentStatsQuery();
     var stats = await mediator.Send(query);
-
     return Ok(stats);
   }
 }

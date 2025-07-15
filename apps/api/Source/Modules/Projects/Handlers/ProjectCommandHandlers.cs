@@ -1,7 +1,7 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Permissions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,14 +28,14 @@ public class ProjectCommandHandlers :
   IRequestHandler<UnpublishProjectCommand, UnpublishProjectResult>,
   IRequestHandler<ArchiveProjectCommand, ArchiveProjectResult> {
   private readonly ApplicationDbContext _context;
-  private readonly GameGuild.Common.Interfaces.IUserContext _userContext;
-  private readonly GameGuild.Common.Interfaces.ITenantContext _tenantContext;
+  private readonly IUserContext _userContext;
+  private readonly ITenantContext _tenantContext;
   private readonly ILogger<ProjectCommandHandlers> _logger;
 
   public ProjectCommandHandlers(
     ApplicationDbContext context,
-    GameGuild.Common.Interfaces.IUserContext userContext,
-    GameGuild.Common.Interfaces.ITenantContext tenantContext,
+    IUserContext userContext,
+    ITenantContext tenantContext,
     ILogger<ProjectCommandHandlers> logger
   ) {
     _context = context;
@@ -210,9 +210,9 @@ public class ProjectCommandHandlers :
 
       // Check authorization - user must have publish permissions
       var hasPublishPermission = project.Collaborators.Any(c =>
-                                                            c.UserId == _userContext.UserId &&
-                                                            c.IsActive &&
-                                                            c.Permissions.Contains(PermissionType.Publish.ToString())
+                                                             c.UserId == _userContext.UserId &&
+                                                             c.IsActive &&
+                                                             c.Permissions.Contains(PermissionType.Publish.ToString())
       );
 
       if (!hasPublishPermission) { return new PublishProjectResult { Success = false, ErrorMessage = "Unauthorized to publish this project" }; }
@@ -241,9 +241,9 @@ public class ProjectCommandHandlers :
 
       // Check authorization - user must have unpublish permissions
       var hasUnpublishPermission = project.Collaborators.Any(c =>
-                                                              c.UserId == _userContext.UserId &&
-                                                              c.IsActive &&
-                                                              c.Permissions.Contains(PermissionType.Unpublish.ToString())
+                                                               c.UserId == _userContext.UserId &&
+                                                               c.IsActive &&
+                                                               c.Permissions.Contains(PermissionType.Unpublish.ToString())
       );
 
       if (!hasUnpublishPermission) { return new UnpublishProjectResult { Success = false, ErrorMessage = "Unauthorized to unpublish this project" }; }
@@ -272,9 +272,9 @@ public class ProjectCommandHandlers :
 
       // Check authorization - user must have archive permissions
       var hasArchivePermission = project.Collaborators.Any(c =>
-                                                            c.UserId == _userContext.UserId &&
-                                                            c.IsActive &&
-                                                            c.Permissions.Contains(PermissionType.Archive.ToString())
+                                                             c.UserId == _userContext.UserId &&
+                                                             c.IsActive &&
+                                                             c.Permissions.Contains(PermissionType.Archive.ToString())
       );
 
       if (!hasArchivePermission) { return new ArchiveProjectResult { Success = false, ErrorMessage = "Unauthorized to archive this project" }; }

@@ -303,6 +303,8 @@ public record GetPricingHistoryQuery : IRequest<IEnumerable<ProductPricing>> {
 /// Query to get subscription plans
 /// </summary>
 public record GetSubscriptionPlansQuery : IRequest<IEnumerable<ProductSubscriptionPlan>> {
+  public Guid? ProductId { get; init; }
+
   public bool ActiveOnly { get; init; } = true;
 }
 

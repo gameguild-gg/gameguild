@@ -76,7 +76,7 @@ namespace GameGuild.Tests.Fixtures {
       services.AddHttpContextAccessor();
       
       // Add IDateTimeProvider for PerformanceBehavior
-      services.AddSingleton<GameGuild.Common.IDateTimeProvider, GameGuild.Common.DateTimeProvider>();
+      services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
       // Add EF Core InMemory database for testing with unique database name
       var databaseName = $"TestDatabase_{Guid.NewGuid()}";
@@ -98,20 +98,20 @@ namespace GameGuild.Tests.Fixtures {
       services.AddCommonServices();
 
       // Add test module for infrastructure testing
-      services = GameGuild.Tests.MockModules.TestModuleDependencyInjection.AddTestModule(services);
+      services = MockModules.TestModuleDependencyInjection.AddTestModule(services);
 
       // Add authentication module
       services = AuthModuleDependencyInjection.AddAuthModule(services, configuration);
       
       // Replace the IAuthService with a mock for testing (avoids complex dependency chain)
-      services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
+      services.AddScoped<IAuthService, MockAuthService>();
       
       // Add GraphQL infrastructure with testing configuration
-      services.AddGraphQLInfrastructure(GameGuild.Common.DependencyInjection.GraphQLOptionsFactory.ForTesting());
+      services.AddGraphQLInfrastructure(DependencyInjection.GraphQLOptionsFactory.ForTesting());
       
       // Manually add simple UserProfile GraphQL implementation for testing
       services.AddGraphQLServer()
-              .AddTypeExtension<GameGuild.Tests.UserProfiles.SimpleUserProfileQueries>()
+              .AddTypeExtension<UserProfiles.SimpleUserProfileQueries>()
               .AddType<GameGuild.Modules.UserProfiles.UserProfileType>();
       
       // Configure GraphQL to return 200 OK for validation errors
@@ -123,7 +123,7 @@ namespace GameGuild.Tests.Fixtures {
 
       // Add controllers from the main application assembly
       services.AddControllers()
-              .AddApplicationPart(typeof(GameGuild.Modules.Users.UsersController).Assembly);
+              .AddApplicationPart(typeof(UsersController).Assembly);
     }
 
     public HttpClient CreateClient() { return Server.CreateClient(); }

@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Permissions;
 using HotChocolate.Resolvers;
 
 

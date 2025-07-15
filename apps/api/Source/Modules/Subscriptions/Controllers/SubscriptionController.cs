@@ -1,5 +1,5 @@
 using GameGuild.Common;
-using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Subscriptions.Models;
 using GameGuild.Modules.Subscriptions.Services;
 using Microsoft.AspNetCore.Mvc;

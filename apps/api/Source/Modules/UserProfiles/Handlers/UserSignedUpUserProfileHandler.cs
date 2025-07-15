@@ -9,8 +9,8 @@ namespace GameGuild.Modules.UserProfiles;
 public class UserSignedUpUserProfileHandler(
   IMediator mediator,
   ILogger<UserSignedUpUserProfileHandler> logger
-) : INotificationHandler<GameGuild.Modules.Authentication.UserSignedUpNotification> {
-  public async Task Handle(GameGuild.Modules.Authentication.UserSignedUpNotification notification, CancellationToken cancellationToken) {
+) : INotificationHandler<Authentication.UserSignedUpNotification> {
+  public async Task Handle(Authentication.UserSignedUpNotification notification, CancellationToken cancellationToken) {
     try {
       logger.LogInformation("Creating UserProfile for newly signed up user {UserId}", notification.UserId);
 

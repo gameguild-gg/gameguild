@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Models;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Represents a paginated result set

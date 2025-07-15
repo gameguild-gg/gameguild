@@ -154,8 +154,8 @@ public class InfrastructureArchitectureTests
 
         // Act - Register minimal GraphQL server with just base types for infrastructure testing
         services.AddGraphQLServer()
-            .AddQueryType<GameGuild.Common.Query>()
-            .AddMutationType<GameGuild.Common.Mutation>()
+            .AddQueryType<Query>()
+            .AddMutationType<Mutation>()
             .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true);
 
         // Assert
@@ -189,8 +189,8 @@ public class InfrastructureArchitectureTests
         services.AddLogging();
 
         services.AddGraphQLServer()
-            .AddQueryType<GameGuild.Common.Query>()
-            .AddMutationType<GameGuild.Common.Mutation>()
+            .AddQueryType<Query>()
+            .AddMutationType<Mutation>()
             .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true);
 
         var serviceProvider = services.BuildServiceProvider();
@@ -272,8 +272,8 @@ public class InfrastructureArchitectureTests
                         options.UseInMemoryDatabase($"GraphQLServer_{Guid.NewGuid()}"));
 
                     services.AddGraphQLServer()
-                        .AddQueryType<GameGuild.Common.Query>()
-                        .AddMutationType<GameGuild.Common.Mutation>()
+                        .AddQueryType<Query>()
+                        .AddMutationType<Mutation>()
                         .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true);
                 });
                 webHost.Configure(app =>
@@ -329,8 +329,8 @@ public class InfrastructureArchitectureTests
         services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
 
         services.AddGraphQLServer()
-            .AddQueryType<GameGuild.Common.Query>()
-            .AddMutationType<GameGuild.Common.Mutation>()
+            .AddQueryType<Query>()
+            .AddMutationType<Mutation>()
             .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true);
 
         // Act

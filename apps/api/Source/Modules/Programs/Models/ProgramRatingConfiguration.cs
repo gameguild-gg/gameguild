@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GameGuild.Modules.Programs;
 
-public class ProgramRatingConfiguration : IEntityTypeConfiguration<GameGuild.Modules.Feedbacks.ProgramRating> {
-  public void Configure(EntityTypeBuilder<GameGuild.Modules.Feedbacks.ProgramRating> builder) {
+public class ProgramRatingConfiguration : IEntityTypeConfiguration<ProgramRating> {
+  public void Configure(EntityTypeBuilder<ProgramRating> builder) {
     builder.ToTable("program_ratings");
 
     builder.HasKey(pr => pr.Id);
