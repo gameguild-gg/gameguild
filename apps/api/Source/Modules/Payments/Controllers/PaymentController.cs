@@ -1,28 +1,66 @@
 using GameGuild.Common;
 using GameGuild.Modules.Payments.Models;
-using GameGuild.Modules.Payments.Services;
+using GameGuild.Modules.Payments.Commands;
+using GameGuild.Modules.Payments.Queries;
 using GameGuild.Modules.Permissions.Models;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 
 namespace GameGuild.Modules.Payments.Controllers;
 
 /// <summary>
-/// REST API controller for managing payments and financial transactions
+/// REST API controller for managing payments using CQRS pattern
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class PaymentController(IPaymentService paymentService) : ControllerBase {
+public class PaymentController(IMediator mediator) : ControllerBase {
   /// <summary>
   /// Get current user's payment methods
   /// </summary>
   [HttpGet("methods/me")]
   public async Task<ActionResult<IEnumerable<UserFinancialMethod>>> GetMyPaymentMethods() {
+    var query = new GetUserPaymentMethodsQuery();
+    var methods = await mediator.Send(query);
+    return Ok(methods);
+  }
+
+  /// <summary>
+  /// Create a new payment intent
+  /// </summary>
+  [HttpPost("intent")]
+  public async Task<ActionResult<Payment>> CreatePaymentIntent([FromBody] CreatePaymentCommand command) {
+    var result = await mediator.Send(command);
+    if (!result.Success) return BadRequest(result.ErrorMessage);
+    return Ok(result.Payment);
+  }
+
+  /// <summary>
+  /// Process an existing payment
+  /// </summary>
+  [HttpPost("{id}/process")]
+  public async Task<ActionResult<Payment>> ProcessPayment(Guid id, [FromBody] ProcessPaymentCommand command) {
+    command.PaymentId = id;
+    var result = await mediator.Send(command);
+    if (!result.Success) return BadRequest(result.ErrorMessage);
+    return Ok(result.Payment);
+  }
+
+  /// <summary>
+  /// Refund a payment
+  /// </summary>
+  [HttpPost("{id}/refund")]
+  public async Task<ActionResult<Payment>> RefundPayment(Guid id, [FromBody] RefundPaymentCommand command) {
+    command.PaymentId = id;
+    var result = await mediator.Send(command);
+    if (!result.Success) return BadRequest(result.ErrorMessage);
+    return Ok(result.Payment);
+  }
     var userIdClaim = User.FindFirst("sub")?.Value;
 
     if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
-    var paymentMethods = await paymentService.GetUserPaymentMethodsAsync(userId);
+    var paymentMethods = await mediator.Send(new GetUserPaymentMethodsQuery(userId));
 
     return Ok(paymentMethods);
   }
@@ -38,7 +76,7 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
 
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var paymentMethod = await paymentService.CreatePaymentMethodAsync(userId, createDto);
+    var paymentMethod = await mediator.Send(new CreatePaymentMethodCommand(userId, createDto));
 
     return CreatedAtAction(nameof(GetPaymentMethod), new { id = paymentMethod.Id }, paymentMethod);
   }
@@ -52,7 +90,7 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
 
     if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
-    var paymentMethod = await paymentService.GetPaymentMethodByIdAsync(id, userId);
+    var paymentMethod = await mediator.Send(new GetPaymentMethodByIdQuery(id, userId));
 
     if (paymentMethod == null) return NotFound();
 
@@ -68,7 +106,7 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
 
     if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
-    var result = await paymentService.DeletePaymentMethodAsync(id, userId);
+    var result = await mediator.Send(new DeletePaymentMethodCommand(id, userId));
 
     if (!result) return NotFound();
 
@@ -89,7 +127,7 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
 
     if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
-    var transactions = await paymentService.GetUserTransactionsAsync(userId, skip, take, type, status);
+    var transactions = await mediator.Send(new GetUserTransactionsQuery(userId, skip, take, type, status));
 
     return Ok(transactions);
   }
@@ -103,7 +141,7 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
 
     if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized(new { message = "User ID not found in token" });
 
-    var transaction = await paymentService.GetTransactionByIdAsync(id, userId);
+    var transaction = await mediator.Send(new GetTransactionByIdQuery(id, userId));
 
     if (transaction == null) return NotFound();
 
@@ -121,7 +159,7 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
 
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var transaction = await paymentService.CreateTransactionAsync(userId, createDto);
+    var transaction = await mediator.Send(new CreateTransactionCommand(userId, createDto));
 
     return CreatedAtAction(nameof(GetTransaction), new { id = transaction.Id }, transaction);
   }
@@ -137,7 +175,7 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
 
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var transaction = await paymentService.ProcessPaymentAsync(id, userId, processDto);
+    var transaction = await mediator.Send(new ProcessPaymentCommand(id, userId, processDto));
 
     if (transaction == null) return NotFound();
 
@@ -155,7 +193,7 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
     [FromQuery] TransactionType? type = null,
     [FromQuery] TransactionStatus? status = null
   ) {
-    var transactions = await paymentService.GetAllTransactionsAsync(skip, take, type, status);
+    var transactions = await mediator.Send(new GetAllTransactionsQuery(skip, take, type, status));
 
     return Ok(transactions);
   }
@@ -169,7 +207,7 @@ public class PaymentController(IPaymentService paymentService) : ControllerBase 
     [FromQuery] DateTime? fromDate = null,
     [FromQuery] DateTime? toDate = null
   ) {
-    var statistics = await paymentService.GetPaymentStatisticsAsync(fromDate, toDate);
+    var statistics = await mediator.Send(new GetPaymentStatisticsQuery(fromDate, toDate));
 
     return Ok(statistics);
   }
