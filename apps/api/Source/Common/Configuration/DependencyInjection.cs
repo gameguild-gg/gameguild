@@ -2,6 +2,7 @@
 using System.Reflection;
 using FluentValidation;
 using GameGuild.Common.Extensions;
+using GameGuild.Common.Middleware;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using HotChocolate.Execution.Configuration;
@@ -118,6 +119,9 @@ public static class DependencyInjection {
     // Register domain event infrastructure early (needed by handlers)
     services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
     services.AddScoped<IDomainEventsDispatcher, DomainEventsDispatcher>();
+
+    // Add context services for user and tenant context
+    services.AddContextServices();
 
     // MediatR for CQRS
     services.AddMediatR(Assembly.GetExecutingAssembly(), typeof(Program).Assembly);

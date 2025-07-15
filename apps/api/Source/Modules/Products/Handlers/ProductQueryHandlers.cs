@@ -1,6 +1,5 @@
 using GameGuild.Common.Interfaces;
-using GameGuild.Data.Models;
-using GameGuild.Data;
+using GameGuild.Database;
 using GameGuild.Modules.Products.Queries;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Contents;
