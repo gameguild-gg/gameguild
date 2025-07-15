@@ -145,10 +145,48 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
             bool autoEnrollTriggered = false;
             if (payment.ProductId.HasValue)
             {
-                // TODO: Implement auto-enrollment logic
-                // This would involve checking if the product has associated programs
-                // and automatically enrolling the user
-                autoEnrollTriggered = true;
+                // Get programs associated with the product
+                var productPrograms = await _context.ProductPrograms
+                    .Include(pp => pp.Program)
+                    .Where(pp => pp.ProductId == payment.ProductId.Value && !pp.Program.IsDeleted)
+                    .ToListAsync(cancellationToken);
+
+                if (productPrograms.Any() && !string.IsNullOrEmpty(payment.UserId))
+                {
+                    foreach (var productProgram in productPrograms)
+                    {
+                        // Check if user is not already enrolled
+                        var existingEnrollment = await _context.ProgramUsers
+                            .AnyAsync(pu => pu.ProgramId == productProgram.ProgramId && 
+                                          pu.UserId == payment.UserId && 
+                                          pu.IsActive, cancellationToken);
+
+                        if (!existingEnrollment && productProgram.Program.IsEnrollmentOpen)
+                        {
+                            var enrollment = new GameGuild.Modules.Programs.Models.ProgramUser
+                            {
+                                ProgramId = productProgram.ProgramId,
+                                UserId = payment.UserId,
+                                EnrollmentDate = DateTime.UtcNow,
+                                IsActive = true,
+                                CreatedAt = DateTime.UtcNow,
+                                UpdatedAt = DateTime.UtcNow
+                            };
+
+                            _context.ProgramUsers.Add(enrollment);
+                            autoEnrollTriggered = true;
+                            
+                            _logger.LogInformation("Auto-enrolled user {UserId} in program {ProgramId} via payment {PaymentId}", 
+                                payment.UserId, productProgram.ProgramId, payment.Id);
+                        }
+                    }
+                    
+                    // Save the auto-enrollments
+                    if (autoEnrollTriggered)
+                    {
+                        await _context.SaveChangesAsync(cancellationToken);
+                    }
+                }
             }
 
             _logger.LogInformation("Payment processed: {PaymentId}", payment.Id);
