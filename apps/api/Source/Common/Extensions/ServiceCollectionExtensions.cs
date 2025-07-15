@@ -1,8 +1,10 @@
 using GameGuild.Modules.Payments.Services;
 using GameGuild.Modules.Payments.Handlers;
+using GameGuild.Modules.Payments.GraphQL;
 using GameGuild.Modules.Posts;
 using GameGuild.Modules.Products.Services;
 using GameGuild.Modules.Products.Handlers;
+using GameGuild.Modules.Products.GraphQL;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Services;
 using GameGuild.Modules.Projects;
@@ -89,6 +91,10 @@ public static class ServiceCollectionExtensions {
     // Register Product CQRS handlers
     services.AddScoped<ProductCommandHandlers>();
     services.AddScoped<ProductQueryHandlers>();
+    
+    // Register GraphQL DataLoaders for efficient data loading
+    services.AddScoped<IProductDataLoader, ProductDataLoader>();
+    services.AddScoped<IProductUserDataLoader, ProductUserDataLoader>();
 
     return services;
   }
@@ -115,6 +121,10 @@ public static class ServiceCollectionExtensions {
     services.AddScoped<GetProductPaymentsQueryHandler>();
     services.AddScoped<GetPaymentStatsQueryHandler>();
     services.AddScoped<GetRevenueReportQueryHandler>();
+    
+    // Register GraphQL DataLoaders for efficient data loading
+    services.AddScoped<IPaymentDataLoader, PaymentDataLoader>();
+    services.AddScoped<IPaymentUserDataLoader, PaymentUserDataLoader>();
 
     return services;
   }

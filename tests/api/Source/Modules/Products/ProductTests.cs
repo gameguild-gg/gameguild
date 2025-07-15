@@ -39,7 +39,7 @@ public class ProductTests : IDisposable
         services.AddLogging(builder => builder.AddConsole());
         
         // Add MediatR
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ProductCommandHandlers).Assembly));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(ProductCommandHandlers).Assembly));
         
         // Mock contexts
         _mockUserContext = new Mock<IUserContext>();
