@@ -1,4 +1,4 @@
-using GameGuild.Common.Interfaces;
+using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Payments;
 using GameGuild.Modules.Products;

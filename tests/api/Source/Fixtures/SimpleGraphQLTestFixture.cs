@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Tests.MockModules;
-using HotChocolate.AspNetCore;
+
 
 namespace GameGuild.Tests.Fixtures;
 

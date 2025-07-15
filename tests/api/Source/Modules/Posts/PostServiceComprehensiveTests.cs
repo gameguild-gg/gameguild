@@ -1,4 +1,3 @@
-using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Posts;
 using GameGuild.Modules.Contents;

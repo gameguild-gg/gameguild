@@ -8,10 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using MediatR;
-using GameGuild.Common;
 using GameGuild.Tests.Infrastructure.Integration;
-using Microsoft.EntityFrameworkCore;
+
 
 namespace GameGuild.Tests.Fixtures;
 

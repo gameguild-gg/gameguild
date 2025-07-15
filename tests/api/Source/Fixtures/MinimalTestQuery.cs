@@ -1,5 +1,3 @@
-using HotChocolate;
-
 namespace GameGuild.Tests.Fixtures;
 
 /// <summary>
