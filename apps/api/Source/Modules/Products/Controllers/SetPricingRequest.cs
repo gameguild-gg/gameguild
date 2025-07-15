@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Products.Controllers;
+﻿namespace GameGuild.Modules.Products;
 
 public class SetPricingRequest {
   public decimal BasePrice { get; set; }

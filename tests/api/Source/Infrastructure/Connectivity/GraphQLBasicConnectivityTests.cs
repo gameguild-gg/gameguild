@@ -4,7 +4,8 @@ using GameGuild.Tests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Infrastructure;
+
+namespace GameGuild.Tests.Infrastructure.Connectivity;
 
 /// <summary>
 /// Basic connectivity tests to diagnose GraphQL setup issues

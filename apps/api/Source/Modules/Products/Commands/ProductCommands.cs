@@ -1,9 +1,9 @@
-using MediatR;
-using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Contents;
 using GameGuild.Common;
+using GameGuild.Modules.Contents;
+using MediatR;
 
-namespace GameGuild.Modules.Products.Commands;
+
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Command to create a new product
@@ -14,7 +14,7 @@ public record CreateProductCommand : IRequest<CreateProductResult>
     public string? Description { get; init; }
     public string? ShortDescription { get; init; }
     public string? ImageUrl { get; init; }
-    public ProductType Type { get; init; } = ProductType.Program;
+    public Common.ProductType Type { get; init; } = Common.ProductType.Program;
     public bool IsBundle { get; init; }
     public Guid CreatorId { get; init; }
     public List<Guid>? BundleItems { get; init; }
@@ -36,7 +36,7 @@ public record UpdateProductCommand : IRequest<UpdateProductResult>
     public string? Description { get; init; }
     public string? ShortDescription { get; init; }
     public string? ImageUrl { get; init; }
-    public ProductType? Type { get; init; }
+    public Common.ProductType? Type { get; init; }
     public bool? IsBundle { get; init; }
     public List<Guid>? BundleItems { get; init; }
     public decimal? ReferralCommissionPercentage { get; init; }

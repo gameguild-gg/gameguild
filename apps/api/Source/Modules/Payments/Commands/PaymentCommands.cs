@@ -1,7 +1,7 @@
 using MediatR;
-using GameGuild.Modules.Payments.Models;
 
-namespace GameGuild.Modules.Payments.Commands;
+
+namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// Command to create a payment intent

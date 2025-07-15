@@ -1,13 +1,11 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Programs.DTOs;
-using GameGuild.Modules.Programs.Models;
 using Microsoft.EntityFrameworkCore;
-using ProgramEntity = GameGuild.Modules.Programs.Models.Program;
+using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 
-namespace GameGuild.Modules.Programs.Services;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Service implementation for Program business logic

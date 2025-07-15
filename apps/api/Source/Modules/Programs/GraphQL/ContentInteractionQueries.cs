@@ -1,11 +1,8 @@
 using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Programs.Interfaces;
-using GameGuild.Modules.Programs.Models;
-using MediatR;
 
 
-namespace GameGuild.Modules.Programs.GraphQL;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// GraphQL queries for ContentInteraction operations using CQRS pattern
@@ -17,7 +14,7 @@ public class ContentInteractionQueries {
   /// Get content interaction by ID
   /// Requires Read permission on the parent Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ContentInteraction?> GetContentInteractionById(
     Guid programId,
     Guid interactionId,
@@ -42,7 +39,7 @@ public class ContentInteractionQueries {
   /// Get content interaction for a specific user and content
   /// Requires Read permission on the parent Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ContentInteraction?> GetUserContentInteraction(
     Guid programId,
     Guid programUserId,
@@ -64,7 +61,7 @@ public class ContentInteractionQueries {
   /// Get all content interactions for a user in a program
   /// Requires Read permission on the parent Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<IEnumerable<ContentInteraction>> GetUserContentInteractions(
     Guid programId,
     Guid programUserId,
@@ -80,7 +77,7 @@ public class ContentInteractionQueries {
   /// Get content interactions by status for a program
   /// Requires Read permission on the parent Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public Task<IEnumerable<ContentInteraction>> GetContentInteractionsByStatus(
     Guid programId,
     ProgressStatus status,
@@ -100,7 +97,7 @@ public class ContentInteractionQueries {
   /// Get content interaction statistics for a program
   /// Requires Read permission on the parent Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public Task<ContentInteractionStats> GetContentInteractionStats(
     Guid programId,
     [Service] IContentInteractionService contentInteractionService

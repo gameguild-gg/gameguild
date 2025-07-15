@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Programs.Controllers;
+﻿namespace GameGuild.Modules.Programs;
 
 public record CompleteContentRequest(Guid ProgramUserId, Guid ContentId) {
   public Guid ProgramUserId { get; init; } = ProgramUserId;

@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Payments.Interfaces;
+﻿namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// Interface for wallet and balance management services
@@ -18,5 +18,5 @@ public interface IWalletService {
 
   Task<bool> UnfreezeFundsAsync(int userId, decimal amount);
 
-  Task<IEnumerable<Models.FinancialTransaction>> GetWalletTransactionsAsync(int userId);
+  Task<IEnumerable<FinancialTransaction>> GetWalletTransactionsAsync(int userId);
 }

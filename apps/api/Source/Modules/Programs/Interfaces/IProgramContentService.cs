@@ -1,36 +1,36 @@
 ﻿using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Programs.Interfaces;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Interface for program content management services
 /// </summary>
 public interface IProgramContentService {
-  Task<Models.ProgramContent> CreateContentAsync(Models.ProgramContent content);
+  Task<ProgramContent> CreateContentAsync(ProgramContent content);
 
-  Task<Models.ProgramContent?> GetContentByIdAsync(Guid id);
+  Task<ProgramContent?> GetContentByIdAsync(Guid id);
 
-  Task<IEnumerable<Models.ProgramContent>> GetContentByProgramAsync(Guid programId);
+  Task<IEnumerable<ProgramContent>> GetContentByProgramAsync(Guid programId);
 
-  Task<IEnumerable<Models.ProgramContent>> GetContentByParentAsync(Guid parentId);
+  Task<IEnumerable<ProgramContent>> GetContentByParentAsync(Guid parentId);
 
-  Task<IEnumerable<Models.ProgramContent>> GetTopLevelContentAsync(Guid programId);
+  Task<IEnumerable<ProgramContent>> GetTopLevelContentAsync(Guid programId);
 
-  Task<Models.ProgramContent> UpdateContentAsync(Models.ProgramContent content);
+  Task<ProgramContent> UpdateContentAsync(ProgramContent content);
 
   Task<bool> DeleteContentAsync(Guid id);
 
   Task<bool> ReorderContentAsync(Guid programId, List<(Guid contentId, int sortOrder)> newOrder);
 
-  Task<IEnumerable<Models.ProgramContent>> GetRequiredContentAsync(Guid programId);
+  Task<IEnumerable<ProgramContent>> GetRequiredContentAsync(Guid programId);
 
-  Task<IEnumerable<Models.ProgramContent>> GetContentByTypeAsync(
+  Task<IEnumerable<ProgramContent>> GetContentByTypeAsync(
     Guid programId,
-    ProgramContentType type
+    Common.ProgramContentType type
   );
 
-  Task<IEnumerable<Models.ProgramContent>> GetContentByVisibilityAsync(
+  Task<IEnumerable<ProgramContent>> GetContentByVisibilityAsync(
     Guid programId,
     Visibility visibility
   );
@@ -41,5 +41,5 @@ public interface IProgramContentService {
 
   Task<int> GetRequiredContentCountAsync(Guid programId);
 
-  Task<IEnumerable<Models.ProgramContent>> SearchContentAsync(Guid programId, string searchTerm);
+  Task<IEnumerable<ProgramContent>> SearchContentAsync(Guid programId, string searchTerm);
 }

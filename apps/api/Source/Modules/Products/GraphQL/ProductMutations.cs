@@ -1,11 +1,10 @@
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Products.Commands;
 using MediatR;
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
-using PromoCodeTypeEnum = GameGuild.Common.PromoCodeType;
+using ProductEntity = GameGuild.Modules.Products.Product;
 
-namespace GameGuild.Modules.Products.GraphQL;
+
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// GraphQL mutations for Product module using CQRS pattern
@@ -121,7 +120,7 @@ public class ProductMutations {
   /// <summary>
   /// Sets product pricing
   /// </summary>
-  public async Task<Models.ProductPricing> SetProductPricing(
+  public async Task<ProductPricing> SetProductPricing(
     SetProductPricingInput input,
     [Service] IMediator mediator
   ) {
@@ -138,7 +137,7 @@ public class ProductMutations {
   /// <summary>
   /// Updates product pricing
   /// </summary>
-  public async Task<Models.ProductPricing?> UpdateProductPricing(
+  public async Task<ProductPricing?> UpdateProductPricing(
     UpdateProductPricingInput input,
     [Service] IMediator mediator
   ) {
@@ -155,7 +154,7 @@ public class ProductMutations {
   /// <summary>
   /// Grants user access to a product
   /// </summary>
-  public async Task<Models.UserProduct> GrantUserAccess(
+  public async Task<UserProduct> GrantUserAccess(
     GrantProductAccessInput input,
     [Service] IMediator mediator
   ) {
@@ -189,7 +188,7 @@ public class ProductMutations {
   /// <summary>
   /// Creates a promotional code
   /// </summary>
-  public async Task<Models.PromoCode> CreatePromoCode(
+  public async Task<PromoCode> CreatePromoCode(
     CreatePromoCodeInput input,
     [Service] IMediator mediator
   ) {
@@ -201,7 +200,7 @@ public class ProductMutations {
   /// <summary>
   /// Updates a promotional code
   /// </summary>
-  public async Task<Models.PromoCode?> UpdatePromoCode(
+  public async Task<PromoCode?> UpdatePromoCode(
     UpdatePromoCodeInput input,
     [Service] IMediator mediator
   ) {
@@ -222,7 +221,7 @@ public class ProductMutations {
   /// <summary>
   /// Uses a promotional code
   /// </summary>
-  public async Task<Models.PromoCodeUse> UsePromoCode(
+  public async Task<PromoCodeUse> UsePromoCode(
     Guid userId, string code, decimal discountAmount,
     [Service] IMediator mediator
   ) {

@@ -1,9 +1,7 @@
 using System.Text.Json;
-using GameGuild.Modules.Programs.DTOs;
-using GameGuild.Modules.Programs.Models;
 
 
-namespace GameGuild.Modules.Programs.Extensions;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Extension methods for mapping between ProgramContent entities and DTOs

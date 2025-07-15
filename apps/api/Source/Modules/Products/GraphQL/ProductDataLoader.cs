@@ -1,8 +1,8 @@
-using GameGuild.Modules.Products.Models;
 using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Products.GraphQL;
+
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// DataLoader interface for efficiently loading Product entities

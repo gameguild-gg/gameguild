@@ -1,8 +1,8 @@
-using GameGuild.Modules.Payments.Models;
 using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Payments.GraphQL;
+
+namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// DataLoader interface for efficiently loading Payment entities

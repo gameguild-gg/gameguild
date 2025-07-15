@@ -3,7 +3,7 @@ using System.Text.Json;
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Programs.Models;
+namespace GameGuild.Modules.Programs;
 
 [Table("content_interactions")]
 public class ContentInteraction : Entity {

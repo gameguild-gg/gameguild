@@ -1,11 +1,10 @@
 using System.Text;
-using Microsoft.Extensions.DependencyInjection;
-using Xunit;
-using Xunit.Abstractions;
 using GameGuild.Tests.Fixtures;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Infrastructure;
+
+namespace GameGuild.Tests.Infrastructure.Integration;
 
 /// <summary>
 /// Debug tests to understand GraphQL endpoint issues

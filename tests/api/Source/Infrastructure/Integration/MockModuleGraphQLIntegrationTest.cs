@@ -1,10 +1,10 @@
 using System.Text;
 using System.Text.Json;
-using Xunit;
-using Xunit.Abstractions;
 using GameGuild.Tests.Fixtures;
+using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Infrastructure;
+
+namespace GameGuild.Tests.Infrastructure.Integration;
 
 /// <summary>
 /// Test the mock module GraphQL integration to verify infrastructure works

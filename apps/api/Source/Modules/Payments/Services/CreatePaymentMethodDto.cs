@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Payments.Services;
+﻿namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// DTO for creating a payment method

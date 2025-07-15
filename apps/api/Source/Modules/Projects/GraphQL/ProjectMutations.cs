@@ -1,6 +1,5 @@
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Projects.Commands;
 using MediatR;
 
 namespace GameGuild.Modules.Projects;
@@ -22,14 +21,14 @@ public class ProjectMutations
     {
         var command = new CreateProjectCommand
         {
-            Title = input.Name,
+            Title = input.Title,
             Description = input.Description,
             ShortDescription = input.ShortDescription,
             ImageUrl = input.ImageUrl,
             RepositoryUrl = input.RepositoryUrl,
-            WebsiteUrl = input.DemoUrl,
-            DownloadUrl = input.DocumentationUrl,
-            Type = (GameGuild.Common.ProjectType)input.Type,
+            WebsiteUrl = input.WebsiteUrl,
+            DownloadUrl = input.DownloadUrl,
+            Type = input.Type,
             CreatedById = userContext.UserId ?? Guid.Empty,
             CategoryId = input.CategoryId,
             Visibility = input.Visibility ?? AccessLevel.Public,
@@ -52,14 +51,14 @@ public class ProjectMutations
         var command = new UpdateProjectCommand
         {
             ProjectId = input.ProjectId,
-            Title = input.Name,
+            Title = input.Title,
             Description = input.Description,
             ShortDescription = input.ShortDescription,
             ImageUrl = input.ImageUrl,
             RepositoryUrl = input.RepositoryUrl,
-            WebsiteUrl = input.DemoUrl,
-            DownloadUrl = input.DocumentationUrl,
-            Type = input.Type != null ? (GameGuild.Common.ProjectType)input.Type : null,
+            WebsiteUrl = input.WebsiteUrl,
+            DownloadUrl = input.DownloadUrl,
+            Type = input.Type,
             CategoryId = input.CategoryId,
             Visibility = input.Visibility,
             Status = input.Status,

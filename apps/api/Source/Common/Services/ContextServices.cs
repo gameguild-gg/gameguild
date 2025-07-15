@@ -1,8 +1,8 @@
-using GameGuild.Common;
-using GameGuild.Common.Interfaces;
 using System.Security.Claims;
+using GameGuild.Common.Interfaces;
 
-namespace GameGuild.Common.Services;
+
+namespace GameGuild.Common;
 
 /// <summary>
 /// Implementation of user context from HTTP context

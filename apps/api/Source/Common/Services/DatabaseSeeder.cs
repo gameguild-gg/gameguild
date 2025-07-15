@@ -4,6 +4,7 @@ using GameGuild.Database;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Programs;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -212,7 +213,7 @@ public class DatabaseSeeder(
     logger.LogInformation("Seeding sample courses...");
 
     // Check if programs already exist
-    var existingPrograms = await context.Set<GameGuild.Modules.Programs.Models.Program>().AnyAsync();
+    var existingPrograms = await context.Set<Modules.Programs.Program>().AnyAsync();
     if (existingPrograms) {
       logger.LogInformation("Programs already exist, skipping seeding");
       return;
@@ -220,7 +221,7 @@ public class DatabaseSeeder(
 
     var samplePrograms = new[] {
       // Programming Courses (Beginner)
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Introduction to Game Programming",
         Description = "Learn the fundamentals of game programming with C# and Unity. Build your first game from scratch and understand core concepts like game loops, physics, and user input.",
         Slug = "intro-game-programming",
@@ -233,7 +234,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Python for Game Development",
         Description = "Discover game development using Python and Pygame. Perfect for beginners who want to learn programming through game creation.",
         Slug = "python-game-development",
@@ -246,7 +247,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "JavaScript Game Development",
         Description = "Create browser-based games using HTML5 Canvas and JavaScript. Learn modern web game development techniques.",
         Slug = "javascript-game-development",
@@ -261,7 +262,7 @@ public class DatabaseSeeder(
       },
 
       // Programming Courses (Intermediate)
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Unity 3D Game Development",
         Description = "Master 3D game development with Unity engine. Learn advanced scripting, physics, and 3D mathematics for game development.",
         Slug = "unity-3d-game-development",
@@ -274,7 +275,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Unreal Engine C++ Programming",
         Description = "Learn advanced game programming with Unreal Engine and C++. Build AAA-quality games with professional tools.",
         Slug = "unreal-cpp-programming",
@@ -287,7 +288,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Mobile Game Development with Flutter",
         Description = "Create cross-platform mobile games using Flutter and Dart. Learn to publish games on both iOS and Android.",
         Slug = "flutter-mobile-games",
@@ -302,7 +303,7 @@ public class DatabaseSeeder(
       },
 
       // Programming Courses (Advanced)
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Game Engine Architecture",
         Description = "Build your own game engine from scratch. Learn about rendering pipelines, memory management, and performance optimization.",
         Slug = "game-engine-architecture",
@@ -315,7 +316,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Multiplayer Networking in Games",
         Description = "Master multiplayer game development with authoritative servers, client prediction, and lag compensation techniques.",
         Slug = "multiplayer-networking",
@@ -330,7 +331,7 @@ public class DatabaseSeeder(
       },
 
       // Art and Design Courses (Beginner)
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "2D Game Art Creation",
         Description = "Master the art of creating 2D sprites, animations, and game assets using Photoshop and Aseprite. Learn industry-standard techniques for pixel art and digital illustration.",
         Slug = "2d-game-art",
@@ -343,7 +344,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Pixel Art Fundamentals",
         Description = "Learn the basics of pixel art creation for indie games. Understand color theory, animation principles, and pixel-perfect techniques.",
         Slug = "pixel-art-fundamentals",
@@ -356,7 +357,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "UI/UX Design for Games",
         Description = "Design intuitive and beautiful game interfaces. Learn about user experience principles specific to game development.",
         Slug = "game-ui-ux-design",
@@ -371,7 +372,7 @@ public class DatabaseSeeder(
       },
 
       // Art and Design Courses (Intermediate)
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "3D Modeling for Games",
         Description = "Create game-ready 3D models using Blender. Learn low-poly modeling, UV mapping, and optimization techniques for real-time rendering.",
         Slug = "3d-modeling-games",
@@ -384,7 +385,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Character Animation for Games",
         Description = "Bring game characters to life with professional animation techniques. Learn rigging, keyframe animation, and state machines.",
         Slug = "character-animation",
@@ -397,7 +398,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Environment Art and Level Design",
         Description = "Create stunning game environments and design engaging levels. Learn composition, lighting, and world-building techniques.",
         Slug = "environment-art-level-design",
@@ -412,7 +413,7 @@ public class DatabaseSeeder(
       },
 
       // Game Design Courses
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Game Design Fundamentals",
         Description = "Learn the core principles of game design including mechanics, dynamics, and aesthetics. Understand what makes games fun and engaging.",
         Slug = "game-design-fundamentals",
@@ -425,7 +426,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Advanced Game Design Principles",
         Description = "Explore advanced concepts in game design, including player psychology, narrative design, and game mechanics. Learn to create engaging and memorable gaming experiences.",
         Slug = "advanced-game-design",
@@ -438,7 +439,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Narrative Design for Games",
         Description = "Craft compelling stories and characters for games. Learn about branching narratives, dialogue systems, and environmental storytelling.",
         Slug = "narrative-design",
@@ -451,7 +452,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Game Analytics and Monetization",
         Description = "Learn to analyze player behavior and implement effective monetization strategies for free-to-play and premium games.",
         Slug = "game-analytics-monetization",
@@ -466,7 +467,7 @@ public class DatabaseSeeder(
       },
 
       // Audio Courses
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Game Audio Design",
         Description = "Create immersive soundscapes and effects for games. Learn about dynamic audio, spatial sound, and interactive music systems.",
         Slug = "game-audio-design",
@@ -479,7 +480,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Music Composition for Games",
         Description = "Compose adaptive and interactive music for video games. Learn about looping, layering, and emotional storytelling through music.",
         Slug = "music-composition-games",
@@ -494,7 +495,7 @@ public class DatabaseSeeder(
       },
 
       // VR/AR Courses
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Virtual Reality Game Development",
         Description = "Build immersive VR experiences using Unity and VR SDKs. Learn about VR interaction design and optimization for VR hardware.",
         Slug = "vr-game-development",
@@ -507,7 +508,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Augmented Reality Games",
         Description = "Create AR games for mobile devices using ARCore and ARKit. Learn about marker-based and markerless AR development.",
         Slug = "ar-game-development",
@@ -522,7 +523,7 @@ public class DatabaseSeeder(
       },
 
       // Specialized Courses
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "AI for Game Development",
         Description = "Implement intelligent behaviors in games using AI techniques like state machines, behavior trees, and pathfinding algorithms.",
         Slug = "ai-game-development",
@@ -535,7 +536,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Procedural Generation in Games",
         Description = "Learn to create infinite worlds and content using procedural generation algorithms. Master noise functions, cellular automata, and more.",
         Slug = "procedural-generation",
@@ -548,7 +549,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Game Physics Programming",
         Description = "Implement realistic physics systems in games. Learn about collision detection, rigid body dynamics, and particle systems.",
         Slug = "game-physics-programming",
@@ -561,7 +562,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Game Security and Anti-Cheat",
         Description = "Protect your games from cheating and exploitation. Learn about client-server validation, encryption, and anti-cheat systems.",
         Slug = "game-security-anti-cheat",
@@ -576,7 +577,7 @@ public class DatabaseSeeder(
       },
 
       // Business and Production
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Indie Game Marketing",
         Description = "Learn to market your indie game effectively. Understand social media marketing, community building, and launch strategies.",
         Slug = "indie-game-marketing",
@@ -589,7 +590,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Game Project Management",
         Description = "Master agile development methodologies for game projects. Learn about scrum, sprint planning, and team coordination.",
         Slug = "game-project-management",
@@ -602,7 +603,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Game Publishing and Distribution",
         Description = "Navigate the complex world of game publishing. Learn about platform requirements, legal considerations, and distribution strategies.",
         Slug = "game-publishing-distribution",
@@ -617,7 +618,7 @@ public class DatabaseSeeder(
       },
 
       // Retro and Indie Focus
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Retro Game Development",
         Description = "Create games inspired by classic 8-bit and 16-bit consoles. Learn about limitations-driven design and authentic retro aesthetics.",
         Slug = "retro-game-development",
@@ -630,7 +631,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Game Jam Survival Guide",
         Description = "Master the art of rapid game development in game jams. Learn time management, scope control, and prototyping techniques.",
         Slug = "game-jam-survival",
@@ -643,7 +644,7 @@ public class DatabaseSeeder(
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new Modules.Programs.Program {
         Title = "Building Your Game Development Portfolio",
         Description = "Create a compelling portfolio that showcases your game development skills. Learn what recruiters and studios are looking for.",
         Slug = "game-dev-portfolio",
@@ -658,7 +659,7 @@ public class DatabaseSeeder(
       },
     };
 
-    await context.Set<GameGuild.Modules.Programs.Models.Program>().AddRangeAsync(samplePrograms);
+    await context.Set<Modules.Programs.Program>().AddRangeAsync(samplePrograms);
     logger.LogInformation("Sample programs seeded successfully with {ProgramCount} programs", samplePrograms.Length);
   }
 
@@ -666,7 +667,7 @@ public class DatabaseSeeder(
     logger.LogInformation("Seeding sample tracks...");
 
     // Check if track programs already exist (using slug pattern to identify tracks)
-    var existingTracks = await context.Set<GameGuild.Modules.Programs.Models.Program>()
+    var existingTracks = await context.Set<Modules.Programs.Program>()
       .Where(p => p.Slug.Contains("-track-") || p.Title.Contains("Track"))
       .AnyAsync();
 
@@ -679,7 +680,7 @@ public class DatabaseSeeder(
     // }
 
     // Get existing course programs to link to tracks
-    var coursePrograms = await context.Set<GameGuild.Modules.Programs.Models.Program>()
+    var coursePrograms = await context.Set<Modules.Programs.Program>()
       .Where(p => !p.Slug.Contains("-track-") && !p.Title.Contains("Track"))
       .ToListAsync();
 
@@ -690,11 +691,11 @@ public class DatabaseSeeder(
       return;
     }
 
-    var trackPrograms = new List<GameGuild.Modules.Programs.Models.Program>();
-    var trackContentList = new List<Modules.Programs.Models.ProgramContent>();
+    var trackPrograms = new List<Modules.Programs.Program>();
+    var trackContentList = new List<ProgramContent>();
 
     // Beginner Track - Game Development Fundamentals
-    var beginnerTrack = new GameGuild.Modules.Programs.Models.Program {
+    var beginnerTrack = new Modules.Programs.Program {
       Id = Guid.NewGuid(),
       Title = "Beginner Track - Game Development Fundamentals",
       Description = "Kickstart your game development journey. Learn the basics of game design, programming, and art. This comprehensive track will take you from zero to your first complete game.",
@@ -719,7 +720,7 @@ public class DatabaseSeeder(
       .ToList();
 
     for (int i = 0; i < beginnerCourses.Count; i++) {
-      trackContentList.Add(new Modules.Programs.Models.ProgramContent {
+      trackContentList.Add(new ProgramContent {
         Id = Guid.NewGuid(),
         ProgramId = beginnerTrack.Id,
         Title = beginnerCourses[i].Title,
@@ -735,7 +736,7 @@ public class DatabaseSeeder(
     }
 
     // Intermediate Track - 2D Game Development
-    var intermediateTrack = new GameGuild.Modules.Programs.Models.Program {
+    var intermediateTrack = new Modules.Programs.Program {
       Id = Guid.NewGuid(),
       Title = "Intermediate Track - 2D Game Development",
       Description = "Enhance your skills in 2D game development. Focus on Unity, C#, and pixel art. Build more complex games and learn advanced 2D techniques.",
@@ -762,7 +763,7 @@ public class DatabaseSeeder(
       .ToList();
 
     for (int i = 0; i < intermediateCourses.Count; i++) {
-      trackContentList.Add(new Modules.Programs.Models.ProgramContent {
+      trackContentList.Add(new ProgramContent {
         Id = Guid.NewGuid(),
         ProgramId = intermediateTrack.Id,
         Title = intermediateCourses[i].Title,
@@ -778,7 +779,7 @@ public class DatabaseSeeder(
     }
 
     // Advanced Track - Multiplayer Game Development
-    var advancedTrack = new GameGuild.Modules.Programs.Models.Program {
+    var advancedTrack = new Modules.Programs.Program {
       Id = Guid.NewGuid(),
       Title = "Advanced Track - Multiplayer Game Development",
       Description = "Master advanced topics in game development. Learn about networking, multiplayer game mechanics, and server management. Build scalable multiplayer games.",
@@ -802,7 +803,7 @@ public class DatabaseSeeder(
       .ToList();
 
     for (int i = 0; i < advancedCourses.Count; i++) {
-      trackContentList.Add(new Modules.Programs.Models.ProgramContent {
+      trackContentList.Add(new ProgramContent {
         Id = Guid.NewGuid(),
         ProgramId = advancedTrack.Id,
         Title = advancedCourses[i].Title,
@@ -818,7 +819,7 @@ public class DatabaseSeeder(
     }
 
     // AI Specialization Track
-    var aiTrack = new GameGuild.Modules.Programs.Models.Program {
+    var aiTrack = new Modules.Programs.Program {
       Id = Guid.NewGuid(),
       Title = "Specialization Track - AI in Games",
       Description = "Dive deep into AI programming for games. Explore pathfinding, decision trees, behavior trees, and machine learning in game contexts.",
@@ -843,7 +844,7 @@ public class DatabaseSeeder(
       .ToList();
 
     for (int i = 0; i < aiCourses.Count; i++) {
-      trackContentList.Add(new Modules.Programs.Models.ProgramContent {
+      trackContentList.Add(new ProgramContent {
         Id = Guid.NewGuid(),
         ProgramId = aiTrack.Id,
         Title = aiCourses[i].Title,
@@ -859,7 +860,7 @@ public class DatabaseSeeder(
     }
 
     // Creative Arts Track
-    var creativeTrack = new GameGuild.Modules.Programs.Models.Program {
+    var creativeTrack = new Modules.Programs.Program {
       Id = Guid.NewGuid(),
       Title = "Creative Track - Game Art and Animation",
       Description = "Unleash your creativity in game art and animation. Learn 2D/3D art, animation principles, and asset creation for games.",
@@ -881,7 +882,7 @@ public class DatabaseSeeder(
       .ToList();
 
     for (int i = 0; i < creativeCourses.Count; i++) {
-      trackContentList.Add(new Modules.Programs.Models.ProgramContent {
+      trackContentList.Add(new ProgramContent {
         Id = Guid.NewGuid(),
         ProgramId = creativeTrack.Id,
         Title = creativeCourses[i].Title,
@@ -897,7 +898,7 @@ public class DatabaseSeeder(
     }
 
     // Business Track
-    var businessTrack = new GameGuild.Modules.Programs.Models.Program {
+    var businessTrack = new Modules.Programs.Program {
       Id = Guid.NewGuid(),
       Title = "Business Track - Game Marketing and Monetization",
       Description = "Learn the business side of games. Focus on marketing, monetization strategies, project management, and building sustainable game businesses.",
@@ -922,7 +923,7 @@ public class DatabaseSeeder(
       .ToList();
 
     for (int i = 0; i < businessCourses.Count; i++) {
-      trackContentList.Add(new Modules.Programs.Models.ProgramContent {
+      trackContentList.Add(new ProgramContent {
         Id = Guid.NewGuid(),
         ProgramId = businessTrack.Id,
         Title = businessCourses[i].Title,
@@ -950,11 +951,11 @@ public class DatabaseSeeder(
     );
 
     // Save track programs and their content
-    logger.LogInformation("Saving {TrackCount} tracks and {ContentCount} track content items to database", 
+    logger.LogInformation("Saving {TrackCount} tracks and {ContentCount} track content items to database",
       trackPrograms.Count, trackContentList.Count);
-    
-    await context.Set<GameGuild.Modules.Programs.Models.Program>().AddRangeAsync(trackPrograms);
-    await context.Set<Modules.Programs.Models.ProgramContent>().AddRangeAsync(trackContentList);
+
+    await context.Set<Modules.Programs.Program>().AddRangeAsync(trackPrograms);
+    await context.Set<ProgramContent>().AddRangeAsync(trackContentList);
 
     logger.LogInformation("Sample tracks seeded successfully with {TrackCount} tracks and {ContentCount} track content items", 
       trackPrograms.Count, trackContentList.Count);

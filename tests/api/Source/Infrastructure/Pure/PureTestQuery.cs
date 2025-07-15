@@ -2,7 +2,8 @@ using HotChocolate;
 using HotChocolate.Types;
 using MediatR;
 
-namespace GameGuild.API.Tests.Infrastructure.Pure;
+
+namespace GameGuild.Tests.Infrastructure.Pure;
 
 /// <summary>
 /// Simple pure test query type for testing GraphQL infrastructure

@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Programs.DTOs;
+﻿namespace GameGuild.Modules.Programs;
 
 public record CreateProductFromProgramDto(string Name, string? Description, decimal BasePrice, string Currency = "USD") {
   public string Name { get; init; } = Name;

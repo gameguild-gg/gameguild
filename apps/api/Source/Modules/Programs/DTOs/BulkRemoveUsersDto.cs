@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Programs.DTOs;
+﻿namespace GameGuild.Modules.Programs;
 
 public record BulkRemoveUsersDto(Guid ProgramId, List<Guid> UserIds) {
   public Guid ProgramId { get; init; } = ProgramId;

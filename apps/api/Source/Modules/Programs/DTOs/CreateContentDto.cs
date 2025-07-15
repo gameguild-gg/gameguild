@@ -1,12 +1,9 @@
-﻿using GameGuild.Common;
-
-
-namespace GameGuild.Modules.Programs.DTOs;
+﻿namespace GameGuild.Modules.Programs;
 
 public record CreateContentDto(
   string Title,
   string Description,
-  ProgramContentType Type,
+  Common.ProgramContentType Type,
   string Body,
   int? SortOrder = null,
   bool IsRequired = true,
@@ -16,7 +13,7 @@ public record CreateContentDto(
 
   public string Description { get; init; } = Description;
 
-  public ProgramContentType Type { get; init; } = Type;
+  public Common.ProgramContentType Type { get; init; } = Type;
 
   public string Body { get; init; } = Body;
 

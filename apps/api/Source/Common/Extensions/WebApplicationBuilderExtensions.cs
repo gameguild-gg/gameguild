@@ -1,5 +1,4 @@
 using DotNetEnv;
-using GameGuild.Common.Middleware;
 using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
 

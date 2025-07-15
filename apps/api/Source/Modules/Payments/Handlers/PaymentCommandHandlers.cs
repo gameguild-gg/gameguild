@@ -1,11 +1,11 @@
+using GameGuild.Common.Interfaces;
+using GameGuild.Database;
+using GameGuild.Modules.Programs;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Database;
-using GameGuild.Modules.Payments.Commands;
-using GameGuild.Modules.Payments.Models;
-using GameGuild.Common.Interfaces;
 
-namespace GameGuild.Modules.Payments.Handlers;
+
+namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// Handler for creating payment intents
@@ -157,13 +157,13 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
                     {
                         // Check if user is not already enrolled
                         var existingEnrollment = await _context.ProgramUsers
-                            .AnyAsync(pu => pu.ProgramId == productProgram.ProgramId && 
-                                          pu.UserId == payment.UserId && 
+                            .AnyAsync(pu => pu.ProgramId == productProgram.ProgramId &&
+                                          pu.UserId == payment.UserId &&
                                           pu.IsActive, cancellationToken);
 
                         if (!existingEnrollment && productProgram.Program.IsEnrollmentOpen)
                         {
-                            var enrollment = new GameGuild.Modules.Programs.Models.ProgramUser
+                            var enrollment = new ProgramUser
                             {
                                 ProgramId = productProgram.ProgramId,
                                 UserId = payment.UserId,

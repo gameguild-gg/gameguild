@@ -1,12 +1,4 @@
-using GameGuild.Modules.Payments.Services;
-using GameGuild.Modules.Payments.Handlers;
-using GameGuild.Modules.Payments.GraphQL;
 using GameGuild.Modules.Posts;
-using GameGuild.Modules.Products.Services;
-using GameGuild.Modules.Products.Handlers;
-using GameGuild.Modules.Products.GraphQL;
-using GameGuild.Modules.Programs.Interfaces;
-using GameGuild.Modules.Programs.Services;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Subscriptions.Services;
 using GameGuild.Modules.Tenants;
@@ -14,7 +6,12 @@ using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Credentials;
-using IProgramService = GameGuild.Modules.Programs.Services.IProgramService;
+using GameGuild.Modules.Payments;
+using GameGuild.Modules.Posts.GraphQL;
+using GameGuild.Modules.Posts.Services;
+using GameGuild.Modules.Products;
+using GameGuild.Modules.Programs;
+using IProgramService = GameGuild.Modules.Programs.IProgramService;
 
 
 namespace GameGuild.Common;

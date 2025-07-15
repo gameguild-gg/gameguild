@@ -1,7 +1,4 @@
-﻿using GameGuild.Modules.Programs.Models;
-
-
-namespace GameGuild.Modules.Programs.GraphQL;
+﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Result type for ContentInteraction mutations with proper error handling

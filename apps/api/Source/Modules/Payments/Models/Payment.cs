@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace GameGuild.Modules.Payments.Models;
+
+namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// Represents a payment transaction in the system

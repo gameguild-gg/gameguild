@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Programs.Services;
+﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Grade statistics for reporting

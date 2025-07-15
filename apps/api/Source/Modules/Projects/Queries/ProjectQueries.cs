@@ -1,16 +1,16 @@
+using GameGuild.Common;
+using GameGuild.Modules.Contents;
 using MediatR;
 
-using GameGuild.Modules.Contents;
-using GameGuild.Common;
 
-namespace GameGuild.Modules.Projects.Queries;
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// Query to get all projects
 /// </summary>
 public record GetAllProjectsQuery : IRequest<IEnumerable<Project>>
 {
-    public ProjectType? Type { get; init; }
+    public Common.ProjectType? Type { get; init; }
     public ContentStatus? Status { get; init; }
     public AccessLevel? Visibility { get; init; }
     public Guid? CreatorId { get; init; }
@@ -75,7 +75,7 @@ public record GetProjectsByCreatorQuery : IRequest<IEnumerable<Project>>
 public record GetProjectsByStatusQuery : IRequest<IEnumerable<Project>>
 {
     public ContentStatus Status { get; init; }
-    public ProjectType? Type { get; init; }
+    public Common.ProjectType? Type { get; init; }
     public int Skip { get; init; } = 0;
     public int Take { get; init; } = 50;
 }
@@ -95,7 +95,7 @@ public record GetDeletedProjectsQuery : IRequest<IEnumerable<Project>>
 public record SearchProjectsQuery : IRequest<IEnumerable<Project>>
 {
     public string SearchTerm { get; init; } = string.Empty;
-    public ProjectType? Type { get; init; }
+    public Common.ProjectType? Type { get; init; }
     public Guid? CategoryId { get; init; }
     public List<string>? Tags { get; init; }
     public ContentStatus? Status { get; init; }
@@ -121,7 +121,7 @@ public record GetProjectStatisticsQuery : IRequest<ProjectStatistics>
 /// </summary>
 public record GetPopularProjectsQuery : IRequest<IEnumerable<Project>>
 {
-    public ProjectType? Type { get; init; }
+    public Common.ProjectType? Type { get; init; }
     public TimeSpan? TimeWindow { get; init; } = TimeSpan.FromDays(30);
     public int Take { get; init; } = 10;
 }
@@ -131,7 +131,7 @@ public record GetPopularProjectsQuery : IRequest<IEnumerable<Project>>
 /// </summary>
 public record GetRecentProjectsQuery : IRequest<IEnumerable<Project>>
 {
-    public ProjectType? Type { get; init; }
+    public Common.ProjectType? Type { get; init; }
     public int Take { get; init; } = 10;
 }
 
@@ -140,6 +140,6 @@ public record GetRecentProjectsQuery : IRequest<IEnumerable<Project>>
 /// </summary>
 public record GetFeaturedProjectsQuery : IRequest<IEnumerable<Project>>
 {
-    public ProjectType? Type { get; init; }
+    public Common.ProjectType? Type { get; init; }
     public int Take { get; init; } = 10;
 }

@@ -2,7 +2,8 @@ using GameGuild.Database;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Posts;
+
+namespace GameGuild.Modules.Posts.GraphQL;
 
 /// <summary>
 /// DataLoader for efficiently loading users by ID

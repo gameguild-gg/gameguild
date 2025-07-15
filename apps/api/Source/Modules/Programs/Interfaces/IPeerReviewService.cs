@@ -1,6 +1,4 @@
-using GameGuild.Modules.Programs.Models;
-
-namespace GameGuild.Modules.Programs.Interfaces;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Interface for peer review services

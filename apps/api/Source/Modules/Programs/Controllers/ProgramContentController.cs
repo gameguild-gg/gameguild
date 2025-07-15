@@ -1,14 +1,10 @@
 using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Programs.DTOs;
-using GameGuild.Modules.Programs.Extensions;
-using GameGuild.Modules.Programs.Interfaces;
-using GameGuild.Modules.Programs.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Modules.Programs.Controllers;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Controller for managing program content with 3-layer DAC permissions
@@ -22,7 +18,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Get all content for a program (resource-level Read permission required on parent Program)
   /// </summary>
   [HttpGet]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetProgramContent(Guid programId) {
     var content = await contentService.GetContentByProgramAsync(programId);
     var contentDtos = content.ToDtos();
@@ -34,7 +30,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Get top-level content for a program (resource-level Read permission required on parent Program)
   /// </summary>
   [HttpGet("top-level")]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetTopLevelContent(Guid programId) {
     var content = await contentService.GetTopLevelContentAsync(programId);
     var contentDtos = content.ToDtos();
@@ -46,7 +42,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Get specific program content by ID (resource-level Read permission required on parent Program)
   /// </summary>
   [HttpGet("{id}")]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ProgramContentDto>> GetContent(Guid programId, Guid id) {
     var content = await contentService.GetContentByIdAsync(id);
 
@@ -61,7 +57,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Create new program content (resource-level Create permission required on parent Program)
   /// </summary>
   [HttpPost]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Create, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Create, "programId")]
   public async Task<ActionResult<ProgramContentDto>> CreateContent(
     Guid programId,
     [FromBody] CreateProgramContentDto createDto
@@ -83,7 +79,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Update program content (resource-level Edit permission required on parent Program)
   /// </summary>
   [HttpPut("{id}")]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<ProgramContentDto>> UpdateContent(
     Guid programId, Guid id,
     [FromBody] UpdateProgramContentDto updateDto
@@ -107,7 +103,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Delete program content (resource-level Delete permission required on parent Program)
   /// </summary>
   [HttpDelete("{id}")]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Delete, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Delete, "programId")]
   public async Task<ActionResult> DeleteContent(Guid programId, Guid id) {
     var content = await contentService.GetContentByIdAsync(id);
 
@@ -124,7 +120,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Get child content for a specific parent (resource-level Read permission required on parent Program)
   /// </summary>
   [HttpGet("{parentId}/children")]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetChildContent(Guid programId, Guid parentId) {
     // Verify parent belongs to the program
     var parent = await contentService.GetContentByIdAsync(parentId);
@@ -141,7 +137,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Reorder content within a program (resource-level Edit permission required on parent Program)
   /// </summary>
   [HttpPost("reorder")]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult> ReorderContent(Guid programId, [FromBody] ReorderContentDto reorderDto) {
     // Convert the simple list to (Id, SortOrder) tuples
     var newOrder = reorderDto.ContentIds.Select((id, index) => (id, index + 1)).ToList();
@@ -156,7 +152,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Move content to a new parent/position (resource-level Edit permission required on parent Program)
   /// </summary>
   [HttpPost("{id}/move")]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult> MoveContent(Guid programId, Guid id, [FromBody] MoveContentDto moveDto) {
     if (moveDto.ContentId != id) return BadRequest("Content ID in URL must match Content ID in request body");
 
@@ -175,7 +171,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Get required content for a program (resource-level Read permission required on parent Program)
   /// </summary>
   [HttpGet("required")]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetRequiredContent(Guid programId) {
     var requiredContent = await contentService.GetRequiredContentAsync(programId);
     var contentDtos = requiredContent.ToDtos();
@@ -187,10 +183,10 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Get content by type (resource-level Read permission required on parent Program)
   /// </summary>
   [HttpGet("by-type/{type}")]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetContentByType(
     Guid programId,
-    ProgramContentType type
+    Common.ProgramContentType type
   ) {
     var content = await contentService.GetContentByTypeAsync(programId, type);
     var contentDtos = content.ToDtos();
@@ -202,7 +198,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Get content by visibility (resource-level Read permission required on parent Program)
   /// </summary>
   [HttpGet("by-visibility/{visibility}")]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetContentByVisibility(
     Guid programId,
     Visibility visibility
@@ -217,7 +213,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Search content within a program (resource-level Read permission required on parent Program)
   /// </summary>
   [HttpPost("search")]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> SearchContent(
     Guid programId,
     [FromBody] SearchContentDto searchDto
@@ -234,7 +230,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   /// Get content statistics for a program (resource-level Read permission required on parent Program)
   /// </summary>
   [HttpGet("stats")]
-  [RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ContentStatsDto>> GetContentStats(Guid programId) {
     var totalContent = await contentService.GetContentCountAsync(programId);
     var requiredContent = await contentService.GetRequiredContentCountAsync(programId);

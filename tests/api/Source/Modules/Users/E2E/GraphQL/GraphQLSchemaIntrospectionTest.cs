@@ -2,7 +2,8 @@ using System.Text;
 using System.Text.Json;
 using GameGuild.Tests.Fixtures;
 
-namespace GameGuild.API.Tests.Modules.Users.E2E.GraphQL {
+
+namespace GameGuild.Tests.Modules.Users.E2E.GraphQL {
   public class GraphQLSchemaIntrospectionTest : IClassFixture<TestServerFixture> {
     private readonly TestServerFixture _fixture;
     private readonly HttpClient _client;

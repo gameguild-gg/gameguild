@@ -1,7 +1,7 @@
 using GameGuild.Modules.Authentication;
-using GameGuild.Modules.Users;
 
-namespace GameGuild.API.Tests.Infrastructure.Integration;
+
+namespace GameGuild.Tests.Infrastructure.Integration;
 
 /// <summary>
 /// Mock implementation of IAuthService for integration testing

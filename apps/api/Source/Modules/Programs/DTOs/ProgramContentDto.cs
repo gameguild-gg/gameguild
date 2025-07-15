@@ -2,7 +2,7 @@
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Programs.DTOs;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// DTO for program content responses
@@ -18,7 +18,7 @@ public class ProgramContentDto {
 
   public string Description { get; set; } = string.Empty;
 
-  public ProgramContentType Type { get; set; }
+  public Common.ProgramContentType Type { get; set; }
 
   public JsonDocument? Body { get; set; }
 

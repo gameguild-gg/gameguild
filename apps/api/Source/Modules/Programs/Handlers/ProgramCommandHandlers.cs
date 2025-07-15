@@ -1,13 +1,11 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Programs.Commands;
-using GameGuild.Modules.Programs.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Modules.Programs.Handlers;
+
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Command handlers for Program management operations
@@ -17,16 +15,16 @@ public class ProgramCommandHandlers(
     ApplicationDbContext context,
     ILogger<ProgramCommandHandlers> logger
 ) : 
-    IRequestHandler<CreateProgramCommand, Program>,
-    IRequestHandler<UpdateProgramCommand, Program>,
+    IRequestHandler<CreateProgramCommand, GameGuild.Program>,
+    IRequestHandler<UpdateProgramCommand, GameGuild.Program>,
     IRequestHandler<DeleteProgramCommand, bool>,
-    IRequestHandler<PublishProgramCommand, Program>,
-    IRequestHandler<UnpublishProgramCommand, Program>,
-    IRequestHandler<ArchiveProgramCommand, Program>,
-    IRequestHandler<RestoreProgramCommand, Program>,
+    IRequestHandler<PublishProgramCommand, GameGuild.Program>,
+    IRequestHandler<UnpublishProgramCommand, GameGuild.Program>,
+    IRequestHandler<ArchiveProgramCommand, GameGuild.Program>,
+    IRequestHandler<RestoreProgramCommand, GameGuild.Program>,
     IRequestHandler<EnrollUserCommand, ProgramUser>,
     IRequestHandler<UnenrollUserCommand, bool>,
-    IRequestHandler<UpdateEnrollmentStatusCommand, Program>,
+    IRequestHandler<UpdateEnrollmentStatusCommand, GameGuild.Program>,
     IRequestHandler<AddProgramContentCommand, ProgramContent>,
     IRequestHandler<RemoveProgramContentCommand, bool>,
     IRequestHandler<ReorderProgramContentCommand, IEnumerable<ProgramContent>>,
@@ -35,17 +33,17 @@ public class ProgramCommandHandlers(
     IRequestHandler<DeleteProgramRatingCommand, bool>,
     IRequestHandler<AddToWishlistCommand, ProgramWishlist>,
     IRequestHandler<RemoveFromWishlistCommand, bool>,
-    IRequestHandler<BulkUpdateProgramVisibilityCommand, IEnumerable<Program>>,
-    IRequestHandler<BulkArchiveProgramsCommand, IEnumerable<Program>>
+    IRequestHandler<BulkUpdateProgramVisibilityCommand, IEnumerable<GameGuild.Program>>,
+    IRequestHandler<BulkArchiveProgramsCommand, IEnumerable<GameGuild.Program>>
 {
     // ===== CRUD HANDLERS =====
 
-    public async Task<Program> Handle(CreateProgramCommand request, CancellationToken cancellationToken)
+    public async Task<GameGuild.Program> Handle(CreateProgramCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Creating new program: {Title}", request.Title);
 
         // Generate slug from title
-        var slug = request.Title.ToSlug();
+        var slug = request.Title.ToSlugCase();
         
         // Ensure slug uniqueness
         var existingSlug = await context.Programs
@@ -57,7 +55,7 @@ public class ProgramCommandHandlers(
             slug = $"{slug}-{Guid.NewGuid().ToString("N")[..8]}";
         }
 
-        var program = new Program
+        var program = new GameGuild.Program
         {
             Id = Guid.NewGuid(),
             Title = request.Title,
@@ -86,7 +84,7 @@ public class ProgramCommandHandlers(
         return program;
     }
 
-    public async Task<Program> Handle(UpdateProgramCommand request, CancellationToken cancellationToken)
+    public async Task<GameGuild.Program> Handle(UpdateProgramCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Updating program: {ProgramId}", request.Id);
 
@@ -103,7 +101,7 @@ public class ProgramCommandHandlers(
         if (request.Title != null)
         {
             program.Title = request.Title;
-            program.Slug = request.Title.ToSlug();
+            program.Slug = request.Title.ToSlugCase();
         }
         if (request.Description != null) program.Description = request.Description;
         if (request.Summary != null) program.Summary = request.Summary;
@@ -149,7 +147,7 @@ public class ProgramCommandHandlers(
 
     // ===== STATUS HANDLERS =====
 
-    public async Task<Program> Handle(PublishProgramCommand request, CancellationToken cancellationToken)
+    public async Task<GameGuild.Program> Handle(PublishProgramCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Publishing program: {ProgramId}", request.Id);
 
@@ -173,7 +171,7 @@ public class ProgramCommandHandlers(
         return program;
     }
 
-    public async Task<Program> Handle(UnpublishProgramCommand request, CancellationToken cancellationToken)
+    public async Task<GameGuild.Program> Handle(UnpublishProgramCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Unpublishing program: {ProgramId}", request.Id);
 
@@ -196,7 +194,7 @@ public class ProgramCommandHandlers(
         return program;
     }
 
-    public async Task<Program> Handle(ArchiveProgramCommand request, CancellationToken cancellationToken)
+    public async Task<GameGuild.Program> Handle(ArchiveProgramCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Archiving program: {ProgramId}", request.Id);
 
@@ -218,7 +216,7 @@ public class ProgramCommandHandlers(
         return program;
     }
 
-    public async Task<Program> Handle(RestoreProgramCommand request, CancellationToken cancellationToken)
+    public async Task<GameGuild.Program> Handle(RestoreProgramCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Restoring program: {ProgramId}", request.Id);
 
@@ -309,7 +307,7 @@ public class ProgramCommandHandlers(
         return true;
     }
 
-    public async Task<Program> Handle(UpdateEnrollmentStatusCommand request, CancellationToken cancellationToken)
+    public async Task<GameGuild.Program> Handle(UpdateEnrollmentStatusCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Updating enrollment status for program: {ProgramId}", request.ProgramId);
 
@@ -527,7 +525,7 @@ public class ProgramCommandHandlers(
 
     // ===== BULK OPERATION HANDLERS =====
 
-    public async Task<IEnumerable<Program>> Handle(BulkUpdateProgramVisibilityCommand request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<GameGuild.Program>> Handle(BulkUpdateProgramVisibilityCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Bulk updating visibility for {Count} programs", request.ProgramIds.Count());
 
@@ -547,7 +545,7 @@ public class ProgramCommandHandlers(
         return programs;
     }
 
-    public async Task<IEnumerable<Program>> Handle(BulkArchiveProgramsCommand request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<GameGuild.Program>> Handle(BulkArchiveProgramsCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Bulk archiving {Count} programs", request.ProgramIds.Count());
 
