@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Programs.Controllers;
+﻿namespace GameGuild.Modules.Programs;
 
 public record UpdateTimeSpentRequest(Guid ProgramUserId, Guid ContentId, int AdditionalMinutes) {
   public Guid ProgramUserId { get; init; } = ProgramUserId;

@@ -1,11 +1,10 @@
+using GameGuild.Common.Interfaces;
+using GameGuild.Database;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Database;
-using GameGuild.Modules.Payments.Queries;
-using GameGuild.Modules.Payments.Models;
-using GameGuild.Common.Interfaces;
 
-namespace GameGuild.Modules.Payments.Handlers;
+
+namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// Handler for getting payment by ID

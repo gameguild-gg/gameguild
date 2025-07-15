@@ -1,7 +1,7 @@
 ﻿using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Programs.DTOs;
+namespace GameGuild.Modules.Programs;
 
 public record UpdateProgressDto(
   ProgressStatus? Status = null,

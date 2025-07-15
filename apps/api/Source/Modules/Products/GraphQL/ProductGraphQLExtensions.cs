@@ -1,7 +1,7 @@
 using HotChocolate.Execution.Configuration;
 
 
-namespace GameGuild.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Extension methods for configuring Product GraphQL integration

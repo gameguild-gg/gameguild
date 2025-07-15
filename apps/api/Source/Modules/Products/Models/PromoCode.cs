@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
-using GameGuild.Modules.Payments.Models;
+using GameGuild.Modules.Payments;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Products.Models;
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Entity representing promotional codes for discounts
@@ -41,7 +41,7 @@ public class PromoCode : Entity {
   /// <summary>
   /// Type of discount this promo code provides
   /// </summary>
-  public PromoCodeType Type { get; set; }
+  public Common.PromoCodeType Type { get; set; }
 
   /// <summary>
   /// Discount percentage (for PercentageOff type)
@@ -155,6 +155,6 @@ public class PromoCode : Entity {
 
     if (MinimumOrderAmount.HasValue && orderAmount < MinimumOrderAmount.Value) return 0;
 
-    return Type switch { PromoCodeType.PercentageOff => orderAmount * (DiscountPercentage ?? 0) / 100, PromoCodeType.FixedAmountOff => Math.Min(DiscountAmount ?? 0, orderAmount), _ => 0 };
+    return Type switch { Common.PromoCodeType.PercentageOff => orderAmount * (DiscountPercentage ?? 0) / 100, Common.PromoCodeType.FixedAmountOff => Math.Min(DiscountAmount ?? 0, orderAmount), _ => 0 };
   }
 }

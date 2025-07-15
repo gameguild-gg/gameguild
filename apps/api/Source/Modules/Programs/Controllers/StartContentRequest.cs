@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Programs.Controllers;
+﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Request DTOs for ContentInteraction endpoints

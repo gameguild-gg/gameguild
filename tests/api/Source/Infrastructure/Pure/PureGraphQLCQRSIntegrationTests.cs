@@ -1,21 +1,19 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using GameGuild.Common;
+using System.Reflection;
+using System.Text;
+using System.Text.Json;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
-using Xunit.Abstractions;
-using HotChocolate.Execution;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Text;
-using System.Text.Json;
-using MediatR;
-using System.Reflection;
+using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Infrastructure.Pure;
+
+namespace GameGuild.Tests.Infrastructure.Pure;
 
 /// <summary>
 /// Tests that validate GraphQL→CQRS integration using pure test modules
@@ -55,7 +53,7 @@ public class PureGraphQLCQRSIntegrationTests
 
         // Assert
         Assert.True(response.IsSuccessStatusCode, $"GraphQL request failed: {response.StatusCode}, {responseString}");
-        
+
         var jsonDoc = JsonDocument.Parse(responseString);
         Assert.True(jsonDoc.RootElement.TryGetProperty("data", out var data));
         Assert.True(data.TryGetProperty("getPureTestMessage", out var message));
@@ -93,7 +91,7 @@ public class PureGraphQLCQRSIntegrationTests
 
         // Assert
         Assert.True(response.IsSuccessStatusCode, $"GraphQL request failed: {response.StatusCode}, {responseString}");
-        
+
         var jsonDoc = JsonDocument.Parse(responseString);
         Assert.True(jsonDoc.RootElement.TryGetProperty("data", out var data));
         Assert.True(data.TryGetProperty("getPureTestItems", out var items));
@@ -133,9 +131,9 @@ public class PureGraphQLCQRSIntegrationTests
 
         // Assert
         // GraphQL can return either 200 with errors or 400 for invalid queries - both are valid
-        Assert.True(response.StatusCode == System.Net.HttpStatusCode.OK || response.StatusCode == System.Net.HttpStatusCode.BadRequest, 
+        Assert.True(response.StatusCode == System.Net.HttpStatusCode.OK || response.StatusCode == System.Net.HttpStatusCode.BadRequest,
                    $"GraphQL should return 200 or 400 for invalid queries, got {response.StatusCode}");
-        
+
         var jsonDoc = JsonDocument.Parse(responseString);
         Assert.True(jsonDoc.RootElement.TryGetProperty("errors", out var errors));
         Assert.True(errors.GetArrayLength() > 0);
@@ -178,7 +176,7 @@ public class PureGraphQLCQRSIntegrationTests
 
         // Assert
         Assert.True(response.IsSuccessStatusCode, $"Schema introspection failed: {response.StatusCode}, {responseString}");
-        
+
         var jsonDoc = JsonDocument.Parse(responseString);
         Assert.True(jsonDoc.RootElement.TryGetProperty("data", out var data));
         Assert.True(data.TryGetProperty("__schema", out var schema));
@@ -195,11 +193,11 @@ public class PureGraphQLCQRSIntegrationTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateMinimalConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
 
-        services.AddDbContext<ApplicationDbContext>(options => 
+        services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"PureHandlers_{Guid.NewGuid()}"));
 
         // Add MediatR with pure test handlers (using older pattern from API)
@@ -213,8 +211,8 @@ public class PureGraphQLCQRSIntegrationTests
         Assert.NotNull(mediator);
 
         // Verify we can resolve our test handlers
-        var testMessageHandler = serviceProvider.GetService<IRequestHandler<GameGuild.API.Tests.Infrastructure.Pure.GetPureTestMessageQuery, string>>();
-        var testItemsHandler = serviceProvider.GetService<IRequestHandler<GameGuild.API.Tests.Infrastructure.Pure.GetPureTestItemsQuery, IEnumerable<GameGuild.API.Tests.Infrastructure.Pure.PureTestItem>>>();
+        var testMessageHandler = serviceProvider.GetService<IRequestHandler<GetPureTestMessageQuery, string>>();
+        var testItemsHandler = serviceProvider.GetService<IRequestHandler<GetPureTestItemsQuery, IEnumerable<PureTestItem>>>();
 
         Assert.NotNull(testMessageHandler);
         Assert.NotNull(testItemsHandler);
@@ -235,20 +233,20 @@ public class PureGraphQLCQRSIntegrationTests
                     services.AddLogging();
                     services.AddRouting(); // Add routing services
 
-                    services.AddDbContext<ApplicationDbContext>(options => 
+                    services.AddDbContext<ApplicationDbContext>(options =>
                         options.UseInMemoryDatabase($"PureTest_{Guid.NewGuid()}"));
 
                     // Add MediatR with our pure test handlers (using older pattern from API)
                     services.AddMediatR(Assembly.GetExecutingAssembly());
-                    
+
                     // Register our test handlers explicitly
-                    services.AddScoped<IRequestHandler<GameGuild.API.Tests.Infrastructure.Pure.GetPureTestMessageQuery, string>, GameGuild.API.Tests.Infrastructure.Pure.GetPureTestMessageHandler>();
-                    services.AddScoped<IRequestHandler<GameGuild.API.Tests.Infrastructure.Pure.GetPureTestItemsQuery, IEnumerable<GameGuild.API.Tests.Infrastructure.Pure.PureTestItem>>, GameGuild.API.Tests.Infrastructure.Pure.GetPureTestItemsHandler>();
+                    services.AddScoped<IRequestHandler<GetPureTestMessageQuery, string>, GetPureTestMessageHandler>();
+                    services.AddScoped<IRequestHandler<GetPureTestItemsQuery, IEnumerable<PureTestItem>>, GetPureTestItemsHandler>();
 
                     // Add GraphQL server with our pure test types
                     services.AddGraphQLServer()
-                        .AddQueryType<GameGuild.API.Tests.Infrastructure.Pure.PureTestQuery>() // Use our simple query type instead
-                        .AddType<GameGuild.API.Tests.Infrastructure.Pure.PureTestItemType>()
+                        .AddQueryType<PureTestQuery>() // Use our simple query type instead
+                        .AddType<PureTestItemType>()
                         .ModifyRequestOptions(opt => 
                         {
                             opt.IncludeExceptionDetails = true;

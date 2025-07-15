@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Programs.DTOs;
+namespace GameGuild.Modules.Programs;
 
 // Program Management DTOs
 public record CreateProgramDto(string Title, string? Description, string Slug, string? Thumbnail = null) {

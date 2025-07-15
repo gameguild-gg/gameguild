@@ -1,13 +1,11 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
-using Microsoft.Data.Sqlite;
 
-namespace GameGuild.API.Tests.Infrastructure.Pure;
+
+namespace GameGuild.Tests.Infrastructure.Pure;
 
 /// <summary>
 /// Comprehensive database infrastructure tests

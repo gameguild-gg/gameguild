@@ -5,7 +5,7 @@ using GameGuild.Modules.Subscriptions.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Products.Models;
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Entity representing subscription plans for products

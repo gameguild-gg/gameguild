@@ -1,7 +1,7 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Programs.Services;
+using GameGuild.Modules.Programs;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -27,7 +27,7 @@ public class ProgramServiceSlugTests : IDisposable {
   [Fact]
   public async Task GetProgramBySlugAsync_WithValidSlug_ReturnsProgram() {
     // Arrange
-    var program = new GameGuild.Modules.Programs.Models.Program {
+    var program = new GameGuild.Modules.Programs.Program {
       Id = Guid.NewGuid(),
       Title = "Unity Game Development",
       Slug = "unity-game-development",
@@ -56,7 +56,7 @@ public class ProgramServiceSlugTests : IDisposable {
   [Fact]
   public async Task GetProgramBySlugAsync_WithInvalidSlug_ReturnsNull() {
     // Arrange
-    var program = new GameGuild.Modules.Programs.Models.Program {
+    var program = new GameGuild.Modules.Programs.Program {
       Id = Guid.NewGuid(),
       Title = "Unity Game Development",
       Slug = "unity-game-development",
@@ -82,7 +82,7 @@ public class ProgramServiceSlugTests : IDisposable {
   [Fact]
   public async Task GetProgramBySlugAsync_WithDeletedProgram_ReturnsNull() {
     // Arrange
-    var program = new GameGuild.Modules.Programs.Models.Program {
+    var program = new GameGuild.Modules.Programs.Program {
       Id = Guid.NewGuid(),
       Title = "Unity Game Development",
       Slug = "unity-game-development",
@@ -109,7 +109,7 @@ public class ProgramServiceSlugTests : IDisposable {
   [Fact]
   public async Task GetProgramBySlugAsync_WithCaseSensitiveSlug_IsExact() {
     // Arrange
-    var program = new GameGuild.Modules.Programs.Models.Program {
+    var program = new GameGuild.Modules.Programs.Program {
       Id = Guid.NewGuid(),
       Title = "Unity Game Development",
       Slug = "Unity-Game-Development", // Mixed case
@@ -137,7 +137,7 @@ public class ProgramServiceSlugTests : IDisposable {
   [Fact]
   public async Task GetProgramBySlugAsync_WithSpecialCharacters_HandlesCorrectly() {
     // Arrange
-    var program = new GameGuild.Modules.Programs.Models.Program {
+    var program = new GameGuild.Modules.Programs.Program {
       Id = Guid.NewGuid(),
       Title = "C# Programming & .NET Development",
       Slug = "c-sharp-programming-and-dotnet-development",
@@ -165,7 +165,7 @@ public class ProgramServiceSlugTests : IDisposable {
   public async Task GetProgramBySlugAsync_WithMultiplePrograms_ReturnsCorrectOne() {
     // Arrange
     var programs = new[] {
-      new GameGuild.Modules.Programs.Models.Program {
+      new GameGuild.Modules.Programs.Program {
         Id = Guid.NewGuid(),
         Title = "Unity Game Development",
         Slug = "unity-game-development",
@@ -177,7 +177,7 @@ public class ProgramServiceSlugTests : IDisposable {
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new GameGuild.Modules.Programs.Program {
         Id = Guid.NewGuid(),
         Title = "Unreal Engine Development",
         Slug = "unreal-engine-development",
@@ -189,7 +189,7 @@ public class ProgramServiceSlugTests : IDisposable {
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
       },
-      new GameGuild.Modules.Programs.Models.Program {
+      new GameGuild.Modules.Programs.Program {
         Id = Guid.NewGuid(),
         Title = "Blender 3D Modeling",
         Slug = "blender-3d-modeling",
@@ -238,7 +238,7 @@ public class ProgramServiceSlugTests : IDisposable {
     // Arrange
     var longSlug = string.Join("-", Enumerable.Repeat("very-long-slug-segment", 10));
     
-    var program = new GameGuild.Modules.Programs.Models.Program {
+    var program = new GameGuild.Modules.Programs.Program {
       Id = Guid.NewGuid(),
       Title = "Test Program with Very Long Slug",
       Slug = longSlug,

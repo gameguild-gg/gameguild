@@ -1,12 +1,12 @@
+using GameGuild.Common;
 using GameGuild.Common.Interfaces;
-using GameGuild.Modules.Projects.Commands;
-using GameGuild.Modules.Projects.Queries;
 using GameGuild.Modules.Contents;
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
-namespace GameGuild.Modules.Projects.Controllers;
+
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// REST API controller for managing projects using CQRS pattern
@@ -39,7 +39,7 @@ public class ProjectsController : ControllerBase
     [HttpGet]
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<Project>>> GetProjects(
-        [FromQuery] ProjectType? type = null,
+        [FromQuery] Common.ProjectType? type = null,
         [FromQuery] ContentStatus? status = null,
         [FromQuery] AccessLevel? visibility = null,
         [FromQuery] Guid? creatorId = null,
@@ -136,14 +136,14 @@ public class ProjectsController : ControllerBase
     {
         var command = new CreateProjectCommand
         {
-            Title = request.Name,
+            Title = request.Title,
             Description = request.Description,
             ShortDescription = request.ShortDescription,
             ImageUrl = request.ImageUrl,
             RepositoryUrl = request.RepositoryUrl,
-            WebsiteUrl = request.DemoUrl,
-            DownloadUrl = request.DocumentationUrl,
-            Type = (GameGuild.Common.ProjectType)request.Type,
+            WebsiteUrl = request.WebsiteUrl,
+            DownloadUrl = request.DownloadUrl,
+            Type = request.Type,
             CreatedById = _userContext.UserId ?? Guid.Empty,
             CategoryId = request.CategoryId,
             Visibility = request.Visibility,
@@ -171,14 +171,14 @@ public class ProjectsController : ControllerBase
         var command = new UpdateProjectCommand
         {
             ProjectId = id,
-            Title = request.Name,
+            Title = request.Title,
             Description = request.Description,
             ShortDescription = request.ShortDescription,
             ImageUrl = request.ImageUrl,
             RepositoryUrl = request.RepositoryUrl,
-            WebsiteUrl = request.DemoUrl,
-            DownloadUrl = request.DocumentationUrl,
-            Type = request.Type != null ? (GameGuild.Common.ProjectType)request.Type : null,
+            WebsiteUrl = request.WebsiteUrl,
+            DownloadUrl = request.DownloadUrl,
+            Type = request.Type,
             CategoryId = request.CategoryId,
             Visibility = request.Visibility,
             Status = request.Status,
@@ -296,7 +296,7 @@ public class ProjectsController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<Project>>> SearchProjects(
         [FromQuery] string searchTerm,
-        [FromQuery] ProjectType? type = null,
+        [FromQuery] Common.ProjectType? type = null,
         [FromQuery] Guid? categoryId = null,
         [FromQuery] ContentStatus? status = null,
         [FromQuery] AccessLevel? visibility = null,
@@ -328,7 +328,7 @@ public class ProjectsController : ControllerBase
     [HttpGet("popular")]
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<Project>>> GetPopularProjects(
-        [FromQuery] ProjectType? type = null,
+        [FromQuery] Common.ProjectType? type = null,
         [FromQuery] int take = 10)
     {
         var query = new GetPopularProjectsQuery
@@ -347,7 +347,7 @@ public class ProjectsController : ControllerBase
     [HttpGet("recent")]
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<Project>>> GetRecentProjects(
-        [FromQuery] ProjectType? type = null,
+        [FromQuery] Common.ProjectType? type = null,
         [FromQuery] int take = 10)
     {
         var query = new GetRecentProjectsQuery
@@ -366,7 +366,7 @@ public class ProjectsController : ControllerBase
     [HttpGet("featured")]
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<Project>>> GetFeaturedProjects(
-        [FromQuery] ProjectType? type = null,
+        [FromQuery] Common.ProjectType? type = null,
         [FromQuery] int take = 10)
     {
         var query = new GetFeaturedProjectsQuery
@@ -452,14 +452,14 @@ public class ProjectsController : ControllerBase
 /// </summary>
 public record CreateProjectRequest
 {
-    public string Name { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
     public string? Description { get; init; }
     public string? ShortDescription { get; init; }
     public string? ImageUrl { get; init; }
     public string? RepositoryUrl { get; init; }
-    public string? DemoUrl { get; init; }
-    public string? DocumentationUrl { get; init; }
-    public ProjectType Type { get; init; } = GameGuild.Common.ProjectType.Game;
+    public string? WebsiteUrl { get; init; }
+    public string? DownloadUrl { get; init; }
+    public GameGuild.Common.ProjectType Type { get; init; } = GameGuild.Common.ProjectType.Game;
     public Guid? CategoryId { get; init; }
     public AccessLevel Visibility { get; init; } = AccessLevel.Public;
     public ContentStatus Status { get; init; } = ContentStatus.Draft;
@@ -468,14 +468,14 @@ public record CreateProjectRequest
 
 public record UpdateProjectRequest
 {
-    public string? Name { get; init; }
+    public string? Title { get; init; }
     public string? Description { get; init; }
     public string? ShortDescription { get; init; }
     public string? ImageUrl { get; init; }
     public string? RepositoryUrl { get; init; }
-    public string? DemoUrl { get; init; }
-    public string? DocumentationUrl { get; init; }
-    public ProjectType? Type { get; init; }
+    public string? WebsiteUrl { get; init; }
+    public string? DownloadUrl { get; init; }
+    public GameGuild.Common.ProjectType? Type { get; init; }
     public Guid? CategoryId { get; init; }
     public AccessLevel? Visibility { get; init; }
     public ContentStatus? Status { get; init; }

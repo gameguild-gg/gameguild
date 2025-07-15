@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Programs.DTOs;
+﻿namespace GameGuild.Modules.Programs;
 
 public record CloneProgramDto(string NewTitle, string? NewDescription = null) {
   public string NewTitle { get; init; } = NewTitle;

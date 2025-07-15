@@ -1,19 +1,20 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using System.Text;
+using System.Text.Json;
 using GameGuild.Common;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
-using Xunit.Abstractions;
+using GameGuild.Tests.Infrastructure.Integration;
 using HotChocolate.Execution;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Text;
-using System.Text.Json;
+using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Infrastructure.Pure;
+
+namespace GameGuild.Tests.Infrastructure.Pure;
 
 /// <summary>
 /// Pure infrastructure tests that validate GraphQL setup without any business modules
@@ -34,12 +35,12 @@ public class PureGraphQLInfrastructureTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateMinimalConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
 
         // Add minimal database context
-        services.AddDbContext<ApplicationDbContext>(options => 
+        services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"PureGraphQL_{Guid.NewGuid()}"));
 
         // Act - Add only GraphQL infrastructure without any business modules
@@ -55,7 +56,7 @@ public class PureGraphQLInfrastructureTests
         // Verify we can build the schema executor using the resolver
         var executorResolver = serviceProvider.GetService<IRequestExecutorResolver>();
         Assert.NotNull(executorResolver);
-        
+
         // Try to get the executor through the resolver
         try
         {
@@ -78,20 +79,20 @@ public class PureGraphQLInfrastructureTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateMinimalConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
         services.AddHttpContextAccessor(); // Required for pipeline behaviors
         services.AddSingleton<GameGuild.Common.IDateTimeProvider, GameGuild.Common.DateTimeProvider>(); // Required for PerformanceBehavior
 
-        services.AddDbContext<ApplicationDbContext>(options => 
+        services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"MediatR_{Guid.NewGuid()}"));
 
         // Act - Add only MediatR/Application layer
         services.AddApplication();
-        
+
         // Add mock IAuthService for Authentication handlers (required by MediatR)
-        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, GameGuild.API.Tests.Infrastructure.Integration.MockAuthService>();
+        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();
@@ -109,18 +110,18 @@ public class PureGraphQLInfrastructureTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateMinimalConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
 
         // Act
-        services.AddDbContext<ApplicationDbContext>(options => 
+        services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"Database_{Guid.NewGuid()}"));
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();
         var dbContext = serviceProvider.GetService<ApplicationDbContext>();
-        
+
         Assert.NotNull(dbContext);
         Assert.True(dbContext.Database.IsInMemory());
 
@@ -142,7 +143,7 @@ public class PureGraphQLInfrastructureTests
                     services.AddLogging();
                     services.AddRouting(); // Add routing services
 
-                    services.AddDbContext<ApplicationDbContext>(options => 
+                    services.AddDbContext<ApplicationDbContext>(options =>
                         options.UseInMemoryDatabase($"TestServer_{Guid.NewGuid()}"));
 
                     // Add minimal GraphQL server
@@ -191,20 +192,20 @@ public class PureGraphQLInfrastructureTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateMinimalConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
         services.AddHttpContextAccessor(); // Required for pipeline behaviors
         services.AddSingleton<GameGuild.Common.IDateTimeProvider, GameGuild.Common.DateTimeProvider>(); // Required for PerformanceBehavior
 
-        services.AddDbContext<ApplicationDbContext>(options => 
+        services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"GraphQLMediatR_{Guid.NewGuid()}"));
 
         // Act - Add both MediatR and GraphQL
         services.AddApplication(); // This adds MediatR
-        
+
         // Add mock IAuthService for Authentication handlers (required by MediatR)
-        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, GameGuild.API.Tests.Infrastructure.Integration.MockAuthService>();
+        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
         
         services.AddGraphQLServer()
             .AddQueryType<GameGuild.Common.Query>()

@@ -1,7 +1,7 @@
 ﻿using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Products.Controllers;
+namespace GameGuild.Modules.Products;
 
 public class GrantAccessRequest {
   public ProductAcquisitionType AcquisitionType { get; set; }

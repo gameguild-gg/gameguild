@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Programs.Models;
+
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Represents a user's rating and review for a program

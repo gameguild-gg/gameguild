@@ -1,7 +1,7 @@
-using GameGuild.Modules.Contents;
 using GameGuild.Modules.Users;
 
-namespace GameGuild.Modules.Posts;
+
+namespace GameGuild.Modules.Posts.GraphQL;
 
 /// <summary>
 /// GraphQL type for Post entity

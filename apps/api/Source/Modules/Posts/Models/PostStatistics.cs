@@ -1,7 +1,8 @@
-using GameGuild.Common;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Common;
 
-namespace GameGuild.Modules.Posts;
+
+namespace GameGuild.Modules.Posts.Models;
 
 /// <summary>
 /// Statistics and metrics for a post

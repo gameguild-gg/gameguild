@@ -1,9 +1,8 @@
 ﻿using GameGuild.Common;
-using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// GraphQL type for UserProduct entity

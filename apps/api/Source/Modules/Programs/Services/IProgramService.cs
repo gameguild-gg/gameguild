@@ -1,11 +1,9 @@
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Programs.DTOs;
-using GameGuild.Modules.Programs.Models;
-using ProgramEntity = GameGuild.Modules.Programs.Models.Program;
+using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 
-namespace GameGuild.Modules.Programs.Services;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Service interface for Program business logic

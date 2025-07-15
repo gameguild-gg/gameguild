@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
-using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Products;
+using GameGuild.Modules.Programs;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -86,7 +86,7 @@ public class ProgramRating : Entity {
   // Navigation properties
   [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;
 
-  [ForeignKey(nameof(ProgramId))] public virtual Programs.Models.Program Program { get; set; } = null!;
+  [ForeignKey(nameof(ProgramId))] public virtual Programs.Program Program { get; set; } = null!;
 
   [ForeignKey(nameof(ProductId))] public virtual Product? Product { get; set; }
 

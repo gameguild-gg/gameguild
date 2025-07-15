@@ -1,6 +1,7 @@
 using GameGuild.Common.Interfaces;
 
-namespace GameGuild.Common.Middleware;
+
+namespace GameGuild.Common;
 
 /// <summary>
 /// Middleware to set up user and tenant context for requests
@@ -23,7 +24,7 @@ public class ContextMiddleware
             // Log context information for debugging
             if (userContext.IsAuthenticated)
             {
-                _logger.LogDebug("User context: UserId={UserId}, Email={Email}, TenantId={TenantId}", 
+                _logger.LogDebug("User context: UserId={UserId}, Email={Email}, TenantId={TenantId}",
                     userContext.UserId, userContext.Email, tenantContext.TenantId);
             }
 
@@ -68,8 +69,8 @@ public static class ContextMiddlewareExtensions
     public static IServiceCollection AddContextServices(this IServiceCollection services)
     {
         services.AddHttpContextAccessor();
-        services.AddScoped<IUserContext, GameGuild.Common.Services.UserContext>();
-        services.AddScoped<ITenantContext, GameGuild.Common.Services.TenantContext>();
+        services.AddScoped<IUserContext, UserContext>();
+        services.AddScoped<ITenantContext, TenantContext>();
         
         return services;
     }

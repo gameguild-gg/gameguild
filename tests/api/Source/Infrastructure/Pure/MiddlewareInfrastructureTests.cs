@@ -1,19 +1,14 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using GameGuild.Common;
-using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
-using Xunit.Abstractions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Http;
-using System.Text;
-using System.Text.Json;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Infrastructure.Pure;
+
+namespace GameGuild.Tests.Infrastructure.Pure;
 
 /// <summary>
 /// Tests focused on middleware components and request pipeline infrastructure

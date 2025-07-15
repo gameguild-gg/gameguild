@@ -1,10 +1,8 @@
 using GameGuild.Database;
-using GameGuild.Modules.Programs.Interfaces;
-using GameGuild.Modules.Programs.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Programs.Services;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Service implementation for ActivityGrade management with full permission inheritance

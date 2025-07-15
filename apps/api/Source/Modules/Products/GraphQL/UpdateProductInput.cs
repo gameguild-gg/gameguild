@@ -1,7 +1,7 @@
 ﻿using GameGuild.Modules.Contents;
 
 
-namespace GameGuild.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products;
 
 public class UpdateProductInput {
   public required Guid Id { get; set; }

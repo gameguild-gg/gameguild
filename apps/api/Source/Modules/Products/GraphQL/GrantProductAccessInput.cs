@@ -1,7 +1,7 @@
 ﻿using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products;
 
 public class GrantProductAccessInput {
   public required Guid ProductId { get; set; }

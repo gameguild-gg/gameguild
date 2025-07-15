@@ -1,10 +1,9 @@
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Programs.Models;
 using MediatR;
 using ProgramAvailabilityStatus = GameGuild.Common.EnrollmentStatus;
 
-namespace GameGuild.Modules.Programs.Commands;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Commands for Program management using CQRS pattern
@@ -29,7 +28,7 @@ public record CreateProgramCommand(
     int? MaxEnrollments = null,
     DateTime? EnrollmentDeadline = null,
     string? CreatorId = null
-) : IRequest<Program>;
+) : IRequest<GameGuild.Program>;
 
 /// <summary>
 /// Command to update an existing program
@@ -47,7 +46,7 @@ public record UpdateProgramCommand(
     ProgramAvailabilityStatus? EnrollmentStatus = null,
     int? MaxEnrollments = null,
     DateTime? EnrollmentDeadline = null
-) : IRequest<Program>;
+) : IRequest<GameGuild.Program>;
 
 /// <summary>
 /// Command to delete a program (soft delete)
@@ -59,22 +58,22 @@ public record DeleteProgramCommand(Guid Id) : IRequest<bool>;
 /// <summary>
 /// Command to publish a program
 /// </summary>
-public record PublishProgramCommand(Guid Id) : IRequest<Program>;
+public record PublishProgramCommand(Guid Id) : IRequest<GameGuild.Program>;
 
 /// <summary>
 /// Command to unpublish a program
 /// </summary>
-public record UnpublishProgramCommand(Guid Id) : IRequest<Program>;
+public record UnpublishProgramCommand(Guid Id) : IRequest<GameGuild.Program>;
 
 /// <summary>
 /// Command to archive a program
 /// </summary>
-public record ArchiveProgramCommand(Guid Id) : IRequest<Program>;
+public record ArchiveProgramCommand(Guid Id) : IRequest<GameGuild.Program>;
 
 /// <summary>
 /// Command to restore an archived program
 /// </summary>
-public record RestoreProgramCommand(Guid Id) : IRequest<Program>;
+public record RestoreProgramCommand(Guid Id) : IRequest<GameGuild.Program>;
 
 // ===== ENROLLMENT COMMANDS =====
 
@@ -103,7 +102,7 @@ public record UpdateEnrollmentStatusCommand(
     ProgramAvailabilityStatus Status,
     int? MaxEnrollments = null,
     DateTime? EnrollmentDeadline = null
-) : IRequest<Program>;
+) : IRequest<GameGuild.Program>;
 
 // ===== CONTENT MANAGEMENT COMMANDS =====
 
@@ -190,11 +189,11 @@ public record RemoveFromWishlistCommand(
 public record BulkUpdateProgramVisibilityCommand(
     IEnumerable<Guid> ProgramIds,
     AccessLevel Visibility
-) : IRequest<IEnumerable<Program>>;
+) : IRequest<IEnumerable<GameGuild.Program>>;
 
 /// <summary>
 /// Command to bulk archive programs
 /// </summary>
 public record BulkArchiveProgramsCommand(
     IEnumerable<Guid> ProgramIds
-) : IRequest<IEnumerable<Program>>;
+) : IRequest<IEnumerable<GameGuild.Program>>;

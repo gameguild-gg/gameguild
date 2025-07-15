@@ -1,7 +1,8 @@
-using GameGuild.Common;
 using GameGuild.Modules.Contents;
+using GameGuild.Modules.Posts.Models;
 
-namespace GameGuild.Modules.Posts;
+
+namespace GameGuild.Modules.Posts.Services;
 
 /// <summary>
 /// Service interface for Post business logic operations

@@ -1,8 +1,8 @@
-using MediatR;
 using GameGuild.Modules.Contents;
-using GameGuild.Common;
+using MediatR;
 
-namespace GameGuild.Modules.Projects.Commands;
+
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// Command to create a new project
@@ -16,7 +16,7 @@ public record CreateProjectCommand : IRequest<CreateProjectResult>
     public string? RepositoryUrl { get; init; }
     public string? WebsiteUrl { get; init; }
     public string? DownloadUrl { get; init; }
-    public ProjectType Type { get; init; } = GameGuild.Common.ProjectType.Game;
+    public GameGuild.Common.ProjectType Type { get; init; } = GameGuild.Common.ProjectType.Game;
     public Guid CreatedById { get; init; }
     public Guid? CategoryId { get; init; }
     public AccessLevel Visibility { get; init; } = AccessLevel.Public;
@@ -38,7 +38,7 @@ public record UpdateProjectCommand : IRequest<UpdateProjectResult>
     public string? RepositoryUrl { get; init; }
     public string? WebsiteUrl { get; init; }
     public string? DownloadUrl { get; init; }
-    public ProjectType? Type { get; init; }
+    public GameGuild.Common.ProjectType? Type { get; init; }
     public Guid? CategoryId { get; init; }
     public AccessLevel? Visibility { get; init; }
     public ContentStatus? Status { get; init; }

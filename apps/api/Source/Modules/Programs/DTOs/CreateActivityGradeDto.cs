@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
 
-namespace GameGuild.Modules.Programs.DTOs;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// DTO for creating new activity grades

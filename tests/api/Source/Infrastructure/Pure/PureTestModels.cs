@@ -1,6 +1,7 @@
 using MediatR;
 
-namespace GameGuild.API.Tests.Infrastructure.Pure;
+
+namespace GameGuild.Tests.Infrastructure.Pure;
 
 /// <summary>
 /// Minimal test item for pure infrastructure testing

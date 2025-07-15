@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Enums;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Program access levels for products

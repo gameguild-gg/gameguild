@@ -1,13 +1,11 @@
-using GameGuild.Modules.Contents;
-using GameGuild.Modules.Products.Services;
-using GameGuild.Modules.Products.Queries;
 using GameGuild.Common;
+using GameGuild.Modules.Contents;
 using MediatR;
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+using ProductEntity = GameGuild.Modules.Products.Product;
 using ProductTypeEnum = GameGuild.Common.ProductType;
 
 
-namespace GameGuild.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// GraphQL queries for Product module using CQRS pattern
@@ -27,7 +25,7 @@ public class ProductQueries {
     string? searchTerm = null,
     bool? isBundle = null
   ) {
-    var query = new GameGuild.Modules.Products.Queries.GetProductsQuery
+    var query = new GetProductsQuery
     {
       Skip = skip,
       Take = take,
@@ -49,7 +47,7 @@ public class ProductQueries {
     bool includePricing = true,
     bool includePrograms = true
   ) { 
-    var query = new GameGuild.Modules.Products.Queries.GetProductByIdQuery
+    var query = new GetProductByIdQuery
     {
       ProductId = id,
       IncludePricing = includePricing,
@@ -136,12 +134,12 @@ public class ProductQueries {
   /// <summary>
   /// Gets current pricing for a product
   /// </summary>
-  public async Task<Models.ProductPricing?> GetCurrentPricing(Guid productId, [Service] IProductService productService) { return await productService.GetCurrentPricingAsync(productId); }
+  public async Task<ProductPricing?> GetCurrentPricing(Guid productId, [Service] IProductService productService) { return await productService.GetCurrentPricingAsync(productId); }
 
   /// <summary>
   /// Gets pricing history for a product
   /// </summary>
-  public async Task<IEnumerable<Models.ProductPricing>> GetPricingHistory(
+  public async Task<IEnumerable<ProductPricing>> GetPricingHistory(
     Guid productId,
     [Service] IProductService productService
   ) {
@@ -151,7 +149,7 @@ public class ProductQueries {
   /// <summary>
   /// Gets user's products
   /// </summary>
-  public async Task<IEnumerable<Models.UserProduct>> GetUserProducts(
+  public async Task<IEnumerable<UserProduct>> GetUserProducts(
     Guid userId,
     [Service] IProductService productService
   ) {
@@ -166,7 +164,7 @@ public class ProductQueries {
   /// <summary>
   /// Gets a promo code by code
   /// </summary>
-  public async Task<Models.PromoCode?> GetPromoCode(string code, [Service] IProductService productService) { return await productService.GetPromoCodeAsync(code); }
+  public async Task<PromoCode?> GetPromoCode(string code, [Service] IProductService productService) { return await productService.GetPromoCodeAsync(code); }
 
   /// <summary>
   /// Validates a promo code

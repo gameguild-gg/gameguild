@@ -2,8 +2,8 @@ using System.Security.Claims;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Products;
+using GameGuild.Modules.Programs;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Resources;
 using Microsoft.AspNetCore.Mvc;
@@ -188,7 +188,7 @@ public class RequireResourcePermissionAttribute<TResource>(PermissionType requir
               var hasProgramPermission =
                 await permissionService
                   .HasResourcePermissionAsync<ProgramPermission,
-                    Modules.Programs.Models.Program>(userId, tenantId, resourceId, requiredPermission);
+                    Modules.Programs.Program>(userId, tenantId, resourceId, requiredPermission);
 
               if (hasProgramPermission) {
                 return; // Permission granted at resource level

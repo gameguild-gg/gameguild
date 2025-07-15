@@ -1,20 +1,22 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using System.Text;
+using System.Text.Json;
 using GameGuild.Common;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
-using Xunit.Abstractions;
+using GameGuild.Tests.Infrastructure.Integration;
+using HotChocolate;
 using HotChocolate.Execution;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Text;
-using System.Text.Json;
-using HotChocolate;
+using Microsoft.Extensions.Logging;
+using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Infrastructure.Pure;
+
+namespace GameGuild.Tests.Infrastructure.Pure;
 
 /// <summary>
 /// Comprehensive pure infrastructure tests that validate each architectural layer in isolation
@@ -34,12 +36,12 @@ public class InfrastructureArchitectureTests
     {
         // Arrange & Act
         var configuration = CreateMinimalConfiguration();
-        
+
         // Assert
         Assert.NotNull(configuration);
         Assert.Equal("InMemory", configuration["Database:Provider"]);
         Assert.Equal("GameGuild.Test", configuration["Jwt:Issuer"]);
-        
+
         _output.WriteLine("✅ Configuration loaded successfully with minimal settings");
     }
 
@@ -49,19 +51,19 @@ public class InfrastructureArchitectureTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateMinimalConfiguration();
-        
+
         // Act
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
-        
+
         // Assert
         var serviceProvider = services.BuildServiceProvider();
         var logger = serviceProvider.GetService<ILogger<InfrastructureArchitectureTests>>();
         var config = serviceProvider.GetService<IConfiguration>();
-        
+
         Assert.NotNull(logger);
         Assert.NotNull(config);
-        
+
         _output.WriteLine("✅ Basic services registered successfully");
     }
 
@@ -71,18 +73,18 @@ public class InfrastructureArchitectureTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateMinimalConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
 
         // Act
-        services.AddDbContext<ApplicationDbContext>(options => 
+        services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"TestDB_{Guid.NewGuid()}"));
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();
         var dbContext = serviceProvider.GetService<ApplicationDbContext>();
-        
+
         Assert.NotNull(dbContext);
         Assert.True(dbContext.Database.IsInMemory());
 
@@ -95,18 +97,18 @@ public class InfrastructureArchitectureTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateMinimalConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
 
         // Act
-        services.AddDbContext<ApplicationDbContext>(options => 
+        services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlite("Data Source=:memory:"));
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();
         var dbContext = serviceProvider.GetService<ApplicationDbContext>();
-        
+
         Assert.NotNull(dbContext);
         Assert.True(dbContext.Database.IsSqlite());
 
@@ -119,24 +121,24 @@ public class InfrastructureArchitectureTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateMinimalConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
-        services.AddDbContext<ApplicationDbContext>(options => 
+        services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"AppLayer_{Guid.NewGuid()}"));
 
         // Act
         services.AddApplication();
-        
+
         // Add mock IAuthService for Authentication handlers (required by MediatR)
-        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, GameGuild.API.Tests.Infrastructure.Integration.MockAuthService>();
+        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();
         var mediator = serviceProvider.GetService<MediatR.IMediator>();
-        
+
         Assert.NotNull(mediator);
-        
+
         _output.WriteLine("✅ Application layer registered successfully");
     }
 
@@ -146,7 +148,7 @@ public class InfrastructureArchitectureTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateMinimalConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
 
@@ -158,7 +160,7 @@ public class InfrastructureArchitectureTests
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();
-        
+
         // Try to get the schema executor factory first
         var executorResolver = serviceProvider.GetService<IRequestExecutorResolver>();
         if (executorResolver != null)
@@ -172,7 +174,7 @@ public class InfrastructureArchitectureTests
             var executor = serviceProvider.GetService<IRequestExecutor>();
             Assert.NotNull(executor);
         }
-        
+
         _output.WriteLine("✅ Pure GraphQL server with empty schema registered successfully");
     }
 
@@ -182,7 +184,7 @@ public class InfrastructureArchitectureTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateMinimalConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
 
@@ -202,7 +204,7 @@ public class InfrastructureArchitectureTests
         Assert.NotNull(result);
         var resultJson = result.ToJson();
         Assert.Contains("GraphQL API is healthy", resultJson);
-        
+
         _output.WriteLine($"✅ Pure GraphQL query executed successfully: {resultJson}");
     }
 
@@ -220,7 +222,7 @@ public class InfrastructureArchitectureTests
                     services.AddSingleton<IConfiguration>(configuration);
                     services.AddLogging();
 
-                    services.AddDbContext<ApplicationDbContext>(options => 
+                    services.AddDbContext<ApplicationDbContext>(options =>
                         options.UseInMemoryDatabase($"TestServer_{Guid.NewGuid()}"));
 
                     // Add minimal routing and endpoint services
@@ -266,7 +268,7 @@ public class InfrastructureArchitectureTests
                     services.AddLogging();
                     services.AddRouting(); // Add routing services
 
-                    services.AddDbContext<ApplicationDbContext>(options => 
+                    services.AddDbContext<ApplicationDbContext>(options =>
                         options.UseInMemoryDatabase($"GraphQLServer_{Guid.NewGuid()}"));
 
                     services.AddGraphQLServer()
@@ -313,18 +315,18 @@ public class InfrastructureArchitectureTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateMinimalConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
 
         // Add all infrastructure components step by step
-        services.AddDbContext<ApplicationDbContext>(options => 
+        services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"Integration_{Guid.NewGuid()}"));
 
         services.AddApplication();
 
         // Add mock IAuthService for Authentication handlers (required by MediatR)
-        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, GameGuild.API.Tests.Infrastructure.Integration.MockAuthService>();
+        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
 
         services.AddGraphQLServer()
             .AddQueryType<GameGuild.Common.Query>()

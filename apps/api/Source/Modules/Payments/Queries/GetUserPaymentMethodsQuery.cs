@@ -1,7 +1,7 @@
 using MediatR;
-using GameGuild.Modules.Payments.Models;
 
-namespace GameGuild.Modules.Payments.Queries;
+
+namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// Query to get user payment methods

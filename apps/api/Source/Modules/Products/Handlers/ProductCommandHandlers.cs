@@ -1,13 +1,10 @@
 using GameGuild.Common.Interfaces;
 using GameGuild.Database;
-using GameGuild.Modules.Products.Commands;
-using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Contents;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Modules.Products.Handlers;
+
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Command handlers for product operations

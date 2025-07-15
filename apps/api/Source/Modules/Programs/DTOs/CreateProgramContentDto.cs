@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Programs.DTOs;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// DTO for creating new program content
@@ -16,7 +16,7 @@ public class CreateProgramContentDto {
 
   public string Description { get; set; } = string.Empty;
 
-  [Required] public ProgramContentType Type { get; set; }
+  [Required] public Common.ProgramContentType Type { get; set; }
 
   public string Body { get; set; } = "{}";
 

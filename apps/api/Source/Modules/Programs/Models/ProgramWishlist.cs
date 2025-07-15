@@ -4,7 +4,7 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Programs.Models;
+namespace GameGuild.Modules.Programs;
 
 [Table("program_wishlists")]
 [Index(nameof(UserId), nameof(ProgramId), IsUnique = true)]
