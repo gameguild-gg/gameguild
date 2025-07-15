@@ -104,9 +104,9 @@ export const authConfig: NextAuthConfig = {
           console.error('❌ [AUTH DEBUG] No id_token received from Google');
           return false;
         }
-        
-        console.log('📨 [AUTH DEBUG] Google ID token received, length:', account.id_token.length);
-        
+
+       console.log('📨 [AUTH DEBUG] Google ID token received, length:', account.id_token.length);
+
         try {
           console.log('🚀 [AUTH DEBUG] Attempting Google ID token validation with CMS backend:', environment.apiBaseUrl);
           console.log('🔑 [AUTH DEBUG] Making request to: POST /api/auth/google/id-token');
@@ -171,7 +171,7 @@ export const authConfig: NextAuthConfig = {
         provider: account?.provider,
         timestamp: new Date().toISOString(),
       });
-      
+
       // If this is a new sign-in, store the CMS data
       if (user && (user as any).cmsData) {
         console.log('📦 [AUTH DEBUG] Storing CMS data in JWT token...');
@@ -184,7 +184,7 @@ export const authConfig: NextAuthConfig = {
         token.user = cmsData.user;
         token.tenantId = cmsData.tenantId;
         token.availableTenants = cmsData.availableTenants;
-        
+
         console.log('✅ [AUTH DEBUG] CMS data stored in token:', {
           userId: token.id,
           hasAccessToken: !!token.accessToken,
@@ -267,7 +267,7 @@ export const authConfig: NextAuthConfig = {
         sessionUserEmail: session?.user?.email,
         timestamp: new Date().toISOString(),
       });
-      
+
       // Pass token data to the session
       session.accessToken = token.accessToken as string;
       session.user.id = token.id as string;
