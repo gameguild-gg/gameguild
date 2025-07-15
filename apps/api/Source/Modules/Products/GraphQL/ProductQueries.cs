@@ -1,5 +1,6 @@
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Products.Services;
+using GameGuild.Modules.Products.Queries;
 using GameGuild.Common;
 using MediatR;
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
@@ -17,26 +18,44 @@ public class ProductQueries {
   /// Gets all products accessible to the current user using CQRS pattern
   /// </summary>
   public async Task<IEnumerable<ProductEntity>> GetProducts(
-    [Service] IMediator mediator, [Service] IProductService productService, int skip = 0, int take = 50
+    [Service] IMediator mediator,
+    int skip = 0,
+    int take = 50,
+    ProductTypeEnum? type = null,
+    ContentStatus? status = null,
+    AccessLevel? visibility = null,
+    string? searchTerm = null,
+    bool? isBundle = null
   ) {
-    // TODO: Replace with proper CQRS query when GetAllProductsQuery is implemented
-    // var query = new GetAllProductsQuery { Skip = skip, Take = take };
-    // return await mediator.Send(query);
-    
-    // Temporary fallback to service until CQRS queries are implemented
-    return await productService.GetProductsAsync(skip, take);
+    var query = new GameGuild.Modules.Products.Queries.GetProductsQuery
+    {
+      Skip = skip,
+      Take = take,
+      Type = type,
+      Status = status,
+      Visibility = visibility,
+      SearchTerm = searchTerm,
+      IsBundle = isBundle
+    };
+    return await mediator.Send(query);
   }
 
   /// <summary>
   /// Gets a product by its unique identifier using CQRS pattern
   /// </summary>
-  public async Task<ProductEntity?> GetProductById(Guid id, [Service] IMediator mediator, [Service] IProductService productService) { 
-    // TODO: Replace with proper CQRS query when GetProductByIdQuery is implemented
-    // var query = new GetProductByIdQuery { ProductId = id };
-    // return await mediator.Send(query);
-    
-    // Temporary fallback to service until CQRS queries are implemented
-    return await productService.GetProductByIdAsync(id); 
+  public async Task<ProductEntity?> GetProductById(
+    Guid id,
+    [Service] IMediator mediator,
+    bool includePricing = true,
+    bool includePrograms = true
+  ) { 
+    var query = new GameGuild.Modules.Products.Queries.GetProductByIdQuery
+    {
+      ProductId = id,
+      IncludePricing = includePricing,
+      IncludePrograms = includePrograms
+    };
+    return await mediator.Send(query);
   }
 
   /// <summary>
