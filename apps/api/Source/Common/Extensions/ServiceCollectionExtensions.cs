@@ -1,4 +1,5 @@
 using GameGuild.Modules.Payments.Services;
+using GameGuild.Modules.Posts;
 using GameGuild.Modules.Products.Services;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Services;
@@ -103,6 +104,22 @@ public static class ServiceCollectionExtensions {
   public static IServiceCollection AddCredentialsModule(this IServiceCollection services) {
     // Register Credentials module services
     services.AddScoped<ICredentialService, CredentialService>();
+
+    return services;
+  }
+
+  public static IServiceCollection AddPostsModule(this IServiceCollection services) {
+    // Register Posts module services
+    services.AddScoped<IPostAnnouncementService, PostAnnouncementService>();
+    services.AddScoped<IPostService, PostService>();
+    
+    // Domain event handlers are automatically registered by MediatR
+    return services;
+  }
+
+  public static IServiceCollection AddPostModule(this IServiceCollection services) {
+    // Register Post module services
+    services.AddScoped<IPostService, PostService>();
 
     return services;
   }

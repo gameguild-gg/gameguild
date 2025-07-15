@@ -96,8 +96,20 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<PromoCode> PromoCodes { get; set; }
 
-  public DbSet<PromoCodeUse> PromoCodeUses { get; set; } // Project Management DbSets
+  public DbSet<PromoCodeUse> PromoCodeUses { get; set; } 
 
+  // Posts Management DbSets
+  public DbSet<GameGuild.Modules.Posts.Post> Posts { get; set; }
+  public DbSet<GameGuild.Modules.Posts.PostComment> PostComments { get; set; }
+  public DbSet<GameGuild.Modules.Posts.PostLike> PostLikes { get; set; }
+  public DbSet<GameGuild.Modules.Posts.PostContentReference> PostContentReferences { get; set; }
+  public DbSet<GameGuild.Modules.Posts.PostStatistics> PostStatistics { get; set; }
+  public DbSet<GameGuild.Modules.Posts.PostFollower> PostFollowers { get; set; }
+  public DbSet<GameGuild.Modules.Posts.PostTag> PostTags { get; set; }
+  public DbSet<GameGuild.Modules.Posts.PostTagAssignment> PostTagAssignments { get; set; }
+  public DbSet<GameGuild.Modules.Posts.PostView> PostViews { get; set; }
+
+  // Project Management DbSets
   public DbSet<Project> Projects { get; set; }
 
   public DbSet<ProjectCollaborator> ProjectCollaborators { get; set; }

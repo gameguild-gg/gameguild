@@ -10,9 +10,9 @@ W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\GameGuild.API.T
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\testhost.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\GameGuild.API.deps.json
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\GameGuild.API.runtimeconfig.json
-W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\appsettings.Development.json
-W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\appsettings.json
-W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\appsettings.Production.json
+W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\appSettings.Development.json
+W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\appSettings.json
+W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\appSettings.Production.json
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\GameGuild.API.staticwebassets.endpoints.json
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\GameGuild.API.exe
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\testhost.exe
@@ -330,6 +330,8 @@ W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\BCrypt.Net-Next
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\Castle.Core.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\ChilliCream.Nitro.App.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\DotNetEnv.dll
+W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\FluentValidation.dll
+W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\FluentValidation.DependencyInjectionExtensions.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\GreenDonut.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\HotChocolate.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\HotChocolate.Abstractions.dll
@@ -407,6 +409,7 @@ W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\Moq.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\Newtonsoft.Json.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\Npgsql.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\Serilog.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\Slugify.Core.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\Sprache.dll
 W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\SQLitePCLRaw.batteries_v2.dll
@@ -516,6 +519,3 @@ W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\refint\GameGuil
 W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\GameGuild.API.Tests.pdb
 W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\GameGuild.API.Tests.genruntimeconfig.cache
 W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\ref\GameGuild.API.Tests.dll
-W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\FluentValidation.dll
-W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\Serilog.dll
-W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\FluentValidation.DependencyInjectionExtensions.dll
