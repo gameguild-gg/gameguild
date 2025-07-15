@@ -1,5 +1,6 @@
 using MediatR;
 using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Contents;
 using GameGuild.Common;
 
 namespace GameGuild.Modules.Products.Commands;
@@ -20,7 +21,7 @@ public record CreateProductCommand : IRequest<CreateProductResult>
     public decimal MaxAffiliateDiscount { get; init; }
     public decimal AffiliateCommissionPercentage { get; init; } = 30m;
     public AccessLevel Visibility { get; init; } = AccessLevel.Public;
-    public ProductStatus Status { get; init; } = ProductStatus.Draft;
+    public ContentStatus Status { get; init; } = ContentStatus.Draft;
     public Guid? TenantId { get; init; }
 }
 
@@ -40,7 +41,7 @@ public record UpdateProductCommand : IRequest<UpdateProductResult>
     public decimal? MaxAffiliateDiscount { get; init; }
     public decimal? AffiliateCommissionPercentage { get; init; }
     public AccessLevel? Visibility { get; init; }
-    public ProductStatus? Status { get; init; }
+    public ContentStatus? Status { get; init; }
     public Guid UpdatedBy { get; init; }
 }
 
