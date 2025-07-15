@@ -2,7 +2,7 @@ using System.Diagnostics;
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Comments;
-using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Permissions;
 using Microsoft.EntityFrameworkCore;
 using TenantModel = GameGuild.Modules.Tenants.Tenant;
 using UserModel = GameGuild.Modules.Users.User;

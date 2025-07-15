@@ -24,7 +24,7 @@ public class AuthQueries {
     string email,
     [Service] IMediator mediator
   ) {
-    var query = new Users.GetUserByEmailQuery { Email = email, IncludeDeleted = false };
+    var query = new GetUserByEmailQuery { Email = email, IncludeDeleted = false };
 
     return await mediator.Send(query);
   }
@@ -45,7 +45,7 @@ public class AuthQueries {
 
     if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid)) { return null; }
 
-    var query = new Users.GetUserByIdQuery { UserId = userGuid, IncludeDeleted = false };
+    var query = new GetUserByIdQuery { UserId = userGuid, IncludeDeleted = false };
 
     return await mediator.Send(query);
   }

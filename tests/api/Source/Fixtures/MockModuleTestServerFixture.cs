@@ -65,7 +65,7 @@ public class MockModuleTestServerFixture : IDisposable
         services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
 
         // Add our test module (includes test-specific MediatR handlers)
-        GameGuild.Tests.MockModules.TestModuleDependencyInjection.AddTestModule(services);
+        TestModuleDependencyInjection.AddTestModule(services);
 
         // Add HTTP context accessor (required by pipeline behaviors)
         services.AddHttpContextAccessor();

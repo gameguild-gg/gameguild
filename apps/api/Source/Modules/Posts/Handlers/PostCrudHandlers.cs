@@ -34,7 +34,7 @@ public class GetPostByIdHandler(
           request.TenantId
         );
 
-        return Common.Result.Failure<Post>(
+        return Result.Failure<Post>(
           new Common.Error(
             "Post.NotFound",
             $"Post with ID {request.PostId} not found",
@@ -45,12 +45,12 @@ public class GetPostByIdHandler(
 
       logger.LogInformation("Successfully retrieved post {PostId}", request.PostId);
 
-      return Common.Result.Success(post);
+      return Result.Success(post);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error getting post {PostId}", request.PostId);
 
-      return Common.Result.Failure<Post>(
+      return Result.Failure<Post>(
         new Common.Error(
           "GetPost.Failed",
           $"Failed to get post: {ex.Message}",
@@ -82,7 +82,7 @@ public class UpdatePostHandler(
                               .FirstOrDefaultAsync(cancellationToken);
 
       if (post == null) {
-        return Common.Result.Failure<Post>(
+        return Result.Failure<Post>(
           new Common.Error(
             "Post.NotFound",
             $"Post with ID {request.PostId} not found",
@@ -93,7 +93,7 @@ public class UpdatePostHandler(
 
       // Authorization: Only post author can update (or admin in future)
       if (post.AuthorId != request.UserId) {
-        return Common.Result.Failure<Post>(
+        return Result.Failure<Post>(
           new Common.Error(
             "Post.Unauthorized",
             "You can only update your own posts",
@@ -138,7 +138,7 @@ public class UpdatePostHandler(
 
       if (!changes.Any()) {
         // No changes made
-        return Common.Result.Success(post);
+        return Result.Success(post);
       }
 
       post.Touch(); // Update timestamp
@@ -162,12 +162,12 @@ public class UpdatePostHandler(
         cancellationToken
       );
 
-      return Common.Result.Success(post);
+      return Result.Success(post);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error updating post {PostId}", request.PostId);
 
-      return Common.Result.Failure<Post>(
+      return Result.Failure<Post>(
         new Common.Error(
           "UpdatePost.Failed",
           $"Failed to update post: {ex.Message}",
@@ -199,7 +199,7 @@ public class DeletePostHandler(
                               .FirstOrDefaultAsync(cancellationToken);
 
       if (post == null) {
-        return Common.Result.Failure<bool>(
+        return Result.Failure<bool>(
           new Common.Error(
             "Post.NotFound",
             $"Post with ID {request.PostId} not found",
@@ -210,7 +210,7 @@ public class DeletePostHandler(
 
       // Authorization: Only post author can delete (or admin in future)
       if (post.AuthorId != request.UserId) {
-        return Common.Result.Failure<bool>(
+        return Result.Failure<bool>(
           new Common.Error(
             "Post.Unauthorized",
             "You can only delete your own posts",
@@ -238,12 +238,12 @@ public class DeletePostHandler(
         cancellationToken
       );
 
-      return Common.Result.Success(true);
+      return Result.Success(true);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error deleting post {PostId}", request.PostId);
 
-      return Common.Result.Failure<bool>(
+      return Result.Failure<bool>(
         new Common.Error(
           "DeletePost.Failed",
           $"Failed to delete post: {ex.Message}",
@@ -275,7 +275,7 @@ public class TogglePostLikeHandler(
                               .FirstOrDefaultAsync(cancellationToken);
 
       if (post == null) {
-        return Common.Result.Failure<bool>(
+        return Result.Failure<bool>(
           new Common.Error(
             "Post.NotFound",
             $"Post with ID {request.PostId} not found",
@@ -324,12 +324,12 @@ public class TogglePostLikeHandler(
         );
       }
 
-      return Common.Result.Success(isLiked);
+      return Result.Success(isLiked);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error toggling like for post {PostId}", request.PostId);
 
-      return Common.Result.Failure<bool>(
+      return Result.Failure<bool>(
         new Common.Error(
           "TogglePostLike.Failed",
           $"Failed to toggle post like: {ex.Message}",

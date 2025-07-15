@@ -10,7 +10,6 @@ using GameGuild.Modules.Posts.GraphQL;
 using GameGuild.Modules.Posts.Services;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Programs;
-using IProgramService = GameGuild.Modules.Programs.IProgramService;
 
 
 namespace GameGuild.Common;

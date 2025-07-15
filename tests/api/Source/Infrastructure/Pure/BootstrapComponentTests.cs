@@ -112,7 +112,7 @@ public class BootstrapComponentTests
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
         services.AddHttpContextAccessor(); // Required for pipeline behaviors
-        services.AddSingleton<GameGuild.Common.IDateTimeProvider, GameGuild.Common.DateTimeProvider>(); // Required for PerformanceBehavior
+        services.AddSingleton<IDateTimeProvider, DateTimeProvider>(); // Required for PerformanceBehavior
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"AppLayer_{Guid.NewGuid()}"));
 
@@ -203,8 +203,8 @@ public class BootstrapComponentTests
 
         // Act - Add GraphQL with minimal configuration
         services.AddGraphQLServer()
-            .AddQueryType<GameGuild.Common.Query>()
-            .AddMutationType<GameGuild.Common.Mutation>()
+            .AddQueryType<Query>()
+            .AddMutationType<Mutation>()
             .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true);
 
         // Assert

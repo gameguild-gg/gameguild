@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using GameGuild.Common;
 using GameGuild.Modules.Products;
@@ -57,7 +57,7 @@ public class ProgramFeedbackSubmission : Entity {
   // Navigation properties
   public virtual User User { get; set; } = null!;
 
-  public virtual Programs.Program Program { get; set; } = null!;
+  public virtual GameGuild.Modules.Programs.Program Program { get; set; } = null!;
 
   public virtual Product? Product { get; set; }
 

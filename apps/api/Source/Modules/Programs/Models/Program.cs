@@ -75,7 +75,7 @@ public class Program : Content {
 
   public virtual ICollection<ProgramFeedbackSubmission> FeedbackSubmissions { get; set; } = new List<ProgramFeedbackSubmission>();
 
-  public virtual ICollection<GameGuild.Modules.Feedbacks.ProgramRating> ProgramRatings { get; set; } = new List<GameGuild.Modules.Feedbacks.ProgramRating>();
+  public virtual ICollection<ProgramRating> ProgramRatings { get; set; } = new List<ProgramRating>();
 
   public virtual ICollection<ProgramWishlist> ProgramWishlists { get; set; } = new List<ProgramWishlist>();
 

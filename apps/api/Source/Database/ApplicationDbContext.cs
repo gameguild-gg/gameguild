@@ -23,7 +23,6 @@ using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
-using ProgramRating = GameGuild.Modules.Programs.ProgramRating;
 using Tag = GameGuild.Modules.Tags.Models.Tag;
 
 
@@ -101,13 +100,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<PromoCodeUse> PromoCodeUses { get; set; }
 
   // Posts Management DbSets
-  public DbSet<GameGuild.Modules.Posts.Post> Posts { get; set; }
+  public DbSet<Modules.Posts.Post> Posts { get; set; }
 
-  public DbSet<GameGuild.Modules.Posts.PostComment> PostComments { get; set; }
+  public DbSet<Modules.Posts.PostComment> PostComments { get; set; }
 
-  public DbSet<GameGuild.Modules.Posts.PostLike> PostLikes { get; set; }
+  public DbSet<Modules.Posts.PostLike> PostLikes { get; set; }
 
-  public DbSet<GameGuild.Modules.Posts.PostContentReference> PostContentReferences { get; set; }
+  public DbSet<Modules.Posts.PostContentReference> PostContentReferences { get; set; }
 
   public DbSet<PostStatistics> PostStatistics { get; set; }
 
@@ -150,7 +149,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<SessionWaitlist> SessionWaitlists { get; set; } // Program Management DbSets
 
-  public DbSet<Modules.Programs.Program> Programs { get; set; }
+  public DbSet<GameGuild.Modules.Programs.Program> Programs { get; set; }
 
   public DbSet<ProgramContent> ProgramContents { get; set; }
 

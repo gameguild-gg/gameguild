@@ -52,7 +52,7 @@ public class ProductMutations {
   /// Deletes a product
   /// </summary>
   public async Task<bool> DeleteProduct(Guid id, [Service] IMediator mediator) {
-    var command = new DeleteProductCommand(id);
+    var command = new DeleteProductCommand { ProductId = id };
     await mediator.Send(command);
 
     return true;

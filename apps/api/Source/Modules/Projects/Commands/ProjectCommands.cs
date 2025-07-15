@@ -22,7 +22,7 @@ public record CreateProjectCommand : IRequest<CreateProjectResult> {
 
   public string? DownloadUrl { get; init; }
 
-  public GameGuild.Common.ProjectType Type { get; init; } = GameGuild.Common.ProjectType.Game;
+  public GameGuild.Common.ProjectType Type { get; init; } = Common.ProjectType.Game;
 
   public Guid CreatedById { get; init; }
 

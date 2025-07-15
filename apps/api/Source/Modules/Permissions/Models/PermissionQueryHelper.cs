@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Permissions.Models;
+﻿namespace GameGuild.Modules.Permissions;
 
 /// <summary>
 /// Helper methods for permission queries without fluent API

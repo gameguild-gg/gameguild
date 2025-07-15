@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Comments;
-using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Projects;
@@ -187,8 +187,7 @@ public class RequireResourcePermissionAttribute<TResource>(PermissionType requir
             case "Program":
               var hasProgramPermission =
                 await permissionService
-                  .HasResourcePermissionAsync<ProgramPermission,
-                    Modules.Programs.Program>(userId, tenantId, resourceId, requiredPermission);
+                  .HasResourcePermissionAsync<ProgramPermission, Program>(userId, tenantId, resourceId, requiredPermission);
 
               if (hasProgramPermission) {
                 return; // Permission granted at resource level

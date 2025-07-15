@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Modules.Permissions;
-using GameGuild.Modules.Permissions.Models;
 using Microsoft.EntityFrameworkCore;
 
 

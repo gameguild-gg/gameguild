@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Interfaces;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Interface for accessing current user context

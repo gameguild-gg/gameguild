@@ -1,6 +1,6 @@
 ﻿using GameGuild.Common;
 using GameGuild.Modules.Comments;
-using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Permissions;
 using Moq;
 
 

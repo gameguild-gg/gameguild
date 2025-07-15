@@ -1,4 +1,4 @@
-using GameGuild.Common.Interfaces;
+using GameGuild.Common;
 using MediatR;
 using IUserContext = GameGuild.Common.IUserContext;
 
@@ -64,8 +64,18 @@ public class PaymentQueries {
     int take = 50,
     CancellationToken cancellationToken = default
   ) {
-    // Product payments are restricted
-    return Enumerable.Empty<Payment>();
+    if (!userContext.IsInRole("Admin")) { return Enumerable.Empty<Payment>(); }
+
+    var query = new GetProductPaymentsQuery {
+      ProductId = productId,
+      Status = status,
+      FromDate = fromDate,
+      ToDate = toDate,
+      Skip = skip,
+      Take = Math.Min(take, 100)
+    };
+
+    return await mediator.Send(query, cancellationToken);
   }
 
   /// <summary>
@@ -105,8 +115,17 @@ public class PaymentQueries {
     Guid? productId = null,
     CancellationToken cancellationToken = default
   ) {
-    // Revenue reports are restricted
-    return null;
+    if (!userContext.IsInRole("Admin")) { return null; }
+
+    var query = new GetRevenueReportQuery {
+      FromDate = fromDate,
+      ToDate = toDate,
+      GroupBy = groupBy,
+      ProductId = productId,
+      TenantId = tenantContext.TenantId
+    };
+
+    return await mediator.Send(query, cancellationToken);
   }
 }
 

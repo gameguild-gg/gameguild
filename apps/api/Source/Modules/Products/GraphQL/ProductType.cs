@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using ProductEntity = GameGuild.Modules.Products.Product;
@@ -229,7 +229,7 @@ public class ProductType : ObjectType<Product> {
 
                   if (userId == null) return false;
 
-                  var productService = context.Service<Services.IProductService>();
+                  var productService = context.Service<IProductService>();
 
                   return await productService.HasUserAccessAsync(userId.Value, product.Id);
                 }
@@ -240,7 +240,7 @@ public class ProductType : ObjectType<Product> {
               .Description("The current active pricing for this product")
               .Resolve(async context => {
                   var product = context.Parent<ProductEntity>();
-                  var productService = context.Service<Services.IProductService>();
+                  var productService = context.Service<IProductService>();
 
                   return await productService.GetCurrentPricingAsync(product.Id);
                 }
@@ -254,7 +254,7 @@ public class ProductType : ObjectType<Product> {
 
                   if (!product.IsBundle) return new List<ProductEntity>();
 
-                  var productService = context.Service<Services.IProductService>();
+                  var productService = context.Service<IProductService>();
 
                   return await productService.GetBundleItemsAsync(product.Id);
                 }

@@ -1,7 +1,4 @@
-﻿using GameGuild.Common.Models;
-
-
-namespace GameGuild.Common;
+﻿namespace GameGuild.Common;
 
 /// <summary>
 /// Base class for paginated queries

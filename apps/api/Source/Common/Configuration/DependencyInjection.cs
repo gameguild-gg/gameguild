@@ -352,7 +352,7 @@ public static class DependencyInjection {
         b => {
           SafeAddGraphQLTypes(
             b,
-            new[] { ("UserQueries", typeof(GameGuild.Modules.Users.UserQueries)), ("UserMutations", typeof(GameGuild.Modules.Users.UserMutations)), ("UserType", typeof(GameGuild.Modules.Users.UserType)) },
+            new[] { ("UserQueries", typeof(Modules.Users.UserQueries)), ("UserMutations", typeof(Modules.Users.UserMutations)), ("UserType", typeof(Modules.Users.UserType)) },
             logger,
             isExtension: new[] { true, true, false }
           );
@@ -362,9 +362,9 @@ public static class DependencyInjection {
           SafeAddGraphQLTypes(
             b,
             new[] {
-              ("UserProfileQueries", typeof(GameGuild.Modules.UserProfiles.UserProfileQueries)),
-              ("UserProfileMutations", typeof(GameGuild.Modules.UserProfiles.UserProfileMutations)),
-              ("UserProfileType", typeof(GameGuild.Modules.UserProfiles.UserProfileType))
+              ("UserProfileQueries", typeof(Modules.UserProfiles.UserProfileQueries)),
+              ("UserProfileMutations", typeof(Modules.UserProfiles.UserProfileMutations)),
+              ("UserProfileType", typeof(Modules.UserProfiles.UserProfileType))
             },
             logger,
             isExtension: new[] { true, true, false }
@@ -374,10 +374,10 @@ public static class DependencyInjection {
         SafeAddGraphQLTypes(
           b,
           new[] {
-            ("TenantQueries", typeof(GameGuild.Modules.Tenants.TenantQueries)),
-            ("TenantMutations", typeof(GameGuild.Modules.Tenants.TenantMutations)),
-            ("TenantType", typeof(GameGuild.Modules.Tenants.TenantType)),
-            ("TenantPermissionType", typeof(GameGuild.Modules.Tenants.TenantPermissionType))
+            ("TenantQueries", typeof(Modules.Tenants.TenantQueries)),
+            ("TenantMutations", typeof(Modules.Tenants.TenantMutations)),
+            ("TenantType", typeof(Modules.Tenants.TenantType)),
+            ("TenantPermissionType", typeof(Modules.Tenants.TenantPermissionType))
           },
           logger,
           isExtension: new[] { true, true, false, false }
@@ -386,7 +386,7 @@ public static class DependencyInjection {
       ["Projects"] = b => {
         SafeAddGraphQLTypes(
           b,
-          new[] { ("ProjectQueries", typeof(GameGuild.Modules.Projects.ProjectQueries)), ("ProjectMutations", typeof(GameGuild.Modules.Projects.ProjectMutations)), ("ProjectType", typeof(GameGuild.Modules.Projects.ProjectType)) },
+          new[] { ("ProjectQueries", typeof(Modules.Projects.ProjectQueries)), ("ProjectMutations", typeof(Modules.Projects.ProjectMutations)), ("ProjectType", typeof(GameGuild.Modules.Projects.ProjectType)) },
           logger,
           isExtension: new[] { true, true, false }
         );
@@ -448,7 +448,7 @@ public static class DependencyInjection {
           SafeAddGraphQLTypes(builder, new[] { ("AuthQueries", typeof(AuthQueries)), ("AuthMutations", typeof(AuthMutations)) }, logger, isExtension: new[] { true, true });
 
           // Try to add CredentialType if it exists
-          SafeAddGraphQLTypes(builder, new[] { ("CredentialType", typeof(GameGuild.Modules.Credentials.CredentialType)) }, logger, isExtension: new[] { false }, isOptional: true);
+          SafeAddGraphQLTypes(builder, new[] { ("CredentialType", typeof(Modules.Credentials.CredentialType)) }, logger, isExtension: new[] { false }, isOptional: true);
         },
         logger
       );
@@ -463,12 +463,12 @@ public static class DependencyInjection {
           SafeAddGraphQLTypes(
             builder,
             new[] {
-              ("TestingLabQueries", typeof(GameGuild.Modules.TestingLab.TestingLabQueries)),
-              ("TestingLabMutations", typeof(GameGuild.Modules.TestingLab.TestingLabMutations)),
-              ("TestingRequestType", typeof(GameGuild.Modules.TestingLab.TestingRequestType)),
-              ("TestingSessionType", typeof(GameGuild.Modules.TestingLab.TestingSessionType)),
-              ("TestingParticipantType", typeof(GameGuild.Modules.TestingLab.TestingParticipantType)),
-              ("TestingLocationType", typeof(GameGuild.Modules.TestingLab.TestingLocationType))
+              ("TestingLabQueries", typeof(Modules.TestingLab.TestingLabQueries)),
+              ("TestingLabMutations", typeof(Modules.TestingLab.TestingLabMutations)),
+              ("TestingRequestType", typeof(Modules.TestingLab.TestingRequestType)),
+              ("TestingSessionType", typeof(Modules.TestingLab.TestingSessionType)),
+              ("TestingParticipantType", typeof(Modules.TestingLab.TestingParticipantType)),
+              ("TestingLocationType", typeof(Modules.TestingLab.TestingLocationType))
             },
             logger,
             isExtension: new[] { true, true, false, false, false, false }

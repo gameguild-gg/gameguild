@@ -3,7 +3,7 @@ using System.Text.Json;
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Projects;
 using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;

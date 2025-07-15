@@ -29,7 +29,7 @@ public record GetAllProgramsQuery(
   bool IncludeArchived = false,
   string? SortBy = "CreatedAt",
   bool SortDescending = true
-) : IRequest<IEnumerable<GameGuild.Modules.Programs.Program>>;
+) : IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get a program by ID
@@ -39,7 +39,7 @@ public record GetProgramByIdQuery(
   bool IncludeContent = false,
   bool IncludeEnrollments = false,
   bool IncludeRatings = false
-) : IRequest<GameGuild.Modules.Programs.Program?>;
+) : IRequest<Program?>;
 
 /// <summary>
 /// Query to get a program by slug
@@ -49,7 +49,7 @@ public record GetProgramBySlugQuery(
   bool IncludeContent = false,
   bool IncludeEnrollments = false,
   bool IncludeRatings = false
-) : IRequest<GameGuild.Modules.Programs.Program?>;
+) : IRequest<Program?>;
 
 /// <summary>
 /// Query to get published program by slug (public access)
@@ -57,7 +57,7 @@ public record GetProgramBySlugQuery(
 public record GetPublishedProgramBySlugQuery(
   string Slug,
   bool IncludeContent = false
-) : IRequest<GameGuild.Modules.Programs.Program?>;
+) : IRequest<Program?>;
 
 // ===== SEARCH AND FILTER QUERIES =====
 
@@ -74,7 +74,7 @@ public record SearchProgramsQuery(
   bool AvailableForEnrollment = false,
   int Skip = 0,
   int Take = 50
-) : IRequest<IEnumerable<GameGuild.Modules.Programs.Program>>;
+) : IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get programs by category
@@ -84,7 +84,7 @@ public record GetProgramsByCategoryQuery(
   int Skip = 0,
   int Take = 50,
   bool OnlyPublished = true
-) : IRequest<IEnumerable<GameGuild.Modules.Programs.Program>>;
+) : IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get programs by difficulty
@@ -94,7 +94,7 @@ public record GetProgramsByDifficultyQuery(
   int Skip = 0,
   int Take = 50,
   bool OnlyPublished = true
-) : IRequest<IEnumerable<GameGuild.Modules.Programs.Program>>;
+) : IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get programs by creator
@@ -104,7 +104,7 @@ public record GetProgramsByCreatorQuery(
   int Skip = 0,
   int Take = 50,
   bool OnlyPublished = false
-) : IRequest<IEnumerable<GameGuild.Modules.Programs.Program>>;
+) : IRequest<IEnumerable<Program>>;
 
 // ===== ENROLLMENT QUERIES =====
 
@@ -116,7 +116,7 @@ public record GetUserEnrolledProgramsQuery(
   int Skip = 0,
   int Take = 50,
   bool OnlyActive = true
-) : IRequest<IEnumerable<GameGuild.Modules.Programs.Program>>;
+) : IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get program enrollments
@@ -190,7 +190,7 @@ public record GetPopularProgramsQuery(
   int Skip = 0,
   int Take = 10,
   int DaysBack = 30
-) : IRequest<IEnumerable<GameGuild.Modules.Programs.Program>>;
+) : IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get recent programs
@@ -199,7 +199,7 @@ public record GetRecentProgramsQuery(
   int Skip = 0,
   int Take = 10,
   int DaysBack = 7
-) : IRequest<IEnumerable<GameGuild.Modules.Programs.Program>>;
+) : IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get featured programs
@@ -207,7 +207,7 @@ public record GetRecentProgramsQuery(
 public record GetFeaturedProgramsQuery(
   int Skip = 0,
   int Take = 10
-) : IRequest<IEnumerable<GameGuild.Modules.Programs.Program>>;
+) : IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get recommended programs for user
@@ -215,7 +215,7 @@ public record GetFeaturedProgramsQuery(
 public record GetRecommendedProgramsQuery(
   string UserId,
   int Take = 10
-) : IRequest<IEnumerable<GameGuild.Modules.Programs.Program>>;
+) : IRequest<IEnumerable<Program>>;
 
 // ===== RATING QUERIES =====
 
@@ -245,7 +245,7 @@ public record GetUserWishlistQuery(
   string UserId,
   int Skip = 0,
   int Take = 50
-) : IRequest<IEnumerable<GameGuild.Modules.Programs.Program>>;
+) : IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to check if program is in user's wishlist

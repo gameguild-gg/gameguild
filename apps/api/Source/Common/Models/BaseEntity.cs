@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
 
-namespace GameGuild.Common.Models;
+namespace GameGuild.Common;
 
 /// <summary>
 /// Base entity with common properties

@@ -1,10 +1,8 @@
+using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Permissions.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using IUserContext = GameGuild.Common.Interfaces.IUserContext;
-using ITenantContext = GameGuild.Common.Interfaces.ITenantContext;
 
 
 namespace GameGuild.Modules.Projects;
@@ -232,10 +230,6 @@ public class ProjectQueryHandlers :
     try {
       // Deleted projects are restricted
       return Enumerable.Empty<Project>();
-                          .Skip(request.Skip)
-                          .Take(request.Take);
-
-      return await query.ToListAsync(cancellationToken);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting deleted projects");

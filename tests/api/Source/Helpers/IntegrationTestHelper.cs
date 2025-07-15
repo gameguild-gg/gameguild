@@ -232,7 +232,7 @@ namespace GameGuild.Tests.Helpers {
       
       // Create test tenant if it doesn't exist
       if (!await context.Tenants.AnyAsync(t => t.Id == actualTenantId)) {
-        var tenant = new GameGuild.Modules.Tenants.Tenant {
+        var tenant = new Tenant {
           Id = actualTenantId,
           Name = $"Test Tenant {actualTenantId}",
           IsActive = true,
@@ -244,7 +244,7 @@ namespace GameGuild.Tests.Helpers {
       
       // Create tenant permission for the user (if it doesn't exist)
       if (!await context.TenantPermissions.AnyAsync(tp => tp.UserId == actualUserId && tp.TenantId == actualTenantId)) {
-        var tenantPermission = new GameGuild.Modules.Tenants.TenantPermission {
+        var tenantPermission = new TenantPermission {
           Id = Guid.NewGuid(),
           UserId = actualUserId,
           TenantId = actualTenantId,

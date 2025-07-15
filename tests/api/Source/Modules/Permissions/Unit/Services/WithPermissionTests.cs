@@ -1,5 +1,5 @@
 using System.Collections.ObjectModel;
-using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Permissions;
 
 
 namespace GameGuild.Tests.Modules.Permissions.Unit.Services;

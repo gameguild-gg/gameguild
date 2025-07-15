@@ -5,7 +5,6 @@ using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions;
-using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Tenants;
 using GameGuild.Tests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;

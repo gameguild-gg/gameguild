@@ -1,5 +1,5 @@
 ﻿using GameGuild.Common.Authorization;
-using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Resources;
 using HotChocolate.Language;
 
