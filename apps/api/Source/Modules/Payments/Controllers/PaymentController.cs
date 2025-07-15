@@ -37,9 +37,13 @@ public class PaymentController(IMediator mediator) : ControllerBase
   /// Process an existing payment
   /// </summary>
   [HttpPost("{id}/process")]
-  public async Task<ActionResult<Payment>> ProcessPayment(Guid id, [FromBody] ProcessPaymentCommand command) 
+  public async Task<ActionResult<Payment>> ProcessPayment(Guid id, [FromBody] ProcessPaymentRequest request) 
   {
-    command.PaymentId = id;
+    var command = new ProcessPaymentCommand { 
+      PaymentId = id, 
+      ProviderTransactionId = request.ProviderTransactionId, 
+      ProviderMetadata = request.ProviderMetadata 
+    };
     var result = await mediator.Send(command);
     if (!result.Success) return BadRequest(result.ErrorMessage);
     return Ok(result.Payment);
@@ -49,12 +53,20 @@ public class PaymentController(IMediator mediator) : ControllerBase
   /// Refund a payment
   /// </summary>
   [HttpPost("{id}/refund")]
-  public async Task<ActionResult<Payment>> RefundPayment(Guid id, [FromBody] RefundPaymentCommand command) 
+  public async Task<ActionResult<PaymentRefund>> RefundPayment(Guid id, [FromBody] RefundPaymentRequest request) 
   {
-    command.PaymentId = id;
+    // TODO: Get the current user ID from authentication context
+    var currentUserId = Guid.Empty; // Placeholder - should get from auth context
+    
+    var command = new RefundPaymentCommand { 
+      PaymentId = id, 
+      RefundAmount = request.RefundAmount, 
+      Reason = request.Reason ?? "Refund requested", 
+      RefundedBy = currentUserId 
+    };
     var result = await mediator.Send(command);
     if (!result.Success) return BadRequest(result.ErrorMessage);
-    return Ok(result.Payment);
+    return Ok(result.Refund); // Fixed: use Refund property instead of Payment
   }
 
   /// <summary>

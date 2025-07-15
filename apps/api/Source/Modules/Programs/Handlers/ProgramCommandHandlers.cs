@@ -1,6 +1,7 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
+using GameGuild.Modules.Programs;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -54,19 +55,17 @@ public class ProgramCommandHandlers(
       Id = Guid.NewGuid(),
       Title = request.Title,
       Description = request.Description,
-      Summary = request.Summary,
       Slug = slug,
       Thumbnail = request.Thumbnail,
       VideoShowcaseUrl = request.VideoShowcaseUrl,
       EstimatedHours = request.EstimatedHours,
       Category = request.Category,
       Difficulty = request.Difficulty,
-      EnrollmentStatus = (EnrollmentStatus)request.EnrollmentStatus,
+      EnrollmentStatus = (Modules.Programs.EnrollmentStatus)request.EnrollmentStatus,
       MaxEnrollments = request.MaxEnrollments,
       EnrollmentDeadline = request.EnrollmentDeadline,
       Status = ContentStatus.Draft,
       Visibility = AccessLevel.Private,
-      CreatorId = request.CreatorId,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };
@@ -95,13 +94,12 @@ public class ProgramCommandHandlers(
     }
 
     if (request.Description != null) program.Description = request.Description;
-    if (request.Summary != null) program.Summary = request.Summary;
     if (request.Thumbnail != null) program.Thumbnail = request.Thumbnail;
     if (request.VideoShowcaseUrl != null) program.VideoShowcaseUrl = request.VideoShowcaseUrl;
     if (request.EstimatedHours.HasValue) program.EstimatedHours = request.EstimatedHours;
     if (request.Category.HasValue) program.Category = request.Category.Value;
     if (request.Difficulty.HasValue) program.Difficulty = request.Difficulty.Value;
-    if (request.EnrollmentStatus.HasValue) program.EnrollmentStatus = request.EnrollmentStatus.Value;
+    if (request.EnrollmentStatus.HasValue) program.EnrollmentStatus = (Modules.Programs.EnrollmentStatus)request.EnrollmentStatus.Value;
     if (request.MaxEnrollments.HasValue) program.MaxEnrollments = request.MaxEnrollments;
     if (request.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = request.EnrollmentDeadline;
 
@@ -147,7 +145,6 @@ public class ProgramCommandHandlers(
 
     program.Status = ContentStatus.Published;
     program.Visibility = AccessLevel.Public;
-    program.PublishedAt = DateTime.UtcNow;
     program.UpdatedAt = DateTime.UtcNow;
 
     await context.SaveChangesAsync(cancellationToken);
@@ -230,15 +227,15 @@ public class ProgramCommandHandlers(
 
     // Check if already enrolled
     var existingEnrollment = await context.ProgramUsers
-                                          .Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == request.UserId)
+                                          .Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == Guid.Parse(request.UserId))
                                           .FirstOrDefaultAsync(cancellationToken);
 
     if (existingEnrollment != null && existingEnrollment.IsActive) { throw new InvalidOperationException("User is already enrolled in this program"); }
 
     var enrollment = new ProgramUser {
       ProgramId = request.ProgramId,
-      UserId = request.UserId,
-      EnrollmentDate = request.EnrollmentDate ?? DateTime.UtcNow,
+      UserId = Guid.Parse(request.UserId),
+      JoinedAt = request.EnrollmentDate ?? DateTime.UtcNow,
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
@@ -256,7 +253,7 @@ public class ProgramCommandHandlers(
     logger.LogInformation("Unenrolling user {UserId} from program {ProgramId}", request.UserId, request.ProgramId);
 
     var enrollment = await context.ProgramUsers
-                                  .Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == request.UserId && pu.IsActive)
+                                  .Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == Guid.Parse(request.UserId) && pu.IsActive)
                                   .FirstOrDefaultAsync(cancellationToken);
 
     if (enrollment == null) { return false; }
@@ -280,7 +277,7 @@ public class ProgramCommandHandlers(
 
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.ProgramId} not found"); }
 
-    program.EnrollmentStatus = request.Status;
+    program.EnrollmentStatus = (EnrollmentStatus)request.Status;
     if (request.MaxEnrollments.HasValue) program.MaxEnrollments = request.MaxEnrollments;
     if (request.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = request.EnrollmentDeadline;
     program.UpdatedAt = DateTime.UtcNow;
@@ -299,10 +296,10 @@ public class ProgramCommandHandlers(
 
     var programContent = new ProgramContent {
       ProgramId = request.ProgramId,
-      ContentId = request.ContentId,
-      Order = request.Order,
+      // ContentId = request.ContentId,  // This property doesn't exist in the current model
+      SortOrder = request.Order,
       IsRequired = request.IsRequired,
-      PointsReward = request.PointsReward,
+      // PointsReward = request.PointsReward,  // This property doesn't exist in the current model
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow
     };
@@ -319,7 +316,7 @@ public class ProgramCommandHandlers(
     logger.LogInformation("Removing content {ContentId} from program {ProgramId}", request.ContentId, request.ProgramId);
 
     var programContent = await context.ProgramContents
-                                      .Where(pc => pc.ProgramId == request.ProgramId && pc.ContentId == request.ContentId)
+                                      .Where(pc => pc.ProgramId == request.ProgramId && pc.Id == request.ContentId)
                                       .FirstOrDefaultAsync(cancellationToken);
 
     if (programContent == null) { return false; }
@@ -336,12 +333,12 @@ public class ProgramCommandHandlers(
     logger.LogInformation("Reordering content for program {ProgramId}", request.ProgramId);
 
     var programContents = await context.ProgramContents
-                                       .Where(pc => pc.ProgramId == request.ProgramId && request.ContentOrders.Keys.Contains(pc.ContentId))
+                                       .Where(pc => pc.ProgramId == request.ProgramId && request.ContentOrders.Keys.Contains(pc.Id))
                                        .ToListAsync(cancellationToken);
 
     foreach (var programContent in programContents) {
-      if (request.ContentOrders.TryGetValue(programContent.ContentId, out var newOrder)) {
-        programContent.Order = newOrder;
+      if (request.ContentOrders.TryGetValue(programContent.Id, out var newOrder)) {
+        programContent.SortOrder = newOrder;
         programContent.UpdatedAt = DateTime.UtcNow;
       }
     }
@@ -424,12 +421,12 @@ public class ProgramCommandHandlers(
     logger.LogInformation("Adding program {ProgramId} to wishlist for user {UserId}", request.ProgramId, request.UserId);
 
     var existingWishlist = await context.ProgramWishlists
-                                        .Where(pw => pw.ProgramId == request.ProgramId && pw.UserId == request.UserId)
+                                        .Where(pw => pw.ProgramId == request.ProgramId && pw.UserId == Guid.Parse(request.UserId))
                                         .FirstOrDefaultAsync(cancellationToken);
 
     if (existingWishlist != null) { throw new InvalidOperationException("Program is already in user's wishlist"); }
 
-    var wishlist = new ProgramWishlist { ProgramId = request.ProgramId, UserId = request.UserId, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+    var wishlist = new ProgramWishlist { ProgramId = request.ProgramId, UserId = Guid.Parse(request.UserId), CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
 
     context.ProgramWishlists.Add(wishlist);
     await context.SaveChangesAsync(cancellationToken);
@@ -443,7 +440,7 @@ public class ProgramCommandHandlers(
     logger.LogInformation("Removing program {ProgramId} from wishlist for user {UserId}", request.ProgramId, request.UserId);
 
     var wishlist = await context.ProgramWishlists
-                                .Where(pw => pw.ProgramId == request.ProgramId && pw.UserId == request.UserId)
+                                .Where(pw => pw.ProgramId == request.ProgramId && pw.UserId == Guid.Parse(request.UserId))
                                 .FirstOrDefaultAsync(cancellationToken);
 
     if (wishlist == null) { return false; }
