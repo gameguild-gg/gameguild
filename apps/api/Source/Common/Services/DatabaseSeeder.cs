@@ -51,6 +51,7 @@ public class DatabaseSeeder(
 
     if (existingPermissions.Any()) {
       logger.LogInformation("Global default permissions already exist, skipping seeding");
+
       return;
     }
 
@@ -214,8 +215,10 @@ public class DatabaseSeeder(
 
     // Check if programs already exist
     var existingPrograms = await context.Set<Modules.Programs.Program>().AnyAsync();
+
     if (existingPrograms) {
       logger.LogInformation("Programs already exist, skipping seeding");
+
       return;
     }
 
@@ -668,8 +671,8 @@ public class DatabaseSeeder(
 
     // Check if track programs already exist (using slug pattern to identify tracks)
     var existingTracks = await context.Set<Modules.Programs.Program>()
-      .Where(p => p.Slug.Contains("-track-") || p.Title.Contains("Track"))
-      .AnyAsync();
+                                      .Where(p => p.Slug.Contains("-track-") || p.Title.Contains("Track"))
+                                      .AnyAsync();
 
     logger.LogInformation("Found {ExistingTracksCount} existing tracks", existingTracks ? "some" : "no");
 
@@ -681,13 +684,14 @@ public class DatabaseSeeder(
 
     // Get existing course programs to link to tracks
     var coursePrograms = await context.Set<Modules.Programs.Program>()
-      .Where(p => !p.Slug.Contains("-track-") && !p.Title.Contains("Track"))
-      .ToListAsync();
+                                      .Where(p => !p.Slug.Contains("-track-") && !p.Title.Contains("Track"))
+                                      .ToListAsync();
 
     logger.LogInformation("Found {CourseCount} course programs for track creation", coursePrograms.Count);
 
     if (coursePrograms.Count == 0) {
       logger.LogWarning("No course programs found. Make sure to seed courses before tracks.");
+
       return;
     }
 
@@ -712,27 +716,30 @@ public class DatabaseSeeder(
 
     // Add related courses to beginner track as ProgramContent
     var beginnerCourses = coursePrograms
-      .Where(c => c.Difficulty == ProgramDifficulty.Beginner &&
-                  (c.Category == ProgramCategory.Programming ||
-                   c.Category == ProgramCategory.GameDevelopment ||
-                   c.Category == ProgramCategory.Design))
-      .Take(5)
-      .ToList();
+                          .Where(c => c.Difficulty == ProgramDifficulty.Beginner &&
+                                      (c.Category == ProgramCategory.Programming ||
+                                       c.Category == ProgramCategory.GameDevelopment ||
+                                       c.Category == ProgramCategory.Design)
+                          )
+                          .Take(5)
+                          .ToList();
 
     for (int i = 0; i < beginnerCourses.Count; i++) {
-      trackContentList.Add(new ProgramContent {
-        Id = Guid.NewGuid(),
-        ProgramId = beginnerTrack.Id,
-        Title = beginnerCourses[i].Title,
-        Description = beginnerCourses[i].Description ?? "",
-        Type = ProgramContentType.Page, // Using Page type to reference other programs
-        Body = $"{{\"programId\": \"{beginnerCourses[i].Id}\", \"type\": \"program_reference\"}}",
-        SortOrder = i + 1,
-        IsRequired = true,
-        Visibility = Visibility.Published,
-        CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow,
-      });
+      trackContentList.Add(
+        new ProgramContent {
+          Id = Guid.NewGuid(),
+          ProgramId = beginnerTrack.Id,
+          Title = beginnerCourses[i].Title,
+          Description = beginnerCourses[i].Description ?? "",
+          Type = ProgramContentType.Page, // Using Page type to reference other programs
+          Body = $"{{\"programId\": \"{beginnerCourses[i].Id}\", \"type\": \"program_reference\"}}",
+          SortOrder = i + 1,
+          IsRequired = true,
+          Visibility = Visibility.Published,
+          CreatedAt = DateTime.UtcNow,
+          UpdatedAt = DateTime.UtcNow,
+        }
+      );
     }
 
     // Intermediate Track - 2D Game Development
@@ -753,29 +760,32 @@ public class DatabaseSeeder(
 
     // Add related courses to intermediate track
     var intermediateCourses = coursePrograms
-      .Where(c => c.Difficulty == ProgramDifficulty.Intermediate &&
-                  (c.Category == ProgramCategory.Programming ||
-                   c.Category == ProgramCategory.GameDevelopment ||
-                   c.Category == ProgramCategory.CreativeArts ||
-                   c.Category == ProgramCategory.Design ||
-                   c.Category == ProgramCategory.MobileDevelopment))
-      .Take(6)
-      .ToList();
+                              .Where(c => c.Difficulty == ProgramDifficulty.Intermediate &&
+                                          (c.Category == ProgramCategory.Programming ||
+                                           c.Category == ProgramCategory.GameDevelopment ||
+                                           c.Category == ProgramCategory.CreativeArts ||
+                                           c.Category == ProgramCategory.Design ||
+                                           c.Category == ProgramCategory.MobileDevelopment)
+                              )
+                              .Take(6)
+                              .ToList();
 
     for (int i = 0; i < intermediateCourses.Count; i++) {
-      trackContentList.Add(new ProgramContent {
-        Id = Guid.NewGuid(),
-        ProgramId = intermediateTrack.Id,
-        Title = intermediateCourses[i].Title,
-        Description = intermediateCourses[i].Description ?? "",
-        Type = ProgramContentType.Page,
-        Body = $"{{\"programId\": \"{intermediateCourses[i].Id}\", \"type\": \"program_reference\"}}",
-        SortOrder = i + 1,
-        IsRequired = i < 4, // First 4 courses are required
-        Visibility = Visibility.Published,
-        CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow,
-      });
+      trackContentList.Add(
+        new ProgramContent {
+          Id = Guid.NewGuid(),
+          ProgramId = intermediateTrack.Id,
+          Title = intermediateCourses[i].Title,
+          Description = intermediateCourses[i].Description ?? "",
+          Type = ProgramContentType.Page,
+          Body = $"{{\"programId\": \"{intermediateCourses[i].Id}\", \"type\": \"program_reference\"}}",
+          SortOrder = i + 1,
+          IsRequired = i < 4, // First 4 courses are required
+          Visibility = Visibility.Published,
+          CreatedAt = DateTime.UtcNow,
+          UpdatedAt = DateTime.UtcNow,
+        }
+      );
     }
 
     // Advanced Track - Multiplayer Game Development
@@ -796,26 +806,29 @@ public class DatabaseSeeder(
 
     // Add related courses to advanced track
     var advancedCourses = coursePrograms
-      .Where(c => c.Difficulty == ProgramDifficulty.Advanced &&
-                  (c.Category == ProgramCategory.GameDevelopment ||
-                   c.Category == ProgramCategory.Programming))
-      .Take(7)
-      .ToList();
+                          .Where(c => c.Difficulty == ProgramDifficulty.Advanced &&
+                                      (c.Category == ProgramCategory.GameDevelopment ||
+                                       c.Category == ProgramCategory.Programming)
+                          )
+                          .Take(7)
+                          .ToList();
 
     for (int i = 0; i < advancedCourses.Count; i++) {
-      trackContentList.Add(new ProgramContent {
-        Id = Guid.NewGuid(),
-        ProgramId = advancedTrack.Id,
-        Title = advancedCourses[i].Title,
-        Description = advancedCourses[i].Description ?? "",
-        Type = ProgramContentType.Page,
-        Body = $"{{\"programId\": \"{advancedCourses[i].Id}\", \"type\": \"program_reference\"}}",
-        SortOrder = i + 1,
-        IsRequired = i < 5, // First 5 courses are required
-        Visibility = Visibility.Published,
-        CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow,
-      });
+      trackContentList.Add(
+        new ProgramContent {
+          Id = Guid.NewGuid(),
+          ProgramId = advancedTrack.Id,
+          Title = advancedCourses[i].Title,
+          Description = advancedCourses[i].Description ?? "",
+          Type = ProgramContentType.Page,
+          Body = $"{{\"programId\": \"{advancedCourses[i].Id}\", \"type\": \"program_reference\"}}",
+          SortOrder = i + 1,
+          IsRequired = i < 5, // First 5 courses are required
+          Visibility = Visibility.Published,
+          CreatedAt = DateTime.UtcNow,
+          UpdatedAt = DateTime.UtcNow,
+        }
+      );
     }
 
     // AI Specialization Track
@@ -836,27 +849,33 @@ public class DatabaseSeeder(
 
     // Add AI-related courses
     var aiCourses = coursePrograms
-      .Where(c => c.Category == ProgramCategory.AI ||
-                  (c.Category == ProgramCategory.Programming &&
-                   (c.Title.Contains("AI") || c.Title.Contains("Algorithm") || c.Title.Contains("Procedural") ||
-                    c.Title.Contains("Physics") || c.Difficulty == ProgramDifficulty.Advanced)))
-      .Take(5)
-      .ToList();
+                    .Where(c => c.Category == ProgramCategory.AI ||
+                                (c.Category == ProgramCategory.Programming &&
+                                 (c.Title.Contains("AI") ||
+                                  c.Title.Contains("Algorithm") ||
+                                  c.Title.Contains("Procedural") ||
+                                  c.Title.Contains("Physics") ||
+                                  c.Difficulty == ProgramDifficulty.Advanced))
+                    )
+                    .Take(5)
+                    .ToList();
 
     for (int i = 0; i < aiCourses.Count; i++) {
-      trackContentList.Add(new ProgramContent {
-        Id = Guid.NewGuid(),
-        ProgramId = aiTrack.Id,
-        Title = aiCourses[i].Title,
-        Description = aiCourses[i].Description ?? "",
-        Type = ProgramContentType.Page,
-        Body = $"{{\"programId\": \"{aiCourses[i].Id}\", \"type\": \"program_reference\"}}",
-        SortOrder = i + 1,
-        IsRequired = true,
-        Visibility = Visibility.Published,
-        CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow,
-      });
+      trackContentList.Add(
+        new ProgramContent {
+          Id = Guid.NewGuid(),
+          ProgramId = aiTrack.Id,
+          Title = aiCourses[i].Title,
+          Description = aiCourses[i].Description ?? "",
+          Type = ProgramContentType.Page,
+          Body = $"{{\"programId\": \"{aiCourses[i].Id}\", \"type\": \"program_reference\"}}",
+          SortOrder = i + 1,
+          IsRequired = true,
+          Visibility = Visibility.Published,
+          CreatedAt = DateTime.UtcNow,
+          UpdatedAt = DateTime.UtcNow,
+        }
+      );
     }
 
     // Creative Arts Track
@@ -877,24 +896,26 @@ public class DatabaseSeeder(
 
     // Add creative arts courses
     var creativeCourses = coursePrograms
-      .Where(c => c.Category == ProgramCategory.CreativeArts)
-      .Take(6)
-      .ToList();
+                          .Where(c => c.Category == ProgramCategory.CreativeArts)
+                          .Take(6)
+                          .ToList();
 
     for (int i = 0; i < creativeCourses.Count; i++) {
-      trackContentList.Add(new ProgramContent {
-        Id = Guid.NewGuid(),
-        ProgramId = creativeTrack.Id,
-        Title = creativeCourses[i].Title,
-        Description = creativeCourses[i].Description ?? "",
-        Type = ProgramContentType.Page,
-        Body = $"{{\"programId\": \"{creativeCourses[i].Id}\", \"type\": \"program_reference\"}}",
-        SortOrder = i + 1,
-        IsRequired = i < 4, // First 4 courses are required
-        Visibility = Visibility.Published,
-        CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow,
-      });
+      trackContentList.Add(
+        new ProgramContent {
+          Id = Guid.NewGuid(),
+          ProgramId = creativeTrack.Id,
+          Title = creativeCourses[i].Title,
+          Description = creativeCourses[i].Description ?? "",
+          Type = ProgramContentType.Page,
+          Body = $"{{\"programId\": \"{creativeCourses[i].Id}\", \"type\": \"program_reference\"}}",
+          SortOrder = i + 1,
+          IsRequired = i < 4, // First 4 courses are required
+          Visibility = Visibility.Published,
+          CreatedAt = DateTime.UtcNow,
+          UpdatedAt = DateTime.UtcNow,
+        }
+      );
     }
 
     // Business Track
@@ -915,50 +936,52 @@ public class DatabaseSeeder(
 
     // Add business courses
     var businessCourses = coursePrograms
-      .Where(c => c.Category == ProgramCategory.Business ||
-                  c.Category == ProgramCategory.Marketing ||
-                  c.Category == ProgramCategory.ProjectManagement ||
-                  (c.Category == ProgramCategory.PersonalDevelopment))
-      .Take(4)
-      .ToList();
+                          .Where(c => c.Category == ProgramCategory.Business ||
+                                      c.Category == ProgramCategory.Marketing ||
+                                      c.Category == ProgramCategory.ProjectManagement ||
+                                      (c.Category == ProgramCategory.PersonalDevelopment)
+                          )
+                          .Take(4)
+                          .ToList();
 
     for (int i = 0; i < businessCourses.Count; i++) {
-      trackContentList.Add(new ProgramContent {
-        Id = Guid.NewGuid(),
-        ProgramId = businessTrack.Id,
-        Title = businessCourses[i].Title,
-        Description = businessCourses[i].Description ?? "",
-        Type = ProgramContentType.Page,
-        Body = $"{{\"programId\": \"{businessCourses[i].Id}\", \"type\": \"program_reference\"}}",
-        SortOrder = i + 1,
-        IsRequired = true,
-        Visibility = Visibility.Published,
-        CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow,
-      });
+      trackContentList.Add(
+        new ProgramContent {
+          Id = Guid.NewGuid(),
+          ProgramId = businessTrack.Id,
+          Title = businessCourses[i].Title,
+          Description = businessCourses[i].Description ?? "",
+          Type = ProgramContentType.Page,
+          Body = $"{{\"programId\": \"{businessCourses[i].Id}\", \"type\": \"program_reference\"}}",
+          SortOrder = i + 1,
+          IsRequired = true,
+          Visibility = Visibility.Published,
+          CreatedAt = DateTime.UtcNow,
+          UpdatedAt = DateTime.UtcNow,
+        }
+      );
     }
 
     // Add all tracks to the list
     trackPrograms.AddRange(
-    [
-      beginnerTrack,
-      intermediateTrack,
-      advancedTrack,
-      aiTrack,
-      creativeTrack,
-      businessTrack,
-    ]
+      [beginnerTrack, intermediateTrack, advancedTrack, aiTrack, creativeTrack, businessTrack,]
     );
 
     // Save track programs and their content
-    logger.LogInformation("Saving {TrackCount} tracks and {ContentCount} track content items to database",
-      trackPrograms.Count, trackContentList.Count);
+    logger.LogInformation(
+      "Saving {TrackCount} tracks and {ContentCount} track content items to database",
+      trackPrograms.Count,
+      trackContentList.Count
+    );
 
     await context.Set<Modules.Programs.Program>().AddRangeAsync(trackPrograms);
     await context.Set<ProgramContent>().AddRangeAsync(trackContentList);
 
-    logger.LogInformation("Sample tracks seeded successfully with {TrackCount} tracks and {ContentCount} track content items", 
-      trackPrograms.Count, trackContentList.Count);
+    logger.LogInformation(
+      "Sample tracks seeded successfully with {TrackCount} tracks and {ContentCount} track content items",
+      trackPrograms.Count,
+      trackContentList.Count
+    );
   }
 
   /// <summary>

@@ -151,9 +151,6 @@ public class ProductQueryHandlers :
   /// Apply access control based on user context and product access levels
   /// </summary>
   private IQueryable<Product> ApplyAccessControl(IQueryable<Product> query) {
-    // Admins can see everything
-    if (_userContext.IsInRole("Admin")) { return query; }
-
     // Anonymous users can only see public products that are published
     if (!_userContext.IsAuthenticated) {
       return query.Where(p =>
@@ -168,11 +165,9 @@ public class ProductQueryHandlers :
                                         p.Visibility == AccessLevel.Public
     );
 
-    // Content creators can see their own products regardless of status
-    if (_userContext.IsInRole("ContentCreator")) {
-      var userProducts = query.Where(p => p.CreatorId == _userContext.UserId);
-      accessibleQuery = accessibleQuery.Union(userProducts);
-    }
+    // Users can see their own products regardless of status
+    var userProducts = query.Where(p => p.CreatorId == _userContext.UserId);
+    accessibleQuery = accessibleQuery.Union(userProducts);
 
     return accessibleQuery;
   }

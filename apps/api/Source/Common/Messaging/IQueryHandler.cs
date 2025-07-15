@@ -7,6 +7,4 @@ namespace GameGuild.Common;
 /// Interface for query handlers
 /// </summary>
 public interface IQueryHandler<in TQuery, TResponse> : IRequestHandler<TQuery, TResponse>
-  where TQuery : IQuery<TResponse>
-{
-}
+  where TQuery : IQuery<TResponse> { }

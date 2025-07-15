@@ -38,9 +38,6 @@ public class ProductCommandHandlers :
       // Validate user permissions
       if (!_userContext.IsAuthenticated || _userContext.UserId == null) { return new CreateProductResult { Success = false, ErrorMessage = "User must be authenticated" }; }
 
-      // Check if user can create products
-      if (!_userContext.IsInRole("Admin") && !_userContext.IsInRole("ContentCreator")) { return new CreateProductResult { Success = false, ErrorMessage = "User does not have permission to create products" }; }
-
       // Create the product
       var product = new Product {
         Id = Guid.NewGuid(),
