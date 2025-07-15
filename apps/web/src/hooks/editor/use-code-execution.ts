@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useCallback } from "react"
-import type { CodeFile, ProgrammingLanguage } from "../components/ui/source-code/types"
+import type { CodeFile, ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
 import { getExecutor } from "./executors/executor-factory"
 import type { ExecutionContext } from "./executors/types"
 import { getTestRunner } from "./test-runners"
@@ -111,9 +111,9 @@ export function useCodeExecution(options: UseCodeExecutionOptions) {
     setCurrentTestIndex(-1)
 
     // Reset callbacks
-    window.promptCallback = null
-    window.confirmCallback = null
-    window.alertCallback = null
+    window.promptCallback = () => {}
+    window.confirmCallback = () => {}
+    window.alertCallback = () => {}
   }, [addOutput, selectedLanguage])
 
   // Execute code
@@ -131,9 +131,9 @@ export function useCodeExecution(options: UseCodeExecutionOptions) {
       }
 
       // Reset global callbacks
-      window.promptCallback = null
-      window.confirmCallback = null
-      window.alertCallback = null
+      window.promptCallback = () => {}
+      window.confirmCallback = () => {}
+      window.alertCallback = () => {}
 
       // Get the appropriate executor for the selected language
       const executor = getExecutor(selectedLanguage)
