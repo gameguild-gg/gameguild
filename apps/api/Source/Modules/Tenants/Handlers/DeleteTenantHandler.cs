@@ -12,12 +12,9 @@ public class DeleteTenantHandler(
   ApplicationDbContext context,
   ILogger<DeleteTenantHandler> logger,
   IDomainEventPublisher eventPublisher
-) : ICommandHandler<DeleteTenantCommand, Common.Result<bool>>
-{
-  public async Task<Common.Result<bool>> Handle(DeleteTenantCommand request, CancellationToken cancellationToken)
-  {
-    try
-    {
+) : ICommandHandler<DeleteTenantCommand, Common.Result<bool>> {
+  public async Task<Common.Result<bool>> Handle(DeleteTenantCommand request, CancellationToken cancellationToken) {
+    try {
       var tenant = await context.Resources.OfType<Tenant>()
                                 .FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
 
@@ -39,9 +36,9 @@ public class DeleteTenantHandler(
 
       return Result.Success(true);
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       logger.LogError(ex, "Error deleting tenant {TenantId}", request.Id);
+
       return Result.Failure<bool>(
         Common.Error.Failure("Tenant.DeleteFailed", "Failed to delete tenant")
       );

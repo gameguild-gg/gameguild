@@ -21,9 +21,7 @@ public class TenantMutations {
     var command = new CreateTenantCommand(input.Name, input.Description, input.IsActive, null);
     var result = await createTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) {
-      throw new GraphQLException("Failed to create tenant");
-    }
+    if (!result.IsSuccess) { throw new GraphQLException("Failed to create tenant"); }
 
     return result.Value;
   }

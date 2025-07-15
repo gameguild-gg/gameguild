@@ -9,7 +9,7 @@ public class ProgramRatingConfiguration : IEntityTypeConfiguration<ProgramRating
     // Configure the relationship with Program explicitly without using navigation properties
     // to avoid conflicts with the Programs module's own ProgramRating relationship
     builder.HasOne(pr => pr.Program)
-           .WithMany()  // No inverse navigation property to avoid type conflicts
+           .WithMany() // No inverse navigation property to avoid type conflicts
            .HasForeignKey(pr => pr.ProgramId)
            .OnDelete(DeleteBehavior.Cascade);
 

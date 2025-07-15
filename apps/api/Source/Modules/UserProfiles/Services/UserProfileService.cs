@@ -7,29 +7,30 @@ namespace GameGuild.Modules.UserProfiles;
 public class UserProfileService(ApplicationDbContext context) : IUserProfileService {
   public async Task<IEnumerable<UserProfile>> GetAllUserProfilesAsync() {
     return await context.UserProfiles
-                       .Where(up => up.DeletedAt == null)
-                       .ToListAsync();
+                        .Where(up => up.DeletedAt == null)
+                        .ToListAsync();
   }
 
   public async Task<UserProfile?> GetUserProfileByIdAsync(Guid id) {
     return await context.UserProfiles
-                       .FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt == null);
+                        .FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt == null);
   }
 
   public async Task<UserProfile?> GetUserProfileByUserIdAsync(Guid userId) {
     return await context.UserProfiles
-                       .FirstOrDefaultAsync(up => up.Id == userId && up.DeletedAt == null);
+                        .FirstOrDefaultAsync(up => up.Id == userId && up.DeletedAt == null);
   }
 
   public async Task<UserProfile> CreateUserProfileAsync(UserProfile userProfile) {
     context.UserProfiles.Add(userProfile);
     await context.SaveChangesAsync();
+
     return userProfile;
   }
 
   public async Task<UserProfile?> UpdateUserProfileAsync(Guid id, UserProfile userProfile) {
     var existingProfile = await context.UserProfiles
-                                      .FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt == null);
+                                       .FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt == null);
 
     if (existingProfile == null) return null;
 
@@ -40,47 +41,51 @@ public class UserProfileService(ApplicationDbContext context) : IUserProfileServ
     existingProfile.Description = userProfile.Description;
 
     await context.SaveChangesAsync();
+
     return existingProfile;
   }
 
   public async Task<bool> DeleteUserProfileAsync(Guid id) {
     var userProfile = await context.UserProfiles
-                                  .FirstOrDefaultAsync(up => up.Id == id);
+                                   .FirstOrDefaultAsync(up => up.Id == id);
 
     if (userProfile == null) return false;
 
     context.UserProfiles.Remove(userProfile);
     await context.SaveChangesAsync();
+
     return true;
   }
 
   public async Task<bool> SoftDeleteUserProfileAsync(Guid id) {
     var userProfile = await context.UserProfiles
-                                  .FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt == null);
+                                   .FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt == null);
 
     if (userProfile == null) return false;
 
     userProfile.SoftDelete();
     await context.SaveChangesAsync();
+
     return true;
   }
 
   public async Task<bool> RestoreUserProfileAsync(Guid id) {
     var userProfile = await context.UserProfiles
-                                  .IgnoreQueryFilters()
-                                  .FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt != null);
+                                   .IgnoreQueryFilters()
+                                   .FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt != null);
 
     if (userProfile == null) return false;
 
     userProfile.Restore();
     await context.SaveChangesAsync();
+
     return true;
   }
 
   public async Task<IEnumerable<UserProfile>> GetDeletedUserProfilesAsync() {
     return await context.UserProfiles
-                       .IgnoreQueryFilters()
-                       .Where(up => up.DeletedAt != null)
-                       .ToListAsync();
+                        .IgnoreQueryFilters()
+                        .Where(up => up.DeletedAt != null)
+                        .ToListAsync();
   }
 }

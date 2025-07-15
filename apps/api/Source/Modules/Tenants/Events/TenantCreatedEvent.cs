@@ -8,13 +8,13 @@ namespace GameGuild.Modules.Tenants;
 /// </summary>
 public class TenantCreatedEvent(Guid tenantId, string name, string? description, bool isActive, string slug)
   : DomainEventBase(tenantId, nameof(Tenant)) {
-    public Guid TenantId { get; init; } = tenantId;
+  public Guid TenantId { get; init; } = tenantId;
 
-    public string Name { get; init; } = name;
+  public string Name { get; init; } = name;
 
-    public string? Description { get; init; } = description;
+  public string? Description { get; init; } = description;
 
-    public bool IsActive { get; init; } = isActive;
+  public bool IsActive { get; init; } = isActive;
 
-    public string Slug { get; init; } = slug;
+  public string Slug { get; init; } = slug;
 }

@@ -1,6 +1,7 @@
 using GameGuild.Modules.UserProfiles;
 using MediatR;
 
+
 namespace GameGuild.Modules.Users;
 
 public class UserType : ObjectType<User> {
@@ -29,9 +30,9 @@ public class UserType : ObjectType<User> {
 
     // Profile relationship
     descriptor.Field("profile")
-             .Type<UserProfileType>()
-             .Description("The user's profile information.")
-             .ResolveWith<UserResolvers>(r => r.GetProfileAsync(default!, default!));
+              .Type<UserProfileType>()
+              .Description("The user's profile information.")
+              .ResolveWith<UserResolvers>(r => r.GetProfileAsync(default!, default!));
   }
 }
 
@@ -40,13 +41,10 @@ public class UserResolvers {
     [Parent] User user,
     [Service] IMediator mediator
   ) {
-    var query = new GetUserProfileByUserIdQuery { 
-      UserId = user.Id, 
-      IncludeDeleted = false 
-    };
+    var query = new GetUserProfileByUserIdQuery { UserId = user.Id, IncludeDeleted = false };
 
     var result = await mediator.Send(query);
-    
+
     return result.IsSuccess ? result.Value : null;
   }
 }

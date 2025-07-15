@@ -27,21 +27,21 @@ public class UserProfileType : ObjectType<UserProfile> {
 
     // Add bio alias for description to match test expectations
     descriptor.Field("bio")
-             .Resolve(ctx => ctx.Parent<UserProfile>().Description)
-             .Type<StringType>()
-             .Description("User's biography (alias for description)");
+              .Resolve(ctx => ctx.Parent<UserProfile>().Description)
+              .Type<StringType>()
+              .Description("User's biography (alias for description)");
 
     // Add avatarUrl field (placeholder for now since it's not in the entity)
     descriptor.Field("avatarUrl")
-             .Resolve(ctx => "https://example.com/default-avatar.jpg") // Default placeholder
-             .Type<StringType>()
-             .Description("User's avatar URL");
+              .Resolve(ctx => "https://example.com/default-avatar.jpg") // Default placeholder
+              .Type<StringType>()
+              .Description("User's avatar URL");
 
     // Add location field (placeholder for now since it's not in the entity)
     descriptor.Field("location")
-             .Resolve(ctx => "New York") // Default placeholder for tests
-             .Type<StringType>()
-             .Description("User's location");
+              .Resolve(ctx => "New York") // Default placeholder for tests
+              .Type<StringType>()
+              .Description("User's location");
 
     descriptor.Field(f => f.Tenant).Description("The tenant this profile belongs to (null for global profiles)");
 

@@ -3,8 +3,7 @@
 /// <summary>
 /// Available sort fields for tenant queries
 /// </summary>
-public enum TenantSortField
-{
+public enum TenantSortField {
   Name,
   Description,
   IsActive,

@@ -12,12 +12,9 @@ public class DeactivateTenantHandler(
   ApplicationDbContext context,
   ILogger<DeactivateTenantHandler> logger,
   IDomainEventPublisher eventPublisher
-) : ICommandHandler<DeactivateTenantCommand, Common.Result<bool>>
-{
-  public async Task<Common.Result<bool>> Handle(DeactivateTenantCommand request, CancellationToken cancellationToken)
-  {
-    try
-    {
+) : ICommandHandler<DeactivateTenantCommand, Common.Result<bool>> {
+  public async Task<Common.Result<bool>> Handle(DeactivateTenantCommand request, CancellationToken cancellationToken) {
+    try {
       var tenant = await context.Resources.OfType<Tenant>()
                                 .FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
 
@@ -42,9 +39,9 @@ public class DeactivateTenantHandler(
 
       return Result.Success(true);
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       logger.LogError(ex, "Error deactivating tenant {TenantId}", request.Id);
+
       return Result.Failure<bool>(
         Common.Error.Failure("Tenant.DeactivationFailed", "Failed to deactivate tenant")
       );

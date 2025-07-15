@@ -15,50 +15,51 @@ namespace GameGuild.Modules.Posts.Models;
 [Index(nameof(UserId))]
 [Index(nameof(ViewedAt))]
 [Index(nameof(IpAddress))]
-public class PostView : Entity
-{
-    /// <summary>
-    /// The post that was viewed
-    /// </summary>
-    public Guid PostId { get; set; }
-    public virtual Post Post { get; set; } = null!;
+public class PostView : Entity {
+  /// <summary>
+  /// The post that was viewed
+  /// </summary>
+  public Guid PostId { get; set; }
 
-    /// <summary>
-    /// The user who viewed (nullable for anonymous views)
-    /// </summary>
-    public Guid? UserId { get; set; }
-    public virtual User? User { get; set; }
+  public virtual Post Post { get; set; } = null!;
 
-    /// <summary>
-    /// When the view occurred
-    /// </summary>
-    public DateTime ViewedAt { get; set; } = DateTime.UtcNow;
+  /// <summary>
+  /// The user who viewed (nullable for anonymous views)
+  /// </summary>
+  public Guid? UserId { get; set; }
 
-    /// <summary>
-    /// IP address of viewer (for unique view tracking)
-    /// </summary>
-    [MaxLength(45)] // IPv6 max length
-    public string? IpAddress { get; set; }
+  public virtual User? User { get; set; }
 
-    /// <summary>
-    /// User agent string
-    /// </summary>
-    [MaxLength(500)]
-    public string? UserAgent { get; set; }
+  /// <summary>
+  /// When the view occurred
+  /// </summary>
+  public DateTime ViewedAt { get; set; } = DateTime.UtcNow;
 
-    /// <summary>
-    /// Referrer URL
-    /// </summary>
-    [MaxLength(500)]
-    public string? Referrer { get; set; }
+  /// <summary>
+  /// IP address of viewer (for unique view tracking)
+  /// </summary>
+  [MaxLength(45)] // IPv6 max length
+  public string? IpAddress { get; set; }
 
-    /// <summary>
-    /// Duration of view in seconds
-    /// </summary>
-    public int DurationSeconds { get; set; } = 0;
+  /// <summary>
+  /// User agent string
+  /// </summary>
+  [MaxLength(500)]
+  public string? UserAgent { get; set; }
 
-    /// <summary>
-    /// Whether this is considered an engaged view (long duration, interactions)
-    /// </summary>
-    public bool IsEngaged { get; set; } = false;
+  /// <summary>
+  /// Referrer URL
+  /// </summary>
+  [MaxLength(500)]
+  public string? Referrer { get; set; }
+
+  /// <summary>
+  /// Duration of view in seconds
+  /// </summary>
+  public int DurationSeconds { get; set; } = 0;
+
+  /// <summary>
+  /// Whether this is considered an engaged view (long duration, interactions)
+  /// </summary>
+  public bool IsEngaged { get; set; } = false;
 }

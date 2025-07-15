@@ -10,4 +10,3 @@ namespace GameGuild.Modules.UserProfiles;
 public class RestoreUserProfileCommand : ICommand<Common.Result<bool>> {
   [Required] public Guid UserProfileId { get; set; }
 }
-
