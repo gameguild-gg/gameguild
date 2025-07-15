@@ -1,12 +1,9 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentValidation.TestHelper;
 using GameGuild.Database;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
+
 
 namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
 {

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Database;
 using GameGuild.Modules.Users;
-using Xunit;
+
 
 namespace GameGuild.Tests.Modules.Users.Unit.Services
 {

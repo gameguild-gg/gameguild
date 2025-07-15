@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using HotChocolate.Execution.Configuration;
 using MediatR;
 using System.Reflection;
-using GameGuild.Tests.MockModules;
+
 
 namespace GameGuild.Tests.MockModules;
 

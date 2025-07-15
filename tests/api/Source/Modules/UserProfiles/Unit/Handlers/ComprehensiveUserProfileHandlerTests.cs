@@ -1,7 +1,3 @@
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.UserProfiles;
@@ -9,7 +5,7 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
+
 
 namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
 {

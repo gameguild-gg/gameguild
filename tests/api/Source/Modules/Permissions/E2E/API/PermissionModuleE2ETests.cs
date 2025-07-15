@@ -8,7 +8,6 @@ using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Models;
 using GameGuild.Modules.Tenants;
 using GameGuild.Tests.Fixtures;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TenantModel = GameGuild.Modules.Tenants.Tenant;
 using UserModel = GameGuild.Modules.Users.User;

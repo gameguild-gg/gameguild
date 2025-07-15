@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using GameGuild.Database;
 using GameGuild.Modules.UserProfiles;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
+
 
 namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
 {
