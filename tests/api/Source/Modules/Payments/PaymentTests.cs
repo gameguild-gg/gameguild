@@ -34,7 +34,7 @@ public class PaymentTests : IDisposable
         services.AddLogging(builder => builder.AddConsole());
         
         // Add MediatR
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(PaymentCommandHandlers).Assembly));
+        services.AddMediatR(typeof(CreatePaymentCommandHandler).Assembly);
         
         // Mock contexts
         _mockUserContext = new Mock<IUserContext>();
@@ -149,8 +149,7 @@ public class PaymentTests : IDisposable
         var processCommand = new ProcessPaymentCommand
         {
             PaymentId = createResult.Payment!.Id,
-            ProviderTransactionId = "pi_success123",
-            Status = PaymentStatus.Completed
+            ProviderTransactionId = "pi_success123"
         };
 
         var processResult = await _mediator.Send(processCommand);
@@ -193,9 +192,7 @@ public class PaymentTests : IDisposable
         var processCommand = new ProcessPaymentCommand
         {
             PaymentId = createResult.Payment!.Id,
-            ProviderTransactionId = "pi_failed123",
-            Status = PaymentStatus.Failed,
-            FailureReason = "Insufficient funds"
+            ProviderTransactionId = "pi_failed123"
         };
 
         var processResult = await _mediator.Send(processCommand);
@@ -236,10 +233,10 @@ public class PaymentTests : IDisposable
 
         // Assert
         Assert.True(refundResult.Success);
-        Assert.NotNull(refundResult.Payment);
-        Assert.Equal(PaymentStatus.Refunded, refundResult.Payment.Status);
-        Assert.Equal(49.99m, refundResult.Payment.RefundAmount);
-        Assert.Equal("Customer request", refundResult.Payment.RefundReason);
+        Assert.NotNull(refundResult.Refund);
+        Assert.Equal(PaymentStatus.Refunded, refundResult.Refund.Payment.Status);
+        Assert.Equal(49.99m, refundResult.Refund.RefundAmount);
+        Assert.Equal("Customer request", refundResult.Refund.Reason);
     }
 
     [Fact]
@@ -307,7 +304,7 @@ public class PaymentTests : IDisposable
         // Assert
         Assert.NotNull(stats);
         Assert.True(stats.TotalRevenue >= 300.00m);
-        Assert.True(stats.TotalTransactions >= 2);
+        Assert.True(stats.TotalPayments >= 2);
     }
 
     #region Helper Methods

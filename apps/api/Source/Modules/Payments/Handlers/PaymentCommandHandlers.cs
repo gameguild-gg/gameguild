@@ -113,13 +113,13 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
                                             .Where(pp => pp.ProductId == payment.ProductId.Value && !pp.Program.IsDeleted)
                                             .ToListAsync(cancellationToken);
 
-        if (productPrograms.Any() && payment.UserId.HasValue) {
+        if (productPrograms.Any()) { // Removed payment.UserId.HasValue since UserId is not nullable
           foreach (var productProgram in productPrograms) {
             // Check if user is not already enrolled
             var existingEnrollment = await _context.ProgramUsers
                                                    .AnyAsync(
                                                      pu => pu.ProgramId == productProgram.ProgramId &&
-                                                           pu.UserId == payment.UserId.Value &&
+                                                           pu.UserId == payment.UserId && // Fixed: UserId is not nullable, no .Value needed
                                                            pu.IsActive,
                                                      cancellationToken
                                                    );
@@ -127,7 +127,7 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
             if (!existingEnrollment && productProgram.Program.IsEnrollmentOpen) {
               var enrollment = new ProgramUser {
                 ProgramId = productProgram.ProgramId,
-                UserId = payment.UserId.Value,
+                UserId = payment.UserId, // Fixed: UserId is not nullable, no .Value needed
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
