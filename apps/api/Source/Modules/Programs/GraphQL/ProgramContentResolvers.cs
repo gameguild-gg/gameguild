@@ -1,9 +1,8 @@
 ﻿using GameGuild.Database;
-using GameGuild.Modules.Programs.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Programs.GraphQL;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Resolvers for ProgramContent navigation properties
@@ -12,7 +11,7 @@ public class ProgramContentResolvers {
   /// <summary>
   /// Resolves the parent program for the content
   /// </summary>
-  public async Task<Models.Program?> GetProgramAsync(
+  public async Task<Program?> GetProgramAsync(
     [Parent] ProgramContent content,
     [Service] ApplicationDbContext context
   ) {

@@ -1,9 +1,8 @@
 using GameGuild.Common;
-using GameGuild.Modules.Programs.Models;
-using ProgramContentEntity = GameGuild.Modules.Programs.Models.ProgramContent;
+using ProgramContentEntity = GameGuild.Modules.Programs.ProgramContent;
 
 
-namespace GameGuild.Modules.Programs.GraphQL;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// GraphQL type definition for ProgramContent entity
@@ -77,7 +76,7 @@ public class ProgramContentType : ObjectType<ProgramContent> {
 
     // Navigation Properties
     descriptor.Field(p => p.Program)
-              .Type<ObjectType<Models.Program>>()
+              .Type<ObjectType<Program>>()
               .Description("The parent program this content belongs to.")
               .ResolveWith<ProgramContentResolvers>(r => r.GetProgramAsync(default!, default!));
 

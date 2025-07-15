@@ -1,10 +1,8 @@
-using GameGuild.Common;
-using GameGuild.Modules.Contents;
-using GameGuild.Modules.Resources;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GameGuild.Modules.Posts.Controllers;
+
+namespace GameGuild.Modules.Posts;
 
 [ApiController]
 [Route("api/[controller]")]

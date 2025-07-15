@@ -1,27 +1,27 @@
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Payments.Interfaces;
+namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// Interface for financial transaction services
 /// </summary>
 public interface IFinancialTransactionService {
-  Task<Models.FinancialTransaction> CreateTransactionAsync(Models.FinancialTransaction transaction);
+  Task<FinancialTransaction> CreateTransactionAsync(FinancialTransaction transaction);
 
-  Task<Models.FinancialTransaction?> GetTransactionByIdAsync(int id);
+  Task<FinancialTransaction?> GetTransactionByIdAsync(int id);
 
-  Task<Models.FinancialTransaction?> GetTransactionByExternalIdAsync(string externalId);
+  Task<FinancialTransaction?> GetTransactionByExternalIdAsync(string externalId);
 
-  Task<IEnumerable<Models.FinancialTransaction>> GetUserTransactionsAsync(int userId);
+  Task<IEnumerable<FinancialTransaction>> GetUserTransactionsAsync(int userId);
 
-  Task<Models.FinancialTransaction> UpdateTransactionStatusAsync(int id, TransactionStatus status);
+  Task<FinancialTransaction> UpdateTransactionStatusAsync(int id, TransactionStatus status);
 
-  Task<Models.FinancialTransaction> ProcessTransactionAsync(int id);
+  Task<FinancialTransaction> ProcessTransactionAsync(int id);
 
   Task<decimal> GetUserBalanceAsync(int userId);
 
-  Task<IEnumerable<Models.FinancialTransaction>> GetPendingTransactionsAsync();
+  Task<IEnumerable<FinancialTransaction>> GetPendingTransactionsAsync();
 
   Task<bool> RefundTransactionAsync(int transactionId, decimal? amount = null);
 }

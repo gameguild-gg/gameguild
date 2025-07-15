@@ -1,20 +1,20 @@
-﻿namespace GameGuild.Modules.Programs.Interfaces;
+﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Interface for content interaction tracking services
 /// </summary>
 public interface IContentInteractionService {
-  Task<Models.ContentInteraction> StartContentAsync(Guid programUserId, Guid contentId);
+  Task<ContentInteraction> StartContentAsync(Guid programUserId, Guid contentId);
 
-  Task<Models.ContentInteraction> UpdateProgressAsync(Guid interactionId, decimal completionPercentage);
+  Task<ContentInteraction> UpdateProgressAsync(Guid interactionId, decimal completionPercentage);
 
-  Task<Models.ContentInteraction> SubmitContentAsync(Guid interactionId, string submissionData);
+  Task<ContentInteraction> SubmitContentAsync(Guid interactionId, string submissionData);
 
-  Task<Models.ContentInteraction> CompleteContentAsync(Guid interactionId);
+  Task<ContentInteraction> CompleteContentAsync(Guid interactionId);
 
-  Task<Models.ContentInteraction?> GetInteractionAsync(Guid programUserId, Guid contentId);
+  Task<ContentInteraction?> GetInteractionAsync(Guid programUserId, Guid contentId);
 
-  Task<IEnumerable<Models.ContentInteraction>> GetUserInteractionsAsync(Guid programUserId);
+  Task<IEnumerable<ContentInteraction>> GetUserInteractionsAsync(Guid programUserId);
 
-  Task<Models.ContentInteraction> UpdateTimeSpentAsync(Guid interactionId, int additionalMinutes);
+  Task<ContentInteraction> UpdateTimeSpentAsync(Guid interactionId, int additionalMinutes);
 }

@@ -1,11 +1,10 @@
 using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.DependencyInjection;
-using Xunit;
-using Xunit.Abstractions;
 using GameGuild.Tests.Fixtures;
+using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Infrastructure;
+
+namespace GameGuild.Tests.Infrastructure.Connectivity;
 
 /// <summary>
 /// Tests to inspect the actual GraphQL schema and available queries

@@ -1,6 +1,5 @@
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Projects.Queries;
 using MediatR;
 
 
@@ -85,7 +84,7 @@ public class ProjectQueries {
   public async Task<IEnumerable<Project>> SearchProjects(
     string searchTerm,
     [Service] IMediator mediator,
-    ProjectType? type = null,
+    Common.ProjectType? type = null,
     Guid? categoryId = null,
     ContentStatus? status = null,
     int skip = 0,
@@ -108,7 +107,7 @@ public class ProjectQueries {
   /// </summary>
   public async Task<IEnumerable<Project>> GetPopularProjects(
     [Service] IMediator mediator,
-    ProjectType? type = null,
+    Common.ProjectType? type = null,
     int take = 10
   ) {
     var query = new GetPopularProjectsQuery { Type = type, Take = take };
@@ -120,7 +119,7 @@ public class ProjectQueries {
   /// </summary>
   public async Task<IEnumerable<Project>> GetRecentProjects(
     [Service] IMediator mediator,
-    ProjectType? type = null,
+    Common.ProjectType? type = null,
     int take = 10
   ) {
     var query = new GetRecentProjectsQuery { Type = type, Take = take };
@@ -132,7 +131,7 @@ public class ProjectQueries {
   /// </summary>
   public async Task<IEnumerable<Project>> GetFeaturedProjects(
     [Service] IMediator mediator,
-    ProjectType? type = null,
+    Common.ProjectType? type = null,
     int take = 10
   ) {
     var query = new GetFeaturedProjectsQuery { Type = type, Take = take };

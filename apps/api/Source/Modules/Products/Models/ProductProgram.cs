@@ -4,7 +4,7 @@ using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Products.Models;
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Junction entity representing the relationship between a Product and a Program
@@ -37,7 +37,7 @@ public class ProductProgram : Entity {
   /// Navigation property to the Program entity
   /// </summary>
   [ForeignKey(nameof(ProgramId))]
-  public virtual Programs.Models.Program Program { get; set; } = null!;
+  public virtual Programs.Program Program { get; set; } = null!;
 
   /// <summary>
   /// Display order of programs within the product

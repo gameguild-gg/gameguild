@@ -6,6 +6,7 @@ using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Users;
+using GameGuild.Tests.Infrastructure.Integration;
 using GameGuild.Tests.MockModules;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -106,7 +107,7 @@ namespace GameGuild.Tests.Fixtures {
       services = AuthModuleDependencyInjection.AddAuthModule(services, configuration);
       
       // Replace the IAuthService with a mock for testing (avoids complex dependency chain)
-      services.AddScoped<GameGuild.Modules.Authentication.IAuthService, GameGuild.API.Tests.Infrastructure.Integration.MockAuthService>();
+      services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
       
       // Add GraphQL infrastructure with testing configuration
       services.AddGraphQLInfrastructure(GameGuild.Common.DependencyInjection.GraphQLOptionsFactory.ForTesting());

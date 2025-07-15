@@ -2,14 +2,11 @@ using GameGuild.Common;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Programs.DTOs;
-using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Programs.Services;
 using Microsoft.AspNetCore.Mvc;
-using ProgramEntity = GameGuild.Modules.Programs.Models.Program;
+using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 
-namespace GameGuild.Modules.Programs.Controllers;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// REST API controller for managing programs

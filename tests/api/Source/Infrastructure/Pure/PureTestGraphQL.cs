@@ -1,9 +1,10 @@
+using GameGuild.Common;
 using HotChocolate;
 using HotChocolate.Types;
 using MediatR;
-using GameGuild.Common;
 
-namespace GameGuild.API.Tests.Infrastructure.Pure;
+
+namespace GameGuild.Tests.Infrastructure.Pure;
 
 /// <summary>
 /// Pure GraphQL queries for testing infrastructure without business modules

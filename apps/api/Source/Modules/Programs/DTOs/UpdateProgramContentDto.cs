@@ -2,7 +2,7 @@
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Programs.DTOs;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// DTO for updating existing program content
@@ -14,7 +14,7 @@ public class UpdateProgramContentDto {
 
   public string? Description { get; set; }
 
-  public ProgramContentType? Type { get; set; }
+  public Common.ProgramContentType? Type { get; set; }
 
   public string? Body { get; set; }
 

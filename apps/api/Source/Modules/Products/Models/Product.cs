@@ -1,14 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using GameGuild.Common;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Products.Models;
+namespace GameGuild.Modules.Products;
 
 [Table("Products")]
 [Index(nameof(Name))]
@@ -22,7 +21,7 @@ public class Product : Content {
 
   [MaxLength(500)] public string? ImageUrl { get; set; }
 
-  public ProductType Type { get; set; } = ProductType.Program;
+  public Common.ProductType Type { get; set; } = Common.ProductType.Program;
 
   public bool IsBundle { get; set; }
 

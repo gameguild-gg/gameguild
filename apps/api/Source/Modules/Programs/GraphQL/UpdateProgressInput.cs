@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Programs.GraphQL;
+﻿namespace GameGuild.Modules.Programs;
 
 public record UpdateProgressInput(
   Guid InteractionId,

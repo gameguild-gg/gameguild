@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Programs.GraphQL;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Extension methods for registering ActivityGrade GraphQL components

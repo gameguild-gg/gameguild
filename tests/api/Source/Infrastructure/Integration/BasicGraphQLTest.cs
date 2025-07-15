@@ -1,10 +1,10 @@
 using System.Text;
 using System.Text.Json;
 using GameGuild.Tests.Fixtures;
-using Xunit;
 using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Infrastructure.Integration;
+
+namespace GameGuild.Tests.Infrastructure.Integration;
 
 public class BasicGraphQLTest : IClassFixture<MockModuleTestServerFixture>
 {

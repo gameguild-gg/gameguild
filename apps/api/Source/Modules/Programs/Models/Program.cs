@@ -5,13 +5,13 @@ using GameGuild.Common;
 using GameGuild.Modules.Certificates;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Feedbacks;
-using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Products;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tags.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Programs.Models;
+namespace GameGuild.Modules.Programs;
 
 [Table("programs")]
 [Index(nameof(Visibility))]
@@ -75,7 +75,7 @@ public class Program : Content {
 
   public virtual ICollection<ProgramFeedbackSubmission> FeedbackSubmissions { get; set; } = new List<ProgramFeedbackSubmission>();
 
-  public virtual ICollection<ProgramRating> ProgramRatings { get; set; } = new List<ProgramRating>();
+  public virtual ICollection<GameGuild.Modules.Feedbacks.ProgramRating> ProgramRatings { get; set; } = new List<GameGuild.Modules.Feedbacks.ProgramRating>();
 
   public virtual ICollection<ProgramWishlist> ProgramWishlists { get; set; } = new List<ProgramWishlist>();
 

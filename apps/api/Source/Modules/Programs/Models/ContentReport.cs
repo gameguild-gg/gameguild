@@ -4,7 +4,8 @@ using GameGuild.Common;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Programs.Models;
+
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Represents a report submitted by a user for content or behavior issues

@@ -5,7 +5,7 @@ using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Programs.Models;
+namespace GameGuild.Modules.Programs;
 
 [Table("program_contents")]
 [Index(nameof(ProgramId))]
@@ -31,7 +31,7 @@ public class ProgramContent : Entity {
 
   public string Description { get; set; } = string.Empty;
 
-  public ProgramContentType Type { get; set; }
+  public Common.ProgramContentType Type { get; set; }
 
   /// <summary>
   /// Main content body stored as JSON to support rich content

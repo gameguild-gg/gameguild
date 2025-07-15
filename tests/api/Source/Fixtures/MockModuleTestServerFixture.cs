@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using MediatR;
 using GameGuild.Common;
+using GameGuild.Tests.Infrastructure.Integration;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Tests.Fixtures;
@@ -63,7 +64,7 @@ public class MockModuleTestServerFixture : IDisposable
         // Remove duplicate registration - let TestModuleDependencyInjection handle it
         
         // Add mock IAuthService for Authentication handlers (required by MediatR)
-        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, GameGuild.API.Tests.Infrastructure.Integration.MockAuthService>();
+        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
 
         // Add our test module (includes test-specific MediatR handlers)
         GameGuild.Tests.MockModules.TestModuleDependencyInjection.AddTestModule(services);

@@ -7,7 +7,7 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Programs.Models;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Junction entity representing the relationship between a User and a Program

@@ -1,20 +1,20 @@
 ﻿using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Products.Interfaces;
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Interface for user product access services
 /// </summary>
 public interface IUserProductService {
-  Task<Models.UserProduct> GrantProductAccessAsync(
+  Task<UserProduct> GrantProductAccessAsync(
     int userId, int productId, ProductAcquisitionType acquisitionType,
     decimal pricePaid = 0
   );
 
-  Task<Models.UserProduct?> GetUserProductAsync(int userId, int productId);
+  Task<UserProduct?> GetUserProductAsync(int userId, int productId);
 
-  Task<IEnumerable<Models.UserProduct>> GetUserProductsAsync(int userId);
+  Task<IEnumerable<UserProduct>> GetUserProductsAsync(int userId);
 
   Task<bool> HasProductAccessAsync(int userId, int productId);
 
@@ -22,5 +22,5 @@ public interface IUserProductService {
 
   Task<bool> ExtendProductAccessAsync(int userId, int productId, DateTime newEndDate);
 
-  Task<IEnumerable<Models.UserProduct>> GetExpiringAccessAsync(DateTime thresholdDate);
+  Task<IEnumerable<UserProduct>> GetExpiringAccessAsync(DateTime thresholdDate);
 }

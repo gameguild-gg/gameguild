@@ -1,18 +1,18 @@
-﻿namespace GameGuild.Modules.Products.Interfaces;
+﻿namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Interface for product pricing services
 /// </summary>
 public interface IProductPricingService {
-  Task<Models.ProductPricing> CreatePricingAsync(Models.ProductPricing pricing);
+  Task<ProductPricing> CreatePricingAsync(ProductPricing pricing);
 
-  Task<Models.ProductPricing?> GetPricingByIdAsync(int id);
+  Task<ProductPricing?> GetPricingByIdAsync(int id);
 
-  Task<IEnumerable<Models.ProductPricing>> GetPricingsByProductIdAsync(int productId);
+  Task<IEnumerable<ProductPricing>> GetPricingsByProductIdAsync(int productId);
 
-  Task<Models.ProductPricing?> GetDefaultPricingForProductAsync(int productId);
+  Task<ProductPricing?> GetDefaultPricingForProductAsync(int productId);
 
-  Task<Models.ProductPricing> UpdatePricingAsync(Models.ProductPricing pricing);
+  Task<ProductPricing> UpdatePricingAsync(ProductPricing pricing);
 
   Task<bool> DeletePricingAsync(int id);
 

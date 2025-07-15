@@ -2,11 +2,12 @@ using System.Text;
 using System.Text.Json;
 using GameGuild.Tests.Fixtures;
 using GameGuild.Tests.MockModules;
-using Microsoft.Extensions.DependencyInjection;
 using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Infrastructure;
+
+namespace GameGuild.Tests.Infrastructure.Integration;
 
 /// <summary>
 /// Infrastructure tests using only mock modules to isolate GraphQL → CQRS → MediatR integration

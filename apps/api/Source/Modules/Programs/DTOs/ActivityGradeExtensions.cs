@@ -1,10 +1,10 @@
-﻿namespace GameGuild.Modules.Programs.DTOs;
+﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Extension methods to convert from entity/service models to DTOs
 /// </summary>
 public static class ActivityGradeExtensions {
-  public static ActivityGradeDto ToDto(this Models.ActivityGrade grade) {
+  public static ActivityGradeDto ToDto(this ActivityGrade grade) {
     return new ActivityGradeDto {
       Id = grade.Id,
       ContentInteractionId = grade.ContentInteractionId,
@@ -43,9 +43,9 @@ public static class ActivityGradeExtensions {
     };
   }
 
-  public static IEnumerable<ActivityGradeDto> ToDto(this IEnumerable<Models.ActivityGrade> grades) { return grades.Select(g => g.ToDto()); }
+  public static IEnumerable<ActivityGradeDto> ToDto(this IEnumerable<ActivityGrade> grades) { return grades.Select(g => g.ToDto()); }
 
-  public static GradeStatisticsDto ToDto(this Services.GradeStatistics statistics) {
+  public static GradeStatisticsDto ToDto(this GradeStatistics statistics) {
     return new GradeStatisticsDto {
       TotalGrades = statistics.TotalGrades,
       AverageGrade = statistics.AverageGrade,

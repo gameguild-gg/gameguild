@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
-using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Products;
+using GameGuild.Modules.Programs;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -87,7 +87,7 @@ public class UserCertificate : Entity {
 
   public virtual Certificate Certificate { get; set; } = null!;
 
-  public virtual Programs.Models.Program? Program { get; set; }
+  public virtual Programs.Program? Program { get; set; }
 
   public virtual Product? Product { get; set; }
 

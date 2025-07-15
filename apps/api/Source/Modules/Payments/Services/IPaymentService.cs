@@ -1,7 +1,7 @@
 using GameGuild.Common;
-using GameGuild.Modules.Payments.Models;
 
-namespace GameGuild.Modules.Payments.Services;
+
+namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// Service interface for managing payments and financial transactions

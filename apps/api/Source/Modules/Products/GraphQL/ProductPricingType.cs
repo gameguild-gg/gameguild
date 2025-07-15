@@ -1,7 +1,4 @@
-﻿using GameGuild.Modules.Products.Models;
-
-
-namespace GameGuild.Modules.Products.GraphQL;
+﻿namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// GraphQL type for ProductPricing entity

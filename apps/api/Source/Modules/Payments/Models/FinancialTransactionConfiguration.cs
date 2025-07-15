@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Payments.Models;
+namespace GameGuild.Modules.Payments;
 
 public class FinancialTransactionConfiguration : IEntityTypeConfiguration<FinancialTransaction> {
   public void Configure(EntityTypeBuilder<FinancialTransaction> builder) {

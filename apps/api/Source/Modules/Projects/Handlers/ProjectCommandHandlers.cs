@@ -1,13 +1,11 @@
-using GameGuild.Common.Interfaces;
+using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Projects.Commands;
-
 using GameGuild.Modules.Contents;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Modules.Projects.Handlers;
+
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// Command handlers for project operations
@@ -21,14 +19,14 @@ public class ProjectCommandHandlers :
     IRequestHandler<ArchiveProjectCommand, ArchiveProjectResult>
 {
     private readonly ApplicationDbContext _context;
-    private readonly IUserContext _userContext;
-    private readonly ITenantContext _tenantContext;
+    private readonly GameGuild.Common.Interfaces.IUserContext _userContext;
+    private readonly GameGuild.Common.Interfaces.ITenantContext _tenantContext;
     private readonly ILogger<ProjectCommandHandlers> _logger;
 
     public ProjectCommandHandlers(
         ApplicationDbContext context,
-        IUserContext userContext,
-        ITenantContext tenantContext,
+        GameGuild.Common.Interfaces.IUserContext userContext,
+        GameGuild.Common.Interfaces.ITenantContext tenantContext,
         ILogger<ProjectCommandHandlers> logger)
     {
         _context = context;
@@ -41,7 +39,7 @@ public class ProjectCommandHandlers :
     {
         try
         {
-            _logger.LogInformation("Creating project: {Name} by user {UserId}", request.Name, _userContext.UserId);
+            _logger.LogInformation("Creating project: {Title} by user {UserId}", request.Title, _userContext.UserId);
 
             // Validate user permissions
             if (!_userContext.IsAuthenticated || _userContext.UserId == null)
@@ -67,7 +65,6 @@ public class ProjectCommandHandlers :
                 WebsiteUrl = request.WebsiteUrl,
                 DownloadUrl = request.DownloadUrl,
                 Type = (GameGuild.Common.ProjectType)request.Type,
-                CreatedById = request.CreatedById,
                 CategoryId = request.CategoryId,
                 Visibility = request.Visibility,
                 Status = request.Status,
@@ -77,7 +74,7 @@ public class ProjectCommandHandlers :
             };
 
             // Generate slug from name
-            project.Slug = GenerateSlug(request.Name);
+            project.Slug = GenerateSlug(request.Title);
 
             // Ensure slug is unique
             var existingSlugCount = await _context.Projects
@@ -90,6 +87,25 @@ public class ProjectCommandHandlers :
             }
 
             _context.Projects.Add(project);
+            
+            // Add the creator as a collaborator with Owner role
+            var creatorCollaborator = new ProjectCollaborator
+            {
+                Id = Guid.NewGuid(),
+                ProjectId = project.Id,
+                UserId = _userContext.UserId!.Value,
+                Role = "Owner",
+                Permissions = "All",
+                IsActive = true,
+                JoinedAt = DateTime.UtcNow,
+                Title = "Project Creator",
+                Description = "Original creator of the project",
+                Visibility = AccessLevel.Private,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _context.Set<ProjectCollaborator>().Add(creatorCollaborator);
+            
             await _context.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Project created successfully: {ProjectId}", project.Id);
@@ -102,7 +118,7 @@ public class ProjectCommandHandlers :
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating project: {Name}", request.Name);
+            _logger.LogError(ex, "Error creating project: {Title}", request.Title);
             return new CreateProjectResult
             {
                 Success = false,
@@ -118,6 +134,7 @@ public class ProjectCommandHandlers :
             _logger.LogInformation("Updating project: {ProjectId} by user {UserId}", request.ProjectId, _userContext.UserId);
 
             var project = await _context.Projects
+                .Include(p => p.Collaborators)
                 .FirstOrDefaultAsync(p => p.Id == request.ProjectId && !p.IsDeleted, cancellationToken);
 
             if (project == null)
@@ -125,8 +142,13 @@ public class ProjectCommandHandlers :
                 return new UpdateProjectResult { Success = false, ErrorMessage = "Project not found" };
             }
 
-            // Check authorization
-            if (!_userContext.IsInRole("Admin") && project.CreatorId != _userContext.UserId)
+            // Check authorization - user must be admin or owner/collaborator with edit permissions
+            var isOwnerOrCollaborator = project.Collaborators.Any(c => 
+                c.UserId == _userContext.UserId && 
+                c.IsActive && 
+                (c.Role == "Owner" || c.Permissions.Contains("Edit")));
+                
+            if (!_userContext.IsInRole("Admin") && !isOwnerOrCollaborator)
             {
                 return new UpdateProjectResult { Success = false, ErrorMessage = "Unauthorized to update this project" };
             }
@@ -174,6 +196,7 @@ public class ProjectCommandHandlers :
             _logger.LogInformation("Deleting project: {ProjectId} by user {UserId}", request.ProjectId, _userContext.UserId);
 
             var project = await _context.Projects
+                .Include(p => p.Collaborators)
                 .FirstOrDefaultAsync(p => p.Id == request.ProjectId && !p.IsDeleted, cancellationToken);
 
             if (project == null)
@@ -181,16 +204,24 @@ public class ProjectCommandHandlers :
                 return new DeleteProjectResult { Success = false, ErrorMessage = "Project not found" };
             }
 
-            // Check authorization
-            if (!_userContext.IsInRole("Admin") && project.CreatorId != _userContext.UserId)
+            // Check authorization - user must be admin or owner
+            var isOwner = project.Collaborators.Any(c => 
+                c.UserId == _userContext.UserId && 
+                c.IsActive && 
+                c.Role == "Owner");
+                
+            if (!_userContext.IsInRole("Admin") && !isOwner)
             {
                 return new DeleteProjectResult { Success = false, ErrorMessage = "Unauthorized to delete this project" };
             }
 
             if (request.SoftDelete)
             {
-                project.IsDeleted = true;
-                project.DeletedAt = DateTime.UtcNow;
+                // Mark as deleted but preserve data
+                // Since IsDeleted is read-only in the base Entity, we'll need a different approach
+                // For now, we'll remove it from the context or use a status change
+                project.Status = ContentStatus.Archived; // Use archived status instead
+                project.UpdatedAt = DateTime.UtcNow;
             }
             else
             {
@@ -294,9 +325,6 @@ public class ProjectCommandHandlers :
 
     private static string GenerateSlug(string name)
     {
-        return name.ToLowerInvariant()
-                   .Replace(" ", "-")
-                   .Replace("_", "-")
-                   .Trim('-');
+        return name.ToSlugCase();
     }
 }

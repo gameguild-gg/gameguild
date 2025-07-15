@@ -1,9 +1,8 @@
 ﻿using GameGuild.Database;
-using GameGuild.Modules.Products.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// GraphQL type for PromoCode entity

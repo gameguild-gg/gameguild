@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
-namespace GameGuild.Modules.Products.Models;
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Entity Framework configuration for ProductProgram entity

@@ -1,9 +1,9 @@
-using MediatR;
-using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Contents;
 using GameGuild.Common;
+using GameGuild.Modules.Contents;
+using MediatR;
 
-namespace GameGuild.Modules.Products.Queries;
+
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Query to get product by ID
@@ -20,7 +20,7 @@ public record GetProductByIdQuery : IRequest<Product?>
 /// </summary>
 public record GetProductsQuery : IRequest<IEnumerable<Product>>
 {
-    public ProductType? Type { get; init; }
+    public Common.ProductType? Type { get; init; }
     public ContentStatus? Status { get; init; }
     public AccessLevel? Visibility { get; init; }
     public Guid? CreatorId { get; init; }
@@ -159,7 +159,7 @@ public record UserProductAccess
 /// </summary>
 public record GetProductsByTypeQuery : IRequest<IEnumerable<Product>>
 {
-    public ProductType Type { get; init; }
+    public Common.ProductType Type { get; init; }
     public int Skip { get; init; } = 0;
     public int Take { get; init; } = 50;
 }
@@ -179,7 +179,7 @@ public record GetPublishedProductsQuery : IRequest<IEnumerable<Product>>
 public record SearchProductsQuery : IRequest<IEnumerable<Product>>
 {
     public string SearchTerm { get; init; } = string.Empty;
-    public ProductType? Type { get; init; }
+    public Common.ProductType? Type { get; init; }
     public int Skip { get; init; } = 0;
     public int Take { get; init; } = 50;
 }
@@ -290,7 +290,7 @@ public record GetUserProductQuery : IRequest<UserProduct?>
 /// </summary>
 public record GetProductCountQuery : IRequest<int>
 {
-    public ProductType? Type { get; init; }
+    public Common.ProductType? Type { get; init; }
     public ContentStatus? Status { get; init; }
 }
 

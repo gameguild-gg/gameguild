@@ -1,8 +1,8 @@
 using GameGuild.Common;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Posts;
+
+namespace GameGuild.Modules.Posts.Services;
 
 /// <summary>
 /// Service for creating system-generated announcement posts

@@ -1,11 +1,9 @@
 using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Programs.Interfaces;
-using GameGuild.Modules.Programs.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Programs.Services;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Service implementation for ProgramContent management with full DAC permission support
@@ -129,7 +127,7 @@ public class ProgramContentService(ApplicationDbContext context) : IProgramConte
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<ProgramContent>> GetContentByTypeAsync(Guid programId, ProgramContentType type) {
+  public async Task<IEnumerable<ProgramContent>> GetContentByTypeAsync(Guid programId, Common.ProgramContentType type) {
     return await context.ProgramContents.Where(pc => pc.ProgramId == programId && pc.Type == type && !pc.IsDeleted)
                         .OrderBy(pc => pc.SortOrder)
                         .ToListAsync();

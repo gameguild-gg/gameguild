@@ -1,12 +1,11 @@
-using GameGuild.Database;
 using GameGuild.Common;
+using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Resources;
-using MediatR;
-using HotChocolate.Types;
+using GameGuild.Modules.Posts.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Posts;
+
+namespace GameGuild.Modules.Posts.GraphQL;
 
 /// <summary>
 /// GraphQL queries for Posts

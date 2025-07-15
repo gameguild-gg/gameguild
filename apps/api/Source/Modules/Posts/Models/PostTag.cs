@@ -1,9 +1,10 @@
-using GameGuild.Common;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Posts;
+
+namespace GameGuild.Modules.Posts.Models;
 
 /// <summary>
 /// Represents a tag that can be applied to posts

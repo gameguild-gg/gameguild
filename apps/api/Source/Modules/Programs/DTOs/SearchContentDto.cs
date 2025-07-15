@@ -2,7 +2,7 @@
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Programs.DTOs;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// DTO for content search operations
@@ -12,7 +12,7 @@ public class SearchContentDto {
 
   [Required] [StringLength(255)] public string SearchTerm { get; set; } = string.Empty;
 
-  public ProgramContentType? Type { get; set; }
+  public Common.ProgramContentType? Type { get; set; }
 
   public Visibility? Visibility { get; set; }
 

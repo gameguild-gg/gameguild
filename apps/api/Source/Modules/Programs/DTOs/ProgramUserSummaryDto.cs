@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Programs.DTOs;
+﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Simplified program user information to avoid circular references

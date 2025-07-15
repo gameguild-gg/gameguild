@@ -1,10 +1,10 @@
-﻿namespace GameGuild.Modules.Programs.DTOs;
+﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Extension methods to convert from entity to DTO
 /// </summary>
 public static class ContentInteractionExtensions {
-  public static ContentInteractionDto ToDto(this Models.ContentInteraction interaction) {
+  public static ContentInteractionDto ToDto(this ContentInteraction interaction) {
     return new ContentInteractionDto {
       Id = interaction.Id,
       ProgramUserId = interaction.ProgramUserId,
@@ -27,5 +27,5 @@ public static class ContentInteractionExtensions {
     };
   }
 
-  public static IEnumerable<ContentInteractionDto> ToDto(this IEnumerable<Models.ContentInteraction> interactions) { return interactions.Select(i => i.ToDto()); }
+  public static IEnumerable<ContentInteractionDto> ToDto(this IEnumerable<ContentInteraction> interactions) { return interactions.Select(i => i.ToDto()); }
 }

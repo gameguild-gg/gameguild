@@ -1,10 +1,10 @@
-﻿namespace GameGuild.Modules.Programs.Interfaces;
+﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Interface for activity grading services
 /// </summary>
 public interface IActivityGradeService {
-  Task<Models.ActivityGrade> GradeActivityAsync(
+  Task<ActivityGrade> GradeActivityAsync(
     Guid contentInteractionId,
     Guid graderProgramUserId,
     decimal grade,
@@ -12,21 +12,21 @@ public interface IActivityGradeService {
     string? gradingDetails = null
   );
 
-  Task<Models.ActivityGrade?> GetGradeAsync(Guid contentInteractionId);
+  Task<ActivityGrade?> GetGradeAsync(Guid contentInteractionId);
 
-  Task<Models.ActivityGrade?> GetGradeByIdAsync(Guid gradeId);
+  Task<ActivityGrade?> GetGradeByIdAsync(Guid gradeId);
 
-  Task<IEnumerable<Models.ActivityGrade>> GetGradesByGraderAsync(Guid graderProgramUserId);
+  Task<IEnumerable<ActivityGrade>> GetGradesByGraderAsync(Guid graderProgramUserId);
 
-  Task<IEnumerable<Models.ActivityGrade>> GetGradesByStudentAsync(Guid programUserId);
+  Task<IEnumerable<ActivityGrade>> GetGradesByStudentAsync(Guid programUserId);
 
-  Task<Models.ActivityGrade?> UpdateGradeAsync(Guid gradeId, decimal? newGrade = null, string? newFeedback = null, string? newGradingDetails = null);
+  Task<ActivityGrade?> UpdateGradeAsync(Guid gradeId, decimal? newGrade = null, string? newFeedback = null, string? newGradingDetails = null);
 
   Task<bool> DeleteGradeAsync(Guid gradeId);
 
-  Task<IEnumerable<Models.ContentInteraction>> GetPendingGradesAsync(Guid programId);
+  Task<IEnumerable<ContentInteraction>> GetPendingGradesAsync(Guid programId);
 
-  Task<Services.GradeStatistics> GetGradeStatisticsAsync(Guid programId);
+  Task<GradeStatistics> GetGradeStatisticsAsync(Guid programId);
 
-  Task<IEnumerable<Models.ActivityGrade>> GetGradesByContentAsync(Guid contentId);
+  Task<IEnumerable<ActivityGrade>> GetGradesByContentAsync(Guid contentId);
 }

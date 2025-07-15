@@ -5,7 +5,8 @@ using GameGuild.Modules.Contents;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Programs.Models;
+
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Tracks user progress through individual content items in a program

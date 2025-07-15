@@ -2,9 +2,11 @@
 using System.Reflection;
 using FluentValidation;
 using GameGuild.Common.Extensions;
-using GameGuild.Common.Middleware;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Payments;
+using GameGuild.Modules.Products;
+using GameGuild.Modules.Programs;
 using HotChocolate.Execution.Configuration;
 using MediatR;
 using Microsoft.AspNetCore.RateLimiting;
@@ -484,15 +486,15 @@ public static class DependencyInjection {
         SafeAddGraphQLTypes(
           builder,
           new[] {
-            ("ProgramContentQueries", typeof(GameGuild.Modules.Programs.GraphQL.ProgramContentQueries)),
-            ("ProgramContentMutations", typeof(GameGuild.Modules.Programs.GraphQL.ProgramContentMutations)),
-            ("ContentInteractionQueries", typeof(GameGuild.Modules.Programs.GraphQL.ContentInteractionQueries)),
-            ("ContentInteractionMutations", typeof(GameGuild.Modules.Programs.GraphQL.ContentInteractionMutations)),
-            ("ActivityGradeQueries", typeof(GameGuild.Modules.Programs.GraphQL.ActivityGradeQueries)),
-            ("ActivityGradeMutations", typeof(GameGuild.Modules.Programs.GraphQL.ActivityGradeMutations)),
-            ("ProgramContentType", typeof(GameGuild.Modules.Programs.GraphQL.ProgramContentType)),
-            ("ContentInteractionType", typeof(GameGuild.Modules.Programs.GraphQL.ContentInteractionType)),
-            ("ActivityGradeType", typeof(GameGuild.Modules.Programs.GraphQL.ActivityGradeType))
+            ("ProgramContentQueries", typeof(ProgramContentQueries)),
+            ("ProgramContentMutations", typeof(ProgramContentMutations)),
+            ("ContentInteractionQueries", typeof(ContentInteractionQueries)),
+            ("ContentInteractionMutations", typeof(ContentInteractionMutations)),
+            ("ActivityGradeQueries", typeof(ActivityGradeQueries)),
+            ("ActivityGradeMutations", typeof(ActivityGradeMutations)),
+            ("ProgramContentType", typeof(Modules.Programs.ProgramContentType)),
+            ("ContentInteractionType", typeof(ContentInteractionType)),
+            ("ActivityGradeType", typeof(ActivityGradeType))
           },
           logger,
           isExtension: new[] { true, true, true, true, true, true, false, false, false }
@@ -502,9 +504,9 @@ public static class DependencyInjection {
         SafeAddGraphQLTypes(
           builder,
           new[] {
-            ("ProductQueries", typeof(GameGuild.Modules.Products.GraphQL.ProductQueries)),
-            ("ProductMutations", typeof(GameGuild.Modules.Products.GraphQL.ProductMutations)),
-            ("ProductType", typeof(GameGuild.Modules.Products.GraphQL.ProductType))
+            ("ProductQueries", typeof(ProductQueries)),
+            ("ProductMutations", typeof(ProductMutations)),
+            ("ProductType", typeof(Modules.Products.ProductType))
           },
           logger,
           isExtension: new[] { true, true, false },
@@ -515,8 +517,8 @@ public static class DependencyInjection {
         SafeAddGraphQLTypes(
           builder,
           new[] {
-            ("PaymentQueries", typeof(GameGuild.Modules.Payments.GraphQL.PaymentQueries)),
-            ("PaymentMutations", typeof(GameGuild.Modules.Payments.GraphQL.PaymentMutations))
+            ("PaymentQueries", typeof(PaymentQueries)),
+            ("PaymentMutations", typeof(PaymentMutations))
           },
           logger,
           isExtension: new[] { true, true },

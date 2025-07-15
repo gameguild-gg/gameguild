@@ -1,13 +1,11 @@
 using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Programs.Interfaces;
-using GameGuild.Modules.Programs.Models;
 using ProgramContentTypeEnum = GameGuild.Common.ProgramContentType;
 using VisibilityEnum = GameGuild.Common.Visibility;
 using GradingMethodEnum = GameGuild.Common.GradingMethod;
 
 
-namespace GameGuild.Modules.Programs.GraphQL;
+namespace GameGuild.Modules.Programs;
 
 [ExtendObjectType<Mutation>]
 public class ProgramContentMutations {
@@ -15,7 +13,7 @@ public class ProgramContentMutations {
   /// Create new program content (Resource Level: Create permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Create permission on the specific Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Create, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Create, "programId")]
   public async Task<ProgramContent> CreateContentAsync(
     [Service] IProgramContentService contentService,
     Guid programId,
@@ -53,7 +51,7 @@ public class ProgramContentMutations {
   /// Update specific program content (Resource Level: Edit permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Edit permission on the parent Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ProgramContent> UpdateContentAsync(
     [Service] IProgramContentService contentService,
     Guid programId,
@@ -95,7 +93,7 @@ public class ProgramContentMutations {
   /// Delete specific program content (Resource Level: Delete permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Delete permission on the parent Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Delete, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Delete, "programId")]
   public async Task<bool> DeleteContentAsync(
     [Service] IProgramContentService contentService,
     Guid programId,
@@ -115,7 +113,7 @@ public class ProgramContentMutations {
   /// Move specific program content (Resource Level: Edit permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Edit permission on the parent Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<bool> MoveContentAsync(
     [Service] IProgramContentService contentService,
     Guid programId,
@@ -137,7 +135,7 @@ public class ProgramContentMutations {
   /// Reorder program content (Resource Level: Edit permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Edit permission on the specific Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<bool> ReorderContentAsync(
     [Service] IProgramContentService contentService, Guid programId,
     List<Guid> contentIds, List<int> sortOrders

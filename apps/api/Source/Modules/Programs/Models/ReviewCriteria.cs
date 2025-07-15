@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-using GameGuild.Common;
 using GameGuild.Common.Models;
 
-namespace GameGuild.Modules.Programs.Models;
+
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Criteria for peer review evaluation

@@ -1,12 +1,10 @@
 using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.DependencyInjection;
-using MediatR;
-using Xunit;
-using Xunit.Abstractions;
 using GameGuild.Tests.Fixtures;
+using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Infrastructure;
+
+namespace GameGuild.Tests.Infrastructure.Integration;
 
 /// <summary>
 /// Debug tests to understand GraphQL endpoint issues with TestServerFixture

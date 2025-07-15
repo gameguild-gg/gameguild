@@ -1,12 +1,12 @@
-using GameGuild.Modules.Programs.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace GameGuild.Modules.Programs.Models;
 
-public class ProgramRatingConfiguration : IEntityTypeConfiguration<ProgramRating>
+namespace GameGuild.Modules.Programs;
+
+public class ProgramRatingConfiguration : IEntityTypeConfiguration<GameGuild.Modules.Feedbacks.ProgramRating>
 {
-    public void Configure(EntityTypeBuilder<ProgramRating> builder)
+    public void Configure(EntityTypeBuilder<GameGuild.Modules.Feedbacks.ProgramRating> builder)
     {
         builder.ToTable("program_ratings");
         

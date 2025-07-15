@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products;
 
 public class CreateProductInput {
   public required string Name { get; set; }

@@ -8,10 +8,11 @@ using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Feedbacks;
 using GameGuild.Modules.Kyc.Models;
 using GameGuild.Modules.Localization;
-using GameGuild.Modules.Payments.Models;
+using GameGuild.Modules.Payments;
 using GameGuild.Modules.Permissions;
-using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Posts.Models;
+using GameGuild.Modules.Products;
+using GameGuild.Modules.Programs;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Reputations;
 using GameGuild.Modules.Resources;
@@ -22,6 +23,7 @@ using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
+using ProgramRating = GameGuild.Modules.Programs.ProgramRating;
 using Tag = GameGuild.Modules.Tags.Models.Tag;
 
 
@@ -103,11 +105,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<GameGuild.Modules.Posts.PostComment> PostComments { get; set; }
   public DbSet<GameGuild.Modules.Posts.PostLike> PostLikes { get; set; }
   public DbSet<GameGuild.Modules.Posts.PostContentReference> PostContentReferences { get; set; }
-  public DbSet<GameGuild.Modules.Posts.PostStatistics> PostStatistics { get; set; }
-  public DbSet<GameGuild.Modules.Posts.PostFollower> PostFollowers { get; set; }
-  public DbSet<GameGuild.Modules.Posts.PostTag> PostTags { get; set; }
-  public DbSet<GameGuild.Modules.Posts.PostTagAssignment> PostTagAssignments { get; set; }
-  public DbSet<GameGuild.Modules.Posts.PostView> PostViews { get; set; }
+  public DbSet<PostStatistics> PostStatistics { get; set; }
+  public DbSet<PostFollower> PostFollowers { get; set; }
+  public DbSet<PostTag> PostTags { get; set; }
+  public DbSet<PostTagAssignment> PostTagAssignments { get; set; }
+  public DbSet<PostView> PostViews { get; set; }
 
   // Project Management DbSets
   public DbSet<Project> Projects { get; set; }
@@ -140,7 +142,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<SessionWaitlist> SessionWaitlists { get; set; } // Program Management DbSets
 
-  public DbSet<Modules.Programs.Models.Program> Programs { get; set; }
+  public DbSet<Modules.Programs.Program> Programs { get; set; }
 
   public DbSet<ProgramContent> ProgramContents { get; set; }
 
@@ -193,7 +195,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   // Feedback Management DbSets
   public DbSet<ProgramFeedbackSubmission> ProgramFeedbackSubmissions { get; set; }
 
-  public DbSet<GameGuild.Modules.Programs.Models.ProgramRating> ProgramRatings { get; set; }
+  public DbSet<ProgramRating> ProgramRatings { get; set; }
 
   protected override void OnModelCreating(ModelBuilder modelBuilder) {
     base.OnModelCreating(modelBuilder);

@@ -1,12 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using MediatR;
-using GameGuild.Modules.Payments.Commands;
-using GameGuild.Modules.Payments.Queries;
-using GameGuild.Modules.Payments.Models;
 using GameGuild.Common.Interfaces;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
-namespace GameGuild.Modules.Payments.Controllers;
+
+namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// REST API controller for payment operations

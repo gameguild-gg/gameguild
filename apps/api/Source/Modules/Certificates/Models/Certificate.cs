@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
-using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Products;
 using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 
@@ -77,7 +77,7 @@ public class Certificate : Entity, ITenantable {
   public Guid? TenantId { get; set; }
 
   // Navigation properties
-  public virtual Programs.Models.Program? Program { get; set; }
+  public virtual Programs.Program? Program { get; set; }
 
   public virtual Product? Product { get; set; }
 

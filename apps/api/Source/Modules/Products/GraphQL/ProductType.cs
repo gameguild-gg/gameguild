@@ -2,13 +2,12 @@ using System.Security.Claims;
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+using ProductEntity = GameGuild.Modules.Products.Product;
 
 
-namespace GameGuild.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// GraphQL type definition for Product entity with DAC permission integration

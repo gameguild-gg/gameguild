@@ -1,13 +1,14 @@
-using GameGuild.Common.Interfaces;
+using GameGuild.Common;
 using GameGuild.Database;
-using GameGuild.Modules.Projects.Queries;
-
 using GameGuild.Modules.Contents;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using IUserContext = GameGuild.Common.Interfaces.IUserContext;
+using ITenantContext = GameGuild.Common.Interfaces.ITenantContext;
 
-namespace GameGuild.Modules.Projects.Handlers;
+
+namespace GameGuild.Modules.Projects;
 
 /// <summary>
 /// Query handlers for project operations
@@ -74,7 +75,7 @@ public class ProjectQueryHandlers :
 
             if (request.CreatorId.HasValue)
             {
-                query = query.Where(p => p.CreatorId == request.CreatorId.Value);
+                query = query.Where(p => p.CreatedById == request.CreatorId.Value);
             }
 
             if (request.CategoryId.HasValue)
@@ -85,7 +86,7 @@ public class ProjectQueryHandlers :
             if (!string.IsNullOrEmpty(request.SearchTerm))
             {
                 query = query.Where(p => 
-                    p.Name.Contains(request.SearchTerm) ||
+                    p.Title.Contains(request.SearchTerm) ||
                     p.Description.Contains(request.SearchTerm) ||
                     p.ShortDescription.Contains(request.SearchTerm));
             }
@@ -100,7 +101,7 @@ public class ProjectQueryHandlers :
             query = query.Skip(request.Skip).Take(request.Take);
 
             // Include related data
-            query = query.Include(p => p.Creator)
+            query = query.Include(p => p.CreatedBy)
                          .Include(p => p.Category);
 
             return await query.ToListAsync(cancellationToken);
@@ -124,7 +125,7 @@ public class ProjectQueryHandlers :
             // Include related data if requested
             if (request.IncludeTeam)
             {
-                query = query.Include(p => p.Team);
+                query = query.Include(p => p.Collaborators);
             }
 
             if (request.IncludeReleases)
@@ -138,7 +139,7 @@ public class ProjectQueryHandlers :
             }
 
             // Always include basic relations
-            query = query.Include(p => p.Creator)
+            query = query.Include(p => p.CreatedBy)
                          .Include(p => p.Category);
 
             // Apply access control
@@ -148,9 +149,9 @@ public class ProjectQueryHandlers :
 
             if (project != null && request.IncludeStatistics)
             {
-                // Load statistics separately to avoid complex joins
-                var statistics = await GetProjectStatistics(project.Id, cancellationToken);
-                project.Statistics = statistics;
+                // Note: Statistics are retrieved separately via GetProjectStatisticsQuery
+                // They are not directly attached to the Project entity
+                _logger.LogInformation("Statistics retrieval requested for project {ProjectId}, but statistics are managed separately", project.Id);
             }
 
             return project;
@@ -174,7 +175,7 @@ public class ProjectQueryHandlers :
             // Include related data if requested
             if (request.IncludeTeam)
             {
-                query = query.Include(p => p.Team);
+                query = query.Include(p => p.Collaborators);
             }
 
             if (request.IncludeReleases)
@@ -188,7 +189,7 @@ public class ProjectQueryHandlers :
             }
 
             // Always include basic relations
-            query = query.Include(p => p.Creator)
+            query = query.Include(p => p.CreatedBy)
                          .Include(p => p.Category);
 
             // Apply access control
@@ -216,7 +217,7 @@ public class ProjectQueryHandlers :
             }
 
             query = ApplyAccessControl(query);
-            query = query.Include(p => p.Creator)
+            query = query.Include(p => p.Collaborators)
                          .Include(p => p.Category)
                          .OrderByDescending(p => p.CreatedAt)
                          .Skip(request.Skip)
@@ -236,7 +237,7 @@ public class ProjectQueryHandlers :
         try
         {
             var query = _context.Projects
-                .Where(p => p.CreatorId == request.CreatorId && !p.IsDeleted);
+                .Where(p => p.Collaborators.Any(c => c.UserId == request.CreatorId && c.Role == "Owner") && !p.IsDeleted);
 
             if (request.Status.HasValue)
             {
@@ -244,7 +245,7 @@ public class ProjectQueryHandlers :
             }
 
             query = ApplyAccessControl(query);
-            query = query.Include(p => p.Creator)
+            query = query.Include(p => p.CreatedBy)
                          .Include(p => p.Category)
                          .OrderByDescending(p => p.CreatedAt)
                          .Skip(request.Skip)
@@ -272,7 +273,7 @@ public class ProjectQueryHandlers :
             }
 
             query = ApplyAccessControl(query);
-            query = query.Include(p => p.Creator)
+            query = query.Include(p => p.CreatedBy)
                          .Include(p => p.Category)
                          .OrderByDescending(p => p.CreatedAt)
                          .Skip(request.Skip)
@@ -299,7 +300,7 @@ public class ProjectQueryHandlers :
 
             var query = _context.Projects
                 .Where(p => p.IsDeleted)
-                .Include(p => p.Creator)
+                .Include(p => p.CreatedBy)
                 .Include(p => p.Category)
                 .OrderByDescending(p => p.DeletedAt)
                 .Skip(request.Skip)
@@ -325,7 +326,7 @@ public class ProjectQueryHandlers :
             if (!string.IsNullOrEmpty(request.SearchTerm))
             {
                 query = query.Where(p => 
-                    p.Name.Contains(request.SearchTerm) ||
+                    p.Title.Contains(request.SearchTerm) ||
                     p.Description.Contains(request.SearchTerm) ||
                     p.ShortDescription.Contains(request.SearchTerm));
             }
@@ -346,7 +347,7 @@ public class ProjectQueryHandlers :
             query = ApplyAccessControl(query);
             query = ApplySorting(query, request.SortBy, request.SortDirection);
             
-            query = query.Include(p => p.Creator)
+            query = query.Include(p => p.CreatedBy)
                          .Include(p => p.Category)
                          .Skip(request.Skip)
                          .Take(request.Take);
@@ -387,7 +388,7 @@ public class ProjectQueryHandlers :
 
             // TODO: Implement popularity scoring based on views, likes, downloads
             query = ApplyAccessControl(query);
-            query = query.Include(p => p.Creator)
+            query = query.Include(p => p.CreatedBy)
                          .Include(p => p.Category)
                          .OrderByDescending(p => p.CreatedAt) // Temporary sorting
                          .Take(request.Take);
@@ -414,7 +415,7 @@ public class ProjectQueryHandlers :
             }
 
             query = ApplyAccessControl(query);
-            query = query.Include(p => p.Creator)
+            query = query.Include(p => p.CreatedBy)
                          .Include(p => p.Category)
                          .OrderByDescending(p => p.CreatedAt)
                          .Take(request.Take);
@@ -442,7 +443,7 @@ public class ProjectQueryHandlers :
 
             // TODO: Add featured flag to Project model
             query = ApplyAccessControl(query);
-            query = query.Include(p => p.Creator)
+            query = query.Include(p => p.CreatedBy)
                          .Include(p => p.Category)
                          .OrderByDescending(p => p.CreatedAt) // Temporary sorting
                          .Take(request.Take);
@@ -469,7 +470,7 @@ public class ProjectQueryHandlers :
             // Authenticated users can see their own private projects
             accessibleQuery = query.Where(p => 
                 p.Visibility == AccessLevel.Public || 
-                (p.Visibility == AccessLevel.Private && p.CreatorId == _userContext.UserId));
+                (p.Visibility == AccessLevel.Private && p.Collaborators.Any(c => c.UserId == _userContext.UserId)));
 
             // Admins can see everything
             if (_userContext.IsInRole("Admin"))
@@ -490,7 +491,7 @@ public class ProjectQueryHandlers :
 
         return sortBy?.ToLowerInvariant() switch
         {
-            "name" => descending ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name),
+            "name" => descending ? query.OrderByDescending(p => p.Title) : query.OrderBy(p => p.Title),
             "createdat" => descending ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt),
             "updatedat" => descending ? query.OrderByDescending(p => p.UpdatedAt) : query.OrderBy(p => p.UpdatedAt),
             _ => query.OrderByDescending(p => p.CreatedAt)
@@ -507,11 +508,14 @@ public class ProjectQueryHandlers :
         return new ProjectStatistics
         {
             ProjectId = projectId,
-            ViewCount = 0,
-            DownloadCount = 0,
-            LikeCount = 0,
-            CommentCount = 0,
-            ShareCount = 0
+            FollowerCount = 0,
+            FeedbackCount = 0,
+            TotalDownloads = 0,
+            ActiveTeamCount = 0,
+            CollaboratorCount = 0,
+            ReleaseCount = 0,
+            JamSubmissionCount = 0,
+            AwardCount = 0
         };
     }
 }

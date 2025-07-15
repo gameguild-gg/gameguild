@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Programs.DTOs;
+﻿namespace GameGuild.Modules.Programs;
 
 public record CompletionTrendDto(DateTime Date, int CompletedCount, int TotalCount, decimal Rate) {
   public DateTime Date { get; init; } = Date;

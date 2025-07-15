@@ -1,10 +1,8 @@
 using GameGuild.Common;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Programs.Interfaces;
-using GameGuild.Modules.Programs.Models;
 
 
-namespace GameGuild.Modules.Programs.GraphQL;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// GraphQL mutations for ContentInteraction operations
@@ -18,7 +16,7 @@ public class ContentInteractionMutations {
   /// Requires Read permission on the parent Program
   /// If the interaction was previously submitted, creates a new interaction based on the previous data
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Read, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ContentInteractionResult> StartContentInteraction(
     Guid programId,
     StartContentInput input,
@@ -46,7 +44,7 @@ public class ContentInteractionMutations {
   /// Requires Edit permission on the parent Program
   /// Cannot update submitted interactions
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ContentInteractionResult> UpdateContentProgress(
     Guid programId,
     UpdateProgressInput input,
@@ -72,7 +70,7 @@ public class ContentInteractionMutations {
   /// Requires Edit permission on the parent Program
   /// Once submitted, the interaction cannot be modified
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ContentInteractionResult> SubmitContentInteraction(
     Guid programId,
     SubmitContentInput input,
@@ -98,7 +96,7 @@ public class ContentInteractionMutations {
   /// Requires Edit permission on the parent Program
   /// Cannot complete submitted interactions
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ContentInteractionResult> CompleteContentInteraction(
     Guid programId,
     CompleteContentInput input,
@@ -121,7 +119,7 @@ public class ContentInteractionMutations {
   /// Requires Edit permission on the parent Program
   /// Cannot update time on submitted interactions
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Models.Program>(PermissionType.Edit, "programId")]
+  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ContentInteractionResult> UpdateTimeSpent(
     Guid programId,
     UpdateTimeSpentInput input,

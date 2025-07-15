@@ -1,11 +1,8 @@
-using HotChocolate;
-using HotChocolate.Types;
-using MediatR;
-using GameGuild.Modules.Payments.Commands;
-using GameGuild.Modules.Payments.Models;
 using GameGuild.Common.Interfaces;
+using MediatR;
 
-namespace GameGuild.Modules.Payments.GraphQL;
+
+namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// GraphQL mutations for payment operations

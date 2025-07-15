@@ -1,9 +1,10 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using GameGuild.Modules.Users;
-using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Posts;
+
+namespace GameGuild.Modules.Posts.Models;
 
 /// <summary>
 /// Represents a user following a post for notifications

@@ -1,18 +1,20 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using GameGuild.Common;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
-using Xunit.Abstractions;
+using GameGuild.Tests.Infrastructure.Integration;
+using HotChocolate.Execution;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using HotChocolate.Execution;
-using MediatR;
+using Microsoft.Extensions.Logging;
+using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Infrastructure.Pure;
+
+namespace GameGuild.Tests.Infrastructure.Pure;
 
 /// <summary>
 /// Tests that break down the application bootstrap process into small, testable components
@@ -32,12 +34,12 @@ public class BootstrapComponentTests
     {
         // Arrange & Act
         var configuration = CreateProductionLikeConfiguration();
-        
+
         // Assert
         Assert.NotNull(configuration);
         Assert.NotNull(configuration["Jwt:SecretKey"]);
         Assert.NotNull(configuration["ConnectionStrings:DefaultConnection"]);
-        
+
         _output.WriteLine("✅ Step 1: Configuration loading works");
     }
 
@@ -47,7 +49,7 @@ public class BootstrapComponentTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateProductionLikeConfiguration();
-        
+
         // Act - Register core services
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging(builder =>
@@ -55,15 +57,15 @@ public class BootstrapComponentTests
             builder.AddConsole();
             builder.SetMinimumLevel(LogLevel.Information);
         });
-        
+
         // Assert
         var serviceProvider = services.BuildServiceProvider();
         var logger = serviceProvider.GetService<ILogger<BootstrapComponentTests>>();
         var config = serviceProvider.GetService<IConfiguration>();
-        
+
         Assert.NotNull(logger);
         Assert.NotNull(config);
-        
+
         _output.WriteLine("✅ Step 2: Basic services registration works");
     }
 
@@ -75,28 +77,28 @@ public class BootstrapComponentTests
         var configuration = CreateProductionLikeConfiguration();
         inMemoryServices.AddSingleton<IConfiguration>(configuration);
         inMemoryServices.AddLogging();
-        
-        inMemoryServices.AddDbContext<ApplicationDbContext>(options => 
+
+        inMemoryServices.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"Bootstrap_InMemory_{Guid.NewGuid()}"));
-        
+
         var inMemoryProvider = inMemoryServices.BuildServiceProvider();
         var inMemoryContext = inMemoryProvider.GetService<ApplicationDbContext>();
         Assert.NotNull(inMemoryContext);
         Assert.True(inMemoryContext.Database.IsInMemory());
-        
+
         // Test SQLite
         var sqliteServices = new ServiceCollection();
         sqliteServices.AddSingleton<IConfiguration>(configuration);
         sqliteServices.AddLogging();
-        
-        sqliteServices.AddDbContext<ApplicationDbContext>(options => 
+
+        sqliteServices.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlite("Data Source=:memory:"));
-        
+
         var sqliteProvider = sqliteServices.BuildServiceProvider();
         var sqliteContext = sqliteProvider.GetService<ApplicationDbContext>();
         Assert.NotNull(sqliteContext);
         Assert.True(sqliteContext.Database.IsSqlite());
-        
+
         _output.WriteLine("✅ Step 3: Database registration works with multiple providers");
     }
 
@@ -106,31 +108,31 @@ public class BootstrapComponentTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateProductionLikeConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
         services.AddHttpContextAccessor(); // Required for pipeline behaviors
         services.AddSingleton<GameGuild.Common.IDateTimeProvider, GameGuild.Common.DateTimeProvider>(); // Required for PerformanceBehavior
-        services.AddDbContext<ApplicationDbContext>(options => 
+        services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"AppLayer_{Guid.NewGuid()}"));
 
         // Act
         services.AddApplication();
-        
+
         // Add mock IAuthService for Authentication handlers (required by MediatR)
-        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, GameGuild.API.Tests.Infrastructure.Integration.MockAuthService>();
+        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();
-        
+
         // Check MediatR is registered
         var mediator = serviceProvider.GetService<IMediator>();
         Assert.NotNull(mediator);
-        
+
         // Check pipeline behaviors are registered
         var behaviors = serviceProvider.GetServices<IPipelineBehavior<TestRequest, string>>().ToList();
         Assert.True(behaviors.Count > 0, "Pipeline behaviors should be registered");
-        
+
         _output.WriteLine($"✅ Step 4: Application layer registered with {behaviors.Count} behaviors");
     }
 
@@ -140,7 +142,7 @@ public class BootstrapComponentTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateProductionLikeConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
 
@@ -149,10 +151,10 @@ public class BootstrapComponentTests
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();
-        
+
         var dbContext = serviceProvider.GetService<ApplicationDbContext>();
         Assert.NotNull(dbContext);
-        
+
         _output.WriteLine("✅ Step 5: Infrastructure layer registered without auth");
     }
 
@@ -162,7 +164,7 @@ public class BootstrapComponentTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateProductionLikeConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
 
@@ -183,7 +185,7 @@ public class BootstrapComponentTests
         // Assert
         var serviceProvider = services.BuildServiceProvider();
         Assert.NotNull(serviceProvider);
-        
+
         _output.WriteLine("✅ Step 6: Presentation layer registered with minimal options");
     }
 
@@ -193,10 +195,10 @@ public class BootstrapComponentTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateProductionLikeConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
-        services.AddDbContext<ApplicationDbContext>(options => 
+        services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"GraphQL_{Guid.NewGuid()}"));
 
         // Act - Add GraphQL with minimal configuration
@@ -209,7 +211,7 @@ public class BootstrapComponentTests
         var serviceProvider = services.BuildServiceProvider();
         var executorResolver = serviceProvider.GetService<IRequestExecutorResolver>();
         Assert.NotNull(executorResolver);
-        
+
         try
         {
             var executor = await executorResolver.GetRequestExecutorAsync();
@@ -220,7 +222,7 @@ public class BootstrapComponentTests
             _output.WriteLine($"GraphQL executor resolution note: {ex.Message}");
             Assert.NotNull(executorResolver); // At minimum the resolver should be available
         }
-        
+
         _output.WriteLine("✅ Step 7: GraphQL infrastructure registered separately");
     }
 
@@ -230,26 +232,26 @@ public class BootstrapComponentTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = CreateProductionLikeConfiguration();
-        
+
         // Act - Build up the entire service container step by step
-        
+
         // Step 1: Core services
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
-        
+
         // Step 2: Database
-        services.AddDbContext<ApplicationDbContext>(options => 
+        services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"CompleteBootstrap_{Guid.NewGuid()}"));
-        
+
         // Step 3: Application layer
         services.AddApplication();
-        
+
         // Add mock IAuthService for Authentication handlers (required by MediatR)
-        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, GameGuild.API.Tests.Infrastructure.Integration.MockAuthService>();
-        
+        services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
+
         // Step 4: Infrastructure (without auth for testing)
         services.AddInfrastructure(configuration, excludeAuth: true);
-        
+
         // Step 5: Presentation layer
         var presentationOptions = new DependencyInjection.PresentationOptions
         {
@@ -265,11 +267,11 @@ public class BootstrapComponentTests
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();
-        
+
         // Verify all major components are available
         var dbContext = serviceProvider.GetService<ApplicationDbContext>();
         var mediator = serviceProvider.GetService<IMediator>();
-        
+
         // For GraphQL executor, try multiple resolution methods
         var executor = serviceProvider.GetService<IRequestExecutor>();
         if (executor == null)
@@ -287,11 +289,11 @@ public class BootstrapComponentTests
                 }
             }
         }
-        
+
         Assert.NotNull(dbContext);
         Assert.NotNull(mediator);
         Assert.NotNull(executor);
-        
+
         _output.WriteLine("✅ Step 8: Complete bootstrap works step by step");
     }
 
@@ -310,14 +312,14 @@ public class BootstrapComponentTests
                     services.AddLogging();
 
                     // Database
-                    services.AddDbContext<ApplicationDbContext>(options => 
+                    services.AddDbContext<ApplicationDbContext>(options =>
                         options.UseInMemoryDatabase($"TestServer_{Guid.NewGuid()}"));
 
                     // Application layer
                     services.AddApplication();
 
                     // Add mock IAuthService for Authentication handlers (required by MediatR)
-                    services.AddScoped<GameGuild.Modules.Authentication.IAuthService, GameGuild.API.Tests.Infrastructure.Integration.MockAuthService>();
+                    services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
 
                     // Infrastructure (without auth)
                     services.AddInfrastructure(configuration, excludeAuth: true);
@@ -371,7 +373,7 @@ public class BootstrapComponentTests
         // Arrange
         var services = new ServiceCollection();
         var invalidConfiguration = CreateInvalidConfiguration();
-        
+
         services.AddSingleton<IConfiguration>(invalidConfiguration);
         services.AddLogging();
 
@@ -379,14 +381,14 @@ public class BootstrapComponentTests
         try
         {
             services.AddApplication();
-            
+
             // Add mock IAuthService for Authentication handlers (required by MediatR)
-            services.AddScoped<GameGuild.Modules.Authentication.IAuthService, GameGuild.API.Tests.Infrastructure.Integration.MockAuthService>();
-            
+            services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
+
             var serviceProvider = services.BuildServiceProvider();
             var mediator = serviceProvider.GetService<IMediator>();
             Assert.NotNull(mediator); // Should still work with invalid config
-            
+
             _output.WriteLine("✅ Bootstrap handles invalid configuration gracefully");
         }
         catch (Exception ex)
@@ -401,24 +403,24 @@ public class BootstrapComponentTests
     {
         // Arrange
         var initialMemory = GC.GetTotalMemory(true);
-        
+
         // Act
         for (int i = 0; i < 10; i++)
         {
             var services = new ServiceCollection();
             var configuration = CreateProductionLikeConfiguration();
-            
+
             services.AddSingleton<IConfiguration>(configuration);
             services.AddLogging();
-            services.AddDbContext<ApplicationDbContext>(options => 
+            services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseInMemoryDatabase($"MemoryTest_{i}_{Guid.NewGuid()}"));
             services.AddApplication();
-            
+
             // Add mock IAuthService for Authentication handlers (required by MediatR)
-            services.AddScoped<GameGuild.Modules.Authentication.IAuthService, GameGuild.API.Tests.Infrastructure.Integration.MockAuthService>();
-            
+            services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
+
             // Add mock IAuthService for Authentication handlers (required by MediatR)
-            services.AddScoped<GameGuild.Modules.Authentication.IAuthService, GameGuild.API.Tests.Infrastructure.Integration.MockAuthService>();
+            services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
             
             var serviceProvider = services.BuildServiceProvider();
             serviceProvider.Dispose();

@@ -6,7 +6,7 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Products.Models;
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Junction entity representing the relationship between a User and a Product

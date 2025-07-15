@@ -5,7 +5,7 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Payments.Models;
+namespace GameGuild.Modules.Payments;
 
 [Table("user_financial_methods")]
 [Index(nameof(UserId))]

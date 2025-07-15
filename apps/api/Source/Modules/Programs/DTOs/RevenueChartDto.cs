@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Programs.DTOs;
+﻿namespace GameGuild.Modules.Programs;
 
 public record RevenueChartDto(DateTime Date, decimal Revenue, int Purchases) {
   public DateTime Date { get; init; } = Date;

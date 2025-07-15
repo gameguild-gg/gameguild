@@ -1,20 +1,20 @@
-﻿namespace GameGuild.Modules.Payments.Interfaces;
+﻿namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// Interface for payment method management services
 /// </summary>
 public interface IUserFinancialMethodService {
-  Task<Models.UserFinancialMethod> AddPaymentMethodAsync(Models.UserFinancialMethod paymentMethod);
+  Task<UserFinancialMethod> AddPaymentMethodAsync(UserFinancialMethod paymentMethod);
 
-  Task<Models.UserFinancialMethod?> GetPaymentMethodByIdAsync(int id);
+  Task<UserFinancialMethod?> GetPaymentMethodByIdAsync(int id);
 
-  Task<IEnumerable<Models.UserFinancialMethod>> GetUserPaymentMethodsAsync(int userId);
+  Task<IEnumerable<UserFinancialMethod>> GetUserPaymentMethodsAsync(int userId);
 
-  Task<Models.UserFinancialMethod?> GetDefaultPaymentMethodAsync(int userId);
+  Task<UserFinancialMethod?> GetDefaultPaymentMethodAsync(int userId);
 
   Task<bool> SetDefaultPaymentMethodAsync(int userId, int paymentMethodId);
 
-  Task<Models.UserFinancialMethod> UpdatePaymentMethodAsync(Models.UserFinancialMethod paymentMethod);
+  Task<UserFinancialMethod> UpdatePaymentMethodAsync(UserFinancialMethod paymentMethod);
 
   Task<bool> RemovePaymentMethodAsync(int id);
 

@@ -2,12 +2,13 @@ using System.Text;
 using System.Text.Json;
 using GameGuild.Tests.Fixtures;
 using GameGuild.Tests.MockModules;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MediatR;
 using Xunit.Abstractions;
 
-namespace GameGuild.API.Tests.Infrastructure;
+
+namespace GameGuild.Tests.Infrastructure.Integration;
 
 /// <summary>
 /// Simple infrastructure tests that focus on core CQRS + MediatR integration without GraphQL complexity

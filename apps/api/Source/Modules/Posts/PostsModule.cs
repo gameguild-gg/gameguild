@@ -1,4 +1,6 @@
 using GameGuild.Common;
+using GameGuild.Modules.Posts.GraphQL;
+using GameGuild.Modules.Posts.Services;
 using Microsoft.EntityFrameworkCore;
 using HotChocolate.Execution.Configuration;
 

@@ -1,7 +1,7 @@
 ﻿using GameGuild.Common;
 
 
-namespace GameGuild.Modules.Programs.DTOs;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// DTO for content statistics
@@ -15,7 +15,7 @@ public class ContentStatsDto {
 
   public int OptionalContent { get; set; }
 
-  public Dictionary<ProgramContentType, int> ContentByType { get; set; } = new();
+  public Dictionary<Common.ProgramContentType, int> ContentByType { get; set; } = new();
 
   public Dictionary<Visibility, int> ContentByVisibility { get; set; } = new();
 

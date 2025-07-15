@@ -1,12 +1,8 @@
-using GameGuild.Common;
-using GameGuild.Modules.Payments.Models;
-using GameGuild.Modules.Payments.Commands;
-using GameGuild.Modules.Payments.Queries;
-using GameGuild.Modules.Permissions.Models;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GameGuild.Modules.Payments.Controllers;
+
+namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// REST API controller for managing payments using CQRS pattern

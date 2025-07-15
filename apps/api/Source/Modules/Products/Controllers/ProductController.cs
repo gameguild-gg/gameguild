@@ -1,14 +1,11 @@
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions.Models;
-using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Products.Commands;
-using GameGuild.Modules.Products.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+using ProductEntity = GameGuild.Modules.Products.Product;
 
-namespace GameGuild.Modules.Products.Controllers;
+namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// REST API controller for managing products using CQRS pattern
@@ -106,7 +103,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpGet("type/{type}")]
   [RequireContentTypePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProductEntity>>> GetProductsByType(
-    ProductType type,
+    Common.ProductType type,
     [FromQuery] int skip = 0, [FromQuery] int take = 50
   ) {
     var products = await mediator.Send(new GetProductsByTypeQuery(type, skip, take));
@@ -447,7 +444,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpGet("analytics/count")]
   [RequireContentTypePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<int>> GetProductCount(
-    [FromQuery] ProductType? type = null,
+    [FromQuery] Common.ProductType? type = null,
     [FromQuery] AccessLevel? visibility = null
   ) {
     var count = await mediator.Send(new GetProductCountQuery(type, visibility));

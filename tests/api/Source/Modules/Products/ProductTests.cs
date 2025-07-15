@@ -1,12 +1,6 @@
-using GameGuild.Common.Enums;
 using GameGuild.Common.Interfaces;
 using GameGuild.Database;
 using GameGuild.Modules.Products;
-using GameGuild.Modules.Products.Services;
-using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Products.Commands;
-using GameGuild.Modules.Products.Queries;
-using GameGuild.Modules.Products.Handlers;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

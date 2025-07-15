@@ -1,9 +1,7 @@
 using GameGuild.Common;
-using GameGuild.Modules.Programs.Interfaces;
-using GameGuild.Modules.Programs.Models;
-using HotChocolate;
 
-namespace GameGuild.Modules.Programs.GraphQL;
+
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// GraphQL mutations for content progress tracking

@@ -1,12 +1,6 @@
-using GameGuild.Common.Enums;
 using GameGuild.Common.Interfaces;
 using GameGuild.Database;
 using GameGuild.Modules.Payments;
-using GameGuild.Modules.Payments.Services;
-using GameGuild.Modules.Payments.Models;
-using GameGuild.Modules.Payments.Commands;
-using GameGuild.Modules.Payments.Queries;
-using GameGuild.Modules.Payments.Handlers;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
@@ -338,7 +332,7 @@ public class PaymentTests : IDisposable
 
     private async Task SeedTestProduct(Guid productId, string name, decimal price)
     {
-        var product = new GameGuild.Modules.Products.Models.Product
+        var product = new Product
         {
             Id = productId,
             Name = name,

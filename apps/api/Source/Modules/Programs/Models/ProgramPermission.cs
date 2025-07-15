@@ -4,7 +4,7 @@ using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Modules.Programs.Models;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Resource-specific permissions for Program entities (Layer 3 of DAC permission system)

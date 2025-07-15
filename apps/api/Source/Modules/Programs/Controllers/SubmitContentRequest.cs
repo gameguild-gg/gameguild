@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Programs.Controllers;
+﻿namespace GameGuild.Modules.Programs;
 
 public record SubmitContentRequest(Guid ProgramUserId, Guid ContentId, string SubmissionData) {
   public Guid ProgramUserId { get; init; } = ProgramUserId;
