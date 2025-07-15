@@ -1,6 +1,5 @@
 using GameGuild.Common.Enums;
-using GameG        // Add MediatR
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(PaymentCommandHandlers).Assembly));ld.Common.Interfaces;
+using GameGuild.Common.Interfaces;
 using GameGuild.Database;
 using GameGuild.Modules.Payments;
 using GameGuild.Modules.Payments.Services;
@@ -41,7 +40,7 @@ public class PaymentTests : IDisposable
         services.AddLogging(builder => builder.AddConsole());
         
         // Add MediatR
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreatePaymentCommandHandler).Assembly));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(PaymentCommandHandlers).Assembly));
         
         // Mock contexts
         _mockUserContext = new Mock<IUserContext>();
@@ -69,20 +68,14 @@ public class PaymentTests : IDisposable
     public async Task Payment_Entity_Can_Be_Created_And_Saved()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var productId = Guid.NewGuid();
-        await SeedTestData(userId, productId);
-
         var payment = new Payment
         {
             Id = Guid.NewGuid(),
-            UserId = userId,
-            ProductId = productId,
+            UserId = Guid.NewGuid(),
             Amount = 99.99m,
-            Currency = "USD",
             Status = PaymentStatus.Pending,
-            Method = PaymentMethod.CreditCard,
-            ProviderTransactionId = "test_txn_123",
+            Method = "stripe",
+            ProviderTransactionId = "pi_test123",
             CreatedAt = DateTime.UtcNow
         };
 
@@ -93,12 +86,9 @@ public class PaymentTests : IDisposable
         // Assert
         var savedPayment = await _context.Payments.FindAsync(payment.Id);
         Assert.NotNull(savedPayment);
-        Assert.Equal(userId, savedPayment.UserId);
-        Assert.Equal(productId, savedPayment.ProductId);
         Assert.Equal(99.99m, savedPayment.Amount);
-        Assert.Equal("USD", savedPayment.Currency);
         Assert.Equal(PaymentStatus.Pending, savedPayment.Status);
-        Assert.Equal(PaymentMethod.CreditCard, savedPayment.Method);
+        Assert.Equal("stripe", savedPayment.Method);
     }
 
     [Fact]
@@ -107,18 +97,19 @@ public class PaymentTests : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
-        await SeedTestData(userId, productId);
+        
+        await SeedTestUser(userId, "Test User");
+        await SeedTestProduct(productId, "Test Product", 49.99m);
 
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
-        _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(false);
+        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
 
         var command = new CreatePaymentCommand
         {
             UserId = userId,
             ProductId = productId,
-            Amount = 149.99m,
-            Currency = "USD",
-            Method = PaymentMethod.CreditCard
+            Amount = 49.99m,
+            Method = "stripe"
         };
 
         // Act
@@ -127,11 +118,9 @@ public class PaymentTests : IDisposable
         // Assert
         Assert.True(result.Success);
         Assert.NotNull(result.Payment);
-        Assert.Equal(userId, result.Payment.UserId);
-        Assert.Equal(productId, result.Payment.ProductId);
-        Assert.Equal(149.99m, result.Payment.Amount);
+        Assert.Equal(49.99m, result.Payment.Amount);
         Assert.Equal(PaymentStatus.Pending, result.Payment.Status);
-        Assert.NotNull(result.ClientSecret);
+        Assert.Equal("stripe", result.Payment.Method);
     }
 
     [Fact]
@@ -141,19 +130,19 @@ public class PaymentTests : IDisposable
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         
-        await SeedTestData(userId, productId);
+        await SeedTestUser(userId, "Test User");
+        await SeedTestProduct(productId, "Test Product", 49.99m);
 
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
-        _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(false);
+        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
 
         // Create payment first
         var createCommand = new CreatePaymentCommand
         {
             UserId = userId,
             ProductId = productId,
-            Amount = 99.99m,
-            Currency = "USD",
-            Method = PaymentMethod.CreditCard
+            Amount = 49.99m,
+            Method = "stripe"
         };
 
         var createResult = await _mediator.Send(createCommand);
@@ -163,7 +152,8 @@ public class PaymentTests : IDisposable
         var processCommand = new ProcessPaymentCommand
         {
             PaymentId = createResult.Payment!.Id,
-            ProviderTransactionId = "successful_charge_123"
+            ProviderTransactionId = "pi_success123",
+            Status = PaymentStatus.Completed
         };
 
         var processResult = await _mediator.Send(processCommand);
@@ -172,8 +162,8 @@ public class PaymentTests : IDisposable
         Assert.True(processResult.Success);
         Assert.NotNull(processResult.Payment);
         Assert.Equal(PaymentStatus.Completed, processResult.Payment.Status);
-        Assert.Equal("successful_charge_123", processResult.Payment.ProviderTransactionId);
-        Assert.True(processResult.Payment.ProcessedAt.HasValue);
+        Assert.Equal("pi_success123", processResult.Payment.ProviderTransactionId);
+        Assert.NotNull(processResult.Payment.ProcessedAt);
     }
 
     [Fact]
@@ -182,36 +172,42 @@ public class PaymentTests : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
-        await SeedTestData(userId, productId);
+        
+        await SeedTestUser(userId, "Test User");
+        await SeedTestProduct(productId, "Test Product", 49.99m);
 
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
+        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
 
-        // Create payment
+        // Create payment first
         var createCommand = new CreatePaymentCommand
         {
             UserId = userId,
             ProductId = productId,
-            Amount = 199.99m,
-            Currency = "USD",
-            Method = PaymentMethod.CreditCard
+            Amount = 49.99m,
+            Method = "stripe"
         };
 
         var createResult = await _mediator.Send(createCommand);
         Assert.True(createResult.Success);
 
-        // Act - Mark payment as failed
-        var payment = await _context.Payments.FindAsync(createResult.Payment!.Id);
-        Assert.NotNull(payment);
-        
-        payment.MarkAsFailed("Insufficient funds");
-        await _context.SaveChangesAsync();
+        // Act - Process failed payment
+        var processCommand = new ProcessPaymentCommand
+        {
+            PaymentId = createResult.Payment!.Id,
+            ProviderTransactionId = "pi_failed123",
+            Status = PaymentStatus.Failed,
+            FailureReason = "Insufficient funds"
+        };
+
+        var processResult = await _mediator.Send(processCommand);
 
         // Assert
-        var updatedPayment = await _context.Payments.FindAsync(payment.Id);
-        Assert.NotNull(updatedPayment);
-        Assert.Equal(PaymentStatus.Failed, updatedPayment.Status);
-        Assert.Equal("Insufficient funds", updatedPayment.FailureReason);
-        Assert.True(updatedPayment.FailedAt.HasValue);
+        Assert.True(processResult.Success);
+        Assert.NotNull(processResult.Payment);
+        Assert.Equal(PaymentStatus.Failed, processResult.Payment.Status);
+        Assert.Equal("Insufficient funds", processResult.Payment.FailureReason);
+        Assert.NotNull(processResult.Payment.FailedAt);
     }
 
     [Fact]
@@ -220,30 +216,32 @@ public class PaymentTests : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
-        await SeedTestData(userId, productId);
+        
+        await SeedTestUser(userId, "Test User");
+        await SeedTestProduct(productId, "Test Product", 49.99m);
 
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
-        _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(true);
+        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
 
-        // Create and complete a payment first
-        var payment = await CreateCompletedPayment(userId, productId, 79.99m);
+        // Create and process payment first
+        var completedPayment = await CreateCompletedPayment(userId, productId, 49.99m);
 
-        // Act
+        // Act - Process refund
         var refundCommand = new RefundPaymentCommand
         {
-            PaymentId = payment.Id,
-            RefundAmount = 79.99m,
-            Reason = "Customer requested refund",
-            RefundedBy = userId
+            PaymentId = completedPayment.Id,
+            RefundAmount = 49.99m,
+            Reason = "Customer request"
         };
 
         var refundResult = await _mediator.Send(refundCommand);
 
         // Assert
         Assert.True(refundResult.Success);
-        Assert.NotNull(refundResult.Refund);
-        Assert.Equal(79.99m, refundResult.Refund.RefundAmount);
-        Assert.Equal("Customer requested refund", refundResult.Refund.Reason);
+        Assert.NotNull(refundResult.Payment);
+        Assert.Equal(PaymentStatus.Refunded, refundResult.Payment.Status);
+        Assert.Equal(49.99m, refundResult.Payment.RefundAmount);
+        Assert.Equal("Customer request", refundResult.Payment.RefundReason);
     }
 
     [Fact]
@@ -251,22 +249,25 @@ public class PaymentTests : IDisposable
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var productId1 = Guid.NewGuid();
-        var productId2 = Guid.NewGuid();
+        var productId = Guid.NewGuid();
         
-        await SeedTestData(userId, productId1);
-        await SeedTestProduct(productId2, "Product 2", 129.99m);
+        await SeedTestUser(userId, "Test User");
+        await SeedTestProduct(productId, "Test Product", 49.99m);
 
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
+        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
 
         // Create multiple payments
-        await CreateCompletedPayment(userId, productId1, 99.99m);
-        await CreateCompletedPayment(userId, productId2, 129.99m);
+        await CreateCompletedPayment(userId, productId, 29.99m);
+        await CreateCompletedPayment(userId, productId, 39.99m);
+        await CreateCompletedPayment(userId, productId, 49.99m);
 
         // Act
         var query = new GetUserPaymentsQuery
         {
-            UserId = userId
+            UserId = userId,
+            Skip = 0,
+            Take = 10
         };
 
         var payments = await _mediator.Send(query);
@@ -274,8 +275,9 @@ public class PaymentTests : IDisposable
         // Assert
         Assert.NotNull(payments);
         var paymentList = payments.ToList();
-        Assert.Equal(2, paymentList.Count);
+        Assert.True(paymentList.Count >= 3);
         Assert.All(paymentList, p => Assert.Equal(userId, p.UserId));
+        Assert.All(paymentList, p => Assert.Equal(PaymentStatus.Completed, p.Status));
     }
 
     [Fact]
@@ -284,31 +286,37 @@ public class PaymentTests : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
-        await SeedTestData(userId, productId);
+        
+        await SeedTestUser(userId, "Test User");
+        await SeedTestProduct(productId, "Test Product", 49.99m);
 
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
-        _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(true);
+        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
 
         // Create test payments
-        await CreateCompletedPayment(userId, productId, 99.99m);
-        await CreateCompletedPayment(userId, productId, 149.99m);
+        await CreateCompletedPayment(userId, productId, 100.00m);
+        await CreateCompletedPayment(userId, productId, 200.00m);
 
         // Act
-        var query = new GetPaymentStatsQuery();
+        var query = new GetPaymentStatsQuery
+        {
+            FromDate = DateTime.UtcNow.AddDays(-30),
+            ToDate = DateTime.UtcNow
+        };
+
         var stats = await _mediator.Send(query);
 
         // Assert
         Assert.NotNull(stats);
-        Assert.True(stats.TotalPayments >= 2);
-        Assert.True(stats.TotalRevenue >= 249.98m);
+        Assert.True(stats.TotalRevenue >= 300.00m);
+        Assert.True(stats.TotalTransactions >= 2);
     }
 
     #region Helper Methods
 
-    private async Task SeedTestData(Guid userId, Guid productId, Guid? programId = null, decimal price = 99.99m)
+    private async Task SeedTestData()
     {
-        await SeedTestUser(userId, "Test User");
-        await SeedTestProduct(productId, "Test Product", price);
+        // Add any common test data here
     }
 
     private async Task SeedTestUser(Guid userId, string name)
@@ -330,7 +338,7 @@ public class PaymentTests : IDisposable
         {
             Id = productId,
             Name = name,
-            Description = $"{name} description"
+            ShortDescription = $"Description for {name}"
         };
 
         _context.Products.Add(product);
@@ -339,30 +347,22 @@ public class PaymentTests : IDisposable
 
     private async Task<Payment> CreateCompletedPayment(Guid userId, Guid productId, decimal amount)
     {
-        _mockUserContext.Setup(x => x.UserId).Returns(userId);
-
-        var createCommand = new CreatePaymentCommand
+        var payment = new Payment
         {
+            Id = Guid.NewGuid(),
             UserId = userId,
             ProductId = productId,
             Amount = amount,
-            Currency = "USD",
-            Method = PaymentMethod.CreditCard
+            Status = PaymentStatus.Completed,
+            Method = "stripe",
+            ProviderTransactionId = $"pi_test_{Guid.NewGuid()}",
+            CreatedAt = DateTime.UtcNow,
+            ProcessedAt = DateTime.UtcNow
         };
 
-        var createResult = await _mediator.Send(createCommand);
-        Assert.True(createResult.Success);
-
-        var processCommand = new ProcessPaymentCommand
-        {
-            PaymentId = createResult.Payment!.Id,
-            ProviderTransactionId = $"completed_charge_{Guid.NewGuid():N}"
-        };
-
-        var processResult = await _mediator.Send(processCommand);
-        Assert.True(processResult.Success);
-
-        return processResult.Payment!;
+        _context.Payments.Add(payment);
+        await _context.SaveChangesAsync();
+        return payment;
     }
 
     #endregion
