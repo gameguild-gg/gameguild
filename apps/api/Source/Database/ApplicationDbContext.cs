@@ -98,17 +98,25 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<PromoCode> PromoCodes { get; set; }
 
-  public DbSet<PromoCodeUse> PromoCodeUses { get; set; } 
+  public DbSet<PromoCodeUse> PromoCodeUses { get; set; }
 
   // Posts Management DbSets
   public DbSet<GameGuild.Modules.Posts.Post> Posts { get; set; }
+
   public DbSet<GameGuild.Modules.Posts.PostComment> PostComments { get; set; }
+
   public DbSet<GameGuild.Modules.Posts.PostLike> PostLikes { get; set; }
+
   public DbSet<GameGuild.Modules.Posts.PostContentReference> PostContentReferences { get; set; }
+
   public DbSet<PostStatistics> PostStatistics { get; set; }
+
   public DbSet<PostFollower> PostFollowers { get; set; }
+
   public DbSet<PostTag> PostTags { get; set; }
+
   public DbSet<PostTagAssignment> PostTagAssignments { get; set; }
+
   public DbSet<PostView> PostViews { get; set; }
 
   // Project Management DbSets
@@ -154,11 +162,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   // Program Enrollment and Progress DbSets
   public DbSet<ProgramEnrollment> ProgramEnrollments { get; set; }
+
   public DbSet<ContentProgress> ContentProgress { get; set; }
-  
+
   // Peer Review System DbSets
   public DbSet<PeerReview> PeerReviews { get; set; }
-  
+
   // Reporting System DbSets
   public DbSet<ContentReport> ContentReports { get; set; }
 
@@ -183,8 +192,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   // Payment Management DbSets
   public DbSet<Payment> Payments { get; set; }
+
   public DbSet<PaymentRefund> PaymentRefunds { get; set; }
+
   public DbSet<DiscountCode> DiscountCodes { get; set; }
+
   public DbSet<UserFinancialMethod> UserFinancialMethods { get; set; }
 
   public DbSet<FinancialTransaction> FinancialTransactions { get; set; }

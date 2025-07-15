@@ -6,8 +6,7 @@ namespace GameGuild.Common;
 /// <summary>
 /// Base class for paginated queries
 /// </summary>
-public abstract class PaginatedQuery<TResponse> : IQuery<PagedResult<TResponse>>
-{
+public abstract class PaginatedQuery<TResponse> : IQuery<PagedResult<TResponse>> {
   /// <summary>
   /// Number of items to skip (for pagination)
   /// </summary>

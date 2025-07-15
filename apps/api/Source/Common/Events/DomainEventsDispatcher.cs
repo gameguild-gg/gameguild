@@ -38,8 +38,7 @@ internal sealed class DomainEventsDispatcher(IServiceProvider serviceProvider) :
         type => typeof(HandlerWrapper<>).MakeGenericType(type)
       );
 
-      return (HandlerWrapper)(Activator.CreateInstance(wrapperType, handler) 
-        ?? throw new InvalidOperationException($"Failed to create handler wrapper for type {domainEventType.Name}"));
+      return (HandlerWrapper)(Activator.CreateInstance(wrapperType, handler) ?? throw new InvalidOperationException($"Failed to create handler wrapper for type {domainEventType.Name}"));
     }
   }
 

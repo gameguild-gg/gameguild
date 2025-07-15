@@ -3,8 +3,7 @@
 /// <summary>
 /// Enumeration of supported case types.
 /// </summary>
-public enum CaseType
-{
+public enum CaseType {
   /// <summary>
   /// kebab-case format (lowercase with hyphens).
   /// </summary>

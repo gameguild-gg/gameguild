@@ -7,108 +7,89 @@ namespace GameGuild.Common;
 /// <summary>
 /// Slug case transformer implementation using Slugify.Core.
 /// </summary>
-public class SlugCaseTransformer : CachedCaseTransformer
-{
-    private static readonly SlugHelper SlugHelper;
+public class SlugCaseTransformer : CachedCaseTransformer {
+  private static readonly SlugHelper SlugHelper;
 
-    static SlugCaseTransformer()
-    {
-        var config = new SlugHelperConfiguration
-        {
-            ForceLowerCase = true,
-            CollapseDashes = true,
-            TrimWhitespace = true,
-            StringReplacements = new Dictionary<string, string> { { "&", "and" }, { "+", "plus" } },
-        };
+  static SlugCaseTransformer() {
+    var config = new SlugHelperConfiguration {
+      ForceLowerCase = true, CollapseDashes = true, TrimWhitespace = true, StringReplacements = new Dictionary<string, string> { { "&", "and" }, { "+", "plus" } },
+    };
 
-        SlugHelper = new SlugHelper(config);
-    }
+    SlugHelper = new SlugHelper(config);
+  }
 
-    protected override string CacheKeyPrefix {
-      get => "slug";
-    }
+  protected override string CacheKeyPrefix {
+    get => "slug";
+  }
 
-    protected override string TransformCore(string input, CaseTransformOptions options)
-    {
-        if (string.IsNullOrEmpty(input)) return string.Empty;
+  protected override string TransformCore(string input, CaseTransformOptions options) {
+    if (string.IsNullOrEmpty(input)) return string.Empty;
 
-        var result = input;
+    var result = input;
 
-        // Apply custom replacements if provided (merge with default ones)
-        var replacements = new Dictionary<string, string> { { "&", "and" }, { "+", "plus" } };
-        if (options.StringReplacements != null)
-          foreach (var replacement in options.StringReplacements)
-          {
-            replacements[replacement.Key] = replacement.Value;
-          }
+    // Apply custom replacements if provided (merge with default ones)
+    var replacements = new Dictionary<string, string> { { "&", "and" }, { "+", "plus" } };
 
-        // Apply replacements
-        foreach (var replacement in replacements)
-        {
-            result = result.Replace(replacement.Key, replacement.Value);
-        }
+    if (options.StringReplacements != null)
+      foreach (var replacement in options.StringReplacements) { replacements[replacement.Key] = replacement.Value; }
 
-        // Generate slug using Slugify.Core
-        result = SlugHelper.GenerateSlug(result);
+    // Apply replacements
+    foreach (var replacement in replacements) { result = result.Replace(replacement.Key, replacement.Value); }
 
-        // Apply custom separator if provided
-        if (!string.IsNullOrEmpty(options.CustomSeparator) && options.CustomSeparator != "-") result = result.Replace("-", options.CustomSeparator);
+    // Generate slug using Slugify.Core
+    result = SlugHelper.GenerateSlug(result);
 
-        // Truncate if necessary
-        if (result.Length > options.MaxLength) result = result[..options.MaxLength].TrimEnd('-');
+    // Apply custom separator if provided
+    if (!string.IsNullOrEmpty(options.CustomSeparator) && options.CustomSeparator != "-") result = result.Replace("-", options.CustomSeparator);
 
-        return result;
-    }
+    // Truncate if necessary
+    if (result.Length > options.MaxLength) result = result[..options.MaxLength].TrimEnd('-');
 
-    public override bool IsValidFormat(string input)
-    {
-        if (string.IsNullOrEmpty(input)) return false;
+    return result;
+  }
 
-        // Check if it matches slug pattern: lowercase letters, numbers, and dashes
-        // No leading/trailing dashes, no consecutive dashes
-        return Regex.IsMatch(input, @"^[a-z0-9]+(?:-[a-z0-9]+)*$");
-    }
+  public override bool IsValidFormat(string input) {
+    if (string.IsNullOrEmpty(input)) return false;
 
-    /// <summary>
-    /// Generates a unique slug by appending a number if the base slug already exists.
-    /// </summary>
-    /// <param name="text">The text to convert to a slug.</param>
-    /// <param name="existingSlugs">Collection of existing slugs to check against.</param>
-    /// <param name="options">Transformation options.</param>
-    /// <returns>A unique slug string.</returns>
-    public string GenerateUnique(string text, IEnumerable<string> existingSlugs, CaseTransformOptions? options = null)
-    {
-        options ??= CaseTransformOptions.Default;
-        var baseSlug = Transform(text, options);
+    // Check if it matches slug pattern: lowercase letters, numbers, and dashes
+    // No leading/trailing dashes, no consecutive dashes
+    return Regex.IsMatch(input, @"^[a-z0-9]+(?:-[a-z0-9]+)*$");
+  }
 
-        var enumerable = existingSlugs as string[] ?? existingSlugs.ToArray();
+  /// <summary>
+  /// Generates a unique slug by appending a number if the base slug already exists.
+  /// </summary>
+  /// <param name="text">The text to convert to a slug.</param>
+  /// <param name="existingSlugs">Collection of existing slugs to check against.</param>
+  /// <param name="options">Transformation options.</param>
+  /// <returns>A unique slug string.</returns>
+  public string GenerateUnique(string text, IEnumerable<string> existingSlugs, CaseTransformOptions? options = null) {
+    options ??= CaseTransformOptions.Default;
+    var baseSlug = Transform(text, options);
 
-        if (!enumerable.Contains(baseSlug)) return baseSlug;
+    var enumerable = existingSlugs as string[] ?? existingSlugs.ToArray();
 
-        var existingSet = new HashSet<string>(enumerable, StringComparer.OrdinalIgnoreCase);
-        var counter = 1;
-        string uniqueSlug;
+    if (!enumerable.Contains(baseSlug)) return baseSlug;
 
-        do
-        {
-            var suffix = $"-{counter}";
-            var availableLength = options.MaxLength - suffix.Length;
+    var existingSet = new HashSet<string>(enumerable, StringComparer.OrdinalIgnoreCase);
+    var counter = 1;
+    string uniqueSlug;
 
-            if (availableLength <= 0)
-            {
-                uniqueSlug = counter.ToString();
-            }
-            else
-            {
-                var truncatedBase = baseSlug.Length > availableLength
-                                  ? baseSlug.Substring(0, availableLength).TrimEnd('-')
-                                  : baseSlug;
-                uniqueSlug = truncatedBase + suffix;
-            }
+    do {
+      var suffix = $"-{counter}";
+      var availableLength = options.MaxLength - suffix.Length;
 
-            counter++;
-        } while (existingSet.Contains(uniqueSlug));
+      if (availableLength <= 0) { uniqueSlug = counter.ToString(); }
+      else {
+        var truncatedBase = baseSlug.Length > availableLength
+                              ? baseSlug.Substring(0, availableLength).TrimEnd('-')
+                              : baseSlug;
+        uniqueSlug = truncatedBase + suffix;
+      }
 
-        return uniqueSlug;
-    }
+      counter++;
+    } while (existingSet.Contains(uniqueSlug));
+
+    return uniqueSlug;
+  }
 }
