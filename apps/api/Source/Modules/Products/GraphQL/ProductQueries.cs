@@ -25,8 +25,7 @@ public class ProductQueries {
     string? searchTerm = null,
     bool? isBundle = null
   ) {
-    var query = new GetProductsQuery
-    {
+    var query = new GetProductsQuery {
       Skip = skip,
       Take = take,
       Type = type,
@@ -35,6 +34,7 @@ public class ProductQueries {
       SearchTerm = searchTerm,
       IsBundle = isBundle
     };
+
     return await mediator.Send(query);
   }
 
@@ -46,13 +46,9 @@ public class ProductQueries {
     [Service] IMediator mediator,
     bool includePricing = true,
     bool includePrograms = true
-  ) { 
-    var query = new GetProductByIdQuery
-    {
-      ProductId = id,
-      IncludePricing = includePricing,
-      IncludePrograms = includePrograms
-    };
+  ) {
+    var query = new GetProductByIdQuery { ProductId = id, IncludePricing = includePricing, IncludePrograms = includePrograms };
+
     return await mediator.Send(query);
   }
 

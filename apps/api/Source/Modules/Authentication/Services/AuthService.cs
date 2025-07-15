@@ -287,6 +287,7 @@ namespace GameGuild.Modules.Authentication {
       string providerId
     ) {
       var result = await FindOrCreateOAuthUserWithInfoAsync(email, name, provider, providerId);
+
       return result.User;
     }
 

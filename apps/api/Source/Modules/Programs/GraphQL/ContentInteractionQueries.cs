@@ -104,14 +104,16 @@ public class ContentInteractionQueries {
   ) {
     // This would require extending the service to support statistics
     // For now, return a placeholder implementation
-    return Task.FromResult(new ContentInteractionStats {
-      ProgramId = programId,
-      TotalInteractions = 0,
-      CompletedInteractions = 0,
-      SubmittedInteractions = 0,
-      InProgressInteractions = 0,
-      AverageCompletionPercentage = 0,
-      AverageTimeSpentMinutes = 0,
-    });
+    return Task.FromResult(
+      new ContentInteractionStats {
+        ProgramId = programId,
+        TotalInteractions = 0,
+        CompletedInteractions = 0,
+        SubmittedInteractions = 0,
+        InProgressInteractions = 0,
+        AverageCompletionPercentage = 0,
+        AverageTimeSpentMinutes = 0,
+      }
+    );
   }
 }

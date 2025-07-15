@@ -6,10 +6,8 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// Validator for BulkDeleteTenantsCommand
 /// </summary>
-public class BulkDeleteTenantsCommandValidator : AbstractValidator<BulkDeleteTenantsCommand>
-{
-  public BulkDeleteTenantsCommandValidator()
-  {
+public class BulkDeleteTenantsCommandValidator : AbstractValidator<BulkDeleteTenantsCommand> {
+  public BulkDeleteTenantsCommandValidator() {
     RuleFor(x => x.TenantIds)
       .NotNull()
       .WithMessage("Tenant IDs collection cannot be null")

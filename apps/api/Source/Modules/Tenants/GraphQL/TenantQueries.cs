@@ -20,9 +20,7 @@ public class TenantQueries {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
-    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) {
-      throw new GraphQLException("Authentication required to access tenant data.");
-    }
+    if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) { throw new GraphQLException("Authentication required to access tenant data."); }
 
     var query = new GetAllTenantsQuery(false);
     var result = await mediator.Send(query);
@@ -183,5 +181,4 @@ public class TenantQueries {
 
     return result.Value;
   }
-
 }

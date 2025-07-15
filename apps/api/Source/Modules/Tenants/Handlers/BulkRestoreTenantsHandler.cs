@@ -12,13 +12,11 @@ public class BulkRestoreTenantsHandler(
   ApplicationDbContext context,
   ILogger<BulkRestoreTenantsHandler> logger,
   IDomainEventPublisher eventPublisher
-) : ICommandHandler<BulkRestoreTenantsCommand, Common.Result<int>>
-{
-  public async Task<Common.Result<int>> Handle(BulkRestoreTenantsCommand request, CancellationToken cancellationToken)
-  {
-    try
-    {
+) : ICommandHandler<BulkRestoreTenantsCommand, Common.Result<int>> {
+  public async Task<Common.Result<int>> Handle(BulkRestoreTenantsCommand request, CancellationToken cancellationToken) {
+    try {
       var tenantIds = request.TenantIds.ToList();
+
       if (tenantIds.Count == 0) return Result.Success(0);
 
       var tenants = await context.Resources.OfType<Tenant>()
@@ -27,10 +25,9 @@ public class BulkRestoreTenantsHandler(
 
       if (tenants.Count == 0) return Result.Success(0);
 
-      foreach (var tenant in tenants)
-      {
+      foreach (var tenant in tenants) {
         tenant.Restore();
-                
+
         // Publish domain event for each restored tenant
         await eventPublisher.PublishAsync(
           new TenantRestoredEvent(tenant.Id, tenant.Name),
@@ -41,11 +38,12 @@ public class BulkRestoreTenantsHandler(
       await context.SaveChangesAsync(cancellationToken);
 
       logger.LogInformation("Bulk restored {Count} tenants", tenants.Count);
+
       return Result.Success(tenants.Count);
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       logger.LogError(ex, "Error bulk restoring tenants");
+
       return Result.Failure<int>(
         Common.Error.Failure("Tenant.BulkRestoreFailed", "Failed to bulk restore tenants")
       );

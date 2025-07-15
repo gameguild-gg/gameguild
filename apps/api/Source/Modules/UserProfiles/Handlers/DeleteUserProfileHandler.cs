@@ -2,6 +2,7 @@ using GameGuild.Common;
 using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
@@ -16,7 +17,7 @@ public class DeleteUserProfileHandler(
     try {
       // Find the user profile
       var userProfile = await context.Resources.OfType<UserProfile>()
-                                    .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
+                                     .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 
       if (userProfile == null) {
         return Result.Failure<bool>(
@@ -27,7 +28,8 @@ public class DeleteUserProfileHandler(
       if (request.SoftDelete) {
         // Soft delete
         userProfile.DeletedAt = DateTime.UtcNow;
-      } else {
+      }
+      else {
         // Hard delete
         context.Resources.Remove(userProfile);
       }
@@ -58,4 +60,3 @@ public class DeleteUserProfileHandler(
     }
   }
 }
-

@@ -26,4 +26,3 @@ public class RestoreUserProfileCommandValidator : AbstractValidator<RestoreUserP
                          .AnyAsync(x => x.Id == userProfileId && x.DeletedAt != null, cancellationToken);
   }
 }
-

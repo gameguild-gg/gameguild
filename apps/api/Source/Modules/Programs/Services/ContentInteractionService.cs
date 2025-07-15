@@ -17,7 +17,7 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
   public async Task<ContentInteraction> StartContentAsync(Guid programUserId, Guid contentId) {
     // Check if there's already an interaction for this user/content
     var existingInteraction = await context.ContentInteractions
-                                            .FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
+                                           .FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
 
     if (existingInteraction != null) {
       // If already submitted, create a new interaction based on the last one
@@ -114,10 +114,10 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
   /// </summary>
   public async Task<ContentInteraction?> GetInteractionAsync(Guid programUserId, Guid contentId) {
     return await context.ContentInteractions
-                         .Include(ci => ci.ProgramUser)
-                         .Include(ci => ci.Content)
-                         .Include(ci => ci.ActivityGrades)
-                         .FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
+                        .Include(ci => ci.ProgramUser)
+                        .Include(ci => ci.Content)
+                        .Include(ci => ci.ActivityGrades)
+                        .FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
   }
 
   /// <summary>
@@ -125,11 +125,11 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
   /// </summary>
   public async Task<IEnumerable<ContentInteraction>> GetUserInteractionsAsync(Guid programUserId) {
     return await context.ContentInteractions
-                         .Include(ci => ci.Content)
-                         .Include(ci => ci.ActivityGrades)
-                         .Where(ci => ci.ProgramUserId == programUserId)
-                         .OrderByDescending(ci => ci.LastAccessedAt)
-                         .ToListAsync();
+                        .Include(ci => ci.Content)
+                        .Include(ci => ci.ActivityGrades)
+                        .Where(ci => ci.ProgramUserId == programUserId)
+                        .OrderByDescending(ci => ci.LastAccessedAt)
+                        .ToListAsync();
   }
 
   /// <summary>
@@ -153,10 +153,10 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
   /// </summary>
   private async Task<ContentInteraction> GetInteractionByIdAsync(Guid interactionId) {
     var interaction = await context.ContentInteractions
-                                    .Include(ci => ci.ProgramUser)
-                                    .Include(ci => ci.Content)
-                                    .Include(ci => ci.ActivityGrades)
-                                    .FirstOrDefaultAsync(ci => ci.Id == interactionId);
+                                   .Include(ci => ci.ProgramUser)
+                                   .Include(ci => ci.Content)
+                                   .Include(ci => ci.ActivityGrades)
+                                   .FirstOrDefaultAsync(ci => ci.Id == interactionId);
 
     if (interaction == null) throw new InvalidOperationException($"Content interaction with ID {interactionId} not found.");
 

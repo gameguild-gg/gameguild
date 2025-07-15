@@ -51,7 +51,7 @@ public class PromoCodeType : ObjectType<PromoCode> {
               .Description("Indicates if the promo code is currently valid")
               .Resolve(async context => {
                   var promoCode = context.Parent<PromoCode>();
-                  var productService = context.Service<Services.IProductService>();
+                  var productService = context.Service<IProductService>();
 
                   return await productService.IsPromoCodeValidAsync(promoCode.Code);
                 }

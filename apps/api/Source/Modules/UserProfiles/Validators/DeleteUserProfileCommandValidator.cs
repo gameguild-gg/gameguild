@@ -26,4 +26,3 @@ public class DeleteUserProfileCommandValidator : AbstractValidator<DeleteUserPro
                          .AnyAsync(x => x.Id == userProfileId && x.DeletedAt == null, cancellationToken);
   }
 }
-

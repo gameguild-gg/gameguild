@@ -223,21 +223,20 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<ProgramEntity>> GetProgramBySlug(string slug) {
     // Check if user is authenticated
     var isAuthenticated = HttpContext.User.Identity?.IsAuthenticated == true;
-    
+
     ProgramEntity? program;
-    
+
     if (isAuthenticated) {
       // Authenticated users can access any program (subject to permission checks)
       program = await programService.GetProgramBySlugAsync(slug);
-    } else {
+    }
+    else {
       // For unauthenticated users, first check if the program exists at all
       program = await programService.GetProgramBySlugAsync(slug);
-      
+
       if (program != null) {
         // If program exists but is not published/public, return Unauthorized
-        if (program.Status != ContentStatus.Published || program.Visibility != AccessLevel.Public) {
-          return Unauthorized("Authentication required to access this program");
-        }
+        if (program.Status != ContentStatus.Published || program.Visibility != AccessLevel.Public) { return Unauthorized("Authentication required to access this program"); }
       }
       // If program is published and public, it will be returned; if not found, null will be returned
     }
