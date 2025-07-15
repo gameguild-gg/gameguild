@@ -180,6 +180,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<UserSubscription> UserSubscriptions { get; set; }
 
   // Payment Management DbSets
+  public DbSet<Payment> Payments { get; set; }
+  public DbSet<PaymentRefund> PaymentRefunds { get; set; }
+  public DbSet<DiscountCode> DiscountCodes { get; set; }
   public DbSet<UserFinancialMethod> UserFinancialMethods { get; set; }
 
   public DbSet<FinancialTransaction> FinancialTransactions { get; set; }

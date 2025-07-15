@@ -136,11 +136,12 @@ public class ProgramEnrollment : Entity
 /// </summary>
 public enum EnrollmentStatus
 {
-    Active = 0,
-    Paused = 1,
-    Cancelled = 2,
-    Expired = 3,
-    Completed = 4
+    Open = 0,
+    Active = 1,
+    Paused = 2,
+    Cancelled = 3,
+    Expired = 4,
+    Completed = 5
 }
 
 /// <summary>
