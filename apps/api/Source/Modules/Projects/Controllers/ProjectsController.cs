@@ -1,154 +1,483 @@
-using System.Security.Claims;
-using GameGuild.Common;
-using GameGuild.Modules.Authentication;
+using GameGuild.Common.Interfaces;
+using GameGuild.Modules.Projects.Commands;
+using GameGuild.Modules.Projects.Queries;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Permissions.Models;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
+namespace GameGuild.Modules.Projects.Controllers;
 
-namespace GameGuild.Modules.Projects;
-
+/// <summary>
+/// REST API controller for managing projects using CQRS pattern
+/// </summary>
 [ApiController]
-[Route("[controller]")]
-public class ProjectsController(IProjectService projectService) : ControllerBase {
-  [HttpGet]
-  [RequireResourcePermission<Project>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Project>>> GetProjects() {
-    // Get the current authenticated user's ID
-    var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+[Route("api/[controller]")]
+[Authorize]
+public class ProjectsController : ControllerBase
+{
+    private readonly IMediator _mediator;
+    private readonly IUserContext _userContext;
+    private readonly ITenantContext _tenantContext;
+    private readonly ILogger<ProjectsController> _logger;
 
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
-
-    // Return only projects created by the authenticated user
-    var projects = await projectService.GetProjectsByCreatorAsync(userId);
-
-    return Ok(projects);
-  }
-
-  // GET: projects/{id}
-  [HttpGet("{id:guid}")]
-  [RequireResourcePermission<Project>(PermissionType.Read)]
-  public async Task<ActionResult<Project>> GetProject(Guid id) {
-    var project = await projectService.GetProjectByIdAsync(id);
-
-    if (project == null) return NotFound();
-
-    return Ok(project);
-  }
-
-  // GET: projects/slug/{slug}
-  [HttpGet("slug/{slug}")]
-  [Public]
-  public async Task<ActionResult<Project>> GetProjectBySlug(string slug) {
-    var project = await projectService.GetProjectBySlugAsync(slug);
-
-    if (project == null) return NotFound();
-
-    return Ok(project);
-  }
-
-  // GET: projects/category/{categoryId}
-  [HttpGet("category/{categoryId:guid}")]
-  [RequireResourcePermission<Project>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCategory(Guid categoryId) {
-    var projects = await projectService.GetProjectsByCategoryAsync(categoryId);
-
-    return Ok(projects);
-  }
-
-  // GET: projects/creator/{creatorId}
-  [HttpGet("creator/{creatorId:guid}")]
-  [RequireResourcePermission<Project>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCreator(Guid creatorId) {
-    var projects = await projectService.GetProjectsByCreatorAsync(creatorId);
-
-    return Ok(projects);
-  }
-
-  // GET: projects/status/{status}
-  [HttpGet("status/{status}")]
-  [RequireResourcePermission<Project>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByStatus(ContentStatus status) {
-    var projects = await projectService.GetProjectsByStatusAsync(status);
-
-    return Ok(projects);
-  } // POST: projects
-
-  [HttpPost]
-  [RequireResourcePermission<Project>(PermissionType.Create)]
-  public async Task<ActionResult<Project>> CreateProject([FromBody] Project project) {
-    // Get the current authenticated user's ID
-    var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
-
-    // Set the creator ID from the authenticated user
-    project.CreatedById = userId;
-
-    // Auto-generate slug if not provided
-    if (string.IsNullOrEmpty(project.Slug)) project.Slug = Project.GenerateSlug(project.Title);
-
-    if (!ModelState.IsValid) return BadRequest(ModelState);
-
-    var createdProject = await projectService.CreateProjectAsync(project);
-
-    return CreatedAtAction(nameof(GetProject), new { id = createdProject.Id }, createdProject);
-  }
-
-  // PUT: projects/{id}
-  [HttpPut("{id}")]
-  [RequireResourcePermission<Project>(PermissionType.Edit)]
-  public async Task<ActionResult<Project>> UpdateProject(Guid id, [FromBody] Project project) {
-    if (id != project.Id) return BadRequest("Project ID mismatch");
-
-    if (!ModelState.IsValid) return BadRequest(ModelState);
-
-    try {
-      var updatedProject = await projectService.UpdateProjectAsync(project);
-
-      return Ok(updatedProject);
+    public ProjectsController(
+        IMediator mediator,
+        IUserContext userContext,
+        ITenantContext tenantContext,
+        ILogger<ProjectsController> logger)
+    {
+        _mediator = mediator;
+        _userContext = userContext;
+        _tenantContext = tenantContext;
+        _logger = logger;
     }
-    catch (InvalidOperationException ex) { return NotFound(ex.Message); }
-  }
 
-  // DELETE: projects/{id}
-  [HttpDelete("{id}")]
-  [RequireResourcePermission<Project>(PermissionType.Delete)]
-  public async Task<ActionResult> DeleteProject(Guid id) {
-    var success = await projectService.DeleteProjectAsync(id);
+    /// <summary>
+    /// Get all projects with filtering and pagination
+    /// </summary>
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<ActionResult<IEnumerable<Project>>> GetProjects(
+        [FromQuery] ProjectType? type = null,
+        [FromQuery] ContentStatus? status = null,
+        [FromQuery] AccessLevel? visibility = null,
+        [FromQuery] Guid? creatorId = null,
+        [FromQuery] Guid? categoryId = null,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        [FromQuery] string? sortBy = "CreatedAt",
+        [FromQuery] string? sortDirection = "DESC")
+    {
+        var query = new GetAllProjectsQuery
+        {
+            Type = type,
+            Status = status,
+            Visibility = visibility,
+            CreatorId = creatorId,
+            CategoryId = categoryId,
+            SearchTerm = searchTerm,
+            Skip = skip,
+            Take = Math.Min(take, 100), // Limit max items
+            SortBy = sortBy,
+            SortDirection = sortDirection
+        };
 
-    if (!success) return NotFound();
+        var projects = await _mediator.Send(query);
+        return Ok(projects);
+    }
 
-    return NoContent();
-  }
+    /// <summary>
+    /// Get project by ID
+    /// </summary>
+    [HttpGet("{id:guid}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<Project>> GetProject(
+        Guid id,
+        [FromQuery] bool includeTeam = true,
+        [FromQuery] bool includeReleases = true,
+        [FromQuery] bool includeCollaborators = true,
+        [FromQuery] bool includeStatistics = false)
+    {
+        var query = new GetProjectByIdQuery
+        {
+            ProjectId = id,
+            IncludeTeam = includeTeam,
+            IncludeReleases = includeReleases,
+            IncludeCollaborators = includeCollaborators,
+            IncludeStatistics = includeStatistics
+        };
 
-  // POST: projects/{id}/restore
-  [HttpPost("{id}/restore")]
-  [RequireResourcePermission<Project>(PermissionType.Restore)]
-  public async Task<ActionResult> RestoreProject(Guid id) {
-    var success = await projectService.RestoreProjectAsync(id);
+        var project = await _mediator.Send(query);
+        
+        if (project == null)
+        {
+            return NotFound();
+        }
 
-    if (!success) return NotFound();
+        return Ok(project);
+    }
 
-    return NoContent();
-  }
+    /// <summary>
+    /// Get project by slug
+    /// </summary>
+    [HttpGet("slug/{slug}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<Project>> GetProjectBySlug(
+        string slug,
+        [FromQuery] bool includeTeam = true,
+        [FromQuery] bool includeReleases = true,
+        [FromQuery] bool includeCollaborators = true)
+    {
+        var query = new GetProjectBySlugQuery
+        {
+            Slug = slug,
+            IncludeTeam = includeTeam,
+            IncludeReleases = includeReleases,
+            IncludeCollaborators = includeCollaborators
+        };
 
-  // GET: projects/deleted
-  [HttpGet("deleted")]
-  [RequireResourcePermission<Project>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Project>>> GetDeletedProjects() {
-    var projects = await projectService.GetDeletedProjectsAsync();
+        var project = await _mediator.Send(query);
+        
+        if (project == null)
+        {
+            return NotFound();
+        }
 
-    return Ok(projects);
-  }
+        return Ok(project);
+    }
 
-  // GET: projects/public (public access for web app integration)
-  [HttpGet("public")]
-  [Public]
-  public async Task<ActionResult<IEnumerable<Project>>> GetPublicProjects() {
-    // Only return published AND public visibility projects for public access
-    var projects = await projectService.GetPublicProjectsAsync();
+    /// <summary>
+    /// Create a new project
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<CreateProjectResult>> CreateProject([FromBody] CreateProjectRequest request)
+    {
+        var command = new CreateProjectCommand
+        {
+            Title = request.Name,
+            Description = request.Description,
+            ShortDescription = request.ShortDescription,
+            ImageUrl = request.ImageUrl,
+            RepositoryUrl = request.RepositoryUrl,
+            WebsiteUrl = request.DemoUrl,
+            DownloadUrl = request.DocumentationUrl,
+            Type = (GameGuild.Common.ProjectType)request.Type,
+            CreatedById = _userContext.UserId ?? Guid.Empty,
+            CategoryId = request.CategoryId,
+            Visibility = request.Visibility,
+            Status = request.Status,
+            Tags = request.Tags,
+            TenantId = _tenantContext.TenantId
+        };
 
-    return Ok(projects);
-  }
+        var result = await _mediator.Send(command);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return CreatedAtAction(nameof(GetProject), new { id = result.Project!.Id }, result);
+    }
+
+    /// <summary>
+    /// Update an existing project
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<UpdateProjectResult>> UpdateProject(Guid id, [FromBody] UpdateProjectRequest request)
+    {
+        var command = new UpdateProjectCommand
+        {
+            ProjectId = id,
+            Title = request.Name,
+            Description = request.Description,
+            ShortDescription = request.ShortDescription,
+            ImageUrl = request.ImageUrl,
+            RepositoryUrl = request.RepositoryUrl,
+            WebsiteUrl = request.DemoUrl,
+            DownloadUrl = request.DocumentationUrl,
+            Type = request.Type != null ? (GameGuild.Common.ProjectType)request.Type : null,
+            CategoryId = request.CategoryId,
+            Visibility = request.Visibility,
+            Status = request.Status,
+            Tags = request.Tags,
+            UpdatedBy = _userContext.UserId ?? Guid.Empty
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Delete a project
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    public async Task<ActionResult<DeleteProjectResult>> DeleteProject(
+        Guid id, 
+        [FromQuery] bool softDelete = true, 
+        [FromQuery] string? reason = null)
+    {
+        var command = new DeleteProjectCommand
+        {
+            ProjectId = id,
+            DeletedBy = _userContext.UserId ?? Guid.Empty,
+            SoftDelete = softDelete,
+            Reason = reason
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Publish a project
+    /// </summary>
+    [HttpPost("{id:guid}/publish")]
+    public async Task<ActionResult<PublishProjectResult>> PublishProject(Guid id)
+    {
+        var command = new PublishProjectCommand
+        {
+            ProjectId = id,
+            PublishedBy = _userContext.UserId ?? Guid.Empty
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Unpublish a project
+    /// </summary>
+    [HttpPost("{id:guid}/unpublish")]
+    public async Task<ActionResult<UnpublishProjectResult>> UnpublishProject(Guid id)
+    {
+        var command = new UnpublishProjectCommand
+        {
+            ProjectId = id,
+            UnpublishedBy = _userContext.UserId ?? Guid.Empty
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Archive a project
+    /// </summary>
+    [HttpPost("{id:guid}/archive")]
+    public async Task<ActionResult<ArchiveProjectResult>> ArchiveProject(Guid id)
+    {
+        var command = new ArchiveProjectCommand
+        {
+            ProjectId = id,
+            ArchivedBy = _userContext.UserId ?? Guid.Empty
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Search projects
+    /// </summary>
+    [HttpGet("search")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IEnumerable<Project>>> SearchProjects(
+        [FromQuery] string searchTerm,
+        [FromQuery] ProjectType? type = null,
+        [FromQuery] Guid? categoryId = null,
+        [FromQuery] ContentStatus? status = null,
+        [FromQuery] AccessLevel? visibility = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        [FromQuery] string? sortBy = "Relevance",
+        [FromQuery] string? sortDirection = "DESC")
+    {
+        var query = new SearchProjectsQuery
+        {
+            SearchTerm = searchTerm,
+            Type = type,
+            CategoryId = categoryId,
+            Status = status,
+            Visibility = visibility,
+            Skip = skip,
+            Take = Math.Min(take, 100),
+            SortBy = sortBy,
+            SortDirection = sortDirection
+        };
+
+        var projects = await _mediator.Send(query);
+        return Ok(projects);
+    }
+
+    /// <summary>
+    /// Get popular projects
+    /// </summary>
+    [HttpGet("popular")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IEnumerable<Project>>> GetPopularProjects(
+        [FromQuery] ProjectType? type = null,
+        [FromQuery] int take = 10)
+    {
+        var query = new GetPopularProjectsQuery
+        {
+            Type = type,
+            Take = Math.Min(take, 50)
+        };
+
+        var projects = await _mediator.Send(query);
+        return Ok(projects);
+    }
+
+    /// <summary>
+    /// Get recent projects
+    /// </summary>
+    [HttpGet("recent")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IEnumerable<Project>>> GetRecentProjects(
+        [FromQuery] ProjectType? type = null,
+        [FromQuery] int take = 10)
+    {
+        var query = new GetRecentProjectsQuery
+        {
+            Type = type,
+            Take = Math.Min(take, 50)
+        };
+
+        var projects = await _mediator.Send(query);
+        return Ok(projects);
+    }
+
+    /// <summary>
+    /// Get featured projects
+    /// </summary>
+    [HttpGet("featured")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IEnumerable<Project>>> GetFeaturedProjects(
+        [FromQuery] ProjectType? type = null,
+        [FromQuery] int take = 10)
+    {
+        var query = new GetFeaturedProjectsQuery
+        {
+            Type = type,
+            Take = Math.Min(take, 50)
+        };
+
+        var projects = await _mediator.Send(query);
+        return Ok(projects);
+    }
+
+    /// <summary>
+    /// Get project statistics
+    /// </summary>
+    [HttpGet("{id:guid}/statistics")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ProjectStatistics>> GetProjectStatistics(
+        Guid id,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null)
+    {
+        var query = new GetProjectStatisticsQuery
+        {
+            ProjectId = id,
+            FromDate = fromDate,
+            ToDate = toDate
+        };
+
+        var statistics = await _mediator.Send(query);
+        return Ok(statistics);
+    }
+
+    /// <summary>
+    /// Get projects by category
+    /// </summary>
+    [HttpGet("category/{categoryId:guid}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCategory(
+        Guid categoryId,
+        [FromQuery] ContentStatus? status = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50)
+    {
+        var query = new GetProjectsByCategoryQuery
+        {
+            CategoryId = categoryId,
+            Status = status,
+            Skip = skip,
+            Take = Math.Min(take, 100)
+        };
+
+        var projects = await _mediator.Send(query);
+        return Ok(projects);
+    }
+
+    /// <summary>
+    /// Get projects by creator
+    /// </summary>
+    [HttpGet("creator/{creatorId:guid}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCreator(
+        Guid creatorId,
+        [FromQuery] ContentStatus? status = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50)
+    {
+        var query = new GetProjectsByCreatorQuery
+        {
+            CreatorId = creatorId,
+            Status = status,
+            Skip = skip,
+            Take = Math.Min(take, 100)
+        };
+
+        var projects = await _mediator.Send(query);
+        return Ok(projects);
+    }
+}
+
+/// <summary>
+/// Request DTOs for REST API
+/// </summary>
+public record CreateProjectRequest
+{
+    public string Name { get; init; } = string.Empty;
+    public string? Description { get; init; }
+    public string? ShortDescription { get; init; }
+    public string? ImageUrl { get; init; }
+    public string? RepositoryUrl { get; init; }
+    public string? DemoUrl { get; init; }
+    public string? DocumentationUrl { get; init; }
+    public ProjectType Type { get; init; } = GameGuild.Common.ProjectType.Game;
+    public Guid? CategoryId { get; init; }
+    public AccessLevel Visibility { get; init; } = AccessLevel.Public;
+    public ContentStatus Status { get; init; } = ContentStatus.Draft;
+    public List<string>? Tags { get; init; }
+}
+
+public record UpdateProjectRequest
+{
+    public string? Name { get; init; }
+    public string? Description { get; init; }
+    public string? ShortDescription { get; init; }
+    public string? ImageUrl { get; init; }
+    public string? RepositoryUrl { get; init; }
+    public string? DemoUrl { get; init; }
+    public string? DocumentationUrl { get; init; }
+    public ProjectType? Type { get; init; }
+    public Guid? CategoryId { get; init; }
+    public AccessLevel? Visibility { get; init; }
+    public ContentStatus? Status { get; init; }
+    public List<string>? Tags { get; init; }
 }

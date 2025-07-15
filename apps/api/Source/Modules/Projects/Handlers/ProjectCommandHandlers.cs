@@ -1,7 +1,7 @@
 using GameGuild.Common.Interfaces;
 using GameGuild.Database;
 using GameGuild.Modules.Projects.Commands;
-using GameGuild.Modules.Projects.Models;
+
 using GameGuild.Modules.Contents;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -59,15 +59,15 @@ public class ProjectCommandHandlers :
             var project = new Project
             {
                 Id = Guid.NewGuid(),
-                Name = request.Name,
+                Title = request.Title,
                 Description = request.Description,
                 ShortDescription = request.ShortDescription,
                 ImageUrl = request.ImageUrl,
                 RepositoryUrl = request.RepositoryUrl,
-                DemoUrl = request.DemoUrl,
-                DocumentationUrl = request.DocumentationUrl,
-                Type = request.Type,
-                CreatorId = request.CreatorId,
+                WebsiteUrl = request.WebsiteUrl,
+                DownloadUrl = request.DownloadUrl,
+                Type = (GameGuild.Common.ProjectType)request.Type,
+                CreatedById = request.CreatedById,
                 CategoryId = request.CategoryId,
                 Visibility = request.Visibility,
                 Status = request.Status,
@@ -132,14 +132,14 @@ public class ProjectCommandHandlers :
             }
 
             // Update fields
-            if (request.Name != null) project.Name = request.Name;
+            if (request.Title != null) project.Title = request.Title;
             if (request.Description != null) project.Description = request.Description;
             if (request.ShortDescription != null) project.ShortDescription = request.ShortDescription;
             if (request.ImageUrl != null) project.ImageUrl = request.ImageUrl;
             if (request.RepositoryUrl != null) project.RepositoryUrl = request.RepositoryUrl;
-            if (request.DemoUrl != null) project.DemoUrl = request.DemoUrl;
-            if (request.DocumentationUrl != null) project.DocumentationUrl = request.DocumentationUrl;
-            if (request.Type.HasValue) project.Type = request.Type.Value;
+            if (request.WebsiteUrl != null) project.WebsiteUrl = request.WebsiteUrl;
+            if (request.DownloadUrl != null) project.DownloadUrl = request.DownloadUrl;
+            if (request.Type.HasValue) project.Type = (GameGuild.Common.ProjectType)request.Type.Value;
             if (request.CategoryId.HasValue) project.CategoryId = request.CategoryId;
             if (request.Visibility.HasValue) project.Visibility = request.Visibility.Value;
             if (request.Status.HasValue) project.Status = request.Status.Value;
