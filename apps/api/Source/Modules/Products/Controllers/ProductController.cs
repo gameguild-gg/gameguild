@@ -65,7 +65,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// Update a product using CQRS pattern (resource level update permission)
   /// </summary>
   [HttpPut("{id:guid}")]
-  [RequireResourcePermission<ProductEntity>(PermissionType.Update)]
+  [RequireResourcePermission<ProductEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductEntity>> UpdateProduct(Guid id, [FromBody] UpdateProductCommand command) {
     command.ProductId = id;
     var result = await mediator.Send(command);
@@ -197,68 +197,6 @@ public class ProductController(IMediator mediator) : ControllerBase {
     var products = await mediator.Send(new GetRecentProductsQuery(count));
 
     return Ok(products);
-  }
-
-  // ===== RESOURCE-LEVEL OPERATIONS =====
-
-  /// <summary>
-  /// Get a specific product by ID (resource-level read permission)
-  /// </summary>
-  [HttpGet("{id}")]
-  [RequireResourcePermission<ProductEntity>(PermissionType.Read)]
-  public async Task<ActionResult<ProductEntity>> GetProduct(Guid id) {
-    var product = await mediator.Send(new GetProductByIdQuery(id));
-
-    if (product == null) return NotFound();
-
-    return Ok(product);
-  }
-
-  /// <summary>
-  /// Get a specific product with details (resource-level read permission)
-  /// </summary>
-  [HttpGet("{id}/details")]
-  [RequireResourcePermission<ProductEntity>(PermissionType.Read)]
-  public async Task<ActionResult<ProductEntity>> GetProductWithDetails(Guid id) {
-    var product = await mediator.Send(new GetProductByIdWithDetailsQuery(id));
-
-    if (product == null) return NotFound();
-
-    return Ok(product);
-  }
-
-  /// <summary>
-  /// Update a product (resource-level edit permission)
-  /// </summary>
-  [HttpPut("{id}")]
-  [RequireResourcePermission<ProductEntity>(PermissionType.Edit)]
-  public async Task<ActionResult<ProductEntity>> UpdateProduct(Guid id, [FromBody] ProductEntity product) {
-    if (id != product.Id) return BadRequest("Product ID mismatch");
-
-    if (!ModelState.IsValid) return BadRequest(ModelState);
-
-    var existingProduct = await mediator.Send(new GetProductByIdQuery(id));
-
-    if (existingProduct == null) return NotFound();
-
-    var updatedProduct = await mediator.Send(new UpdateProductCommand(product));
-
-    return Ok(updatedProduct);
-  }
-
-  /// <summary>
-  /// Delete a product (resource-level delete permission)
-  /// </summary>
-  [HttpDelete("{id}")]
-  [RequireResourcePermission<ProductEntity>(PermissionType.Delete)]
-  public async Task<ActionResult> DeleteProduct(Guid id) {
-    var existingProduct = await mediator.Send(new GetProductByIdQuery(id));
-
-    if (existingProduct == null) return NotFound();
-
-    await mediator.Send(new DeleteProductCommand(id));
-
-    return NoContent();
   }
 
   /// <summary>
