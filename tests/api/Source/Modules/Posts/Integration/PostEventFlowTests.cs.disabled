@@ -1,0 +1,358 @@
+using GameGuild.Common;
+using GameGuild.Database;
+using GameGuild.Modules.Posts;
+using GameGuild.Modules.Users;
+using GameGuild.Modules.UserProfiles;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Tests.Modules.Posts.Integration;
+
+/// <summary>
+/// End-to-end tests that verify complete event flow across modules with real service dependencies
+/// </summary>
+public class PostEventFlowTests : IDisposable
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IDomainEventPublisher _eventPublisher;
+    private readonly IServiceProvider _serviceProvider;
+
+    public PostEventFlowTests()
+    {
+        var services = new ServiceCollection();
+        
+        // Add database context
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+        
+        // Add logging
+        services.AddLogging(builder => builder.AddConsole());
+        
+        // Add domain event infrastructure
+        services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
+        
+        // Add all domain event handlers
+        services.AddScoped<UserDomainEventHandler>();
+        services.AddScoped<UserProfileDomainEventHandler>();
+        services.AddScoped<PostCreatedEventHandler>();
+        services.AddScoped<PostLikedEventHandler>();
+        services.AddScoped<PostDeletedEventHandler>();
+        
+        // Add post announcement service
+        services.AddScoped<IPostAnnouncementService, PostAnnouncementService>();
+        
+        _serviceProvider = services.BuildServiceProvider();
+        _context = _serviceProvider.GetRequiredService<ApplicationDbContext>();
+        _eventPublisher = _serviceProvider.GetRequiredService<IDomainEventPublisher>();
+    }
+
+    [Fact]
+    public async Task Full_Game_Developer_Onboarding_Should_Trigger_Complete_Event_Chain()
+    {
+        // Arrange
+        var gameDevTenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var userProfileId = Guid.NewGuid();
+        var userName = "Alice Game Developer";
+        var email = "alice@indiestudio.com";
+
+        // Create game development tenant
+        var tenant = new GameGuild.Modules.Tenants.Tenant
+        {
+            Id = gameDevTenantId,
+            Name = "Indie Game Studio",
+            Slug = "indie-game-studio"
+        };
+        _context.Tenants.Add(tenant);
+        await _context.SaveChangesAsync();
+
+        // Act: Complete onboarding flow
+        await SimulateUserOnboarding(userId, userProfileId, gameDevTenantId, userName, email);
+
+        // Create a manual post to trigger post events
+        var manualPost = new Post
+        {
+            Id = Guid.NewGuid(),
+            Title = "My First Game Project",
+            Description = "I'm excited to share my new indie game concept!",
+            PostType = "project_announcement",
+            AuthorId = userId,
+            TenantId = gameDevTenantId,
+            Visibility = "public",
+            IsSystemGenerated = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Posts.Add(manualPost);
+        await _context.SaveChangesAsync();
+
+        // Trigger PostCreatedEvent
+        var postCreatedEvent = new PostCreatedEvent(
+            manualPost.Id, manualPost.Title, manualPost.AuthorId.Value, manualPost.TenantId, DateTime.UtcNow);
+        
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var handler = scope.ServiceProvider.GetRequiredService<PostCreatedEventHandler>();
+            await handler.Handle(postCreatedEvent, CancellationToken.None);
+        }
+
+        // Assert
+        var allPosts = await _context.Posts.Include(p => p.Tenant).OrderBy(p => p.CreatedAt).ToListAsync();
+        
+        // Should have: Registration post + Welcome post + Manual post + Engagement post
+        Assert.True(allPosts.Count >= 4);
+
+        // Verify onboarding posts
+        var registrationPost = allPosts.FirstOrDefault(p => p.PostType == "user_registration");
+        Assert.NotNull(registrationPost);
+        Assert.Equal($"New member joined: {userName}", registrationPost.Title);
+
+        var welcomePost = allPosts.FirstOrDefault(p => p.PostType == "user_signup");
+        Assert.NotNull(welcomePost);
+        Assert.Equal($"Welcome {userName}!", welcomePost.Title);
+
+        // Verify manual post
+        var projectPost = allPosts.FirstOrDefault(p => p.PostType == "project_announcement");
+        Assert.NotNull(projectPost);
+        Assert.Equal("My First Game Project", projectPost.Title);
+
+        // Verify engagement post (created by PostCreatedEventHandler)
+        var engagementPost = allPosts.FirstOrDefault(p => p.PostType == "community_engagement");
+        Assert.NotNull(engagementPost);
+        Assert.Contains("shared their first post", engagementPost.Description);
+
+        // Verify all posts belong to the correct tenant
+        Assert.All(allPosts, post =>
+        {
+            Assert.Equal(gameDevTenantId, post.TenantId);
+        });
+    }
+
+    [Fact]
+    public async Task Project_Management_Workflow_Should_Create_Milestone_Posts()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var userProfileId = Guid.NewGuid();
+        var userName = "Project Manager Pro";
+
+        await SimulateUserOnboarding(userId, userProfileId, tenantId, userName, "pm@corp.com");
+
+        // Act: Use announcement service to create milestone
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var announcementService = scope.ServiceProvider.GetRequiredService<IPostAnnouncementService>();
+            
+            await announcementService.CreateMilestoneCelebrationAsync(
+                tenantId: tenantId,
+                authorId: userId,
+                milestoneName: "Q1 Goals Achieved",
+                description: "Successfully completed all Q1 objectives ahead of schedule!",
+                achievementDate: DateTime.UtcNow
+            );
+        }
+
+        // Assert
+        var posts = await _context.Posts.Where(p => p.PostType == "milestone_celebration").ToListAsync();
+        Assert.Single(posts);
+
+        var milestonePost = posts.First();
+        Assert.Equal("🎉 Milestone Achieved: Q1 Goals Achieved", milestonePost.Title);
+        Assert.Contains("celebration", milestonePost.Description);
+        Assert.Equal(userId, milestonePost.AuthorId);
+        Assert.Equal(tenantId, milestonePost.TenantId);
+    }
+
+    [Fact]
+    public async Task Testing_Lab_Session_Should_Create_Activity_Posts()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var userProfileId = Guid.NewGuid();
+        var userName = "QA Testing Expert";
+
+        await SimulateUserOnboarding(userId, userProfileId, tenantId, userName, "qa@testlab.com");
+
+        // Act: Create testing session announcement
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var announcementService = scope.ServiceProvider.GetRequiredService<IPostAnnouncementService>();
+            
+            await announcementService.CreateSystemAnnouncementAsync(
+                tenantId: tenantId,
+                authorId: userId,
+                title: "Testing Session Scheduled",
+                message: "Join us for automated testing workshop this Friday",
+                priority: "high"
+            );
+        }
+
+        // Assert
+        var posts = await _context.Posts.Where(p => p.PostType == "system_announcement").ToListAsync();
+        Assert.Single(posts);
+
+        var announcementPost = posts.First();
+        Assert.Equal("Testing Session Scheduled", announcementPost.Title);
+        Assert.Contains("workshop", announcementPost.Description);
+        Assert.Equal("high", announcementPost.Priority);
+    }
+
+    [Fact]
+    public async Task Post_Interaction_Chain_Should_Create_Social_Activity()
+    {
+        // Arrange
+        var userId1 = Guid.NewGuid();
+        var userId2 = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+
+        // Create two users
+        await SimulateUserOnboarding(userId1, Guid.NewGuid(), tenantId, "Creator User", "creator@test.com");
+        await SimulateUserOnboarding(userId2, Guid.NewGuid(), tenantId, "Liker User", "liker@test.com");
+
+        // Create a post by user 1
+        var originalPost = new Post
+        {
+            Id = Guid.NewGuid(),
+            Title = "Check out my latest work",
+            Description = "I've been working on this amazing feature",
+            PostType = "update",
+            AuthorId = userId1,
+            TenantId = tenantId,
+            Visibility = "public",
+            IsSystemGenerated = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Posts.Add(originalPost);
+        await _context.SaveChangesAsync();
+
+        // Act: User 2 likes the post
+        var postLikedEvent = new PostLikedEvent(originalPost.Id, userId2, DateTime.UtcNow);
+        
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var handler = scope.ServiceProvider.GetRequiredService<PostLikedEventHandler>();
+            await handler.Handle(postLikedEvent, CancellationToken.None);
+        }
+
+        // Delete the post to trigger cleanup
+        _context.Posts.Remove(originalPost);
+        await _context.SaveChangesAsync();
+
+        var postDeletedEvent = new PostDeletedEvent(originalPost.Id, userId1, DateTime.UtcNow);
+        
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var handler = scope.ServiceProvider.GetRequiredService<PostDeletedEventHandler>();
+            await handler.Handle(postDeletedEvent, CancellationToken.None);
+        }
+
+        // Assert
+        var activityPosts = await _context.Posts
+            .Where(p => p.PostType == "social_activity" || p.PostType == "content_management")
+            .ToListAsync();
+
+        // Should have like activity and deletion notice
+        Assert.True(activityPosts.Count >= 2);
+
+        var likeActivity = activityPosts.FirstOrDefault(p => p.Description.Contains("liked"));
+        Assert.NotNull(likeActivity);
+
+        var deletionNotice = activityPosts.FirstOrDefault(p => p.Description.Contains("deleted"));
+        Assert.NotNull(deletionNotice);
+    }
+
+    [Fact]
+    public async Task Community_Update_Should_Reach_All_Tenant_Members()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var adminUserId = Guid.NewGuid();
+        var member1Id = Guid.NewGuid();
+        var member2Id = Guid.NewGuid();
+
+        // Create multiple users in the same tenant
+        await SimulateUserOnboarding(adminUserId, Guid.NewGuid(), tenantId, "Admin User", "admin@community.com");
+        await SimulateUserOnboarding(member1Id, Guid.NewGuid(), tenantId, "Member One", "member1@community.com");
+        await SimulateUserOnboarding(member2Id, Guid.NewGuid(), tenantId, "Member Two", "member2@community.com");
+
+        // Act: Create community update
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var announcementService = scope.ServiceProvider.GetRequiredService<IPostAnnouncementService>();
+            
+            await announcementService.CreateCommunityUpdateAsync(
+                tenantId: tenantId,
+                authorId: adminUserId,
+                title: "New Features Available",
+                content: "We've rolled out exciting new collaboration tools for everyone!",
+                targetAudience: "all_members"
+            );
+        }
+
+        // Assert
+        var communityPosts = await _context.Posts.Where(p => p.PostType == "community_update").ToListAsync();
+        Assert.Single(communityPosts);
+
+        var communityPost = communityPosts.First();
+        Assert.Equal("📢 Community Update: New Features Available", communityPost.Title);
+        Assert.Contains("collaboration tools", communityPost.Description);
+        Assert.Equal("all_members", communityPost.TargetAudience);
+        Assert.Equal(tenantId, communityPost.TenantId);
+    }
+
+    private async Task SimulateUserOnboarding(Guid userId, Guid userProfileId, Guid tenantId, string userName, string email)
+    {
+        // Create user
+        var user = new User
+        {
+            Id = userId,
+            Name = userName,
+            Email = email,
+            TenantId = tenantId,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        // Trigger user created event
+        var userCreatedEvent = new UserCreatedEvent(userId, email, userName, DateTime.UtcNow);
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var handler = scope.ServiceProvider.GetRequiredService<UserDomainEventHandler>();
+            await handler.Handle(userCreatedEvent, CancellationToken.None);
+        }
+
+        // Create user profile
+        var userProfile = new UserProfile
+        {
+            Id = userProfileId,
+            UserId = userId,
+            DisplayName = userName,
+            GivenName = userName.Split(' ').FirstOrDefault() ?? userName,
+            FamilyName = userName.Split(' ').LastOrDefault() ?? "",
+            User = user
+        };
+        _context.UserProfiles.Add(userProfile);
+        await _context.SaveChangesAsync();
+
+        // Trigger user profile created event
+        var userProfileCreatedEvent = new UserProfileCreatedEvent(
+            userProfileId, userId, userName, userProfile.GivenName, userProfile.FamilyName, DateTime.UtcNow);
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var handler = scope.ServiceProvider.GetRequiredService<UserProfileDomainEventHandler>();
+            await handler.Handle(userProfileCreatedEvent, CancellationToken.None);
+        }
+    }
+
+    public void Dispose()
+    {
+        _context.Dispose();
+        if (_serviceProvider is IDisposable disposableProvider)
+        {
+            disposableProvider.Dispose();
+        }
+    }
+}
