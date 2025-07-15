@@ -1,3 +1,4 @@
+using GameGuild.Common;
 using GameGuild.Common.Interfaces;
 using System.Security.Claims;
 

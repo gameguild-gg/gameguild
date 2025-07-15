@@ -160,7 +160,6 @@ public class PaymentType : ObjectType<Payment>
         descriptor.Field(p => p.Currency).Type<NonNullType<StringType>>();
         descriptor.Field(p => p.Status).Type<NonNullType<EnumType<PaymentStatus>>>();
         descriptor.Field(p => p.Method).Type<NonNullType<EnumType<PaymentMethod>>>();
-        descriptor.Field(p => p.Description).Type<StringType>();
         descriptor.Field(p => p.ProcessedAt).Type<DateTimeType>();
         descriptor.Field(p => p.CreatedAt).Type<NonNullType<DateTimeType>>();
         descriptor.Field(p => p.UpdatedAt).Type<NonNullType<DateTimeType>>();
