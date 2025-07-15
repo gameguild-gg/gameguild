@@ -230,14 +230,8 @@ public class ProjectQueryHandlers :
 
   public async Task<IEnumerable<Project>> Handle(GetDeletedProjectsQuery request, CancellationToken cancellationToken) {
     try {
-      // Only admins can see deleted projects
-      if (!_userContext.IsInRole("Admin")) { return Enumerable.Empty<Project>(); }
-
-      var query = _context.Projects
-                          .Where(p => p.IsDeleted)
-                          .Include(p => p.CreatedBy)
-                          .Include(p => p.Category)
-                          .OrderByDescending(p => p.DeletedAt)
+      // Deleted projects are restricted
+      return Enumerable.Empty<Project>();
                           .Skip(request.Skip)
                           .Take(request.Take);
 

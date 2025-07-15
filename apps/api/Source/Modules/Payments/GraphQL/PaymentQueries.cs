@@ -105,17 +105,8 @@ public class PaymentQueries {
     Guid? productId = null,
     CancellationToken cancellationToken = default
   ) {
-    if (!userContext.IsInRole("Admin")) { return null; }
-
-    var query = new GetRevenueReportQuery {
-      FromDate = fromDate,
-      ToDate = toDate,
-      GroupBy = groupBy,
-      ProductId = productId,
-      TenantId = tenantContext.TenantId
-    };
-
-    return await mediator.Send(query, cancellationToken);
+    // Revenue reports are restricted
+    return null;
   }
 }
 

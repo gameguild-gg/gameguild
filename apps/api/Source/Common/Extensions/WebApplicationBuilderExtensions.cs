@@ -9,87 +9,83 @@ namespace GameGuild.Common;
 /// Modern .NET extension methods for WebApplicationBuilder following best practices.
 /// Provides fluent configuration with clean separation of concerns.
 /// </summary>
-public static class WebApplicationBuilderExtensions
-{
-    /// <summary>
-    /// Main entry point for configuring the GameGuild application.
-    /// Combines all configuration steps in a single, fluent call.
-    /// </summary>
-    /// <param name="builder">The WebApplicationBuilder instance</param>
-    /// <returns>The configured WebApplicationBuilder for method chaining</returns>
-    public static WebApplicationBuilder ConfigureGameGuildApplication(this WebApplicationBuilder builder) =>
-        builder
-            .ConfigureEnvironment()
-            .ConfigureServices();
+public static class WebApplicationBuilderExtensions {
+  /// <summary>
+  /// Main entry point for configuring the GameGuild application.
+  /// Combines all configuration steps in a single, fluent call.
+  /// </summary>
+  /// <param name="builder">The WebApplicationBuilder instance</param>
+  /// <returns>The configured WebApplicationBuilder for method chaining</returns>
+  public static WebApplicationBuilder ConfigureGameGuildApplication(this WebApplicationBuilder builder) =>
+    builder
+      .ConfigureEnvironment()
+      .ConfigureServices();
 
-    /// <summary>
-    /// Configures environment variables and configuration sources.
-    /// </summary>
-    /// <param name="builder">The WebApplicationBuilder instance</param>
-    /// <returns>The WebApplicationBuilder for method chaining</returns>
-    public static WebApplicationBuilder ConfigureEnvironment(this WebApplicationBuilder builder)
-    {
-        // Load .env file for local development
-        Env.Load();
+  /// <summary>
+  /// Configures environment variables and configuration sources.
+  /// </summary>
+  /// <param name="builder">The WebApplicationBuilder instance</param>
+  /// <returns>The WebApplicationBuilder for method chaining</returns>
+  public static WebApplicationBuilder ConfigureEnvironment(this WebApplicationBuilder builder) {
+    // Load .env file for local development
+    Env.Load();
 
-        // Configure configuration sources with proper precedence
-        builder.Configuration
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-            .AddEnvironmentVariables(); // Highest precedence
+    // Configure configuration sources with proper precedence
+    builder.Configuration
+           .SetBasePath(AppContext.BaseDirectory)
+           .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+           .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+           .AddEnvironmentVariables(); // Highest precedence
 
-        return builder;
-    }
+    return builder;
+  }
 
-    /// <summary>
-    /// Configures all application services using clean architecture layers.
-    /// </summary>
-    /// <param name="builder">The WebApplicationBuilder instance</param>
-    /// <returns>The WebApplicationBuilder for method chaining</returns>
-    public static WebApplicationBuilder ConfigureServices(this WebApplicationBuilder builder)
-    {
-        builder.Services
-            .AddPresentation(CreatePresentationOptionsInternal(builder))
-            .AddApplication()
-            .AddInfrastructure(builder.Configuration);
+  /// <summary>
+  /// Configures all application services using clean architecture layers.
+  /// </summary>
+  /// <param name="builder">The WebApplicationBuilder instance</param>
+  /// <returns>The WebApplicationBuilder for method chaining</returns>
+  public static WebApplicationBuilder ConfigureServices(this WebApplicationBuilder builder) {
+    builder.Services
+           .AddPresentation(CreatePresentationOptionsInternal(builder))
+           .AddApplication()
+           .AddInfrastructure(builder.Configuration);
 
-        return builder;
-    }
+    return builder;
+  }
 
-    /// <summary>
-    /// Builds the application and configures the complete request pipeline.
-    /// </summary>
-    /// <param name="builder">The configured WebApplicationBuilder</param>
-    /// <returns>A fully configured WebApplication ready to run</returns>
-    public static async Task<WebApplication> BuildWithPipelineAsync(this WebApplicationBuilder builder)
-    {
-        var app = builder.Build();
-        
-        await app.ConfigureApplicationAsync();
-        return app.ConfigurePipeline();
-    }
+  /// <summary>
+  /// Builds the application and configures the complete request pipeline.
+  /// </summary>
+  /// <param name="builder">The configured WebApplicationBuilder</param>
+  /// <returns>A fully configured WebApplication ready to run</returns>
+  public static async Task<WebApplication> BuildWithPipelineAsync(this WebApplicationBuilder builder) {
+    var app = builder.Build();
 
-    /// <summary>
-    /// Creates environment-specific presentation options.
-    /// </summary>
-    internal static DependencyInjection.PresentationOptions CreatePresentationOptionsInternal(WebApplicationBuilder builder)
-    {
-        var corsOptions = builder.Configuration
-            .GetSection(CorsOptions.SectionName)
-            .Get<CorsOptions>() ?? new CorsOptions();
+    await app.ConfigureApplicationAsync();
 
-        return new DependencyInjection.PresentationOptions
-        {
-            AllowedOrigins = corsOptions.AllowedOrigins,
-            EnableSwagger = builder.Environment.IsDevelopment(),
-            EnableHealthChecks = true,
-            EnableResponseCompression = !builder.Environment.IsDevelopment(),
-            EnableRateLimiting = !builder.Environment.IsDevelopment(),
-            ApiTitle = "GameGuild API",
-            ApiVersion = "v1"
-        };
-    }
+    return app.ConfigurePipeline();
+  }
+
+  /// <summary>
+  /// Creates environment-specific presentation options.
+  /// </summary>
+  internal static DependencyInjection.PresentationOptions CreatePresentationOptionsInternal(WebApplicationBuilder builder) {
+    var corsOptions = builder.Configuration
+                             .GetSection(CorsOptions.SectionName)
+                             .Get<CorsOptions>() ??
+                      new CorsOptions();
+
+    return new DependencyInjection.PresentationOptions {
+      AllowedOrigins = corsOptions.AllowedOrigins,
+      EnableSwagger = builder.Environment.IsDevelopment(),
+      EnableHealthChecks = true,
+      EnableResponseCompression = !builder.Environment.IsDevelopment(),
+      EnableRateLimiting = !builder.Environment.IsDevelopment(),
+      ApiTitle = "GameGuild API",
+      ApiVersion = "v1"
+    };
+  }
 }
 
 /// <summary>
@@ -138,10 +134,10 @@ public static class WebApplicationExtensions {
 
     // Authentication and authorization
     app.UseAuthentication();
-    
+
     // User and tenant context middleware (after authentication, before authorization)
     app.UseContextMiddleware();
-    
+
     app.UseAuthorization();
 
     // Endpoint mapping

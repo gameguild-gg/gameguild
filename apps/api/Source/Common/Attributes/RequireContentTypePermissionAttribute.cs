@@ -31,10 +31,8 @@ public class RequireContentTypePermissionAttribute<T>(PermissionType requiredPer
 
     // Parse tenant ID if present, otherwise use null for global permissions
     Guid? tenantId = null;
-    if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out var parsedTenantId))
-    {
-      tenantId = parsedTenantId;
-    }
+
+    if (!string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out var parsedTenantId)) { tenantId = parsedTenantId; }
 
     // Get content type name from generic type parameter
     var contentTypeName = typeof(T).Name;

@@ -60,7 +60,8 @@ public static class DependencyInjection {
             .AddJsonOptions(options => {
                 // Handle circular references in navigation properties
                 options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-              })
+              }
+            )
             .ConfigureApiBehaviorOptions(options => {
                 options.SuppressModelStateInvalidFilter = true; // We handle validation through MediatR
               }
@@ -334,9 +335,7 @@ public static class DependencyInjection {
 
     // Add authorization if enabled
     if (options.EnableAuthorization) {
-      try {
-        builder.AddDACAuthorization();
-      }
+      try { builder.AddDACAuthorization(); }
       catch (Exception ex) {
         // In test environments, DAC authorization might not be available
         if (!options.IsTestEnvironment) { throw new InvalidOperationException("Failed to configure DAC authorization. Ensure AddDACAuthorizationServices() is called first.", ex); }
@@ -374,11 +373,11 @@ public static class DependencyInjection {
       ["Tenants"] = b => {
         SafeAddGraphQLTypes(
           b,
-          new[] { 
-            ("TenantQueries", typeof(GameGuild.Modules.Tenants.TenantQueries)), 
+          new[] {
+            ("TenantQueries", typeof(GameGuild.Modules.Tenants.TenantQueries)),
             ("TenantMutations", typeof(GameGuild.Modules.Tenants.TenantMutations)),
-            ("TenantType", typeof(GameGuild.Modules.Tenants.TenantType)), 
-            ("TenantPermissionType", typeof(GameGuild.Modules.Tenants.TenantPermissionType)) 
+            ("TenantType", typeof(GameGuild.Modules.Tenants.TenantType)),
+            ("TenantPermissionType", typeof(GameGuild.Modules.Tenants.TenantPermissionType))
           },
           logger,
           isExtension: new[] { true, true, false, false }
@@ -395,15 +394,17 @@ public static class DependencyInjection {
     };
 
     // Add test module for testing environments
-    var isTestEnvironment = options.IsTestEnvironment || options.EnableTestingModule || 
-                          AppDomain.CurrentDomain.GetAssemblies()
-                            .Any(a => a.FullName?.Contains("GameGuild.API.Tests") == true);
-    
+    var isTestEnvironment = options.IsTestEnvironment ||
+                            options.EnableTestingModule ||
+                            AppDomain.CurrentDomain.GetAssemblies()
+                                     .Any(a => a.FullName?.Contains("GameGuild.API.Tests") == true);
+
     if (isTestEnvironment) {
       coreModules["TestModule"] = b => {
         try {
           // Try to register test module if available
           var testModuleType = Type.GetType("GameGuild.Tests.MockModules.TestModuleQueries, GameGuild.API.Tests");
+
           if (testModuleType != null) {
             SafeAddGraphQLTypes(
               b,
@@ -413,7 +414,8 @@ public static class DependencyInjection {
             );
             logger?.LogDebug("Registered test module: TestModuleQueries");
           }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
           logger?.LogDebug("Test module not available: {Error}", ex.Message);
           // Ignore test module registration failures
         }
@@ -503,11 +505,7 @@ public static class DependencyInjection {
       ["Products"] = () => {
         SafeAddGraphQLTypes(
           builder,
-          new[] {
-            ("ProductQueries", typeof(ProductQueries)),
-            ("ProductMutations", typeof(ProductMutations)),
-            ("ProductType", typeof(Modules.Products.ProductType))
-          },
+          new[] { ("ProductQueries", typeof(ProductQueries)), ("ProductMutations", typeof(ProductMutations)), ("ProductType", typeof(Modules.Products.ProductType)) },
           logger,
           isExtension: new[] { true, true, false },
           isOptional: true
@@ -516,10 +514,7 @@ public static class DependencyInjection {
       ["Payments"] = () => {
         SafeAddGraphQLTypes(
           builder,
-          new[] {
-            ("PaymentQueries", typeof(PaymentQueries)),
-            ("PaymentMutations", typeof(PaymentMutations))
-          },
+          new[] { ("PaymentQueries", typeof(PaymentQueries)), ("PaymentMutations", typeof(PaymentMutations)) },
           logger,
           isExtension: new[] { true, true },
           isOptional: true
@@ -599,9 +594,7 @@ public static class DependencyInjection {
     );
 
     // Configure request options for development vs production
-    builder.ModifyRequestOptions(opt => { 
-        opt.IncludeExceptionDetails = options.IncludeExceptionDetails;
-    });
+    builder.ModifyRequestOptions(opt => { opt.IncludeExceptionDetails = options.IncludeExceptionDetails; });
   }
 
   /// <summary>

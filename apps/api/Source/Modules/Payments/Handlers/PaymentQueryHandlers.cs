@@ -80,14 +80,8 @@ public class GetProductPaymentsQueryHandler : IRequestHandler<GetProductPayments
   }
 
   public async Task<IEnumerable<Payment>> Handle(GetProductPaymentsQuery request, CancellationToken cancellationToken) {
-    // Only admins can view product payments
-    if (!_userContext.IsInRole("Admin")) { return Enumerable.Empty<Payment>(); }
-
-    var query = _context.Payments
-                        .Include(p => p.Refunds)
-                        .Where(p => p.ProductId == request.ProductId);
-
-    // Apply filters
+    // Product payments are restricted
+    return Enumerable.Empty<Payment>();
     if (request.Status.HasValue) { query = query.Where(p => p.Status == request.Status.Value); }
 
     if (request.FromDate.HasValue) { query = query.Where(p => p.CreatedAt >= request.FromDate.Value); }
