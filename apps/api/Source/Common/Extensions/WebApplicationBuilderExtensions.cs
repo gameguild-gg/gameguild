@@ -1,4 +1,5 @@
 using DotNetEnv;
+using GameGuild.Common.Middleware;
 using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
 
@@ -138,6 +139,10 @@ public static class WebApplicationExtensions {
 
     // Authentication and authorization
     app.UseAuthentication();
+    
+    // User and tenant context middleware (after authentication, before authorization)
+    app.UseContextMiddleware();
+    
     app.UseAuthorization();
 
     // Endpoint mapping
