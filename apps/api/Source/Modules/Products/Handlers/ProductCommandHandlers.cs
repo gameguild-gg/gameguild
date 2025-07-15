@@ -192,7 +192,7 @@ public class ProductCommandHandlers :
 
             _logger.LogInformation("Product deleted successfully: {ProductId}", product.Id);
 
-            return new DeleteProductResult { Success = true, ProductId = product.Id };
+            return new DeleteProductResult { Success = true };
         }
         catch (Exception ex)
         {

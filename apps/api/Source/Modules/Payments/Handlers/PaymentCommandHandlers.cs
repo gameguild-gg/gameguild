@@ -67,8 +67,6 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
                 Amount = request.Amount,
                 Currency = request.Currency,
                 Method = request.Method,
-                Description = request.Description ?? "",
-                TenantId = request.TenantId ?? _tenantContext.TenantId,
                 Status = PaymentStatus.Pending,
                 Metadata = System.Text.Json.JsonSerializer.Serialize(request.Metadata ?? new Dictionary<string, object>())
             };
@@ -119,10 +117,8 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
     public async Task<ProcessPaymentResult> Handle(ProcessPaymentCommand request, CancellationToken cancellationToken)
     {
         try
-        {
-            var payment = await _context.Payments
-                .Include(p => p.Product)
-                .FirstOrDefaultAsync(p => p.Id == request.PaymentId, cancellationToken);
+        {        var payment = await _context.Payments
+            .FirstOrDefaultAsync(p => p.Id == request.PaymentId, cancellationToken);
 
             if (payment == null)
             {
@@ -134,7 +130,7 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
             }
 
             // Update payment status
-            payment.Status = PaymentStatus.Succeeded;
+            payment.Status = PaymentStatus.Completed;
             payment.ProviderTransactionId = request.ProviderTransactionId;
             payment.ProcessedAt = DateTime.UtcNow;
 

@@ -1,6 +1,8 @@
 using GameGuild.Modules.Payments.Services;
+using GameGuild.Modules.Payments.Handlers;
 using GameGuild.Modules.Posts;
 using GameGuild.Modules.Products.Services;
+using GameGuild.Modules.Products.Handlers;
 using GameGuild.Modules.Programs.Interfaces;
 using GameGuild.Modules.Programs.Services;
 using GameGuild.Modules.Projects;
@@ -83,6 +85,10 @@ public static class ServiceCollectionExtensions {
   public static IServiceCollection AddProductModule(this IServiceCollection services) {
     // Register Product module services
     services.AddScoped<IProductService, ProductService>();
+    
+    // Register Product CQRS handlers
+    services.AddScoped<ProductCommandHandlers>();
+    services.AddScoped<ProductQueryHandlers>();
 
     return services;
   }
@@ -97,6 +103,18 @@ public static class ServiceCollectionExtensions {
   public static IServiceCollection AddPaymentModule(this IServiceCollection services) {
     // Register Payment module services
     services.AddScoped<IPaymentService, PaymentService>();
+    
+    // Register Payment CQRS command handlers
+    services.AddScoped<CreatePaymentCommandHandler>();
+    services.AddScoped<ProcessPaymentCommandHandler>();
+    services.AddScoped<RefundPaymentCommandHandler>();
+    
+    // Register Payment CQRS query handlers  
+    services.AddScoped<GetPaymentByIdQueryHandler>();
+    services.AddScoped<GetUserPaymentsQueryHandler>();
+    services.AddScoped<GetProductPaymentsQueryHandler>();
+    services.AddScoped<GetPaymentStatsQueryHandler>();
+    services.AddScoped<GetRevenueReportQueryHandler>();
 
     return services;
   }
@@ -112,6 +130,12 @@ public static class ServiceCollectionExtensions {
     // Register Posts module services
     services.AddScoped<IPostAnnouncementService, PostAnnouncementService>();
     services.AddScoped<IPostService, PostService>();
+    
+    // Register GraphQL DataLoaders for efficient data loading
+    services.AddScoped<IUserDataLoader, UserDataLoader>();
+    services.AddScoped<IPostContentReferenceDataLoader, PostContentReferenceDataLoader>();
+    services.AddScoped<IPostCommentDataLoader, PostCommentDataLoader>();
+    services.AddScoped<IPostLikeDataLoader, PostLikeDataLoader>();
     
     // Domain event handlers are automatically registered by MediatR
     return services;
