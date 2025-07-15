@@ -1,4 +1,4 @@
-using GameGuild.Common.Models;
+using GameGuild.Common;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

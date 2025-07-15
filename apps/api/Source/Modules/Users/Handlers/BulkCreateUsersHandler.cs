@@ -1,5 +1,4 @@
 using GameGuild.Common;
-using GameGuild.Common.Models;
 using GameGuild.Database;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

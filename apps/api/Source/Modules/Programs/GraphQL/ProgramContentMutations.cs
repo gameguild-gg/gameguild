@@ -1,5 +1,5 @@
 using GameGuild.Common;
-using GameGuild.Modules.Permissions.Models;
+using GameGuild.Modules.Permissions;
 using ProgramContentTypeEnum = GameGuild.Common.ProgramContentType;
 using VisibilityEnum = GameGuild.Common.Visibility;
 using GradingMethodEnum = GameGuild.Common.GradingMethod;

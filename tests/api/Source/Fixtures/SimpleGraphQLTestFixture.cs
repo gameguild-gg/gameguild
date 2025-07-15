@@ -66,7 +66,7 @@ public class SimpleGraphQLTestFixture : IDisposable
         services.AddCommonServices();
 
         // Add our test module
-        GameGuild.Tests.MockModules.TestModuleDependencyInjection.AddTestModule(services);
+        TestModuleDependencyInjection.AddTestModule(services);
 
         // Add HTTP context accessor
         services.AddHttpContextAccessor();

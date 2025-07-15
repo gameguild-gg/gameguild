@@ -29,7 +29,7 @@ public record CreateProgramCommand(
   int? MaxEnrollments = null,
   DateTime? EnrollmentDeadline = null,
   string? CreatorId = null
-) : IRequest<GameGuild.Program>;
+) : IRequest<Program>;
 
 /// <summary>
 /// Command to update an existing program
@@ -47,7 +47,7 @@ public record UpdateProgramCommand(
   ProgramAvailabilityStatus? EnrollmentStatus = null,
   int? MaxEnrollments = null,
   DateTime? EnrollmentDeadline = null
-) : IRequest<GameGuild.Program>;
+) : IRequest<Program>;
 
 /// <summary>
 /// Command to delete a program (soft delete)
@@ -59,22 +59,22 @@ public record DeleteProgramCommand(Guid Id) : IRequest<bool>;
 /// <summary>
 /// Command to publish a program
 /// </summary>
-public record PublishProgramCommand(Guid Id) : IRequest<GameGuild.Program>;
+public record PublishProgramCommand(Guid Id) : IRequest<Program>;
 
 /// <summary>
 /// Command to unpublish a program
 /// </summary>
-public record UnpublishProgramCommand(Guid Id) : IRequest<GameGuild.Program>;
+public record UnpublishProgramCommand(Guid Id) : IRequest<Program>;
 
 /// <summary>
 /// Command to archive a program
 /// </summary>
-public record ArchiveProgramCommand(Guid Id) : IRequest<GameGuild.Program>;
+public record ArchiveProgramCommand(Guid Id) : IRequest<Program>;
 
 /// <summary>
 /// Command to restore an archived program
 /// </summary>
-public record RestoreProgramCommand(Guid Id) : IRequest<GameGuild.Program>;
+public record RestoreProgramCommand(Guid Id) : IRequest<Program>;
 
 // ===== ENROLLMENT COMMANDS =====
 
@@ -103,7 +103,7 @@ public record UpdateEnrollmentStatusCommand(
   ProgramAvailabilityStatus Status,
   int? MaxEnrollments = null,
   DateTime? EnrollmentDeadline = null
-) : IRequest<GameGuild.Program>;
+) : IRequest<Program>;
 
 // ===== CONTENT MANAGEMENT COMMANDS =====
 
@@ -190,11 +190,11 @@ public record RemoveFromWishlistCommand(
 public record BulkUpdateProgramVisibilityCommand(
   IEnumerable<Guid> ProgramIds,
   AccessLevel Visibility
-) : IRequest<IEnumerable<GameGuild.Program>>;
+) : IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Command to bulk archive programs
 /// </summary>
 public record BulkArchiveProgramsCommand(
   IEnumerable<Guid> ProgramIds
-) : IRequest<IEnumerable<GameGuild.Program>>;
+) : IRequest<IEnumerable<Program>>;

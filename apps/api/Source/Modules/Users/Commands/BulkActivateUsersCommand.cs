@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
-using GameGuild.Common.Models;
 
 
 namespace GameGuild.Modules.Users;

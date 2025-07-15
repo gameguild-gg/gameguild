@@ -1,5 +1,4 @@
 using GameGuild.Common;
-using GameGuild.Common.Models;
 using GameGuild.Modules.Users.Inputs;
 using MediatR;
 

@@ -1,4 +1,4 @@
-using GameGuild.Common.Interfaces;
+using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Programs;
 using MediatR;
@@ -113,13 +113,13 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
                                             .Where(pp => pp.ProductId == payment.ProductId.Value && !pp.Program.IsDeleted)
                                             .ToListAsync(cancellationToken);
 
-        if (productPrograms.Any() && !string.IsNullOrEmpty(payment.UserId)) {
+        if (productPrograms.Any() && payment.UserId.HasValue) {
           foreach (var productProgram in productPrograms) {
             // Check if user is not already enrolled
             var existingEnrollment = await _context.ProgramUsers
                                                    .AnyAsync(
                                                      pu => pu.ProgramId == productProgram.ProgramId &&
-                                                           pu.UserId == payment.UserId &&
+                                                           pu.UserId == payment.UserId.Value &&
                                                            pu.IsActive,
                                                      cancellationToken
                                                    );
@@ -127,8 +127,7 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
             if (!existingEnrollment && productProgram.Program.IsEnrollmentOpen) {
               var enrollment = new ProgramUser {
                 ProgramId = productProgram.ProgramId,
-                UserId = payment.UserId,
-                EnrollmentDate = DateTime.UtcNow,
+                UserId = payment.UserId.Value,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow

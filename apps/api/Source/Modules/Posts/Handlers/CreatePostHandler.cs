@@ -81,12 +81,12 @@ public class CreatePostHandler(
         cancellationToken
       );
 
-      return Common.Result.Success(post);
+      return Result.Success(post);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error creating post for user {AuthorId}", request.AuthorId);
 
-      return Common.Result.Failure<Post>(
+      return Result.Failure<Post>(
         new Common.Error(
           "CreatePost.Failed",
           $"Failed to create post: {ex.Message}",

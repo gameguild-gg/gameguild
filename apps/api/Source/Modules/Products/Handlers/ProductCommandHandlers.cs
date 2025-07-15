@@ -1,4 +1,4 @@
-using GameGuild.Common.Interfaces;
+using GameGuild.Common;
 using GameGuild.Database;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -84,8 +84,8 @@ public class ProductCommandHandlers :
 
       if (product == null) { return new UpdateProductResult { Success = false, ErrorMessage = "Product not found" }; }
 
-      // Check permissions
-      if (!_userContext.IsInRole("Admin") && product.CreatorId != _userContext.UserId) { return new UpdateProductResult { Success = false, ErrorMessage = "User does not have permission to update this product" }; }
+      // Check permissions - only the creator can update their product
+      if (product.CreatorId != _userContext.UserId) { return new UpdateProductResult { Success = false, ErrorMessage = "User does not have permission to update this product" }; }
 
       // Update properties
       if (!string.IsNullOrEmpty(request.Name)) {
@@ -137,8 +137,8 @@ public class ProductCommandHandlers :
 
       if (product == null) { return new DeleteProductResult { Success = false, ErrorMessage = "Product not found" }; }
 
-      // Check permissions
-      if (!_userContext.IsInRole("Admin") && product.CreatorId != _userContext.UserId) { return new DeleteProductResult { Success = false, ErrorMessage = "User does not have permission to delete this product" }; }
+      // Check permissions - only the creator can delete their product
+      if (product.CreatorId != _userContext.UserId) { return new DeleteProductResult { Success = false, ErrorMessage = "User does not have permission to delete this product" }; }
 
       // Soft delete using Entity base class method
       product.SoftDelete();

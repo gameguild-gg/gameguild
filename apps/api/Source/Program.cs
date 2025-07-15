@@ -10,6 +10,6 @@ var app = await WebApplication
 await app.RunAsync();
 
 // REMARK: Required for functional and integration tests to work.
-namespace GameGuild {
-  public partial class Program;
-}
+// namespace GameGuild {
+//   public partial class Program;
+// }

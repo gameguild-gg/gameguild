@@ -11,7 +11,7 @@ public interface IPostAnnouncementService {
   /// <summary>
   /// Creates a system announcement post
   /// </summary>
-  Task<GameGuild.Common.Result<Post>> CreateSystemAnnouncementAsync(
+  Task<Common.Result<Post>> CreateSystemAnnouncementAsync(
     Guid tenantId,
     Guid authorId,
     string title,
@@ -23,7 +23,7 @@ public interface IPostAnnouncementService {
   /// <summary>
   /// Creates a milestone celebration post
   /// </summary>
-  Task<GameGuild.Common.Result<Post>> CreateMilestoneCelebrationAsync(
+  Task<Common.Result<Post>> CreateMilestoneCelebrationAsync(
     Guid tenantId,
     Guid authorId,
     string milestoneName,
@@ -35,7 +35,7 @@ public interface IPostAnnouncementService {
   /// <summary>
   /// Creates a community update post
   /// </summary>
-  Task<GameGuild.Common.Result<Post>> CreateCommunityUpdateAsync(
+  Task<Common.Result<Post>> CreateCommunityUpdateAsync(
     Guid tenantId,
     Guid authorId,
     string title,
@@ -63,7 +63,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
     _logger = logger;
   }
 
-  public async Task<GameGuild.Common.Result<Post>> CreateSystemAnnouncementAsync(
+  public async Task<Common.Result<Post>> CreateSystemAnnouncementAsync(
     Guid tenantId,
     Guid authorId,
     string title,
@@ -82,8 +82,8 @@ public class PostAnnouncementService : IPostAnnouncementService {
         PostType = "system_announcement",
         AuthorId = authorId,
         IsSystemGenerated = true,
-        Visibility = GameGuild.Modules.Contents.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.ContentStatus.Published,
+        Visibility = Contents.AccessLevel.Public,
+        Status = Contents.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
         LikesCount = 0,
@@ -116,13 +116,13 @@ public class PostAnnouncementService : IPostAnnouncementService {
         cancellationToken
       );
 
-      return GameGuild.Common.Result.Success(announcementPost);
+      return Result.Success(announcementPost);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Failed to create system announcement: {Title}", title);
 
-      return GameGuild.Common.Result.Failure<Post>(
-        new GameGuild.Common.Error(
+      return Result.Failure<Post>(
+        new Common.Error(
           "PostAnnouncement.CreationFailed",
           $"Failed to create system announcement: {ex.Message}",
           ErrorType.Failure
@@ -131,7 +131,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
     }
   }
 
-  public async Task<GameGuild.Common.Result<Post>> CreateMilestoneCelebrationAsync(
+  public async Task<Common.Result<Post>> CreateMilestoneCelebrationAsync(
     Guid tenantId,
     Guid authorId,
     string milestoneName,
@@ -150,8 +150,8 @@ public class PostAnnouncementService : IPostAnnouncementService {
         PostType = "milestone_celebration",
         AuthorId = authorId,
         IsSystemGenerated = true,
-        Visibility = GameGuild.Modules.Contents.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.ContentStatus.Published,
+        Visibility = Contents.AccessLevel.Public,
+        Status = Contents.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
         LikesCount = 0,
@@ -188,7 +188,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
         cancellationToken
       );
 
-      return GameGuild.Common.Result.Success(celebrationPost);
+      return Result.Success(celebrationPost);
     }
     catch (Exception ex) {
       _logger.LogError(
@@ -198,8 +198,8 @@ public class PostAnnouncementService : IPostAnnouncementService {
         milestoneName
       );
 
-      return GameGuild.Common.Result.Failure<Post>(
-        new GameGuild.Common.Error(
+      return Result.Failure<Post>(
+        new Common.Error(
           "PostAnnouncement.MilestoneCreationFailed",
           $"Failed to create milestone celebration: {ex.Message}",
           ErrorType.Failure
@@ -208,7 +208,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
     }
   }
 
-  public async Task<GameGuild.Common.Result<Post>> CreateCommunityUpdateAsync(
+  public async Task<Common.Result<Post>> CreateCommunityUpdateAsync(
     Guid tenantId,
     Guid authorId,
     string title,
@@ -227,8 +227,8 @@ public class PostAnnouncementService : IPostAnnouncementService {
         PostType = "community_update",
         AuthorId = authorId,
         IsSystemGenerated = true,
-        Visibility = GameGuild.Modules.Contents.AccessLevel.Public,
-        Status = GameGuild.Modules.Contents.ContentStatus.Published,
+        Visibility = Contents.AccessLevel.Public,
+        Status = Contents.ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
         LikesCount = 0,
@@ -261,13 +261,13 @@ public class PostAnnouncementService : IPostAnnouncementService {
         cancellationToken
       );
 
-      return GameGuild.Common.Result.Success(updatePost);
+      return Result.Success(updatePost);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Failed to create community update: {UpdateTitle}", title);
 
-      return GameGuild.Common.Result.Failure<Post>(
-        new GameGuild.Common.Error(
+      return Result.Failure<Post>(
+        new Common.Error(
           "PostAnnouncement.CommunityUpdateFailed",
           $"Failed to create community update: {ex.Message}",
           ErrorType.Failure
