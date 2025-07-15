@@ -1,21 +1,13 @@
-using System.Security.Claims;
-using System.Text;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Tenants;
-using GameGuild.Tests.Helpers;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
-using GameGuild.Common;
 
 
 // Add this for TestJwtAuthenticationFilter and TestAuthHandler

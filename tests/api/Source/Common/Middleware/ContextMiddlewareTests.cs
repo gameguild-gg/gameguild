@@ -1,10 +1,9 @@
-using GameGuild.Common.Interfaces;
+using GameGuild.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
-using GameGuild.Common;
-using Xunit;
+
 
 namespace GameGuild.Tests.Common.Middleware;
 
