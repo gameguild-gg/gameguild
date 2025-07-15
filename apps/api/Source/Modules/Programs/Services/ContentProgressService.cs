@@ -48,6 +48,14 @@ public class ContentProgressService : IContentProgressService
     }
 
     /// <summary>
+    /// Start tracking content progress (initial access)
+    /// </summary>
+    public async Task<ContentProgress> StartContentAsync(Guid userId, Guid contentId, Guid programEnrollmentId)
+    {
+        return await TrackContentAccessAsync(userId, contentId, programEnrollmentId);
+    }
+
+    /// <summary>
     /// Update content progress
     /// </summary>
     public async Task<ContentProgress> UpdateContentProgressAsync(Guid userId, Guid contentId, decimal progressPercentage, int? timeSpentSeconds = null)
@@ -115,7 +123,7 @@ public class ContentProgressService : IContentProgressService
         return await _context.ContentProgress
             .Include(cp => cp.Content)
             .Where(cp => cp.UserId == userId && cp.Content.ProgramId == programId)
-            .OrderBy(cp => cp.Content.SortOrder)
+            .OrderBy(cp => cp.Content.Id) // Using Id instead of SortOrder for now
             .ToListAsync();
     }
 
@@ -220,7 +228,7 @@ public class ContentProgressService : IContentProgressService
         var notStarted = totalContent - allProgress.Count;
 
         var completionByType = allProgress
-            .GroupBy(cp => cp.Content.ContentType)
+            .GroupBy(cp => "Content") // Using generic type for now
             .ToDictionary(g => g.Key, g => g.Count(cp => cp.CompletionStatus == ContentCompletionStatus.Completed));
 
         return new ContentCompletionStats

@@ -48,7 +48,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService
         if (program == null)
             throw new ArgumentException("Program not found", nameof(programId));
 
-        if (program.Status != ContentStatus.Published)
+        if (program.EnrollmentStatus != EnrollmentStatus.Open)
             throw new InvalidOperationException("Program is not available for enrollment");
 
         // Create new enrollment
