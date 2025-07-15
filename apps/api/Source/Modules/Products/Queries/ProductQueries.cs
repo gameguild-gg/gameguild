@@ -1,5 +1,6 @@
 using MediatR;
 using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Contents;
 using GameGuild.Common;
 
 namespace GameGuild.Modules.Products.Queries;
@@ -20,7 +21,7 @@ public record GetProductByIdQuery : IRequest<Product?>
 public record GetProductsQuery : IRequest<IEnumerable<Product>>
 {
     public ProductType? Type { get; init; }
-    public ProductStatus? Status { get; init; }
+    public ContentStatus? Status { get; init; }
     public AccessLevel? Visibility { get; init; }
     public Guid? CreatorId { get; init; }
     public string? SearchTerm { get; init; }
