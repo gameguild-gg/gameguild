@@ -13,6 +13,11 @@ public interface IContentProgressService
     Task<ContentProgress> TrackContentAccessAsync(Guid userId, Guid contentId, Guid programEnrollmentId);
 
     /// <summary>
+    /// Start tracking content progress (initial access)
+    /// </summary>
+    Task<ContentProgress> StartContentAsync(Guid userId, Guid contentId, Guid programEnrollmentId);
+
+    /// <summary>
     /// Update content progress
     /// </summary>
     Task<ContentProgress> UpdateContentProgressAsync(Guid userId, Guid contentId, decimal progressPercentage, int? timeSpentSeconds = null);

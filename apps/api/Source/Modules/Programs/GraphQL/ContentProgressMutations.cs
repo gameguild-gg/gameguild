@@ -24,7 +24,7 @@ public class ContentProgressMutations
             // TODO: Implement proper current user service
             var currentUserId = GetCurrentUserId();
 
-            var progress = await progressService.StartContentAsync(programEnrollmentId, contentId);
+            var progress = await progressService.StartContentAsync(currentUserId, contentId, programEnrollmentId);
 
             return new ContentProgressResult
             {
@@ -56,22 +56,8 @@ public class ContentProgressMutations
             // TODO: Implement proper current user service
             var currentUserId = GetCurrentUserId();
 
-            // Find active enrollment and content progress
-            var enrollments = await progressService.GetUserActiveEnrollmentsAsync(currentUserId);
-            var contentProgress = enrollments.SelectMany(e => e.ContentProgress ?? new List<ContentProgress>())
-                .FirstOrDefault(cp => cp.ContentId == contentId);
-                
-            if (contentProgress == null)
-            {
-                return new ContentProgressResult
-                {
-                    Success = false,
-                    ErrorMessage = "Content progress not found"
-                };
-            }
-
-            var progress = await progressService.UpdateProgressAsync(
-                contentProgress.Id, (int)progressPercentage, timeSpentSeconds ?? 0);
+            // Update content progress
+            var progress = await progressService.UpdateContentProgressAsync(currentUserId, contentId, progressPercentage, timeSpentSeconds);
 
             return new ContentProgressResult
             {
@@ -103,21 +89,8 @@ public class ContentProgressMutations
             // TODO: Implement proper current user service
             var currentUserId = GetCurrentUserId();
 
-            // Find active enrollment and content progress
-            var enrollments = await progressService.GetUserActiveEnrollmentsAsync(currentUserId);
-            var contentProgress = enrollments.SelectMany(e => e.ContentProgress ?? new List<ContentProgress>())
-                .FirstOrDefault(cp => cp.ContentId == contentId);
-                
-            if (contentProgress == null)
-            {
-                return new ContentProgressResult
-                {
-                    Success = false,
-                    ErrorMessage = "Content progress not found"
-                };
-            }
-
-            var progress = await progressService.CompleteContentAsync(contentProgress.Id, score ?? 0, maxScore ?? 100);
+            // Complete content progress
+            var progress = await progressService.CompleteContentAsync(currentUserId, contentId, score, maxScore);
 
             return new ContentProgressResult
             {

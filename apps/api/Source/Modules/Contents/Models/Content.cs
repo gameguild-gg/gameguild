@@ -25,4 +25,9 @@ public abstract class Content : Resource {
   /// Status of the content (draft, published, etc.)
   /// </summary>
   public ContentStatus Status { get; set; } = ContentStatus.Draft;
+
+  /// <summary>
+  /// Program ID that this content belongs to (optional for standalone content)
+  /// </summary>
+  public Guid? ProgramId { get; set; }
 }
