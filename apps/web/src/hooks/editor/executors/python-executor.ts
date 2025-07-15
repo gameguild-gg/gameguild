@@ -1,4 +1,4 @@
-import type { ProgrammingLanguage } from "../../components/ui/source-code/types"
+import type { ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
 import type { ExecutionResult, ExecutionContext, LanguageExecutor } from "./types"
 
 class PythonExecutor implements LanguageExecutor {

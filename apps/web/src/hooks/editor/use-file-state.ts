@@ -1,5 +1,5 @@
 import type React from "react"
-import type { CodeFile } from "../components/ui/source-code/types"
+import type { CodeFile } from "@/components/editor/ui/source-code/types"
 
 interface UseFileStateProps {
   files: CodeFile[]
