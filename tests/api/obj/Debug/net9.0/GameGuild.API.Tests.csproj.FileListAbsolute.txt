@@ -1,0 +1,9 @@
+W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\.msCoverageSourceRootsMapping_GameGuild.API.Tests
+W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\CoverletSourceRootsMapping_GameGuild.API.Tests
+W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\GameGuild.API.Tests.csproj.AssemblyReference.cache
+W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\MvcTestingAppManifest.json
+W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\GameGuild.API.Tests.GeneratedMSBuildEditorConfig.editorconfig
+W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\GameGuild.API.Tests.AssemblyInfoInputs.cache
+W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\GameGuild.API.Tests.AssemblyInfo.cs
+W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\GameGuild.API.Tests.csproj.CoreCompileInputs.cache
+W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\GameGuild.API.Tests.sourcelink.json

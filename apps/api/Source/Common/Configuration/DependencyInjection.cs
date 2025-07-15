@@ -510,6 +510,18 @@ public static class DependencyInjection {
           isExtension: new[] { true, true, false },
           isOptional: true
         );
+      },
+      ["Payments"] = () => {
+        SafeAddGraphQLTypes(
+          builder,
+          new[] {
+            ("PaymentQueries", typeof(GameGuild.Modules.Payments.GraphQL.PaymentQueries)),
+            ("PaymentMutations", typeof(GameGuild.Modules.Payments.GraphQL.PaymentMutations))
+          },
+          logger,
+          isExtension: new[] { true, true },
+          isOptional: true
+        );
       }
     };
 

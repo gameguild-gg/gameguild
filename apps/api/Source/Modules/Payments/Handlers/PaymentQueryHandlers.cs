@@ -183,15 +183,6 @@ public class GetPaymentStatsQueryHandler : IRequestHandler<GetPaymentStatsQuery,
             query = query.Where(p => p.ProductId == request.ProductId.Value);
         }
 
-        if (request.TenantId.HasValue)
-        {
-            query = query.Where(p => p.TenantId == request.TenantId.Value);
-        }
-        else if (_tenantContext.TenantId.HasValue)
-        {
-            query = query.Where(p => p.TenantId == _tenantContext.TenantId.Value);
-        }
-
         if (request.FromDate.HasValue)
         {
             query = query.Where(p => p.CreatedAt >= request.FromDate.Value);
@@ -204,7 +195,7 @@ public class GetPaymentStatsQueryHandler : IRequestHandler<GetPaymentStatsQuery,
 
         var payments = await query.ToListAsync(cancellationToken);
 
-        var successfulPayments = payments.Where(p => p.Status == PaymentStatus.Succeeded).ToList();
+        var successfulPayments = payments.Where(p => p.Status == PaymentStatus.Completed).ToList();
         var failedPayments = payments.Where(p => p.Status == PaymentStatus.Failed).ToList();
         var refundedPayments = payments.Where(p => p.Status == PaymentStatus.Refunded || p.Status == PaymentStatus.PartiallyRefunded).ToList();
 
@@ -263,21 +254,12 @@ public class GetRevenueReportQueryHandler : IRequestHandler<GetRevenueReportQuer
         }
 
         var query = _context.Payments
-            .Where(p => p.Status == PaymentStatus.Succeeded)
+            .Where(p => p.Status == PaymentStatus.Completed)
             .Where(p => p.CreatedAt >= request.FromDate && p.CreatedAt <= request.ToDate);
 
         if (request.ProductId.HasValue)
         {
             query = query.Where(p => p.ProductId == request.ProductId.Value);
-        }
-
-        if (request.TenantId.HasValue)
-        {
-            query = query.Where(p => p.TenantId == request.TenantId.Value);
-        }
-        else if (_tenantContext.TenantId.HasValue)
-        {
-            query = query.Where(p => p.TenantId == _tenantContext.TenantId.Value);
         }
 
         var payments = await query.ToListAsync(cancellationToken);

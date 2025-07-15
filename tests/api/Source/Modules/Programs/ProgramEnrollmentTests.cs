@@ -1,6 +1,7 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Programs;
+using GameGuild.Modules.Programs.Services;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
