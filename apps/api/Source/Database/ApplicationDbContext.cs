@@ -150,6 +150,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<ActivityGrade> ActivityGrades { get; set; }
 
+  // Program Enrollment and Progress DbSets
+  public DbSet<ProgramEnrollment> ProgramEnrollments { get; set; }
+  public DbSet<ContentProgress> ContentProgress { get; set; }
+  
+  // Peer Review System DbSets
+  public DbSet<PeerReview> PeerReviews { get; set; }
+  
+  // Reporting System DbSets
+  public DbSet<ContentReport> ContentReports { get; set; }
+
   // Certificate Management DbSets
   public DbSet<Certificate> Certificates { get; set; }
 
