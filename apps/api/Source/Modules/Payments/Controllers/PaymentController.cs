@@ -43,8 +43,8 @@ public class PaymentController(IMediator mediator) : ControllerBase
   [HttpPost("{id}/process")]
   public async Task<ActionResult<Payment>> ProcessPayment(Guid id, [FromBody] ProcessPaymentCommand command) 
   {
-    command.PaymentId = id;
-    var result = await mediator.Send(command);
+    var processCommand = command with { PaymentId = id };
+    var result = await mediator.Send(processCommand);
     if (!result.Success) return BadRequest(result.ErrorMessage);
     return Ok(result.Payment);
   }
@@ -53,12 +53,12 @@ public class PaymentController(IMediator mediator) : ControllerBase
   /// Refund a payment
   /// </summary>
   [HttpPost("{id}/refund")]
-  public async Task<ActionResult<Payment>> RefundPayment(Guid id, [FromBody] RefundPaymentCommand command) 
+  public async Task<ActionResult<PaymentRefund>> RefundPayment(Guid id, [FromBody] RefundPaymentCommand command) 
   {
-    command.PaymentId = id;
-    var result = await mediator.Send(command);
+    var refundCommand = command with { PaymentId = id };
+    var result = await mediator.Send(refundCommand);
     if (!result.Success) return BadRequest(result.ErrorMessage);
-    return Ok(result.Payment);
+    return Ok(result.Refund);
   }
 
   /// <summary>

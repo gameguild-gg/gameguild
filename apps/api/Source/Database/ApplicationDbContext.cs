@@ -193,7 +193,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   // Feedback Management DbSets
   public DbSet<ProgramFeedbackSubmission> ProgramFeedbackSubmissions { get; set; }
 
-  public DbSet<ProgramRating> ProgramRatings { get; set; }
+  public DbSet<GameGuild.Modules.Programs.Models.ProgramRating> ProgramRatings { get; set; }
 
   protected override void OnModelCreating(ModelBuilder modelBuilder) {
     base.OnModelCreating(modelBuilder);
