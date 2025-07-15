@@ -203,6 +203,7 @@ public static class DependencyInjection {
       .AddProductModule()
       .AddSubscriptionModule()
       .AddPaymentModule()
+      .AddPostsModule()
       .AddTestModule()
       .AddCommonServices();
 
