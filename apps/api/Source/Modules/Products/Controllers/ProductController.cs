@@ -339,7 +339,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
       CreatedBy = User.GetUserId() ?? Guid.Empty 
     });
 
-    return CreatedAtAction(nameof(GetSubscriptionPlan), new { planId = createdPlan.Id }, createdPlan);
+    return CreatedAtAction(nameof(GetSubscriptionPlan), new { planId = createdPlan.Plan?.Id }, createdPlan.Plan); // Fixed: use createdPlan.Plan.Id instead of createdPlan.Id
   }
 
   /// <summary>

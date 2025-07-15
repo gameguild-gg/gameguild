@@ -208,6 +208,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<ProgramRating> ProgramRatings { get; set; }
 
+  public DbSet<ProgramWishlist> ProgramWishlists { get; set; }
+
   protected override void OnModelCreating(ModelBuilder modelBuilder) {
     base.OnModelCreating(modelBuilder);
 
