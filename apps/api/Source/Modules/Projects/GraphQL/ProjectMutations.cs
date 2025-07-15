@@ -1,78 +1,148 @@
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Permissions.Models;
-
+using GameGuild.Modules.Projects.Commands;
+using MediatR;
 
 namespace GameGuild.Modules.Projects;
 
 /// <summary>
-/// GraphQL mutations for Project module
+/// GraphQL mutations for Project module using CQRS pattern
 /// </summary>
 [ExtendObjectType<Mutation>]
-public class ProjectMutations {
-  /// <summary>
-  /// Creates a new project
-  /// </summary>
-  [RequireResourcePermission<Project>(PermissionType.Create)]
-  public async Task<Project> CreateProject(CreateProjectInput input, [Service] IProjectService projectService) {
-    var project = new Project {
-      Title = input.Title,
-      Description = input.Description,
-      ShortDescription = input.ShortDescription,
-      WebsiteUrl = input.WebsiteUrl,
-      RepositoryUrl = input.RepositoryUrl,
-      SocialLinks = input.SocialLinks,
-      CategoryId = input.CategoryId,
-      Status = input.Status ?? ContentStatus.Draft,
-      Visibility = input.Visibility ?? AccessLevel.Private,
-    };
+public class ProjectMutations
+{
+    /// <summary>
+    /// Creates a new project using CQRS pattern
+    /// </summary>
+    public async Task<CreateProjectResult> CreateProject(
+        CreateProjectInput input,
+        [Service] IMediator mediator,
+        [Service] IUserContext userContext,
+        CancellationToken cancellationToken)
+    {
+        var command = new CreateProjectCommand
+        {
+            Title = input.Name,
+            Description = input.Description,
+            ShortDescription = input.ShortDescription,
+            ImageUrl = input.ImageUrl,
+            RepositoryUrl = input.RepositoryUrl,
+            WebsiteUrl = input.DemoUrl,
+            DownloadUrl = input.DocumentationUrl,
+            Type = (GameGuild.Common.ProjectType)input.Type,
+            CreatedById = userContext.UserId ?? Guid.Empty,
+            CategoryId = input.CategoryId,
+            Visibility = input.Visibility ?? AccessLevel.Public,
+            Status = input.Status ?? ContentStatus.Draft,
+            Tags = input.Tags
+        };
 
-    return await projectService.CreateProjectAsync(project);
-  }
+        return await mediator.Send(command, cancellationToken);
+    }
 
-  /// <summary>
-  /// Updates an existing project
-  /// </summary>
-  [RequireResourcePermission<Project>(PermissionType.Edit)]
-  public async Task<Project> UpdateProject(
-    Guid id, UpdateProjectInput input,
-    [Service] IProjectService projectService
-  ) {
-    var existingProject = await projectService.GetProjectByIdAsync(id);
+    /// <summary>
+    /// Updates an existing project using CQRS pattern
+    /// </summary>
+    public async Task<UpdateProjectResult> UpdateProject(
+        UpdateProjectInput input,
+        [Service] IMediator mediator,
+        [Service] IUserContext userContext,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateProjectCommand
+        {
+            ProjectId = input.ProjectId,
+            Title = input.Name,
+            Description = input.Description,
+            ShortDescription = input.ShortDescription,
+            ImageUrl = input.ImageUrl,
+            RepositoryUrl = input.RepositoryUrl,
+            WebsiteUrl = input.DemoUrl,
+            DownloadUrl = input.DocumentationUrl,
+            Type = input.Type != null ? (GameGuild.Common.ProjectType)input.Type : null,
+            CategoryId = input.CategoryId,
+            Visibility = input.Visibility,
+            Status = input.Status,
+            Tags = input.Tags,
+            UpdatedBy = userContext.UserId ?? Guid.Empty
+        };
 
-    if (existingProject == null) throw new InvalidOperationException("Project not found");
+        return await mediator.Send(command, cancellationToken);
+    }
 
-    // Update only provided fields
-    if (!string.IsNullOrEmpty(input.Title)) existingProject.Title = input.Title;
+    /// <summary>
+    /// Deletes a project using CQRS pattern
+    /// </summary>
+    public async Task<DeleteProjectResult> DeleteProject(
+        Guid projectId,
+        [Service] IMediator mediator,
+        [Service] IUserContext userContext,
+        bool softDelete = true,
+        string? reason = null,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new DeleteProjectCommand
+        {
+            ProjectId = projectId,
+            DeletedBy = userContext.UserId ?? Guid.Empty,
+            SoftDelete = softDelete,
+            Reason = reason
+        };
 
-    if (input.Description != null) existingProject.Description = input.Description;
+        return await mediator.Send(command, cancellationToken);
+    }
 
-    if (input.ShortDescription != null) existingProject.ShortDescription = input.ShortDescription;
+    /// <summary>
+    /// Publishes a project using CQRS pattern
+    /// </summary>
+    public async Task<PublishProjectResult> PublishProject(
+        Guid projectId,
+        [Service] IMediator mediator,
+        [Service] IUserContext userContext,
+        CancellationToken cancellationToken)
+    {
+        var command = new PublishProjectCommand
+        {
+            ProjectId = projectId,
+            PublishedBy = userContext.UserId ?? Guid.Empty
+        };
 
-    if (input.WebsiteUrl != null) existingProject.WebsiteUrl = input.WebsiteUrl;
+        return await mediator.Send(command, cancellationToken);
+    }
 
-    if (input.RepositoryUrl != null) existingProject.RepositoryUrl = input.RepositoryUrl;
+    /// <summary>
+    /// Unpublishes a project using CQRS pattern
+    /// </summary>
+    public async Task<UnpublishProjectResult> UnpublishProject(
+        Guid projectId,
+        [Service] IMediator mediator,
+        [Service] IUserContext userContext,
+        CancellationToken cancellationToken)
+    {
+        var command = new UnpublishProjectCommand
+        {
+            ProjectId = projectId,
+            UnpublishedBy = userContext.UserId ?? Guid.Empty
+        };
 
-    if (input.SocialLinks != null) existingProject.SocialLinks = input.SocialLinks;
+        return await mediator.Send(command, cancellationToken);
+    }
 
-    if (input.CategoryId.HasValue) existingProject.CategoryId = input.CategoryId.Value;
+    /// <summary>
+    /// Archives a project using CQRS pattern
+    /// </summary>
+    public async Task<ArchiveProjectResult> ArchiveProject(
+        Guid projectId,
+        [Service] IMediator mediator,
+        [Service] IUserContext userContext,
+        CancellationToken cancellationToken)
+    {
+        var command = new ArchiveProjectCommand
+        {
+            ProjectId = projectId,
+            ArchivedBy = userContext.UserId ?? Guid.Empty
+        };
 
-    if (input.Status.HasValue) existingProject.Status = input.Status.Value;
-
-    if (input.Visibility.HasValue) existingProject.Visibility = input.Visibility.Value;
-
-    return await projectService.UpdateProjectAsync(existingProject);
-  }
-
-  /// <summary>
-  /// Deletes a project (soft delete)
-  /// </summary>
-  [RequireResourcePermission<Project>(PermissionType.Delete)]
-  public async Task<bool> DeleteProject(Guid id, [Service] IProjectService projectService) { return await projectService.DeleteProjectAsync(id); }
-
-  /// <summary>
-  /// Restores a deleted project
-  /// </summary>
-  [RequireResourcePermission<Project>(PermissionType.Restore)]
-  public async Task<bool> RestoreProject(Guid id, [Service] IProjectService projectService) { return await projectService.RestoreProjectAsync(id); }
+        return await mediator.Send(command, cancellationToken);
+    }
 }

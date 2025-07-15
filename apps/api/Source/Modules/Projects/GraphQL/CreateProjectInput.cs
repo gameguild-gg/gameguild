@@ -10,13 +10,15 @@ public record CreateProjectInput(
   string Title,
   string? Description,
   string? ShortDescription,
-  string? WebsiteUrl,
+  string? ImageUrl,
   string? RepositoryUrl,
-  string? SocialLinks,
-  Guid CategoryId,
-  string? Slug,
+  string? WebsiteUrl,
+  string? DownloadUrl,
+  ProjectType Type,
+  Guid? CategoryId,
   ContentStatus? Status,
-  AccessLevel? Visibility
+  AccessLevel? Visibility,
+  List<string>? Tags
 ) {
   public string Title { get; init; } = Title;
 
@@ -24,17 +26,21 @@ public record CreateProjectInput(
 
   public string? ShortDescription { get; init; } = ShortDescription;
 
-  public string? WebsiteUrl { get; init; } = WebsiteUrl;
+  public string? ImageUrl { get; init; } = ImageUrl;
 
   public string? RepositoryUrl { get; init; } = RepositoryUrl;
 
-  public string? SocialLinks { get; init; } = SocialLinks;
+  public string? WebsiteUrl { get; init; } = WebsiteUrl;
 
-  public Guid CategoryId { get; init; } = CategoryId;
+  public string? DownloadUrl { get; init; } = DownloadUrl;
 
-  public string? Slug { get; init; } = Slug;
+  public ProjectType Type { get; init; } = Type;
+
+  public Guid? CategoryId { get; init; } = CategoryId;
 
   public ContentStatus? Status { get; init; } = Status;
 
   public AccessLevel? Visibility { get; init; } = Visibility;
+
+  public List<string>? Tags { get; init; } = Tags;
 }

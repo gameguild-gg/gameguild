@@ -2,6 +2,8 @@ using GameGuild.Common;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Programs.Models;
 using MediatR;
+using ProgramEnrollmentStatus = GameGuild.Modules.Programs.Models.EnrollmentStatus;
+using ProgramAvailabilityStatus = GameGuild.Common.EnrollmentStatus;
 
 namespace GameGuild.Modules.Programs.Queries;
 
@@ -23,7 +25,7 @@ public record GetAllProgramsQuery(
     ProgramDifficulty? Difficulty = null,
     ContentStatus? Status = null,
     AccessLevel? Visibility = null,
-    EnrollmentStatus? EnrollmentStatus = null,
+    ProgramAvailabilityStatus? EnrollmentStatus = null,
     string? CreatorId = null,
     bool IncludeArchived = false,
     string? SortBy = "CreatedAt",

@@ -1,7 +1,7 @@
 using GameGuild.Common.Interfaces;
 using GameGuild.Database;
 using GameGuild.Modules.Projects.Queries;
-using GameGuild.Modules.Projects.Models;
+
 using GameGuild.Modules.Contents;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

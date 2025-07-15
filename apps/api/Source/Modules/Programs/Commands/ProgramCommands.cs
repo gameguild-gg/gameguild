@@ -2,6 +2,7 @@ using GameGuild.Common;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Programs.Models;
 using MediatR;
+using ProgramAvailabilityStatus = GameGuild.Common.EnrollmentStatus;
 
 namespace GameGuild.Modules.Programs.Commands;
 
@@ -24,7 +25,7 @@ public record CreateProgramCommand(
     float? EstimatedHours = null,
     ProgramCategory Category = ProgramCategory.Other,
     ProgramDifficulty Difficulty = ProgramDifficulty.Beginner,
-    EnrollmentStatus EnrollmentStatus = EnrollmentStatus.Open,
+    ProgramAvailabilityStatus EnrollmentStatus = ProgramAvailabilityStatus.Open,
     int? MaxEnrollments = null,
     DateTime? EnrollmentDeadline = null,
     string? CreatorId = null
@@ -43,7 +44,7 @@ public record UpdateProgramCommand(
     float? EstimatedHours = null,
     ProgramCategory? Category = null,
     ProgramDifficulty? Difficulty = null,
-    EnrollmentStatus? EnrollmentStatus = null,
+    ProgramAvailabilityStatus? EnrollmentStatus = null,
     int? MaxEnrollments = null,
     DateTime? EnrollmentDeadline = null
 ) : IRequest<Program>;
@@ -99,7 +100,7 @@ public record UnenrollUserCommand(
 /// </summary>
 public record UpdateEnrollmentStatusCommand(
     Guid ProgramId,
-    EnrollmentStatus Status,
+    ProgramAvailabilityStatus Status,
     int? MaxEnrollments = null,
     DateTime? EnrollmentDeadline = null
 ) : IRequest<Program>;

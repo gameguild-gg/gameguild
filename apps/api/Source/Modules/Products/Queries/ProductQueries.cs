@@ -153,3 +153,160 @@ public record UserProductAccess
     public decimal? PurchasePrice { get; init; }
     public string? Currency { get; init; }
 }
+
+/// <summary>
+/// Query to get products by type
+/// </summary>
+public record GetProductsByTypeQuery : IRequest<IEnumerable<Product>>
+{
+    public ProductType Type { get; init; }
+    public int Skip { get; init; } = 0;
+    public int Take { get; init; } = 50;
+}
+
+/// <summary>
+/// Query to get published products
+/// </summary>
+public record GetPublishedProductsQuery : IRequest<IEnumerable<Product>>
+{
+    public int Skip { get; init; } = 0;
+    public int Take { get; init; } = 50;
+}
+
+/// <summary>
+/// Query to search products
+/// </summary>
+public record SearchProductsQuery : IRequest<IEnumerable<Product>>
+{
+    public string SearchTerm { get; init; } = string.Empty;
+    public ProductType? Type { get; init; }
+    public int Skip { get; init; } = 0;
+    public int Take { get; init; } = 50;
+}
+
+/// <summary>
+/// Query to get products by creator
+/// </summary>
+public record GetProductsByCreatorQuery : IRequest<IEnumerable<Product>>
+{
+    public Guid CreatorId { get; init; }
+    public int Skip { get; init; } = 0;
+    public int Take { get; init; } = 50;
+}
+
+/// <summary>
+/// Query to get products in price range
+/// </summary>
+public record GetProductsInPriceRangeQuery : IRequest<IEnumerable<Product>>
+{
+    public decimal MinPrice { get; init; }
+    public decimal MaxPrice { get; init; }
+    public string Currency { get; init; } = "USD";
+    public int Skip { get; init; } = 0;
+    public int Take { get; init; } = 50;
+}
+
+/// <summary>
+/// Query to get popular products
+/// </summary>
+public record GetPopularProductsQuery : IRequest<IEnumerable<Product>>
+{
+    public int Skip { get; init; } = 0;
+    public int Take { get; init; } = 50;
+}
+
+/// <summary>
+/// Query to get recent products
+/// </summary>
+public record GetRecentProductsQuery : IRequest<IEnumerable<Product>>
+{
+    public int Skip { get; init; } = 0;
+    public int Take { get; init; } = 50;
+}
+
+/// <summary>
+/// Query to get bundle items
+/// </summary>
+public record GetBundleItemsQuery : IRequest<IEnumerable<Product>>
+{
+    public Guid BundleId { get; init; }
+}
+
+/// <summary>
+/// Query to get current pricing
+/// </summary>
+public record GetCurrentPricingQuery : IRequest<ProductPricing?>
+{
+    public Guid ProductId { get; init; }
+    public string Currency { get; init; } = "USD";
+}
+
+/// <summary>
+/// Query to get pricing history
+/// </summary>
+public record GetPricingHistoryQuery : IRequest<IEnumerable<ProductPricing>>
+{
+    public Guid ProductId { get; init; }
+    public int Skip { get; init; } = 0;
+    public int Take { get; init; } = 50;
+}
+
+/// <summary>
+/// Query to get subscription plans
+/// </summary>
+public record GetSubscriptionPlansQuery : IRequest<IEnumerable<ProductSubscriptionPlan>>
+{
+    public bool ActiveOnly { get; init; } = true;
+}
+
+/// <summary>
+/// Query to get specific subscription plan
+/// </summary>
+public record GetSubscriptionPlanQuery : IRequest<ProductSubscriptionPlan?>
+{
+    public Guid PlanId { get; init; }
+}
+
+/// <summary>
+/// Query to check user access
+/// </summary>
+public record HasUserAccessQuery : IRequest<bool>
+{
+    public Guid UserId { get; init; }
+    public Guid ProductId { get; init; }
+}
+
+/// <summary>
+/// Query to get user product
+/// </summary>
+public record GetUserProductQuery : IRequest<UserProduct?>
+{
+    public Guid UserId { get; init; }
+    public Guid ProductId { get; init; }
+}
+
+/// <summary>
+/// Query to get product count
+/// </summary>
+public record GetProductCountQuery : IRequest<int>
+{
+    public ProductType? Type { get; init; }
+    public ContentStatus? Status { get; init; }
+}
+
+/// <summary>
+/// Query to get user count for product
+/// </summary>
+public record GetUserCountForProductQuery : IRequest<int>
+{
+    public Guid ProductId { get; init; }
+}
+
+/// <summary>
+/// Query to get total revenue for product
+/// </summary>
+public record GetTotalRevenueForProductQuery : IRequest<decimal>
+{
+    public Guid ProductId { get; init; }
+    public string Currency { get; init; } = "USD";
+}

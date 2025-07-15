@@ -1,5 +1,4 @@
 using MediatR;
-using GameGuild.Modules.Projects.Models;
 using GameGuild.Modules.Contents;
 using GameGuild.Common;
 
@@ -10,15 +9,15 @@ namespace GameGuild.Modules.Projects.Commands;
 /// </summary>
 public record CreateProjectCommand : IRequest<CreateProjectResult>
 {
-    public string Name { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
     public string? Description { get; init; }
     public string? ShortDescription { get; init; }
     public string? ImageUrl { get; init; }
     public string? RepositoryUrl { get; init; }
-    public string? DemoUrl { get; init; }
-    public string? DocumentationUrl { get; init; }
-    public ProjectType Type { get; init; } = ProjectType.Game;
-    public Guid CreatorId { get; init; }
+    public string? WebsiteUrl { get; init; }
+    public string? DownloadUrl { get; init; }
+    public ProjectType Type { get; init; } = GameGuild.Common.ProjectType.Game;
+    public Guid CreatedById { get; init; }
     public Guid? CategoryId { get; init; }
     public AccessLevel Visibility { get; init; } = AccessLevel.Public;
     public ContentStatus Status { get; init; } = ContentStatus.Draft;
@@ -32,13 +31,13 @@ public record CreateProjectCommand : IRequest<CreateProjectResult>
 public record UpdateProjectCommand : IRequest<UpdateProjectResult>
 {
     public Guid ProjectId { get; init; }
-    public string? Name { get; init; }
+    public string? Title { get; init; }
     public string? Description { get; init; }
     public string? ShortDescription { get; init; }
     public string? ImageUrl { get; init; }
     public string? RepositoryUrl { get; init; }
-    public string? DemoUrl { get; init; }
-    public string? DocumentationUrl { get; init; }
+    public string? WebsiteUrl { get; init; }
+    public string? DownloadUrl { get; init; }
     public ProjectType? Type { get; init; }
     public Guid? CategoryId { get; init; }
     public AccessLevel? Visibility { get; init; }

@@ -67,8 +67,11 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpPut("{id:guid}")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductEntity>> UpdateProduct(Guid id, [FromBody] UpdateProductCommand command) {
-    command.ProductId = id;
-    var result = await mediator.Send(command);
+    var updateCommand = command with { 
+      ProductId = id,
+      UpdatedBy = User.GetUserId() ?? Guid.Empty
+    };
+    var result = await mediator.Send(updateCommand);
     if (!result.Success) return BadRequest(result.ErrorMessage);
     return Ok(result.Product);
   }
@@ -79,7 +82,10 @@ public class ProductController(IMediator mediator) : ControllerBase {
   [HttpDelete("{id:guid}")]
   [RequireResourcePermission<ProductEntity>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteProduct(Guid id) {
-    var command = new DeleteProductCommand { ProductId = id };
+    var command = new DeleteProductCommand { 
+      ProductId = id,
+      DeletedBy = User.GetUserId() ?? Guid.Empty
+    };
     var result = await mediator.Send(command);
     if (!result.Success) return BadRequest(result.ErrorMessage);
     return NoContent();
@@ -89,7 +95,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50
   ) {
-    var products = await mediator.Send(new GetProductsQuery(skip, take));
+    var products = await mediator.Send(new GetProductsQuery { Skip = skip, Take = take });
 
     return Ok(products);
   }
@@ -129,9 +135,26 @@ public class ProductController(IMediator mediator) : ControllerBase {
   public async Task<ActionResult<ProductEntity>> CreateProduct([FromBody] ProductEntity product) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    var createdProduct = await mediator.Send(new CreateProductCommand(product));
+    var command = new CreateProductCommand {
+      Name = product.Name,
+      Description = product.Description,
+      ShortDescription = product.ShortDescription,
+      ImageUrl = product.ImageUrl,
+      Type = product.Type,
+      IsBundle = product.IsBundle,
+      CreatorId = User.GetUserId() ?? Guid.Empty,
+      BundleItems = product.BundleItems,
+      ReferralCommissionPercentage = product.ReferralCommissionPercentage,
+      MaxAffiliateDiscount = product.MaxAffiliateDiscount,
+      AffiliateCommissionPercentage = product.AffiliateCommissionPercentage,
+      Visibility = product.Visibility,
+      Status = product.Status
+    };
 
-    return CreatedAtAction(nameof(GetProduct), new { id = createdProduct.Id }, createdProduct);
+    var result = await mediator.Send(command);
+    if (!result.Success) return BadRequest(result.ErrorMessage);
+
+    return CreatedAtAction(nameof(GetProduct), new { id = result.Product?.Id }, result.Product);
   }
 
   /// <summary>
