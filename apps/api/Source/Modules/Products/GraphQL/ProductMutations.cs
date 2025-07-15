@@ -1,23 +1,23 @@
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
-using GameGuild.Modules.Products.Services;
+using GameGuild.Modules.Products.Commands;
+using MediatR;
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
 using PromoCodeTypeEnum = GameGuild.Common.PromoCodeType;
-
 
 namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary>
-/// GraphQL mutations for Product module
+/// GraphQL mutations for Product module using CQRS pattern
 /// </summary>
 [ExtendObjectType<Mutation>]
 public class ProductMutations {
   /// <summary>
-  /// Creates a new product
+  /// Creates a new product using CQRS pattern
   /// </summary>
-  public async Task<ProductEntity> CreateProduct(CreateProductInput input, [Service] IProductService productService) {
-    var product = new ProductEntity {
-      Title = input.Name,
+  public async Task<ProductEntity> CreateProduct(CreateProductInput input, [Service] IMediator mediator) {
+    var command = new CreateProductCommand {
+      Name = input.Name,
       Name = input.Name,
       ShortDescription = input.ShortDescription,
       Description = input.ShortDescription, // Using short description for both fields
