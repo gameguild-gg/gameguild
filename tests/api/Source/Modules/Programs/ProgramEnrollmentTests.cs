@@ -1,0 +1,424 @@
+using GameGuild.Common;
+using GameGuild.Database;
+using GameGuild.Modules.Programs;
+using GameGuild.Modules.Products;
+using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Tests.Modules.Programs;
+
+/// <summary>
+/// Comprehensive tests for Program Enrollment functionality including auto-enrollment from product purchases
+/// </summary>
+public class ProgramEnrollmentTests : IDisposable
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly IProgramEnrollmentService _enrollmentService;
+
+    public ProgramEnrollmentTests()
+    {
+        var services = new ServiceCollection();
+        
+        // Add database context
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+        
+        // Add logging
+        services.AddLogging(builder => builder.AddConsole());
+        
+        // Add Program enrollment service
+        services.AddScoped<IProgramEnrollmentService, ProgramEnrollmentService>();
+        
+        _serviceProvider = services.BuildServiceProvider();
+        _context = _serviceProvider.GetRequiredService<ApplicationDbContext>();
+        _enrollmentService = _serviceProvider.GetRequiredService<IProgramEnrollmentService>();
+    }
+
+    [Fact]
+    public async Task ProgramEnrollment_Entity_Can_Be_Created_And_Saved()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+        await SeedTestData(userId, programId);
+
+        var enrollment = new ProgramEnrollment
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            ProgramId = programId,
+            EnrollmentSource = EnrollmentSource.Manual,
+            Status = EnrollmentStatus.Active,
+            ProgressPercentage = 0m
+        };
+
+        // Act
+        _context.ProgramEnrollments.Add(enrollment);
+        await _context.SaveChangesAsync();
+
+        // Assert
+        var savedEnrollment = await _context.ProgramEnrollments.FindAsync(enrollment.Id);
+        Assert.NotNull(savedEnrollment);
+        Assert.Equal(userId, savedEnrollment.UserId);
+        Assert.Equal(programId, savedEnrollment.ProgramId);
+        Assert.Equal(EnrollmentSource.Manual, savedEnrollment.EnrollmentSource);
+        Assert.Equal(EnrollmentStatus.Active, savedEnrollment.Status);
+        Assert.Equal(0m, savedEnrollment.ProgressPercentage);
+    }
+
+    [Fact]
+    public void ProgramEnrollment_Has_Required_Properties()
+    {
+        // Arrange & Act
+        var enrollment = new ProgramEnrollment();
+
+        // Assert - Test default values
+        Assert.Equal(EnrollmentSource.Manual, enrollment.EnrollmentSource);
+        Assert.Equal(EnrollmentStatus.Active, enrollment.Status);
+        Assert.Equal(0m, enrollment.ProgressPercentage);
+        Assert.False(enrollment.IsCompleted);
+        Assert.False(enrollment.CertificateIssued);
+        Assert.Null(enrollment.CompletedAt);
+        Assert.Null(enrollment.CertificateIssuedAt);
+        Assert.True(enrollment.Id != Guid.Empty);
+    }
+
+    [Fact]
+    public async Task EnrollmentService_Can_Enroll_User_In_Program()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+        await SeedTestData(userId, programId);
+
+        // Act
+        var enrollment = await _enrollmentService.EnrollUserInProgramAsync(userId, programId, EnrollmentSource.Manual);
+
+        // Assert
+        Assert.NotNull(enrollment);
+        Assert.Equal(userId, enrollment.UserId);
+        Assert.Equal(programId, enrollment.ProgramId);
+        Assert.Equal(EnrollmentSource.Manual, enrollment.EnrollmentSource);
+        Assert.Equal(EnrollmentStatus.Active, enrollment.Status);
+    }
+
+    [Fact]
+    public async Task EnrollmentService_Prevents_Duplicate_Enrollment()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+        await SeedTestData(userId, programId);
+
+        // First enrollment
+        await _enrollmentService.EnrollUserInProgramAsync(userId, programId, EnrollmentSource.Manual);
+
+        // Act & Assert - Second enrollment should throw exception
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _enrollmentService.EnrollUserInProgramAsync(userId, programId, EnrollmentSource.Manual));
+    }
+
+    [Fact]
+    public async Task EnrollmentService_Can_Get_User_Enrollments()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var programId1 = Guid.NewGuid();
+        var programId2 = Guid.NewGuid();
+        await SeedTestData(userId, programId1);
+        await SeedTestProgram(programId2, "Test Program 2");
+
+        await _enrollmentService.EnrollUserInProgramAsync(userId, programId1, EnrollmentSource.Manual);
+        await _enrollmentService.EnrollUserInProgramAsync(userId, programId2, EnrollmentSource.Manual);
+
+        // Act
+        var enrollments = await _enrollmentService.GetUserEnrollmentsAsync(userId);
+
+        // Assert
+        Assert.NotNull(enrollments);
+        var enrollmentList = enrollments.ToList();
+        Assert.Equal(2, enrollmentList.Count);
+        Assert.All(enrollmentList, e => Assert.Equal(userId, e.UserId));
+    }
+
+    [Fact]
+    public async Task EnrollmentService_Can_Get_Program_Enrollments()
+    {
+        // Arrange
+        var userId1 = Guid.NewGuid();
+        var userId2 = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+        await SeedTestData(userId1, programId);
+        await SeedTestUser(userId2, "User 2", "user2@test.com");
+
+        await _enrollmentService.EnrollUserInProgramAsync(userId1, programId, EnrollmentSource.Manual);
+        await _enrollmentService.EnrollUserInProgramAsync(userId2, programId, EnrollmentSource.Manual);
+
+        // Act
+        var enrollments = await _enrollmentService.GetProgramEnrollmentsAsync(programId);
+
+        // Assert
+        Assert.NotNull(enrollments);
+        var enrollmentList = enrollments.ToList();
+        Assert.Equal(2, enrollmentList.Count);
+        Assert.All(enrollmentList, e => Assert.Equal(programId, e.ProgramId));
+    }
+
+    [Fact]
+    public async Task EnrollmentService_Can_Update_Progress()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+        await SeedTestData(userId, programId);
+
+        var enrollment = await _enrollmentService.EnrollUserInProgramAsync(userId, programId, EnrollmentSource.Manual);
+
+        // Act
+        await _enrollmentService.UpdateProgressAsync(enrollment.Id, 75m);
+
+        // Assert
+        var updatedEnrollment = await _enrollmentService.GetEnrollmentByIdAsync(enrollment.Id);
+        Assert.NotNull(updatedEnrollment);
+        Assert.Equal(75m, updatedEnrollment.ProgressPercentage);
+    }
+
+    [Fact]
+    public async Task EnrollmentService_Can_Complete_Enrollment()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+        await SeedTestData(userId, programId);
+
+        var enrollment = await _enrollmentService.EnrollUserInProgramAsync(userId, programId, EnrollmentSource.Manual);
+
+        // Act
+        await _enrollmentService.CompleteEnrollmentAsync(enrollment.Id);
+
+        // Assert
+        var completedEnrollment = await _enrollmentService.GetEnrollmentByIdAsync(enrollment.Id);
+        Assert.NotNull(completedEnrollment);
+        Assert.Equal(EnrollmentStatus.Completed, completedEnrollment.Status);
+        Assert.True(completedEnrollment.IsCompleted);
+        Assert.Equal(100m, completedEnrollment.ProgressPercentage);
+        Assert.NotNull(completedEnrollment.CompletedAt);
+    }
+
+    [Fact]
+    public async Task EnrollmentService_Can_Issue_Certificate()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+        await SeedTestData(userId, programId);
+
+        var enrollment = await _enrollmentService.EnrollUserInProgramAsync(userId, programId, EnrollmentSource.Manual);
+        await _enrollmentService.CompleteEnrollmentAsync(enrollment.Id);
+
+        // Act
+        await _enrollmentService.IssueCertificateAsync(enrollment.Id);
+
+        // Assert
+        var certificatedEnrollment = await _enrollmentService.GetEnrollmentByIdAsync(enrollment.Id);
+        Assert.NotNull(certificatedEnrollment);
+        Assert.True(certificatedEnrollment.CertificateIssued);
+        Assert.NotNull(certificatedEnrollment.CertificateIssuedAt);
+    }
+
+    [Fact]
+    public async Task EnrollmentService_Cannot_Issue_Certificate_For_Incomplete_Enrollment()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+        await SeedTestData(userId, programId);
+
+        var enrollment = await _enrollmentService.EnrollUserInProgramAsync(userId, programId, EnrollmentSource.Manual);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _enrollmentService.IssueCertificateAsync(enrollment.Id));
+    }
+
+    [Fact]
+    public async Task EnrollmentService_Can_Auto_Enroll_From_Product_Purchase()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        await SeedTestData(userId, programId);
+        await SeedProductWithProgram(productId, programId);
+
+        // Act
+        await _enrollmentService.AutoEnrollInProductProgramsAsync(userId, productId);
+
+        // Assert
+        var enrollments = await _enrollmentService.GetUserEnrollmentsAsync(userId);
+        var enrollmentList = enrollments.ToList();
+        Assert.Single(enrollmentList);
+        
+        var enrollment = enrollmentList.First();
+        Assert.Equal(EnrollmentSource.ProductPurchase, enrollment.EnrollmentSource);
+        Assert.Equal(productId, enrollment.ProductId);
+    }
+
+    [Fact]
+    public async Task EnrollmentService_Can_Handle_Product_With_Multiple_Programs()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var programId1 = Guid.NewGuid();
+        var programId2 = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        
+        await SeedTestData(userId, programId1);
+        await SeedTestProgram(programId2, "Test Program 2");
+        await SeedProductWithPrograms(productId, new[] { programId1, programId2 });
+
+        // Act
+        await _enrollmentService.AutoEnrollInProductProgramsAsync(userId, productId);
+
+        // Assert
+        var enrollments = await _enrollmentService.GetUserEnrollmentsAsync(userId);
+        var enrollmentList = enrollments.ToList();
+        Assert.Equal(2, enrollmentList.Count);
+        Assert.All(enrollmentList, e => Assert.Equal(EnrollmentSource.ProductPurchase, e.EnrollmentSource));
+        Assert.All(enrollmentList, e => Assert.Equal(productId, e.ProductId));
+    }
+
+    [Fact]
+    public async Task EnrollmentService_Can_Calculate_Progress_From_Content()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var programId = Guid.NewGuid();
+        await SeedTestData(userId, programId);
+
+        var enrollment = await _enrollmentService.EnrollUserInProgramAsync(userId, programId, EnrollmentSource.Manual);
+
+        // Seed some content progress
+        await SeedContentProgress(enrollment.Id, programId, 50m);
+
+        // Act
+        var calculatedProgress = await _enrollmentService.CalculateProgressFromContentAsync(enrollment.Id);
+
+        // Assert
+        Assert.Equal(50m, calculatedProgress);
+    }
+
+    #region Helper Methods
+
+    private async Task SeedTestData(Guid userId, Guid programId)
+    {
+        await SeedTestUser(userId, "Test User", "test@example.com");
+        await SeedTestProgram(programId, "Test Program");
+    }
+
+    private async Task SeedTestUser(Guid userId, string name, string email)
+    {
+        var user = new User
+        {
+            Id = userId,
+            Name = name,
+            Email = email,
+            IsActive = true
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task SeedTestProgram(Guid programId, string title)
+    {
+        var program = new Program
+        {
+            Id = programId,
+            Title = title,
+            Description = "Test program description",
+            Visibility = AccessLevel.Public
+        };
+
+        _context.Programs.Add(program);
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task SeedProductWithProgram(Guid productId, Guid programId)
+    {
+        var product = new Product
+        {
+            Id = productId,
+            Name = "Test Product",
+            Description = "Test product description",
+            Price = 99.99m,
+            Currency = "USD"
+        };
+
+        var productProgram = new ProductProgram
+        {
+            ProductId = productId,
+            ProgramId = programId
+        };
+
+        _context.Products.Add(product);
+        _context.ProductPrograms.Add(productProgram);
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task SeedProductWithPrograms(Guid productId, Guid[] programIds)
+    {
+        var product = new Product
+        {
+            Id = productId,
+            Name = "Test Product",
+            Description = "Test product description",
+            Price = 99.99m,
+            Currency = "USD"
+        };
+
+        _context.Products.Add(product);
+
+        foreach (var programId in programIds)
+        {
+            var productProgram = new ProductProgram
+            {
+                ProductId = productId,
+                ProgramId = programId
+            };
+            _context.ProductPrograms.Add(productProgram);
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task SeedContentProgress(Guid enrollmentId, Guid programId, decimal progress)
+    {
+        var contentProgress = new ContentProgress
+        {
+            Id = Guid.NewGuid(),
+            EnrollmentId = enrollmentId,
+            ProgramId = programId,
+            ContentId = Guid.NewGuid(),
+            ContentType = "lesson",
+            Status = ContentCompletionStatus.InProgress,
+            ProgressPercentage = progress,
+            TimeSpentMinutes = 30
+        };
+
+        _context.ContentProgress.Add(contentProgress);
+        await _context.SaveChangesAsync();
+    }
+
+    #endregion
+
+    public void Dispose()
+    {
+        _context.Dispose();
+        if (_serviceProvider is IDisposable disposable)
+            disposable.Dispose();
+    }
+}
