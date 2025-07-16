@@ -226,15 +226,15 @@ public class ProjectQueryHandlers :
     }
   }
 
-  public async Task<IEnumerable<Project>> Handle(GetDeletedProjectsQuery request, CancellationToken cancellationToken) {
+  public Task<IEnumerable<Project>> Handle(GetDeletedProjectsQuery request, CancellationToken cancellationToken) {
     try {
       // Deleted projects are restricted
-      return Enumerable.Empty<Project>();
+      return Task.FromResult(Enumerable.Empty<Project>());
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting deleted projects");
 
-      return Enumerable.Empty<Project>();
+      return Task.FromResult(Enumerable.Empty<Project>());
     }
   }
 
@@ -393,10 +393,10 @@ public class ProjectQueryHandlers :
   /// <summary>
   /// Get project statistics
   /// </summary>
-  private async Task<ProjectStatistics> GetProjectStatistics(Guid projectId, CancellationToken cancellationToken, DateTime? fromDate = null, DateTime? toDate = null) {
+  private Task<ProjectStatistics> GetProjectStatistics(Guid projectId, CancellationToken cancellationToken, DateTime? fromDate = null, DateTime? toDate = null) {
     // TODO: Implement actual statistics calculation
     // This would typically involve querying related tables for views, downloads, likes, etc.
-    return new ProjectStatistics {
+    return Task.FromResult(new ProjectStatistics {
       ProjectId = projectId,
       FollowerCount = 0,
       FeedbackCount = 0,
@@ -406,6 +406,6 @@ public class ProjectQueryHandlers :
       ReleaseCount = 0,
       JamSubmissionCount = 0,
       AwardCount = 0
-    };
+    });
   }
 }
