@@ -1,5 +1,6 @@
 using GameGuild.Common;
 using GameGuild.Database;
+using GameGuild.Modules.Contents;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using IUserContext = GameGuild.Common.IUserContext;
@@ -13,7 +14,9 @@ namespace GameGuild.Modules.Products;
 public class ProductCommandHandlers :
   IRequestHandler<CreateProductCommand, CreateProductResult>,
   IRequestHandler<UpdateProductCommand, UpdateProductResult>,
-  IRequestHandler<DeleteProductCommand, DeleteProductResult> {
+  IRequestHandler<DeleteProductCommand, DeleteProductResult>,
+  IRequestHandler<PublishProductCommand, PublishProductResult>,
+  IRequestHandler<UnpublishProductCommand, UnpublishProductResult> {
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
   private readonly ITenantContext _tenantContext;
@@ -38,11 +41,18 @@ public class ProductCommandHandlers :
       // Validate user permissions
       if (!_userContext.IsAuthenticated || _userContext.UserId == null) { return new CreateProductResult { Success = false, ErrorMessage = "User must be authenticated" }; }
 
+      // Check if user has permission to create products (basic role check)
+      if (!_userContext.IsInRole("Admin")) { return new CreateProductResult { Success = false, ErrorMessage = "Unauthorized - Admin role required" }; }
+
+      // Basic validation
+      if (string.IsNullOrWhiteSpace(request.Name)) { return new CreateProductResult { Success = false, ErrorMessage = "Name is required" }; }
+
       // Create the product
       var product = new Product {
         Id = Guid.NewGuid(),
         Title = request.Name, // Using Title from Resource base class
         Name = request.Name,
+        Description = request.Description,
         ShortDescription = request.ShortDescription,
         ImageUrl = request.ImageUrl,
         Type = request.Type,
@@ -92,6 +102,8 @@ public class ProductCommandHandlers :
         product.Name = request.Name;
         product.Title = request.Name; // Update Resource.Title as well
       }
+
+      if (request.Description != null) product.Description = request.Description;
 
       if (request.ShortDescription != null) product.ShortDescription = request.ShortDescription;
 
@@ -153,6 +165,64 @@ public class ProductCommandHandlers :
       _logger.LogError(ex, "Error deleting product: {ProductId}", request.ProductId);
 
       return new DeleteProductResult { Success = false, ErrorMessage = $"Failed to delete product: {ex.Message}" };
+    }
+  }
+
+  public async Task<PublishProductResult> Handle(PublishProductCommand request, CancellationToken cancellationToken) {
+    try {
+      _logger.LogInformation("Publishing product: {ProductId} by user {UserId}", request.ProductId, _userContext.UserId);
+
+      var product = await _context.Products
+                                  .FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
+
+      if (product == null) { return new PublishProductResult { Success = false, ErrorMessage = "Product not found" }; }
+
+      // Check permissions - only the creator can publish their product
+      if (product.CreatorId != _userContext.UserId) { return new PublishProductResult { Success = false, ErrorMessage = "User does not have permission to publish this product" }; }
+
+      // Update status to published
+      product.Status = ContentStatus.Published;
+      product.UpdatedAt = DateTime.UtcNow;
+
+      await _context.SaveChangesAsync(cancellationToken);
+
+      _logger.LogInformation("Product published successfully: {ProductId}", product.Id);
+
+      return new PublishProductResult { Success = true, Product = product };
+    }
+    catch (Exception ex) {
+      _logger.LogError(ex, "Error publishing product: {ProductId}", request.ProductId);
+
+      return new PublishProductResult { Success = false, ErrorMessage = $"Failed to publish product: {ex.Message}" };
+    }
+  }
+
+  public async Task<UnpublishProductResult> Handle(UnpublishProductCommand request, CancellationToken cancellationToken) {
+    try {
+      _logger.LogInformation("Unpublishing product: {ProductId} by user {UserId}", request.ProductId, _userContext.UserId);
+
+      var product = await _context.Products
+                                  .FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
+
+      if (product == null) { return new UnpublishProductResult { Success = false, ErrorMessage = "Product not found" }; }
+
+      // Check permissions - only the creator can unpublish their product
+      if (product.CreatorId != _userContext.UserId) { return new UnpublishProductResult { Success = false, ErrorMessage = "User does not have permission to unpublish this product" }; }
+
+      // Update status to draft
+      product.Status = ContentStatus.Draft;
+      product.UpdatedAt = DateTime.UtcNow;
+
+      await _context.SaveChangesAsync(cancellationToken);
+
+      _logger.LogInformation("Product unpublished successfully: {ProductId}", product.Id);
+
+      return new UnpublishProductResult { Success = true, Product = product };
+    }
+    catch (Exception ex) {
+      _logger.LogError(ex, "Error unpublishing product: {ProductId}", request.ProductId);
+
+      return new UnpublishProductResult { Success = false, ErrorMessage = $"Failed to unpublish product: {ex.Message}" };
     }
   }
 }
