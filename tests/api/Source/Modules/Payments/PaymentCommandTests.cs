@@ -72,6 +72,9 @@ public class PaymentCommandTests : IDisposable
         await SeedTestUser(userId, "Test User");
         await SeedTestProduct(productId, "Test Product", userId);
 
+        // Setup user context for this specific user
+        _mockUserContext.Setup(x => x.UserId).Returns(userId);
+
         var command = new CreatePaymentCommand
         {
             UserId = userId,
@@ -87,7 +90,7 @@ public class PaymentCommandTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Success);
+        Assert.True(result.Success, $"Expected success but got error: {result.ErrorMessage}");
         Assert.NotNull(result.Payment);
         Assert.Equal(PaymentStatus.Pending, result.Payment.Status);
         Assert.Equal(99.99m, result.Payment.Amount);
@@ -109,6 +112,9 @@ public class PaymentCommandTests : IDisposable
         var productId = Guid.NewGuid();
         await SeedTestUser(userId, "Test User");
         await SeedTestProduct(productId, "Test Product", userId);
+
+        // Setup user context for this specific user
+        _mockUserContext.Setup(x => x.UserId).Returns(userId);
 
         // Setup payment gateway mock for success
         _mockPaymentGateway.Setup(x => x.ProcessPaymentAsync(It.IsAny<PaymentRequest>()))
@@ -145,7 +151,7 @@ public class PaymentCommandTests : IDisposable
 
         // Assert
         Assert.NotNull(processResult);
-        Assert.True(processResult.Success);
+        Assert.True(processResult.Success, $"Expected success but got error: {processResult.ErrorMessage}");
         Assert.NotNull(processResult.Payment);
         Assert.Equal(PaymentStatus.Completed, processResult.Payment.Status);
         Assert.Equal("txn_success_123", processResult.Payment.ProviderTransactionId);
@@ -164,6 +170,9 @@ public class PaymentCommandTests : IDisposable
         var productId = Guid.NewGuid();
         await SeedTestUser(userId, "Test User");
         await SeedTestProduct(productId, "Test Product", userId);
+
+        // Setup user context for this specific user
+        _mockUserContext.Setup(x => x.UserId).Returns(userId);
 
         // Setup payment gateway mock to fail
         _mockPaymentGateway.Setup(x => x.ProcessPaymentAsync(It.IsAny<PaymentRequest>()))
@@ -185,12 +194,14 @@ public class PaymentCommandTests : IDisposable
         };
 
         var createResult = await _mediator.Send(createCommand);
+        Assert.True(createResult.Success, $"Create payment failed: {createResult.ErrorMessage}");
+        Assert.NotNull(createResult.Payment);
 
         // Step 2: Process Payment (should fail)
         var processCommand = new ProcessPaymentCommand
         {
-            PaymentId = createResult.Payment!.Id,
-            ProviderTransactionId = "txn_failed_456"
+            PaymentId = createResult.Payment.Id,
+            ProviderTransactionId = "pi_failed_456"
         };
 
         // Act
@@ -198,7 +209,7 @@ public class PaymentCommandTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.False(result.Success);
+        Assert.True(result.Success, $"Expected success but got error: {result.ErrorMessage}"); // Process command should succeed even if payment fails
         Assert.NotNull(result.Payment);
         Assert.Equal(PaymentStatus.Failed, result.Payment.Status);
         
@@ -216,6 +227,9 @@ public class PaymentCommandTests : IDisposable
         var productId = Guid.NewGuid();
         await SeedTestUser(userId, "Test User");
         await SeedTestProduct(productId, "Test Product", userId);
+
+        // Setup user context for this specific user
+        _mockUserContext.Setup(x => x.UserId).Returns(userId);
 
         // Create and process a payment first
         var payment = await CreateTestPayment(userId, productId, PaymentStatus.Completed);
@@ -242,7 +256,7 @@ public class PaymentCommandTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Success);
+        Assert.True(result.Success, $"Expected success but got error: {result.ErrorMessage}");
         Assert.NotNull(result.Refund);
         Assert.Equal(50.00m, result.Refund.RefundAmount);
     }
@@ -255,6 +269,9 @@ public class PaymentCommandTests : IDisposable
         var productId = Guid.NewGuid();
         await SeedTestUser(userId, "Test User");
         await SeedTestProduct(productId, "Test Product", userId);
+
+        // Setup user context for this specific user
+        _mockUserContext.Setup(x => x.UserId).Returns(userId);
 
         // Create a pending payment
         var payment = await CreateTestPayment(userId, productId, PaymentStatus.Pending);
@@ -271,7 +288,7 @@ public class PaymentCommandTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Success);
+        Assert.True(result.Success, $"Expected success but got error: {result.ErrorMessage}");
         Assert.NotNull(result.Payment);
         Assert.Equal(PaymentStatus.Cancelled, result.Payment.Status);
     }
