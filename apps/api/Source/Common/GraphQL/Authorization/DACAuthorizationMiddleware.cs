@@ -11,7 +11,7 @@ namespace GameGuild.Common.Authorization;
 /// </summary>
 public class DACAuthorizationMiddleware(FieldDelegate next) {
   public async ValueTask InvokeAsync(IMiddlewareContext context) {
-    // Skip authorization for introspection queries
+                                                                                                                                                                                                                                                                            // Skip authorization for introspection queries
     if (IsIntrospectionQuery(context)) {
       await next(context);
       return;
