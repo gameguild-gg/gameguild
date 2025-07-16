@@ -117,6 +117,9 @@ namespace GameGuild.Tests.Fixtures {
       // Add GraphQL infrastructure with testing configuration
       services.AddGraphQLInfrastructure(DependencyInjection.GraphQLOptionsFactory.ForTesting());
       
+      // Explicitly enable introspection for tests (overrides any DisableIntrospection calls)
+      services.AddGraphQLServer().DisableIntrospection(false);
+      
       // Configure GraphQL to return 200 OK for validation errors
       services.Configure<HotChocolate.AspNetCore.GraphQLHttpOptions>(options =>
       {
