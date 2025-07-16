@@ -19,7 +19,7 @@ import {
   markAllNotificationsAsRead,
   markNotificationAsRead,
 } from '@/lib/notifications/actions/notifications.actions';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/lib/hooks/use-toast';
 
 interface NotificationDropdownProps {
   className?: string;

@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@game-guild/ui/components';
 import { Label } from '@game-guild/ui/components';
 import { Input } from '@game-guild/ui/components';
-import { signInWithGoogle } from '@/lib/auth';
-import { useAuthError } from '@/hooks/useAuthError';
+import { signIn } from '@/auth';
+import { useAuthError } from '@/lib/hooks/useAuthError';
 import { Link } from '@/i18n/navigation';
 
 export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'div'>) => {
@@ -22,7 +22,7 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await signInWithGoogle();
+      await signIn('google');
     } catch (error) {
       console.error('Sign-in error:', error);
     } finally {

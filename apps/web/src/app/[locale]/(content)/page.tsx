@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useTenant } from '@/lib/tenant/tenant-provider.tsx';
 import { TenantSelector } from '@/components/auth/TenantSelector.tsx';
-import { getUserTenants } from '@/lib/auth/actions/tenant.actions.ts';
+import { TenantService } from '@/lib/services/tenant.service.ts';
 import { Button } from '@game-guild/ui/components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
 import { Alert, AlertDescription } from '@game-guild/ui/components';
@@ -34,7 +34,10 @@ export default function Page(): React.JSX.Element {
     setLoading(true);
     try {
       console.log('Testing server action: getUserTenants');
-      const result = await getUserTenants();
+      if (!session?.accessToken) {
+        throw new Error('No access token available');
+      }
+      const result = await TenantService.getUserTenants(session.accessToken);
       setTestResults((prev: Record<string, any>) => ({
         ...prev,
         getUserTenants: result,
