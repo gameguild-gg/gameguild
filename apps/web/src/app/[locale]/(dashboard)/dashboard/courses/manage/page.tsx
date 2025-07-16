@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import { getEnhancedCourseData } from '@/lib/courses/actions';
 import { CourseProvider } from '@/lib/courses';
 import { CourseManagementContent } from '@/components/dashboard/courses/course-management-content';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner } from '@game-guild/ui/components';
+import { ErrorBoundary } from '@game-guild/ui/components';
 
 export const metadata: Metadata = {
   title: 'Course Management | Game Guild Dashboard',

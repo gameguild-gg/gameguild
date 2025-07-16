@@ -6,7 +6,7 @@ import { CourseOverview } from '@/components/course/CourseOverview';
 import { CourseTools } from '@/components/course/CourseTools';
 import { CourseFeatures } from '@/components/course/CourseFeatures';
 import { CourseSidebar } from '@/components/course/CourseSidebar';
-import { Loading } from '@/components/ui/loading';
+import { Loading } from '@game-guild/ui/components';
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {

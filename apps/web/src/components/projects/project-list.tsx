@@ -3,8 +3,8 @@
 import { useMemo, useState } from 'react';
 
 import { ArrowDownAZ, ArrowUpAZ, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Inbox, PlusIcon, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@game-guild/ui/components';
+import { Input } from '@game-guild/ui/components';
 import { Project, ProjectListItem } from './actions';
 import { CreateProjectForm } from '@/components/projects/create-project-form';
 import { ProjectCard } from '@/components/projects/project-card';

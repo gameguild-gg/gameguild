@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components';
 import { ArrowRight, Play } from 'lucide-react';
 
 export default function CoursesBanner() {
