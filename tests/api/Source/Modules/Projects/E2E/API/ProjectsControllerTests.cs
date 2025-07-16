@@ -60,7 +60,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     await permissionService.GrantContentTypePermissionAsync(_userId, _tenantId, "Project", [PermissionType.Read]);
 
     // Act
-    var response = await _client.GetAsync("/projects");
+    var response = await _client.GetAsync("/api/projects");
 
     // Debug: Check what we actually got
     var content = await response.Content.ReadAsStringAsync();
@@ -113,7 +113,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     await _context.SaveChangesAsync();
 
     // Act
-    var response = await _client.GetAsync("/projects");
+    var response = await _client.GetAsync("/api/projects");
 
     // Assert
     Assert.True(response.IsSuccessStatusCode);
@@ -157,7 +157,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    var response = await _client.PostAsync("/projects", content);
+    var response = await _client.PostAsync("/api/projects", content);
 
     // Debug the response
     var responseContent = await response.Content.ReadAsStringAsync();
@@ -199,7 +199,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    var response = await _client.PostAsync("/projects", content);
+    var response = await _client.PostAsync("/api/projects", content);
 
     // Assert
     Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
@@ -223,7 +223,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     await _context.SaveChangesAsync();
 
     // Act
-    var response = await _client.GetAsync($"/projects/{project.Id}");
+    var response = await _client.GetAsync($"/api/projects/{project.Id}");
 
     // Assert
     Assert.True(response.IsSuccessStatusCode);
@@ -247,7 +247,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     var nonExistentId = Guid.NewGuid();
 
     // Act
-    var response = await _client.GetAsync($"/projects/{nonExistentId}");
+    var response = await _client.GetAsync($"/api/projects/{nonExistentId}");
 
     // Assert
     Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
@@ -284,7 +284,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     _output.WriteLine($"Expected slug: {expectedSlug}");
 
     // Act
-    var response = await _client.GetAsync($"/projects/slug/{expectedSlug}");
+    var response = await _client.GetAsync($"/api/projects/slug/{expectedSlug}");
 
     // Debug the response
     var responseContent = await response.Content.ReadAsStringAsync();
