@@ -155,13 +155,13 @@ public class ProductQueryTests : IDisposable
         var userId = Guid.NewGuid();
         await SeedTestUser(userId, "Test Creator");
         
-        await CreateTestProduct("Program Product", userId, type: Common.ProductType.Program);
-        await CreateTestProduct("Bundle Product", userId, type: Common.ProductType.Bundle);
-        await CreateTestProduct("Course Product", userId, type: Common.ProductType.Course);
+        await CreateTestProduct("Program Product", userId, type: GameGuild.Common.ProductType.Program);
+        await CreateTestProduct("Bundle Product", userId, type: GameGuild.Common.ProductType.Bundle);
+        await CreateTestProduct("Course Product", userId, type: GameGuild.Common.ProductType.Course);
 
         var query = new GetProductsQuery
         {
-            Type = Common.ProductType.Program,
+            Type = GameGuild.Common.ProductType.Program,
             Take = 10
         };
 
@@ -171,7 +171,7 @@ public class ProductQueryTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.Single(result);
-        Assert.Equal(Common.ProductType.Program, result.First().Type);
+        Assert.Equal(GameGuild.Common.ProductType.Program, result.First().Type);
     }
 
     [Fact]
@@ -390,7 +390,7 @@ public class ProductQueryTests : IDisposable
         string name, 
         Guid creatorId, 
         ContentStatus status = ContentStatus.Published,
-        Common.ProductType type = Common.ProductType.Program)
+        GameGuild.Common.ProductType type = GameGuild.Common.ProductType.Program)
     {
         var product = new Product
         {

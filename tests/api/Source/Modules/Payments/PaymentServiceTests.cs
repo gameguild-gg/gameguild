@@ -413,7 +413,7 @@ public class PaymentServiceTests : IDisposable
         await _context.SaveChangesAsync();
     }
 
-    private async Task SeedTestProduct(Guid productId, string name, Guid creatorId, Common.ProductType type = Common.ProductType.Program)
+    private async Task SeedTestProduct(Guid productId, string name, Guid creatorId, GameGuild.Common.ProductType type = GameGuild.Common.ProductType.Program)
     {
         var product = new Product
         {
@@ -496,6 +496,6 @@ public class PaymentServiceTests : IDisposable
     public void Dispose()
     {
         _context?.Dispose();
-        _serviceProvider?.Dispose();
+        (_serviceProvider as IDisposable)?.Dispose();
     }
 }
