@@ -343,11 +343,18 @@ public static class DependencyInjection {
 
     // Add authorization if enabled
     if (options.EnableAuthorization) {
-      try { builder.AddDACAuthorization(); }
+      try { 
+        builder.AddDACAuthorization(); 
+        logger?.LogInformation("DAC Authorization enabled");
+      }
       catch (Exception ex) {
         // In test environments, DAC authorization might not be available
         if (!options.IsTestEnvironment) { throw new InvalidOperationException("Failed to configure DAC authorization. Ensure AddDACAuthorizationServices() is called first.", ex); }
+        else { logger?.LogWarning("DAC Authorization failed in test environment (expected): {Message}", ex.Message); }
       }
+    }
+    else {
+      logger?.LogInformation("DAC Authorization disabled");
     }
   }
 
@@ -605,10 +612,17 @@ public static class DependencyInjection {
     if (!options.EnableIntrospection)
     {
         builder.DisableIntrospection();
+        logger?.LogInformation("Introspection disabled for non-test environment");
+    }
+    else
+    {
+        logger?.LogInformation("Introspection enabled (default HotChocolate behavior)");
     }
 
     // Configure request options for development vs production
-    builder.ModifyRequestOptions(opt => { opt.IncludeExceptionDetails = options.IncludeExceptionDetails; });
+    builder.ModifyRequestOptions(opt => { 
+        opt.IncludeExceptionDetails = options.IncludeExceptionDetails; 
+    });
   }
 
   /// <summary>
