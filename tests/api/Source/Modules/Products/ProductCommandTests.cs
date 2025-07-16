@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MediatR;
 using Moq;
+using ProductType = GameGuild.Common.ProductType;
+
 
 namespace GameGuild.Tests.Modules.Products;
 
@@ -72,7 +74,7 @@ public class ProductCommandTests : IDisposable
             Name = "Test Product",
             Description = "A comprehensive test product",
             ShortDescription = "Test product short description",
-            Type = Common.ProductType.Program,
+            Type = ProductType.Program,
             IsBundle = false,
             CreatorId = userId,
             Visibility = AccessLevel.Public,
@@ -87,7 +89,7 @@ public class ProductCommandTests : IDisposable
         Assert.NotNull(result.Product);
         Assert.Equal("Test Product", result.Product.Name);
         Assert.Equal("A comprehensive test product", result.Product.Description);
-        Assert.Equal(Common.ProductType.Program, result.Product.Type);
+        Assert.Equal(ProductType.Program, result.Product.Type);
         Assert.False(result.Product.IsBundle);
         Assert.Equal(AccessLevel.Public, result.Product.Visibility);
         Assert.Equal(ContentStatus.Published, result.Product.Status);
@@ -107,16 +109,16 @@ public class ProductCommandTests : IDisposable
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
         _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(true);
 
+
         var command = new CreateProductCommand
         {
-            Name = "Bundle Product",
-            Description = "A bundle of products",
-            Type = Common.ProductType.Bundle,
-            IsBundle = true,
-            CreatorId = userId,
-            BundleItems = new List<Guid> { product1.Id, product2.Id }
+          Name = "Bundle Product",
+          Description = "A bundle of products",
+          Type = ProductType.Bundle,
+          IsBundle = true,
+          CreatorId = userId,
+          BundleItems = new List<Guid> { product1.Id, product2.Id }
         };
-
         // Act
         var result = await _mediator.Send(command);
 
@@ -125,7 +127,7 @@ public class ProductCommandTests : IDisposable
         Assert.NotNull(result.Product);
         Assert.Equal("Bundle Product", result.Product.Name);
         Assert.True(result.Product.IsBundle);
-        Assert.Equal(Common.ProductType.Bundle, result.Product.Type);
+        Assert.Equal(ProductType.Bundle, result.Product.Type);
     }
 
     [Fact]
@@ -339,7 +341,7 @@ public class ProductCommandTests : IDisposable
             Name = name,
             Description = $"Description for {name}",
             ShortDescription = $"Short description for {name}",
-            Type = Common.ProductType.Program,
+            Type = ProductType.Program,
             Status = status,
             Visibility = AccessLevel.Public,
             CreatorId = creatorId
@@ -353,6 +355,6 @@ public class ProductCommandTests : IDisposable
     public void Dispose()
     {
         _context?.Dispose();
-        _serviceProvider?.Dispose();
+        (_serviceProvider as IDisposable)?.Dispose();
     }
 }
