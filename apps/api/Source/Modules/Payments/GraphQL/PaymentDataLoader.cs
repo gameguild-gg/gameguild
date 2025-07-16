@@ -20,7 +20,7 @@ public class PaymentDataLoader : BatchDataLoader<Guid, Payment?>, IPaymentDataLo
     IServiceProvider serviceProvider,
     DataLoaderOptions? options = null
   )
-    : base(batchScheduler, options) {
+    : base(batchScheduler, options ?? new DataLoaderOptions()) {
     _serviceProvider = serviceProvider;
   }
 

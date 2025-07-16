@@ -59,6 +59,17 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
+  /// <summary>
+  /// Gets projects with pagination without loading related entities for performance-critical scenarios
+  /// </summary>
+  public async Task<IEnumerable<Project>> GetProjectsOptimizedAsync(int skip = 0, int take = 50) {
+    return await context.Projects.Where(p => p.DeletedAt == null)
+                        .OrderByDescending(p => p.CreatedAt)
+                        .Skip(skip)
+                        .Take(take)
+                        .ToListAsync();
+  }
+
   public async Task<IEnumerable<Project>> GetAllProjectsAsync() {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)

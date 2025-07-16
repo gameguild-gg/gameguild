@@ -50,7 +50,7 @@ public class ProgramQueryHandlers(
     // Apply filters
     if (!string.IsNullOrEmpty(request.Search)) {
       query = query.Where(p => p.Title.Contains(request.Search) ||
-                               p.Description.Contains(request.Search)
+                               (p.Description != null && p.Description.Contains(request.Search))
       );
     }
 
@@ -166,7 +166,7 @@ public class ProgramQueryHandlers(
 
     // Text search
     query = query.Where(p => p.Title.Contains(request.SearchTerm) ||
-                             p.Description.Contains(request.SearchTerm)
+                             (p.Description != null && p.Description.Contains(request.SearchTerm))
     );
 
     // Apply filters

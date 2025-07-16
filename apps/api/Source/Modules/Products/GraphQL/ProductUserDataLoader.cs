@@ -21,7 +21,7 @@ public class ProductUserDataLoader : BatchDataLoader<Guid, User?>, IProductUserD
     IServiceProvider serviceProvider,
     DataLoaderOptions? options = null
   )
-    : base(batchScheduler, options) {
+    : base(batchScheduler, options ?? new DataLoaderOptions()) {
     _serviceProvider = serviceProvider;
   }
 

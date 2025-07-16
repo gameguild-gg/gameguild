@@ -124,7 +124,7 @@ public class PostResolvers {
     [Service] IPostContentReferenceDataLoader dataLoader,
     CancellationToken cancellationToken
   ) {
-    return await dataLoader.LoadAsync(post.Id, cancellationToken);
+    return await dataLoader.LoadAsync(post.Id, cancellationToken) ?? Array.Empty<PostContentReference>();
   }
 
   /// <summary>
@@ -135,7 +135,7 @@ public class PostResolvers {
     [Service] IPostCommentDataLoader dataLoader,
     CancellationToken cancellationToken
   ) {
-    return await dataLoader.LoadAsync(post.Id, cancellationToken);
+    return await dataLoader.LoadAsync(post.Id, cancellationToken) ?? Array.Empty<PostComment>();
   }
 
   /// <summary>
@@ -146,6 +146,6 @@ public class PostResolvers {
     [Service] IPostLikeDataLoader dataLoader,
     CancellationToken cancellationToken
   ) {
-    return await dataLoader.LoadAsync(post.Id, cancellationToken);
+    return await dataLoader.LoadAsync(post.Id, cancellationToken) ?? Array.Empty<PostLike>();
   }
 }

@@ -45,7 +45,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
         !Guid.TryParse(tenantIdClaim, out var tenantId))
       return ValueTask.FromResult<UserContext?>(null);
 
-    return ValueTask.FromResult(new UserContext { UserId = userId, TenantId = tenantId });
+    return ValueTask.FromResult<UserContext?>(new UserContext { UserId = userId, TenantId = tenantId });
   }
 
   private static DACAuthorizationAttribute? GetDACAttribute(IMiddlewareContext context) {
