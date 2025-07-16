@@ -73,7 +73,7 @@ public class ContextMiddlewareTests
         // Arrange
         var testUserId = Guid.NewGuid().ToString();
         var httpContext = CreateHttpContextWithUser(testUserId, "test@example.com", "TestTenant");
-        httpContext.Request.Headers.Add("X-Tenant-Id", "tenant-123");
+        httpContext.Request.Headers.Append("X-Tenant-Id", "tenant-123");
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         var tenantContext = new TenantContext(httpContextAccessor);
 
