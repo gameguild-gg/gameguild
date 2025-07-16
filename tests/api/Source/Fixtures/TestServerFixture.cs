@@ -80,7 +80,15 @@ namespace GameGuild.Tests.Fixtures {
 
       // Add EF Core InMemory database for testing with unique database name
       var databaseName = $"TestDatabase_{Guid.NewGuid()}";
-      services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName));
+      
+      // Add DbContextFactory for GraphQL DataLoaders first  
+      services.AddDbContextFactory<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName));
+      
+      // Add regular DbContext using the factory (ensures compatible lifetimes)
+      services.AddScoped<ApplicationDbContext>(provider => {
+        var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+        return factory.CreateDbContext();
+      });
 
       // Add application services (includes IDomainEventPublisher registration)
       services.AddApplication();
