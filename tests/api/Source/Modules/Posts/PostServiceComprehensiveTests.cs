@@ -231,7 +231,7 @@ public class PostServiceComprehensiveTests : IDisposable
 
         // Assert
         var draftsList = draftPosts.ToList();
-        Assert.Equal(1, draftsList.Count);
+        Assert.Single(draftsList);
         Assert.All(draftsList, p => Assert.Equal(ContentStatus.Draft, p.Status));
     }
 
@@ -255,7 +255,7 @@ public class PostServiceComprehensiveTests : IDisposable
 
         // Assert
         var publicList = publicPosts.ToList();
-        Assert.Equal(1, publicList.Count);
+        Assert.Single(publicList);
         Assert.All(publicList, p => Assert.Equal(AccessLevel.Public, p.Visibility));
     }
 
@@ -279,7 +279,7 @@ public class PostServiceComprehensiveTests : IDisposable
 
         // Assert
         var systemList = systemPosts.ToList();
-        Assert.Equal(1, systemList.Count);
+        Assert.Single(systemList);
         Assert.All(systemList, p => Assert.True(p.IsSystemGenerated));
     }
 
@@ -303,7 +303,7 @@ public class PostServiceComprehensiveTests : IDisposable
 
         // Assert
         var userList = userPosts.ToList();
-        Assert.Equal(1, userList.Count);
+        Assert.Single(userList);
         Assert.All(userList, p => Assert.False(p.IsSystemGenerated));
     }
 
@@ -327,7 +327,7 @@ public class PostServiceComprehensiveTests : IDisposable
 
         // Assert
         var pinnedList = pinnedPosts.ToList();
-        Assert.Equal(1, pinnedList.Count);
+        Assert.Single(pinnedList);
         Assert.All(pinnedList, p => Assert.True(p.IsPinned));
     }
 
@@ -357,7 +357,7 @@ public class PostServiceComprehensiveTests : IDisposable
 
         // Assert
         var publicList = publicPosts.ToList();
-        Assert.Equal(1, publicList.Count);
+        Assert.Single(publicList);
         Assert.All(publicList, p => 
         {
             Assert.Equal(AccessLevel.Public, p.Visibility);
@@ -382,7 +382,7 @@ public class PostServiceComprehensiveTests : IDisposable
 
         // Assert
         var deletedList = deletedPosts.ToList();
-        Assert.Equal(1, deletedList.Count);
+        Assert.Single(deletedList);
         Assert.All(deletedList, p => Assert.NotNull(p.DeletedAt));
     }
 

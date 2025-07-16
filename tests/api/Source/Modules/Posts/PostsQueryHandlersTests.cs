@@ -143,7 +143,7 @@ public class PostsQueryHandlersTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(1, result.Value.Posts.Count);
+        Assert.Single(result.Value.Posts);
         Assert.True(result.Value.Posts.First().IsPinned);
     }
 
@@ -153,7 +153,7 @@ public class PostsQueryHandlersTests : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         await SeedTestUser(userId);
-        
+
         await SeedPostWithContent(userId, "React Tutorial", "Learn React basics");
         await SeedPostWithContent(userId, "Vue Guide", "Advanced Vue concepts");
         await SeedPostWithContent(userId, "Angular Tips", "React comparison with Angular");
@@ -178,16 +178,16 @@ public class PostsQueryHandlersTests : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         await SeedTestUser(userId);
-        
+
         var post1 = await SeedPostWithType(userId, "general", "Post 1");
         var post2 = await SeedPostWithType(userId, "general", "Post 2");
         var post3 = await SeedPostWithType(userId, "general", "Post 3");
-        
+
         // Update likes count directly in the database
         post1.LikesCount = 5;
         post2.LikesCount = 10;
         post3.LikesCount = 2;
-        
+
         _context.Posts.UpdateRange(post1, post2, post3);
         await _context.SaveChangesAsync();
 
@@ -216,14 +216,14 @@ public class PostsQueryHandlersTests : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         await SeedTestUser(userId);
-        
+
         var post1 = await SeedPostWithType(userId, "general", "Post 1");
         var post2 = await SeedPostWithType(userId, "general", "Post 2");
-        
+
         // Update comments count directly in the database
         post1.CommentsCount = 3;
         post2.CommentsCount = 7;
-        
+
         _context.Posts.UpdateRange(post1, post2);
         await _context.SaveChangesAsync();
 
@@ -249,14 +249,14 @@ public class PostsQueryHandlersTests : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         await SeedTestUser(userId);
-        
+
         var regularPost = await SeedPostWithType(userId, "general", "Regular Post");
         regularPost.CreatedAt = DateTime.UtcNow.AddHours(-1); // Older
-        
+
         var pinnedPost = await SeedPostWithType(userId, "general", "Pinned Post");
         pinnedPost.IsPinned = true;
         pinnedPost.CreatedAt = DateTime.UtcNow.AddHours(-2); // Even older but pinned
-        
+
         await _context.SaveChangesAsync();
 
         var query = new GetPostsQuery
@@ -325,11 +325,11 @@ public class PostsQueryHandlersTests : IDisposable
         // Arrange
         var userId = Guid.NewGuid();
         await SeedTestUser(userId);
-        
+
         var activePost = await SeedPostWithType(userId, "general", "Active Post");
         var deletedPost = await SeedPostWithType(userId, "general", "Deleted Post");
         deletedPost.DeletedAt = DateTime.UtcNow;
-        
+
         await _context.SaveChangesAsync();
 
         var query = new GetPostsQuery
@@ -342,7 +342,7 @@ public class PostsQueryHandlersTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(1, result.Value.Posts.Count);
+        Assert.Single(result.Value.Posts);
         Assert.Equal("Active Post", result.Value.Posts.First().Title);
     }
 
@@ -358,16 +358,16 @@ public class PostsQueryHandlersTests : IDisposable
         var user2Id = Guid.NewGuid();
         await SeedTestUser(user1Id);
         await SeedTestUser(user2Id);
-        
+
         // User 1 posts
         await SeedPostWithType(user1Id, "announcement", "User 1 Announcement");
         var user1General = await SeedPostWithType(user1Id, "general", "User 1 General");
         user1General.LikesCount = 5;
-        
+
         // User 2 posts
         var user2General = await SeedPostWithType(user2Id, "general", "User 2 General");
         user2General.LikesCount = 10;
-        
+
         await _context.SaveChangesAsync();
 
         var query = new GetPostsQuery
@@ -384,7 +384,7 @@ public class PostsQueryHandlersTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(1, result.Value.Posts.Count);
+        Assert.Single(result.Value.Posts);
         Assert.Equal("User 1 General", result.Value.Posts.First().Title);
         Assert.Equal(user1Id, result.Value.Posts.First().AuthorId);
         Assert.Equal("general", result.Value.Posts.First().PostType);
