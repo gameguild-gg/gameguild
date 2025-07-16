@@ -22,6 +22,11 @@ public interface IProjectService {
   Task<IEnumerable<Project>> GetProjectsAsync(int skip = 0, int take = 50);
 
   /// <summary>
+  /// Get projects with pagination without loading related entities for performance-critical scenarios
+  /// </summary>
+  Task<IEnumerable<Project>> GetProjectsOptimizedAsync(int skip = 0, int take = 50);
+
+  /// <summary>
   /// Get a project by ID
   /// </summary>
   Task<Project?> GetProjectByIdAsync(Guid id);

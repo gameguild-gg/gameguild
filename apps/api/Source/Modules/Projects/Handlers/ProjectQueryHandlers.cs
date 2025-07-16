@@ -62,8 +62,8 @@ public class ProjectQueryHandlers :
       if (!string.IsNullOrEmpty(request.SearchTerm)) {
         query = query.Where(p =>
                               p.Title.Contains(request.SearchTerm) ||
-                              p.Description.Contains(request.SearchTerm) ||
-                              p.ShortDescription.Contains(request.SearchTerm)
+                              (p.Description != null && p.Description.Contains(request.SearchTerm)) ||
+                              (p.ShortDescription != null && p.ShortDescription.Contains(request.SearchTerm))
         );
       }
 
@@ -247,8 +247,8 @@ public class ProjectQueryHandlers :
       if (!string.IsNullOrEmpty(request.SearchTerm)) {
         query = query.Where(p =>
                               p.Title.Contains(request.SearchTerm) ||
-                              p.Description.Contains(request.SearchTerm) ||
-                              p.ShortDescription.Contains(request.SearchTerm)
+                              (p.Description != null && p.Description.Contains(request.SearchTerm)) ||
+                              (p.ShortDescription != null && p.ShortDescription.Contains(request.SearchTerm))
         );
       }
 

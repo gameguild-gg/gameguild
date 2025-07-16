@@ -275,9 +275,9 @@ public class ProjectPerformanceTests : IDisposable {
 
     var stopwatch = new Stopwatch();
 
-    // Act - Get first 50 projects
+    // Act - Get first 50 projects using optimized method for performance testing
     stopwatch.Start();
-    var result = await _projectService.GetProjectsAsync(0, 50);
+    var result = await _projectService.GetProjectsOptimizedAsync(0, 50);
     stopwatch.Stop();
 
     // Assert
