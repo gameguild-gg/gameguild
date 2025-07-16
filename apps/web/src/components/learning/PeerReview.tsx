@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Textarea } from '@game-guild/ui/components';
+import { Badge } from '@game-guild/ui/components';
+import { Slider } from '@game-guild/ui/components';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components';
 import { Users, Star, AlertTriangle, CheckCircle, Clock, Flag, ThumbsUp, ThumbsDown, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ReportButton } from '@/components/common/ReportButton';

@@ -4,10 +4,10 @@ import { redirect } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { Badge } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Progress } from '@game-guild/ui/components';
 import { ArrowLeft, Clock, Play, CheckCircle, FileText, Video, Code, Award } from 'lucide-react';
 
 const levelColors = {

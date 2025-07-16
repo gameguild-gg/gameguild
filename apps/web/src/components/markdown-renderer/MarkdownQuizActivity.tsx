@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@game-guild/ui/components';
+import { Checkbox } from '@game-guild/ui/components';
 import MarkdownRenderer from '@/components/markdown-renderer/markdown-renderer';
 
 interface QuizProps {

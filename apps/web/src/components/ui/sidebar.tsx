@@ -7,12 +7,12 @@ import { PanelLeftIcon } from 'lucide-react';
 
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@game-guild/ui/components';
+import { Input } from '@game-guild/ui/components';
+import { Separator } from '@game-guild/ui/components';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@game-guild/ui/components';
+import { Skeleton } from '@game-guild/ui/components';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@game-guild/ui/components';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;

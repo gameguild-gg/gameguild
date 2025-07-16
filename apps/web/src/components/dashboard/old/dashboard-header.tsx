@@ -1,5 +1,5 @@
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components';
 import { Button } from '../../ui/button';
 import { Bell, Search } from 'lucide-react';
 import {
@@ -9,8 +9,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+} from '@game-guild/ui/components';
+import { Dialog, DialogContent, DialogFooter, DialogTrigger } from '@game-guild/ui/components';
 
 type Props = {
   children?: React.ReactNode;

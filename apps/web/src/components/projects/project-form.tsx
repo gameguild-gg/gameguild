@@ -7,14 +7,14 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useRouter } from 'next/navigation';
 import slugify from 'slugify';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@game-guild/ui/components';
 import { getSession } from 'next-auth/react';
 import Image from 'next/image';
 
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@game-guild/ui/components';
+import { Textarea } from '@game-guild/ui/components';
 import { Plus, X } from 'lucide-react';
-import { FileUploader } from '@/components/ui/file-uploader';
+import { FileUploader } from '@game-guild/ui/components';
 
 // Import types from the generated API
 import type { ProjectReadable, ProjectWritable } from '@/lib/api/generated';

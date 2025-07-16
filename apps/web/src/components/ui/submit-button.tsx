@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useFormStatus } from 'react-dom';
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components';
 
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   children: React.ReactNode;

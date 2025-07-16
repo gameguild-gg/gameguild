@@ -2,19 +2,19 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import { Button } from '@game-guild/ui/components';
+import { Input } from '@game-guild/ui/components';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@game-guild/ui/components';
+import { Textarea } from '@game-guild/ui/components';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components';
+import { RadioGroup, RadioGroupItem } from '@game-guild/ui/components';
+import { Label } from '@game-guild/ui/components';
 import { Bold, CircleHelp, Code, ExternalLink, HelpCircle, ImageIcon, Italic, Link2, List, ListOrdered, PlusIcon, X } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@game-guild/ui/components';
 
-import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@game-guild/ui/components';
 import { createProject, Project } from '@/components/projects/actions';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@game-guild/ui/components';
 
 interface NewProjectFormProps {
   onProjectCreated: (project: Project) => void;

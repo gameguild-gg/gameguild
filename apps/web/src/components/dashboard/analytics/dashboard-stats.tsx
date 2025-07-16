@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Badge } from '@game-guild/ui/components';
+import { Skeleton } from '@game-guild/ui/components';
+import { Progress } from '@game-guild/ui/components';
 import { Users, UserCheck, UserX, GraduationCap, BookOpen, DollarSign, TrendingUp, TrendingDown, Activity, Eye, Calendar } from 'lucide-react';
 import { fetchUserStatistics } from '@/lib/api/dashboard';
 

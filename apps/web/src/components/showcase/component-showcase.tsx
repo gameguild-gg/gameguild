@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
 import { TaskDashboard } from '@/components/dashboard';
 import { AppearanceModal } from '@/components/modals';
 import { Leaderboard } from '@/components/leaderboard';

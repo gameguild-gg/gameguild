@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { Play } from 'lucide-react';
 import Editor from '@monaco-editor/react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components';
 import { useCode } from '../use-code';
 import { RunnerStatus } from '../types';
 

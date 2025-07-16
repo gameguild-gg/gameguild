@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@game-guild/ui/components';
+import { Input } from '@game-guild/ui/components';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Badge } from '@game-guild/ui/components';
 import { getCourseData, revalidateCourseData } from '@/lib/courses/actions';
 import { Course } from '@/types/courses';
 import { BookOpen, Plus, Search, Edit, Eye, Trash } from 'lucide-react';

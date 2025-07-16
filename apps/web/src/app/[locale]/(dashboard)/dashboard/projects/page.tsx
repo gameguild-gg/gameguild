@@ -214,9 +214,9 @@ export default function ProjectsPage() {
 //
 // import React, { useEffect, useState } from 'react';
 // import Link from 'next/link';
-// import { Button } from '@/components/ui/button';
+// import { Button } from '@game-guild/ui/components';
 // import { GameCard } from '@/components/testing-lab/game-card';
-// import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+// import { Sheet, SheetContent, SheetTrigger } from '@game-guild/ui/components';
 // import ProjectForm from '@/components/projects/project-form';
 // import { getSession } from 'next-auth/react';
 // import { useRouter } from 'next/navigation';

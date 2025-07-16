@@ -4,8 +4,8 @@ import React from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { useAuthenticatedApi, useTenant } from '@/lib/tenant/tenant-provider';
 import { TenantSelector } from '@/components/auth/TenantSelector';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();

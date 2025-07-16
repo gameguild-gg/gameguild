@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { useTenant } from '@/lib/tenant/tenant-provider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components';
+import { Badge } from '@game-guild/ui/components';
 
 interface TenantSelectorProps {
   className?: string;

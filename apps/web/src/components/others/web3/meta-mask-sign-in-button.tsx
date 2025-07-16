@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components';
 import React from 'react';
 
 import { useSignInWithWeb3, Web3ProviderChoice } from '@/components/web3/use-sign-in-with-web3';

@@ -7,7 +7,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu';
+} from '@game-guild/ui/components';
 import { cn } from '@/lib/utils';
 import { NotificationDropdown } from '@/components/common/notifications';
 import { UserProfileDropdown } from '@/components/common/profile';

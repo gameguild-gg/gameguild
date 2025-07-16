@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { Bell, Search, Settings, User, LogOut, Moon, Sun } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@game-guild/ui/components';
+import { Input } from '@game-guild/ui/components';
+import { Badge } from '@game-guild/ui/components';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,8 +12,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+} from '@game-guild/ui/components';
+import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components';
 import { useTheme } from 'next-themes';
 
 interface DashboardHeaderProps {

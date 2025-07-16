@@ -2,11 +2,11 @@
 
 import React, { useActionState } from 'react';
 import { SignInFormState, signInWithEmailAndPassword } from '@/lib/auth/email-password-actions';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@game-guild/ui/components';
+import { Input } from '@game-guild/ui/components';
+import { Label } from '@game-guild/ui/components';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Alert, AlertDescription } from '@game-guild/ui/components';
 
 const initialState: SignInFormState = {
   success: false,

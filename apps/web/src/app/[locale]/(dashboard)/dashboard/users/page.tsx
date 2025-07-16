@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import { getUsersData } from '@/lib/actions/users.ts';
 import { UserProvider } from '@/lib/users/user-context.tsx';
 import { UserManagementContent } from '@/components/dashboard/users/user-management-content';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner } from '@game-guild/ui/components';
+import { ErrorBoundary } from '@game-guild/ui/components';
 
 export const metadata: Metadata = {
   title: 'User Management | Game Guild Dashboard',

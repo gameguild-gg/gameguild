@@ -3,9 +3,9 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Bug, Lightbulb, ListChecks, MessageCircle, MessageSquare } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@game-guild/ui/components';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components';
 import { cn } from '@/lib/utils';
 
 interface FloatingFeedbackButtonProps {

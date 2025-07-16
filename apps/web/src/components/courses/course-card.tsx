@@ -1,8 +1,8 @@
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader } from '@game-guild/ui/components';
+import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components';
 import { Star, Clock, Users, BookOpen, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 

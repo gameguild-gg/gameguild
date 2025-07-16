@@ -2,10 +2,10 @@ import { getTrackBySlug } from '@/lib/tracks/actions';
 import { getCourseData } from '@/lib/courses/actions';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { Badge } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Progress } from '@game-guild/ui/components';
 import {
   ArrowLeft,
   BookOpen,

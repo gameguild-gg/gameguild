@@ -1,8 +1,8 @@
 import React, { PropsWithChildren } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@game-guild/ui/components';
+import { Input } from '@game-guild/ui/components';
 
 type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>;
 
