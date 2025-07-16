@@ -117,11 +117,6 @@ namespace GameGuild.Tests.Fixtures {
       // Add GraphQL infrastructure with testing configuration
       services.AddGraphQLInfrastructure(DependencyInjection.GraphQLOptionsFactory.ForTesting());
       
-      // Add additional GraphQL types for testing without calling AddGraphQLServer() again
-      services.ConfigureGraphQL(builder =>
-          builder.AddTypeExtension<UserProfiles.SimpleUserProfileQueries>()
-                 .AddType<GameGuild.Modules.UserProfiles.UserProfileType>());
-      
       // Configure GraphQL to return 200 OK for validation errors
       services.Configure<HotChocolate.AspNetCore.GraphQLHttpOptions>(options =>
       {
