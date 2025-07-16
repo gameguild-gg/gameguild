@@ -4,9 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Button } from '@game-guild/ui/components';
+import { Badge } from '@game-guild/ui/components';
+import { Separator } from '@game-guild/ui/components';
 import { LayoutDashboard, Users, BookOpen, Settings, BarChart3, FileText, Bell, Search, Plus, ChevronDown, Menu, X } from 'lucide-react';
 
 interface NavigationItem {

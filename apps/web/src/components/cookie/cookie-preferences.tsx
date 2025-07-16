@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { CookieIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Button } from '@game-guild/ui/components';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Label } from '@game-guild/ui/components';
+import { Switch } from '@game-guild/ui/components';
 
 type CookiePreferencesProps = {};
 

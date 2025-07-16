@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@game-guild/ui/components';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
 import { Notifications } from '@/components/notifications';
 
 export function NotificationsExample() {

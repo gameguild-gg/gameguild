@@ -2,7 +2,7 @@ import React from 'react';
 import { cva, VariantProps } from 'class-variance-authority';
 import Link from 'next/link';
 import { Home, LifeBuoy, LineChart, Package, Package2, Settings, ShoppingCart, Users2 } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@game-guild/ui/components';
 
 const Variants = cva('flex flex-grow', {
   variants: {

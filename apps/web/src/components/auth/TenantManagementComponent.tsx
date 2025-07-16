@@ -3,14 +3,14 @@
 import React, { useActionState, useEffect, useState } from 'react';
 import { createTenant, deleteTenant, getUserTenants, TenantActionState } from '@/lib/auth/actions/tenant.actions';
 import { TenantResponse } from '@/lib/tenant/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@game-guild/ui/components';
+import { Input } from '@game-guild/ui/components';
+import { Label } from '@game-guild/ui/components';
+import { Textarea } from '@game-guild/ui/components';
+import { Checkbox } from '@game-guild/ui/components';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Alert, AlertDescription } from '@game-guild/ui/components';
+import { Badge } from '@game-guild/ui/components';
 import { Trash2 } from 'lucide-react';
 
 const initialState: TenantActionState = {

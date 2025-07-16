@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components';
 import { cn } from '@/lib/utils';
 
 export interface NotificationBarItem {

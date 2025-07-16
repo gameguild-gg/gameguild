@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { TenantDomainManager } from '@/components/tenant/tenant-domain-manager';
 import { TenantUserGroupManager } from '@/components/tenant/tenant-user-group-manager';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Alert, AlertDescription } from '@game-guild/ui/components';
 import { Globe, Users, Network, Shield } from 'lucide-react';
 
 export default function TenantManagementPage() {

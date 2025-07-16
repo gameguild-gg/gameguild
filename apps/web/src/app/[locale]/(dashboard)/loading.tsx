@@ -1,5 +1,5 @@
-import { Skeleton } from '@/components/ui/skeleton.tsx';
-import { Card, CardContent, CardHeader } from '@/components/ui/card.tsx';
+import { Skeleton } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader } from '@game-guild/ui/components';
 
 export default function DashboardLoading() {
   return (

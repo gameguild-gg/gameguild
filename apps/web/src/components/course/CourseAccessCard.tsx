@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Loading } from '@/components/ui/loading';
-import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { Button } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Badge } from '@game-guild/ui/components';
+import { Progress } from '@game-guild/ui/components';
+import { Loading } from '@game-guild/ui/components';
+import { ErrorBoundary } from '@game-guild/ui/components';
 import {
   getCourseEnrollmentStatus,
   enrollInFreeCourse,

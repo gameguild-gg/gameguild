@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
 
 export function NotificationIntegrationGuide() {
   return (
@@ -15,7 +15,7 @@ export function NotificationIntegrationGuide() {
             <div className="bg-muted/50 p-4 rounded-lg">
               <pre className="text-sm">
 {`// In your layout.tsx or main app component
-import { NotificationProvider } from '@/components/ui/notification-bar';
+import { NotificationProvider } from '@game-guild/ui/components';
 
 export default function RootLayout({ children }) {
   return (
@@ -37,7 +37,7 @@ export default function RootLayout({ children }) {
             <div className="bg-muted/50 p-4 rounded-lg">
               <pre className="text-sm">
 {`// In any component
-import { useNotificationHelpers } from '@/components/ui/notification-bar';
+import { useNotificationHelpers } from '@game-guild/ui/components';
 
 export function MyComponent() {
   const { success, error, warning, info } = useNotificationHelpers();

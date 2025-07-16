@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components';
 
 export default function UserNotFound() {
   return (
