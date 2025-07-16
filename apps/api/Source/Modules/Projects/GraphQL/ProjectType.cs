@@ -37,8 +37,9 @@ public class ProjectType : ObjectType<Project> {
               .Type<DateTimeType>()
               .Description("The date and time when the project was soft deleted (null if not deleted).");
 
-    descriptor.Field(p => p.IsDeleted)
+    descriptor.Field("isDeleted")
               .Type<NonNullType<BooleanType>>()
+              .Resolve(context => context.Parent<Project>().DeletedAt != null)
               .Description("Indicates whether the project has been soft deleted.");
 
     // ResourceBase Properties
