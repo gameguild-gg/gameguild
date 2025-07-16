@@ -138,7 +138,7 @@ public sealed class Project : Content {
   /// </summary>
   [NotMapped]
   public bool IsActive {
-    get => Status == ContentStatus.Published && !IsDeleted;
+    get => Status == ContentStatus.Published && DeletedAt == null;
   }
 
   /// <summary>

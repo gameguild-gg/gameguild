@@ -75,7 +75,7 @@ public class ProjectCommandHandlers :
 
       // Ensure slug is unique
       var existingSlugCount = await _context.Projects
-                                            .Where(p => p.Slug.StartsWith(project.Slug) && !p.IsDeleted)
+                                            .Where(p => p.Slug.StartsWith(project.Slug) && p.DeletedAt == null)
                                             .CountAsync(cancellationToken);
 
       if (existingSlugCount > 0) { project.Slug = $"{project.Slug}-{existingSlugCount + 1}"; }
@@ -118,7 +118,7 @@ public class ProjectCommandHandlers :
 
       var project = await _context.Projects
                                   .Include(p => p.Collaborators)
-                                  .FirstOrDefaultAsync(p => p.Id == request.ProjectId && !p.IsDeleted, cancellationToken);
+                                  .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
 
       if (project == null) { return new UpdateProjectResult { Success = false, ErrorMessage = "Project not found" }; }
 
@@ -165,7 +165,7 @@ public class ProjectCommandHandlers :
 
       var project = await _context.Projects
                                   .Include(p => p.Collaborators)
-                                  .FirstOrDefaultAsync(p => p.Id == request.ProjectId && !p.IsDeleted, cancellationToken);
+                                  .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
 
       if (project == null) { return new DeleteProjectResult { Success = false, ErrorMessage = "Project not found" }; }
 
@@ -180,9 +180,8 @@ public class ProjectCommandHandlers :
 
       if (request.SoftDelete) {
         // Mark as deleted but preserve data
-        // Since IsDeleted is read-only in the base Entity, we'll need a different approach
-        // For now, we'll remove it from the context or use a status change
-        project.Status = ContentStatus.Archived; // Use archived status instead
+        // Use the DeletedAt property from the base Entity for soft delete
+        project.DeletedAt = DateTime.UtcNow;
         project.UpdatedAt = DateTime.UtcNow;
       }
       else { _context.Projects.Remove(project); }
@@ -204,7 +203,7 @@ public class ProjectCommandHandlers :
     try {
       var project = await _context.Projects
                                   .Include(p => p.Collaborators)
-                                  .FirstOrDefaultAsync(p => p.Id == request.ProjectId && !p.IsDeleted, cancellationToken);
+                                  .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
 
       if (project == null) { return new PublishProjectResult { Success = false, ErrorMessage = "Project not found" }; }
 
@@ -235,7 +234,7 @@ public class ProjectCommandHandlers :
     try {
       var project = await _context.Projects
                                   .Include(p => p.Collaborators)
-                                  .FirstOrDefaultAsync(p => p.Id == request.ProjectId && !p.IsDeleted, cancellationToken);
+                                  .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
 
       if (project == null) { return new UnpublishProjectResult { Success = false, ErrorMessage = "Project not found" }; }
 
@@ -266,7 +265,7 @@ public class ProjectCommandHandlers :
     try {
       var project = await _context.Projects
                                   .Include(p => p.Collaborators)
-                                  .FirstOrDefaultAsync(p => p.Id == request.ProjectId && !p.IsDeleted, cancellationToken);
+                                  .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
 
       if (project == null) { return new ArchiveProjectResult { Success = false, ErrorMessage = "Project not found" }; }
 
