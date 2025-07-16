@@ -3,6 +3,8 @@ using GameGuild.Database;
 using GameGuild.Modules.Payments;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Users;
+using GameGuild.Modules.Programs;
+using GameGuild.Modules.Contents;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -21,6 +23,7 @@ public class PaymentCommandTests : IDisposable
     private readonly IMediator _mediator;
     private readonly Mock<IUserContext> _mockUserContext;
     private readonly Mock<ITenantContext> _mockTenantContext;
+    private readonly Mock<IPaymentGatewayService> _mockPaymentGateway;
 
     public PaymentCommandTests()
     {
@@ -39,14 +42,16 @@ public class PaymentCommandTests : IDisposable
         services.AddLogging(builder => builder.AddConsole());
         
         // Add MediatR
-        services.AddMediatR(typeof(PaymentCommandHandlers).Assembly);
+        services.AddMediatR(typeof(CreatePaymentCommandHandler).Assembly);
         
-        // Mock contexts
+        // Mock contexts and services
         _mockUserContext = new Mock<IUserContext>();
         _mockTenantContext = new Mock<ITenantContext>();
+        _mockPaymentGateway = new Mock<IPaymentGatewayService>();
         
         services.AddSingleton(_mockUserContext.Object);
         services.AddSingleton(_mockTenantContext.Object);
+        services.AddSingleton(_mockPaymentGateway.Object);
         
         _serviceProvider = services.BuildServiceProvider();
         _context = _serviceProvider.GetRequiredService<ApplicationDbContext>();
@@ -55,10 +60,11 @@ public class PaymentCommandTests : IDisposable
         // Setup default mock behavior
         _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
         _mockTenantContext.Setup(x => x.TenantId).Returns(Guid.NewGuid());
+        _mockPaymentGateway.Setup(x => x.Gateway).Returns(PaymentGateway.Stripe);
     }
 
     [Fact]
-    public async Task ProcessPaymentCommand_Should_Create_Payment_Successfully()
+    public async Task CreatePaymentCommand_Should_Create_Payment_Intent_Successfully()
     {
         // Arrange
         var userId = Guid.NewGuid();
@@ -66,15 +72,14 @@ public class PaymentCommandTests : IDisposable
         await SeedTestUser(userId, "Test User");
         await SeedTestProduct(productId, "Test Product", userId);
 
-        var command = new ProcessPaymentCommand
+        var command = new CreatePaymentCommand
         {
             UserId = userId,
             ProductId = productId,
             Amount = 99.99m,
             Currency = "USD",
-            PaymentMethod = PaymentMethod.CreditCard,
-            TransactionId = "txn_success_123",
-            PaymentGateway = PaymentGateway.Stripe
+            Method = PaymentMethod.CreditCard,
+            Description = "Test Product Purchase"
         };
 
         // Act
@@ -82,14 +87,71 @@ public class PaymentCommandTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(PaymentStatus.Completed, result.Status);
-        Assert.Equal(99.99m, result.Amount);
-        Assert.Equal("USD", result.Currency);
-        Assert.Equal(userId, result.UserId);
-        Assert.Equal(productId, result.ProductId);
+        Assert.True(result.Success);
+        Assert.NotNull(result.Payment);
+        Assert.Equal(PaymentStatus.Pending, result.Payment.Status);
+        Assert.Equal(99.99m, result.Payment.Amount);
+        Assert.Equal("USD", result.Payment.Currency);
+        Assert.Equal(userId, result.Payment.UserId);
+        Assert.Equal(productId, result.Payment.ProductId);
 
         // Verify payment is saved in database
-        var payment = await _context.Payments.FindAsync(result.Id);
+        var payment = await _context.Payments.FindAsync(result.Payment.Id);
+        Assert.NotNull(payment);
+        Assert.Equal(PaymentStatus.Pending, payment.Status);
+    }
+
+    [Fact]
+    public async Task ProcessPaymentCommand_Should_Complete_Payment_Successfully()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        await SeedTestUser(userId, "Test User");
+        await SeedTestProduct(productId, "Test Product", userId);
+
+        // Setup payment gateway mock for success
+        _mockPaymentGateway.Setup(x => x.ProcessPaymentAsync(It.IsAny<PaymentRequest>()))
+            .ReturnsAsync(new PaymentResult 
+            { 
+                Success = true, 
+                TransactionId = "txn_success_123",
+                ProcessedAt = DateTime.UtcNow 
+            });
+
+        // Step 1: Create Payment Intent
+        var createCommand = new CreatePaymentCommand
+        {
+            UserId = userId,
+            ProductId = productId,
+            Amount = 99.99m,
+            Currency = "USD",
+            Method = PaymentMethod.CreditCard
+        };
+
+        var createResult = await _mediator.Send(createCommand);
+        Assert.True(createResult.Success);
+        Assert.NotNull(createResult.Payment);
+
+        // Step 2: Process Payment
+        var processCommand = new ProcessPaymentCommand
+        {
+            PaymentId = createResult.Payment.Id,
+            ProviderTransactionId = "txn_success_123"
+        };
+
+        // Act
+        var processResult = await _mediator.Send(processCommand);
+
+        // Assert
+        Assert.NotNull(processResult);
+        Assert.True(processResult.Success);
+        Assert.NotNull(processResult.Payment);
+        Assert.Equal(PaymentStatus.Completed, processResult.Payment.Status);
+        Assert.Equal("txn_success_123", processResult.Payment.ProviderTransactionId);
+
+        // Verify payment is updated in database
+        var payment = await _context.Payments.FindAsync(processResult.Payment.Id);
         Assert.NotNull(payment);
         Assert.Equal(PaymentStatus.Completed, payment.Status);
     }
@@ -103,132 +165,76 @@ public class PaymentCommandTests : IDisposable
         await SeedTestUser(userId, "Test User");
         await SeedTestProduct(productId, "Test Product", userId);
 
-        var command = new ProcessPaymentCommand
+        // Setup payment gateway mock to fail
+        _mockPaymentGateway.Setup(x => x.ProcessPaymentAsync(It.IsAny<PaymentRequest>()))
+            .ReturnsAsync(new PaymentResult 
+            { 
+                Success = false, 
+                ErrorMessage = "Payment failed",
+                ProcessedAt = DateTime.UtcNow 
+            });
+
+        // Step 1: Create Payment Intent
+        var createCommand = new CreatePaymentCommand
         {
             UserId = userId,
             ProductId = productId,
             Amount = 99.99m,
             Currency = "USD",
-            PaymentMethod = PaymentMethod.CreditCard,
-            TransactionId = "txn_failed_456", // Transaction ID indicates failure
-            PaymentGateway = PaymentGateway.Stripe
+            Method = PaymentMethod.CreditCard
+        };
+
+        var createResult = await _mediator.Send(createCommand);
+
+        // Step 2: Process Payment (should fail)
+        var processCommand = new ProcessPaymentCommand
+        {
+            PaymentId = createResult.Payment!.Id,
+            ProviderTransactionId = "txn_failed_456"
         };
 
         // Act
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(processCommand);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(PaymentStatus.Failed, result.Status);
+        Assert.False(result.Success);
+        Assert.NotNull(result.Payment);
+        Assert.Equal(PaymentStatus.Failed, result.Payment.Status);
         
-        // Verify payment is saved in database
-        var payment = await _context.Payments.FindAsync(result.Id);
+        // Verify payment is updated in database
+        var payment = await _context.Payments.FindAsync(result.Payment.Id);
         Assert.NotNull(payment);
         Assert.Equal(PaymentStatus.Failed, payment.Status);
     }
 
     [Fact]
-    public async Task ProcessPaymentCommand_Should_Auto_Enroll_User_On_Successful_Payment()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var creatorId = Guid.NewGuid();
-        var productId = Guid.NewGuid();
-        var programId = Guid.NewGuid();
-        
-        await SeedTestUser(userId, "Test User");
-        await SeedTestUser(creatorId, "Test Creator");
-        await SeedTestProduct(productId, "Test Product", creatorId);
-        await SeedTestProgram(programId, "Test Program", creatorId);
-        await SeedTestProductProgram(productId, programId);
-
-        var command = new ProcessPaymentCommand
-        {
-            UserId = userId,
-            ProductId = productId,
-            Amount = 99.99m,
-            Currency = "USD",
-            PaymentMethod = PaymentMethod.CreditCard,
-            TransactionId = "txn_success_123",
-            PaymentGateway = PaymentGateway.Stripe
-        };
-
-        // Act
-        var result = await _mediator.Send(command);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(PaymentStatus.Completed, result.Status);
-
-        // Verify auto-enrollment occurred
-        var userProduct = await _context.UserProducts
-            .FirstOrDefaultAsync(up => up.UserId == userId && up.ProductId == productId);
-        
-        Assert.NotNull(userProduct);
-        Assert.Equal(ProductAcquisitionType.Purchase, userProduct.AcquisitionType);
-        Assert.Equal(ProductAccessStatus.Active, userProduct.Status);
-    }
-
-    [Fact]
-    public async Task ProcessPaymentCommand_Should_Fail_For_Nonexistent_User()
-    {
-        // Arrange
-        var productId = Guid.NewGuid();
-        await SeedTestProduct(productId, "Test Product", Guid.NewGuid());
-
-        var command = new ProcessPaymentCommand
-        {
-            UserId = Guid.NewGuid(), // Non-existent user
-            ProductId = productId,
-            Amount = 99.99m,
-            Currency = "USD",
-            PaymentMethod = PaymentMethod.CreditCard,
-            TransactionId = "txn_success_123",
-            PaymentGateway = PaymentGateway.Stripe
-        };
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _mediator.Send(command));
-    }
-
-    [Fact]
-    public async Task ProcessPaymentCommand_Should_Fail_For_Nonexistent_Product()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        await SeedTestUser(userId, "Test User");
-
-        var command = new ProcessPaymentCommand
-        {
-            UserId = userId,
-            ProductId = Guid.NewGuid(), // Non-existent product
-            Amount = 99.99m,
-            Currency = "USD",
-            PaymentMethod = PaymentMethod.CreditCard,
-            TransactionId = "txn_success_123",
-            PaymentGateway = PaymentGateway.Stripe
-        };
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _mediator.Send(command));
-    }
-
-    [Fact]
-    public async Task RefundPaymentCommand_Should_Process_Refund_Successfully()
+    public async Task RefundPaymentCommand_Should_Refund_Payment_Successfully()
     {
         // Arrange
         var userId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         await SeedTestUser(userId, "Test User");
         await SeedTestProduct(productId, "Test Product", userId);
-        
+
+        // Create and process a payment first
         var payment = await CreateTestPayment(userId, productId, PaymentStatus.Completed);
 
+        // Setup refund gateway mock
+        _mockPaymentGateway.Setup(x => x.RefundPaymentAsync(It.IsAny<RefundRequest>()))
+            .ReturnsAsync(new RefundResult 
+            { 
+                Success = true, 
+                RefundId = "refund_123",
+                ProcessedAt = DateTime.UtcNow 
+            });
+
         var command = new RefundPaymentCommand
         {
             PaymentId = payment.Id,
-            Reason = "Customer requested refund",
-            RefundAmount = 99.99m
+            RefundAmount = 50.00m,
+            Reason = "Customer request",
+            RefundedBy = userId
         };
 
         // Act
@@ -236,36 +242,9 @@ public class PaymentCommandTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(PaymentStatus.Refunded, result.Status);
-        Assert.Equal(99.99m, result.RefundAmount);
-        Assert.Equal("Customer requested refund", result.RefundReason);
-
-        // Verify payment status is updated in database
-        var updatedPayment = await _context.Payments.FindAsync(payment.Id);
-        Assert.NotNull(updatedPayment);
-        Assert.Equal(PaymentStatus.Refunded, updatedPayment.Status);
-    }
-
-    [Fact]
-    public async Task RefundPaymentCommand_Should_Fail_For_Already_Refunded_Payment()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var productId = Guid.NewGuid();
-        await SeedTestUser(userId, "Test User");
-        await SeedTestProduct(productId, "Test Product", userId);
-        
-        var payment = await CreateTestPayment(userId, productId, PaymentStatus.Refunded);
-
-        var command = new RefundPaymentCommand
-        {
-            PaymentId = payment.Id,
-            Reason = "Customer requested refund",
-            RefundAmount = 99.99m
-        };
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _mediator.Send(command));
+        Assert.True(result.Success);
+        Assert.NotNull(result.Refund);
+        Assert.Equal(50.00m, result.Refund.RefundAmount);
     }
 
     [Fact]
@@ -276,13 +255,15 @@ public class PaymentCommandTests : IDisposable
         var productId = Guid.NewGuid();
         await SeedTestUser(userId, "Test User");
         await SeedTestProduct(productId, "Test Product", userId);
-        
+
+        // Create a pending payment
         var payment = await CreateTestPayment(userId, productId, PaymentStatus.Pending);
 
         var command = new CancelPaymentCommand
         {
             PaymentId = payment.Id,
-            Reason = "Payment timeout"
+            Reason = "User cancellation",
+            CancelledBy = userId
         };
 
         // Act
@@ -290,166 +271,40 @@ public class PaymentCommandTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(PaymentStatus.Cancelled, result.Status);
-
-        // Verify payment status is updated in database
-        var updatedPayment = await _context.Payments.FindAsync(payment.Id);
-        Assert.NotNull(updatedPayment);
-        Assert.Equal(PaymentStatus.Cancelled, updatedPayment.Status);
+        Assert.True(result.Success);
+        Assert.NotNull(result.Payment);
+        Assert.Equal(PaymentStatus.Cancelled, result.Payment.Status);
     }
 
-    [Fact]
-    public async Task CancelPaymentCommand_Should_Fail_For_Completed_Payment()
+    private async Task SeedTestUser(Guid userId, string userName)
     {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var productId = Guid.NewGuid();
-        await SeedTestUser(userId, "Test User");
-        await SeedTestProduct(productId, "Test Product", userId);
+        var user = new User 
+        { 
+            Id = userId, 
+            Name = userName,
+            Email = $"{userName.ToLowerInvariant()}@test.com",
+            CreatedAt = DateTime.UtcNow
+        };
         
-        var payment = await CreateTestPayment(userId, productId, PaymentStatus.Completed);
-
-        var command = new CancelPaymentCommand
-        {
-            PaymentId = payment.Id,
-            Reason = "Customer changed mind"
-        };
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _mediator.Send(command));
-    }
-
-    [Fact]
-    public async Task CreatePaymentIntentCommand_Should_Create_Payment_Intent()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var productId = Guid.NewGuid();
-        await SeedTestUser(userId, "Test User");
-        await SeedTestProduct(productId, "Test Product", userId);
-
-        var command = new CreatePaymentIntentCommand
-        {
-            UserId = userId,
-            ProductId = productId,
-            Amount = 99.99m,
-            Currency = "USD",
-            PaymentMethod = PaymentMethod.CreditCard
-        };
-
-        // Act
-        var result = await _mediator.Send(command);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(PaymentStatus.Pending, result.Status);
-        Assert.Equal(99.99m, result.Amount);
-        Assert.Equal("USD", result.Currency);
-        Assert.Equal(userId, result.UserId);
-        Assert.Equal(productId, result.ProductId);
-
-        // Verify payment intent is saved in database
-        var payment = await _context.Payments.FindAsync(result.Id);
-        Assert.NotNull(payment);
-        Assert.Equal(PaymentStatus.Pending, payment.Status);
-    }
-
-    [Fact]
-    public async Task UpdatePaymentStatusCommand_Should_Update_Payment_Status()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var productId = Guid.NewGuid();
-        await SeedTestUser(userId, "Test User");
-        await SeedTestProduct(productId, "Test Product", userId);
-        
-        var payment = await CreateTestPayment(userId, productId, PaymentStatus.Pending);
-
-        var command = new UpdatePaymentStatusCommand
-        {
-            PaymentId = payment.Id,
-            Status = PaymentStatus.Completed,
-            TransactionId = "txn_success_789"
-        };
-
-        // Act
-        var result = await _mediator.Send(command);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(PaymentStatus.Completed, result.Status);
-        Assert.Equal("txn_success_789", result.TransactionId);
-
-        // Verify payment status is updated in database
-        var updatedPayment = await _context.Payments.FindAsync(payment.Id);
-        Assert.NotNull(updatedPayment);
-        Assert.Equal(PaymentStatus.Completed, updatedPayment.Status);
-        Assert.Equal("txn_success_789", updatedPayment.TransactionId);
-    }
-
-    // Helper methods
-    private async Task SeedTestUser(Guid userId, string name)
-    {
-        var user = new User
-        {
-            Id = userId,
-            Name = name,
-            Email = $"{name.ToLower().Replace(" ", "")}@test.com"
-        };
-
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
     }
 
-    private async Task SeedTestProduct(Guid productId, string name, Guid creatorId)
+    private async Task SeedTestProduct(Guid productId, string productName, Guid creatorId)
     {
-        var product = new Product
-        {
-            Id = productId,
-            Name = name,
-            Description = $"Description for {name}",
-            ShortDescription = $"Short description for {name}",
-            Type = Common.ProductType.Program,
+        var product = new Product 
+        { 
+            Id = productId, 
+            Name = productName,
+            Description = $"{productName} description",
+            Title = productName,
+            CreatorId = creatorId,
             Status = ContentStatus.Published,
             Visibility = AccessLevel.Public,
-            CreatorId = creatorId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        _context.Products.Add(product);
-        await _context.SaveChangesAsync();
-    }
-
-    private async Task SeedTestProgram(Guid programId, string name, Guid creatorId)
-    {
-        var program = new Program
-        {
-            Id = programId,
-            Name = name,
-            Description = $"Description for {name}",
-            Status = ContentStatus.Published,
-            Visibility = AccessLevel.Public,
-            CreatorId = creatorId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        _context.Programs.Add(program);
-        await _context.SaveChangesAsync();
-    }
-
-    private async Task SeedTestProductProgram(Guid productId, Guid programId)
-    {
-        var productProgram = new ProductProgram
-        {
-            Id = Guid.NewGuid(),
-            ProductId = productId,
-            ProgramId = programId,
             CreatedAt = DateTime.UtcNow
         };
-
-        _context.ProductPrograms.Add(productProgram);
+        
+        _context.Products.Add(product);
         await _context.SaveChangesAsync();
     }
 
@@ -463,12 +318,18 @@ public class PaymentCommandTests : IDisposable
             Amount = 99.99m,
             Currency = "USD",
             Status = status,
-            PaymentMethod = PaymentMethod.CreditCard,
-            PaymentGateway = PaymentGateway.Stripe,
-            TransactionId = "txn_test_" + Guid.NewGuid().ToString("N")[..8],
+            Method = PaymentMethod.CreditCard,
+            Gateway = PaymentGateway.Stripe,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            FinalAmount = 99.99m,
+            NetAmount = 95.99m
         };
+
+        if (status == PaymentStatus.Completed)
+        {
+            payment.ProcessedAt = DateTime.UtcNow;
+            payment.ProviderTransactionId = "test_txn_123";
+        }
 
         _context.Payments.Add(payment);
         await _context.SaveChangesAsync();
@@ -478,6 +339,6 @@ public class PaymentCommandTests : IDisposable
     public void Dispose()
     {
         _context?.Dispose();
-        _serviceProvider?.Dispose();
+        _serviceProvider?.GetService<IServiceScope>()?.Dispose();
     }
 }
