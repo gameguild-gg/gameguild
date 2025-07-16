@@ -125,14 +125,31 @@ public class ProductQueryHandlers :
     try {
       _logger.LogDebug("Getting user products for user: {UserId}", request.UserId);
 
-      var query = _context.UserProducts
-                          .Include(up => up.Product)
-                          .Where(up => up.UserId == request.UserId && up.Product.DeletedAt == null);
-
       // Apply access control - users can only see their own products
       if (_userContext.UserId != request.UserId) {
         return Enumerable.Empty<UserProduct>();
       }
+
+      var query = _context.UserProducts
+                          .Include(up => up.Product)
+                          .Where(up => up.UserId == request.UserId && up.Product.DeletedAt == null);
+
+      // Apply optional filters
+      if (request.AcquisitionType.HasValue) {
+        query = query.Where(up => up.AcquisitionType == request.AcquisitionType.Value);
+      }
+
+      if (request.IsActive.HasValue) {
+        if (request.IsActive.Value) {
+          query = query.Where(up => up.AccessStatus == ProductAccessStatus.Active);
+        } else {
+          query = query.Where(up => up.AccessStatus != ProductAccessStatus.Active);
+        }
+      }
+
+      // Apply pagination
+      query = query.Skip(request.Skip)
+                   .Take(Math.Min(request.Take, 100)); // Limit to prevent abuse
 
       var userProducts = await query.ToListAsync(cancellationToken);
 
