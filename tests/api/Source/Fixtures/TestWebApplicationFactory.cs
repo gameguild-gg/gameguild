@@ -122,15 +122,15 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
 
         // Add in-memory database for testing with unique database name
         var databaseName = $"TestDatabase_{Guid.NewGuid()}";
-        services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName));
         
-        // Add DbContextFactory for GraphQL DataLoaders with singleton options
-        services.AddSingleton<DbContextOptions<ApplicationDbContext>>(provider => {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase(databaseName);
-            return optionsBuilder.Options;
+        // Add DbContextFactory for GraphQL DataLoaders first
+        services.AddDbContextFactory<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName));
+        
+        // Add regular DbContext using the factory (ensures compatible lifetimes)
+        services.AddScoped<ApplicationDbContext>(provider => {
+            var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+            return factory.CreateDbContext();
         });
-        services.AddDbContextFactory<ApplicationDbContext>();
 
         // Don't override GraphQL configuration - let the main application handle it
         // The main application already configures GraphQL through AddGraphQLInfrastructure

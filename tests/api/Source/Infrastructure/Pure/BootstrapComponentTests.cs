@@ -311,10 +311,6 @@ public class BootstrapComponentTests
                     services.AddSingleton<IConfiguration>(configuration);
                     services.AddLogging();
 
-                    // Database
-                    services.AddDbContext<ApplicationDbContext>(options =>
-                        options.UseInMemoryDatabase($"TestServer_{Guid.NewGuid()}"));
-
                     // Application layer
                     services.AddApplication();
 
@@ -412,12 +408,11 @@ public class BootstrapComponentTests
 
             services.AddSingleton<IConfiguration>(configuration);
             services.AddLogging();
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services.AddDbContextFactory<ApplicationDbContext>(options =>
                 options.UseInMemoryDatabase($"MemoryTest_{i}_{Guid.NewGuid()}"));
+            services.AddScoped<ApplicationDbContext>(provider => 
+                provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>().CreateDbContext());
             services.AddApplication();
-
-            // Add mock IAuthService for Authentication handlers (required by MediatR)
-            services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
 
             // Add mock IAuthService for Authentication handlers (required by MediatR)
             services.AddScoped<GameGuild.Modules.Authentication.IAuthService, MockAuthService>();
