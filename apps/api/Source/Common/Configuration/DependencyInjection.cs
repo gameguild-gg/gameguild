@@ -601,6 +601,12 @@ public static class DependencyInjection {
       }
     );
 
+    // Configure introspection
+    if (!options.EnableIntrospection)
+    {
+        builder.DisableIntrospection();
+    }
+
     // Configure request options for development vs production
     builder.ModifyRequestOptions(opt => { opt.IncludeExceptionDetails = options.IncludeExceptionDetails; });
   }

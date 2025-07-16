@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
 using MediatR;
@@ -119,6 +120,10 @@ public class ProjectsController : ControllerBase {
   /// </summary>
   [HttpPost]
   public async Task<ActionResult<CreateProjectResult>> CreateProject([FromBody] CreateProjectRequest request) {
+    if (!ModelState.IsValid) {
+      return BadRequest(ModelState);
+    }
+
     var command = new CreateProjectCommand {
       Title = request.Title,
       Description = request.Description,
@@ -371,18 +376,26 @@ public class ProjectsController : ControllerBase {
 /// Request DTOs for REST API
 /// </summary>
 public record CreateProjectRequest {
+  [Required(ErrorMessage = "Title is required")]
+  [StringLength(255, MinimumLength = 1, ErrorMessage = "Title must be between 1 and 255 characters")]
   public string Title { get; init; } = string.Empty;
 
+  [StringLength(2000, ErrorMessage = "Description cannot exceed 2000 characters")]
   public string? Description { get; init; }
 
+  [StringLength(500, ErrorMessage = "Short description cannot exceed 500 characters")]
   public string? ShortDescription { get; init; }
 
+  [Url(ErrorMessage = "Image URL must be a valid URL")]
   public string? ImageUrl { get; init; }
 
+  [Url(ErrorMessage = "Repository URL must be a valid URL")]
   public string? RepositoryUrl { get; init; }
 
+  [Url(ErrorMessage = "Website URL must be a valid URL")]
   public string? WebsiteUrl { get; init; }
 
+  [Url(ErrorMessage = "Download URL must be a valid URL")]
   public string? DownloadUrl { get; init; }
 
   public GameGuild.Common.ProjectType Type { get; init; } = GameGuild.Common.ProjectType.Game;

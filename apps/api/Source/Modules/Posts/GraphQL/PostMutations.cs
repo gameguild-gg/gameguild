@@ -364,7 +364,8 @@ public class PostMutations {
     if (post != null) {
       statistics.ViewsCount = post.Views.Count;
       statistics.UniqueViewersCount = post.Views.Where(v => v.UserId.HasValue).DistinctBy(v => v.UserId).Count();
-      statistics.AverageEngagementTime = post.Views.Where(v => v.DurationSeconds > 0).DefaultIfEmpty().Average(v => v.DurationSeconds);
+      var viewsWithDuration = post.Views.Where(v => v.DurationSeconds > 0);
+      statistics.AverageEngagementTime = viewsWithDuration.Any() ? viewsWithDuration.Average(v => v.DurationSeconds) : 0.0;
 
       // Calculate engagement score (likes + comments + shares weighted)
       statistics.EngagementScore = (post.LikesCount * 1.0) + (post.CommentsCount * 2.0) + (post.SharesCount * 3.0);

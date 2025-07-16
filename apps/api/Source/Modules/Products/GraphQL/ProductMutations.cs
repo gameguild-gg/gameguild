@@ -169,13 +169,13 @@ public class ProductMutations {
       ProductId = input.ProductId,
       AcquisitionType = input.AcquisitionType,
       PurchasePrice = input.PurchasePrice,
-      Currency = input.Currency,
+      Currency = input.Currency ?? "USD",
       ExpiresAt = input.ExpiresAt,
       GrantedBy = Guid.Empty
     };
     var result = await mediator.Send(command);
 
-    return result.UserProduct!;
+    return result.UserProduct ?? throw new InvalidOperationException("Failed to grant user access to product");
   }
 
   /// <summary>

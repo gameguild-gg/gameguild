@@ -11,6 +11,12 @@ namespace GameGuild.Common.Authorization;
 /// </summary>
 public class DACAuthorizationMiddleware(FieldDelegate next) {
   public async ValueTask InvokeAsync(IMiddlewareContext context) {
+    // Skip authorization for introspection queries
+    if (IsIntrospectionQuery(context)) {
+      await next(context);
+      return;
+    }
+
     var permissionService = context.Services.GetRequiredService<IPermissionService>();
 
     // Extract user context from GraphQL context
@@ -61,6 +67,14 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
                DACAuthorizationAttribute;
 
     return null;
+  }
+
+  private static bool IsIntrospectionQuery(IMiddlewareContext context) {
+    // Check if this is an introspection query (__schema, __type fields)
+    var selection = context.Selection;
+    var fieldName = selection.Field.Name;
+    
+    return fieldName.StartsWith("__");
   }
 
   private async ValueTask<bool> CheckPermissionAsync(
