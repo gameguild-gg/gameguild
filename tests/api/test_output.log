@@ -1,0 +1,110 @@
+Build started 7/16/2025 1:04:13 AM.
+     1>Project "W:\repositories\game-guild\game-guild\tests\api\GameGuild.API.Tests.csproj" on node 1 (Restore target(s)).
+     1>_GetAllRestoreProjectPathItems:
+         Determining projects to restore...
+       Restore:
+         X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+         X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+         Assets file has not changed. Skipping assets file writing. Path: W:\repositories\game-guild\game-guild\apps\api\obj\project.assets.json
+         Assets file has not changed. Skipping assets file writing. Path: W:\repositories\game-guild\game-guild\tests\api\obj\project.assets.json
+         Restored W:\repositories\game-guild\game-guild\tests\api\GameGuild.API.Tests.csproj (in 62 ms).
+         Restored W:\repositories\game-guild\game-guild\apps\api\GameGuild.API.csproj (in 62 ms).
+         
+         NuGet Config files used:
+             C:\Users\MatheusMartins\AppData\Roaming\NuGet\NuGet.Config
+         
+         Feeds used:
+             https://api.nuget.org/v3/index.json
+         All projects are up-to-date for restore.
+     1>Done Building Project "W:\repositories\game-guild\game-guild\tests\api\GameGuild.API.Tests.csproj" (Restore target(s)).
+   1:7>Project "W:\repositories\game-guild\game-guild\tests\api\GameGuild.API.Tests.csproj" on node 1 (VSTest target(s)).
+     1>BuildProject:
+         Build started, please wait...
+   1:7>Project "W:\repositories\game-guild\game-guild\tests\api\GameGuild.API.Tests.csproj" (1:7) is building "W:\repositories\game-guild\game-guild\tests\api\GameGuild.API.Tests.csproj" (1:8) on node 1 (default targets).
+   1:8>Project "W:\repositories\game-guild\game-guild\tests\api\GameGuild.API.Tests.csproj" (1:8) is building "W:\repositories\game-guild\game-guild\apps\api\GameGuild.API.csproj" (2:6) on node 1 (default targets).
+     2>_DiscoverMvcApplicationParts:
+       Skipping target "_DiscoverMvcApplicationParts" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net9.0\GameGuild.API.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       _CreateAppHost:
+       Skipping target "_CreateAppHost" because all output files are up-to-date with respect to the input files.
+       _ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+       _ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+       _BuildCopyStaticWebAssetsPreserveNewest:
+       Skipping target "_BuildCopyStaticWebAssetsPreserveNewest" because it has no outputs.
+       _CopyOutOfDateSourceItemsToOutputDirectory:
+       Skipping target "_CopyOutOfDateSourceItemsToOutputDirectory" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         GameGuild.API -> W:\repositories\game-guild\game-guild\apps\api\bin\Debug\net9.0\GameGuild.API.dll
+     2>Done Building Project "W:\repositories\game-guild\game-guild\apps\api\GameGuild.API.csproj" (default targets).
+     1>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+       CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net9.0\GameGuild.API.Tests.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       _CopyOutOfDateSourceItemsToOutputDirectory:
+       Building target "_CopyOutOfDateSourceItemsToOutputDirectory" partially, because some output files are out of date with respect to their input files.
+         Copying file from "W:\repositories\game-guild\game-guild\tests\api\obj\Debug\net9.0\MvcTestingAppManifest.json" to "W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\MvcTestingAppManifest.json".
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         GameGuild.API.Tests -> W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\GameGuild.API.Tests.dll
+       _MvcCopyDependencyFiles:
+         Copying file from "W:\repositories\game-guild\game-guild\apps\api\bin\Debug\net9.0\GameGuild.API.deps.json" to "W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\GameGuild.API.deps.json".
+     1>Done Building Project "W:\repositories\game-guild\game-guild\tests\api\GameGuild.API.Tests.csproj" (default targets).
+     1>BuildProject:
+         Build completed.
+         
+Test run for W:\repositories\game-guild\game-guild\tests\api\bin\Debug\net9.0\GameGuild.API.Tests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.0 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.4.5+1caef2f33e (64-bit .NET 9.0.5)
+[xUnit.net 00:00:01.53]   Discovering: GameGuild.API.Tests
+[xUnit.net 00:00:01.65]   Discovered:  GameGuild.API.Tests
+[xUnit.net 00:00:01.65]   Starting:    GameGuild.API.Tests
+GraphQL Schema Introspection Response: {"errors":[{"message":"Introspection is not allowed for the current request.","locations":[{"line":3,"column":19}],"extensions":{"field":"__schema","code":"HC0046"}}]}
+[xUnit.net 00:00:04.40]     GameGuild.Tests.Modules.Users.E2E.GraphQL.GraphQLSchemaIntrospectionTest.Should_Show_Available_Query_Fields [FAIL]
+[xUnit.net 00:00:04.40]       GraphQL introspection failed. Status: BadRequest
+[xUnit.net 00:00:04.40]       Expected: True
+[xUnit.net 00:00:04.40]       Actual:   False
+[xUnit.net 00:00:04.40]       Stack Trace:
+[xUnit.net 00:00:04.40]         W:\repositories\game-guild\game-guild\tests\api\Source\Modules\Users\E2E\GraphQL\GraphQLSchemaIntrospectionTest.cs(53,0): at GameGuild.Tests.Modules.Users.E2E.GraphQL.GraphQLSchemaIntrospectionTest.Should_Show_Available_Query_Fields()
+[xUnit.net 00:00:04.40]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:04.41]   Finished:    GameGuild.API.Tests
+  Failed GameGuild.Tests.Modules.Users.E2E.GraphQL.GraphQLSchemaIntrospectionTest.Should_Show_Available_Query_Fields [410 ms]
+  Error Message:
+   GraphQL introspection failed. Status: BadRequest
+Expected: True
+Actual:   False
+  Stack Trace:
+     at GameGuild.Tests.Modules.Users.E2E.GraphQL.GraphQLSchemaIntrospectionTest.Should_Show_Available_Query_Fields() in W:\repositories\game-guild\game-guild\tests\api\Source\Modules\Users\E2E\GraphQL\GraphQLSchemaIntrospectionTest.cs:line 53
+--- End of stack trace from previous location ---
+
+Test Run Failed.
+Total tests: 1
+     Failed: 1
+ Total time: 5.0361 Seconds
+       _VSTestConsole:
+         MSB4181: The "VSTestTask" task returned false but did not log an error.
+     1>Done Building Project "W:\repositories\game-guild\game-guild\tests\api\GameGuild.API.Tests.csproj" (VSTest target(s)) -- FAILED.
+
+Build FAILED.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.52
