@@ -233,3 +233,68 @@ public class RefundPaymentCommandHandler : IRequestHandler<RefundPaymentCommand,
     }
   }
 }
+
+/// <summary>
+/// Handler for cancelling payments
+/// </summary>
+public class CancelPaymentCommandHandler : IRequestHandler<CancelPaymentCommand, CancelPaymentResult> {
+  private readonly ApplicationDbContext _context;
+  private readonly IUserContext _userContext;
+  private readonly ILogger<CancelPaymentCommandHandler> _logger;
+
+  public CancelPaymentCommandHandler(
+    ApplicationDbContext context,
+    IUserContext userContext,
+    ILogger<CancelPaymentCommandHandler> logger
+  ) {
+    _context = context;
+    _userContext = userContext;
+    _logger = logger;
+  }
+
+  public async Task<CancelPaymentResult> Handle(CancelPaymentCommand request, CancellationToken cancellationToken) {
+    try {
+      var payment = await _context.Payments
+                                  .FirstOrDefaultAsync(p => p.Id == request.PaymentId, cancellationToken);
+
+      if (payment == null) {
+        return new CancelPaymentResult { Success = false, ErrorMessage = "Payment not found" };
+      }
+
+      // Check authorization
+      if (!_userContext.IsInRole("Admin") && payment.UserId != _userContext.UserId) {
+        return new CancelPaymentResult { Success = false, ErrorMessage = "Unauthorized to cancel this payment" };
+      }
+
+      // Only allow cancellation of pending payments
+      if (payment.Status != PaymentStatus.Pending) {
+        return new CancelPaymentResult { Success = false, ErrorMessage = "Only pending payments can be cancelled" };
+      }
+
+      // Update payment status to cancelled
+      payment.Status = PaymentStatus.Cancelled;
+      payment.UpdatedAt = DateTime.UtcNow;
+
+      // Add cancellation metadata
+      var metadata = string.IsNullOrEmpty(payment.Metadata) ? new Dictionary<string, object>() : 
+                     System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(payment.Metadata) ?? new Dictionary<string, object>();
+      
+      metadata["cancellation_reason"] = request.Reason;
+      metadata["cancelled_by"] = request.CancelledBy.ToString();
+      metadata["cancelled_at"] = DateTime.UtcNow.ToString("O");
+      
+      payment.Metadata = System.Text.Json.JsonSerializer.Serialize(metadata);
+
+      await _context.SaveChangesAsync(cancellationToken);
+
+      _logger.LogInformation("Payment cancelled: {PaymentId}, Reason: {Reason}", payment.Id, request.Reason);
+
+      return new CancelPaymentResult { Success = true, Payment = payment };
+    }
+    catch (Exception ex) {
+      _logger.LogError(ex, "Error cancelling payment {PaymentId}", request.PaymentId);
+
+      return new CancelPaymentResult { Success = false, ErrorMessage = "Failed to cancel payment" };
+    }
+  }
+}
