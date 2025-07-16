@@ -1,5 +1,6 @@
 using GameGuild.Common;
 using GameGuild.Database;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
@@ -179,8 +180,9 @@ public class ProductTests : IDisposable
         // Assert
         Assert.True(deleteResult.Success);
         
-        // Verify product is deleted
-        var deletedProduct = await _context.Products.FindAsync(createResult.Product.Id);
+        // Verify product is deleted (use a query that respects global filters)
+        var deletedProduct = await _context.Products
+            .FirstOrDefaultAsync(p => p.Id == createResult.Product.Id);
         Assert.Null(deletedProduct);
     }
 
@@ -194,10 +196,10 @@ public class ProductTests : IDisposable
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
         _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
 
-        // Create test products
-        await SeedTestProduct("Product 1", "Description 1");
-        await SeedTestProduct("Product 2", "Description 2");
-        await SeedTestProduct("Product 3", "Description 3");
+        // Create test products with the test user as creator
+        await SeedTestProduct("Product 1", "Description 1", userId);
+        await SeedTestProduct("Product 2", "Description 2", userId);
+        await SeedTestProduct("Product 3", "Description 3", userId);
 
         // Act
         var query = new GetProductsQuery
@@ -224,7 +226,7 @@ public class ProductTests : IDisposable
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
         _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
 
-        var testProduct = await SeedTestProduct("Test Product", "Test Description");
+        var testProduct = await SeedTestProduct("Test Product", "Test Description", userId);
 
         // Act
         var query = new GetProductByIdQuery
@@ -256,13 +258,16 @@ public class ProductTests : IDisposable
         await _context.SaveChangesAsync();
     }
 
-    private async Task<Product> SeedTestProduct(string name, string description)
+    private async Task<Product> SeedTestProduct(string name, string description, Guid? creatorId = null)
     {
         var product = new Product
         {
             Id = Guid.NewGuid(),
             Name = name,
-            ShortDescription = description
+            ShortDescription = description,
+            CreatorId = creatorId ?? Guid.NewGuid(),
+            Status = ContentStatus.Published,
+            Visibility = AccessLevel.Public
         };
 
         _context.Products.Add(product);
