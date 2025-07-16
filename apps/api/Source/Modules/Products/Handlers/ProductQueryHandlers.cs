@@ -37,7 +37,7 @@ public class ProductQueryHandlers :
       _logger.LogDebug("Getting product by ID: {ProductId}", request.ProductId);
 
       var query = _context.Products
-                          .Where(p => p.Id == request.ProductId && !p.IsDeleted);
+                          .Where(p => p.Id == request.ProductId && p.DeletedAt == null);
 
       // Include related data if requested
       if (request.IncludePricing) { query = query.Include(p => p.ProductPricings); }
@@ -71,7 +71,7 @@ public class ProductQueryHandlers :
       );
 
       var query = _context.Products
-                          .Where(p => !p.IsDeleted);
+                          .Where(p => p.DeletedAt == null);
 
       // Apply filters
       if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
@@ -127,7 +127,7 @@ public class ProductQueryHandlers :
 
       var query = _context.UserProducts
                           .Include(up => up.Product)
-                          .Where(up => up.UserId == request.UserId && !up.Product.IsDeleted);
+                          .Where(up => up.UserId == request.UserId && up.Product.DeletedAt == null);
 
       // Apply access control - users can only see their own products
       if (_userContext.UserId != request.UserId) {

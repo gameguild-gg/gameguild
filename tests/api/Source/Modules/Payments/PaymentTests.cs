@@ -26,9 +26,15 @@ public class PaymentTests : IDisposable
     {
         var services = new ServiceCollection();
         
-        // Add database context
-        services.AddDbContext<ApplicationDbContext>(options =>
+        // Add database context factory for GraphQL DataLoader compatibility
+        services.AddDbContextFactory<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+        
+        // Add regular DbContext using the factory (ensures compatible lifetimes)
+        services.AddScoped<ApplicationDbContext>(provider => {
+            var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+            return factory.CreateDbContext();
+        });
         
         // Add logging
         services.AddLogging(builder => builder.AddConsole());

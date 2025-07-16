@@ -25,9 +25,15 @@ public class ProductTests : IDisposable
     {
         var services = new ServiceCollection();
         
-        // Add database context
-        services.AddDbContext<ApplicationDbContext>(options =>
+        // Add database context factory for GraphQL DataLoader compatibility
+        services.AddDbContextFactory<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+        
+        // Add regular DbContext using the factory (ensures compatible lifetimes)
+        services.AddScoped<ApplicationDbContext>(provider => {
+            var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+            return factory.CreateDbContext();
+        });
         
         // Add logging
         services.AddLogging(builder => builder.AddConsole());
@@ -81,12 +87,14 @@ public class ProductTests : IDisposable
         await SeedTestUser(userId, "Test User");
 
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
+        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
         _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(true);
 
         var command = new CreateProductCommand
         {
             Name = "New Product",
-            ShortDescription = "Created via CQRS command"
+            ShortDescription = "Created via CQRS command",
+            CreatorId = userId
         };
 
         // Act
@@ -107,13 +115,15 @@ public class ProductTests : IDisposable
         await SeedTestUser(userId, "Test User");
 
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
+        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
         _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(true);
 
         // Create product first
         var createCommand = new CreateProductCommand
         {
             Name = "Original Product",
-            ShortDescription = "Original description"
+            ShortDescription = "Original description",
+            CreatorId = userId
         };
 
         var createResult = await _mediator.Send(createCommand);
@@ -144,13 +154,15 @@ public class ProductTests : IDisposable
         await SeedTestUser(userId, "Test User");
 
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
+        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
         _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(true);
 
         // Create product first
         var createCommand = new CreateProductCommand
         {
             Name = "Product to Delete",
-            ShortDescription = "This will be deleted"
+            ShortDescription = "This will be deleted",
+            CreatorId = userId
         };
 
         var createResult = await _mediator.Send(createCommand);
@@ -180,6 +192,7 @@ public class ProductTests : IDisposable
         await SeedTestUser(userId, "Test User");
 
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
+        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
 
         // Create test products
         await SeedTestProduct("Product 1", "Description 1");
@@ -209,6 +222,7 @@ public class ProductTests : IDisposable
         await SeedTestUser(userId, "Test User");
 
         _mockUserContext.Setup(x => x.UserId).Returns(userId);
+        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
 
         var testProduct = await SeedTestProduct("Test Product", "Test Description");
 
