@@ -14,7 +14,7 @@ import Image from 'next/image';
 import { Button } from '@game-guild/ui/components';
 import { Textarea } from '@game-guild/ui/components';
 import { Plus, X } from 'lucide-react';
-import { FileUploader } from '@game-guild/ui/components';
+import { FileUploader } from '@/components/custom/file-uploader';
 
 // Import types from the generated API
 import type { ProjectReadable, ProjectWritable } from '@/lib/api/generated';
