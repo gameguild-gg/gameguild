@@ -45,11 +45,9 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
 
   const fetchProgressData = async () => {
     try {
-      const response = await fetch(`/api/progress/${courseId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setProgressData(data);
-      }
+      const { getCourseProgress } = await import('@/lib/courses/server-actions');
+      const data = await getCourseProgress(courseId);
+      setProgressData(data);
     } catch (error) {
       console.error('Error fetching progress data:', error);
     } finally {

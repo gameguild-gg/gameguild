@@ -63,20 +63,17 @@ export function ReportButton({ reportType, targetId, targetTitle, variant = 'gho
     setIsSubmitting(true);
 
     try {
-      // TODO: Implement actual API call
-      const response = await fetch('/api/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reportType,
-          targetId,
-          reason,
-          description,
-          targetTitle,
-        }),
+      const { submitReport } = await import('@/lib/core/actions');
+      
+      const result = await submitReport({
+        reportType,
+        targetId,
+        reason,
+        description,
+        targetTitle,
       });
 
-      if (response.ok) {
+      if (result.success) {
         toast({
           title: 'Report Submitted',
           description: 'Thank you for reporting. We will review this shortly.',

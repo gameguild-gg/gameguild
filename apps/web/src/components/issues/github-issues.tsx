@@ -85,22 +85,18 @@ export default function GitHubIssues() {
     });
 
     try {
-      const response = await fetch(`/api/github-issues?${queryParams}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch issues');
-      }
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      setIssues(data.issues);
-      setTotalPages(data.totalPages);
-      setTotalIssues(data.totalIssues);
+      const { getAllGitHubIssues } = await import('@/lib/integrations/github/actions');
+      
+      const data = await getAllGitHubIssues(issueState as 'open' | 'closed' | 'all');
+      const issuesArray = Array.isArray(data.issues) ? data.issues : [];
+      setIssues(issuesArray);
+      setTotalPages(Math.ceil(issuesArray.length / pageSize));
+      setTotalIssues(data.total);
 
       // Extract unique users and labels
       const uniqueUsers = Array.from(
         new Set(
-          data.issues.flatMap((issue: Issue) => [
+          issuesArray.flatMap((issue: Issue) => [
             issue.user.login,
             ...(issue.assignees?.map((assignee) => assignee.login) || []),
             ...(issue.reviewers?.map((reviewer) => reviewer.login) || []),
@@ -108,7 +104,7 @@ export default function GitHubIssues() {
           ]),
         ),
       );
-      const uniqueLabels = Array.from(new Set(data.issues.flatMap((issue: Issue) => issue.labels || []).map((label: Label) => JSON.stringify(label))))
+      const uniqueLabels = Array.from(new Set(issuesArray.flatMap((issue: Issue) => issue.labels || []).map((label: Label) => JSON.stringify(label))))
         .map((labelString) => {
           if (typeof labelString !== 'string') {
             console.error('Unexpected non-string label:', labelString);
