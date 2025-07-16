@@ -157,7 +157,7 @@ public class ProductQueryTests : IDisposable
         
         await CreateTestProduct("Program Product", userId, type: GameGuild.Common.ProductType.Program);
         await CreateTestProduct("Bundle Product", userId, type: GameGuild.Common.ProductType.Bundle);
-        await CreateTestProduct("Course Product", userId, type: GameGuild.Common.ProductType.Course);
+        await CreateTestProduct("Course Product", userId, type: GameGuild.Common.ProductType.Program);
 
         var query = new GetProductsQuery
         {
@@ -422,8 +422,9 @@ public class ProductQueryTests : IDisposable
             UserId = userId,
             ProductId = productId,
             AcquisitionType = acquisitionType,
-            Status = ProductAccessStatus.Active,
-            AccessGrantedAt = DateTime.UtcNow
+            AccessStatus = ProductAccessStatus.Active,
+            PricePaid = 0,
+            Currency = "USD"
         };
 
         _context.UserProducts.Add(userProduct);
@@ -434,6 +435,6 @@ public class ProductQueryTests : IDisposable
     public void Dispose()
     {
         _context?.Dispose();
-        _serviceProvider?.Dispose();
+        (_serviceProvider as IDisposable)?.Dispose();
     }
 }
