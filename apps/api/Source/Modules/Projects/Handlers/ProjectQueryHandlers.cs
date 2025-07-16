@@ -47,7 +47,7 @@ public class ProjectQueryHandlers :
       var query = _context.Projects.AsQueryable();
 
       // Apply filters
-      if (!request.IncludeDeleted) { query = query.Where(p => !p.IsDeleted); }
+      if (!request.IncludeDeleted) { query = query.Where(p => p.DeletedAt == null); }
 
       if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 
@@ -94,7 +94,7 @@ public class ProjectQueryHandlers :
       _logger.LogDebug("Getting project by ID: {ProjectId}", request.ProjectId);
 
       var query = _context.Projects
-                          .Where(p => p.Id == request.ProjectId && !p.IsDeleted);
+                          .Where(p => p.Id == request.ProjectId && p.DeletedAt == null);
 
       // Include related data if requested
       if (request.IncludeTeam) { query = query.Include(p => p.Collaborators); }
@@ -132,7 +132,7 @@ public class ProjectQueryHandlers :
       _logger.LogDebug("Getting project by slug: {Slug}", request.Slug);
 
       var query = _context.Projects
-                          .Where(p => p.Slug == request.Slug && !p.IsDeleted);
+                          .Where(p => p.Slug == request.Slug && p.DeletedAt == null);
 
       // Include related data if requested
       if (request.IncludeTeam) { query = query.Include(p => p.Collaborators); }
@@ -160,7 +160,7 @@ public class ProjectQueryHandlers :
   public async Task<IEnumerable<Project>> Handle(GetProjectsByCategoryQuery request, CancellationToken cancellationToken) {
     try {
       var query = _context.Projects
-                          .Where(p => p.CategoryId == request.CategoryId && !p.IsDeleted);
+                          .Where(p => p.CategoryId == request.CategoryId && p.DeletedAt == null);
 
       if (request.Status.HasValue) { query = query.Where(p => p.Status == request.Status.Value); }
 
@@ -183,7 +183,7 @@ public class ProjectQueryHandlers :
   public async Task<IEnumerable<Project>> Handle(GetProjectsByCreatorQuery request, CancellationToken cancellationToken) {
     try {
       var query = _context.Projects
-                          .Where(p => p.Collaborators.Any(c => c.UserId == request.CreatorId && c.Role == ProjectRoles.Owner) && !p.IsDeleted);
+                          .Where(p => p.Collaborators.Any(c => c.UserId == request.CreatorId && c.Role == ProjectRoles.Owner) && p.DeletedAt == null);
 
       if (request.Status.HasValue) { query = query.Where(p => p.Status == request.Status.Value); }
 
@@ -206,7 +206,7 @@ public class ProjectQueryHandlers :
   public async Task<IEnumerable<Project>> Handle(GetProjectsByStatusQuery request, CancellationToken cancellationToken) {
     try {
       var query = _context.Projects
-                          .Where(p => p.Status == request.Status && !p.IsDeleted);
+                          .Where(p => p.Status == request.Status && p.DeletedAt == null);
 
       if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 
@@ -241,7 +241,7 @@ public class ProjectQueryHandlers :
   public async Task<IEnumerable<Project>> Handle(SearchProjectsQuery request, CancellationToken cancellationToken) {
     try {
       var query = _context.Projects
-                          .Where(p => !p.IsDeleted);
+                          .Where(p => p.DeletedAt == null);
 
       // Search term
       if (!string.IsNullOrEmpty(request.SearchTerm)) {
@@ -290,7 +290,7 @@ public class ProjectQueryHandlers :
   public async Task<IEnumerable<Project>> Handle(GetPopularProjectsQuery request, CancellationToken cancellationToken) {
     try {
       var query = _context.Projects
-                          .Where(p => !p.IsDeleted && p.Status == ContentStatus.Published);
+                          .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published);
 
       if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 
@@ -313,7 +313,7 @@ public class ProjectQueryHandlers :
   public async Task<IEnumerable<Project>> Handle(GetRecentProjectsQuery request, CancellationToken cancellationToken) {
     try {
       var query = _context.Projects
-                          .Where(p => !p.IsDeleted && p.Status == ContentStatus.Published);
+                          .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published);
 
       if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 
@@ -335,7 +335,7 @@ public class ProjectQueryHandlers :
   public async Task<IEnumerable<Project>> Handle(GetFeaturedProjectsQuery request, CancellationToken cancellationToken) {
     try {
       var query = _context.Projects
-                          .Where(p => !p.IsDeleted && p.Status == ContentStatus.Published);
+                          .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published);
 
       if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 

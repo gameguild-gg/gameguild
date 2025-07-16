@@ -137,22 +137,20 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     // Grant the user permission to create projects
     await GrantContentTypePermissions(_userId, _tenantId, "Project", [PermissionType.Create]);
 
-    // Create a proper Project object instead of an anonymous object
-    var project = new Project {
+    // Create a proper CreateProjectRequest instead of a Project entity
+    var request = new CreateProjectRequest {
       Title = "New Test Project",
       Description = "This is a test project",
       ShortDescription = "Test project",
       Status = ContentStatus.Draft,
       Visibility = AccessLevel.Public,
       Type = ProjectType.Game,
-      DevelopmentStatus = DevelopmentStatus.Planning,
       WebsiteUrl = "https://example.com",
       RepositoryUrl = "https://github.com/test/repo",
-      CreatedById = _userId,
-      TenantId = _tenantId
+      Tags = new List<string> { "test", "project" }
     };
 
-    var json = JsonSerializer.Serialize(project);
+    var json = JsonSerializer.Serialize(request);
     _output.WriteLine($"Request payload: {json}");
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -170,19 +168,21 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
       $"Expected success status code but got {response.StatusCode}. Content: {responseContent}"
     );
 
-    var createdProject = JsonSerializer.Deserialize<Project>(
+    var result = JsonSerializer.Deserialize<CreateProjectResult>(
       responseContent,
       new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
     );
 
-    Assert.NotNull(createdProject);
-    Assert.Equal("New Test Project", createdProject.Title);
-    Assert.Equal("This is a test project", createdProject.Description);
-    Assert.NotEqual(Guid.Empty, createdProject.Id);
+    Assert.NotNull(result);
+    Assert.True(result.Success);
+    Assert.NotNull(result.Project);
+    Assert.Equal("New Test Project", result.Project.Title);
+    Assert.Equal("This is a test project", result.Project.Description);
+    Assert.NotEqual(Guid.Empty, result.Project.Id);
 
     // Verify in database
     var dbProject =
-      await _context.Projects.FirstOrDefaultAsync(p => p.Id == createdProject.Id);
+      await _context.Projects.FirstOrDefaultAsync(p => p.Id == result.Project.Id);
     Assert.NotNull(dbProject);
     Assert.Equal("New Test Project", dbProject.Title);
   }
