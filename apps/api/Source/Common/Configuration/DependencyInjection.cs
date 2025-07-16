@@ -10,6 +10,7 @@ using GameGuild.Modules.Programs;
 using HotChocolate.Execution.Configuration;
 using MediatR;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 
@@ -190,10 +191,14 @@ public static class DependencyInjection {
   private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration) {
     var dbOptions = InfrastructureConfiguration.CreateDatabaseOptions(configuration);
 
-    services.AddDbContext<ApplicationDbContext>(options => { InfrastructureConfiguration.ConfigureDbContext(options, dbOptions); });
-    
-    // Add DbContext factory for GraphQL DataLoaders
+    // Add DbContext factory for GraphQL DataLoaders with proper lifetime management
     services.AddDbContextFactory<ApplicationDbContext>(options => { InfrastructureConfiguration.ConfigureDbContext(options, dbOptions); });
+    
+    // Add regular DbContext using the factory (this ensures compatible lifetimes)
+    services.AddScoped<ApplicationDbContext>(provider => {
+      var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+      return factory.CreateDbContext();
+    });
 
     return services;
   }

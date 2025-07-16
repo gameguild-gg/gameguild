@@ -84,24 +84,20 @@ namespace GameGuild.Tests.Helpers {
               foreach (var service in efCoreServices) services.Remove(service);
 
               // Add in-memory database for testing
-              services.AddDbContext<ApplicationDbContext>(options => {
-                  // Use the provided database name or a default one
-                  var dbName = databaseName ?? "TestDatabase";
+              var dbName = databaseName ?? "TestDatabase";
+              
+              // Add DbContextFactory for GraphQL DataLoaders first
+              services.AddDbContextFactory<ApplicationDbContext>(options => {
                   options.UseInMemoryDatabase(dbName);
                   // Enable sensitive data logging for tests
                   options.EnableSensitiveDataLogging();
-                }
-              );
-
-              // Add DbContextFactory for GraphQL DataLoaders with singleton options
-              services.AddSingleton<DbContextOptions<ApplicationDbContext>>(provider => {
-                  var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-                  var dbName = databaseName ?? "TestDatabase";
-                  optionsBuilder.UseInMemoryDatabase(dbName);
-                  optionsBuilder.EnableSensitiveDataLogging();
-                  return optionsBuilder.Options;
               });
-              services.AddDbContextFactory<ApplicationDbContext>();
+              
+              // Add regular DbContext using the factory (ensures compatible lifetimes)
+              services.AddScoped<ApplicationDbContext>(provider => {
+                  var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+                  return factory.CreateDbContext();
+              });
 
               // Override auth configuration for tests
               services.AddAuthentication("Test")
