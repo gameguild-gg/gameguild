@@ -616,11 +616,7 @@ public static class DependencyInjection {
     }
     else
     {
-        // Explicitly enable introspection for test environments
-        builder.ModifyOptions(opt => {
-            opt.EnableIntrospection = true;
-        });
-        logger?.LogInformation("Introspection explicitly enabled for test environment");
+        logger?.LogInformation("Introspection enabled (default HotChocolate behavior)");
     }
 
     // Configure request options for development vs production
