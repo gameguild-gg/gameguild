@@ -62,7 +62,7 @@ public class ContentInteractionMutations {
       return new ContentInteractionResult { Success = true, ErrorMessage = null, Interaction = interaction };
     }
     catch (InvalidOperationException ex) { return new ContentInteractionResult { Success = false, ErrorMessage = ex.Message, Interaction = null }; }
-    catch (Exception ex) { return new ContentInteractionResult { Success = false, ErrorMessage = "An unexpected error occurred while updating progress.", Interaction = null }; }
+    catch (Exception) { return new ContentInteractionResult { Success = false, ErrorMessage = "An unexpected error occurred while updating progress.", Interaction = null }; }
   }
 
   /// <summary>
@@ -88,7 +88,7 @@ public class ContentInteractionMutations {
       return new ContentInteractionResult { Success = true, ErrorMessage = null, Interaction = interaction };
     }
     catch (InvalidOperationException ex) { return new ContentInteractionResult { Success = false, ErrorMessage = ex.Message, Interaction = null }; }
-    catch (Exception ex) { return new ContentInteractionResult { Success = false, ErrorMessage = "An unexpected error occurred while submitting the interaction.", Interaction = null }; }
+    catch (Exception) { return new ContentInteractionResult { Success = false, ErrorMessage = "An unexpected error occurred while submitting the interaction.", Interaction = null }; }
   }
 
   /// <summary>
@@ -111,7 +111,7 @@ public class ContentInteractionMutations {
       return new ContentInteractionResult { Success = true, ErrorMessage = null, Interaction = interaction };
     }
     catch (InvalidOperationException ex) { return new ContentInteractionResult { Success = false, ErrorMessage = ex.Message, Interaction = null }; }
-    catch (Exception ex) { return new ContentInteractionResult { Success = false, ErrorMessage = "An unexpected error occurred while completing the interaction.", Interaction = null }; }
+    catch (Exception) { return new ContentInteractionResult { Success = false, ErrorMessage = "An unexpected error occurred while completing the interaction.", Interaction = null }; }
   }
 
   /// <summary>
@@ -137,6 +137,6 @@ public class ContentInteractionMutations {
       return new ContentInteractionResult { Success = true, ErrorMessage = null, Interaction = interaction };
     }
     catch (InvalidOperationException ex) { return new ContentInteractionResult { Success = false, ErrorMessage = ex.Message, Interaction = null }; }
-    catch (Exception ex) { return new ContentInteractionResult { Success = false, ErrorMessage = "An unexpected error occurred while updating time spent.", Interaction = null }; }
+    catch (Exception) { return new ContentInteractionResult { Success = false, ErrorMessage = "An unexpected error occurred while updating time spent.", Interaction = null }; }
   }
 }

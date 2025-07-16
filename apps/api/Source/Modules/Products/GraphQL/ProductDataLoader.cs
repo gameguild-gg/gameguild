@@ -20,7 +20,7 @@ public class ProductDataLoader : BatchDataLoader<Guid, Product?>, IProductDataLo
     IServiceProvider serviceProvider,
     DataLoaderOptions? options = null
   )
-    : base(batchScheduler, options) {
+    : base(batchScheduler, options ?? new DataLoaderOptions()) {
     _serviceProvider = serviceProvider;
   }
 

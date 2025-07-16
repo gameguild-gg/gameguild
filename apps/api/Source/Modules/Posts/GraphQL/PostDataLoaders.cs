@@ -18,7 +18,7 @@ public class UserDataLoader : BatchDataLoader<Guid, User>, IUserDataLoader {
     IDbContextFactory<ApplicationDbContext> contextFactory,
     DataLoaderOptions? options = null
   )
-    : base(batchScheduler, options) {
+    : base(batchScheduler, options ?? new DataLoaderOptions()) {
     _contextFactory = contextFactory;
   }
 
