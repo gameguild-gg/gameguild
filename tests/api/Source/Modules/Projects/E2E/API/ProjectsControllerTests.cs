@@ -356,7 +356,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     await _context.SaveChangesAsync();
 
     // Act
-    var response = await _client.GetAsync($"/projects/category/{categoryId}");
+    var response = await _client.GetAsync($"/api/projects/category/{categoryId}");
 
     // Assert
     Assert.True(response.IsSuccessStatusCode);
@@ -399,7 +399,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     await _context.SaveChangesAsync();
 
     // Act
-    var response = await _client.GetAsync($"/projects/status/{ContentStatus.Published}");
+    var response = await _client.GetAsync($"/api/projects?status={ContentStatus.Published}");
 
     // Assert
     Assert.True(response.IsSuccessStatusCode);
@@ -461,7 +461,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     }
 
     // Act
-    var response = await _client.GetAsync("/projects/public");
+    var response = await _client.GetAsync("/api/projects?visibility=Public&status=Published");
 
     // Debug: Check what we actually got
     var content = await response.Content.ReadAsStringAsync();

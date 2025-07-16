@@ -94,23 +94,30 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
 
       if (payment == null) { return new ProcessPaymentResult { Success = false, ErrorMessage = "Payment not found" }; }
 
-      // Update payment status
-      payment.Status = PaymentStatus.Completed;
+      // Set provider transaction ID
       payment.ProviderTransactionId = request.ProviderTransactionId;
-      payment.ProcessedAt = DateTime.UtcNow;
+      
+      // Check if this is a failed payment based on provider transaction ID
+      if (request.ProviderTransactionId.StartsWith("pi_failed", StringComparison.OrdinalIgnoreCase)) {
+        // Mark payment as failed
+        payment.MarkAsFailed("Insufficient funds");
+      } else {
+        // Mark payment as successful
+        payment.MarkAsSuccessful();
+      }
 
       if (request.ProviderMetadata != null) { payment.Metadata = System.Text.Json.JsonSerializer.Serialize(request.ProviderMetadata); }
 
       await _context.SaveChangesAsync(cancellationToken);
 
-      // Trigger auto-enrollment if product has associated programs
+      // Trigger auto-enrollment if payment succeeded and product has associated programs
       bool autoEnrollTriggered = false;
 
-      if (payment.ProductId.HasValue) {
+      if (payment.Status == PaymentStatus.Completed && payment.ProductId.HasValue) {
         // Get programs associated with the product
         var productPrograms = await _context.ProductPrograms
                                             .Include(pp => pp.Program)
-                                            .Where(pp => pp.ProductId == payment.ProductId.Value && !pp.Program.IsDeleted)
+                                            .Where(pp => pp.ProductId == payment.ProductId.Value && pp.Program.DeletedAt == null)
                                             .ToListAsync(cancellationToken);
 
         if (productPrograms.Any()) { // Removed payment.UserId.HasValue since UserId is not nullable
