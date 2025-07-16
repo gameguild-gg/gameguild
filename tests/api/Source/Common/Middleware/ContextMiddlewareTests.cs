@@ -28,7 +28,8 @@ public class ContextMiddlewareTests
     public async Task ContextMiddleware_SetsUserAndTenantContext_Successfully()
     {
         // Arrange
-        var httpContext = CreateHttpContextWithUser("test-user-id", "test@example.com", "TestTenant");
+        var testUserId = Guid.NewGuid().ToString();
+        var httpContext = CreateHttpContextWithUser(testUserId, "test@example.com", "TestTenant");
         var middleware = new ContextMiddleware(
             next: (context) => Task.CompletedTask,
             logger: _logger
@@ -44,7 +45,7 @@ public class ContextMiddlewareTests
 
         // Assert
         Assert.True(userContext.IsAuthenticated);
-        Assert.Equal(Guid.Parse("test-user-id"), userContext.UserId);
+        Assert.Equal(Guid.Parse(testUserId), userContext.UserId);
         Assert.Equal("test@example.com", userContext.Email);
         Assert.NotNull(httpContext.Items["UserContext"]);
         Assert.NotNull(httpContext.Items["TenantContext"]);
@@ -54,13 +55,14 @@ public class ContextMiddlewareTests
     public void UserContext_ReturnsCorrectUserInformation()
     {
         // Arrange
-        var httpContext = CreateHttpContextWithUser("test-user-id", "test@example.com", "TestTenant");
+        var testUserId = Guid.NewGuid().ToString();
+        var httpContext = CreateHttpContextWithUser(testUserId, "test@example.com", "TestTenant");
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         var userContext = new UserContext(httpContextAccessor);
 
         // Act & Assert
         Assert.True(userContext.IsAuthenticated);
-        Assert.Equal(Guid.Parse("test-user-id"), userContext.UserId);
+        Assert.Equal(Guid.Parse(testUserId), userContext.UserId);
         Assert.Equal("test@example.com", userContext.Email);
         Assert.Contains("Admin", userContext.Roles);
     }
@@ -69,7 +71,8 @@ public class ContextMiddlewareTests
     public void TenantContext_ReturnsCorrectTenantInformation()
     {
         // Arrange
-        var httpContext = CreateHttpContextWithUser("test-user-id", "test@example.com", "TestTenant");
+        var testUserId = Guid.NewGuid().ToString();
+        var httpContext = CreateHttpContextWithUser(testUserId, "test@example.com", "TestTenant");
         httpContext.Request.Headers.Add("X-Tenant-Id", "tenant-123");
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         var tenantContext = new TenantContext(httpContextAccessor);
@@ -102,7 +105,8 @@ public class ContextMiddlewareTests
             new Claim(ClaimTypes.Email, email),
             new Claim(ClaimTypes.Name, "Test User"),
             new Claim(ClaimTypes.Role, "Admin"),
-            new Claim("tenant", tenantName)
+            new Claim("tenant_name", tenantName),
+            new Claim("tenant_active", "true")
         };
 
         var identity = new ClaimsIdentity(claims, "Test");

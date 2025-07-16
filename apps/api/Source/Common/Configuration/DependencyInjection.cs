@@ -191,6 +191,9 @@ public static class DependencyInjection {
     var dbOptions = InfrastructureConfiguration.CreateDatabaseOptions(configuration);
 
     services.AddDbContext<ApplicationDbContext>(options => { InfrastructureConfiguration.ConfigureDbContext(options, dbOptions); });
+    
+    // Add DbContext factory for GraphQL DataLoaders
+    services.AddDbContextFactory<ApplicationDbContext>(options => { InfrastructureConfiguration.ConfigureDbContext(options, dbOptions); });
 
     return services;
   }

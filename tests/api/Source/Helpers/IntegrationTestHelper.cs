@@ -93,6 +93,16 @@ namespace GameGuild.Tests.Helpers {
                 }
               );
 
+              // Add DbContextFactory for GraphQL DataLoaders with singleton options
+              services.AddSingleton<DbContextOptions<ApplicationDbContext>>(provider => {
+                  var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+                  var dbName = databaseName ?? "TestDatabase";
+                  optionsBuilder.UseInMemoryDatabase(dbName);
+                  optionsBuilder.EnableSensitiveDataLogging();
+                  return optionsBuilder.Options;
+              });
+              services.AddDbContextFactory<ApplicationDbContext>();
+
               // Override auth configuration for tests
               services.AddAuthentication("Test")
                       .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, TestAuthHandler>(
