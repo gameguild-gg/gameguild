@@ -301,7 +301,7 @@ public static class DependencyInjection {
                                    .AddMutationType<Mutation>();
 
       // Configure core GraphQL features
-      ConfigureGraphQLFeatures(graphqlBuilder, options);
+      ConfigureGraphQLFeatures(graphqlBuilder, options, logger);
 
       // Register core modules (always required)
       RegisterCoreModules(graphqlBuilder, options, logger);
@@ -313,7 +313,7 @@ public static class DependencyInjection {
       if (options.EnableAdvancedModules) { RegisterAdvancedModules(graphqlBuilder, options, logger); }
 
       // Configure GraphQL server options
-      ConfigureServerOptions(graphqlBuilder, options);
+      ConfigureServerOptions(graphqlBuilder, options, logger);
 
       stopwatch.Stop();
       logger?.LogInformation("GraphQL infrastructure configured in {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
@@ -330,7 +330,7 @@ public static class DependencyInjection {
   /// <summary>
   /// Configures core GraphQL features like filtering, sorting, projections, etc.
   /// </summary>
-  private static void ConfigureGraphQLFeatures(IRequestExecutorBuilder builder, GraphQLOptions options) {
+  private static void ConfigureGraphQLFeatures(IRequestExecutorBuilder builder, GraphQLOptions options, ILogger? logger = null) {
     // Add global object identification if enabled
     if (options.EnableGlobalObjectIdentification) { builder.AddGlobalObjectIdentification(); }
 
@@ -599,7 +599,7 @@ public static class DependencyInjection {
   /// <summary>
   /// Configures GraphQL server options based on provided configuration
   /// </summary>
-  private static void ConfigureServerOptions(IRequestExecutorBuilder builder, GraphQLOptions options) {
+  private static void ConfigureServerOptions(IRequestExecutorBuilder builder, GraphQLOptions options, ILogger? logger = null) {
     builder.ModifyOptions(opt => {
         opt.RemoveUnreachableTypes = options.RemoveUnreachableTypes;
         opt.EnsureAllNodesCanBeResolved = options.EnsureAllNodesCanBeResolved;
@@ -616,7 +616,11 @@ public static class DependencyInjection {
     }
     else
     {
-        logger?.LogInformation("Introspection enabled (default HotChocolate behavior)");
+        // Explicitly enable introspection for test environments
+        builder.ModifyOptions(opt => {
+            opt.EnableIntrospection = true;
+        });
+        logger?.LogInformation("Introspection explicitly enabled for test environment");
     }
 
     // Configure request options for development vs production
