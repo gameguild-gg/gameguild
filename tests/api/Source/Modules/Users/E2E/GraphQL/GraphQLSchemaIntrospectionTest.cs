@@ -15,10 +15,10 @@ namespace GameGuild.Tests.Modules.Users.E2E.GraphQL {
 
     [Fact]
     public async Task Should_Show_Available_Query_Fields() {
-      // Arrange
-      var token = _fixture.GenerateTestToken();
-      _client.DefaultRequestHeaders.Authorization =
-        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+      // Arrange - Don't use any authorization header to test if it works without auth
+      // var token = _fixture.GenerateTestToken();
+      // _client.DefaultRequestHeaders.Authorization =
+      //   new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
       var query = @"
                 query IntrospectSchema {
