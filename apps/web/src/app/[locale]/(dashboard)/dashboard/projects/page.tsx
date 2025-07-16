@@ -27,44 +27,38 @@ export default function ProjectsPage() {
       setCreating(true);
       console.log('Creating test project...');
 
-      const response = await fetch('/api/test-create-project', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: `Test Project ${new Date().toLocaleTimeString()}`,
-          description: 'This is a test project created to verify authentication and data flow',
-          shortDescription: 'Test project for verification',
-          status: 'not-started',
-          visibility: 'Public',
-          websiteUrl: 'https://example.com',
-          repositoryUrl: 'https://github.com/example/test',
-        }),
+      const { testCreateProject } = await import('@/lib/core/actions');
+      
+      const result = await testCreateProject({
+        title: `Test Project ${new Date().toLocaleTimeString()}`,
+        description: 'This is a test project created to verify authentication and data flow',
+        shortDescription: 'Test project for verification',
+        status: 'not-started',
+        visibility: 'Public',
+        tags: ['test', 'verification'],
+        technologies: ['Next.js', 'TypeScript'],
+        difficulty: 'Beginner',
+        estimatedHours: 1,
+        category: 'Web Development',
+        websiteUrl: 'https://example.com',
+        repositoryUrl: 'https://github.com/example/test',
       });
-      if (response.ok) {
-        const project = await response.json();
-        console.log('Project created successfully:', project);
-        // Clear all project-related cache
-        await clearProjectCache();
+      
+      console.log('Project created successfully:', result);      // Clear all project-related cache
+      await clearProjectCache();
 
-        // Revalidate Next.js cache
-        await revalidateProjects();
+      // Revalidate Next.js cache
+      await revalidateProjects();
 
-        // Force router refresh to clear any cached data
-        router.refresh();
+      // Force router refresh to clear any cached data
+      router.refresh();
 
-        // Add a small delay to ensure cache clearing takes effect
-        await new Promise((resolve) => setTimeout(resolve, 300));
+      // Add a small delay to ensure cache clearing takes effect
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
-        // Refresh the projects list
-        const projectsData = await getProjects();
-        setProjects(projectsData);
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to create project:', errorData);
-        setError(`Failed to create project: ${errorData.error}`);
-      }
+      // Refresh the projects list
+      const projectsData = await getProjects();
+      setProjects(projectsData);
     } catch (err) {
       console.error('Error creating project:', err);
       setError('Error creating test project');

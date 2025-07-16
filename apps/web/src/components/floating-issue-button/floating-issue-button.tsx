@@ -17,24 +17,20 @@ export function FeedbackFloatingButton({ className }: FloatingFeedbackButtonProp
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/version')
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data.version) {
-          setVersion(data.version);
-        } else {
-          throw new Error('Version not found in response');
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching version:', error);
-        setError('Failed to fetch version');
-      });
+    import('@/lib/core/actions').then(({ getVersion }) => {
+      getVersion()
+        .then((data) => {
+          if (data.version) {
+            setVersion(data.version);
+          } else {
+            throw new Error('Version not found in response');
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching version:', error);
+          setError('Failed to fetch version');
+        });
+    });
   }, []);
 
   const getActionUrl = (action: 'bug_report' | 'feature_request' | 'discussion') => {

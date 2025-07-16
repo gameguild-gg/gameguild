@@ -64,21 +64,18 @@ export function ActivitySubmission({
     setShowConfirmDialog(false);
 
     try {
-      // TODO: Implement actual API call
-      const response = await fetch('/api/activities/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          activityId,
-          activityType,
-          submissionData,
-          isGraded,
-          attempt: currentAttempts + 1,
-        }),
+      const { submitActivity } = await import('@/lib/courses/server-actions');
+      
+      const result = await submitActivity({
+        activityId,
+        activityType,
+        submissionData,
+        isGraded,
+        attempt: currentAttempts + 1,
       });
 
-      if (response.ok) {
-        const result = await response.json();
+      if (result.success) {
+        const submission = result;
         
         toast({
           title: 'Submission successful',

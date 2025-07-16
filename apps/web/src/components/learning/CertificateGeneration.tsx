@@ -39,23 +39,20 @@ export function CertificateGeneration({
     setIsGenerating(true);
 
     try {
-      const response = await fetch('/api/certificates/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courseId,
-          courseTitle,
-          studentName,
-          completionDate,
-          instructorName,
-          skillsLearned,
-          finalGrade,
-        }),
+      const { generateCertificate } = await import('@/lib/certificates/actions');
+      
+      const result = await generateCertificate({
+        courseId,
+        courseTitle,
+        studentName,
+        completionDate,
+        instructorName,
+        skillsLearned,
+        finalGrade,
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        setCertificateUrl(result.certificateUrl);
+      if (result.success) {
+        setCertificateUrl(result.certificate.downloadUrl);
         
         toast({
           title: 'Certificate generated!',

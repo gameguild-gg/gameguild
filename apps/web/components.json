@@ -5,17 +5,16 @@
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "src/styles/globals.css",
+    "css": "../../packages/ui/src/styles/globals.css",
     "baseColor": "neutral",
-    "cssVariables": true,
-    "prefix": ""
+    "cssVariables": true
   },
+  "iconLibrary": "lucide",
   "aliases": {
     "components": "@/components",
-    "utils": "@/lib/utils",
-    "ui": "@/components/ui",
+    "hooks": "@game-guild/ui/hooks",
     "lib": "@/lib",
-    "hooks": "@/hooks"
-  },
-  "iconLibrary": "lucide"
+    "utils": "@game-guild/ui/lib/utils",
+    "ui": "@game-guild/ui/components"
+  }
 }

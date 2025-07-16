@@ -57,21 +57,13 @@ export default function Page(): React.JSX.Element {
     setLoading(true);
     try {
       console.log('Testing direct API call to CMS backend');
-      const response = await fetch('/api/test-cms', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-          'Content-Type': 'application/json',
-          ...(currentTenant && typeof currentTenant === 'object' && currentTenant !== null && 'id' in currentTenant
-            ? { 'X-Tenant-Id': (currentTenant as any).id }
-            : {}),
-        },
-      });
+      const { testCmsConnection } = await import('@/lib/api/actions');
+      
+      const result = await testCmsConnection();
 
-      const result = await response.json();
       setTestResults((prev: Record<string, any>) => ({
         ...prev,
-        directApi: { status: response.status, data: result },
+        directApi: { status: 'success', data: result },
       }));
       console.log('Direct API result:', result);
     } catch (error) {
