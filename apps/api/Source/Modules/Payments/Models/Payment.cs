@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using GameGuild.Common;
 
 
 namespace GameGuild.Modules.Payments;
@@ -39,6 +40,11 @@ public class Payment {
   /// Payment method used
   /// </summary>
   public PaymentMethod Method { get; set; }
+
+  /// <summary>
+  /// Payment gateway used for processing
+  /// </summary>
+  public PaymentGateway Gateway { get; set; } = PaymentGateway.Stripe;
 
   /// <summary>
   /// External payment provider transaction ID
