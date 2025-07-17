@@ -10,7 +10,9 @@ import { ContentNavigationSidebar } from './content-navigation-sidebar';
 import { LessonViewer } from './lesson-viewer';
 import { ActivityComponent } from './activity-component';
 import { ReportContentDialog } from './report-content-dialog';
+import { CertificateNotification } from './certificate-notification';
 import { ContentReportService } from '@/lib/courses/services/content-report.service';
+import { CourseCompletionCertificateService } from '@/lib/courses/services/certificate.service';
 
 interface ContentItem {
   id: string;
@@ -468,7 +470,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                     {currentItem.type === 'lesson' ? (
                       <LessonViewer item={currentItem} onComplete={() => handleItemComplete(currentItem.id)} />
                     ) : (
-                      <ActivityComponent item={currentItem} onComplete={(score) => handleItemComplete(currentItem.id, score)} />
+                      <ActivityComponent item={currentItem} onComplete={(score: number) => handleItemComplete(currentItem.id, score)} />
                     )}
                   </CardContent>
                 </Card>

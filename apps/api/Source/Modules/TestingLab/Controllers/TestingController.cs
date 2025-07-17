@@ -598,7 +598,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
   // POST: testing/sessions/{id}/attendance
   [HttpPost("sessions/{sessionId}/attendance")]
-  [RequireResourcePermission<SessionRegistration>(PermissionType.Update)]
+  [RequireResourcePermission<SessionRegistration>(PermissionType.Edit)]
   public async Task<ActionResult> UpdateAttendance(Guid sessionId, UpdateAttendanceDto attendanceDto) {
     try {
       // Get the current authenticated user's ID
@@ -616,7 +616,59 @@ public class TestingController(ITestService testService) : ControllerBase {
     }
   }
 
+  // POST: testing/feedback/{id}/report
+  [HttpPost("feedback/{feedbackId}/report")]
+  [RequireResourcePermission<TestingFeedback>(PermissionType.Report)]
+  public async Task<ActionResult> ReportFeedback(Guid feedbackId, ReportFeedbackDto reportDto) {
+    try {
+      // Get the current authenticated user's ID
+      var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId)) 
+        return Unauthorized("User ID not found in token");
+
+      await testService.ReportFeedbackAsync(feedbackId, reportDto.Reason, currentUserId);
+
+      return Ok(new { message = "Feedback reported successfully" });
+    }
+    catch (Exception ex) {
+      return BadRequest($"Error reporting feedback: {ex.Message}");
+    }
+  }
+
+  // POST: testing/feedback/{id}/quality
+  [HttpPost("feedback/{feedbackId}/quality")]
+  [RequireResourcePermission<TestingFeedback>(PermissionType.Edit)]
+  public async Task<ActionResult> RateFeedbackQuality(Guid feedbackId, RateFeedbackQualityDto qualityDto) {
+    try {
+      // Get the current authenticated user's ID
+      var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId)) 
+        return Unauthorized("User ID not found in token");
+
+      await testService.RateFeedbackQualityAsync(feedbackId, qualityDto.Quality, currentUserId);
+
+      return Ok(new { message = "Feedback quality rated successfully" });
+    }
+    catch (Exception ex) {
+      return BadRequest($"Error rating feedback quality: {ex.Message}");
+    }
+  }
+
   #endregion
 }
 
 // DTOs for request bodies
+public class UpdateAttendanceDto {
+  public Guid UserId { get; set; }
+  public AttendanceStatus AttendanceStatus { get; set; }
+}
+
+public class ReportFeedbackDto {
+  public string Reason { get; set; } = string.Empty;
+}
+
+public class RateFeedbackQualityDto {
+  public FeedbackQuality Quality { get; set; }
+}

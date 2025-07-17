@@ -70,12 +70,38 @@ export interface TestingSession {
   };
 }
 
+export interface StudentAttendanceData {
+  id: string;
+  name: string;
+  email: string;
+  team: string;
+  block1Sessions: number;
+  block2Sessions: number;
+  block3Sessions: number;
+  block4Sessions: number;
+  totalSessions: number;
+  gamesTested: number;
+  status: 'onTrack' | 'atRisk' | 'failing';
+}
+
+export interface SessionAttendanceData {
+  id: string;
+  sessionName: string;
+  date: string;
+  location: string;
+  totalCapacity: number;
+  studentsRegistered: number;
+  studentsAttended: number;
+  attendanceRate: number;
+  gamesTested: number;
+}
+
 export const testingLabApi = {
   // Testing Requests
   async getAvailableTestingRequests(): Promise<TestingRequest[]> {
     try {
-      const response = await apiClient.get('/testing/available-for-testing');
-      return response.data;
+      const response = await apiClient.request<TestingRequest[]>('/testing/available-for-testing');
+      return response;
     } catch (error) {
       console.error('Error fetching available testing requests:', error);
       throw error;
@@ -84,8 +110,8 @@ export const testingLabApi = {
 
   async getMyTestingRequests(): Promise<TestingRequest[]> {
     try {
-      const response = await apiClient.get('/testing/my-requests');
-      return response.data;
+      const response = await apiClient.request<TestingRequest[]>('/testing/my-requests');
+      return response;
     } catch (error) {
       console.error('Error fetching my testing requests:', error);
       throw error;
@@ -94,8 +120,8 @@ export const testingLabApi = {
 
   async getTestingRequest(id: string): Promise<TestingRequest> {
     try {
-      const response = await apiClient.get(`/testing/requests/${id}`);
-      return response.data;
+      const response = await apiClient.request<TestingRequest>(`/testing/requests/${id}`);
+      return response;
     } catch (error) {
       console.error('Error fetching testing request:', error);
       throw error;
@@ -104,8 +130,11 @@ export const testingLabApi = {
 
   async createSimpleTestingRequest(data: CreateSimpleTestingRequestDto): Promise<TestingRequest> {
     try {
-      const response = await apiClient.post('/testing/submit-simple', data);
-      return response.data;
+      const response = await apiClient.request<TestingRequest>('/testing/submit-simple', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      return response;
     } catch (error) {
       console.error('Error creating testing request:', error);
       throw error;
@@ -114,7 +143,10 @@ export const testingLabApi = {
 
   async submitFeedback(data: SubmitFeedbackDto): Promise<void> {
     try {
-      await apiClient.post('/testing/feedback', data);
+      await apiClient.request('/testing/feedback', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
     } catch (error) {
       console.error('Error submitting feedback:', error);
       throw error;
@@ -124,8 +156,8 @@ export const testingLabApi = {
   // Testing Sessions
   async getTestingSessions(): Promise<TestingSession[]> {
     try {
-      const response = await apiClient.get('/testing/sessions');
-      return response.data;
+      const response = await apiClient.request<TestingSession[]>('/testing/sessions');
+      return response;
     } catch (error) {
       console.error('Error fetching testing sessions:', error);
       throw error;
@@ -134,10 +166,46 @@ export const testingLabApi = {
 
   async getTestingSession(id: string): Promise<TestingSession> {
     try {
-      const response = await apiClient.get(`/testing/sessions/${id}`);
-      return response.data;
+      const response = await apiClient.request<TestingSession>(`/testing/sessions/${id}`);
+      return response;
     } catch (error) {
       console.error('Error fetching testing session:', error);
+      throw error;
+    }
+  },
+
+  // Attendance Reports
+  async getStudentAttendanceReport(): Promise<StudentAttendanceData[]> {
+    try {
+      const response = await apiClient.request<StudentAttendanceData[]>('/testing/attendance/students');
+      return response;
+    } catch (error) {
+      console.error('Error fetching student attendance report:', error);
+      throw error;
+    }
+  },
+
+  async getSessionAttendanceReport(): Promise<SessionAttendanceData[]> {
+    try {
+      const response = await apiClient.request<SessionAttendanceData[]>('/testing/attendance/sessions');
+      return response;
+    } catch (error) {
+      console.error('Error fetching session attendance report:', error);
+      throw error;
+    }
+  },
+
+  async updateAttendance(sessionId: string, userId: string, status: string): Promise<void> {
+    try {
+      await apiClient.request(`/testing/sessions/${sessionId}/attendance`, {
+        method: 'POST',
+        body: JSON.stringify({
+          userId,
+          attendanceStatus: status,
+        }),
+      });
+    } catch (error) {
+      console.error('Error updating attendance:', error);
       throw error;
     }
   },
