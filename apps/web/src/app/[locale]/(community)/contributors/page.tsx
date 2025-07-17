@@ -1,7 +1,12 @@
 import React from 'react';
 import { Metadata } from 'next';
 import { getContributors } from '@/lib/contributors';
-import { ContributorsHeader, TopContributorsSection, GlobalRankingTable, ProjectStats, HorizontalRoadmap, HowToContribute } from '@/components/contributors';
+import { ContributorsHeader } from '@/components/contributors/contributors-header';
+import { TopContributorsSection } from '@/components/contributors/top-contributors-section';
+import { GlobalRankingTable } from '@/components/contributors/global-ranking-table';
+import { ProjectStats } from '@/components/contributors/project-stats-simple';
+import { HorizontalRoadmap } from '@/components/contributors/horizontal-roadmap';
+import { HowToContribute } from '@/components/contributors/how-to-contribute';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -28,7 +33,8 @@ export default async function Page(): Promise<React.JSX.Element> {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
       {/* Project Stats Overview - Full Width */}
-      <ProjectStats />
+      {/* <ProjectStats /> */}
+      <div>Project Stats Placeholder</div>
 
       {/* Other sections with centered content */}
       <div className="max-w-7xl mx-auto px-6">

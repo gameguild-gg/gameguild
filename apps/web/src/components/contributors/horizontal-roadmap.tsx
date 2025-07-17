@@ -77,12 +77,12 @@ export function HorizontalRoadmap() {
   const currentMilestone = milestones.find((m) => m.id === selectedMilestone) || milestones[4];
 
   return (
-    <section className="w-full py-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-y border-slate-700">
+    <section className="w-full py-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Centered content container */}
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-full mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-full mb-4">
             <MapPin className="w-4 h-4 text-purple-400" />
             <span className="text-purple-400 text-sm font-medium">Development Timeline</span>
           </div>
@@ -138,7 +138,7 @@ export function HorizontalRoadmap() {
             </div>
 
             {/* Selected milestone details */}
-            <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-lg p-6 border border-slate-700/50 shadow-lg">
+            <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-lg p-6 shadow-lg">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">{currentMilestone.title}</h3>
@@ -167,7 +167,10 @@ export function HorizontalRoadmap() {
                 <h4 className="text-sm font-medium text-slate-300 mb-3">Key Features</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {currentMilestone.features.map((feature, index) => (
-                    <div key={index} className="flex items-center text-sm text-slate-300 bg-slate-800/50 rounded-lg p-3 border border-slate-600/30 hover:bg-slate-700/50 transition-colors">
+                    <div
+                      key={index}
+                      className="flex items-center text-sm text-slate-300 bg-slate-800/50 rounded-lg p-3 hover:bg-slate-700/50 transition-colors"
+                    >
                       <div
                         className={`w-2 h-2 rounded-full mr-3 ${
                           currentMilestone.status === 'completed' ? 'bg-green-400' : currentMilestone.status === 'current' ? 'bg-blue-400' : 'bg-slate-400'

@@ -3,7 +3,7 @@ import { Code, BookOpen, Bug, Github, Target, GitFork } from 'lucide-react';
 
 export function HowToContribute() {
   return (
-    <section id="contributing-section" className="w-full py-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-t border-slate-700">
+    <section id="contributing-section" className="w-full py-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Centered content container */}
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-8">
@@ -20,7 +20,7 @@ export function HowToContribute() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {/* Code Contributions */}
-          <div className="group relative bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-blue-600/10 rounded-xl p-6 text-center border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
+          <div className="group relative bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-blue-600/10 rounded-xl p-6 text-center border border-blue-500/20 hover:border-blue-400/40 hover:from-blue-500/20 hover:via-purple-500/10 hover:to-blue-600/20 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
               <Code className="w-6 h-6 text-white" />
             </div>
@@ -29,7 +29,7 @@ export function HowToContribute() {
           </div>
 
           {/* Documentation */}
-          <div className="group relative bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-green-600/10 rounded-xl p-6 text-center border border-green-500/20 hover:border-green-400/40 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/10">
+          <div className="group relative bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-green-600/10 rounded-xl p-6 text-center border border-green-500/20 hover:border-green-400/40 hover:from-green-500/20 hover:via-emerald-500/10 hover:to-green-600/20 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/10">
             <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
@@ -38,7 +38,7 @@ export function HowToContribute() {
           </div>
 
           {/* Bug Reports */}
-          <div className="group relative bg-gradient-to-br from-orange-500/10 via-red-500/5 to-orange-600/10 rounded-xl p-6 text-center border border-orange-500/20 hover:border-orange-400/40 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10">
+          <div className="group relative bg-gradient-to-br from-orange-500/10 via-red-500/5 to-orange-600/10 rounded-xl p-6 text-center border border-orange-500/20 hover:border-orange-400/40 hover:from-orange-500/20 hover:via-red-500/10 hover:to-orange-600/20 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10">
             <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
               <Bug className="w-6 h-6 text-white" />
             </div>
@@ -62,7 +62,7 @@ export function HowToContribute() {
             href="https://github.com/gameguild-gg/website/issues"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-6 py-3 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-800 hover:border-slate-500 transition-all duration-300 font-medium"
+            className="inline-flex items-center justify-center px-6 py-3 bg-slate-800/50 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700/50 hover:border-slate-500 transition-all duration-300 font-medium"
           >
             <Target className="mr-2 w-4 h-4" />
             Browse Issues
@@ -71,7 +71,7 @@ export function HowToContribute() {
             href="https://github.com/gameguild-gg/website/fork"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-6 py-3 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-800 hover:border-slate-500 transition-all duration-300 font-medium"
+            className="inline-flex items-center justify-center px-6 py-3 bg-slate-800/50 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700/50 hover:border-slate-500 transition-all duration-300 font-medium"
           >
             <GitFork className="mr-2 w-4 h-4" />
             Fork Repository

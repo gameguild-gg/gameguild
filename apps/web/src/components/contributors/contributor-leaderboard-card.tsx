@@ -4,6 +4,7 @@ import { Card } from '@game-guild/ui/components/card';
 import { Contributor } from '@/lib/contributors';
 import { ContributorStats } from './contributor-stats';
 import { numberToAbbreviation } from '@/lib/utils';
+import { Medal, Trophy, Award } from 'lucide-react';
 
 interface ContributorLeaderboardCardProps {
   contributor: Contributor;
@@ -13,26 +14,40 @@ interface ContributorLeaderboardCardProps {
 
 export const ContributorLeaderboardCard: React.FC<ContributorLeaderboardCardProps> = ({ contributor, rank, showMedal = false }) => {
   const getMedalIcon = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
+    if (rank === 1) return <Trophy className="w-8 h-8 text-yellow-400" />;
+    if (rank === 2) return <Medal className="w-8 h-8 text-slate-400" />;
+    if (rank === 3) return <Award className="w-8 h-8 text-amber-600" />;
     return null;
   };
 
   const getBorderColor = (rank: number) => {
-    if (rank === 1) return 'border-yellow-500';
-    if (rank === 2) return 'border-zinc-400';
-    if (rank === 3) return 'border-amber-600';
-    return 'border-border';
+    if (rank === 1) return 'border-yellow-500/50';
+    if (rank === 2) return 'border-slate-400/50';
+    if (rank === 3) return 'border-amber-600/50';
+    return 'border-slate-700/50';
+  };
+
+  const getGradientBg = (rank: number) => {
+    if (rank === 1) return 'from-yellow-500/10 via-orange-500/5 to-yellow-600/10';
+    if (rank === 2) return 'from-slate-500/10 via-slate-400/5 to-slate-600/10';
+    if (rank === 3) return 'from-amber-500/10 via-orange-500/5 to-amber-600/10';
+    return 'from-slate-900/50 to-slate-800/50';
   };
 
   return (
-    <Card className={`bg-card ${getBorderColor(rank)} border-2 p-6 relative overflow-hidden transition-all hover:scale-105`}>
+    <Card
+      className={`bg-gradient-to-br ${getGradientBg(rank)} backdrop-blur-sm ${getBorderColor(rank)} border-2 p-6 relative overflow-hidden transition-all hover:scale-105 hover:shadow-xl shadow-lg`}
+    >
       {/* Medal */}
-      {showMedal && rank <= 3 && <div className="absolute top-4 right-4 text-4xl">{getMedalIcon(rank)}</div>}
+      {showMedal && rank <= 3 && <div className="absolute top-4 right-4">{getMedalIcon(rank)}</div>}
+
+      {/* Background Icon */}
+      <div className="absolute bottom-4 right-4 opacity-10">
+        <Trophy className="w-24 h-24 text-white blur-sm" />
+      </div>
 
       {/* Rank Badge */}
-      <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-sm font-bold px-2 py-1 rounded">#{rank}</div>
+      <div className="absolute top-2 left-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-bold px-2 py-1 rounded">#{rank}</div>
 
       {/* Avatar and Name */}
       <div className="flex items-center gap-4 mb-6 mt-4">
@@ -41,11 +56,11 @@ export const ContributorLeaderboardCard: React.FC<ContributorLeaderboardCardProp
           alt={contributor.name || contributor.login}
           width={64}
           height={64}
-          className="rounded-full border-2 border-border"
+          className="rounded-full"
         />
         <div>
-          <h3 className="text-xl font-bold text-foreground">{contributor.name || contributor.login}</h3>
-          <p className="text-muted-foreground">@{contributor.login}</p>
+          <h3 className="text-xl font-bold text-white">{contributor.name || contributor.login}</h3>
+          <p className="text-slate-400">@{contributor.login}</p>
         </div>
       </div>
 
