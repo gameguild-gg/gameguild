@@ -2,11 +2,6 @@ import { execSync } from 'child_process';
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { createHash } from 'crypto';
 import { join } from 'path';
-import type { Response } from 'node-fetch';
-
-// Dynamic import for node-fetch in ESM
-const fetch = (...args: Parameters<typeof import('node-fetch').default>): Promise<Response> =>
-  import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 interface SwaggerInfo {
   version?: string;
@@ -61,17 +56,13 @@ async function fetchSwaggerSpec(): Promise<SwaggerSpec> {
 
     clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 
-    const spec = await response.json() as SwaggerSpec;
+    const spec = (await response.json()) as SwaggerSpec;
     console.log('✅ Successfully fetched API specification');
     return spec;
   } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Request timed out - make sure API is running');
-    }
+    if (error instanceof Error && error.name === 'AbortError') throw new Error('Request timed out - make sure API is running');
     throw error;
   }
 }

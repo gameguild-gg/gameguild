@@ -81,13 +81,13 @@ export type AddUserToGroupDto = {
 export type ArchiveProjectResultReadable = {
   success?: boolean;
   project?: ProjectReadable;
-  errorMessage?: string | null;
+  error?: string | null;
 };
 
 export type ArchiveProjectResultWritable = {
   success?: boolean;
   project?: ProjectWritable;
-  errorMessage?: string | null;
+  error?: string | null;
 };
 
 export type AttendanceStatus = 0 | 1 | 2 | 3;
@@ -137,7 +137,7 @@ export type CancelPaymentRequest = {
 export type CancelPaymentResult = {
   success?: boolean;
   payment?: Payment;
-  errorMessage?: string | null;
+  error?: string | null;
 };
 
 export type CertificateReadable = {
@@ -628,7 +628,7 @@ export type CreatePaymentRequest = {
 export type CreatePaymentResult = {
   success?: boolean;
   payment?: Payment;
-  errorMessage?: string | null;
+  error?: string | null;
   clientSecret?: string | null;
 };
 
@@ -705,13 +705,13 @@ export type CreateProjectRequest = {
 export type CreateProjectResultReadable = {
   success?: boolean;
   project?: ProjectReadable;
-  errorMessage?: string | null;
+  error?: string | null;
 };
 
 export type CreateProjectResultWritable = {
   success?: boolean;
   project?: ProjectWritable;
-  errorMessage?: string | null;
+  error?: string | null;
 };
 
 export type CreateSimpleTestingRequestDto = {
@@ -874,7 +874,7 @@ export type CredentialResponseDtoWritable = {
 
 export type DeleteProjectResult = {
   success?: boolean;
-  errorMessage?: string | null;
+  error?: string | null;
 };
 
 export type DevelopmentStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -931,7 +931,7 @@ export type FinancialTransactionReadable = {
   metadata?: string | null;
   processedAt?: string | null;
   failedAt?: string | null;
-  errorMessage?: string | null;
+  error?: string | null;
   failureReason?: string | null;
   fromUser?: UserReadable;
   toUser?: UserReadable;
@@ -963,7 +963,7 @@ export type FinancialTransactionWritable = {
   metadata?: string | null;
   processedAt?: string | null;
   failedAt?: string | null;
-  errorMessage?: string | null;
+  error?: string | null;
   failureReason?: string | null;
   fromUser?: UserWritable;
   toUser?: UserWritable;
@@ -1289,7 +1289,7 @@ export type ProcessPaymentRequest = {
 export type ProcessPaymentResult = {
   success?: boolean;
   payment?: Payment;
-  errorMessage?: string | null;
+  error?: string | null;
   autoEnrollTriggered?: boolean;
 };
 
@@ -2480,13 +2480,13 @@ export type PromoCodeUseWritable = {
 export type PublishProjectResultReadable = {
   success?: boolean;
   project?: ProjectReadable;
-  errorMessage?: string | null;
+  error?: string | null;
 };
 
 export type PublishProjectResultWritable = {
   success?: boolean;
   project?: ProjectWritable;
-  errorMessage?: string | null;
+  error?: string | null;
 };
 
 export type RateFeedbackQualityDto = {
@@ -2506,7 +2506,7 @@ export type RefundPaymentRequest = {
 export type RefundPaymentResult = {
   success?: boolean;
   refund?: PaymentRefund;
-  errorMessage?: string | null;
+  error?: string | null;
 };
 
 export type RefundStatus = 0 | 1 | 2 | 3 | 4;
@@ -3387,13 +3387,13 @@ export type TransactionType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export type UnpublishProjectResultReadable = {
   success?: boolean;
   project?: ProjectReadable;
-  errorMessage?: string | null;
+  error?: string | null;
 };
 
 export type UnpublishProjectResultWritable = {
   success?: boolean;
   project?: ProjectWritable;
-  errorMessage?: string | null;
+  error?: string | null;
 };
 
 export type UpdateActivityGradeDto = {
@@ -3504,13 +3504,13 @@ export type UpdateProjectRequest = {
 export type UpdateProjectResultReadable = {
   success?: boolean;
   project?: ProjectReadable;
-  errorMessage?: string | null;
+  error?: string | null;
 };
 
 export type UpdateProjectResultWritable = {
   success?: boolean;
   project?: ProjectWritable;
-  errorMessage?: string | null;
+  error?: string | null;
 };
 
 export type UpdateTenantDomainDto = {
