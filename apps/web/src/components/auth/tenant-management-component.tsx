@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useActionState, useEffect, useState } from 'react';
-import { createTenant, deleteTenant, getUserTenants, TenantActionState } from '@/lib/auth/actions/tenant.actions';
-import { TenantResponse } from '@/lib/tenants/types';
+import React, { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { TenantService } from '@/lib/tenants/tenant.service';
+import { TenantResponse, CreateTenantRequest } from '@/lib/tenants/types';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
@@ -13,31 +14,29 @@ import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Trash2 } from 'lucide-react';
 
-const initialState: TenantActionState = {
-  success: false,
-};
-
 export function TenantManagementComponent() {
-  const [createState, createFormAction, isCreating] = useActionState(createTenant, initialState);
+  const { data: session } = useSession();
   const [tenants, setTenants] = useState<TenantResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createSuccess, setCreateSuccess] = useState(false);
 
   // Load user tenants on component mount
   useEffect(() => {
-    loadTenants();
-  }, []);
+    if (session?.accessToken) {
+      loadTenants();
+    }
+  }, [session]);
 
   const loadTenants = async () => {
+    if (!session?.accessToken) return;
+    
     setLoading(true);
     setError(null);
     try {
-      const result = await getUserTenants();
-      if (result.success && Array.isArray(result.data)) {
-        setTenants(result.data);
-      } else {
-        setError(result.error || 'Failed to load tenants');
-      }
+      const tenantsData = await TenantService.getUserTenants(session.accessToken);
+      setTenants(tenantsData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load tenants');
     } finally {
@@ -45,30 +44,53 @@ export function TenantManagementComponent() {
     }
   };
 
+  const handleCreateTenant = async (formData: FormData) => {
+    if (!session?.accessToken) return;
+
+    setIsCreating(true);
+    setError(null);
+    setCreateSuccess(false);
+
+    try {
+      const tenantData: CreateTenantRequest = {
+        name: formData.get('name') as string,
+        description: formData.get('description') as string || undefined,
+        isActive: formData.get('isActive') === 'on',
+      };
+
+      await TenantService.createTenant(tenantData, session.accessToken);
+      setCreateSuccess(true);
+      await loadTenants(); // Refresh the list
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create tenant');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   const handleDeleteTenant = async (tenantId: string) => {
+    if (!session?.accessToken) return;
     if (!confirm('Are you sure you want to delete this tenant?')) {
       return;
     }
 
     try {
-      const result = await deleteTenant(tenantId);
-      if (result.success) {
-        // Refresh the tenant list
-        await loadTenants();
-      } else {
-        setError(result.error || 'Failed to delete tenant');
-      }
+      await TenantService.deleteTenant(tenantId, session.accessToken);
+      await loadTenants(); // Refresh the list
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete tenant');
     }
   };
 
-  // Refresh tenant list when a new tenant is created
-  useEffect(() => {
-    if (createState.success) {
-      loadTenants();
-    }
-  }, [createState.success]);
+  if (!session) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <p>Please sign in to manage tenants.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
