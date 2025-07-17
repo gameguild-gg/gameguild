@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/a
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
 import { ScrollArea } from '@game-guild/ui/components/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@game-guild/ui/components/popover';
-import { NotificationFilters } from '@/components/legacy/types/notification';
+import { NotificationFilters, Notification as AppNotification } from '@/components/legacy/types/notification';
 import {
   acceptProjectInvite,
   archiveNotification,
@@ -27,7 +27,7 @@ interface NotificationDropdownProps {
 }
 
 interface NotificationItemProps {
-  notification: Notification;
+  notification: AppNotification;
   onMarkAsRead: (id: string) => Promise<void>;
   onArchive: (id: string) => Promise<void>;
   onAccept?: (id: string) => Promise<void>;
@@ -50,7 +50,7 @@ const formatTimeAgo = (date: Date): string => {
   return date.toLocaleDateString();
 };
 
-const getNotificationIcon = (type: Notification['type']): string => {
+const getNotificationIcon = (type: AppNotification['type']): string => {
   switch (type) {
     case 'comment':
       return '💬';
@@ -84,7 +84,12 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onMar
   };
 
   return (
-    <div className={cn('flex gap-3 p-4 hover:bg-muted/50 transition-colors', !notification.isRead && 'bg-blue-50/50 dark:bg-blue-950/20')}>
+    <div
+      className={cn(
+        'flex gap-3 p-4 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 border-l-2 border-transparent hover:border-blue-400 dark:hover:border-blue-500',
+        !notification.isRead && 'bg-blue-50 dark:bg-blue-950 border-l-blue-500 dark:border-l-blue-400',
+      )}
+    >
       {/* Unread indicator */}
       {!notification.isRead && <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />}
 
@@ -139,22 +144,43 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onMar
         {notification.actionButtons && (
           <div className="flex gap-2 mt-3">
             {notification.actionButtons.accept && onAccept && (
-              <Button size="sm" disabled={isLoading} onClick={() => handleAction(() => onAccept(notification.id))}>
+              <Button
+                size="sm"
+                disabled={isLoading}
+                onClick={() => handleAction(() => onAccept(notification.id))}
+                className="bg-green-500 hover:bg-green-600 text-white border-0 shadow-sm disabled:opacity-50"
+              >
                 Accept
               </Button>
             )}
             {notification.actionButtons.decline && onDecline && (
-              <Button variant="outline" size="sm" disabled={isLoading} onClick={() => handleAction(() => onDecline(notification.id))}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isLoading}
+                onClick={() => handleAction(() => onDecline(notification.id))}
+                className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/50 disabled:opacity-50"
+              >
                 Decline
               </Button>
             )}
             {notification.actionButtons.respond && (
-              <Button variant="outline" size="sm" disabled={isLoading}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isLoading}
+                className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950/50 disabled:opacity-50"
+              >
                 Respond
               </Button>
             )}
             {notification.actionButtons.view && (
-              <Button variant="outline" size="sm" disabled={isLoading}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isLoading}
+                className="border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 disabled:opacity-50"
+              >
                 View
               </Button>
             )}
@@ -167,7 +193,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onMar
 
 export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ className }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [notifications, setNotifications] = React.useState<Notification[]>([]);
+  const [notifications, setNotifications] = React.useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = React.useState(0);
   const [activeTab, setActiveTab] = React.useState<'all' | 'unread' | 'archived'>('all');
   const [isLoading, setIsLoading] = React.useState(false);
@@ -296,42 +322,74 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
         <Button variant="ghost" size="icon" className={cn('relative', className)} aria-label="Notifications">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+            <Badge
+              variant="destructive"
+              className="absolute -top-1 -right-1 h-4 w-auto min-w-[16px] px-1 flex items-center justify-center text-[10px] leading-none font-medium"
+            >
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-96 p-0" align="end" sideOffset={8}>
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold">Notifications</h3>
+      <PopoverContent className="w-96 p-0 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 shadow-2xl" align="end" sideOffset={8}>
+        {/* Top border */}
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-400 dark:via-slate-500 to-transparent"></div>
+
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+          <h3 className="font-semibold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+            Notifications
+          </h3>
           {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={handleMarkAllAsRead} className="text-xs">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleMarkAllAsRead}
+              className="text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200"
+            >
               Mark all as read
             </Button>
           )}
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
-          <TabsList className="w-full rounded-none border-b bg-transparent p-0">
-            <TabsTrigger value="all" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+          <TabsList className="w-full rounded-none border-b bg-slate-50 dark:bg-slate-800 p-0 border-slate-200 dark:border-slate-700">
+            <TabsTrigger
+              value="all"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200"
+            >
               All
             </TabsTrigger>
-            <TabsTrigger value="unread" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
-              Unread
-              {unreadTabCount > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 text-xs">
-                  {unreadTabCount}
-                </Badge>
-              )}
+            <TabsTrigger
+              value="unread"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-purple-100 dark:data-[state=active]:bg-purple-900 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200"
+            >
+              <span className="flex items-center gap-1">
+                Unread
+                {unreadTabCount > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="h-4 w-auto min-w-[16px] px-1 text-[10px] leading-none bg-purple-200 text-purple-800 dark:bg-purple-800 dark:text-purple-200"
+                  >
+                    {unreadTabCount > 99 ? '99+' : unreadTabCount}
+                  </Badge>
+                )}
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="archived" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
-              Archived
-              {archivedCount > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 text-xs">
-                  {archivedCount}
-                </Badge>
-              )}
+            <TabsTrigger
+              value="archived"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-green-500 data-[state=active]:bg-green-100 dark:data-[state=active]:bg-green-900 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200"
+            >
+              <span className="flex items-center gap-1">
+                Archived
+                {archivedCount > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="h-4 w-auto min-w-[16px] px-1 text-[10px] leading-none bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200"
+                  >
+                    {archivedCount > 99 ? '99+' : archivedCount}
+                  </Badge>
+                )}
+              </span>
             </TabsTrigger>
           </TabsList>
 
@@ -364,11 +422,18 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
           </TabsContent>
         </Tabs>
 
-        <div className="p-4 border-t">
-          <Button variant="outline" className="w-full" size="sm">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+          <Button
+            variant="outline"
+            className="w-full bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 hover:bg-blue-50 dark:hover:bg-blue-950 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200"
+            size="sm"
+          >
             View all notifications
           </Button>
         </div>
+
+        {/* Bottom border */}
+        <div className="h-1 bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 dark:from-blue-500 dark:via-purple-600 dark:to-green-500"></div>
       </PopoverContent>
     </Popover>
   );

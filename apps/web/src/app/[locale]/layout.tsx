@@ -14,8 +14,6 @@ import { auth } from '@/auth';
 import { routing } from '@/i18n/routing';
 import { PropsWithLocaleParams } from '@/components/legacy/types';
 
-// import { Toaster } from 'sonner';
-
 export async function generateMetadata({ params }: PropsWithLocaleParams): Promise<Metadata> {
   const { locale } = await params;
   // TODO: Use the locale to fetch metadata if needed.
@@ -55,7 +53,6 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
                   {children}
                   {/*TODO: Move this to a better place*/}
                   {/*<FeedbackFloatingButton />*/}
-                  {/*<Toaster />*/}
                 </TenantProvider>
               </SessionProvider>
             </Web3Provider>

@@ -103,8 +103,8 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
         {children}
       </div>
       
-      {/* Bottom Subtle Border */}
-      <div className="h-0.5 bg-gradient-to-r from-transparent via-slate-600/50 to-transparent"></div>
+      {/* Bottom Beautiful Border */}
+      <div className="h-px bg-gradient-to-r from-transparent via-white/20 dark:via-slate-400/30 to-transparent"></div>
     </header>
   );
 };
@@ -116,13 +116,13 @@ const ListItem = React.forwardRef<React.ElementRef<'a'>, React.ComponentPropsWit
         <a
           ref={ref}
           className={cn(
-            'block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10 text-slate-300 hover:text-white border border-transparent hover:border-blue-400/20',
+            'block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-all duration-200 hover:bg-white/10 dark:hover:bg-slate-800/50 text-slate-200 hover:text-white border border-transparent hover:border-white/20 dark:hover:border-blue-400/30 backdrop-blur-sm',
             className,
           )}
           {...props}
         >
-          <div className="text-sm font-medium leading-none text-blue-400">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-slate-400">{children}</p>
+          <div className="text-sm font-medium leading-none text-blue-300">{title}</div>
+          <p className="line-clamp-2 text-sm leading-snug text-slate-300">{children}</p>
         </a>
       </NavigationMenuLink>
     </li>
