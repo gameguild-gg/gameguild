@@ -8,7 +8,7 @@ import { Badge } from '@game-guild/ui/components/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
 import { Progress } from '@game-guild/ui/components/progress';
 import Link from 'next/link';
-import { User } from '@/types/user';
+import { User } from '@/components/legacy/types/user';
 
 interface UserProfileProps {
   user: User;

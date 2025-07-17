@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/compone
 import { Badge } from '@game-guild/ui/components/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
 import { Award, Download, Share2, Check, Loader2, Calendar, User } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/lib/old/hooks/use-toast';
 
 interface CertificateProps {
   readonly courseId: string;

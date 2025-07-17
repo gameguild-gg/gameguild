@@ -7,7 +7,7 @@ import { Textarea } from '@game-guild/ui/components/textarea';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
 import { Upload, FileText, Code, Award, Clock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/lib/old/hooks/use-toast';
 
 interface ActivitySubmissionProps {
   readonly activityId: string;

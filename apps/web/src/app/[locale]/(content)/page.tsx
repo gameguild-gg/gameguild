@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useTenant } from '@/lib/tenants/tenant-provider';
 import { TenantSelector } from '@/components/auth/tenant-selector';
-import { TenantService } from '@/lib/services/tenant.service';
+import { TenantService } from '@/lib/tenants/tenant.service';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
@@ -61,7 +61,7 @@ export default function Page(): React.JSX.Element {
     try {
       console.log('Testing direct API call to CMS backend');
       const { testCmsConnection } = await import('@/lib/api/actions');
-      
+
       const result = await testCmsConnection();
 
       setTestResults((prev: Record<string, any>) => ({

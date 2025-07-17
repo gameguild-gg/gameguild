@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import CourseList from './course-list';
-import type { Course } from '@/types/courses';
+import type { Course } from '@/components/legacy/types/courses';
 
 export default function CourseListWrapper({ courses }: { courses: Course[] }) {
   const categories = Array.from(new Set(courses.map((c) => c.area)));

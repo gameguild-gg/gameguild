@@ -8,7 +8,7 @@ import {
   TenantUserGroupMembership,
   AddUserToGroupRequest,
   AutoAssignUserRequest,
-} from '@/types/tenant-domain';
+} from '@/components/legacy/types/tenant-domain';
 
 class TenantDomainApiClient {
   private baseUrl: string;

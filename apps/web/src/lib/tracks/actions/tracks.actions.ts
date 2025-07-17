@@ -1,6 +1,6 @@
 'use server';
 
-import { Track, TracksData, ToolsByArea } from '@/types/tracks';
+import { Track, TracksData, ToolsByArea } from '@/components/legacy/types/tracks';
 
 // Helper function to map Program API categories to track areas
 function mapProgramCategoryToTrackArea(category: number): string {

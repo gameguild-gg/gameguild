@@ -6,7 +6,7 @@ import { Input } from '@game-guild/ui/components/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { getCourseData, revalidateCourseData } from '@/lib/courses/actions';
-import { Course } from '@/types/courses';
+import { Course } from '@/components/legacy/types/courses';
 import { BookOpen, Plus, Search, Edit, Eye, Trash } from 'lucide-react';
 import Link from 'next/link';
 

@@ -1,5 +1,5 @@
 import { apiClient } from '../api/api-client';
-import { LocalSignInRequest, LocalSignUpRequest, RefreshTokenRequest, RefreshTokenResponse, SignInResponse } from '@/types/auth';
+import { LocalSignInRequest, LocalSignUpRequest, RefreshTokenRequest, RefreshTokenResponse, SignInResponse } from '@/components/legacy/types/auth';
 
 export class AuthService {
   // Local sign in (email/password)
