@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { Search, Users, Building, UserPlus, ChevronDown } from 'lucide-react';
-import { Button } from '@game-guild/ui/components';
-import { Input } from '@game-guild/ui/components';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
+import { Input } from '@game-guild/ui/components/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
 
 interface TeamMember {
   id: string;

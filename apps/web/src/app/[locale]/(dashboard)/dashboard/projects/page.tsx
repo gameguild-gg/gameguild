@@ -214,7 +214,7 @@ export default function ProjectsPage() {
 //
 // import React, { useEffect, useState } from 'react';
 // import Link from 'next/link';
-// import { Button } from '@game-guild/ui/components';
+// import { Button } from '@game-guild/ui/components/button';
 // import { GameCard } from '@/components/testing-lab/game-card';
 // import { Sheet, SheetContent, SheetTrigger } from '@game-guild/ui/components';
 // import ProjectForm from '@/components/projects/project-form';

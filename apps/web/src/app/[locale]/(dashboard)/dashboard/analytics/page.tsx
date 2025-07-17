@@ -2,7 +2,7 @@ import React from 'react';
 import { DashboardCharts } from '@/components/dashboard/analytics/dashboard-charts';
 import { DashboardStats } from '@/components/dashboard/analytics/dashboard-stats';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Button } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
 import { Download, RefreshCw, Calendar } from 'lucide-react';
 
 export default async function AnalyticsPage() {

@@ -78,6 +78,18 @@ export type AddUserToGroupDto = {
   isAutoAssigned?: boolean;
 };
 
+export type ArchiveProjectResultReadable = {
+  success?: boolean;
+  project?: ProjectReadable;
+  errorMessage?: string | null;
+};
+
+export type ArchiveProjectResultWritable = {
+  success?: boolean;
+  project?: ProjectWritable;
+  errorMessage?: string | null;
+};
+
 export type AttendanceStatus = 0 | 1 | 2 | 3;
 
 export type AutoAssignUserDto = {
@@ -116,6 +128,16 @@ export type BulkOperationResultWritable = {
 
 export type BulkRestoreTenantsDto = {
   tenantIds: Array<string>;
+};
+
+export type CancelPaymentRequest = {
+  reason?: string | null;
+};
+
+export type CancelPaymentResult = {
+  success?: boolean;
+  payment?: Payment;
+  errorMessage?: string | null;
 };
 
 export type CertificateReadable = {
@@ -468,6 +490,14 @@ export type ContentProgressDto = {
   completedAt?: string | null;
 };
 
+export type ContentReferenceDto = {
+  resourceId?: string;
+  resourceTitle?: string | null;
+  resourceType?: string | null;
+  referenceType?: string | null;
+  context?: string | null;
+};
+
 export type ContentStatsDto = {
   programId?: string;
   totalContent?: number;
@@ -569,15 +599,63 @@ export type CreateCredentialDto = {
   isActive?: boolean;
 };
 
-export type CreatePaymentMethodDto = {
-  type?: string | null;
-  externalId?: string | null;
-  displayName?: string | null;
-  lastFourDigits?: string | null;
-  brand?: string | null;
-  expiryMonth?: number | null;
-  expiryYear?: number | null;
-  isDefault?: boolean;
+export type CreatePaymentCommand = {
+  userId?: string;
+  productId?: string | null;
+  amount?: number;
+  currency?: string | null;
+  method?: PaymentMethod;
+  description?: string | null;
+  tenantId?: string | null;
+  metadata?: {
+    [key: string]: unknown;
+  } | null;
+};
+
+export type CreatePaymentRequest = {
+  userId?: string | null;
+  productId?: string | null;
+  amount?: number;
+  currency?: string | null;
+  method?: PaymentMethod;
+  description?: string | null;
+  tenantId?: string | null;
+  metadata?: {
+    [key: string]: unknown;
+  } | null;
+};
+
+export type CreatePaymentResult = {
+  success?: boolean;
+  payment?: Payment;
+  errorMessage?: string | null;
+  clientSecret?: string | null;
+};
+
+export type CreatePostDto = {
+  title?: string | null;
+  description?: string | null;
+  postType?: string | null;
+  visibility?: AccessLevel;
+  richContent?: string | null;
+  contentReferences?: Array<string> | null;
+};
+
+export type CreateProductCommand = {
+  name?: string | null;
+  description?: string | null;
+  shortDescription?: string | null;
+  imageUrl?: string | null;
+  type?: ProductType;
+  isBundle?: boolean;
+  creatorId?: string;
+  bundleItems?: Array<string> | null;
+  referralCommissionPercentage?: number;
+  maxAffiliateDiscount?: number;
+  affiliateCommissionPercentage?: number;
+  visibility?: AccessLevel;
+  status?: ContentStatus;
+  tenantId?: string | null;
 };
 
 export type CreateProductFromProgramDto = {
@@ -607,6 +685,33 @@ export type CreateProgramDto = {
   description?: string | null;
   slug?: string | null;
   thumbnail?: string | null;
+};
+
+export type CreateProjectRequest = {
+  title: string;
+  description?: string | null;
+  shortDescription?: string | null;
+  imageUrl?: string | null;
+  repositoryUrl?: string | null;
+  websiteUrl?: string | null;
+  downloadUrl?: string | null;
+  type?: ProjectType;
+  categoryId?: string | null;
+  visibility?: AccessLevel;
+  status?: ContentStatus;
+  tags?: Array<string> | null;
+};
+
+export type CreateProjectResultReadable = {
+  success?: boolean;
+  project?: ProjectReadable;
+  errorMessage?: string | null;
+};
+
+export type CreateProjectResultWritable = {
+  success?: boolean;
+  project?: ProjectWritable;
+  errorMessage?: string | null;
 };
 
 export type CreateSubscriptionDto = {
@@ -653,16 +758,6 @@ export type CreateTestingRequestDto = {
   startDate: string;
   endDate: string;
   status: TestingRequestStatus;
-};
-
-export type CreateTransactionDto = {
-  toUserId?: string | null;
-  type?: TransactionType;
-  amount?: number;
-  currency?: string | null;
-  paymentMethodId?: string | null;
-  description?: string | null;
-  metadata?: string | null;
 };
 
 export type CreateUserDto = {
@@ -760,6 +855,11 @@ export type CredentialResponseDtoWritable = {
   user?: UserResponseDto;
 };
 
+export type DeleteProjectResult = {
+  success?: boolean;
+  errorMessage?: string | null;
+};
+
 export type DevelopmentStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export type EngagementMetricsDto = {
@@ -775,7 +875,7 @@ export type EngagementMetricsDto = {
   } | null;
 };
 
-export type EnrollmentStatus = 0 | 1 | 2 | 3;
+export type EnrollmentStatus = 0 | 1 | 2 | 3 | 4 | 5;
 
 export type FeedbackRequest = {
   feedbackFormId?: string;
@@ -1035,8 +1135,6 @@ export type LocationStatus = 0 | 1 | 2;
 
 export type MemberStatus = 0 | 1 | 2;
 
-export type ModerationStatus = 0 | 1 | 2 | 3;
-
 export type MonetizationDto = {
   price?: number;
   currency?: string | null;
@@ -1050,24 +1148,99 @@ export type MoveContentDto = {
   newSortOrder: number;
 };
 
+export type Payment = {
+  id?: string;
+  userId: string;
+  productId?: string | null;
+  amount?: number;
+  currency: string | null;
+  status?: PaymentStatus;
+  method?: PaymentMethod;
+  gateway?: PaymentGateway;
+  providerTransactionId?: string | null;
+  paymentIntentId?: string | null;
+  discountCodeId?: string | null;
+  discountAmount?: number;
+  finalAmount?: number;
+  processingFee?: number;
+  netAmount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  processedAt?: string | null;
+  failedAt?: string | null;
+  failureReason?: string | null;
+  metadata?: string | null;
+  refunds?: Array<PaymentRefund> | null;
+};
+
+export type PaymentGateway = 0 | 1 | 2 | 3 | 4 | 99;
+
+export type PaymentMethod = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
 export type PaymentMethodStatus = 0 | 1 | 2 | 3;
 
 export type PaymentMethodType = 0 | 1 | 2 | 3 | 4;
 
-export type PaymentStatisticsDto = {
+export type PaymentRefund = {
+  id?: string;
+  paymentId?: string;
+  payment?: Payment;
+  externalRefundId: string;
+  refundAmount?: number;
+  reason: string;
+  status?: RefundStatus;
+  processedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type PaymentStats = {
+  totalPayments?: number;
   totalRevenue?: number;
-  totalTransactions?: number;
-  successfulTransactions?: number;
-  failedTransactions?: number;
-  averageTransactionAmount?: number;
+  averagePaymentAmount?: number;
+  successfulPayments?: number;
+  failedPayments?: number;
+  refundedPayments?: number;
+  totalRefunded?: number;
+  netRevenue?: number;
+  paymentsByMethod?: {
+    [key: string]: number;
+  } | null;
   revenueByMethod?: {
     [key: string]: number;
   } | null;
-  transactionsByStatus?: {
-    [key: string]: number;
-  } | null;
-  fromDate?: string | null;
-  toDate?: string | null;
+};
+
+export type PaymentStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export type PostDto = {
+  id?: string;
+  title?: string | null;
+  description?: string | null;
+  slug?: string | null;
+  postType?: string | null;
+  authorId?: string;
+  authorName?: string | null;
+  isSystemGenerated?: boolean;
+  visibility?: AccessLevel;
+  status?: ContentStatus;
+  isPinned?: boolean;
+  likesCount?: number;
+  commentsCount?: number;
+  sharesCount?: number;
+  richContent?: string | null;
+  contentReferences?: Array<ContentReferenceDto> | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type PostsPageDto = {
+  posts?: Array<PostDto> | null;
+  totalCount?: number;
+  pageNumber?: number;
+  pageSize?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
 };
 
 export type PricingDto = {
@@ -1087,11 +1260,18 @@ export type ProblemDetails = {
   [key: string]: unknown | (string | null) | (string | null) | (number | null) | (string | null) | (string | null) | undefined;
 };
 
-export type ProcessPaymentDto = {
-  paymentMethodId?: string;
-  externalTransactionId?: string | null;
-  paymentIntentId?: string | null;
-  metadata?: string | null;
+export type ProcessPaymentRequest = {
+  providerTransactionId?: string | null;
+  providerMetadata?: {
+    [key: string]: unknown;
+  } | null;
+};
+
+export type ProcessPaymentResult = {
+  success?: boolean;
+  payment?: Payment;
+  errorMessage?: string | null;
+  autoEnrollTriggered?: boolean;
 };
 
 export type ProductReadable = {
@@ -1518,26 +1698,15 @@ export type ProgramRatingReadable = {
   deletedAt?: string | null;
   readonly isDeleted?: boolean;
   tenant?: TenantReadable;
-  userId?: string;
   programId?: string;
-  productId?: string | null;
-  programUserId?: string;
+  userId?: string | null;
   rating?: number;
   review?: string | null;
-  contentQualityRating?: number | null;
-  instructorRating?: number | null;
-  difficultyRating?: number | null;
-  valueRating?: number | null;
-  wouldRecommend?: boolean | null;
-  moderationStatus?: ModerationStatus;
-  moderatedBy?: string | null;
-  moderatedAt?: string | null;
-  submittedAt?: string;
-  user?: UserReadable;
+  isVerified?: boolean;
+  isFeatured?: boolean;
+  helpfulVotes?: number;
+  unhelpfulVotes?: number;
   program?: ProgramReadable;
-  product?: ProductReadable;
-  programUser?: ProgramUserReadable;
-  moderator?: UserReadable;
 };
 
 export type ProgramRatingWritable = {
@@ -1547,26 +1716,15 @@ export type ProgramRatingWritable = {
   updatedAt?: string;
   deletedAt?: string | null;
   tenant?: TenantWritable;
-  userId?: string;
   programId?: string;
-  productId?: string | null;
-  programUserId?: string;
+  userId?: string | null;
   rating?: number;
   review?: string | null;
-  contentQualityRating?: number | null;
-  instructorRating?: number | null;
-  difficultyRating?: number | null;
-  valueRating?: number | null;
-  wouldRecommend?: boolean | null;
-  moderationStatus?: ModerationStatus;
-  moderatedBy?: string | null;
-  moderatedAt?: string | null;
-  submittedAt?: string;
-  user?: UserWritable;
+  isVerified?: boolean;
+  isFeatured?: boolean;
+  helpfulVotes?: number;
+  unhelpfulVotes?: number;
   program?: ProgramWritable;
-  product?: ProductWritable;
-  programUser?: ProgramUserWritable;
-  moderator?: UserWritable;
 };
 
 export type ProgramUserReadable = {
@@ -2089,6 +2247,25 @@ export type ProjectReleaseWritable = {
   releaseMetadata?: string | null;
 };
 
+export type ProjectStatistics = {
+  projectId?: string;
+  followerCount?: number;
+  feedbackCount?: number;
+  averageRating?: number | null;
+  totalDownloads?: number;
+  activeTeamCount?: number;
+  collaboratorCount?: number;
+  releaseCount?: number;
+  jamSubmissionCount?: number;
+  awardCount?: number;
+  viewsLast30Days?: number;
+  downloadsLast30Days?: number;
+  newFollowersLast30Days?: number;
+  calculatedAt?: string;
+  trendingScore?: number;
+  popularityRank?: number | null;
+};
+
 export type ProjectTeamReadable = {
   readonly isNew?: boolean;
   readonly domainEvents?: Array<IDomainEvent> | null;
@@ -2281,10 +2458,35 @@ export type PromoCodeUseWritable = {
   discountApplied?: number;
 };
 
+export type PublishProjectResultReadable = {
+  success?: boolean;
+  project?: ProjectReadable;
+  errorMessage?: string | null;
+};
+
+export type PublishProjectResultWritable = {
+  success?: boolean;
+  project?: ProjectWritable;
+  errorMessage?: string | null;
+};
+
 export type RefreshTokenRequestDto = {
   refreshToken?: string | null;
   tenantId?: string | null;
 };
+
+export type RefundPaymentRequest = {
+  refundAmount?: number | null;
+  reason?: string | null;
+};
+
+export type RefundPaymentResult = {
+  success?: boolean;
+  refund?: PaymentRefund;
+  errorMessage?: string | null;
+};
+
+export type RefundStatus = 0 | 1 | 2 | 3 | 4;
 
 export type RegistrationType = 0 | 1;
 
@@ -2377,6 +2579,23 @@ export type RevenueChartDto = {
   date?: string;
   revenue?: number;
   purchases?: number;
+};
+
+export type RevenueDataPoint = {
+  date?: string;
+  revenue?: number;
+  netRevenue?: number;
+  transactionCount?: number;
+  averageTransactionValue?: number;
+};
+
+export type RevenueReport = {
+  fromDate?: string;
+  toDate?: string;
+  totalRevenue?: number;
+  netRevenue?: number;
+  totalTransactions?: number;
+  dataPoints?: Array<RevenueDataPoint> | null;
 };
 
 export type RevokeTokenRequestDto = {
@@ -3109,6 +3328,18 @@ export type TransactionStatus = 0 | 1 | 2 | 3 | 4 | 5;
 
 export type TransactionType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
+export type UnpublishProjectResultReadable = {
+  success?: boolean;
+  project?: ProjectReadable;
+  errorMessage?: string | null;
+};
+
+export type UnpublishProjectResultWritable = {
+  success?: boolean;
+  project?: ProjectWritable;
+  errorMessage?: string | null;
+};
+
 export type UpdateActivityGradeDto = {
   grade?: number | null;
   feedback?: string | null;
@@ -3143,6 +3374,23 @@ export type UpdatePricingDto = {
   subscriptionDurationDays?: number | null;
 };
 
+export type UpdateProductCommand = {
+  productId?: string;
+  name?: string | null;
+  description?: string | null;
+  shortDescription?: string | null;
+  imageUrl?: string | null;
+  type?: ProductType;
+  isBundle?: boolean | null;
+  bundleItems?: Array<string> | null;
+  referralCommissionPercentage?: number | null;
+  maxAffiliateDiscount?: number | null;
+  affiliateCommissionPercentage?: number | null;
+  visibility?: AccessLevel;
+  status?: ContentStatus;
+  updatedBy?: string;
+};
+
 export type UpdateProgramContentDto = {
   id: string;
   title?: string | null;
@@ -3175,6 +3423,33 @@ export type UpdateProgressRequest = {
   programUserId?: string;
   contentId?: string;
   completionPercentage?: number;
+};
+
+export type UpdateProjectRequest = {
+  title?: string | null;
+  description?: string | null;
+  shortDescription?: string | null;
+  imageUrl?: string | null;
+  repositoryUrl?: string | null;
+  websiteUrl?: string | null;
+  downloadUrl?: string | null;
+  type?: ProjectType;
+  categoryId?: string | null;
+  visibility?: AccessLevel;
+  status?: ContentStatus;
+  tags?: Array<string> | null;
+};
+
+export type UpdateProjectResultReadable = {
+  success?: boolean;
+  project?: ProjectReadable;
+  errorMessage?: string | null;
+};
+
+export type UpdateProjectResultWritable = {
+  success?: boolean;
+  project?: ProjectWritable;
+  errorMessage?: string | null;
 };
 
 export type UpdateTenantDomainDto = {
@@ -4339,177 +4614,374 @@ export type GetApiPaymentMethodsMeResponses = {
 
 export type GetApiPaymentMethodsMeResponse = GetApiPaymentMethodsMeResponses[keyof GetApiPaymentMethodsMeResponses];
 
-export type PostApiPaymentMethodsData = {
-  body?: CreatePaymentMethodDto;
+export type PostApiPaymentIntentData = {
+  body?: CreatePaymentCommand;
   path?: never;
   query?: never;
-  url: '/api/Payment/methods';
+  url: '/api/Payment/intent';
 };
 
-export type PostApiPaymentMethodsResponses = {
+export type PostApiPaymentIntentResponses = {
   /**
    * OK
    */
-  200: UserFinancialMethodReadable;
+  200: Payment;
 };
 
-export type PostApiPaymentMethodsResponse = PostApiPaymentMethodsResponses[keyof PostApiPaymentMethodsResponses];
+export type PostApiPaymentIntentResponse = PostApiPaymentIntentResponses[keyof PostApiPaymentIntentResponses];
 
-export type DeleteApiPaymentMethodsByIdData = {
+export type PostApiPaymentByIdProcessData = {
+  body?: ProcessPaymentRequest;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Payment/{id}/process';
+};
+
+export type PostApiPaymentByIdProcessResponses = {
+  /**
+   * OK
+   */
+  200: Payment;
+};
+
+export type PostApiPaymentByIdProcessResponse = PostApiPaymentByIdProcessResponses[keyof PostApiPaymentByIdProcessResponses];
+
+export type PostApiPaymentByIdRefundData = {
+  body?: RefundPaymentRequest;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Payment/{id}/refund';
+};
+
+export type PostApiPaymentByIdRefundResponses = {
+  /**
+   * OK
+   */
+  200: PaymentRefund;
+};
+
+export type PostApiPaymentByIdRefundResponse = PostApiPaymentByIdRefundResponses[keyof PostApiPaymentByIdRefundResponses];
+
+export type GetApiPaymentByIdData = {
   body?: never;
   path: {
     id: string;
   };
   query?: never;
-  url: '/api/Payment/methods/{id}';
+  url: '/api/Payment/{id}';
 };
 
-export type DeleteApiPaymentMethodsByIdResponses = {
+export type GetApiPaymentByIdResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: Payment;
 };
 
-export type GetApiPaymentMethodsByIdData = {
+export type GetApiPaymentByIdResponse = GetApiPaymentByIdResponses[keyof GetApiPaymentByIdResponses];
+
+export type GetApiPaymentUserByUserIdData = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: '/api/Payment/user/{userId}';
+};
+
+export type GetApiPaymentUserByUserIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<Payment>;
+};
+
+export type GetApiPaymentUserByUserIdResponse = GetApiPaymentUserByUserIdResponses[keyof GetApiPaymentUserByUserIdResponses];
+
+export type GetApiPaymentStatsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/Payment/stats';
+};
+
+export type GetApiPaymentStatsResponses = {
+  /**
+   * OK
+   */
+  200: PaymentStats;
+};
+
+export type GetApiPaymentStatsResponse = GetApiPaymentStatsResponses[keyof GetApiPaymentStatsResponses];
+
+export type PostApiPaymentsData = {
+  body?: CreatePaymentRequest;
+  path?: never;
+  query?: never;
+  url: '/api/Payments';
+};
+
+export type PostApiPaymentsResponses = {
+  /**
+   * OK
+   */
+  200: CreatePaymentResult;
+};
+
+export type PostApiPaymentsResponse = PostApiPaymentsResponses[keyof PostApiPaymentsResponses];
+
+export type GetApiPaymentsByIdData = {
   body?: never;
   path: {
     id: string;
   };
   query?: never;
-  url: '/api/Payment/methods/{id}';
+  url: '/api/Payments/{id}';
 };
 
-export type GetApiPaymentMethodsByIdResponses = {
+export type GetApiPaymentsByIdResponses = {
   /**
    * OK
    */
-  200: UserFinancialMethodReadable;
+  200: Payment;
 };
 
-export type GetApiPaymentMethodsByIdResponse = GetApiPaymentMethodsByIdResponses[keyof GetApiPaymentMethodsByIdResponses];
+export type GetApiPaymentsByIdResponse = GetApiPaymentsByIdResponses[keyof GetApiPaymentsByIdResponses];
 
-export type GetApiPaymentTransactionsMeData = {
+export type GetApiPaymentsMyPaymentsData = {
   body?: never;
   path?: never;
   query?: {
+    status?: PaymentStatus;
+    fromDate?: string;
+    toDate?: string;
     skip?: number;
     take?: number;
-    type?: TransactionType;
-    status?: TransactionStatus;
   };
-  url: '/api/Payment/transactions/me';
+  url: '/api/Payments/my-payments';
 };
 
-export type GetApiPaymentTransactionsMeResponses = {
+export type GetApiPaymentsMyPaymentsResponses = {
   /**
    * OK
    */
-  200: Array<FinancialTransactionReadable>;
+  200: Array<Payment>;
 };
 
-export type GetApiPaymentTransactionsMeResponse = GetApiPaymentTransactionsMeResponses[keyof GetApiPaymentTransactionsMeResponses];
+export type GetApiPaymentsMyPaymentsResponse = GetApiPaymentsMyPaymentsResponses[keyof GetApiPaymentsMyPaymentsResponses];
 
-export type GetApiPaymentTransactionsByIdData = {
+export type GetApiPaymentsUsersByUserIdData = {
   body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    status?: PaymentStatus;
+    fromDate?: string;
+    toDate?: string;
+    skip?: number;
+    take?: number;
+  };
+  url: '/api/Payments/users/{userId}';
+};
+
+export type GetApiPaymentsUsersByUserIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<Payment>;
+};
+
+export type GetApiPaymentsUsersByUserIdResponse = GetApiPaymentsUsersByUserIdResponses[keyof GetApiPaymentsUsersByUserIdResponses];
+
+export type GetApiPaymentsProductsByProductIdData = {
+  body?: never;
+  path: {
+    productId: string;
+  };
+  query?: {
+    status?: PaymentStatus;
+    fromDate?: string;
+    toDate?: string;
+    skip?: number;
+    take?: number;
+  };
+  url: '/api/Payments/products/{productId}';
+};
+
+export type GetApiPaymentsProductsByProductIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<Payment>;
+};
+
+export type GetApiPaymentsProductsByProductIdResponse = GetApiPaymentsProductsByProductIdResponses[keyof GetApiPaymentsProductsByProductIdResponses];
+
+export type PostApiPaymentsByIdProcessData = {
+  body?: ProcessPaymentRequest;
   path: {
     id: string;
   };
   query?: never;
-  url: '/api/Payment/transactions/{id}';
+  url: '/api/Payments/{id}/process';
 };
 
-export type GetApiPaymentTransactionsByIdResponses = {
+export type PostApiPaymentsByIdProcessResponses = {
   /**
    * OK
    */
-  200: FinancialTransactionReadable;
+  200: ProcessPaymentResult;
 };
 
-export type GetApiPaymentTransactionsByIdResponse = GetApiPaymentTransactionsByIdResponses[keyof GetApiPaymentTransactionsByIdResponses];
+export type PostApiPaymentsByIdProcessResponse = PostApiPaymentsByIdProcessResponses[keyof PostApiPaymentsByIdProcessResponses];
 
-export type GetApiPaymentTransactionsData = {
+export type PostApiPaymentsByIdRefundData = {
+  body?: RefundPaymentRequest;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Payments/{id}/refund';
+};
+
+export type PostApiPaymentsByIdRefundResponses = {
+  /**
+   * OK
+   */
+  200: RefundPaymentResult;
+};
+
+export type PostApiPaymentsByIdRefundResponse = PostApiPaymentsByIdRefundResponses[keyof PostApiPaymentsByIdRefundResponses];
+
+export type PostApiPaymentsByIdCancelData = {
+  body?: CancelPaymentRequest;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Payments/{id}/cancel';
+};
+
+export type PostApiPaymentsByIdCancelResponses = {
+  /**
+   * OK
+   */
+  200: CancelPaymentResult;
+};
+
+export type PostApiPaymentsByIdCancelResponse = PostApiPaymentsByIdCancelResponses[keyof PostApiPaymentsByIdCancelResponses];
+
+export type GetApiPaymentsStatsData = {
   body?: never;
   path?: never;
   query?: {
-    skip?: number;
-    take?: number;
-    type?: TransactionType;
-    status?: TransactionStatus;
+    userId?: string;
+    productId?: string;
+    fromDate?: string;
+    toDate?: string;
   };
-  url: '/api/Payment/transactions';
+  url: '/api/Payments/stats';
 };
 
-export type GetApiPaymentTransactionsResponses = {
+export type GetApiPaymentsStatsResponses = {
   /**
    * OK
    */
-  200: Array<FinancialTransactionReadable>;
+  200: PaymentStats;
 };
 
-export type GetApiPaymentTransactionsResponse = GetApiPaymentTransactionsResponses[keyof GetApiPaymentTransactionsResponses];
+export type GetApiPaymentsStatsResponse = GetApiPaymentsStatsResponses[keyof GetApiPaymentsStatsResponses];
 
-export type PostApiPaymentTransactionsData = {
-  body?: CreateTransactionDto;
-  path?: never;
-  query?: never;
-  url: '/api/Payment/transactions';
-};
-
-export type PostApiPaymentTransactionsResponses = {
-  /**
-   * OK
-   */
-  200: FinancialTransactionReadable;
-};
-
-export type PostApiPaymentTransactionsResponse = PostApiPaymentTransactionsResponses[keyof PostApiPaymentTransactionsResponses];
-
-export type PostApiPaymentTransactionsByIdProcessData = {
-  body?: ProcessPaymentDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Payment/transactions/{id}/process';
-};
-
-export type PostApiPaymentTransactionsByIdProcessResponses = {
-  /**
-   * OK
-   */
-  200: FinancialTransactionReadable;
-};
-
-export type PostApiPaymentTransactionsByIdProcessResponse =
-  PostApiPaymentTransactionsByIdProcessResponses[keyof PostApiPaymentTransactionsByIdProcessResponses];
-
-export type GetApiPaymentStatisticsData = {
+export type GetApiPaymentsRevenueReportData = {
   body?: never;
   path?: never;
   query?: {
     fromDate?: string;
     toDate?: string;
+    groupBy?: string;
+    productId?: string;
   };
-  url: '/api/Payment/statistics';
+  url: '/api/Payments/revenue-report';
 };
 
-export type GetApiPaymentStatisticsResponses = {
+export type GetApiPaymentsRevenueReportResponses = {
   /**
    * OK
    */
-  200: PaymentStatisticsDto;
+  200: RevenueReport;
 };
 
-export type GetApiPaymentStatisticsResponse = GetApiPaymentStatisticsResponses[keyof GetApiPaymentStatisticsResponses];
+export type GetApiPaymentsRevenueReportResponse = GetApiPaymentsRevenueReportResponses[keyof GetApiPaymentsRevenueReportResponses];
+
+export type GetApiPostsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    pageNumber?: number;
+    pageSize?: number;
+    postType?: string;
+    userId?: string;
+    isPinned?: boolean;
+    searchTerm?: string;
+    orderBy?: string;
+    descending?: boolean;
+    tenantId?: string;
+  };
+  url: '/api/Posts';
+};
+
+export type GetApiPostsResponses = {
+  /**
+   * OK
+   */
+  200: PostsPageDto;
+};
+
+export type GetApiPostsResponse = GetApiPostsResponses[keyof GetApiPostsResponses];
+
+export type PostApiPostsData = {
+  body?: CreatePostDto;
+  path?: never;
+  query?: never;
+  url: '/api/Posts';
+};
+
+export type PostApiPostsResponses = {
+  /**
+   * OK
+   */
+  200: PostDto;
+};
+
+export type PostApiPostsResponse = PostApiPostsResponses[keyof PostApiPostsResponses];
+
+export type GetApiPostsByPostIdData = {
+  body?: never;
+  path: {
+    postId: string;
+  };
+  query?: never;
+  url: '/api/Posts/{postId}';
+};
+
+export type GetApiPostsByPostIdResponses = {
+  /**
+   * OK
+   */
+  200: PostDto;
+};
+
+export type GetApiPostsByPostIdResponse = GetApiPostsByPostIdResponses[keyof GetApiPostsByPostIdResponses];
 
 export type GetApiProductData = {
   body?: never;
   path?: never;
-  query?: {
-    skip?: number;
-    take?: number;
-  };
+  query?: never;
   url: '/api/Product';
 };
 
@@ -4523,7 +4995,7 @@ export type GetApiProductResponses = {
 export type GetApiProductResponse = GetApiProductResponses[keyof GetApiProductResponses];
 
 export type PostApiProductData = {
-  body?: ProductWritable;
+  body?: CreateProductCommand;
   path?: never;
   query?: never;
   url: '/api/Product';
@@ -4537,6 +5009,58 @@ export type PostApiProductResponses = {
 };
 
 export type PostApiProductResponse = PostApiProductResponses[keyof PostApiProductResponses];
+
+export type DeleteApiProductByIdData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Product/{id}';
+};
+
+export type DeleteApiProductByIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetApiProductByIdData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Product/{id}';
+};
+
+export type GetApiProductByIdResponses = {
+  /**
+   * OK
+   */
+  200: ProductReadable;
+};
+
+export type GetApiProductByIdResponse = GetApiProductByIdResponses[keyof GetApiProductByIdResponses];
+
+export type PutApiProductByIdData = {
+  body?: UpdateProductCommand;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Product/{id}';
+};
+
+export type PutApiProductByIdResponses = {
+  /**
+   * OK
+   */
+  200: ProductReadable;
+};
+
+export type PutApiProductByIdResponse = PutApiProductByIdResponses[keyof PutApiProductByIdResponses];
 
 export type GetApiProductTypeByTypeData = {
   body?: never;
@@ -4676,76 +5200,6 @@ export type GetApiProductRecentResponses = {
 };
 
 export type GetApiProductRecentResponse = GetApiProductRecentResponses[keyof GetApiProductRecentResponses];
-
-export type DeleteApiProductByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}';
-};
-
-export type DeleteApiProductByIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type GetApiProductByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}';
-};
-
-export type GetApiProductByIdResponses = {
-  /**
-   * OK
-   */
-  200: ProductReadable;
-};
-
-export type GetApiProductByIdResponse = GetApiProductByIdResponses[keyof GetApiProductByIdResponses];
-
-export type PutApiProductByIdData = {
-  body?: ProductWritable;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}';
-};
-
-export type PutApiProductByIdResponses = {
-  /**
-   * OK
-   */
-  200: ProductReadable;
-};
-
-export type PutApiProductByIdResponse = PutApiProductByIdResponses[keyof PutApiProductByIdResponses];
-
-export type GetApiProductByIdDetailsData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/details';
-};
-
-export type GetApiProductByIdDetailsResponses = {
-  /**
-   * OK
-   */
-  200: ProductReadable;
-};
-
-export type GetApiProductByIdDetailsResponse = GetApiProductByIdDetailsResponses[keyof GetApiProductByIdDetailsResponses];
 
 export type PostApiProductByIdPublishData = {
   body?: never;
@@ -5065,7 +5519,7 @@ export type GetApiProductAnalyticsCountData = {
   path?: never;
   query?: {
     type?: ProductType;
-    visibility?: AccessLevel;
+    status?: ContentStatus;
   };
   url: '/api/Product/analytics/count';
 };
@@ -6234,209 +6688,334 @@ export type GetApiProgramsByProgramIdContentStatsResponses = {
 export type GetApiProgramsByProgramIdContentStatsResponse =
   GetApiProgramsByProgramIdContentStatsResponses[keyof GetApiProgramsByProgramIdContentStatsResponses];
 
-export type GetProjectsData = {
+export type GetApiProjectsData = {
   body?: never;
   path?: never;
-  query?: never;
-  url: '/Projects';
+  query?: {
+    type?: ProjectType;
+    status?: ContentStatus;
+    visibility?: AccessLevel;
+    creatorId?: string;
+    categoryId?: string;
+    searchTerm?: string;
+    skip?: number;
+    take?: number;
+    sortBy?: string;
+    sortDirection?: string;
+  };
+  url: '/api/Projects';
 };
 
-export type GetProjectsResponses = {
+export type GetApiProjectsResponses = {
   /**
    * OK
    */
   200: Array<ProjectReadable>;
 };
 
-export type GetProjectsResponse = GetProjectsResponses[keyof GetProjectsResponses];
+export type GetApiProjectsResponse = GetApiProjectsResponses[keyof GetApiProjectsResponses];
 
-export type PostProjectsData = {
-  body?: ProjectWritable;
+export type PostApiProjectsData = {
+  body?: CreateProjectRequest;
   path?: never;
   query?: never;
-  url: '/Projects';
+  url: '/api/Projects';
 };
 
-export type PostProjectsResponses = {
+export type PostApiProjectsResponses = {
   /**
    * OK
    */
-  200: ProjectReadable;
+  200: CreateProjectResultReadable;
 };
 
-export type PostProjectsResponse = PostProjectsResponses[keyof PostProjectsResponses];
+export type PostApiProjectsResponse = PostApiProjectsResponses[keyof PostApiProjectsResponses];
 
-export type DeleteProjectsByIdData = {
+export type DeleteApiProjectsByIdData = {
   body?: never;
   path: {
     id: string;
   };
-  query?: never;
-  url: '/Projects/{id}';
+  query?: {
+    softDelete?: boolean;
+    reason?: string;
+  };
+  url: '/api/Projects/{id}';
 };
 
-export type DeleteProjectsByIdResponses = {
+export type DeleteApiProjectsByIdResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: DeleteProjectResult;
 };
 
-export type GetProjectsByIdData = {
+export type DeleteApiProjectsByIdResponse = DeleteApiProjectsByIdResponses[keyof DeleteApiProjectsByIdResponses];
+
+export type GetApiProjectsByIdData = {
   body?: never;
   path: {
     id: string;
   };
-  query?: never;
-  url: '/Projects/{id}';
+  query?: {
+    includeTeam?: boolean;
+    includeReleases?: boolean;
+    includeCollaborators?: boolean;
+    includeStatistics?: boolean;
+  };
+  url: '/api/Projects/{id}';
 };
 
-export type GetProjectsByIdResponses = {
+export type GetApiProjectsByIdResponses = {
   /**
    * OK
    */
   200: ProjectReadable;
 };
 
-export type GetProjectsByIdResponse = GetProjectsByIdResponses[keyof GetProjectsByIdResponses];
+export type GetApiProjectsByIdResponse = GetApiProjectsByIdResponses[keyof GetApiProjectsByIdResponses];
 
-export type PutProjectsByIdData = {
-  body?: ProjectWritable;
+export type PutApiProjectsByIdData = {
+  body?: UpdateProjectRequest;
   path: {
     id: string;
   };
   query?: never;
-  url: '/Projects/{id}';
+  url: '/api/Projects/{id}';
 };
 
-export type PutProjectsByIdResponses = {
+export type PutApiProjectsByIdResponses = {
   /**
    * OK
    */
-  200: ProjectReadable;
+  200: UpdateProjectResultReadable;
 };
 
-export type PutProjectsByIdResponse = PutProjectsByIdResponses[keyof PutProjectsByIdResponses];
+export type PutApiProjectsByIdResponse = PutApiProjectsByIdResponses[keyof PutApiProjectsByIdResponses];
 
-export type GetProjectsSlugBySlugData = {
+export type GetApiProjectsSlugBySlugData = {
   body?: never;
   path: {
     slug: string;
   };
-  query?: never;
-  url: '/Projects/slug/{slug}';
+  query?: {
+    includeTeam?: boolean;
+    includeReleases?: boolean;
+    includeCollaborators?: boolean;
+  };
+  url: '/api/Projects/slug/{slug}';
 };
 
-export type GetProjectsSlugBySlugResponses = {
+export type GetApiProjectsSlugBySlugResponses = {
   /**
    * OK
    */
   200: ProjectReadable;
 };
 
-export type GetProjectsSlugBySlugResponse = GetProjectsSlugBySlugResponses[keyof GetProjectsSlugBySlugResponses];
+export type GetApiProjectsSlugBySlugResponse = GetApiProjectsSlugBySlugResponses[keyof GetApiProjectsSlugBySlugResponses];
 
-export type GetProjectsCategoryByCategoryIdData = {
-  body?: never;
-  path: {
-    categoryId: string;
-  };
-  query?: never;
-  url: '/Projects/category/{categoryId}';
-};
-
-export type GetProjectsCategoryByCategoryIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProjectReadable>;
-};
-
-export type GetProjectsCategoryByCategoryIdResponse = GetProjectsCategoryByCategoryIdResponses[keyof GetProjectsCategoryByCategoryIdResponses];
-
-export type GetProjectsCreatorByCreatorIdData = {
-  body?: never;
-  path: {
-    creatorId: string;
-  };
-  query?: never;
-  url: '/Projects/creator/{creatorId}';
-};
-
-export type GetProjectsCreatorByCreatorIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProjectReadable>;
-};
-
-export type GetProjectsCreatorByCreatorIdResponse = GetProjectsCreatorByCreatorIdResponses[keyof GetProjectsCreatorByCreatorIdResponses];
-
-export type GetProjectsStatusByStatusData = {
-  body?: never;
-  path: {
-    status: ContentStatus;
-  };
-  query?: never;
-  url: '/Projects/status/{status}';
-};
-
-export type GetProjectsStatusByStatusResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProjectReadable>;
-};
-
-export type GetProjectsStatusByStatusResponse = GetProjectsStatusByStatusResponses[keyof GetProjectsStatusByStatusResponses];
-
-export type PostProjectsByIdRestoreData = {
+export type PostApiProjectsByIdPublishData = {
   body?: never;
   path: {
     id: string;
   };
   query?: never;
-  url: '/Projects/{id}/restore';
+  url: '/api/Projects/{id}/publish';
 };
 
-export type PostProjectsByIdRestoreResponses = {
+export type PostApiProjectsByIdPublishResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: PublishProjectResultReadable;
 };
 
-export type GetProjectsDeletedData = {
+export type PostApiProjectsByIdPublishResponse = PostApiProjectsByIdPublishResponses[keyof PostApiProjectsByIdPublishResponses];
+
+export type PostApiProjectsByIdUnpublishData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Projects/{id}/unpublish';
+};
+
+export type PostApiProjectsByIdUnpublishResponses = {
+  /**
+   * OK
+   */
+  200: UnpublishProjectResultReadable;
+};
+
+export type PostApiProjectsByIdUnpublishResponse = PostApiProjectsByIdUnpublishResponses[keyof PostApiProjectsByIdUnpublishResponses];
+
+export type PostApiProjectsByIdArchiveData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/Projects/{id}/archive';
+};
+
+export type PostApiProjectsByIdArchiveResponses = {
+  /**
+   * OK
+   */
+  200: ArchiveProjectResultReadable;
+};
+
+export type PostApiProjectsByIdArchiveResponse = PostApiProjectsByIdArchiveResponses[keyof PostApiProjectsByIdArchiveResponses];
+
+export type GetApiProjectsSearchData = {
   body?: never;
   path?: never;
-  query?: never;
-  url: '/Projects/deleted';
+  query?: {
+    searchTerm?: string;
+    type?: ProjectType;
+    categoryId?: string;
+    status?: ContentStatus;
+    visibility?: AccessLevel;
+    skip?: number;
+    take?: number;
+    sortBy?: string;
+    sortDirection?: string;
+  };
+  url: '/api/Projects/search';
 };
 
-export type GetProjectsDeletedResponses = {
+export type GetApiProjectsSearchResponses = {
   /**
    * OK
    */
   200: Array<ProjectReadable>;
 };
 
-export type GetProjectsDeletedResponse = GetProjectsDeletedResponses[keyof GetProjectsDeletedResponses];
+export type GetApiProjectsSearchResponse = GetApiProjectsSearchResponses[keyof GetApiProjectsSearchResponses];
 
-export type GetProjectsPublicData = {
+export type GetApiProjectsPopularData = {
   body?: never;
   path?: never;
-  query?: never;
-  url: '/Projects/public';
+  query?: {
+    type?: ProjectType;
+    take?: number;
+  };
+  url: '/api/Projects/popular';
 };
 
-export type GetProjectsPublicResponses = {
+export type GetApiProjectsPopularResponses = {
   /**
    * OK
    */
   200: Array<ProjectReadable>;
 };
 
-export type GetProjectsPublicResponse = GetProjectsPublicResponses[keyof GetProjectsPublicResponses];
+export type GetApiProjectsPopularResponse = GetApiProjectsPopularResponses[keyof GetApiProjectsPopularResponses];
+
+export type GetApiProjectsRecentData = {
+  body?: never;
+  path?: never;
+  query?: {
+    type?: ProjectType;
+    take?: number;
+  };
+  url: '/api/Projects/recent';
+};
+
+export type GetApiProjectsRecentResponses = {
+  /**
+   * OK
+   */
+  200: Array<ProjectReadable>;
+};
+
+export type GetApiProjectsRecentResponse = GetApiProjectsRecentResponses[keyof GetApiProjectsRecentResponses];
+
+export type GetApiProjectsFeaturedData = {
+  body?: never;
+  path?: never;
+  query?: {
+    type?: ProjectType;
+    take?: number;
+  };
+  url: '/api/Projects/featured';
+};
+
+export type GetApiProjectsFeaturedResponses = {
+  /**
+   * OK
+   */
+  200: Array<ProjectReadable>;
+};
+
+export type GetApiProjectsFeaturedResponse = GetApiProjectsFeaturedResponses[keyof GetApiProjectsFeaturedResponses];
+
+export type GetApiProjectsByIdStatisticsData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: {
+    fromDate?: string;
+    toDate?: string;
+  };
+  url: '/api/Projects/{id}/statistics';
+};
+
+export type GetApiProjectsByIdStatisticsResponses = {
+  /**
+   * OK
+   */
+  200: ProjectStatistics;
+};
+
+export type GetApiProjectsByIdStatisticsResponse = GetApiProjectsByIdStatisticsResponses[keyof GetApiProjectsByIdStatisticsResponses];
+
+export type GetApiProjectsCategoryByCategoryIdData = {
+  body?: never;
+  path: {
+    categoryId: string;
+  };
+  query?: {
+    status?: ContentStatus;
+    skip?: number;
+    take?: number;
+  };
+  url: '/api/Projects/category/{categoryId}';
+};
+
+export type GetApiProjectsCategoryByCategoryIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<ProjectReadable>;
+};
+
+export type GetApiProjectsCategoryByCategoryIdResponse = GetApiProjectsCategoryByCategoryIdResponses[keyof GetApiProjectsCategoryByCategoryIdResponses];
+
+export type GetApiProjectsCreatorByCreatorIdData = {
+  body?: never;
+  path: {
+    creatorId: string;
+  };
+  query?: {
+    status?: ContentStatus;
+    skip?: number;
+    take?: number;
+  };
+  url: '/api/Projects/creator/{creatorId}';
+};
+
+export type GetApiProjectsCreatorByCreatorIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<ProjectReadable>;
+};
+
+export type GetApiProjectsCreatorByCreatorIdResponse = GetApiProjectsCreatorByCreatorIdResponses[keyof GetApiProjectsCreatorByCreatorIdResponses];
 
 export type GetApiSubscriptionMeData = {
   body?: never;

@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Button } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Button } from '@game-guild/ui/components/button';
 import { BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import CourseAccessCard from './CourseAccessCard';

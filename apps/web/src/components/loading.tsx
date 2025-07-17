@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, CardContent, CardHeader } from '@game-guild/ui/components';
-import { Skeleton } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader } from '@game-guild/ui/components/card';
+import { Skeleton } from '@game-guild/ui/components/skeleton';
 import { Loader2 } from 'lucide-react';
 
 interface LoadingProps {

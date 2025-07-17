@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@game-guild/ui/components';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@game-guild/ui/components/breadcrumb';
 
 type Props = {
   children?: React.ReactNode;

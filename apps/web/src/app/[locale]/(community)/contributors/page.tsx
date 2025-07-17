@@ -2,7 +2,7 @@
 // import { Github } from 'lucide-react';
 // import { Metadata } from 'next';
 // import Link from 'next/link';
-// import { Button } from '@game-guild/ui/components';
+// import { Button } from '@game-guild/ui/components/button';
 // import fs from 'fs';
 // import path from 'path';
 // import simpleGit from 'simple-git';
