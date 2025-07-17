@@ -1,11 +1,9 @@
 import { ComponentShowcase } from '@/components/showcase';
 
-
 export default function ComponentsPage() {
   return (
-    <NotificationProvider>
-      <ComponentShowcase />
-    </NotificationProvider>
+    // TODO: Implement NotificationProvider or remove this wrapper
+    <ComponentShowcase />
   );
 }
 

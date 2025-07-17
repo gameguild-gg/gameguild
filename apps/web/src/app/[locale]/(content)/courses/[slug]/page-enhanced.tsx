@@ -36,7 +36,7 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             <ErrorBoundary fallback={<div>Failed to load course overview</div>}>
-              <Suspense fallback={<Loading />}>
+              <Suspense fallback={<Skeleton className="h-32 w-full" />}>
                 <CourseOverview course={course} levelConfig={levelConfig} />
               </Suspense>
             </ErrorBoundary>
@@ -46,7 +46,7 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-6">
               <ErrorBoundary fallback={<div>Failed to load course access</div>}>
-                <Suspense fallback={<Loading />}>
+                <Suspense fallback={<Skeleton className="h-24 w-full" />}>
                   <CourseAccessCard courseSlug={course.slug} courseTitle={course.title} />
                 </Suspense>
               </ErrorBoundary>

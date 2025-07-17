@@ -1,5 +1,5 @@
-import type { Client, Config, RequestOptions } from './types.js';
-import { buildUrl, createConfig, createInterceptors, getParseAs, mergeConfigs, mergeHeaders, setAuthParams } from './utils.js';
+import type { Client, Config, RequestOptions } from './types';
+import { buildUrl, createConfig, createInterceptors, getParseAs, mergeConfigs, mergeHeaders, setAuthParams } from './utils';
 
 type ReqInit = Omit<RequestInit, 'body' | 'headers'> & {
   body?: any;

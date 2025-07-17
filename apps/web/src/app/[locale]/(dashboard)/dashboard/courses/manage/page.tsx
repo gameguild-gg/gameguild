@@ -1,9 +1,9 @@
-import { Suspense } from 'next';
+import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { getEnhancedCourseData } from '@/lib/courses/actions';
 import { CourseProvider } from '@/lib/courses';
 import { CourseManagementContent } from '@/components/dashboard/courses/course-management-content';
-import { LoadingSpinner } from '@game-guild/ui/components/spinner';
+import { Loader2 } from 'lucide-react';
 import ErrorBoundary from '@/components/error-boundary';
 
 

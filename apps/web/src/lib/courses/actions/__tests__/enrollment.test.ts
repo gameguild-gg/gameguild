@@ -1,12 +1,12 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { getCourseEnrollmentStatus, getProductsContainingCourse, enrollInFreeCourse } from '@/lib/actions/enrollment.ts';
+import { getCourseEnrollmentStatus, getProductsContainingCourse, enrollInFreeCourse } from '@/lib/courses/actions/enrollment.actions';
 
 // Mock the auth module
-jest.mock('@/auth.ts', () => ({
+jest.mock('@/auth', () => ({
   auth: jest.fn(),
 }));
 
-const mockAuth = require('@/auth.ts').auth as jest.MockedFunction<any>;
+const mockAuth = require('@/auth').auth as jest.MockedFunction<any>;
 
 describe('Enrollment Actions', () => {
   beforeEach(() => {

@@ -1,6 +1,6 @@
 'use server';
 
-import { CourseArea, CourseLevel, ToolsByArea } from '@/types/courses.ts';
+import { CourseArea, CourseLevel, ToolsByArea } from '@/types/courses';
 import { EnhancedCourse } from '@/lib/courses/courses-enhanced.context';
 
 // Enhanced course data interface

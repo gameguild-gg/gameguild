@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { Track, TracksData } from '@/types/tracks.ts';
+import { Track, TracksData } from '@/types/tracks';
 
 // Track filter state
 export interface TrackState {

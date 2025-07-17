@@ -7,7 +7,7 @@ import { TaskDashboard } from '@/components/dashboard';
 import { AppearanceModal } from '@/components/modals';
 import { Leaderboard } from '@/components/leaderboard';
 import { GameProjectEditor } from '@/components/projects';
-import { NotificationsPanel } from '@/components/notifications';
+import { NotificationsPanel } from '@/components/notification';
 import { NotificationBarExample } from '@/components/examples';
 
 export function ComponentShowcase() {

@@ -1,5 +1,5 @@
 import { revalidateTag, unstable_cache } from 'next/cache';
-import { User, UpdateUserRequest, PagedResult } from '@/types/user.ts';
+import { User, UpdateUserRequest, PagedResult } from '@/types/user';
 
 export interface UserData {
   users: User[];
