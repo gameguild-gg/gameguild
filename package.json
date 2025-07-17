@@ -52,7 +52,7 @@
     "@semantic-release/release-notes-generator": "^14.0.1",
     "eslint": "^9",
     "prettier": "^3.5.2",
-    "next": "15.3.5",
+    "next": "15.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "rimraf": "^6",
