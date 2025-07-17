@@ -7,7 +7,7 @@ import { ContactFormState, submitContactForm } from '@/lib/old/contact/actions';
 
 const initialState: ContactFormState = {};
 
-export default function ContactForm() {
+export default function ContactForm(): React.JSX.Element {
   const [state, formAction] = useFormState(submitContactForm, initialState);
 
   return (

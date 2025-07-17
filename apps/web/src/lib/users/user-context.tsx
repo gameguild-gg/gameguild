@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode, useEffect, useMemo, useCallback } from 'react';
-import { User, UserSortField, SortDirection } from '@/types/user.ts';
+import { User, UserSortField, SortDirection } from '@/types/user';
 
 // Enhanced types with better filtering options
 export interface UserFilters {

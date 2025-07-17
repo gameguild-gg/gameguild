@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidateTag, unstable_cache } from 'next/cache';
-import { Course, CourseArea, CourseLevel } from '@/types/courses.ts';
+import { Course, CourseArea, CourseLevel } from '@/types/courses';
 
 // Enhanced course types
 export interface CourseAnalytics {

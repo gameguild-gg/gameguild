@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect } from 'react';
-import { useUserContext, useUserFilters, useUserSelection, useUserPagination } from '@/lib/users/user-context.tsx';
+import { useUserContext, useUserFilters, useUserSelection, useUserPagination } from '@/lib/users/user-context';
 import { createUserAction, updateUserAction, deleteUserAction, toggleUserStatusAction, revalidateUsersDataAction } from '@/lib/actions/user-management';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
@@ -14,7 +14,7 @@ import { Checkbox } from '@game-guild/ui/components/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
 import { Label } from '@game-guild/ui/components/label';
-import { LoadingSpinner } from '@game-guild/ui/components/spinner';
+import { Loader2 } from "lucide-react";
 import { Users, Plus, Search, Filter, MoreHorizontal, Edit, Trash2, UserCheck, UserX, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
@@ -138,7 +138,7 @@ export function UserManagementContent({ initialPagination }: UserManagementConte
                   <Button type="submit" disabled={isCreatingUser}>
                     {isCreatingUser ? (
                       <>
-                        <LoadingSpinner size="sm" className="mr-2" />
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         Creating...
                       </>
                     ) : (
@@ -238,7 +238,7 @@ export function UserManagementContent({ initialPagination }: UserManagementConte
             {state.isLoading ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8">
-                  <LoadingSpinner />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 </TableCell>
               </TableRow>
             ) : paginatedUsers.length === 0 ? (
@@ -384,7 +384,7 @@ export function UserManagementContent({ initialPagination }: UserManagementConte
                 <Button type="submit" disabled={isUpdatingUser}>
                   {isUpdatingUser ? (
                     <>
-                      <LoadingSpinner size="sm" className="mr-2" />
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       Updating...
                     </>
                   ) : (

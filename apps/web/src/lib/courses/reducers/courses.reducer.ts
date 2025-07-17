@@ -1,4 +1,4 @@
-import { CourseState, CourseAction, INITIAL_FILTERS } from '@/types/courses.ts';
+import { CourseState, CourseAction, INITIAL_FILTERS } from '@/types/courses';
 
 export const initialCourseState: CourseState = {
   data: null,

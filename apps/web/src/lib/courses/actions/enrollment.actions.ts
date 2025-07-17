@@ -1,6 +1,6 @@
 'use server';
 
-import { auth } from '@/auth.ts';
+import { auth } from '@/auth';
 
 export interface EnrollmentStatus {
   isEnrolled: boolean;
