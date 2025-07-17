@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { Button } from '@game-guild/ui/components';
-import { Input } from '@game-guild/ui/components';
-import { Label } from '@game-guild/ui/components';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Alert, AlertDescription } from '@game-guild/ui/components';
-import { Shield, AlertCircle } from 'lucide-react';
+import { Button } from '@game-guild/ui/components/button';
+import { Input } from '@game-guild/ui/components/input';
+import { Label } from '@game-guild/ui/components/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
+import { AlertCircle, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function AdminLoginForm() {

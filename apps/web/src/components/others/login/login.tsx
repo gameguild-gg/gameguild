@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Button } from '@game-guild/ui/components';
-import { Input } from '@game-guild/ui/components';
-import { Checkbox } from '@game-guild/ui/components';
-import { Label } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
+import { Input } from '@game-guild/ui/components/input';
+import { Checkbox } from '@game-guild/ui/components/checkbox';
+import { Label } from '@game-guild/ui/components/label';
 import { Lock, User } from 'lucide-react';
 
 const Login = () => {

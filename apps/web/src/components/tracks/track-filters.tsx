@@ -1,7 +1,7 @@
 'use client';
 
-import { Input } from '@game-guild/ui/components';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components';
+import { Input } from '@game-guild/ui/components/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { useTrackFilters } from '@/hooks/use-tracks';
 
 export function TrackFilters() {

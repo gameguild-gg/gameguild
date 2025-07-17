@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
+import { Textarea } from '@game-guild/ui/components/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Flag, AlertTriangle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 

@@ -1,16 +1,17 @@
 import React, { PropsWithChildren } from 'react';
 import Image from 'next/image';
+
+import { cn } from '@/lib/utils';
+import { NotificationDropdown } from '@/components/common/notifications';
+import { UserProfileDropdown } from '@/components/common/profile';
 import {
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from '@game-guild/ui/components';
-import { cn } from '@/lib/utils';
-import { NotificationDropdown } from '@/components/common/notifications';
-import { UserProfileDropdown } from '@/components/common/profile';
+} from '@game-guild/ui/components/navigation-menu';
+import { NavigationMenuLink } from '@radix-ui/react-navigation-menu';
 
 type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>;
 

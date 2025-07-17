@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@game-guild/ui/components';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { AlertTriangle, RefreshCw, Home, ArrowLeft } from 'lucide-react';
+
+import { AlertTriangle, ArrowLeft, Home, RefreshCw } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Button } from '@game-guild/ui/components/button';
 
 interface GlobalErrorProps {
   error: Error & { digest?: string };

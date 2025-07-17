@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@game-guild/ui/components';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Badge } from '@game-guild/ui/components';
-import { Input } from '@game-guild/ui/components';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Input } from '@game-guild/ui/components/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
 import {
   Search,
   Filter,

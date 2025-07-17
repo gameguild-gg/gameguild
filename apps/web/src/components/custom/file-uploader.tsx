@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
 import { Upload } from 'lucide-react';
 
 interface FileUploaderProps {

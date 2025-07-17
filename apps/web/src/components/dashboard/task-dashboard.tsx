@@ -1,8 +1,8 @@
 'use client';
 
 import { CheckCircle } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components';
-import { Progress } from '@game-guild/ui/components';
+import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
+import { Progress } from '@game-guild/ui/components/progress';
 
 interface TaskItem {
   id: string;

@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { Plus, Users, MessageCircle, Trophy, BarChart3, Lock } from 'lucide-react';
-import { Button } from '@game-guild/ui/components';
-import { Card, CardContent } from '@game-guild/ui/components';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent } from '@game-guild/ui/components/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
 
 interface GroupMember {
   id: string;

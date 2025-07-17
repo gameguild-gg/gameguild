@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components';
 import { Textarea } from '@game-guild/ui/components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';

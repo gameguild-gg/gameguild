@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@game-guild/ui/components';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
+import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
 import Link from 'next/link';
 import { Bug, ChevronLeft, ChevronRight, HelpCircle, Lightbulb } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@game-guild/ui/components';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@game-guild/ui/components/tooltip';
 
 interface User {
   login: string;

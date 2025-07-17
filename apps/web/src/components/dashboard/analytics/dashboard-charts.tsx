@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components';
-import { Badge } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
+import { Badge } from '@game-guild/ui/components/badge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
 // Mock data for charts

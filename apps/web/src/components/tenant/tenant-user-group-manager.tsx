@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { TenantUserGroup, CreateTenantUserGroupRequest } from '@/types/tenant-domain';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { CreateTenantUserGroupRequest, TenantUserGroup } from '@/types/tenant-domain';
 import { TenantDomainApiClient } from '@/lib/api/tenant-domain-client';
-import { Button } from '@game-guild/ui/components';
-import { Input } from '@game-guild/ui/components';
-import { Label } from '@game-guild/ui/components';
-import { Checkbox } from '@game-guild/ui/components';
-import { Textarea } from '@game-guild/ui/components';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components';
-import { Badge } from '@game-guild/ui/components';
-import { Trash2, Edit, Plus, Users, Star } from 'lucide-react';
+import { Button } from '@game-guild/ui/components/button';
+import { Input } from '@game-guild/ui/components/input';
+import { Label } from '@game-guild/ui/components/label';
+import { Checkbox } from '@game-guild/ui/components/checkbox';
+import { Textarea } from '@game-guild/ui/components/textarea';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Edit, Plus, Star, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { TenantService } from '@/lib/services/tenant.service';
 

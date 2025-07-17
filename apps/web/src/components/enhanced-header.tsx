@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button } from '@game-guild/ui/components';
-import { Badge } from '@game-guild/ui/components';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
-} from '@game-guild/ui/components';
+} from '@game-guild/ui/components/dropdown-menu';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -24,9 +24,9 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from '@game-guild/ui/components';
-import { Sheet, SheetContent, SheetTrigger } from '@game-guild/ui/components';
-import { Input } from '@game-guild/ui/components';
+} from '@game-guild/ui/components/navigation-menu';
+import { Sheet, SheetContent, SheetTrigger } from '@game-guild/ui/components/sheet';
+import { Input } from '@game-guild/ui/components/input';
 import {
   Bell,
   Search,

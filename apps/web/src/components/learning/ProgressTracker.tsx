@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Progress } from '@game-guild/ui/components';
-import { Badge } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Progress } from '@game-guild/ui/components/progress';
+import { Badge } from '@game-guild/ui/components/badge';
 import { CheckCircle, Clock, Trophy, Target, Book, Activity } from 'lucide-react';
 
 interface ProgressItem {

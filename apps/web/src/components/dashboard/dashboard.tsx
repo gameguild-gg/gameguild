@@ -1,19 +1,5 @@
 import React, { PropsWithChildren } from 'react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarHeader,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarRail,
-  SidebarSeparator,
-  SidebarTrigger,
-} from '@game-guild/ui/components';
+
 import { Package, Send, Settings, Building2, BookOpen, LayoutDashboard, Users, BarChart3, FileText } from 'lucide-react';
 import { cookies } from 'next/headers';
 import { DashboardHeader } from './layout/dashboard-header';

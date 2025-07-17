@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@game-guild/ui/components';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
 import { CreateGroup } from '@/components/groups';
 
 export function GroupsExample() {

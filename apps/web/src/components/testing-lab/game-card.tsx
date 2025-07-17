@@ -1,5 +1,5 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Badge } from '@game-guild/ui/components';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Badge } from '@game-guild/ui/components/badge';
 import type { ProjectReadable } from '@/lib/api/generated';
 
 type Props = {

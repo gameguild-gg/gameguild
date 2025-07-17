@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@game-guild/ui/components';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Badge } from '@game-guild/ui/components';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
 import { Award, Download, Share2, Check, Loader2, Calendar, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 

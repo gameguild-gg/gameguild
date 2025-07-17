@@ -4,10 +4,10 @@ import React, { useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { useAuthenticatedApi, useTenant } from '@/lib/tenant/tenant-provider';
 import { TenantSelector } from '@/components/auth/TenantSelector';
-import { Button } from '@game-guild/ui/components';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Input } from '@game-guild/ui/components';
-import { Label } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Input } from '@game-guild/ui/components/input';
+import { Label } from '@game-guild/ui/components/label';
 import { TenantService } from '@/lib/services/tenant.service';
 import { useAuthError } from '@/hooks/useAuthError';
 

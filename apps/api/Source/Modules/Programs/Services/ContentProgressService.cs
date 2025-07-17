@@ -96,7 +96,12 @@ public class ContentProgressService : IContentProgressService {
   public async Task<IEnumerable<ContentProgress>> GetProgramProgressAsync(Guid userId, Guid programId) {
     return await _context.ContentProgress
                          .Include(cp => cp.Content)
-                         .Where(cp => cp.UserId == userId && cp.Content.ProgramId == programId)
+                         .Join(_context.ProgramContents,
+                               cp => cp.ContentId,
+                               pc => pc.Id,
+                               (cp, pc) => new { cp, pc })
+                         .Where(x => x.cp.UserId == userId && x.pc.ProgramId == programId)
+                         .Select(x => x.cp)
                          .OrderBy(cp => cp.Content.Id) // Using Id instead of SortOrder for now
                          .ToListAsync();
   }
@@ -182,7 +187,12 @@ public class ContentProgressService : IContentProgressService {
   public async Task<ContentCompletionStats> GetCompletionStatsAsync(Guid programId) {
     var allProgress = await _context.ContentProgress
                                     .Include(cp => cp.Content)
-                                    .Where(cp => cp.Content.ProgramId == programId)
+                                    .Join(_context.ProgramContents,
+                                          cp => cp.ContentId,
+                                          pc => pc.Id,
+                                          (cp, pc) => new { cp, pc })
+                                    .Where(x => x.pc.ProgramId == programId)
+                                    .Select(x => x.cp)
                                     .ToListAsync();
 
     var totalContent = await _context.ProgramContents
@@ -214,7 +224,12 @@ public class ContentProgressService : IContentProgressService {
   /// </summary>
   public async Task<bool> ResetProgramProgressAsync(Guid userId, Guid programId) {
     var progressRecords = await _context.ContentProgress
-                                        .Where(cp => cp.UserId == userId && cp.Content.ProgramId == programId)
+                                        .Join(_context.ProgramContents,
+                                              cp => cp.ContentId,
+                                              pc => pc.Id,
+                                              (cp, pc) => new { cp, pc })
+                                        .Where(x => x.cp.UserId == userId && x.pc.ProgramId == programId)
+                                        .Select(x => x.cp)
                                         .ToListAsync();
 
     _context.ContentProgress.RemoveRange(progressRecords);

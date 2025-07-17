@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Button } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
 import { CodeLanguage, RunnerStatus } from '@/components/code/types';
 import { useCode } from '@/components/code/use-code';
-import { Card } from '@game-guild/ui/components';
+import { Card } from '@game-guild/ui/components/card';
 import Editor, { OnMount } from '@monaco-editor/react';
 import { Play } from 'lucide-react';
 import confetti from 'canvas-confetti';

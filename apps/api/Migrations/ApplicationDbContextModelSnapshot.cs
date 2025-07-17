@@ -658,110 +658,6 @@ namespace GameGuild.Migrations
                     b.ToTable("program_feedback_submissions");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Feedbacks.ProgramRating", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<decimal?>("ContentQualityRating")
-                        .HasColumnType("decimal(2,1)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("DifficultyRating")
-                        .HasColumnType("decimal(2,1)");
-
-                    b.Property<decimal?>("InstructorRating")
-                        .HasColumnType("decimal(2,1)");
-
-                    b.Property<DateTime?>("ModeratedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("ModeratedBy")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ModerationStatus")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid?>("ProductId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ProgramId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ProgramUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("Rating")
-                        .HasColumnType("decimal(2,1)");
-
-                    b.Property<string>("Review")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("ValueRating")
-                        .HasColumnType("decimal(2,1)");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1);
-
-                    b.Property<bool?>("WouldRecommend")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("DeletedAt");
-
-                    b.HasIndex("ModeratedBy");
-
-                    b.HasIndex("ModerationStatus");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("ProgramId");
-
-                    b.HasIndex("ProgramUserId");
-
-                    b.HasIndex("Rating");
-
-                    b.HasIndex("SubmittedAt");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "ProgramId")
-                        .IsUnique();
-
-                    b.ToTable("program_ratings");
-                });
-
             modelBuilder.Entity("GameGuild.Modules.GameJams.Models.Jam", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1055,7 +951,53 @@ namespace GameGuild.Migrations
                     b.ToTable("Languages");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.Models.FinancialTransaction", b =>
+            modelBuilder.Entity("GameGuild.Modules.Payments.DiscountCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CurrentUses")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("MaxUses")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("MaximumDiscount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("MinimumAmount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ValidFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ValidUntil")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Value")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DiscountCodes");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Payments.FinancialTransaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1179,7 +1121,124 @@ namespace GameGuild.Migrations
                     b.ToTable("financial_transactions");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.Models.UserFinancialMethod", b =>
+            modelBuilder.Entity("GameGuild.Modules.Payments.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DiscountCodeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("FailedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("FinalAmount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Gateway")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("NetAmount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PaymentIntentId")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("ProcessingFee")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProviderTransactionId")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Payments.PaymentRefund", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExternalRefundId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("RefundAmount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentId");
+
+                    b.ToTable("PaymentRefunds");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Payments.UserFinancialMethod", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1349,6 +1408,338 @@ namespace GameGuild.Migrations
                     b.ToTable("ContentTypePermissions");
                 });
 
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostFollower", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("NotifyOnComments")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("NotifyOnLikes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("NotifyOnShares")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("NotifyOnUpdates")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("post_followers");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostStatistics", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<double>("AverageEngagementTime")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("EngagementScore")
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("ExternalSharesCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("LastCalculatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("TrendingScore")
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("UniqueViewersCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.Property<int>("ViewsCount")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("PostId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("post_statistics");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(7)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("UsageCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("UsageCount");
+
+                    b.ToTable("post_tags");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTagAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TagId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("TagId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("post_tag_assignments");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostView", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DurationSeconds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsEngaged")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Referrer")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.Property<DateTime>("ViewedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("IpAddress");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ViewedAt");
+
+                    b.ToTable("post_views");
+                });
+
             modelBuilder.Entity("GameGuild.Modules.Posts.PostComment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1471,68 +1862,6 @@ namespace GameGuild.Migrations
                     b.ToTable("post_content_references");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostFollower", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("NotifyOnComments")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("NotifyOnLikes")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("NotifyOnShares")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("NotifyOnUpdates")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("DeletedAt");
-
-                    b.HasIndex("PostId");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("post_followers");
-                });
-
             modelBuilder.Entity("GameGuild.Modules.Posts.PostLike", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1591,277 +1920,7 @@ namespace GameGuild.Migrations
                     b.ToTable("post_likes");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostStatistics", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<double>("AverageEngagementTime")
-                        .HasColumnType("REAL");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<double>("EngagementScore")
-                        .HasColumnType("REAL");
-
-                    b.Property<int>("ExternalSharesCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("LastCalculatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<double>("TrendingScore")
-                        .HasColumnType("REAL");
-
-                    b.Property<int>("UniqueViewersCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1);
-
-                    b.Property<int>("ViewsCount")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("DeletedAt");
-
-                    b.HasIndex("PostId")
-                        .IsUnique();
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("post_statistics");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostTag", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Color")
-                        .HasMaxLength(7)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsFeatured")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int>("UsageCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Category");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("DeletedAt");
-
-                    b.HasIndex("Name");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("UsageCount");
-
-                    b.ToTable("post_tags");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostTagAssignment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("TagId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("DeletedAt");
-
-                    b.HasIndex("PostId");
-
-                    b.HasIndex("TagId");
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("post_tag_assignments");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostView", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("DurationSeconds")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(45)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsEngaged")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Referrer")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1);
-
-                    b.Property<DateTime>("ViewedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("DeletedAt");
-
-                    b.HasIndex("IpAddress");
-
-                    b.HasIndex("PostId");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("ViewedAt");
-
-                    b.ToTable("post_views");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.ProductPermission", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductPermission", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1923,7 +1982,7 @@ namespace GameGuild.Migrations
                     b.ToTable("ProductPermissions");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.ProductPricing", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductPricing", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2001,7 +2060,7 @@ namespace GameGuild.Migrations
                     b.ToTable("product_pricing");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.ProductProgram", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductProgram", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2063,7 +2122,7 @@ namespace GameGuild.Migrations
                     b.ToTable("product_programs");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.ProductSubscriptionPlan", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductSubscriptionPlan", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2156,7 +2215,7 @@ namespace GameGuild.Migrations
                     b.ToTable("product_subscription_plans");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.PromoCode", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.PromoCode", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2262,7 +2321,7 @@ namespace GameGuild.Migrations
                     b.ToTable("promo_codes");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.PromoCodeUse", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.PromoCodeUse", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2320,7 +2379,7 @@ namespace GameGuild.Migrations
                     b.ToTable("promo_code_uses");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.UserProduct", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.UserProduct", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2419,7 +2478,7 @@ namespace GameGuild.Migrations
                     b.ToTable("user_products");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ActivityGrade", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ActivityGrade", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2486,7 +2545,7 @@ namespace GameGuild.Migrations
                     b.ToTable("activity_grades");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ContentInteraction", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentInteraction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2565,7 +2624,294 @@ namespace GameGuild.Migrations
                     b.ToTable("content_interactions");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ProgramContent", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CompletionStatus")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ContentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("FirstAccessedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LastAccessedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("MaxScore")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProgramEnrollmentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProgressData")
+                        .HasColumnType("jsonb");
+
+                    b.Property<decimal>("ProgressPercentage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Score")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TimeSpentSeconds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompletedAt");
+
+                    b.HasIndex("CompletionStatus");
+
+                    b.HasIndex("ContentId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("ProgramEnrollmentId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "ContentId")
+                        .IsUnique();
+
+                    b.ToTable("content_progress");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("ActionTaken")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("AssignedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ContentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Evidence")
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid?>("ModeratorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PeerReviewId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ReportType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ReportedUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ReporterId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ResolutionNotes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Subject")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("ModeratorId");
+
+                    b.HasIndex("PeerReviewId");
+
+                    b.HasIndex("ReportType");
+
+                    b.HasIndex("ReportedUserId");
+
+                    b.HasIndex("ReporterId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("content_reports");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Programs.PeerReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("AcceptanceReason")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ContentInteractionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Feedback")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Grade")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool?>("IsAccepted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ResponseAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReviewData")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int?>("ReviewQuality")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("RevieweeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ReviewerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedAt");
+
+                    b.HasIndex("ContentInteractionId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("RevieweeId");
+
+                    b.HasIndex("ReviewerId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("peer_reviews");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramContent", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2661,7 +3007,103 @@ namespace GameGuild.Migrations
                     b.ToTable("program_contents");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ProgramPermission", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramEnrollment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<Guid?>("CertificateId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("CertificateIssued")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CertificateIssuedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CompletionStatus")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EnrolledAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EnrollmentSource")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EnrollmentStatus")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("FinalGrade")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("ProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("ProgressPercentage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompletionStatus");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("EnrollmentStatus");
+
+                    b.HasIndex("ProgramId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "ProgramId")
+                        .IsUnique();
+
+                    b.ToTable("program_enrollments");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramPermission", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2723,7 +3165,106 @@ namespace GameGuild.Migrations
                     b.ToTable("ProgramPermissions");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ProgramUser", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramRating", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HelpfulVotes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<bool>("IsFeatured")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid>("ProgramId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ProgramUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Rating")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Review")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UnhelpfulVotes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_ProgramRatings_CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("IsFeatured")
+                        .HasDatabaseName("IX_ProgramRatings_IsFeatured");
+
+                    b.HasIndex("IsVerified")
+                        .HasDatabaseName("IX_ProgramRatings_IsVerified");
+
+                    b.HasIndex("ProgramId");
+
+                    b.HasIndex("ProgramUserId");
+
+                    b.HasIndex("Rating")
+                        .HasDatabaseName("IX_ProgramRatings_Rating");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ProgramId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProgramRatings_ProgramId_UserId_Unique");
+
+                    b.ToTable("program_ratings", (string)null);
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -2803,7 +3344,7 @@ namespace GameGuild.Migrations
                     b.ToTable("program_users");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ProgramWishlist", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramWishlist", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -5250,7 +5791,7 @@ namespace GameGuild.Migrations
                     b.ToTable("posts");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.Product", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.Product", b =>
                 {
                     b.HasBaseType("GameGuild.Modules.Contents.Content");
 
@@ -5303,7 +5844,7 @@ namespace GameGuild.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.Program", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.Program", b =>
                 {
                     b.HasBaseType("GameGuild.Modules.Contents.Content");
 
@@ -5446,12 +5987,12 @@ namespace GameGuild.Migrations
 
             modelBuilder.Entity("GameGuild.Modules.Certificates.Certificate", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Products.Models.Product", "Product")
+                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Programs.Models.Program", "Program")
+                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
                         .WithMany("Certificates")
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -5522,17 +6063,17 @@ namespace GameGuild.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Products.Models.Product", "Product")
+                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Programs.Models.Program", "Program")
+                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
                         .WithMany()
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Programs.Models.ProgramUser", "ProgramUser")
+                    b.HasOne("GameGuild.Modules.Programs.ProgramUser", "ProgramUser")
                         .WithMany("UserCertificates")
                         .HasForeignKey("ProgramUserId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -5603,62 +6144,18 @@ namespace GameGuild.Migrations
 
             modelBuilder.Entity("GameGuild.Modules.Feedbacks.ProgramFeedbackSubmission", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Products.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("GameGuild.Modules.Programs.Models.Program", "Program")
-                        .WithMany("FeedbackSubmissions")
-                        .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Programs.Models.ProgramUser", "ProgramUser")
-                        .WithMany("FeedbackSubmissions")
-                        .HasForeignKey("ProgramUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
-
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("Program");
-
-                    b.Navigation("ProgramUser");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Feedbacks.ProgramRating", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Users.User", "Moderator")
-                        .WithMany()
-                        .HasForeignKey("ModeratedBy");
-
-                    b.HasOne("GameGuild.Modules.Products.Models.Product", "Product")
+                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId");
 
-                    b.HasOne("GameGuild.Modules.Programs.Models.Program", "Program")
-                        .WithMany("ProgramRatings")
+                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
+                        .WithMany("FeedbackSubmissions")
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Programs.Models.ProgramUser", "ProgramUser")
-                        .WithMany("ProgramRatings")
+                    b.HasOne("GameGuild.Modules.Programs.ProgramUser", "ProgramUser")
+                        .WithMany("FeedbackSubmissions")
                         .HasForeignKey("ProgramUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -5672,8 +6169,6 @@ namespace GameGuild.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Moderator");
 
                     b.Navigation("Product");
 
@@ -5734,24 +6229,24 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.Models.FinancialTransaction", b =>
+            modelBuilder.Entity("GameGuild.Modules.Payments.FinancialTransaction", b =>
                 {
                     b.HasOne("GameGuild.Modules.Users.User", "FromUser")
                         .WithMany()
                         .HasForeignKey("FromUserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Payments.Models.UserFinancialMethod", "PaymentMethod")
+                    b.HasOne("GameGuild.Modules.Payments.UserFinancialMethod", "PaymentMethod")
                         .WithMany()
                         .HasForeignKey("PaymentMethodId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Products.Models.PromoCode", "PromoCode")
+                    b.HasOne("GameGuild.Modules.Products.PromoCode", "PromoCode")
                         .WithMany()
                         .HasForeignKey("PromoCodeId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Products.Models.PromoCode", null)
+                    b.HasOne("GameGuild.Modules.Products.PromoCode", null)
                         .WithMany("FinancialTransactions")
                         .HasForeignKey("PromoCodeId1");
 
@@ -5775,7 +6270,18 @@ namespace GameGuild.Migrations
                     b.Navigation("ToUser");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.Models.UserFinancialMethod", b =>
+            modelBuilder.Entity("GameGuild.Modules.Payments.PaymentRefund", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Payments.Payment", "Payment")
+                        .WithMany("Refunds")
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Payment");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Payments.UserFinancialMethod", b =>
                 {
                     b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
                         .WithMany()
@@ -5810,6 +6316,105 @@ namespace GameGuild.Migrations
                     b.HasOne("GameGuild.Modules.Users.User", null)
                         .WithMany("ContentTypePermissions")
                         .HasForeignKey("UserId1");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostFollower", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
+                        .WithMany("Followers")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.HasOne("GameGuild.Modules.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostStatistics", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
+                        .WithOne("Statistics")
+                        .HasForeignKey("GameGuild.Modules.Posts.Models.PostStatistics", "PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.Navigation("Post");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTag", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTagAssignment", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
+                        .WithMany("Tags")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Posts.Models.PostTag", "Tag")
+                        .WithMany("Posts")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.Navigation("Post");
+
+                    b.Navigation("Tag");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostView", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
+                        .WithMany("Views")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.HasOne("GameGuild.Modules.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Post");
 
                     b.Navigation("Tenant");
 
@@ -5872,31 +6477,6 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostFollower", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
-                        .WithMany("Followers")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
-
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Post");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("GameGuild.Modules.Posts.PostLike", b =>
                 {
                     b.HasOne("GameGuild.Modules.Posts.Post", "Post")
@@ -5922,83 +6502,9 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostStatistics", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductPermission", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
-                        .WithOne("Statistics")
-                        .HasForeignKey("GameGuild.Modules.Posts.PostStatistics", "PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
-
-                    b.Navigation("Post");
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostTag", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostTagAssignment", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
-                        .WithMany("Tags")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Posts.PostTag", "Tag")
-                        .WithMany("Posts")
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
-
-                    b.Navigation("Post");
-
-                    b.Navigation("Tag");
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostView", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
-                        .WithMany("Views")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
-
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("Post");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.ProductPermission", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Products.Models.Product", "Resource")
+                    b.HasOne("GameGuild.Modules.Products.Product", "Resource")
                         .WithMany()
                         .HasForeignKey("ResourceId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6019,9 +6525,9 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.ProductPricing", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductPricing", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Products.Models.Product", "Product")
+                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
                         .WithMany("ProductPricings")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6036,21 +6542,21 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.ProductProgram", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductProgram", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Products.Models.Product", "Product")
+                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
                         .WithMany("ProductPrograms")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Programs.Models.Program", "Program")
+                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
                         .WithMany()
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Programs.Models.Program", null)
+                    b.HasOne("GameGuild.Modules.Programs.Program", null)
                         .WithMany("ProductPrograms")
                         .HasForeignKey("ProgramId1");
 
@@ -6065,9 +6571,9 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.ProductSubscriptionPlan", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductSubscriptionPlan", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Products.Models.Product", "Product")
+                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
                         .WithMany("SubscriptionPlans")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6082,7 +6588,7 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.PromoCode", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.PromoCode", b =>
                 {
                     b.HasOne("GameGuild.Modules.Users.User", "CreatedByUser")
                         .WithMany()
@@ -6090,7 +6596,7 @@ namespace GameGuild.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Products.Models.Product", "Product")
+                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
                         .WithMany("PromoCodes")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -6106,15 +6612,15 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.PromoCodeUse", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.PromoCodeUse", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Payments.Models.FinancialTransaction", "FinancialTransaction")
+                    b.HasOne("GameGuild.Modules.Payments.FinancialTransaction", "FinancialTransaction")
                         .WithMany("PromoCodeUses")
                         .HasForeignKey("FinancialTransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Products.Models.PromoCode", "PromoCode")
+                    b.HasOne("GameGuild.Modules.Products.PromoCode", "PromoCode")
                         .WithMany("PromoCodeUses")
                         .HasForeignKey("PromoCodeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6139,20 +6645,20 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.UserProduct", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.UserProduct", b =>
                 {
                     b.HasOne("GameGuild.Modules.Users.User", "GiftedByUser")
                         .WithMany()
                         .HasForeignKey("GiftedByUserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Products.Models.Product", "Product")
+                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Products.Models.Product", null)
+                    b.HasOne("GameGuild.Modules.Products.Product", null)
                         .WithMany("UserProducts")
                         .HasForeignKey("ProductId1");
 
@@ -6186,21 +6692,21 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ActivityGrade", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ActivityGrade", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Programs.Models.ContentInteraction", "ContentInteraction")
+                    b.HasOne("GameGuild.Modules.Programs.ContentInteraction", "ContentInteraction")
                         .WithMany("ActivityGrades")
                         .HasForeignKey("ContentInteractionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Programs.Models.ProgramUser", "GraderProgramUser")
+                    b.HasOne("GameGuild.Modules.Programs.ProgramUser", "GraderProgramUser")
                         .WithMany("GivenGrades")
                         .HasForeignKey("GraderProgramUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Programs.Models.ProgramUser", null)
+                    b.HasOne("GameGuild.Modules.Programs.ProgramUser", null)
                         .WithMany("ReceivedGrades")
                         .HasForeignKey("ProgramUserId");
 
@@ -6215,19 +6721,19 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ContentInteraction", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentInteraction", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Programs.Models.ProgramContent", "Content")
+                    b.HasOne("GameGuild.Modules.Programs.ProgramContent", "Content")
                         .WithMany()
                         .HasForeignKey("ContentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Programs.Models.ProgramContent", null)
+                    b.HasOne("GameGuild.Modules.Programs.ProgramContent", null)
                         .WithMany("ContentInteractions")
                         .HasForeignKey("ProgramContentId");
 
-                    b.HasOne("GameGuild.Modules.Programs.Models.ProgramUser", "ProgramUser")
+                    b.HasOne("GameGuild.Modules.Programs.ProgramUser", "ProgramUser")
                         .WithMany("ContentInteractions")
                         .HasForeignKey("ProgramUserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6244,14 +6750,115 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ProgramContent", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentProgress", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Programs.Models.ProgramContent", "Parent")
+                    b.HasOne("GameGuild.Modules.Contents.Content", "Content")
+                        .WithMany()
+                        .HasForeignKey("ContentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Programs.ProgramEnrollment", "ProgramEnrollment")
+                        .WithMany()
+                        .HasForeignKey("ProgramEnrollmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.HasOne("GameGuild.Modules.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Content");
+
+                    b.Navigation("ProgramEnrollment");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentReport", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Users.User", "Moderator")
+                        .WithMany()
+                        .HasForeignKey("ModeratorId");
+
+                    b.HasOne("GameGuild.Modules.Programs.PeerReview", "PeerReview")
+                        .WithMany()
+                        .HasForeignKey("PeerReviewId");
+
+                    b.HasOne("GameGuild.Modules.Users.User", "ReportedUser")
+                        .WithMany()
+                        .HasForeignKey("ReportedUserId");
+
+                    b.HasOne("GameGuild.Modules.Users.User", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.Navigation("Moderator");
+
+                    b.Navigation("PeerReview");
+
+                    b.Navigation("ReportedUser");
+
+                    b.Navigation("Reporter");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Programs.PeerReview", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Programs.ContentInteraction", "ContentInteraction")
+                        .WithMany()
+                        .HasForeignKey("ContentInteractionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Users.User", "Reviewee")
+                        .WithMany()
+                        .HasForeignKey("RevieweeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Users.User", "Reviewer")
+                        .WithMany()
+                        .HasForeignKey("ReviewerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.Navigation("ContentInteraction");
+
+                    b.Navigation("Reviewee");
+
+                    b.Navigation("Reviewer");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramContent", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Programs.ProgramContent", "Parent")
                         .WithMany("Children")
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("GameGuild.Modules.Programs.Models.Program", "Program")
+                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
                         .WithMany("ProgramContents")
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6268,9 +6875,34 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ProgramPermission", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramEnrollment", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Programs.Models.Program", "Resource")
+                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
+                        .WithMany()
+                        .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.HasOne("GameGuild.Modules.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Program");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramPermission", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Programs.Program", "Resource")
                         .WithMany()
                         .HasForeignKey("ResourceId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6291,9 +6923,30 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ProgramUser", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramRating", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Programs.Models.Program", "Program")
+                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
+                        .WithMany("ProgramRatings")
+                        .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Programs.ProgramUser", null)
+                        .WithMany("ProgramRatings")
+                        .HasForeignKey("ProgramUserId");
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.Navigation("Program");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramUser", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
                         .WithMany("ProgramUsers")
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6316,9 +6969,9 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ProgramWishlist", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramWishlist", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Programs.Models.Program", "Program")
+                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
                         .WithMany("ProgramWishlists")
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -6509,11 +7162,11 @@ namespace GameGuild.Migrations
 
             modelBuilder.Entity("GameGuild.Modules.Subscriptions.Models.UserSubscription", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Products.Models.ProductSubscriptionPlan", null)
+                    b.HasOne("GameGuild.Modules.Products.ProductSubscriptionPlan", null)
                         .WithMany("UserSubscriptions")
                         .HasForeignKey("ProductSubscriptionPlanId");
 
-                    b.HasOne("GameGuild.Modules.Products.Models.ProductSubscriptionPlan", "SubscriptionPlan")
+                    b.HasOne("GameGuild.Modules.Products.ProductSubscriptionPlan", "SubscriptionPlan")
                         .WithMany()
                         .HasForeignKey("SubscriptionPlanId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -7108,7 +7761,7 @@ namespace GameGuild.Migrations
                     b.Navigation("Author");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.Product", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.Product", b =>
                 {
                     b.HasOne("GameGuild.Modules.Users.User", "Creator")
                         .WithMany()
@@ -7157,9 +7810,19 @@ namespace GameGuild.Migrations
                     b.Navigation("ResourceLocalizations");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.Models.FinancialTransaction", b =>
+            modelBuilder.Entity("GameGuild.Modules.Payments.FinancialTransaction", b =>
                 {
                     b.Navigation("PromoCodeUses");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Payments.Payment", b =>
+                {
+                    b.Navigation("Refunds");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTag", b =>
+                {
+                    b.Navigation("Posts");
                 });
 
             modelBuilder.Entity("GameGuild.Modules.Posts.PostComment", b =>
@@ -7167,36 +7830,31 @@ namespace GameGuild.Migrations
                     b.Navigation("Replies");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostTag", b =>
-                {
-                    b.Navigation("Posts");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.ProductSubscriptionPlan", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductSubscriptionPlan", b =>
                 {
                     b.Navigation("UserSubscriptions");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.PromoCode", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.PromoCode", b =>
                 {
                     b.Navigation("FinancialTransactions");
 
                     b.Navigation("PromoCodeUses");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ContentInteraction", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentInteraction", b =>
                 {
                     b.Navigation("ActivityGrades");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ProgramContent", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramContent", b =>
                 {
                     b.Navigation("Children");
 
                     b.Navigation("ContentInteractions");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.ProgramUser", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramUser", b =>
                 {
                     b.Navigation("ContentInteractions");
 
@@ -7374,7 +8032,7 @@ namespace GameGuild.Migrations
                     b.Navigation("Views");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Models.Product", b =>
+            modelBuilder.Entity("GameGuild.Modules.Products.Product", b =>
                 {
                     b.Navigation("ProductPricings");
 
@@ -7387,7 +8045,7 @@ namespace GameGuild.Migrations
                     b.Navigation("UserProducts");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Models.Program", b =>
+            modelBuilder.Entity("GameGuild.Modules.Programs.Program", b =>
                 {
                     b.Navigation("Certificates");
 

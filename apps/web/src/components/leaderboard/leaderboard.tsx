@@ -1,8 +1,8 @@
 'use client';
 
 import { Users, Snowflake, Trophy } from 'lucide-react';
-import { Card, CardContent } from '@game-guild/ui/components';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components';
+import { Card, CardContent } from '@game-guild/ui/components/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
 
 interface LeaderboardUser {
   id: string;

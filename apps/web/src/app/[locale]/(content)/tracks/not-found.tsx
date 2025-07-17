@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Button } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
 import { ArrowLeft, Search } from 'lucide-react';
 
 export default function TrackNotFound() {
