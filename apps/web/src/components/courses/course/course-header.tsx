@@ -1,4 +1,4 @@
-import type { Course } from '@/types/course-enhanced';
+import type { Course } from '@/components/legacy/types/course-enhanced';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@game-guild/ui/components/button';

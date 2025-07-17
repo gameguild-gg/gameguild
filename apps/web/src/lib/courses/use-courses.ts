@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useCourseContext } from '@/lib/courses/context/course-enhanced.context';
-import { Course, COURSE_LEVEL_NAMES } from '@/types/courses';
+import { Course, COURSE_LEVEL_NAMES } from '@/components/legacy/types/courses';
 
 export function useCourseFilters() {
   const { state, dispatch } = useCourseContext();

@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
-import type { Notification, NotificationActionState, NotificationFilters, NotificationResponse } from '@/types/notification';
+import type { Notification, NotificationActionState, NotificationFilters, NotificationResponse } from '@/components/legacy/types/notification';
 
 // Mock data for demonstration - in a real app, this would connect to your database
 const mockNotifications: Notification[] = [

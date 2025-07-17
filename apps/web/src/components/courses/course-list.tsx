@@ -1,5 +1,5 @@
 import CourseCard from './course-card-list';
-import type { Course } from '@/types/courses';
+import type { Course } from '@/components/legacy/types/courses';
 
 export default function CourseList({ courses }: { courses: Course[] }) {
   return (

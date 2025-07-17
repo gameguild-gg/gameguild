@@ -1,4 +1,4 @@
-import type { Course } from '@/types/course-enhanced';
+import type { Course } from '@/components/legacy/types/course-enhanced';
 import { BookOpen } from 'lucide-react';
 
 interface CourseToolsProps {

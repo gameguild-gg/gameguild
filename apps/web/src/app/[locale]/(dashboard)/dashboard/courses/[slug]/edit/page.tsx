@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { getCourseBySlug } from '@/lib/courses/actions';
-import { Course } from '@/types/courses';
+import { Course } from '@/components/legacy/types/courses';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 

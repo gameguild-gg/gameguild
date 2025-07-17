@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
-import { User } from '@/types/user';
+import { User } from '@/components/legacy/types/user';
 
 // Enhanced types with better filtering options
 export interface UserFilters {
