@@ -71,7 +71,7 @@ interface ApiProgram {
   category: number;
   difficulty: number;
   thumbnail?: string;
-  slug: string;
+  slug?: string; // Make optional since it might not be provided
   tools?: string[];
   progress?: number;
 }
@@ -80,6 +80,16 @@ interface ApiProgram {
  * Transform API program object to Course interface
  */
 function transformProgramToCourse(program: ApiProgram): Course {
+  // Generate slug from title if not provided
+  const slug = program.slug || generateSlugFromTitle(program.title);
+  
+  // Debug logging
+  console.log('Transforming course:', { 
+    title: program.title, 
+    originalSlug: program.slug, 
+    generatedSlug: slug 
+  });
+  
   return {
     id: program.id as CourseId,
     title: program.title,
@@ -88,9 +98,22 @@ function transformProgramToCourse(program: ApiProgram): Course {
     level: mapDifficultyToLevel(program.difficulty),
     tools: Object.freeze(program.tools || []),
     image: sanitizeImagePath(program.thumbnail),
-    slug: program.slug,
+    slug: slug,
     progress: program.progress,
   } as const;
+}
+
+/**
+ * Generate a URL-friendly slug from a title
+ */
+function generateSlugFromTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .trim()
+    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 }
 
 /**

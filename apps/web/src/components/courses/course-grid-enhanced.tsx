@@ -36,6 +36,7 @@ export function CourseGridEnhanced() {
     rating: course.analytics?.averageRating || 0,
     price: 0, // You may want to add pricing to EnhancedCourse
     image: course.image || '/placeholder-course.jpg',
+    slug: course.slug,
     instructor: {
       name: course.instructors?.[0] || 'Unknown',
       avatar: '/placeholder-avatar.jpg',
@@ -46,6 +47,7 @@ export function CourseGridEnhanced() {
   }));
 
   console.log('CourseGridEnhanced - coursesForGrid:', coursesForGrid.length, coursesForGrid.slice(0, 2));
+  console.log('CourseGridEnhanced - sample course slugs:', paginatedCourses.slice(0, 3).map(c => ({ title: c.title, slug: c.slug })));
 
   return <CourseGrid courses={coursesForGrid} loading={state.isLoading} />;
 }

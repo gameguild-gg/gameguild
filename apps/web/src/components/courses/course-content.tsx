@@ -52,6 +52,7 @@ function CourseGridEnhanced() {
     rating: course.analytics?.averageRating || 0,
     price: 0, // You may want to add pricing to EnhancedCourse
     image: course.image || '/placeholder-course.jpg',
+    slug: course.slug,
     instructor: {
       name: course.instructors?.[0] || 'Unknown',
       avatar: '/placeholder-avatar.jpg',
