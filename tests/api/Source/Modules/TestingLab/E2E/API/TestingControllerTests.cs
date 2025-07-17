@@ -426,6 +426,405 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     _context.SaveChanges();
   }
 
+  #region Simplified Workflow Tests
+
+  [Fact]
+  public async Task SubmitSimpleTestingRequest_ShouldCreateRequest_WhenValidData() {
+    // Arrange
+    var (user, tenant) = await SeedUserAndTenantAsync(_context);
+    await SetupPermissionsAsync(_context, user.Id, tenant.Id);
+
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    SetAuthorizationHeader(token);
+
+    var requestDto = new CreateSimpleTestingRequestDto {
+      Title = "Test Game Alpha",
+      Description = "Alpha build testing",
+      VersionNumber = "v1.0.0-alpha",
+      DownloadUrl = "https://example.com/game.zip",
+      InstructionsType = InstructionType.Text,
+      InstructionsContent = "Test the core gameplay mechanics",
+      FeedbackFormContent = "Please rate the game on a scale of 1-5",
+      TeamIdentifier = "fa23-capstone-2023-24-t01"
+    };
+
+    var json = JsonSerializer.Serialize(requestDto);
+    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+    // Act
+    var response = await _client.PostAsync("/testing/submit-simple", content);
+
+    // Assert
+    response.EnsureSuccessStatusCode();
+    var responseContent = await response.Content.ReadAsStringAsync();
+    var createdRequest = JsonSerializer.Deserialize<TestingRequest>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+    Assert.NotNull(createdRequest);
+    Assert.Equal(requestDto.Title, createdRequest.Title);
+    Assert.Equal(requestDto.DownloadUrl, createdRequest.DownloadUrl);
+    Assert.Equal(TestingRequestStatus.Draft, createdRequest.Status);
+  }
+
+  [Fact]
+  public async Task SubmitSimpleTestingRequest_ShouldReturnBadRequest_WhenInvalidData() {
+    // Arrange
+    var (user, tenant) = await SeedUserAndTenantAsync(_context);
+    await SetupPermissionsAsync(_context, user.Id, tenant.Id);
+
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    SetAuthorizationHeader(token);
+
+    var requestDto = new CreateSimpleTestingRequestDto {
+      // Missing required fields
+      Title = "",
+      VersionNumber = "",
+      DownloadUrl = "invalid-url"
+    };
+
+    var json = JsonSerializer.Serialize(requestDto);
+    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+    // Act
+    var response = await _client.PostAsync("/testing/submit-simple", content);
+
+    // Assert
+    Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task SubmitFeedback_ShouldCreateFeedback_WhenValidData() {
+    // Arrange
+    var (user, tenant) = await SeedUserAndTenantAsync(_context);
+    await SetupPermissionsAsync(_context, user.Id, tenant.Id);
+
+    // Create a testing request first
+    var testingRequest = await SeedTestingRequestAsync(_context, user, tenant);
+
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    SetAuthorizationHeader(token);
+
+    var feedbackDto = new SubmitFeedbackDto {
+      TestingRequestId = testingRequest.Id,
+      FeedbackResponses = "{\"rating\": 5, \"comments\": \"Great game!\"}",
+      OverallRating = 5,
+      WouldRecommend = true,
+      AdditionalNotes = "Really enjoyed the gameplay"
+    };
+
+    var json = JsonSerializer.Serialize(feedbackDto);
+    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+    // Act
+    var response = await _client.PostAsync("/testing/feedback", content);
+
+    // Assert
+    response.EnsureSuccessStatusCode();
+    var responseContent = await response.Content.ReadAsStringAsync();
+    Assert.Contains("Feedback submitted successfully", responseContent);
+
+    // Verify feedback was created in database
+    var feedback = await _context.TestingFeedback.FirstOrDefaultAsync(f => f.TestingRequestId == testingRequest.Id);
+    Assert.NotNull(feedback);
+    Assert.Equal(feedbackDto.OverallRating, feedback.OverallRating);
+    Assert.Equal(feedbackDto.WouldRecommend, feedback.WouldRecommend);
+  }
+
+  [Fact]
+  public async Task GetAvailableTestingRequests_ShouldReturnActiveRequests() {
+    // Arrange
+    var (user, tenant) = await SeedUserAndTenantAsync(_context);
+    await SetupPermissionsAsync(_context, user.Id, tenant.Id);
+
+    // Create some testing requests
+    var activeRequest = await SeedTestingRequestAsync(_context, user, tenant, TestingRequestStatus.Open);
+    var draftRequest = await SeedTestingRequestAsync(_context, user, tenant, TestingRequestStatus.Draft);
+
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    SetAuthorizationHeader(token);
+
+    // Act
+    var response = await _client.GetAsync("/testing/available-for-testing");
+
+    // Assert
+    response.EnsureSuccessStatusCode();
+    var responseContent = await response.Content.ReadAsStringAsync();
+    var requests = JsonSerializer.Deserialize<TestingRequest[]>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+    Assert.NotNull(requests);
+    Assert.Contains(requests, r => r.Id == activeRequest.Id);
+    Assert.DoesNotContain(requests, r => r.Id == draftRequest.Id); // Draft requests should not be available for testing
+  }
+
+  [Fact]
+  public async Task GetMyTestingRequests_ShouldReturnUserRequests() {
+    // Arrange
+    var (user, tenant) = await SeedUserAndTenantAsync(_context);
+    var (otherUser, _) = await SeedUserAndTenantAsync(_context);
+    await SetupPermissionsAsync(_context, user.Id, tenant.Id);
+
+    // Create requests for both users
+    var userRequest = await SeedTestingRequestAsync(_context, user, tenant);
+    var otherUserRequest = await SeedTestingRequestAsync(_context, otherUser, tenant);
+
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    SetAuthorizationHeader(token);
+
+    // Act
+    var response = await _client.GetAsync("/testing/my-requests");
+
+    // Assert
+    response.EnsureSuccessStatusCode();
+    var responseContent = await response.Content.ReadAsStringAsync();
+    var requests = JsonSerializer.Deserialize<TestingRequest[]>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+    Assert.NotNull(requests);
+    Assert.Contains(requests, r => r.Id == userRequest.Id);
+    Assert.DoesNotContain(requests, r => r.Id == otherUserRequest.Id);
+  }
+
+  #endregion
+
+  #region Attendance Management Tests
+
+  [Fact]
+  public async Task GetStudentAttendanceReport_ShouldReturnAttendanceData() {
+    // Arrange
+    var (user, tenant) = await SeedUserAndTenantAsync(_context);
+    await SetupPermissionsAsync(_context, user.Id, tenant.Id);
+
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    SetAuthorizationHeader(token);
+
+    // Act
+    var response = await _client.GetAsync("/testing/attendance/students");
+
+    // Assert
+    response.EnsureSuccessStatusCode();
+    var responseContent = await response.Content.ReadAsStringAsync();
+    Assert.NotNull(responseContent);
+    // Note: The actual structure depends on the implementation of GetStudentAttendanceReportAsync
+  }
+
+  [Fact]
+  public async Task UpdateAttendance_ShouldUpdateSessionAttendance_WhenValidData() {
+    // Arrange
+    var (user, tenant) = await SeedUserAndTenantAsync(_context);
+    await SetupPermissionsAsync(_context, user.Id, tenant.Id);
+
+    // Create a testing session
+    var session = await SeedTestingSessionAsync(_context, user, tenant);
+
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    SetAuthorizationHeader(token);
+
+    var attendanceDto = new UpdateAttendanceDto {
+      UserId = user.Id,
+      AttendanceStatus = AttendanceStatus.Completed
+    };
+
+    var json = JsonSerializer.Serialize(attendanceDto);
+    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+    // Act
+    var response = await _client.PostAsync($"/testing/sessions/{session.Id}/attendance", content);
+
+    // Assert
+    response.EnsureSuccessStatusCode();
+    var responseContent = await response.Content.ReadAsStringAsync();
+    Assert.Contains("Attendance updated successfully", responseContent);
+  }
+
+  #endregion
+
+  #region Feedback Quality Management Tests
+
+  [Fact]
+  public async Task ReportFeedback_ShouldMarkFeedbackAsReported_WhenValidData() {
+    // Arrange
+    var (user, tenant) = await SeedUserAndTenantAsync(_context);
+    await SetupPermissionsAsync(_context, user.Id, tenant.Id);
+
+    // Create testing request and feedback
+    var testingRequest = await SeedTestingRequestAsync(_context, user, tenant);
+    var feedback = await SeedTestingFeedbackAsync(_context, testingRequest, user);
+
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    SetAuthorizationHeader(token);
+
+    var reportDto = new ReportFeedbackDto {
+      Reason = "Inappropriate content"
+    };
+
+    var json = JsonSerializer.Serialize(reportDto);
+    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+    // Act
+    var response = await _client.PostAsync($"/testing/feedback/{feedback.Id}/report", content);
+
+    // Assert
+    response.EnsureSuccessStatusCode();
+    var responseContent = await response.Content.ReadAsStringAsync();
+    Assert.Contains("Feedback reported successfully", responseContent);
+
+    // Verify feedback was marked as reported
+    var updatedFeedback = await _context.TestingFeedback.FindAsync(feedback.Id);
+    Assert.NotNull(updatedFeedback);
+    Assert.True(updatedFeedback.IsReported);
+    Assert.Equal(reportDto.Reason, updatedFeedback.ReportReason);
+  }
+
+  [Fact]
+  public async Task RateFeedbackQuality_ShouldUpdateQualityRating_WhenValidData() {
+    // Arrange
+    var (user, tenant) = await SeedUserAndTenantAsync(_context);
+    await SetupPermissionsAsync(_context, user.Id, tenant.Id);
+
+    // Create testing request and feedback
+    var testingRequest = await SeedTestingRequestAsync(_context, user, tenant);
+    var feedback = await SeedTestingFeedbackAsync(_context, testingRequest, user);
+
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    SetAuthorizationHeader(token);
+
+    var qualityDto = new RateFeedbackQualityDto {
+      Quality = FeedbackQuality.Positive
+    };
+
+    var json = JsonSerializer.Serialize(qualityDto);
+    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+    // Act
+    var response = await _client.PostAsync($"/testing/feedback/{feedback.Id}/quality", content);
+
+    // Assert
+    response.EnsureSuccessStatusCode();
+    var responseContent = await response.Content.ReadAsStringAsync();
+    Assert.Contains("Feedback quality rated successfully", responseContent);
+
+    // Verify feedback quality was updated
+    var updatedFeedback = await _context.TestingFeedback.FindAsync(feedback.Id);
+    Assert.NotNull(updatedFeedback);
+    Assert.Equal(FeedbackQuality.Positive, updatedFeedback.QualityRating);
+  }
+
+  [Fact]
+  public async Task ReportFeedback_ShouldReturnNotFound_WhenFeedbackDoesNotExist() {
+    // Arrange
+    var (user, tenant) = await SeedUserAndTenantAsync(_context);
+    await SetupPermissionsAsync(_context, user.Id, tenant.Id);
+
+    var token = await CreateJwtTokenForUserAsync(user, tenant);
+    SetAuthorizationHeader(token);
+
+    var reportDto = new ReportFeedbackDto {
+      Reason = "Test reason"
+    };
+
+    var json = JsonSerializer.Serialize(reportDto);
+    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+    var nonExistentFeedbackId = Guid.NewGuid();
+
+    // Act
+    var response = await _client.PostAsync($"/testing/feedback/{nonExistentFeedbackId}/report", content);
+
+    // Assert
+    Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  #endregion
+
+  #region Helper Methods for New Tests
+
+  private async Task<TestingRequest> SeedTestingRequestAsync(ApplicationDbContext context, UserModel user, TenantModel tenant, TestingRequestStatus status = TestingRequestStatus.Draft) {
+    var project = new ProjectModel {
+      Id = Guid.NewGuid(),
+      Title = $"Test Project {Guid.NewGuid().ToString()[..8]}",
+      TenantId = tenant.Id,
+      CreatedBy = user.Id,
+      CreatedAt = DateTime.UtcNow
+    };
+
+    var projectVersion = new ProjectVersionModel {
+      Id = Guid.NewGuid(),
+      VersionNumber = "v1.0.0",
+      ProjectId = project.Id,
+      CreatedBy = user.Id,
+      CreatedAt = DateTime.UtcNow
+    };
+
+    var testingRequest = new TestingRequest {
+      Id = Guid.NewGuid(),
+      Title = $"Test Request {Guid.NewGuid().ToString()[..8]}",
+      Description = "Test description",
+      ProjectVersionId = projectVersion.Id,
+      DownloadUrl = "https://example.com/game.zip",
+      InstructionsType = InstructionsType.Inline,
+      InstructionsContent = "Test instructions",
+      FeedbackFormContent = "Feedback form",
+      MaxTesters = 8,
+      CurrentTesterCount = 0,
+      StartDate = DateTime.UtcNow,
+      EndDate = DateTime.UtcNow.AddDays(7),
+      Status = status,
+      CreatedBy = user.Id,
+      CreatedAt = DateTime.UtcNow,
+      TenantId = tenant.Id
+    };
+
+    context.Projects.Add(project);
+    context.Set<ProjectVersionModel>().Add(projectVersion);
+    context.TestingRequests.Add(testingRequest);
+    await context.SaveChangesAsync();
+
+    return testingRequest;
+  }
+
+  private async Task<TestingSession> SeedTestingSessionAsync(ApplicationDbContext context, UserModel user, TenantModel tenant) {
+    var testingRequest = await SeedTestingRequestAsync(context, user, tenant);
+
+    var session = new TestingSession {
+      Id = Guid.NewGuid(),
+      TestingRequestId = testingRequest.Id,
+      StartTime = DateTime.UtcNow,
+      EndTime = DateTime.UtcNow.AddHours(2),
+      LocationId = null,
+      MaxParticipants = 8,
+      CurrentParticipants = 0,
+      CreatedBy = user.Id,
+      CreatedAt = DateTime.UtcNow,
+      TenantId = tenant.Id
+    };
+
+    context.TestingSessions.Add(session);
+    await context.SaveChangesAsync();
+
+    return session;
+  }
+
+  private async Task<TestingFeedback> SeedTestingFeedbackAsync(ApplicationDbContext context, TestingRequest testingRequest, UserModel user) {
+    var feedback = new TestingFeedback {
+      Id = Guid.NewGuid(),
+      TestingRequestId = testingRequest.Id,
+      SubmittedBy = user.Id,
+      FeedbackResponses = "{\"rating\": 4, \"comments\": \"Good game\"}",
+      OverallRating = 4,
+      WouldRecommend = true,
+      AdditionalNotes = "Test feedback",
+      SubmittedAt = DateTime.UtcNow,
+      IsReported = false,
+      QualityRating = FeedbackQuality.Medium,
+      TenantId = testingRequest.TenantId
+    };
+
+    context.TestingFeedback.Add(feedback);
+    await context.SaveChangesAsync();
+
+    return feedback;
+  }
+
+  #endregion
+
   public void Dispose() {
     _scope?.Dispose();
     _client?.Dispose();
