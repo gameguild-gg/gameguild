@@ -26,10 +26,10 @@ public class GetTenantByNameHandler(
       return Result.Success(tenant);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "Error retrieving tenant by name '{TenantName}'", request.Name);
+      logger.LogError(ex, "ErrorMessage retrieving tenant by name '{TenantName}'", request.Name);
 
       return Result.Failure<Tenant?>(
-        Common.Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant by name")
+        Common.ErrorMessage.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant by name")
       );
     }
   }

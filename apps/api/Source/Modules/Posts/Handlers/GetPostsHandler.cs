@@ -96,10 +96,10 @@ public class GetPostsHandler(
       return Result.Success(result);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "Error getting posts for tenant {TenantId}", request.TenantId);
+      logger.LogError(ex, "ErrorMessage getting posts for tenant {TenantId}", request.TenantId);
 
       return Result.Failure<PostsPageDto>(
-        new Common.Error(
+        new Common.ErrorMessage(
           "GetPosts.Failed",
           $"Failed to get posts: {ex.Message}",
           ErrorType.Failure

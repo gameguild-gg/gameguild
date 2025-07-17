@@ -41,7 +41,7 @@ public class PostsController : ControllerBase {
 
     var result = await _mediator.Send(query);
 
-    return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    return result.IsSuccess ? Ok(result.Value) : BadRequest(result.ErrorMessage);
   }
 
   [HttpGet("{postId:guid}")]
@@ -50,7 +50,7 @@ public class PostsController : ControllerBase {
 
     var result = await _mediator.Send(query);
 
-    if (!result.IsSuccess) { return result.Error?.Code == "Post.NotFound" ? NotFound(result.Error) : BadRequest(result.Error); }
+    if (!result.IsSuccess) { return result.ErrorMessage?.Code == "Post.PageNotFound" ? PageNotFound(result.ErrorMessage) : BadRequest(result.ErrorMessage); }
 
     var post = result.Value!;
     var postDto = new PostDto {
@@ -92,7 +92,7 @@ public class PostsController : ControllerBase {
 
     var result = await _mediator.Send(command);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     var post = result.Value!;
     var postDto = new PostDto {

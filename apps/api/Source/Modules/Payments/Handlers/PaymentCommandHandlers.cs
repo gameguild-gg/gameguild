@@ -62,7 +62,7 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
       };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error creating payment for user {UserId}", request.UserId);
+      _logger.LogError(ex, "ErrorMessage creating payment for user {UserId}", request.UserId);
 
       return new CreatePaymentResult { Success = false, ErrorMessage = "Failed to create payment" };
     }
@@ -162,7 +162,7 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
       return new ProcessPaymentResult { Success = true, Payment = payment, AutoEnrollTriggered = autoEnrollTriggered };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error processing payment {PaymentId}", request.PaymentId);
+      _logger.LogError(ex, "ErrorMessage processing payment {PaymentId}", request.PaymentId);
 
       return new ProcessPaymentResult { Success = false, ErrorMessage = "Failed to process payment" };
     }
@@ -227,7 +227,7 @@ public class RefundPaymentCommandHandler : IRequestHandler<RefundPaymentCommand,
       return new RefundPaymentResult { Success = true, Refund = refund };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error refunding payment {PaymentId}", request.PaymentId);
+      _logger.LogError(ex, "ErrorMessage refunding payment {PaymentId}", request.PaymentId);
 
       return new RefundPaymentResult { Success = false, ErrorMessage = "Failed to process refund" };
     }
@@ -292,7 +292,7 @@ public class CancelPaymentCommandHandler : IRequestHandler<CancelPaymentCommand,
       return new CancelPaymentResult { Success = true, Payment = payment };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error cancelling payment {PaymentId}", request.PaymentId);
+      _logger.LogError(ex, "ErrorMessage cancelling payment {PaymentId}", request.PaymentId);
 
       return new CancelPaymentResult { Success = false, ErrorMessage = "Failed to cancel payment" };
     }

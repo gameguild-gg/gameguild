@@ -93,7 +93,7 @@ public class FinancialTransaction : Entity {
   public DateTime? FailedAt { get; set; }
 
   /// <summary>
-  /// Error message if transaction failed
+  /// ErrorMessage message if transaction failed
   /// </summary>
   [MaxLength(500)]
   public string? ErrorMessage { get; set; }

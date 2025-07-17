@@ -303,7 +303,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     content = new StringContent(json, Encoding.UTF8, "application/json");
     response = await _client.PostAsync("/api/tenant-domains/auto-assign", content);
 
-    Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    Assert.Equal(HttpStatusCode.PageNotFound, response.StatusCode);
 
     // Step 10: Verify group memberships
     // Check Students group has the general student

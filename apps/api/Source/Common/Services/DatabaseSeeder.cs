@@ -37,7 +37,7 @@ public class DatabaseSeeder(
       logger.LogInformation("Database seeding completed successfully");
     }
     catch (Exception ex) {
-      logger.LogError(ex, "Error occurred during database seeding");
+      logger.LogError(ex, "ErrorMessage occurred during database seeding");
 
       throw;
     }

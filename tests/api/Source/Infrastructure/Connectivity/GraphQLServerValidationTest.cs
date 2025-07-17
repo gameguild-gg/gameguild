@@ -53,6 +53,6 @@ public class GraphQLServerValidationTest : IClassFixture<TestServerFixture>
         var response = await _client.GetAsync("/graphql");
         
         // GraphQL typically returns 400 for GET requests without query params, but should not be 404
-        Assert.NotEqual(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        Assert.NotEqual(System.Net.HttpStatusCode.PageNotFound, response.StatusCode);
     }
 }

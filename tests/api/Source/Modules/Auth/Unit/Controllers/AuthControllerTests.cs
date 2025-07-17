@@ -94,7 +94,7 @@ public class AuthControllerTests
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
         var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
         Assert.Equal(400, problemDetails.Status);
-        Assert.Equal("Validation Error", problemDetails.Title);
+        Assert.Equal("Validation ErrorMessage", problemDetails.Title);
     }
 
     [Fact]
@@ -250,7 +250,7 @@ public class AuthControllerTests
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
         Assert.Equal(400, problemDetails.Status);
-        Assert.Equal("Validation Error", problemDetails.Title);
+        Assert.Equal("Validation ErrorMessage", problemDetails.Title);
     }
 
     [Fact]

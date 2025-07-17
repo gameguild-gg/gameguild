@@ -86,7 +86,7 @@ public class PostCreatedEventHandler : IDomainEventHandler<PostCreatedEvent> {
       await SendRealTimeNotifications(domainEvent, cancellationToken);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error handling side effects for post {PostId}", domainEvent.PostId);
+      _logger.LogError(ex, "ErrorMessage handling side effects for post {PostId}", domainEvent.PostId);
       // Don't rethrow - side effects shouldn't fail the main operation
     }
   }
@@ -173,7 +173,7 @@ public class PostLikedEventHandler : IDomainEventHandler<PostLikedEvent> {
       await CheckLikeMilestones(domainEvent, cancellationToken);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error handling post like event for post {PostId}", domainEvent.PostId);
+      _logger.LogError(ex, "ErrorMessage handling post like event for post {PostId}", domainEvent.PostId);
       // Don't rethrow - side effects shouldn't fail the main operation
     }
   }
@@ -304,7 +304,7 @@ public class PostDeletedEventHandler : IDomainEventHandler<PostDeletedEvent> {
       await UpdateUserStatistics(domainEvent, cancellationToken);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error handling post deletion event for post {PostId}", domainEvent.PostId);
+      _logger.LogError(ex, "ErrorMessage handling post deletion event for post {PostId}", domainEvent.PostId);
       // Don't rethrow - side effects shouldn't fail the main operation
     }
   }
