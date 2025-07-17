@@ -1,12 +1,12 @@
 import React from 'react';
 import { numberToAbbreviation } from '@/lib/utils';
 
-interface LeaderboardHeaderProps {
+interface ContributorsHeaderProps {
   totalContributors: number;
   totalParticipated: number;
 }
 
-export const LeaderboardHeader: React.FC<LeaderboardHeaderProps> = ({ totalContributors, totalParticipated }) => {
+export function ContributorsHeader({ totalContributors, totalParticipated }: ContributorsHeaderProps) {
   return (
     <div className="mb-8">
       <h1 className="text-4xl font-bold text-foreground mb-6">Contributors Leaderboard</h1>
@@ -25,34 +25,23 @@ export const LeaderboardHeader: React.FC<LeaderboardHeaderProps> = ({ totalContr
         </div>
 
         {/* Call to Action - Contribute */}
-        <div className="md:col-span-2 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-6 border border-primary/20 relative overflow-hidden">
+        <a
+          href="#contributing-section"
+          className="md:col-span-2 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-6 border border-primary/20 relative overflow-hidden hover:border-primary/30 transition-all hover:scale-[1.02] cursor-pointer block"
+        >
           <div className="relative z-10">
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-foreground mb-2">Start Contributing Today!</h3>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground">
                   Join our amazing community of developers and help make Game Guild even better. Every contribution counts!
                 </p>
+                <div className="flex items-center gap-2 mt-3 text-sm text-primary font-medium">
+                  <span>Learn how to contribute</span>
+                  <span>↓</span>
+                </div>
               </div>
               <div className="text-4xl">🚀</div>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <a
-                href="https://github.com/gameguild-gg/website"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
-              >
-                View Repository
-              </a>
-              <a
-                href="https://github.com/gameguild-gg/website/issues"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-4 py-2 border border-border text-foreground rounded-md hover:bg-muted transition-colors font-medium"
-              >
-                Browse Issues
-              </a>
             </div>
           </div>
           {/* Decorative background pattern */}
@@ -60,8 +49,8 @@ export const LeaderboardHeader: React.FC<LeaderboardHeaderProps> = ({ totalContr
             <div className="absolute top-4 right-4 text-6xl">💻</div>
             <div className="absolute bottom-4 left-4 text-4xl">⚡</div>
           </div>
-        </div>
+        </a>
       </div>
     </div>
   );
-};
+}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Metadata } from 'next';
 import { getContributors } from '@/lib/contributors';
-import { LeaderboardHeader, TopContributorsSection, GlobalRankingTable } from '@/components/contributors';
+import { ContributorsHeader, TopContributorsSection, GlobalRankingTable, HowToContribute } from '@/components/contributors';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -29,13 +29,16 @@ export default async function Page(): Promise<React.JSX.Element> {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header with stats */}
-        <LeaderboardHeader totalContributors={totalContributors} totalParticipated={totalParticipated} />
+        <ContributorsHeader totalContributors={totalContributors} totalParticipated={totalParticipated} />
 
         {/* Top 3 Contributors */}
         <TopContributorsSection contributors={contributors} />
 
         {/* Global Ranking Table */}
         <GlobalRankingTable contributors={contributors} />
+
+        {/* How to Contribute Section */}
+        <HowToContribute />
       </div>
     </div>
   );
