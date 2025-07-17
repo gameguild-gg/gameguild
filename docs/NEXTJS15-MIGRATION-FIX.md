@@ -5,9 +5,9 @@
 ### Problem
 Next.js 15 introduced a breaking change where `params` in page components is now a Promise that must be unwrapped using `React.use()`. Direct access to `params.slug` and `params.locale` was causing runtime warnings and will break in future versions.
 
-### Error Messages
+### ErrorMessage Messages
 ```
-Error: A param property was accessed directly with `params.slug`. `params` is now a Promise and should be unwrapped with `React.use()` before accessing properties of the underlying params object.
+ErrorMessage: A param property was accessed directly with `params.slug`. `params` is now a Promise and should be unwrapped with `React.use()` before accessing properties of the underlying params object.
 ```
 
 ### Solution Applied

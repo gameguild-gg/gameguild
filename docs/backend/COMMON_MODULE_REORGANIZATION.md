@@ -37,7 +37,7 @@ Common/
 │   ├── Entities/
 │   ├── Enums/
 │   ├── Events/
-│   ├── Error.cs
+│   ├── ErrorMessage.cs
 │   ├── ErrorType.cs
 │   ├── Result.cs
 │   └── ValidationError.cs

@@ -95,7 +95,7 @@ public async Task<IActionResult> GoogleIdTokenValidation([FromBody] GoogleIdToke
 - ✅ `auth.config.ts`: Temporary authentication bypass
 - ✅ `page.tsx`: CMS connectivity testing
 - ✅ `.env.local`: Updated API URL to localhost:5001
-- ✅ Error handling and logging improvements
+- ✅ ErrorMessage handling and logging improvements
 
 ## 🎉 Ready to Test!
 

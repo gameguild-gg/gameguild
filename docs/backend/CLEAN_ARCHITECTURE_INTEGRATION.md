@@ -46,7 +46,7 @@ app.Run();
 - **Modern Endpoints**: New minimal API endpoints with better performance
 - **Gradual Migration**: Can migrate endpoints one by one
 
-### 2. **Enhanced Error Handling**
+### 2. **Enhanced ErrorMessage Handling**
 ```csharp
 // Old approach
 catch (Exception ex)
@@ -60,11 +60,11 @@ try
     var result = await mediator.Send(command);
     return result.IsSuccess 
         ? TypedResults.Ok(result.Value)
-        : TypedResults.BadRequest(result.Error.Description);
+        : TypedResults.BadRequest(result.ErrorMessage.Description);
 }
 catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
 {
-    return TypedResults.NotFound();
+    return TypedResults.PageNotFound();
 }
 ```
 
@@ -129,7 +129,7 @@ group.MapPost("/", async (CreateUserDto dto, IMediator mediator) =>
     
     return result.IsSuccess
         ? Results.Created($"/api/users/{result.Value.Id}", result.Value)
-        : Results.BadRequest(result.Error);
+        : Results.BadRequest(result.ErrorMessage);
 })
 .WithName("CreateUser")
 .Produces<UserDto>(201)
