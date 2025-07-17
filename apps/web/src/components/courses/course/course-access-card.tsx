@@ -5,7 +5,6 @@ import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Progress } from '@game-guild/ui/components/progress';
-import { Loading } from '@game-guild/ui/components/loading';
 
 import {
   createPaymentIntent,
@@ -18,6 +17,7 @@ import {
 import { BookOpen, CreditCard, Gift, Loader2, Lock, Star, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { CourseErrorBoundary } from '@/components/courses/course-error-boundary';
 
 interface CourseAccessCardProps {
   readonly courseSlug: string;
@@ -32,7 +32,9 @@ function LoadingCard() {
         <CardTitle className="text-xl text-center">Loading...</CardTitle>
       </CardHeader>
       <CardContent>
-        <Loading size="sm" />
+        <div className="flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
       </CardContent>
     </Card>
   );
@@ -314,7 +316,7 @@ export default function CourseAccessCard({ courseSlug }: Omit<CourseAccessCardPr
   }
 
   return (
-    <ErrorBoundary>
+    <CourseErrorBoundary>
       <div className="space-y-4">
         {products.map((product) => (
           <ProductCard
@@ -328,6 +330,6 @@ export default function CourseAccessCard({ courseSlug }: Omit<CourseAccessCardPr
         ))}
         <CourseStatsCard />
       </div>
-    </ErrorBoundary>
+    </CourseErrorBoundary>
   );
 }

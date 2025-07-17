@@ -12,7 +12,7 @@ import {
   getProductsContainingCourse,
   EnrollmentStatus,
   Product,
-} from '@/lib/actions/enrollment.ts';
+} from '@/lib/courses/actions/enrollment.actions';
 import { Users, Trophy, Star, Lock, CreditCard, Gift, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';

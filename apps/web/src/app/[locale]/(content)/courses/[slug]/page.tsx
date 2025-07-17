@@ -6,6 +6,7 @@ import { CourseOverview } from '@/components/courses/course/course-overview';
 import { CourseTools } from '@/components/courses/course/course-tools';
 import { CourseFeatures } from '@/components/courses/course/course-features';
 import { CourseSidebar } from '@/components/courses/course/course-sidebar';
+import { Loader2 } from 'lucide-react';
 
 
 // Generate metadata for SEO
@@ -74,7 +75,16 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
   const { slug } = await params;
 
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense 
+      fallback={
+        <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <p className="text-gray-400">Loading course...</p>
+          </div>
+        </div>
+      }
+    >
       <CourseContent slug={slug} />
     </Suspense>
   );
