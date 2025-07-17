@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { ArrowRight, Bell, Check } from 'lucide-react';
-import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent } from '@game-guild/ui/components/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
-import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 interface Notification {
   id: string;

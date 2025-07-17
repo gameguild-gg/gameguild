@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent, CardHeader } from '@game-guild/ui/components/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowRight, Clock, Star, Users } from 'lucide-react';
 import Link from 'next/link';
 

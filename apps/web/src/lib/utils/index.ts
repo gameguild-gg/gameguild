@@ -1,3 +1,8 @@
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
+
 export const numberToAbbreviation = (number: number): string => {
   if (!number || number === 0) return '0';
 

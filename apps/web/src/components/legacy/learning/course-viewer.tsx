@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Progress } from '@game-guild/ui/components/progress';
-import { ScrollArea } from '@game-guild/ui/components/scroll-area';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertTriangle, ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock, Code, FileText, MessageSquare, PlayCircle, Trophy, Users } from 'lucide-react';
 
 interface ContentItem {

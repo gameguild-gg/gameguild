@@ -14,7 +14,7 @@ import {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
-} from '@game-guild/ui/components/sidebar';
+} from '@/components/ui/sidebar';
 
 const navigationData = {
   primary: [

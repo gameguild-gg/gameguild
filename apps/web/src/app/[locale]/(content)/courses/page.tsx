@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent } from '@game-guild/ui/components/card';
-import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { ArrowRight, BookOpen, CheckCircle, Code, Gamepad2, Headphones, Palette, PlayCircle, Star, Trophy, Users, Zap } from 'lucide-react';
 
 export default function CoursesLandingPage() {

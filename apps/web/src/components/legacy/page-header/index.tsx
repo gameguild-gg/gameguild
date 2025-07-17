@@ -1,8 +1,8 @@
 import React from 'react';
 import { PageHeaderMenu } from '@/components/page/page-header/page-header-menu';
 import { Bell, Globe, Search, ShoppingCart } from 'lucide-react';
-import { Input } from '@game-guild/ui/components/input';
-import { Button } from '@game-guild/ui/components/button';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 type Props = React.HTMLAttributes<HTMLDivElement> & {
   children?: React.ReactNode;

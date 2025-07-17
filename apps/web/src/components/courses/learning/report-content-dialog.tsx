@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
-import { Button } from '@game-guild/ui/components/button';
-import { Textarea } from '@game-guild/ui/components/textarea';
-import { RadioGroup, RadioGroupItem } from '@game-guild/ui/components/radio-group';
-import { Label } from '@game-guild/ui/components/label';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { AlertTriangle, Copyright, Flag, Shield, Spam } from 'lucide-react';
 
 interface ReportContentDialogProps {

@@ -1,7 +1,7 @@
 import { AppSidebar } from '@/components/app-sidebar';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@game-guild/ui/components/breadcrumb';
-import { Separator } from '@game-guild/ui/components/separator';
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@game-guild/ui/components/sidebar';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { Separator } from '@/components/ui/separator';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import React, { PropsWithChildren } from 'react';
 
 export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {

@@ -4,14 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { TenantService } from '@/lib/tenants/tenant.service';
 import { CreateTenantRequest, TenantResponse } from '@/lib/tenants/types';
-import { Button } from '@game-guild/ui/components/button';
-import { Input } from '@game-guild/ui/components/input';
-import { Label } from '@game-guild/ui/components/label';
-import { Textarea } from '@game-guild/ui/components/textarea';
-import { Checkbox } from '@game-guild/ui/components/checkbox';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
-import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Trash2 } from 'lucide-react';
 
 export function TenantManagementComponent() {

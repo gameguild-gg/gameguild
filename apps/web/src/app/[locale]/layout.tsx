@@ -6,13 +6,13 @@ import { SessionProvider } from 'next-auth/react';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { WebVitals } from '@/components/analytics';
-import { ThemeProvider } from '@game-guild/ui/components/theme';
+import { ThemeProvider } from '@/components/theme';
 import { Web3Provider } from '@/components/web3/web3-context';
 import { TenantProvider } from '@/lib/tenants/tenant-provider';
 import { environment } from '@/configs/environment';
 import { auth } from '@/auth';
 import { routing } from '@/i18n/routing';
-import { PropsWithLocaleParams } from '@/components/legacy/types';
+import { PropsWithLocaleParams } from '@/types';
 
 export async function generateMetadata({ params }: PropsWithLocaleParams): Promise<Metadata> {
   const { locale } = await params;
