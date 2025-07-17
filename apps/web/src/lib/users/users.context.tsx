@@ -520,7 +520,7 @@ interface UserContextType {
   isProcessing: boolean;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+const UsersContext = createContext<UserContextType | undefined>(undefined);
 
 // Provider props
 interface UserProviderProps {
@@ -717,7 +717,7 @@ export function UserProvider({ children, initialUsers = [] }: UserProviderProps)
     isProcessing,
   };
 
-  return <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>;
+  return <UsersContext.Provider value={contextValue}>{children}</UsersContext.Provider>;
 }
 
 // Utility functions
@@ -752,7 +752,7 @@ function downloadFile(content: string, filename: string, contentType: string) {
 
 // Hook to use the context
 export function useUserContext(): UserContextType {
-  const context = useContext(UserContext);
+  const context = useContext(UsersContext);
   if (context === undefined) {
     throw new Error('useUserContext must be used within a UserProvider');
   }

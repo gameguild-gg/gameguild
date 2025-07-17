@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/compone
 import { Button } from '@game-guild/ui/components/button';
 import { BookOpen } from 'lucide-react';
 import Link from 'next/link';
-import CourseAccessCard from './CourseAccessCard';
+import CourseAccessCard from './course-access-card';
 
 interface CourseSidebarProps {
   readonly courseSlug: string;

@@ -1,4 +1,4 @@
-// import ContributorCard, { Contributor } from '@/components/contributors/ContributorCard';
+// import ContributorCard, { Contributor } from '@/components/contributors/contributor-card';
 // import { Github } from 'lucide-react';
 // import { Metadata } from 'next';
 // import Link from 'next/link';

@@ -1,5 +1,5 @@
 import { fetchCourses } from '@/components/courses/actions';
-import CourseList from '@/components/courses/CourseList';
+import CourseList from '@/components/courses/course-list';
 import Link from 'next/link';
 
 export default async function CategoryCatalogPage({ params }: { params: { category: string } }) {

@@ -1,8 +1,8 @@
 'use client';
 
+import { useTrackFilters } from '@/lib/hooks/use-tracks';
 import { Input } from '@game-guild/ui/components/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { useTrackFilters } from '@/hooks/use-tracks';
 
 export function TrackFilters() {
   const { area, tool, level, searchTerm, availableTools, setArea, setTool, setLevel, setSearchTerm } = useTrackFilters();
