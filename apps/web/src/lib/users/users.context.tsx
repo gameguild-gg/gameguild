@@ -1,7 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, ReactNode, useEffect, useMemo, useCallback } from 'react';
-import { User, UserSortField, SortDirection } from '@/types/user';
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
+import { User } from '@/types/user';
 
 // Enhanced types with better filtering options
 export interface UserFilters {
@@ -200,9 +200,7 @@ export function userReducer(state: UserState, action: UserAction): UserState {
     }
 
     case 'BULK_UPDATE_USERS': {
-      const updatedUsers = state.users.map((user) =>
-        action.payload.ids.includes(user.id) ? { ...user, ...action.payload.updates } : user
-      );
+      const updatedUsers = state.users.map((user) => (action.payload.ids.includes(user.id) ? { ...user, ...action.payload.updates } : user));
       return {
         ...state,
         users: updatedUsers,
@@ -233,10 +231,11 @@ export function userReducer(state: UserState, action: UserAction): UserState {
 
     case 'SET_SEARCH': {
       const newFilters = { ...state.filters, search: action.payload };
-      const newSearchHistory = action.payload && !state.searchHistory.includes(action.payload)
-        ? [action.payload, ...state.searchHistory.slice(0, 9)] // Keep only last 10 searches
-        : state.searchHistory;
-      
+      const newSearchHistory =
+        action.payload && !state.searchHistory.includes(action.payload)
+          ? [action.payload, ...state.searchHistory.slice(0, 9)] // Keep only last 10 searches
+          : state.searchHistory;
+
       return {
         ...state,
         filters: newFilters,
@@ -247,9 +246,8 @@ export function userReducer(state: UserState, action: UserAction): UserState {
     }
 
     case 'ADD_TO_SEARCH_HISTORY': {
-      const newHistory = action.payload && !state.searchHistory.includes(action.payload)
-        ? [action.payload, ...state.searchHistory.slice(0, 9)]
-        : state.searchHistory;
+      const newHistory =
+        action.payload && !state.searchHistory.includes(action.payload) ? [action.payload, ...state.searchHistory.slice(0, 9)] : state.searchHistory;
       return { ...state, searchHistory: newHistory };
     }
 
@@ -322,14 +320,16 @@ export function userReducer(state: UserState, action: UserAction): UserState {
       };
 
     case 'SET_ERROR':
-      return { 
-        ...state, 
+      return {
+        ...state,
         error: action.payload,
-        operationStatus: action.payload ? {
-          ...state.operationStatus,
-          success: false,
-          message: action.payload
-        } : state.operationStatus
+        operationStatus: action.payload
+          ? {
+              ...state.operationStatus,
+              success: false,
+              message: action.payload,
+            }
+          : state.operationStatus,
       };
 
     case 'SET_OPERATION_STATUS':
@@ -357,16 +357,12 @@ export function userReducer(state: UserState, action: UserAction): UserState {
 
     case 'OPTIMIZE_STATE': {
       // Remove duplicates and optimize data
-      const uniqueUsers = state.users.filter((user, index, self) => 
-        index === self.findIndex(u => u.id === user.id)
-      );
+      const uniqueUsers = state.users.filter((user, index, self) => index === self.findIndex((u) => u.id === user.id));
       return {
         ...state,
         users: uniqueUsers,
         filteredUsers: applyFilters(uniqueUsers, state.filters),
-        selectedUsers: state.selectedUsers.filter(id => 
-          uniqueUsers.some(user => user.id === id)
-        ),
+        selectedUsers: state.selectedUsers.filter((id) => uniqueUsers.some((user) => user.id === id)),
       };
     }
 
@@ -383,15 +379,8 @@ function applyFilters(users: User[], filters: UserFilters): User[] {
   if (filters.search) {
     const searchLower = filters.search.toLowerCase();
     filtered = filtered.filter((user) => {
-      const searchableFields = [
-        user.name,
-        user.email,
-        user.role || '',
-        user.phone || '',
-      ];
-      return searchableFields.some(field => 
-        field.toLowerCase().includes(searchLower)
-      );
+      const searchableFields = [user.name, user.email, user.role || '', user.phone || ''];
+      return searchableFields.some((field) => field.toLowerCase().includes(searchLower));
     });
   }
 
@@ -410,10 +399,10 @@ function applyFilters(users: User[], filters: UserFilters): User[] {
     filtered = filtered.filter((user) => {
       const subscription = user.subscription;
       if (!subscription) return filters.subscriptionStatus === 'inactive';
-      
+
       const now = new Date();
       const expiryDate = new Date(subscription.expiryDate);
-      
+
       switch (filters.subscriptionStatus) {
         case 'active':
           return subscription.isActive && expiryDate > now;
@@ -539,21 +528,15 @@ export function UserProvider({ children, initialUsers = [] }: UserProviderProps)
   // Computed values with memoization for performance
   const startIndex = (state.pagination.page - 1) * state.pagination.limit;
   const endIndex = startIndex + state.pagination.limit;
-  const paginatedUsers = useMemo(
-    () => state.filteredUsers.slice(startIndex, endIndex),
-    [state.filteredUsers, startIndex, endIndex]
-  );
+  const paginatedUsers = useMemo(() => state.filteredUsers.slice(startIndex, endIndex), [state.filteredUsers, startIndex, endIndex]);
 
   const hasSelection = state.selectedUsers.length > 0;
   const allSelected = state.selectedUsers.length === paginatedUsers.length && paginatedUsers.length > 0;
-  
+
   const totalUsers = state.users.length;
-  const activeUsers = useMemo(
-    () => state.users.filter(user => user.isActive).length,
-    [state.users]
-  );
+  const activeUsers = useMemo(() => state.users.filter((user) => user.isActive).length, [state.users]);
   const inactiveUsers = totalUsers - activeUsers;
-  
+
   const isFiltered = useMemo(() => {
     const defaultFilters = initialUserState.filters;
     return (
@@ -581,10 +564,13 @@ export function UserProvider({ children, initialUsers = [] }: UserProviderProps)
     dispatch({ type: 'CLEAR_SELECTION' });
   }, []);
 
-  const toggleSort = useCallback((column: UserFilters['sortBy']) => {
-    const newOrder = state.filters.sortBy === column && state.filters.sortOrder === 'asc' ? 'desc' : 'asc';
-    dispatch({ type: 'SET_SORT', payload: { sortBy: column, sortOrder: newOrder } });
-  }, [state.filters.sortBy, state.filters.sortOrder]);
+  const toggleSort = useCallback(
+    (column: UserFilters['sortBy']) => {
+      const newOrder = state.filters.sortBy === column && state.filters.sortOrder === 'asc' ? 'desc' : 'asc';
+      dispatch({ type: 'SET_SORT', payload: { sortBy: column, sortOrder: newOrder } });
+    },
+    [state.filters.sortBy, state.filters.sortOrder],
+  );
 
   const setPage = useCallback((page: number) => {
     dispatch({ type: 'SET_PAGINATION', payload: { page } });
@@ -600,54 +586,67 @@ export function UserProvider({ children, initialUsers = [] }: UserProviderProps)
 
   const bulkDelete = useCallback(async () => {
     if (state.selectedUsers.length === 0) return;
-    
-    dispatch({ type: 'SET_OPERATION_STATUS', payload: { 
-      type: 'bulk_operation', 
-      isProcessing: true 
-    }});
+
+    dispatch({
+      type: 'SET_OPERATION_STATUS',
+      payload: {
+        type: 'bulk_operation',
+        isProcessing: true,
+      },
+    });
 
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       dispatch({ type: 'BULK_DELETE_USERS', payload: state.selectedUsers });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete users' });
     }
   }, [state.selectedUsers]);
 
-  const bulkUpdate = useCallback(async (updates: Partial<User>) => {
-    if (state.selectedUsers.length === 0) return;
-    
-    dispatch({ type: 'SET_OPERATION_STATUS', payload: { 
-      type: 'bulk_operation', 
-      isProcessing: true 
-    }});
+  const bulkUpdate = useCallback(
+    async (updates: Partial<User>) => {
+      if (state.selectedUsers.length === 0) return;
 
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      dispatch({ type: 'BULK_UPDATE_USERS', payload: { 
-        ids: state.selectedUsers, 
-        updates 
-      }});
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to update users' });
-    }
-  }, [state.selectedUsers]);
+      dispatch({
+        type: 'SET_OPERATION_STATUS',
+        payload: {
+          type: 'bulk_operation',
+          isProcessing: true,
+        },
+      });
 
-  const exportUsers = useCallback((format: 'csv' | 'json') => {
-    const dataToExport = state.selectedUsers.length > 0 
-      ? state.users.filter(user => state.selectedUsers.includes(user.id))
-      : state.filteredUsers;
+      try {
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        dispatch({
+          type: 'BULK_UPDATE_USERS',
+          payload: {
+            ids: state.selectedUsers,
+            updates,
+          },
+        });
+      } catch (error) {
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to update users' });
+      }
+    },
+    [state.selectedUsers],
+  );
 
-    if (format === 'csv') {
-      const csvContent = convertToCSV(dataToExport);
-      downloadFile(csvContent, 'users.csv', 'text/csv');
-    } else {
-      const jsonContent = JSON.stringify(dataToExport, null, 2);
-      downloadFile(jsonContent, 'users.json', 'application/json');
-    }
-  }, [state.selectedUsers, state.users, state.filteredUsers]);
+  const exportUsers = useCallback(
+    (format: 'csv' | 'json') => {
+      const dataToExport = state.selectedUsers.length > 0 ? state.users.filter((user) => state.selectedUsers.includes(user.id)) : state.filteredUsers;
+
+      if (format === 'csv') {
+        const csvContent = convertToCSV(dataToExport);
+        downloadFile(csvContent, 'users.csv', 'text/csv');
+      } else {
+        const jsonContent = JSON.stringify(dataToExport, null, 2);
+        downloadFile(jsonContent, 'users.json', 'application/json');
+      }
+    },
+    [state.selectedUsers, state.users, state.filteredUsers],
+  );
 
   const getFilterSummary = useCallback(() => {
     const parts = [];
@@ -661,12 +660,15 @@ export function UserProvider({ children, initialUsers = [] }: UserProviderProps)
   }, [state.filters]);
 
   const clearOperationStatus = useCallback(() => {
-    dispatch({ type: 'SET_OPERATION_STATUS', payload: { 
-      type: null, 
-      isProcessing: false, 
-      success: null, 
-      message: null 
-    }});
+    dispatch({
+      type: 'SET_OPERATION_STATUS',
+      payload: {
+        type: null,
+        isProcessing: false,
+        success: null,
+        message: null,
+      },
+    });
   }, []);
 
   // Update pagination total when filtered users change
@@ -723,19 +725,19 @@ export function UserProvider({ children, initialUsers = [] }: UserProviderProps)
 // Utility functions
 function convertToCSV(data: User[]): string {
   if (data.length === 0) return '';
-  
+
   const headers = ['ID', 'Name', 'Email', 'Role', 'Status', 'Balance', 'Created At'];
-  const rows = data.map(user => [
+  const rows = data.map((user) => [
     user.id,
     user.name,
     user.email,
     user.role || '',
     user.isActive ? 'Active' : 'Inactive',
     user.balance?.toString() || '0',
-    new Date(user.createdAt).toLocaleDateString()
+    new Date(user.createdAt).toLocaleDateString(),
   ]);
-  
-  return [headers, ...rows].map(row => row.join(',')).join('\n');
+
+  return [headers, ...rows].map((row) => row.join(',')).join('\n');
 }
 
 function downloadFile(content: string, filename: string, contentType: string) {
@@ -769,14 +771,10 @@ export function useUserFilters() {
     setSearch: (search: string) => dispatch({ type: 'SET_SEARCH', payload: search }),
     setActiveFilter: (isActive: boolean | 'all') => dispatch({ type: 'SET_ACTIVE_FILTER', payload: isActive }),
     setRoleFilter: (role: string | 'all') => dispatch({ type: 'SET_ROLE_FILTER', payload: role }),
-    setSubscriptionFilter: (status: 'active' | 'inactive' | 'expired' | 'all') => 
-      dispatch({ type: 'SET_SUBSCRIPTION_FILTER', payload: status }),
-    setBalanceRange: (range: { min?: number; max?: number }) => 
-      dispatch({ type: 'SET_BALANCE_RANGE', payload: range }),
-    setDateRange: (range: { start?: Date; end?: Date }) => 
-      dispatch({ type: 'SET_DATE_RANGE', payload: range }),
-    setSort: (sortBy: UserFilters['sortBy'], sortOrder: UserFilters['sortOrder']) => 
-      dispatch({ type: 'SET_SORT', payload: { sortBy, sortOrder } }),
+    setSubscriptionFilter: (status: 'active' | 'inactive' | 'expired' | 'all') => dispatch({ type: 'SET_SUBSCRIPTION_FILTER', payload: status }),
+    setBalanceRange: (range: { min?: number; max?: number }) => dispatch({ type: 'SET_BALANCE_RANGE', payload: range }),
+    setDateRange: (range: { start?: Date; end?: Date }) => dispatch({ type: 'SET_DATE_RANGE', payload: range }),
+    setSort: (sortBy: UserFilters['sortBy'], sortOrder: UserFilters['sortOrder']) => dispatch({ type: 'SET_SORT', payload: { sortBy, sortOrder } }),
     resetFilters: () => dispatch({ type: 'RESET_FILTERS' }),
     clearSearchHistory: () => dispatch({ type: 'CLEAR_SEARCH_HISTORY' }),
   };
@@ -797,7 +795,7 @@ export function useUserSelection() {
     selectByFilter: (predicate: (user: User) => boolean) => {
       const { paginatedUsers } = useUserContext();
       const filtered = paginatedUsers.filter(predicate);
-      dispatch({ type: 'SET_SELECTED_USERS', payload: filtered.map(u => u.id) });
+      dispatch({ type: 'SET_SELECTED_USERS', payload: filtered.map((u) => u.id) });
     },
   };
 }
@@ -831,10 +829,8 @@ export function useUserOperations() {
     addUser: (user: User) => dispatch({ type: 'ADD_USER', payload: user }),
     updateUser: (user: User) => dispatch({ type: 'UPDATE_USER', payload: user }),
     deleteUser: (id: string) => dispatch({ type: 'DELETE_USER', payload: id }),
-    setOperationStatus: (status: Partial<UserOperationStatus>) => 
-      dispatch({ type: 'SET_OPERATION_STATUS', payload: status }),
-    setBulkProgress: (progress: UserState['bulkOperationProgress']) => 
-      dispatch({ type: 'SET_BULK_PROGRESS', payload: progress }),
+    setOperationStatus: (status: Partial<UserOperationStatus>) => dispatch({ type: 'SET_OPERATION_STATUS', payload: status }),
+    setBulkProgress: (progress: UserState['bulkOperationProgress']) => dispatch({ type: 'SET_BULK_PROGRESS', payload: progress }),
     optimizeState: () => dispatch({ type: 'OPTIMIZE_STATE' }),
   };
 }
@@ -845,7 +841,7 @@ export function useUserStats() {
   const stats = useMemo(() => {
     const filteredCount = state.filteredUsers.length;
     const selectedCount = state.selectedUsers.length;
-    
+
     return {
       total: totalUsers,
       active: activeUsers,

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { signOut, useSession } from 'next-auth/react';
-import { useAuthenticatedApi, useTenant } from '@/lib/tenant/tenant-provider';
+import { useAuthenticatedApi, useTenant } from '@/lib/tenants/tenant-provider';
 import { TenantSelector } from '@/components/auth/tenant-selector';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Button } from '@game-guild/ui/components/button';

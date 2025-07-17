@@ -1,5 +1,5 @@
 import { apiClient } from '../api/api-client';
-import { CreateTenantRequest, TenantResponse, UpdateTenantRequest } from '@/lib/tenant/types';
+import { CreateTenantRequest, TenantResponse, UpdateTenantRequest } from '@/lib/tenants/types';
 
 export class TenantService {
   // Get all tenants (admin function)
