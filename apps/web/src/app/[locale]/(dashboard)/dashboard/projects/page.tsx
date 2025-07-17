@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
-import { clearProjectCache, getProjects, ProjectListItem, revalidateProjects } from '@/components/projects/actions';
-import { ProjectList } from '@/components/projects/project-list';
+import { clearProjectCache, getProjects, ProjectListItem, revalidateProjects } from '@/components/legacy/projects/actions';
+import { ProjectList } from '@/components/legacy/projects/project-list';
 import { useRouter } from 'next/navigation';
 
 // Utility function to force fresh authentication
