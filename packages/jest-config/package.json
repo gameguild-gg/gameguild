@@ -8,9 +8,9 @@
   "private": true,
   "main": "src/index.js",
   "peerDependencies": {
-    "jest": "^29.7.0"
+    "jest": "30.0.4"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14"
+    "@types/jest": "30.0.0"
   }
 }

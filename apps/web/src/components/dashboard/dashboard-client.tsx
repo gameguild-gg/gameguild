@@ -1,8 +1,6 @@
-import React, { PropsWithChildren } from 'react';
+'use client';
 
-import { BarChart3, BookOpen, Building2, FileText, LayoutDashboard, Package, Send, Settings, Users } from 'lucide-react';
-import { cookies } from 'next/headers';
-import { DashboardHeader } from './layout/dashboard-header';
+import React, { PropsWithChildren } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -18,6 +16,8 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from '@game-guild/ui/components/sidebar';
+import { BarChart3, BookOpen, Building2, FileText, LayoutDashboard, Package, Send, Settings, Users } from 'lucide-react';
+import { DashboardHeader } from './layout/dashboard-header';
 
 const data = {
   navigation: {
@@ -73,10 +73,11 @@ const data = {
   },
 };
 
-export const Dashboard = async ({ children }: PropsWithChildren) => {
-  const cookieStore = await cookies();
-  const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true';
+interface DashboardClientProps extends PropsWithChildren {
+  defaultOpen?: boolean;
+}
 
+export function DashboardClient({ children, defaultOpen = true }: DashboardClientProps) {
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <DashboardSidebar />
@@ -88,7 +89,7 @@ export const Dashboard = async ({ children }: PropsWithChildren) => {
       </SidebarInset>
     </SidebarProvider>
   );
-};
+}
 
 export const DashboardSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
   return (
