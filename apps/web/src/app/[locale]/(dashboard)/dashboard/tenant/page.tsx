@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { TenantDomainManager } from '@/components/tenant/tenant-domain-manager';
-import { TenantUserGroupManager } from '@/components/tenant/tenant-user-group-manager';
+import { TenantDomainManager } from '@/components/legacy/tenant/tenant-domain-manager';
+import { TenantUserGroupManager } from '@/components/legacy/tenant/tenant-user-group-manager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';

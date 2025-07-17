@@ -5,7 +5,7 @@ type Props = {
 };
 
 import React from 'react';
-import ProjectForm from '@/components/projects/project-form';
+import ProjectForm from '@/components/legacy/projects/project-form';
 
 export default async function Component({ params }: Readonly<Props>) {
   const { slug } = await params;

@@ -1,5 +1,5 @@
 import React from 'react';
-import ProjectForm from '@/components/projects/project-form';
+import ProjectForm from '@/components/legacy/projects/project-form';
 
 export const dynamic = 'force-dynamic';
 

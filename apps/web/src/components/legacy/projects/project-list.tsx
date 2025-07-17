@@ -6,8 +6,8 @@ import { ArrowDownAZ, ArrowUpAZ, ChevronFirst, ChevronLast, ChevronLeft, Chevron
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Project, ProjectListItem } from './actions';
-import { CreateProjectForm } from '@/components/projects/create-project-form';
-import { ProjectCard } from '@/components/projects/project-card';
+import { CreateProjectForm } from '@/components/legacy/projects/create-project-form';
+import { ProjectCard } from '@/components/legacy/projects/project-card';
 
 type SortField = 'name';
 type SortDirection = 'asc' | 'desc';
