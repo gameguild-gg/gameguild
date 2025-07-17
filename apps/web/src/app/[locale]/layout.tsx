@@ -6,7 +6,7 @@ import { SessionProvider } from 'next-auth/react';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { WebVitals } from '@/components/analytics';
-import { ThemeProvider } from '@/game-guild/ui/theme-provider';
+import { ThemeProvider } from '@game-guild/ui/components/theme';
 import { Web3Provider } from '@/components/web3/web3-context';
 import { TenantProvider } from '@/lib/tenants/tenant-provider';
 import { environment } from '@/configs/environment';

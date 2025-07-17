@@ -12,7 +12,7 @@
   "iconLibrary": "lucide",
   "aliases": {
     "components": "@/components",
-    "hooks": "@game-guild/ui/hooks",
+    "hooks": "@/hooks",
     "lib": "@/lib",
     "utils": "@game-guild/ui/lib/utils",
     "ui": "@game-guild/ui/components"
