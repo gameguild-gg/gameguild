@@ -12,11 +12,34 @@ export const TopContributorsSection: React.FC<TopContributorsSectionProps> = ({ 
 
   return (
     <div className="mb-12">
-      {/* Top 3 Contributors */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {topContributors.map((contributor, index) => (
-          <ContributorLeaderboardCard key={contributor.login} contributor={contributor} rank={index + 1} showMedal={true} />
-        ))}
+      {/* Section Header */}
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mb-4">Top Contributors</h2>
+        <p className="text-slate-400 text-lg">Our most dedicated community members</p>
+      </div>
+
+      {/* Top 3 Contributors - Podium Layout */}
+      <div className="flex items-end justify-center gap-6 mb-8 relative">
+        {/* 2nd Place - Left */}
+        {topContributors[1] && (
+          <div className="transform translate-y-8">
+            <ContributorLeaderboardCard key={topContributors[1].login} contributor={topContributors[1]} rank={2} showMedal={true} />
+          </div>
+        )}
+        
+        {/* 1st Place - Center (Elevated) */}
+        {topContributors[0] && (
+          <div className="transform -translate-y-4 z-10 scale-110">
+            <ContributorLeaderboardCard key={topContributors[0].login} contributor={topContributors[0]} rank={1} showMedal={true} />
+          </div>
+        )}
+        
+        {/* 3rd Place - Right */}
+        {topContributors[2] && (
+          <div className="transform translate-y-8">
+            <ContributorLeaderboardCard key={topContributors[2].login} contributor={topContributors[2]} rank={3} showMedal={true} />
+          </div>
+        )}
       </div>
     </div>
   );
