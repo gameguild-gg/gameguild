@@ -1,6 +1,6 @@
 import React from 'react';
 import { FeedHeader } from './feed-header';
-import { PostFilters } from './post-filters';
+import { PostFiltersStatic } from './post-filters-static';
 import { PinnedPosts } from './pinned-posts';
 import { PostsList } from './posts-list';
 import { fetchPosts, fetchPinnedPosts } from '@/lib/feed/api';
@@ -72,10 +72,9 @@ export async function CommunityFeedServer({
         />
 
         {/* Filters */}
-        <PostFilters
+        <PostFiltersStatic
           filters={filters}
           postTypes={POST_TYPES}
-          onFiltersChange={() => {}} // No-op for server-side rendering
         />
 
         {/* Pinned Posts */}
