@@ -11,15 +11,15 @@ export const TopContributorsSection: React.FC<TopContributorsSectionProps> = ({ 
   const topContributors = contributors.slice(0, topCount);
 
   return (
-    <div className="mb-12">
+    <div className="mb-8">
       {/* Section Header */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-6">
         <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mb-4">Top Contributors</h2>
         <p className="text-slate-400 text-lg">Our most dedicated community members</p>
       </div>
 
       {/* Top 3 Contributors - Podium Layout */}
-      <div className="flex items-end justify-center gap-6 mb-8 relative">
+      <div className="flex items-end justify-center gap-12 mb-6 relative">
         {/* 2nd Place - Left */}
         {topContributors[1] && (
           <div className="transform translate-y-8">
