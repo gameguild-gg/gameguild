@@ -2,7 +2,7 @@
 
 import React, { useActionState, useEffect, useState } from 'react';
 import { createTenant, deleteTenant, getUserTenants, TenantActionState } from '@/lib/auth/actions/tenant.actions';
-import { TenantResponse } from '@/lib/tenant/types';
+import { TenantResponse } from '@/lib/tenants/types';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
