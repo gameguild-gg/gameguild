@@ -4,7 +4,7 @@ import { getContributors } from '@/lib/contributors';
 import { ContributorsHeader } from '@/components/contributors/contributors-header';
 import { TopContributorsSection } from '@/components/contributors/top-contributors-section';
 import { GlobalRankingTable } from '@/components/contributors/global-ranking-table';
-import { ProjectStats } from '@/components/contributors/project-stats-simple';
+import { ProjectStats } from '@/components/contributors/project-stats';
 import { HorizontalRoadmap } from '@/components/contributors/horizontal-roadmap';
 import { HowToContribute } from '@/components/contributors/how-to-contribute';
 
@@ -33,8 +33,7 @@ export default async function Page(): Promise<React.JSX.Element> {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
       {/* Project Stats Overview - Full Width */}
-      {/* <ProjectStats /> */}
-      <div>Project Stats Placeholder</div>
+      <ProjectStats />
 
       {/* Other sections with centered content */}
       <div className="max-w-7xl mx-auto px-6">
@@ -45,7 +44,9 @@ export default async function Page(): Promise<React.JSX.Element> {
         <TopContributorsSection contributors={contributors} />
 
         {/* Global Ranking Table */}
-        <GlobalRankingTable contributors={contributors} />
+        <div className="py-8">
+          <GlobalRankingTable contributors={contributors} />
+        </div>
       </div>
 
       {/* Interactive Roadmap - Full Width */}
