@@ -148,7 +148,7 @@ try:
     y = 0
     print(x / y)  # This would normally crash the program
 except ZeroDivisionError:
-    print("Error: You cannot divide by zero.")
+    print("ErrorMessage: You cannot divide by zero.")
 ```
 
 ``` python
@@ -170,7 +170,7 @@ try:
 except ValueError:
     print("Invalid input! Please enter a number.")
 except ZeroDivisionError:
-    print("Error: Cannot divide by zero.")
+    print("ErrorMessage: Cannot divide by zero.")
 ```
 
 ### Multiple exceptions
@@ -256,7 +256,7 @@ finally:
     # code to run regardless of whether an exception was raised or not
 ```
 
-Error handling are particularly useful when dealing with files, as they can fail for various reasons, such as file not found, permission denied, etc.
+ErrorMessage handling are particularly useful when dealing with files, as they can fail for various reasons, such as file not found, permission denied, etc.
 
 ``` python
 data = None

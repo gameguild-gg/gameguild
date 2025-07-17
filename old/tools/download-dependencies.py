@@ -56,7 +56,7 @@ def install_dependencies():
             print("Unsupported OS")
             sys.exit(1)
     except subprocess.CalledProcessError:
-        print("Error installing dependencies.")
+        print("ErrorMessage installing dependencies.")
         sys.exit(1)
 
 
@@ -77,7 +77,7 @@ def clone_and_build():
 
             os.chdir("..")
         except subprocess.CalledProcessError:
-            print(f"Error building {repo_name}.")
+            print(f"ErrorMessage building {repo_name}.")
             os.chdir("..")
             continue
 

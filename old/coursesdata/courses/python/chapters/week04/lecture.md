@@ -27,7 +27,7 @@ else:
 {
 "title": "Basic `if-else` Quiz",
 "question": "What will be printed when `x = 3` in the following code?\n\n```python\nif x > 5:\n    print(\"Greater than 5\")\nelse:\n    print(\"5 or less\")\n```",
-"options": ["Greater than 5", "5 or less", "No output", "Error"],
+"options": ["Greater than 5", "5 or less", "No output", "ErrorMessage"],
 "answers": ["5 or less"]
 }
 !!!
@@ -71,7 +71,7 @@ Excessive nesting can make your code harder to read. Consider using logical oper
 {
 "title": "Nested Conditional Quiz",
 "question": "What will be printed when `x = 15` in the following code?\n\n```python\nif x > 10:\n    if x < 20:\n        print(\"x is between 10 and 20\")\n```",
-"options": ["x is between 10 and 20", "No output", "x is greater than 10", "Error"],
+"options": ["x is between 10 and 20", "No output", "x is greater than 10", "ErrorMessage"],
 "answers": ["x is between 10 and 20"]
 }
 !!!
