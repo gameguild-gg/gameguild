@@ -18,16 +18,27 @@ type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>;
 
 const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children, ...props }) => {
   return (
-    <header className={cn('w-full border-b border-border bg-background/80 backdrop-blur sticky top-0 z-30', className)} {...props}>
+    <header
+      className={cn(
+        'w-full bg-white/10 dark:bg-slate-900/20 backdrop-blur-md border-b border-white/10 dark:border-slate-700/30 text-white sticky top-0 z-50 shadow-lg',
+        className,
+      )}
+      {...props}
+    >
+      {/* Top Subtle Border */}
+      <div className="h-px bg-gradient-to-r from-transparent via-white/20 dark:via-slate-400/30 to-transparent"></div>
+      
       <div className="container mx-auto px-4 flex justify-between items-center py-4">
         <div className="flex space-x-8 items-center">
           <Image src="/assets/images/logo-text-2.png" width={135} height={46} className="my-auto mx-[10px]" alt="Logo" />
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Getting started</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-slate-200 hover:text-blue-300 transition-colors duration-300 bg-transparent hover:bg-white/5 backdrop-blur-sm">
+                  Getting started
+                </NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
                     <ListItem href="/docs" title="Introduction">
                       Re-usable components built using Radix UI and Tailwind CSS.
                     </ListItem>
@@ -41,9 +52,11 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Courses</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-slate-200 hover:text-purple-300 transition-colors duration-300 bg-transparent hover:bg-white/5 backdrop-blur-sm">
+                  Courses
+                </NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
                     <ListItem href="/courses" title="Courses">
                       Learn about our learning pathways and start your journey.
                     </ListItem>
@@ -57,9 +70,11 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Jobs</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-slate-200 hover:text-green-300 transition-colors duration-300 bg-transparent hover:bg-white/5 backdrop-blur-sm">
+                  Jobs
+                </NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
                     <ListItem href="/jobs" title="Job Board">
                       Find and apply for jobs.
                     </ListItem>
@@ -67,9 +82,11 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Blogs</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-slate-200 hover:text-blue-300 transition-colors duration-300 bg-transparent hover:bg-white/5 backdrop-blur-sm">
+                  Blogs
+                </NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
                     <ListItem href="/blog" title="Blog">
                       Read the latest articles and news.
                     </ListItem>
@@ -85,6 +102,9 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
         </div>
         {children}
       </div>
+      
+      {/* Bottom Subtle Border */}
+      <div className="h-0.5 bg-gradient-to-r from-transparent via-slate-600/50 to-transparent"></div>
     </header>
   );
 };
@@ -96,13 +116,13 @@ const ListItem = React.forwardRef<React.ElementRef<'a'>, React.ComponentPropsWit
         <a
           ref={ref}
           className={cn(
-            'block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
+            'block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10 text-slate-300 hover:text-white border border-transparent hover:border-blue-400/20',
             className,
           )}
           {...props}
         >
-          <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">{children}</p>
+          <div className="text-sm font-medium leading-none text-blue-400">{title}</div>
+          <p className="line-clamp-2 text-sm leading-snug text-slate-400">{children}</p>
         </a>
       </NavigationMenuLink>
     </li>
