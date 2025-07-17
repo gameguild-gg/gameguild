@@ -4,7 +4,7 @@ import { Card } from '@game-guild/ui/components/card';
 import { Contributor } from '@/lib/contributors';
 import { ContributorStats } from './contributor-stats';
 import { numberToAbbreviation } from '@/lib/utils';
-import { Medal, Trophy, Award } from 'lucide-react';
+import { Trophy, Award } from 'lucide-react';
 
 interface ContributorLeaderboardCardProps {
   contributor: Contributor;
@@ -15,7 +15,7 @@ interface ContributorLeaderboardCardProps {
 export const ContributorLeaderboardCard: React.FC<ContributorLeaderboardCardProps> = ({ contributor, rank, showMedal = false }) => {
   const getMedalIcon = (rank: number) => {
     if (rank === 1) return <Trophy className="w-8 h-8 text-yellow-400" />;
-    if (rank === 2) return <Medal className="w-8 h-8 text-slate-400" />;
+    if (rank === 2) return <Award className="w-8 h-8 text-slate-400" />;
     if (rank === 3) return <Award className="w-8 h-8 text-amber-600" />;
     return null;
   };
@@ -28,29 +28,36 @@ export const ContributorLeaderboardCard: React.FC<ContributorLeaderboardCardProp
   };
 
   const getGradientBg = (rank: number) => {
-    if (rank === 1) return 'from-yellow-500/10 via-orange-500/5 to-yellow-600/10';
-    if (rank === 2) return 'from-slate-500/10 via-slate-400/5 to-slate-600/10';
-    if (rank === 3) return 'from-amber-500/10 via-orange-500/5 to-amber-600/10';
-    return 'from-slate-900/50 to-slate-800/50';
+    if (rank === 1) return 'from-yellow-500/10 via-orange-500/5 to-yellow-600/10 hover:from-yellow-500/20 hover:via-orange-500/10 hover:to-yellow-600/20';
+    if (rank === 2) return 'from-slate-500/10 via-slate-400/5 to-slate-600/10 hover:from-slate-500/20 hover:via-slate-400/10 hover:to-slate-600/20';
+    if (rank === 3) return 'from-amber-500/10 via-orange-500/5 to-amber-600/10 hover:from-amber-500/20 hover:via-orange-500/10 hover:to-amber-600/20';
+    return 'from-slate-900/50 to-slate-800/50 hover:from-slate-900/70 hover:to-slate-800/70';
+  };
+
+  const getBackgroundIconColor = (rank: number) => {
+    if (rank === 1) return 'text-yellow-400';
+    if (rank === 2) return 'text-slate-400';
+    if (rank === 3) return 'text-amber-600';
+    return 'text-slate-400';
   };
 
   return (
     <Card
-      className={`bg-gradient-to-br ${getGradientBg(rank)} backdrop-blur-sm ${getBorderColor(rank)} border-2 p-6 relative overflow-hidden transition-all hover:scale-105 hover:shadow-xl shadow-lg`}
+      className={`bg-gradient-to-br ${getGradientBg(rank)} backdrop-blur-sm ${getBorderColor(rank)} border-2 p-4 relative overflow-hidden transition-all hover:scale-105 hover:shadow-xl hover:brightness-110 hover:shadow-white/10 shadow-lg`}
     >
       {/* Medal */}
       {showMedal && rank <= 3 && <div className="absolute top-4 right-4">{getMedalIcon(rank)}</div>}
 
       {/* Background Icon */}
-      <div className="absolute bottom-4 right-4 opacity-10">
-        <Trophy className="w-24 h-24 text-white blur-sm" />
+      <div className="absolute -bottom-8 -left-8 opacity-30">
+        <Trophy className={`w-60 h-60 ${getBackgroundIconColor(rank)} blur-md`} />
       </div>
 
       {/* Rank Badge */}
       <div className="absolute top-2 left-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-bold px-2 py-1 rounded">#{rank}</div>
 
       {/* Avatar and Name */}
-      <div className="flex items-center gap-4 mb-6 mt-4">
+      <div className="flex items-center gap-4 mb-4 mt-4">
         <Image
           src={contributor.avatar_url}
           alt={contributor.name || contributor.login}
@@ -65,7 +72,7 @@ export const ContributorLeaderboardCard: React.FC<ContributorLeaderboardCardProp
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-4">
         <div className="text-center">
           <div className="text-sm text-muted-foreground uppercase tracking-wide">Commits</div>
           <div className="text-2xl font-bold text-foreground">{numberToAbbreviation(contributor.total_commits || 0)}</div>

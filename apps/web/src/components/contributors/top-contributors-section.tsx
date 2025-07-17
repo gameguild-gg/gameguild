@@ -11,32 +11,32 @@ export const TopContributorsSection: React.FC<TopContributorsSectionProps> = ({ 
   const topContributors = contributors.slice(0, topCount);
 
   return (
-    <div className="mb-8">
+    <div className="mb-16 py-12">
       {/* Section Header */}
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mb-4">Top Contributors</h2>
+      <div className="text-center mb-16">
+        <h2 className="text-3xl font-bold text-white mb-4">Top Contributors</h2>
         <p className="text-slate-400 text-lg">Our most dedicated community members</p>
       </div>
 
       {/* Top 3 Contributors - Podium Layout */}
-      <div className="flex items-end justify-center gap-12 mb-6 relative">
+      <div className="flex items-end justify-center gap-12 mb-12 relative min-h-[320px]">
         {/* 2nd Place - Left */}
         {topContributors[1] && (
-          <div className="transform translate-y-8">
+          <div className="transform translate-y-16">
             <ContributorLeaderboardCard key={topContributors[1].login} contributor={topContributors[1]} rank={2} showMedal={true} />
           </div>
         )}
         
         {/* 1st Place - Center (Elevated) */}
         {topContributors[0] && (
-          <div className="transform -translate-y-4 z-10 scale-110">
+          <div className="transform translate-y-0 z-10 scale-110">
             <ContributorLeaderboardCard key={topContributors[0].login} contributor={topContributors[0]} rank={1} showMedal={true} />
           </div>
         )}
         
         {/* 3rd Place - Right */}
         {topContributors[2] && (
-          <div className="transform translate-y-8">
+          <div className="transform translate-y-16">
             <ContributorLeaderboardCard key={topContributors[2].login} contributor={topContributors[2]} rank={3} showMedal={true} />
           </div>
         )}

@@ -13,25 +13,25 @@ export const GlobalRankingTable: React.FC<GlobalRankingTableProps> = ({ contribu
 
   const getRankColorClasses = (rank: number) => {
     if (rank === 1) return {
-      bg: 'bg-gradient-to-r from-yellow-500/20 to-orange-500/10',
-      border: 'border-yellow-500/30',
-      rankBg: 'bg-gradient-to-r from-yellow-500 to-orange-500',
-      textColor: 'text-yellow-400'
+      bg: 'bg-gradient-to-r from-yellow-400/10 to-amber-300/5 hover:from-yellow-400/15 hover:to-amber-300/8',
+      border: 'border-yellow-400/40',
+      rankBg: 'bg-gradient-to-r from-yellow-400 to-amber-300',
+      textColor: 'text-yellow-300'
     };
     if (rank === 2) return {
-      bg: 'bg-gradient-to-r from-slate-500/20 to-slate-400/10',
-      border: 'border-slate-400/30',
-      rankBg: 'bg-gradient-to-r from-slate-500 to-slate-400',
-      textColor: 'text-slate-400'
+      bg: 'bg-gradient-to-r from-slate-300/10 to-gray-400/5 hover:from-slate-300/15 hover:to-gray-400/8',
+      border: 'border-slate-300/40',
+      rankBg: 'bg-gradient-to-r from-slate-300 to-gray-400',
+      textColor: 'text-slate-300'
     };
     if (rank === 3) return {
-      bg: 'bg-gradient-to-r from-amber-500/20 to-orange-500/10',
-      border: 'border-amber-600/30',
-      rankBg: 'bg-gradient-to-r from-amber-500 to-orange-500',
-      textColor: 'text-amber-500'
+      bg: 'bg-gradient-to-r from-orange-400/10 to-amber-500/5 hover:from-orange-400/15 hover:to-amber-500/8',
+      border: 'border-orange-400/40',
+      rankBg: 'bg-gradient-to-r from-orange-400 to-amber-500',
+      textColor: 'text-orange-300'
     };
     return {
-      bg: 'hover:bg-slate-800/30',
+      bg: 'hover:bg-slate-800/30 hover:shadow-lg',
       border: '',
       rankBg: 'bg-gradient-to-br from-slate-700 to-slate-800',
       textColor: 'text-slate-300'
@@ -39,9 +39,11 @@ export const GlobalRankingTable: React.FC<GlobalRankingTableProps> = ({ contribu
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-sm rounded-xl overflow-hidden shadow-2xl border border-slate-700/50 relative">
+    <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-sm rounded-xl overflow-hidden shadow-2xl border border-slate-700/70 relative">
       {/* Add depth with multiple shadows */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-800/20 to-slate-900/40 rounded-xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-800/30 to-slate-900/50 rounded-xl shadow-inner"></div>
+      {/* Additional depth layer */}
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent rounded-xl"></div>
       <div className="relative z-10">
         <div className="p-8">
           <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Global Ranking</h2>
@@ -49,17 +51,17 @@ export const GlobalRankingTable: React.FC<GlobalRankingTableProps> = ({ contribu
         </div>
 
         {/* Table Header */}
-        <div className="grid grid-cols-6 gap-4 p-4 bg-slate-800/70 text-sm text-slate-400 font-medium uppercase tracking-wide border-b border-slate-700/50">
+        <div className="grid grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr] gap-6 px-6 py-3 bg-slate-800/70 text-sm text-slate-400 font-medium uppercase tracking-wide border-b border-slate-700/70">
           <div>Rank</div>
           <div>Contributor</div>
-          <div>Commits</div>
-          <div>Additions</div>
-          <div>Deletions</div>
-          <div>Total Changes</div>
+          <div className="text-right">Commits</div>
+          <div className="text-right">Additions</div>
+          <div className="text-right">Deletions</div>
+          <div className="text-right">Total Changes</div>
         </div>
 
         {/* Table Body */}
-        <div className="divide-y divide-slate-700/30">
+        <div className="divide-y divide-slate-700/60">
           {allContributors.map((contributor, index) => {
             const rank = index + 1;
             const commits = contributor.total_commits || 0;
@@ -71,7 +73,7 @@ export const GlobalRankingTable: React.FC<GlobalRankingTableProps> = ({ contribu
             return (
               <div 
                 key={contributor.login} 
-                className={`grid grid-cols-6 gap-4 p-4 items-center transition-all duration-300 ${colorClasses.bg} ${colorClasses.border ? `border-l-4 ${colorClasses.border}` : ''}`}
+                className={`grid grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr] gap-6 px-6 py-3 items-center transition-all duration-300 cursor-pointer ${colorClasses.bg} ${colorClasses.border ? `border-l-4 ${colorClasses.border}` : ''}`}
               >
                 {/* Rank */}
                 <div className="flex items-center gap-3">
@@ -101,16 +103,16 @@ export const GlobalRankingTable: React.FC<GlobalRankingTableProps> = ({ contribu
                 </div>
 
                 {/* Commits */}
-                <div className="text-blue-400 font-semibold">{numberToAbbreviation(commits)}</div>
+                <div className="text-blue-400 font-semibold text-right">{numberToAbbreviation(commits)}</div>
 
                 {/* Additions */}
-                <div className="text-green-400 font-semibold">+{numberToAbbreviation(additions)}</div>
+                <div className="text-green-400 font-semibold text-right">+{numberToAbbreviation(additions)}</div>
 
                 {/* Deletions */}
-                <div className="text-red-400 font-semibold">-{numberToAbbreviation(deletions)}</div>
+                <div className="text-red-400 font-semibold text-right">-{numberToAbbreviation(deletions)}</div>
 
                 {/* Total Changes */}
-                <div className="text-purple-400 font-semibold">{numberToAbbreviation(totalChanges)}</div>
+                <div className="text-purple-400 font-semibold text-right">{numberToAbbreviation(totalChanges)}</div>
               </div>
             );
           })}
