@@ -70,15 +70,15 @@ const navigationData = {
 
 export function DashboardSidebar(props: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" className="border-r border-slate-700/50 bg-slate-900/95 backdrop-blur-sm" {...props}>
       <SidebarHeader>
         <div className="flex items-center gap-2 px-4 py-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">GG</span>
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+            <span className="text-white font-bold text-sm">GG</span>
           </div>
           <div className="group-data-[collapsible=icon]:hidden">
-            <h1 className="font-semibold">Game Guild</h1>
-            <p className="text-xs text-muted-foreground">Dashboard</p>
+            <h1 className="font-semibold text-white">Game Guild</h1>
+            <p className="text-xs text-slate-400">Dashboard</p>
           </div>
         </div>
       </SidebarHeader>
@@ -88,7 +88,7 @@ export function DashboardSidebar(props: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu>
             {navigationData.primary.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild size="default" tooltip={item.title}>
+                <SidebarMenuButton asChild size="default" tooltip={item.title} className="text-slate-300 hover:text-white hover:bg-slate-800/50 data-[active=true]:bg-blue-600/20 data-[active=true]:text-blue-400">
                   <a href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
