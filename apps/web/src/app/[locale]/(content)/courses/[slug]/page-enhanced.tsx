@@ -6,7 +6,7 @@ import { CourseOverview } from '@/components/courses/course/course-overview';
 import { CourseSidebar } from '@/components/courses/course/course-sidebar';
 import CourseAccessCard from '@/components/courses/course/course-access-card';
 import { Skeleton } from '@game-guild/ui/components/skeleton';
-import ErrorBoundary from '@/components/error-boundary';
+import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
 
 
 

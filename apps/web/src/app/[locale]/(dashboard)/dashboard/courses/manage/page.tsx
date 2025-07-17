@@ -4,7 +4,7 @@ import { getEnhancedCourseData } from '@/lib/courses/actions';
 import { CourseProvider } from '@/lib/courses';
 import { CourseManagementContent } from '@/components/dashboard/courses/course-management-content';
 import { Loader2 } from 'lucide-react';
-import ErrorBoundary from '@/components/error-boundary';
+import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
 
 
 export const metadata: Metadata = {
@@ -50,7 +50,7 @@ export default async function CoursesManagementPage({ searchParams }: CoursesPag
 
         <ErrorBoundary fallback={<div className="text-red-500">Failed to load course management interface</div>}>
           <CourseProvider initialCourses={courseData.courses}>
-            <Suspense fallback={<LoadingSpinner />}>
+            <Suspense fallback={<div className="flex items-center justify-center p-4"><Loader2 className="h-4 w-4 animate-spin" /></div>}>
               <CourseManagementContent />
             </Suspense>
           </CourseProvider>
