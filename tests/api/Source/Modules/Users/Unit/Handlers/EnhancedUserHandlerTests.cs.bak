@@ -164,7 +164,7 @@ public class EnhancedUserHandlerTests : IDisposable {
 
     // Assert
     Assert.False(result.IsSuccess);
-    Assert.Equal("User.PageNotFound", result.ErrorMessage.Code);
+    Assert.Equal("User.NotFound", result.Error.Code);
   }
 
   [Fact]
@@ -187,7 +187,7 @@ public class EnhancedUserHandlerTests : IDisposable {
 
     // Assert
     Assert.False(result.IsSuccess);
-    Assert.Equal("User.PageNotFound", result.ErrorMessage.Code);
+    Assert.Equal("User.NotFound", result.Error.Code);
   }
 
   #endregion
@@ -254,7 +254,7 @@ public class EnhancedUserHandlerTests : IDisposable {
 
     // Assert
     Assert.False(result.IsSuccess);
-    Assert.Equal("User.PageNotFound", result.ErrorMessage.Code);
+    Assert.Equal("User.NotFound", result.Error.Code);
 
     // Verify no event was published
     _mockMediator.Verify(
@@ -292,7 +292,7 @@ public class EnhancedUserHandlerTests : IDisposable {
 
     // Assert
     Assert.False(result.IsSuccess);
-    Assert.Equal("User.EmailExists", result.ErrorMessage.Code);
+    Assert.Equal("User.EmailExists", result.Error.Code);
 
     // Verify no event was published
     _mockMediator.Verify(
@@ -350,7 +350,7 @@ public class EnhancedUserHandlerTests : IDisposable {
 
     // Assert
     Assert.False(result.IsSuccess);
-    Assert.Equal("User.PageNotFound", result.ErrorMessage.Code);
+    Assert.Equal("User.NotFound", result.Error.Code);
 
     // Verify no event was published
     _mockMediator.Verify(

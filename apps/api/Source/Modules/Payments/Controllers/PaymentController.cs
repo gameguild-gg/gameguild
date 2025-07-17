@@ -29,7 +29,7 @@ public class PaymentController(IMediator mediator) : ControllerBase
   public async Task<ActionResult<Payment>> CreatePaymentIntent([FromBody] CreatePaymentCommand command) 
   {
     var result = await mediator.Send(command);
-    if (!result.Success) return BadRequest(result.ErrorMessage);
+    if (!result.Success) return BadRequest(result.Error);
     return Ok(result.Payment);
   }
 
@@ -45,7 +45,7 @@ public class PaymentController(IMediator mediator) : ControllerBase
       ProviderMetadata = request.ProviderMetadata 
     };
     var result = await mediator.Send(command);
-    if (!result.Success) return BadRequest(result.ErrorMessage);
+    if (!result.Success) return BadRequest(result.Error);
     return Ok(result.Payment);
   }
 
@@ -65,7 +65,7 @@ public class PaymentController(IMediator mediator) : ControllerBase
       RefundedBy = currentUserId 
     };
     var result = await mediator.Send(command);
-    if (!result.Success) return BadRequest(result.ErrorMessage);
+    if (!result.Success) return BadRequest(result.Error);
     return Ok(result.Refund); // Fixed: use Refund property instead of Payment
   }
 
@@ -77,7 +77,7 @@ public class PaymentController(IMediator mediator) : ControllerBase
   {
     var query = new GetPaymentByIdQuery { PaymentId = id };
     var payment = await mediator.Send(query);
-    if (payment == null) return PageNotFound();
+    if (payment == null) return NotFound();
     return Ok(payment);
   }
 

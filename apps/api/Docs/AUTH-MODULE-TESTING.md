@@ -13,7 +13,7 @@ The following unit test suites have been implemented:
 - **Login Tests**: Valid credentials, invalid credentials, password verification
 - **Token Management**: Refresh token validation, token revocation
 - **Database Integration**: User and credential creation, relationship mapping
-- **ErrorMessage Handling**: Exception scenarios for various edge cases
+- **Error Handling**: Exception scenarios for various edge cases
 
 **Key Test Cases:**
 - `RegisterAsync_ValidDto_CreatesUserAndCredential()`
@@ -68,7 +68,7 @@ The following unit test suites have been implemented:
 
 #### 5. AuthController Tests (`Tests/Modules/Auth/Controllers/AuthControllerTests.cs`)
 - **HTTP Endpoints**: Request/response validation, status codes
-- **ErrorMessage Handling**: Exception to HTTP status mapping
+- **Error Handling**: Exception to HTTP status mapping
 - **OAuth Flows**: GitHub/Google OAuth integration
 - **Web3 Endpoints**: Challenge/verification API testing
 - **Email Endpoints**: Verification and password reset APIs
@@ -119,7 +119,7 @@ The following unit test suites have been implemented:
 6. **Authorization Filters**: Role-based access control
 7. **HTTP Controllers**: All endpoints tested
 8. **Database Operations**: Entity relationships, migrations
-9. **ErrorMessage Handling**: Exception scenarios
+9. **Error Handling**: Exception scenarios
 10. **Security**: Password hashing, token validation
 
 ### 📋 Testing Framework

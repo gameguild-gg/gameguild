@@ -39,13 +39,13 @@ public class ProductCommandHandlers :
       _logger.LogInformation("Creating product: {Name} by user {UserId}", request.Name, _userContext.UserId);
 
       // Validate user permissions
-      if (!_userContext.IsAuthenticated || _userContext.UserId == null) { return new CreateProductResult { Success = false, ErrorMessage = "User must be authenticated" }; }
+      if (!_userContext.IsAuthenticated || _userContext.UserId == null) { return new CreateProductResult { Success = false, Error = "User must be authenticated" }; }
 
       // Check if user has permission to create products (basic role check)
-      if (!_userContext.IsInRole("Admin")) { return new CreateProductResult { Success = false, ErrorMessage = "Unauthorized - Admin role required" }; }
+      if (!_userContext.IsInRole("Admin")) { return new CreateProductResult { Success = false, Error = "Unauthorized - Admin role required" }; }
 
       // Basic validation
-      if (string.IsNullOrWhiteSpace(request.Name)) { return new CreateProductResult { Success = false, ErrorMessage = "Name is required" }; }
+      if (string.IsNullOrWhiteSpace(request.Name)) { return new CreateProductResult { Success = false, Error = "Name is required" }; }
 
       // Create the product
       var product = new Product {
@@ -78,9 +78,9 @@ public class ProductCommandHandlers :
       return new CreateProductResult { Success = true, Product = product };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage creating product: {Name}", request.Name);
+      _logger.LogError(ex, "Error creating product: {Name}", request.Name);
 
-      return new CreateProductResult { Success = false, ErrorMessage = $"Failed to create product: {ex.Message}" };
+      return new CreateProductResult { Success = false, Error = $"Failed to create product: {ex.Message}" };
     }
   }
 
@@ -92,10 +92,10 @@ public class ProductCommandHandlers :
       var product = await _context.Products
                                   .FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
 
-      if (product == null) { return new UpdateProductResult { Success = false, ErrorMessage = "Product not found" }; }
+      if (product == null) { return new UpdateProductResult { Success = false, Error = "Product not found" }; }
 
       // Check permissions - only the creator can update their product
-      if (product.CreatorId != _userContext.UserId) { return new UpdateProductResult { Success = false, ErrorMessage = "User does not have permission to update this product" }; }
+      if (product.CreatorId != _userContext.UserId) { return new UpdateProductResult { Success = false, Error = "User does not have permission to update this product" }; }
 
       // Update properties
       if (!string.IsNullOrEmpty(request.Name)) {
@@ -134,9 +134,9 @@ public class ProductCommandHandlers :
       return new UpdateProductResult { Success = true, Product = product };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage updating product: {ProductId}", request.ProductId);
+      _logger.LogError(ex, "Error updating product: {ProductId}", request.ProductId);
 
-      return new UpdateProductResult { Success = false, ErrorMessage = $"Failed to update product: {ex.Message}" };
+      return new UpdateProductResult { Success = false, Error = $"Failed to update product: {ex.Message}" };
     }
   }
 
@@ -147,10 +147,10 @@ public class ProductCommandHandlers :
       var product = await _context.Products
                                   .FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
 
-      if (product == null) { return new DeleteProductResult { Success = false, ErrorMessage = "Product not found" }; }
+      if (product == null) { return new DeleteProductResult { Success = false, Error = "Product not found" }; }
 
       // Check permissions - only the creator can delete their product
-      if (product.CreatorId != _userContext.UserId) { return new DeleteProductResult { Success = false, ErrorMessage = "User does not have permission to delete this product" }; }
+      if (product.CreatorId != _userContext.UserId) { return new DeleteProductResult { Success = false, Error = "User does not have permission to delete this product" }; }
 
       // Soft delete using Entity base class method
       product.SoftDelete();
@@ -162,9 +162,9 @@ public class ProductCommandHandlers :
       return new DeleteProductResult { Success = true };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage deleting product: {ProductId}", request.ProductId);
+      _logger.LogError(ex, "Error deleting product: {ProductId}", request.ProductId);
 
-      return new DeleteProductResult { Success = false, ErrorMessage = $"Failed to delete product: {ex.Message}" };
+      return new DeleteProductResult { Success = false, Error = $"Failed to delete product: {ex.Message}" };
     }
   }
 
@@ -175,10 +175,10 @@ public class ProductCommandHandlers :
       var product = await _context.Products
                                   .FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
 
-      if (product == null) { return new PublishProductResult { Success = false, ErrorMessage = "Product not found" }; }
+      if (product == null) { return new PublishProductResult { Success = false, Error = "Product not found" }; }
 
       // Check permissions - only the creator can publish their product
-      if (product.CreatorId != _userContext.UserId) { return new PublishProductResult { Success = false, ErrorMessage = "User does not have permission to publish this product" }; }
+      if (product.CreatorId != _userContext.UserId) { return new PublishProductResult { Success = false, Error = "User does not have permission to publish this product" }; }
 
       // Update status to published
       product.Status = ContentStatus.Published;
@@ -191,9 +191,9 @@ public class ProductCommandHandlers :
       return new PublishProductResult { Success = true, Product = product };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage publishing product: {ProductId}", request.ProductId);
+      _logger.LogError(ex, "Error publishing product: {ProductId}", request.ProductId);
 
-      return new PublishProductResult { Success = false, ErrorMessage = $"Failed to publish product: {ex.Message}" };
+      return new PublishProductResult { Success = false, Error = $"Failed to publish product: {ex.Message}" };
     }
   }
 
@@ -204,10 +204,10 @@ public class ProductCommandHandlers :
       var product = await _context.Products
                                   .FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
 
-      if (product == null) { return new UnpublishProductResult { Success = false, ErrorMessage = "Product not found" }; }
+      if (product == null) { return new UnpublishProductResult { Success = false, Error = "Product not found" }; }
 
       // Check permissions - only the creator can unpublish their product
-      if (product.CreatorId != _userContext.UserId) { return new UnpublishProductResult { Success = false, ErrorMessage = "User does not have permission to unpublish this product" }; }
+      if (product.CreatorId != _userContext.UserId) { return new UnpublishProductResult { Success = false, Error = "User does not have permission to unpublish this product" }; }
 
       // Update status to draft
       product.Status = ContentStatus.Draft;
@@ -220,9 +220,9 @@ public class ProductCommandHandlers :
       return new UnpublishProductResult { Success = true, Product = product };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage unpublishing product: {ProductId}", request.ProductId);
+      _logger.LogError(ex, "Error unpublishing product: {ProductId}", request.ProductId);
 
-      return new UnpublishProductResult { Success = false, ErrorMessage = $"Failed to unpublish product: {ex.Message}" };
+      return new UnpublishProductResult { Success = false, Error = $"Failed to unpublish product: {ex.Message}" };
     }
   }
 }

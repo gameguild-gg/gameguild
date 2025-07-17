@@ -151,7 +151,7 @@ public class PaymentServiceTests : IDisposable
             .ReturnsAsync(new PaymentResult 
             { 
                 Success = false, 
-                ErrorMessage = "Insufficient funds",
+                Error = "Insufficient funds",
                 ProcessedAt = DateTime.UtcNow 
             });
 

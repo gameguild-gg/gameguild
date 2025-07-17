@@ -87,7 +87,7 @@ GraphQL Schema Introspection Response: {"errors":[{"message":"Introspection is n
 [xUnit.net 00:00:04.40]         --- End of stack trace from previous location ---
 [xUnit.net 00:00:04.41]   Finished:    GameGuild.API.Tests
   Failed GameGuild.Tests.Modules.Users.E2E.GraphQL.GraphQLSchemaIntrospectionTest.Should_Show_Available_Query_Fields [410 ms]
-  ErrorMessage Message:
+  Error Message:
    GraphQL introspection failed. Status: BadRequest
 Expected: True
 Actual:   False
@@ -105,6 +105,6 @@ Total tests: 1
 
 Build FAILED.
     0 Warning(s)
-    0 ErrorMessage(s)
+    0 Error(s)
 
 Time Elapsed 00:00:07.52

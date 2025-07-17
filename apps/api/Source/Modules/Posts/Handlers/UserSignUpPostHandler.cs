@@ -47,14 +47,14 @@ public class UserSignUpPostHandler(
       }
       else {
         logger.LogWarning(
-          "Failed to create welcome post for user {UserId}: {ErrorMessage}",
+          "Failed to create welcome post for user {UserId}: {Error}",
           notification.UserId,
-          result.ErrorMessage?.Description
+          result.Error?.Description
         );
       }
     }
     catch (Exception ex) {
-      logger.LogError(ex, "ErrorMessage creating welcome post for user {UserId} during signup", notification.UserId);
+      logger.LogError(ex, "Error creating welcome post for user {UserId} during signup", notification.UserId);
       // Don't rethrow - we don't want to break the signup process if post creation fails
     }
   }

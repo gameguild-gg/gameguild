@@ -68,7 +68,7 @@ Many module tests failing with Unauthorized (401):
 
 ### 3. GraphQL Configuration Problems
 - GraphQL introspection behavior differences
-- ErrorMessage handling expectations vs actual behavior
+- Error handling expectations vs actual behavior
 - Status code mismatches (expecting 200 for GraphQL errors, getting BadRequest)
 
 ## Metrics & Progress 📊

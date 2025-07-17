@@ -82,10 +82,10 @@ public class GetUserProfileStatisticsHandler(ApplicationDbContext context, ILogg
       return Result.Success(statistics);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "ErrorMessage generating user profile statistics");
+      logger.LogError(ex, "Error generating user profile statistics");
 
       return Result.Failure<UserProfileStatistics>(
-        Common.ErrorMessage.Failure("UserProfile.StatisticsFailed", "Failed to generate user profile statistics")
+        Common.Error.Failure("UserProfile.StatisticsFailed", "Failed to generate user profile statistics")
       );
     }
   }

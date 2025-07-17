@@ -108,7 +108,7 @@ Follow the User module pattern to add:
 1. **Separation of Concerns**: Each module is self-contained
 2. **Dependency Injection**: Proper service registration
 3. **Type Safety**: Strong typing with DTOs and interfaces
-4. **ErrorMessage Handling**: Centralized exception management
+4. **Error Handling**: Centralized exception management
 5. **Documentation**: Auto-generated API docs
 6. **Scalability**: Easy to add new modules and features
 

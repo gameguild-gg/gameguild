@@ -11,7 +11,7 @@
     "@game-guild/prettier-config": "0.1.0"
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "^15.4.0",
+    "@next/eslint-plugin-next": "^15.4.1",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
     "@eslint/js": "^9",

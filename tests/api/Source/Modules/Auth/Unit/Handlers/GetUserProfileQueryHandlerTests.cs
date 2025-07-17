@@ -122,7 +122,7 @@ public class GetUserProfileQueryHandlerTests
         // Verify error logging
         _mockLogger.Verify(
             x => x.Log(
-                LogLevel.ErrorMessage,
+                LogLevel.Error,
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to retrieve user profile")),
                 It.Is<Exception>(ex => ex == expectedException),

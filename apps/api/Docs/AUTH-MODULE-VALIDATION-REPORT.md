@@ -86,7 +86,7 @@ All auth endpoints implemented and accessible:
 - ✅ Security best practices applied
 - ✅ API endpoints responding correctly
 - ✅ Service dependency injection configured
-- ✅ ErrorMessage handling implemented
+- ✅ Error handling implemented
 
 #### Configuration Required for Production
 1. **Email Service**: Replace console logging with SMTP/SendGrid integration
@@ -120,7 +120,7 @@ All auth endpoints implemented and accessible:
 - [x] Database schema created and migrated
 - [x] API endpoints functional
 - [x] Security measures implemented
-- [x] ErrorMessage handling and validation
+- [x] Error handling and validation
 - [ ] Production environment configuration
 - [ ] External service integration (email, Web3 libraries)
 - [ ] Performance testing and optimization

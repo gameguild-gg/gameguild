@@ -1085,7 +1085,7 @@ namespace GameGuild.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ErrorMessage")
+                    b.Property<string>("Error")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 

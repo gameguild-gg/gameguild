@@ -24,7 +24,7 @@ public class ContentProgressMutations {
 
       return new ContentProgressResult { Success = true, Progress = progress };
     }
-    catch (Exception ex) { return new ContentProgressResult { Success = false, ErrorMessage = ex.Message }; }
+    catch (Exception ex) { return new ContentProgressResult { Success = false, Error = ex.Message }; }
   }
 
   /// <summary>
@@ -45,7 +45,7 @@ public class ContentProgressMutations {
 
       return new ContentProgressResult { Success = true, Progress = progress };
     }
-    catch (Exception ex) { return new ContentProgressResult { Success = false, ErrorMessage = ex.Message }; }
+    catch (Exception ex) { return new ContentProgressResult { Success = false, Error = ex.Message }; }
   }
 
   /// <summary>
@@ -66,7 +66,7 @@ public class ContentProgressMutations {
 
       return new ContentProgressResult { Success = true, Progress = progress };
     }
-    catch (Exception ex) { return new ContentProgressResult { Success = false, ErrorMessage = ex.Message }; }
+    catch (Exception ex) { return new ContentProgressResult { Success = false, Error = ex.Message }; }
   }
 
   // Helper method to get current user ID (temporary implementation)
@@ -82,7 +82,7 @@ public class ContentProgressMutations {
 public class ContentProgressResult {
   public bool Success { get; set; }
 
-  public string? ErrorMessage { get; set; }
+  public string? Error { get; set; }
 
   public ContentProgress? Progress { get; set; }
 }

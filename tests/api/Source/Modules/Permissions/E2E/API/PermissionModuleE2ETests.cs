@@ -254,7 +254,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     // 1. Tenant-level READ should work
     var tenantResponse = await _client.GetAsync("/tenants");
 
-    if (tenantResponse.IsSuccessStatusCode || tenantResponse.StatusCode == System.Net.HttpStatusCode.PageNotFound) Assert.NotEqual(System.Net.HttpStatusCode.Forbidden, tenantResponse.StatusCode);
+    if (tenantResponse.IsSuccessStatusCode || tenantResponse.StatusCode == System.Net.HttpStatusCode.NotFound) Assert.NotEqual(System.Net.HttpStatusCode.Forbidden, tenantResponse.StatusCode);
 
     // 2. Content-type level comment permissions should be available via GraphQL
     var commentQuery = @"
@@ -345,7 +345,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     Assert.True(
       response.StatusCode is System.Net.HttpStatusCode.Forbidden
                              or System.Net.HttpStatusCode.Unauthorized
-                             or System.Net.HttpStatusCode.PageNotFound
+                             or System.Net.HttpStatusCode.NotFound
     );
   }
 

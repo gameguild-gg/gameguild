@@ -32,7 +32,7 @@ namespace GameGuild.Modules.Authentication {
         return new EmailOperationResponseDto { Success = true, Message = "Verification email sent successfully" };
       }
       catch (Exception ex) {
-        logger.LogError(ex, "ErrorMessage sending email verification to {Email}", email);
+        logger.LogError(ex, "Error sending email verification to {Email}", email);
 
         return new EmailOperationResponseDto { Success = false, Message = "Failed to send verification email" };
       }
@@ -64,7 +64,7 @@ namespace GameGuild.Modules.Authentication {
         return new EmailOperationResponseDto { Success = true, Message = "Email verified successfully" };
       }
       catch (Exception ex) {
-        logger.LogError(ex, "ErrorMessage verifying email with token {Token}", token);
+        logger.LogError(ex, "Error verifying email with token {Token}", token);
 
         return new EmailOperationResponseDto { Success = false, Message = "Email verification failed" };
       }
@@ -87,7 +87,7 @@ namespace GameGuild.Modules.Authentication {
         return new EmailOperationResponseDto { Success = true, Message = "If an account with that email exists, a password reset link has been sent" };
       }
       catch (Exception ex) {
-        logger.LogError(ex, "ErrorMessage sending password reset to {Email}", email);
+        logger.LogError(ex, "Error sending password reset to {Email}", email);
 
         return new EmailOperationResponseDto { Success = false, Message = "Failed to send password reset email" };
       }
@@ -140,7 +140,7 @@ namespace GameGuild.Modules.Authentication {
         return new EmailOperationResponseDto { Success = true, Message = "Password reset successfully" };
       }
       catch (Exception ex) {
-        logger.LogError(ex, "ErrorMessage resetting password with token {Token}", token);
+        logger.LogError(ex, "Error resetting password with token {Token}", token);
 
         return new EmailOperationResponseDto { Success = false, Message = "Password reset failed" };
       }

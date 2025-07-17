@@ -44,7 +44,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   public async Task<ActionResult<Product>> CreateProduct([FromBody] CreateProductCommand command) {
     var result = await mediator.Send(command);
 
-    if (!result.Success) return BadRequest(result.ErrorMessage);
+    if (!result.Success) return BadRequest(result.Error);
 
     return CreatedAtAction(nameof(GetProduct), new { id = result.Product!.Id }, result.Product);
   }
@@ -60,7 +60,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
     var query = new GetProductByIdQuery { ProductId = id };
     var product = await mediator.Send(query);
 
-    if (product == null) return PageNotFound();
+    if (product == null) return NotFound();
 
     return Ok(product);
   }
@@ -74,7 +74,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
     var updateCommand = command with { ProductId = id, UpdatedBy = User.GetUserId() ?? Guid.Empty };
     var result = await mediator.Send(updateCommand);
 
-    if (!result.Success) return BadRequest(result.ErrorMessage);
+    if (!result.Success) return BadRequest(result.Error);
 
     return Ok(result.Product);
   }
@@ -88,7 +88,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
     var command = new DeleteProductCommand { ProductId = id, DeletedBy = User.GetUserId() ?? Guid.Empty };
     var result = await mediator.Send(command);
 
-    if (!result.Success) return BadRequest(result.ErrorMessage);
+    if (!result.Success) return BadRequest(result.Error);
 
     return NoContent();
   }
@@ -277,7 +277,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   public async Task<ActionResult<ProductPricing>> GetCurrentPricing(Guid id) {
     var pricing = await mediator.Send(new GetCurrentPricingQuery { ProductId = id });
 
-    if (pricing == null) return PageNotFound();
+    if (pricing == null) return NotFound();
 
     return Ok(pricing);
   }
@@ -349,7 +349,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   public async Task<ActionResult<ProductSubscriptionPlan>> GetSubscriptionPlan(Guid planId) {
     var plan = await mediator.Send(new GetSubscriptionPlanQuery { PlanId = planId });
 
-    if (plan == null) return PageNotFound();
+    if (plan == null) return NotFound();
 
     return Ok(plan);
   }
@@ -375,7 +375,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   public async Task<ActionResult<UserProduct>> GetUserProduct(Guid id, Guid userId) {
     var userProduct = await mediator.Send(new GetUserProductQuery { UserId = userId, ProductId = id });
 
-    if (userProduct == null) return PageNotFound();
+    if (userProduct == null) return NotFound();
 
     return Ok(userProduct);
   }

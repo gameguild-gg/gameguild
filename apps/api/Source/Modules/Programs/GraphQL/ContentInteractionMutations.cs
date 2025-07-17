@@ -27,16 +27,16 @@ public class ContentInteractionMutations {
       // Verify content belongs to the specified program
       var content = await programContentService.GetContentByIdAsync(input.ContentId);
 
-      if (content == null || content.ProgramId != programId) return new ContentInteractionResult { Success = false, ErrorMessage = "Content does not belong to the specified program.", Interaction = null };
+      if (content == null || content.ProgramId != programId) return new ContentInteractionResult { Success = false, Error = "Content does not belong to the specified program.", Interaction = null };
 
       var interaction = await contentInteractionService.StartContentAsync(
                           input.ProgramUserId,
                           input.ContentId
                         );
 
-      return new ContentInteractionResult { Success = true, ErrorMessage = null, Interaction = interaction };
+      return new ContentInteractionResult { Success = true, Error = null, Interaction = interaction };
     }
-    catch (Exception ex) { return new ContentInteractionResult { Success = false, ErrorMessage = ex.Message, Interaction = null }; }
+    catch (Exception ex) { return new ContentInteractionResult { Success = false, Error = ex.Message, Interaction = null }; }
   }
 
   /// <summary>
@@ -57,12 +57,12 @@ public class ContentInteractionMutations {
                         );
 
       // Verify the interaction belongs to the specified program
-      if (interaction.Content.ProgramId != programId) return new ContentInteractionResult { Success = false, ErrorMessage = "Interaction does not belong to the specified program.", Interaction = null };
+      if (interaction.Content.ProgramId != programId) return new ContentInteractionResult { Success = false, Error = "Interaction does not belong to the specified program.", Interaction = null };
 
-      return new ContentInteractionResult { Success = true, ErrorMessage = null, Interaction = interaction };
+      return new ContentInteractionResult { Success = true, Error = null, Interaction = interaction };
     }
-    catch (InvalidOperationException ex) { return new ContentInteractionResult { Success = false, ErrorMessage = ex.Message, Interaction = null }; }
-    catch (Exception) { return new ContentInteractionResult { Success = false, ErrorMessage = "An unexpected error occurred while updating progress.", Interaction = null }; }
+    catch (InvalidOperationException ex) { return new ContentInteractionResult { Success = false, Error = ex.Message, Interaction = null }; }
+    catch (Exception) { return new ContentInteractionResult { Success = false, Error = "An unexpected error occurred while updating progress.", Interaction = null }; }
   }
 
   /// <summary>
@@ -83,12 +83,12 @@ public class ContentInteractionMutations {
                         );
 
       // Verify the interaction belongs to the specified program
-      if (interaction.Content.ProgramId != programId) return new ContentInteractionResult { Success = false, ErrorMessage = "Interaction does not belong to the specified program.", Interaction = null };
+      if (interaction.Content.ProgramId != programId) return new ContentInteractionResult { Success = false, Error = "Interaction does not belong to the specified program.", Interaction = null };
 
-      return new ContentInteractionResult { Success = true, ErrorMessage = null, Interaction = interaction };
+      return new ContentInteractionResult { Success = true, Error = null, Interaction = interaction };
     }
-    catch (InvalidOperationException ex) { return new ContentInteractionResult { Success = false, ErrorMessage = ex.Message, Interaction = null }; }
-    catch (Exception) { return new ContentInteractionResult { Success = false, ErrorMessage = "An unexpected error occurred while submitting the interaction.", Interaction = null }; }
+    catch (InvalidOperationException ex) { return new ContentInteractionResult { Success = false, Error = ex.Message, Interaction = null }; }
+    catch (Exception) { return new ContentInteractionResult { Success = false, Error = "An unexpected error occurred while submitting the interaction.", Interaction = null }; }
   }
 
   /// <summary>
@@ -106,12 +106,12 @@ public class ContentInteractionMutations {
       var interaction = await contentInteractionService.CompleteContentAsync(input.InteractionId);
 
       // Verify the interaction belongs to the specified program
-      if (interaction.Content.ProgramId != programId) return new ContentInteractionResult { Success = false, ErrorMessage = "Interaction does not belong to the specified program.", Interaction = null };
+      if (interaction.Content.ProgramId != programId) return new ContentInteractionResult { Success = false, Error = "Interaction does not belong to the specified program.", Interaction = null };
 
-      return new ContentInteractionResult { Success = true, ErrorMessage = null, Interaction = interaction };
+      return new ContentInteractionResult { Success = true, Error = null, Interaction = interaction };
     }
-    catch (InvalidOperationException ex) { return new ContentInteractionResult { Success = false, ErrorMessage = ex.Message, Interaction = null }; }
-    catch (Exception) { return new ContentInteractionResult { Success = false, ErrorMessage = "An unexpected error occurred while completing the interaction.", Interaction = null }; }
+    catch (InvalidOperationException ex) { return new ContentInteractionResult { Success = false, Error = ex.Message, Interaction = null }; }
+    catch (Exception) { return new ContentInteractionResult { Success = false, Error = "An unexpected error occurred while completing the interaction.", Interaction = null }; }
   }
 
   /// <summary>
@@ -132,11 +132,11 @@ public class ContentInteractionMutations {
                         );
 
       // Verify the interaction belongs to the specified program
-      if (interaction.Content.ProgramId != programId) return new ContentInteractionResult { Success = false, ErrorMessage = "Interaction does not belong to the specified program.", Interaction = null };
+      if (interaction.Content.ProgramId != programId) return new ContentInteractionResult { Success = false, Error = "Interaction does not belong to the specified program.", Interaction = null };
 
-      return new ContentInteractionResult { Success = true, ErrorMessage = null, Interaction = interaction };
+      return new ContentInteractionResult { Success = true, Error = null, Interaction = interaction };
     }
-    catch (InvalidOperationException ex) { return new ContentInteractionResult { Success = false, ErrorMessage = ex.Message, Interaction = null }; }
-    catch (Exception) { return new ContentInteractionResult { Success = false, ErrorMessage = "An unexpected error occurred while updating time spent.", Interaction = null }; }
+    catch (InvalidOperationException ex) { return new ContentInteractionResult { Success = false, Error = ex.Message, Interaction = null }; }
+    catch (Exception) { return new ContentInteractionResult { Success = false, Error = "An unexpected error occurred while updating time spent.", Interaction = null }; }
   }
 }

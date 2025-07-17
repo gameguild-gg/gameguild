@@ -36,7 +36,7 @@ public class ContextMiddleware {
       await _next(context);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage in context middleware");
+      _logger.LogError(ex, "Error in context middleware");
 
       throw;
     }

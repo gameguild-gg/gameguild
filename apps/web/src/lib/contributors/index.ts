@@ -1,4 +1,7 @@
-export const getContributors = (): Promise<unknown[]> => {};
+export const getContributors = (): Promise<unknown[]> => {
+  return [];
+};
+
 // import ContributorCard, { Contributor } from '@/components/contributors/contributor-card';
 // import { Github } from 'lucide-react';
 // import { Metadata } from 'next';
@@ -16,7 +19,7 @@ export const getContributors = (): Promise<unknown[]> => {};
 // /**
 //  * Generate git stats from the git repository
 //  */
-// async function generateGitStats(): Promise<GitStats[]> {
+async function generateGitStats(): Promise<GitStats[]> {}
 //   try {
 //     // Check if we're in production and if the stats file exists
 //     if (process.env.NODE_ENV === 'production' && fs.existsSync(STATS_FILE_PATH)) {
@@ -271,4 +274,4 @@ export const getContributors = (): Promise<unknown[]> => {};
   //     </p>
   //   </div>
   // );
-}
+

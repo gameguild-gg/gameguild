@@ -113,7 +113,7 @@ public class UserSignedUpUserProfileHandlerTests
         };
 
         var failureResult = GameGuild.Common.Result.Failure<UserProfile>(
-            GameGuild.Common.ErrorMessage.Conflict("UserProfile.AlreadyExists", "Profile already exists")
+            GameGuild.Common.Error.Conflict("UserProfile.AlreadyExists", "Profile already exists")
         );
 
         _mediatorMock

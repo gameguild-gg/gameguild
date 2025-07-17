@@ -22,7 +22,7 @@ public class PaymentResult
     public bool Success { get; set; }
     public string? TransactionId { get; set; }
     public string? PaymentIntentId { get; set; }
-    public string? ErrorMessage { get; set; }
+    public string? Error { get; set; }
     public decimal ProcessingFee { get; set; }
     public DateTime ProcessedAt { get; set; }
 }
@@ -44,7 +44,7 @@ public class RefundResult
 {
     public bool Success { get; set; }
     public string? RefundId { get; set; }
-    public string? ErrorMessage { get; set; }
+    public string? Error { get; set; }
     public DateTime ProcessedAt { get; set; }
 }
 

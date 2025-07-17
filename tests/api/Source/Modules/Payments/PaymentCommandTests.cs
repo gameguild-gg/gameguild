@@ -90,7 +90,7 @@ public class PaymentCommandTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Success, $"Expected success but got error: {result.ErrorMessage}");
+        Assert.True(result.Success, $"Expected success but got error: {result.Error}");
         Assert.NotNull(result.Payment);
         Assert.Equal(PaymentStatus.Pending, result.Payment.Status);
         Assert.Equal(99.99m, result.Payment.Amount);
@@ -151,7 +151,7 @@ public class PaymentCommandTests : IDisposable
 
         // Assert
         Assert.NotNull(processResult);
-        Assert.True(processResult.Success, $"Expected success but got error: {processResult.ErrorMessage}");
+        Assert.True(processResult.Success, $"Expected success but got error: {processResult.Error}");
         Assert.NotNull(processResult.Payment);
         Assert.Equal(PaymentStatus.Completed, processResult.Payment.Status);
         Assert.Equal("txn_success_123", processResult.Payment.ProviderTransactionId);
@@ -179,7 +179,7 @@ public class PaymentCommandTests : IDisposable
             .ReturnsAsync(new PaymentResult 
             { 
                 Success = false, 
-                ErrorMessage = "Payment failed",
+                Error = "Payment failed",
                 ProcessedAt = DateTime.UtcNow 
             });
 
@@ -194,7 +194,7 @@ public class PaymentCommandTests : IDisposable
         };
 
         var createResult = await _mediator.Send(createCommand);
-        Assert.True(createResult.Success, $"Create payment failed: {createResult.ErrorMessage}");
+        Assert.True(createResult.Success, $"Create payment failed: {createResult.Error}");
         Assert.NotNull(createResult.Payment);
 
         // Step 2: Process Payment (should fail)
@@ -209,7 +209,7 @@ public class PaymentCommandTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Success, $"Expected success but got error: {result.ErrorMessage}"); // Process command should succeed even if payment fails
+        Assert.True(result.Success, $"Expected success but got error: {result.Error}"); // Process command should succeed even if payment fails
         Assert.NotNull(result.Payment);
         Assert.Equal(PaymentStatus.Failed, result.Payment.Status);
         
@@ -256,7 +256,7 @@ public class PaymentCommandTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Success, $"Expected success but got error: {result.ErrorMessage}");
+        Assert.True(result.Success, $"Expected success but got error: {result.Error}");
         Assert.NotNull(result.Refund);
         Assert.Equal(50.00m, result.Refund.RefundAmount);
     }
@@ -288,7 +288,7 @@ public class PaymentCommandTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Success, $"Expected success but got error: {result.ErrorMessage}");
+        Assert.True(result.Success, $"Expected success but got error: {result.Error}");
         Assert.NotNull(result.Payment);
         Assert.Equal(PaymentStatus.Cancelled, result.Payment.Status);
     }

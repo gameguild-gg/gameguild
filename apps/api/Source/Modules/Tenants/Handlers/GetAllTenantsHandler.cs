@@ -25,10 +25,10 @@ public class GetAllTenantsHandler(
       return Result.Success<IEnumerable<Tenant>>(tenants);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "ErrorMessage retrieving tenants");
+      logger.LogError(ex, "Error retrieving tenants");
 
       return Result.Failure<IEnumerable<Tenant>>(
-        Common.ErrorMessage.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenants")
+        Common.Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenants")
       );
     }
   }

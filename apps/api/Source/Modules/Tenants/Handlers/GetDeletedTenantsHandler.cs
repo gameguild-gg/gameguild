@@ -23,10 +23,10 @@ public class GetDeletedTenantsHandler(
       return Result.Success<IEnumerable<Tenant>>(tenants);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "ErrorMessage retrieving deleted tenants");
+      logger.LogError(ex, "Error retrieving deleted tenants");
 
       return Result.Failure<IEnumerable<Tenant>>(
-        Common.ErrorMessage.Failure("Tenant.RetrievalFailed", "Failed to retrieve deleted tenants")
+        Common.Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve deleted tenants")
       );
     }
   }

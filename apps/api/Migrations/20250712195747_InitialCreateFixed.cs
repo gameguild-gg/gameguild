@@ -298,7 +298,7 @@ namespace GameGuild.Migrations
                     Metadata = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
                     ProcessedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     FailedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    ErrorMessage = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    Error = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     FailureReason = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     PromoCodeId1 = table.Column<Guid>(type: "TEXT", nullable: true),
                     Version = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 1),

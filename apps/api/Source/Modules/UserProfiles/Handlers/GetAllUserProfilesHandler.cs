@@ -46,10 +46,10 @@ public class GetAllUserProfilesHandler(ApplicationDbContext context, ILogger<Get
       return Result.Success<IEnumerable<UserProfile>>(userProfiles);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "ErrorMessage retrieving user profiles");
+      logger.LogError(ex, "Error retrieving user profiles");
 
       return Result.Failure<IEnumerable<UserProfile>>(
-        Common.ErrorMessage.Failure("UserProfile.QueryFailed", "Failed to retrieve user profiles")
+        Common.Error.Failure("UserProfile.QueryFailed", "Failed to retrieve user profiles")
       );
     }
   }

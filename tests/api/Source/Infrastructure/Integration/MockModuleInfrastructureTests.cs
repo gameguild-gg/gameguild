@@ -259,8 +259,8 @@ public class MockModuleInfrastructureTests : IClassFixture<MockModuleTestServerF
         var response = await _client.PostAsync("/graphql", content);
         var responseString = await response.Content.ReadAsStringAsync();
 
-        _output.WriteLine($"ErrorMessage Handling Response Status: {response.StatusCode}");
-        _output.WriteLine($"ErrorMessage Handling Response: {responseString}");
+        _output.WriteLine($"Error Handling Response Status: {response.StatusCode}");
+        _output.WriteLine($"Error Handling Response: {responseString}");
 
         // Assert
         // GraphQL can return either 200 with errors in body OR 400 for validation errors
@@ -273,9 +273,9 @@ public class MockModuleInfrastructureTests : IClassFixture<MockModuleTestServerF
         Assert.True(errors.GetArrayLength() > 0, "Should have at least one error");
         
         var firstError = errors[0];
-        Assert.True(firstError.TryGetProperty("message", out _), "ErrorMessage should have message");
+        Assert.True(firstError.TryGetProperty("message", out _), "Error should have message");
         
-        _output.WriteLine("✅ ErrorMessage handling working correctly");
+        _output.WriteLine("✅ Error handling working correctly");
     }
 
     [Fact]

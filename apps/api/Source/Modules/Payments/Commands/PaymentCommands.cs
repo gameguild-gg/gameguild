@@ -78,7 +78,7 @@ public record CreatePaymentResult {
 
   public Payment? Payment { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 
   public string? ClientSecret { get; init; } // For Stripe-like integrations
 }
@@ -88,7 +88,7 @@ public record ProcessPaymentResult {
 
   public Payment? Payment { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 
   public bool AutoEnrollTriggered { get; init; }
 }
@@ -98,7 +98,7 @@ public record RefundPaymentResult {
 
   public PaymentRefund? Refund { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record CancelPaymentResult {
@@ -106,7 +106,7 @@ public record CancelPaymentResult {
 
   public Payment? Payment { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record ApplyDiscountResult {
@@ -116,5 +116,5 @@ public record ApplyDiscountResult {
 
   public decimal DiscountAmount { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }

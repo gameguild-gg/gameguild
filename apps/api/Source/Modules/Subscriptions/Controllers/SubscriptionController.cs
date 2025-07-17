@@ -40,7 +40,7 @@ public class SubscriptionController(ISubscriptionService subscriptionService) : 
 
     var subscription = await subscriptionService.GetActiveSubscriptionAsync(userId);
 
-    if (subscription == null) return PageNotFound(new { message = "No active subscription found" });
+    if (subscription == null) return NotFound(new { message = "No active subscription found" });
 
     return Ok(subscription);
   }
@@ -53,7 +53,7 @@ public class SubscriptionController(ISubscriptionService subscriptionService) : 
   public async Task<ActionResult<UserSubscription>> GetSubscription(Guid id) {
     var subscription = await subscriptionService.GetSubscriptionByIdAsync(id);
 
-    if (subscription == null) return PageNotFound();
+    if (subscription == null) return NotFound();
 
     return Ok(subscription);
   }
@@ -100,7 +100,7 @@ public class SubscriptionController(ISubscriptionService subscriptionService) : 
 
     var subscription = await subscriptionService.CancelSubscriptionAsync(id, userId);
 
-    if (subscription == null) return PageNotFound(new { message = "Subscription not found or not owned by user" });
+    if (subscription == null) return NotFound(new { message = "Subscription not found or not owned by user" });
 
     return Ok(subscription);
   }
@@ -116,7 +116,7 @@ public class SubscriptionController(ISubscriptionService subscriptionService) : 
 
     var subscription = await subscriptionService.ResumeSubscriptionAsync(id, userId);
 
-    if (subscription == null) return PageNotFound(new { message = "Subscription not found or not owned by user" });
+    if (subscription == null) return NotFound(new { message = "Subscription not found or not owned by user" });
 
     return Ok(subscription);
   }
@@ -134,7 +134,7 @@ public class SubscriptionController(ISubscriptionService subscriptionService) : 
 
     var subscription = await subscriptionService.UpdatePaymentMethodAsync(id, userId, updateDto.PaymentMethodId);
 
-    if (subscription == null) return PageNotFound(new { message = "Subscription not found or not owned by user" });
+    if (subscription == null) return NotFound(new { message = "Subscription not found or not owned by user" });
 
     return Ok(subscription);
   }

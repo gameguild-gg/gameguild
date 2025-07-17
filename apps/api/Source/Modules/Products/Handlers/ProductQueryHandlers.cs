@@ -55,7 +55,7 @@ public class ProductQueryHandlers :
       return product;
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting product by ID: {ProductId}", request.ProductId);
+      _logger.LogError(ex, "Error getting product by ID: {ProductId}", request.ProductId);
 
       return null;
     }
@@ -116,7 +116,7 @@ public class ProductQueryHandlers :
       return products;
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting products");
+      _logger.LogError(ex, "Error getting products");
 
       return Enumerable.Empty<Product>();
     }
@@ -159,7 +159,7 @@ public class ProductQueryHandlers :
       return userProducts;
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting user products for user: {UserId}", request.UserId);
+      _logger.LogError(ex, "Error getting user products for user: {UserId}", request.UserId);
 
       return Enumerable.Empty<UserProduct>();
     }
@@ -296,7 +296,7 @@ public class ProductQueryHandlers :
       return stats;
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting product statistics");
+      _logger.LogError(ex, "Error getting product statistics");
       
       // Return empty stats on error
       return new ProductStats {

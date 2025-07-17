@@ -116,7 +116,7 @@ public record CreateProjectResult {
 
   public Project? Project { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record UpdateProjectResult {
@@ -124,13 +124,13 @@ public record UpdateProjectResult {
 
   public Project? Project { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record DeleteProjectResult {
   public bool Success { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record PublishProjectResult {
@@ -138,7 +138,7 @@ public record PublishProjectResult {
 
   public Project? Project { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record UnpublishProjectResult {
@@ -146,7 +146,7 @@ public record UnpublishProjectResult {
 
   public Project? Project { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record ArchiveProjectResult {
@@ -154,5 +154,5 @@ public record ArchiveProjectResult {
 
   public Project? Project { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }

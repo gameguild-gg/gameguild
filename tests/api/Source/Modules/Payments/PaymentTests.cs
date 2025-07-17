@@ -161,7 +161,7 @@ public class PaymentTests : IDisposable
         var processResult = await _mediator.Send(processCommand);
 
         // Assert
-        Assert.True(processResult.Success, $"Payment processing failed: {processResult.ErrorMessage}");
+        Assert.True(processResult.Success, $"Payment processing failed: {processResult.Error}");
         Assert.NotNull(processResult.Payment);
         Assert.Equal(PaymentStatus.Completed, processResult.Payment.Status);
         Assert.Equal("pi_success123", processResult.Payment.ProviderTransactionId);

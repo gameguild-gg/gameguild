@@ -113,7 +113,7 @@ public class TestingControllerE2ETests : IClassFixture<TestWebApplicationFactory
     var response = await _client.GetAsync($"/testing/requests/{invalidId}");
 
     // Assert
-    Assert.Equal(HttpStatusCode.PageNotFound, response.StatusCode);
+    Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
   }
 
   [Fact]

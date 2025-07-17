@@ -49,17 +49,17 @@ public class AuthController : ControllerBase {
     catch (ValidationException ex) {
       _logger.LogWarning("Validation failed for sign-up: {ValidationErrors}", string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));
 
-      return BadRequest(new ProblemDetails { Title = "Validation ErrorMessage", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
+      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
     }
     catch (InvalidOperationException ex) {
       _logger.LogWarning("Sign-up operation failed: {Message}", ex.Message);
 
-      return Conflict(new ProblemDetails { Title = "Operation ErrorMessage", Detail = ex.Message, Status = StatusCodes.Status409Conflict });
+      return Conflict(new ProblemDetails { Title = "Operation Error", Detail = ex.Message, Status = StatusCodes.Status409Conflict });
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Unexpected error during sign-up for email: {Email}", request.Email);
 
-      return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server ErrorMessage", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError });
+      return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server Error", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError });
     }
   }
 
@@ -87,7 +87,7 @@ public class AuthController : ControllerBase {
     catch (ValidationException ex) {
       _logger.LogWarning("Validation failed for sign-in: {ValidationErrors}", string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));
 
-      return BadRequest(new ProblemDetails { Title = "Validation ErrorMessage", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
+      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
     }
     catch (UnauthorizedAccessException ex) {
       _logger.LogWarning("Sign-in failed for email: {Email} - {Message}", request.Email, ex.Message);
@@ -97,7 +97,7 @@ public class AuthController : ControllerBase {
     catch (Exception ex) {
       _logger.LogError(ex, "Unexpected error during sign-in for email: {Email}", request.Email);
 
-      return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server ErrorMessage", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError });
+      return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server Error", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError });
     }
   }
 
@@ -125,7 +125,7 @@ public class AuthController : ControllerBase {
     catch (ValidationException ex) {
       _logger.LogWarning("Validation failed for Google ID token sign-in: {ValidationErrors}", string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));
 
-      return BadRequest(new ProblemDetails { Title = "Validation ErrorMessage", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
+      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
     }
     catch (UnauthorizedAccessException ex) {
       _logger.LogWarning("Google ID token sign-in failed: {Message}", ex.Message);
@@ -135,7 +135,7 @@ public class AuthController : ControllerBase {
     catch (Exception ex) {
       _logger.LogError(ex, "Unexpected error during Google ID token sign-in");
 
-      return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server ErrorMessage", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError });
+      return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server Error", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError });
     }
   }
 
@@ -163,7 +163,7 @@ public class AuthController : ControllerBase {
     catch (ValidationException ex) {
       _logger.LogWarning("Validation failed for token refresh: {ValidationErrors}", string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));
 
-      return BadRequest(new ProblemDetails { Title = "Validation ErrorMessage", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
+      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
     }
     catch (UnauthorizedAccessException ex) {
       _logger.LogWarning("Token refresh failed: {Message}", ex.Message);
@@ -173,7 +173,7 @@ public class AuthController : ControllerBase {
     catch (Exception ex) {
       _logger.LogError(ex, "Unexpected error during token refresh");
 
-      return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server ErrorMessage", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError });
+      return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server Error", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError });
     }
   }
 
@@ -202,7 +202,7 @@ public class AuthController : ControllerBase {
     catch (ValidationException ex) {
       _logger.LogWarning("Validation failed for token revocation: {ValidationErrors}", string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));
 
-      return BadRequest(new ProblemDetails { Title = "Validation ErrorMessage", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
+      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
     }
     catch (UnauthorizedAccessException ex) {
       _logger.LogWarning("Token revocation failed: {Message}", ex.Message);
@@ -212,7 +212,7 @@ public class AuthController : ControllerBase {
     catch (Exception ex) {
       _logger.LogError(ex, "Unexpected error during token revocation");
 
-      return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server ErrorMessage", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError });
+      return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server Error", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError });
     }
   }
 
@@ -248,7 +248,7 @@ public class AuthController : ControllerBase {
     catch (Exception ex) {
       _logger.LogError(ex, "Unexpected error during profile retrieval");
 
-      return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server ErrorMessage", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError });
+      return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server Error", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError });
     }
   }
 }

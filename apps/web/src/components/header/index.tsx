@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from 'react';
 import Image from 'next/image';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@game-guild/ui/lib/utils';
 
 import {
   NavigationMenu,

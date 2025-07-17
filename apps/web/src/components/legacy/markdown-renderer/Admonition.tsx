@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertCircle, AlertTriangle, BookOpen, Bug, CheckCircle, HelpCircle, Info, Quote, XCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@game-guild/ui/lib/utils';
 
 type AdmonitionType = 'note' | 'abstract' | 'info' | 'tip' | 'success' | 'question' | 'warning' | 'failure' | 'danger' | 'bug' | 'example' | 'quote';
 

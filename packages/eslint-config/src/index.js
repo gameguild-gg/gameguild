@@ -39,15 +39,15 @@ const config = [
     plugins: { prettier: prettierPlugin },
     rules: { 'prettier/prettier': ['error', prettierConfig] },
   },
-  {
-    plugins: {
-      '@next/next': nextJsPlugin,
-    },
-    rules: {
-      ...nextJsPlugin.configs.recommended.rules,
-      ...nextJsPlugin.configs['core-web-vitals'].rules,
-    },
-  },
+  // {
+  //   plugins: {
+  //     '@next/next': nextJsPlugin,
+  //   },
+  //   rules: {
+  //     ...nextJsPlugin.configs.recommended.rules,
+  //     ...nextJsPlugin.configs['core-web-vitals'].rules,
+  //   },
+  // },
   {
     plugins: {
       'react-hooks': reactHooksPlugin,

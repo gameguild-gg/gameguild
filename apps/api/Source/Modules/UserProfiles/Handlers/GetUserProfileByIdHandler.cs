@@ -34,10 +34,10 @@ public class GetUserProfileByIdHandler(ApplicationDbContext context, ILogger<Get
       return Result.Success<UserProfile?>(userProfile);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "ErrorMessage retrieving user profile {UserProfileId}", request.UserProfileId);
+      logger.LogError(ex, "Error retrieving user profile {UserProfileId}", request.UserProfileId);
 
       return Result.Failure<UserProfile?>(
-        Common.ErrorMessage.Failure("UserProfile.QueryFailed", "Failed to retrieve user profile")
+        Common.Error.Failure("UserProfile.QueryFailed", "Failed to retrieve user profile")
       );
     }
   }

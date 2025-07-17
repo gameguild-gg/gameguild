@@ -21,7 +21,7 @@ public class DeleteUserProfileHandler(
 
       if (userProfile == null) {
         return Result.Failure<bool>(
-          Common.ErrorMessage.PageNotFound("UserProfile.PageNotFound", $"User profile with ID {request.UserProfileId} not found")
+          Common.Error.NotFound("UserProfile.NotFound", $"User profile with ID {request.UserProfileId} not found")
         );
       }
 
@@ -52,10 +52,10 @@ public class DeleteUserProfileHandler(
       return Result.Success(true);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "ErrorMessage deleting user profile {UserProfileId}", request.UserProfileId);
+      logger.LogError(ex, "Error deleting user profile {UserProfileId}", request.UserProfileId);
 
       return Result.Failure<bool>(
-        Common.ErrorMessage.Failure("UserProfile.DeleteFailed", "Failed to delete user profile")
+        Common.Error.Failure("UserProfile.DeleteFailed", "Failed to delete user profile")
       );
     }
   }

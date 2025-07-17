@@ -55,7 +55,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
   ) {
     var grade = await activityGradeService.GetGradeAsync(contentInteractionId);
 
-    if (grade == null) return PageNotFound("Grade not found for this content interaction");
+    if (grade == null) return NotFound("Grade not found for this content interaction");
 
     // Verify the grade belongs to the specified program
     await ValidateGradeBelongsToProgram(grade.Id, programId);
@@ -119,7 +119,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
                          updateDto.GradingDetails
                        );
 
-    if (updatedGrade == null) return PageNotFound("Grade not found");
+    if (updatedGrade == null) return NotFound("Grade not found");
 
     return Ok(updatedGrade.ToDto());
   }
@@ -138,7 +138,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
 
     var deleted = await activityGradeService.DeleteGradeAsync(gradeId);
 
-    if (!deleted) return PageNotFound("Grade not found");
+    if (!deleted) return NotFound("Grade not found");
 
     return NoContent();
   }

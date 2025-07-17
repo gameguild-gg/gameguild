@@ -34,7 +34,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   public async Task<ActionResult<TenantDomain>> GetDomain(Guid id) {
     var domain = await tenantDomainService.GetDomainByIdAsync(id);
 
-    if (domain == null) return PageNotFound();
+    if (domain == null) return NotFound();
 
     return Ok(domain);
   }
@@ -54,7 +54,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
 
       return CreatedAtAction(nameof(GetDomain), new { id = createdDomain.Id }, createdDomain);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage creating domain: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error creating domain: {ex.Message}"); }
   }
 
   // PUT: api/tenant-domains/{id}
@@ -64,14 +64,14 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
     try {
       var existingDomain = await tenantDomainService.GetDomainByIdAsync(id);
 
-      if (existingDomain == null) return PageNotFound();
+      if (existingDomain == null) return NotFound();
 
       request.UpdateTenantDomain(existingDomain);
       var updatedDomain = await tenantDomainService.UpdateDomainAsync(existingDomain);
 
       return Ok(updatedDomain);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage updating domain: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error updating domain: {ex.Message}"); }
   }
 
   // DELETE: api/tenant-domains/{id}
@@ -80,7 +80,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   public async Task<ActionResult> DeleteDomain(Guid id) {
     var result = await tenantDomainService.DeleteDomainAsync(id);
 
-    if (!result) return PageNotFound();
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -91,7 +91,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   public async Task<ActionResult> SetMainDomain(Guid tenantId, Guid domainId) {
     var result = await tenantDomainService.SetMainDomainAsync(tenantId, domainId);
 
-    if (!result) return PageNotFound();
+    if (!result) return NotFound();
 
     return Ok();
   }
@@ -120,7 +120,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   public async Task<ActionResult<TenantUserGroupDto>> GetUserGroup(Guid id) {
     var userGroup = await tenantDomainService.GetUserGroupByIdAsync(id);
 
-    if (userGroup == null) return PageNotFound();
+    if (userGroup == null) return NotFound();
 
     var dto = TenantUserGroupDto.FromTenantUserGroup(userGroup);
 
@@ -137,7 +137,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
 
       return CreatedAtAction(nameof(GetUserGroup), new { id = createdUserGroup.Id }, dto);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage creating user group: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error creating user group: {ex.Message}"); }
   } // PUT: api/tenant-domains/user-groups/{id}
 
   [HttpPut("user-groups/{id:guid}")]
@@ -149,7 +149,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
     try {
       var existingUserGroup = await tenantDomainService.GetUserGroupByIdAsync(id);
 
-      if (existingUserGroup == null) return PageNotFound();
+      if (existingUserGroup == null) return NotFound();
 
       request.UpdateTenantUserGroup(existingUserGroup);
       var updatedUserGroup = await tenantDomainService.UpdateUserGroupAsync(existingUserGroup);
@@ -157,7 +157,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
 
       return Ok(dto);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage updating user group: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error updating user group: {ex.Message}"); }
   }
 
   // DELETE: api/tenant-domains/user-groups/{id}
@@ -166,7 +166,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   public async Task<ActionResult> DeleteUserGroup(Guid id) {
     var result = await tenantDomainService.DeleteUserGroupAsync(id);
 
-    if (!result) return PageNotFound();
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -202,7 +202,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
 
       return Ok(membership);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage adding user to group: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error adding user to group: {ex.Message}"); }
   }
 
   // DELETE: api/tenant-domains/user-groups/memberships
@@ -211,7 +211,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   public async Task<ActionResult> RemoveUserFromGroup([FromQuery] Guid userId, [FromQuery] Guid userGroupId) {
     var result = await tenantDomainService.RemoveUserFromGroupAsync(userId, userGroupId);
 
-    if (!result) return PageNotFound();
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -257,7 +257,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
 
       var tenantUserGroupMemberships = membership as TenantUserGroupMembership[] ?? membership.ToArray();
 
-      if (tenantUserGroupMemberships.Length == 0) return PageNotFound("No matching domain found for user's email");
+      if (tenantUserGroupMemberships.Length == 0) return NotFound("No matching domain found for user's email");
 
       // Return the first membership created (there should typically be only one for a single user)
       var firstMembership = tenantUserGroupMemberships.First();
@@ -272,7 +272,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
 
       return CreatedAtAction(nameof(GetUserGroups), new { userId = firstMembership.UserId }, membershipDto);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage during auto-assignment: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error during auto-assignment: {ex.Message}"); }
   }
 
   // POST: api/tenant-domains/auto-assign-bulk
@@ -304,7 +304,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
 
       return Ok(new { AssignedCount = assignedCount });
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage during auto-assignment: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error during auto-assignment: {ex.Message}"); }
   }
 
   // GET: api/tenant-domains/domain-match
@@ -313,7 +313,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   public async Task<ActionResult<TenantDomain>> FindMatchingDomain([FromQuery] string email) {
     var domain = await tenantDomainService.FindMatchingDomainAsync(email);
 
-    if (domain == null) return PageNotFound("No matching domain found for the provided email");
+    if (domain == null) return NotFound("No matching domain found for the provided email");
 
     return Ok(domain);
   }
@@ -339,7 +339,7 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
 
       return CreatedAtAction(nameof(GetUserGroups), new { userId = membership.UserId }, membershipDto);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage adding user to group: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error adding user to group: {ex.Message}"); }
   }
 
   #endregion

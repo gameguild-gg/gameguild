@@ -15,7 +15,7 @@ public class UpdateUserProfileHandler(ApplicationDbContext context, ILogger<Upda
 
       if (userProfile == null)
         return Result.Failure<UserProfile>(
-          Common.ErrorMessage.PageNotFound("UserProfile.PageNotFound", $"User profile with ID {request.UserProfileId} not found")
+          Common.Error.NotFound("UserProfile.NotFound", $"User profile with ID {request.UserProfileId} not found")
         );
 
       // Track changes for notification
@@ -74,10 +74,10 @@ public class UpdateUserProfileHandler(ApplicationDbContext context, ILogger<Upda
       return Result.Success(userProfile);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "ErrorMessage updating user profile {UserProfileId}", request.UserProfileId);
+      logger.LogError(ex, "Error updating user profile {UserProfileId}", request.UserProfileId);
 
       return Result.Failure<UserProfile>(
-        Common.ErrorMessage.Failure("UserProfile.UpdateFailed", "Failed to update user profile")
+        Common.Error.Failure("UserProfile.UpdateFailed", "Failed to update user profile")
       );
     }
   }

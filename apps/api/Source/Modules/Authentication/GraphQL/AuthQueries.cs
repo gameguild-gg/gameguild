@@ -58,7 +58,7 @@ public class AuthQueries {
   /// <returns>The current user's complete profile</returns>
   [GraphQLDescription("Retrieves the current authenticated user's complete profile")]
   [Authorize] // Requires authentication
-  [ErrorMessage<UnauthorizedAccessException>]
+  [Error<UnauthorizedAccessException>]
   public async Task<UserProfileDto> GetCurrentUserProfile(
     [Service] IMediator mediator,
     [Service] IHttpContextAccessor contextAccessor

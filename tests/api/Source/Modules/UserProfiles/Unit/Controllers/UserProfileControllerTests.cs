@@ -120,7 +120,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
         Description = "Test bio"
       };
 
-      var error = ErrorMessage.Conflict("UserProfile.AlreadyExists", "User profile already exists");
+      var error = Error.Conflict("UserProfile.AlreadyExists", "User profile already exists");
       _mockMediator.Setup(m => m.Send(It.IsAny<CreateUserProfileCommand>(), It.IsAny<CancellationToken>()))
                   .ReturnsAsync(Result.Failure<UserProfile>(error));
 
