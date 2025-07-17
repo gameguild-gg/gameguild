@@ -720,4 +720,79 @@ public class TestService(ApplicationDbContext context) : ITestService {
   }
 
   #endregion
+
+  #region Attendance Tracking
+
+  public Task<object> GetStudentAttendanceReportAsync() {
+    // For now, return mock data until we have proper relationships set up
+    var mockData = new[] {
+      new {
+        Id = "1",
+        Name = "John Developer",
+        Email = "john.dev@mymail.champlain.edu",
+        Team = "fa23-capstone-2023-24-t01",
+        Block1Sessions = 2,
+        Block2Sessions = 1,
+        Block3Sessions = 0,
+        Block4Sessions = 0,
+        TotalSessions = 3,
+        GamesTested = 8,
+        Status = "onTrack"
+      },
+      new {
+        Id = "2",
+        Name = "Jane Smith",
+        Email = "jane.smith@mymail.champlain.edu",
+        Team = "fa23-capstone-2023-24-t02",
+        Block1Sessions = 1,
+        Block2Sessions = 1,
+        Block3Sessions = 0,
+        Block4Sessions = 0,
+        TotalSessions = 2,
+        GamesTested = 4,
+        Status = "atRisk"
+      }
+    };
+
+    return Task.FromResult<object>(mockData);
+  }
+
+  public async Task<object> GetSessionAttendanceReportAsync() {
+    var sessions = await context.TestingSessions
+        .Where(ts => ts.DeletedAt == null)
+        .Include(ts => ts.Location)
+        .Select(ts => new {
+            Id = ts.Id,
+            SessionName = ts.SessionName,
+            Date = ts.SessionDate.ToString("yyyy-MM-dd"),
+            Location = ts.Location.Name,
+            TotalCapacity = ts.Location.MaxTestersCapacity,
+            StudentsRegistered = ts.RegisteredTesterCount,
+            StudentsAttended = ts.RegisteredTesterCount, // Placeholder - would need actual attendance tracking
+            AttendanceRate = ts.RegisteredTesterCount > 0 ? 
+                (double)ts.RegisteredTesterCount / ts.RegisteredTesterCount * 100 : 0,
+            GamesTested = 1 // Placeholder - would need actual count
+        })
+        .ToListAsync();
+
+    return sessions;
+  }
+
+  public async Task UpdateSessionAttendanceAsync(Guid sessionId, Guid userId, AttendanceStatus status, Guid updatedByUserId) {
+    var registration = await context.SessionRegistrations
+        .FirstOrDefaultAsync(sr => sr.SessionId == sessionId && sr.UserId == userId);
+
+    if (registration == null) {
+      throw new ArgumentException("Registration not found");
+    }
+
+    registration.AttendanceStatus = status;
+    if (status == AttendanceStatus.Completed) {
+      registration.AttendedAt = DateTime.UtcNow;
+    }
+
+    await context.SaveChangesAsync();
+  }
+
+  #endregion
 }

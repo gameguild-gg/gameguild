@@ -265,4 +265,37 @@ public interface ITestService {
   Task<IEnumerable<TestingRequest>> GetActiveTestingRequestsAsync();
 
   #endregion
+
+  #region Attendance Tracking
+
+  /// <summary>
+  /// Get student attendance report for professors
+  /// </summary>
+  Task<object> GetStudentAttendanceReportAsync();
+
+  /// <summary>
+  /// Get session attendance report for professors
+  /// </summary>
+  Task<object> GetSessionAttendanceReportAsync();
+
+  /// <summary>
+  /// Update session attendance for a user
+  /// </summary>
+  Task UpdateSessionAttendanceAsync(Guid sessionId, Guid userId, AttendanceStatus status, Guid updatedByUserId);
+
+  #endregion
+
+  #region Feedback Reporting
+
+  /// <summary>
+  /// Report feedback as inappropriate
+  /// </summary>
+  Task ReportFeedbackAsync(Guid feedbackId, string reason, Guid reportedByUserId);
+
+  /// <summary>
+  /// Rate feedback quality for tracking purposes
+  /// </summary>
+  Task RateFeedbackQualityAsync(Guid feedbackId, FeedbackQuality quality, Guid ratedByUserId);
+
+  #endregion
 }
