@@ -570,6 +570,52 @@ public class TestingController(ITestService testService) : ControllerBase {
     return Ok(requests);
   }
 
+  // GET: testing/attendance/students
+  [HttpGet("attendance/students")]
+  [RequireResourcePermission<SessionRegistration>(PermissionType.Read)]
+  public async Task<ActionResult<object>> GetStudentAttendanceReport() {
+    try {
+      var report = await testService.GetStudentAttendanceReportAsync();
+      return Ok(report);
+    }
+    catch (Exception ex) {
+      return BadRequest($"Error generating student attendance report: {ex.Message}");
+    }
+  }
+
+  // GET: testing/attendance/sessions
+  [HttpGet("attendance/sessions")]
+  [RequireResourcePermission<SessionRegistration>(PermissionType.Read)]
+  public async Task<ActionResult<object>> GetSessionAttendanceReport() {
+    try {
+      var report = await testService.GetSessionAttendanceReportAsync();
+      return Ok(report);
+    }
+    catch (Exception ex) {
+      return BadRequest($"Error generating session attendance report: {ex.Message}");
+    }
+  }
+
+  // POST: testing/sessions/{id}/attendance
+  [HttpPost("sessions/{sessionId}/attendance")]
+  [RequireResourcePermission<SessionRegistration>(PermissionType.Update)]
+  public async Task<ActionResult> UpdateAttendance(Guid sessionId, UpdateAttendanceDto attendanceDto) {
+    try {
+      // Get the current authenticated user's ID
+      var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId)) 
+        return Unauthorized("User ID not found in token");
+
+      await testService.UpdateSessionAttendanceAsync(sessionId, attendanceDto.UserId, attendanceDto.AttendanceStatus, currentUserId);
+
+      return Ok(new { message = "Attendance updated successfully" });
+    }
+    catch (Exception ex) {
+      return BadRequest($"Error updating attendance: {ex.Message}");
+    }
+  }
+
   #endregion
 }
 

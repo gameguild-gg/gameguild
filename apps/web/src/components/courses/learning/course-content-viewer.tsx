@@ -1,27 +1,16 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Button } from '@game-guild/ui/components/button';
 import { Progress } from '@game-guild/ui/components/progress';
 import { Badge } from '@game-guild/ui/components/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  BookOpen, 
-  CheckCircle, 
-  Clock, 
-  Play,
-  FileText,
-  Upload,
-  MessageSquare,
-  Trophy
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, BookOpen, CheckCircle, Clock, Play, FileText, Upload, MessageSquare, Trophy, Flag, MoreVertical } from 'lucide-react';
 import { ContentNavigationSidebar } from './content-navigation-sidebar';
 import { LessonViewer } from './lesson-viewer';
 import { ActivityComponent } from './activity-component';
-import { ProgressTracker } from './progress-tracker';
+import { ReportContentDialog } from './report-content-dialog';
+import { ContentReportService } from '@/lib/courses/services/content-report.service';
 
 interface ContentItem {
   id: string;
@@ -70,15 +59,12 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
   const [currentItem, setCurrentItem] = useState<ContentItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
-  useEffect(() => {
-    loadCourseData();
-  }, [courseSlug]);
-
-  const loadCourseData = async () => {
+  const loadCourseData = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Mock course data - replace with actual API call
       const mockData: CourseData = {
         id: courseSlug,
@@ -105,7 +91,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                 duration: 15,
                 order: 1,
                 isRequired: true,
-                description: 'Overview of game development process and roles'
+                description: 'Overview of game development process and roles',
               },
               {
                 id: 'activity-1',
@@ -116,9 +102,9 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                 order: 2,
                 isRequired: true,
                 activityType: 'text',
-                description: 'Set up your development tools and workspace'
-              }
-            ]
+                description: 'Set up your development tools and workspace',
+              },
+            ],
           },
           {
             id: 'module-2',
@@ -136,7 +122,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                 duration: 25,
                 order: 1,
                 isRequired: true,
-                description: 'Variables, functions, and game loops'
+                description: 'Variables, functions, and game loops',
               },
               {
                 id: 'activity-2',
@@ -148,7 +134,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                 isRequired: true,
                 activityType: 'code',
                 description: 'Create a simple player movement script',
-                progress: 60
+                progress: 60,
               },
               {
                 id: 'quiz-1',
@@ -159,9 +145,9 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                 order: 3,
                 isRequired: true,
                 activityType: 'quiz',
-                description: 'Test your understanding of basic programming'
-              }
-            ]
+                description: 'Test your understanding of basic programming',
+              },
+            ],
           },
           {
             id: 'module-3',
@@ -179,7 +165,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                 duration: 30,
                 order: 1,
                 isRequired: true,
-                description: 'Understanding game mechanics and how they work together'
+                description: 'Understanding game mechanics and how they work together',
               },
               {
                 id: 'assignment-1',
@@ -190,17 +176,17 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                 order: 2,
                 isRequired: true,
                 activityType: 'file',
-                description: 'Create a game design document for your first project'
-              }
-            ]
-          }
-        ]
+                description: 'Create a game design document for your first project',
+              },
+            ],
+          },
+        ],
       };
 
       // Find the current item (first available/in-progress item)
       let foundCurrentItem = null;
-      for (const module of mockData.modules) {
-        for (const item of module.items) {
+      for (const moduleItem of mockData.modules) {
+        for (const item of moduleItem.items) {
           if (item.status === 'in-progress' || (item.status === 'available' && !foundCurrentItem)) {
             foundCurrentItem = item;
             break;
@@ -209,16 +195,19 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
         if (foundCurrentItem) break;
       }
 
-      mockData.currentItem = foundCurrentItem;
+      mockData.currentItem = foundCurrentItem || undefined;
       setCourseData(mockData);
       setCurrentItem(foundCurrentItem);
-
     } catch (error) {
       console.error('Error loading course data:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseSlug]);
+
+  useEffect(() => {
+    loadCourseData();
+  }, [loadCourseData]);
 
   const handleItemSelect = (item: ContentItem) => {
     if (item.status === 'locked') return;
@@ -249,16 +238,14 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
 
     // Recalculate progress
     const totalItems = updatedCourseData.modules.reduce((sum, module) => sum + module.items.length, 0);
-    const completedItems = updatedCourseData.modules.reduce((sum, module) => 
-      sum + module.items.filter(item => item.status === 'completed').length, 0
-    );
-    
+    const completedItems = updatedCourseData.modules.reduce((sum, module) => sum + module.items.filter((item) => item.status === 'completed').length, 0);
+
     updatedCourseData.overallProgress = Math.round((completedItems / totalItems) * 100);
     updatedCourseData.completedItems = completedItems;
 
     // Update module progress
     for (const module of updatedCourseData.modules) {
-      const moduleCompleted = module.items.filter(item => item.status === 'completed').length;
+      const moduleCompleted = module.items.filter((item) => item.status === 'completed').length;
       module.progress = Math.round((moduleCompleted / module.items.length) * 100);
     }
 
@@ -273,7 +260,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
 
   const findNextAvailableItem = (data: CourseData, currentItemId: string): ContentItem | null => {
     let foundCurrent = false;
-    
+
     for (const module of data.modules) {
       for (const item of module.items) {
         if (foundCurrent && (item.status === 'available' || item.status === 'in-progress')) {
@@ -284,7 +271,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
         }
       }
     }
-    
+
     return null;
   };
 
@@ -292,12 +279,12 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
     if (!courseData || !currentItem) return;
 
     const allItems: ContentItem[] = [];
-    courseData.modules.forEach(module => {
-      allItems.push(...module.items);
+    courseData.modules.forEach((moduleItem) => {
+      allItems.push(...moduleItem.items);
     });
 
-    const currentIndex = allItems.findIndex(item => item.id === currentItem.id);
-    
+    const currentIndex = allItems.findIndex((item) => item.id === currentItem.id);
+
     if (direction === 'prev' && currentIndex > 0) {
       const prevItem = allItems[currentIndex - 1];
       if (prevItem.status !== 'locked') {
@@ -308,6 +295,26 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
       if (nextItem.status !== 'locked') {
         setCurrentItem(nextItem);
       }
+    }
+  };
+
+  const handleReportContent = async (reason: string, description: string) => {
+    try {
+      if (!currentItem) return;
+
+      const report = await ContentReportService.createReport({
+        contentId: currentItem.id,
+        contentTitle: currentItem.title,
+        reportType: reason,
+        description,
+      });
+
+      console.log('Content reported successfully:', report);
+      setShowReportDialog(false);
+      // TODO: Show success notification
+    } catch (error) {
+      console.error('Failed to report content:', error);
+      // TODO: Show error notification
     }
   };
 
@@ -376,12 +383,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                 </span>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="border-gray-600"
-            >
+            <Button variant="outline" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)} className="border-gray-600">
               {sidebarOpen ? 'Hide' : 'Show'} Contents
             </Button>
           </div>
@@ -398,50 +400,36 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
               contentItems: module.items,
             }))}
             currentContentId={currentItem?.id}
-            onContentSelect={(contentId: string, _type: string) => {
+            onContentSelect={(contentId: string) => {
               // Find the item by id across all modules
-              const foundItem = courseData.modules
-                .flatMap((module) => module.items)
-                .find((item) => item.id === contentId);
+              const foundItem = courseData.modules.flatMap((module) => module.items).find((item) => item.id === contentId);
               if (foundItem) {
                 handleItemSelect(foundItem);
               }
             }}
           />
         )}
-        
+
         <main className={`flex-1 ${sidebarOpen ? 'ml-80' : ''}`}>
           <div className="container mx-auto px-4 py-8">
             {currentItem && (
               <>
                 {/* Navigation Controls */}
                 <div className="flex items-center justify-between mb-6">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigateToItem('prev')}
-                    className="border-gray-600"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => navigateToItem('prev')} className="border-gray-600">
                     <ChevronLeft className="h-4 w-4 mr-1" />
                     Previous
                   </Button>
-                  
+
                   <div className="flex items-center gap-2">
                     {getContentIcon(currentItem.type)}
                     <Badge variant="outline" className="border-gray-600">
                       {currentItem.type.charAt(0).toUpperCase() + currentItem.type.slice(1)}
                     </Badge>
-                    {currentItem.isRequired && (
-                      <Badge variant="secondary">Required</Badge>
-                    )}
+                    {currentItem.isRequired && <Badge variant="secondary">Required</Badge>}
                   </div>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigateToItem('next')}
-                    className="border-gray-600"
-                  >
+
+                  <Button variant="outline" size="sm" onClick={() => navigateToItem('next')} className="border-gray-600">
                     Next
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
@@ -452,31 +440,47 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <span>{currentItem.title}</span>
-                      {currentItem.duration && (
-                        <span className="text-sm font-normal text-gray-400 flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {currentItem.duration} min
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {currentItem.duration && (
+                          <span className="text-sm font-normal text-gray-400 flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {currentItem.duration} min
+                          </span>
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setShowReportDialog(true)}>
+                              <Flag className="h-4 w-4 mr-2" />
+                              Report Content
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </CardTitle>
-                    {currentItem.description && (
-                      <p className="text-gray-400">{currentItem.description}</p>
-                    )}
+                    {currentItem.description && <p className="text-gray-400">{currentItem.description}</p>}
                   </CardHeader>
                   <CardContent>
                     {currentItem.type === 'lesson' ? (
-                      <LessonViewer
-                        item={currentItem}
-                        onComplete={() => handleItemComplete(currentItem.id)}
-                      />
+                      <LessonViewer item={currentItem} onComplete={() => handleItemComplete(currentItem.id)} />
                     ) : (
-                      <ActivityComponent
-                        item={currentItem}
-                        onComplete={(score) => handleItemComplete(currentItem.id, score)}
-                      />
+                      <ActivityComponent item={currentItem} onComplete={(score) => handleItemComplete(currentItem.id, score)} />
                     )}
                   </CardContent>
                 </Card>
+
+                {/* Report Content Dialog */}
+                <ReportContentDialog
+                  open={showReportDialog}
+                  onOpenChange={setShowReportDialog}
+                  contentId={currentItem.id}
+                  contentTitle={currentItem.title}
+                  onSubmit={handleReportContent}
+                />
               </>
             )}
           </div>
