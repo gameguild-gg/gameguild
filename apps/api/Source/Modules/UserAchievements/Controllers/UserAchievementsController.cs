@@ -129,7 +129,7 @@ public class UserAchievementsController : ControllerBase {
   public async Task<ActionResult<AchievementProgress>> UpdateAchievementProgress(
     Guid userId,
     Guid achievementId,
-    [FromBody] UpdateProgressRequest request
+    [FromBody] UpdateAchievementProgressRequest request
   ) {
     // Only allow users to update their own progress or admins/moderators
     if (userId != GetCurrentUserId() && !User.IsInRole("Admin") && !User.IsInRole("Moderator")) {
@@ -269,9 +269,9 @@ public class AchievementLeaderboardController : ControllerBase {
 }
 
 /// <summary>
-/// Request model for updating progress
+/// Request model for updating achievement progress
 /// </summary>
-public class UpdateProgressRequest {
+public class UpdateAchievementProgressRequest {
   public int ProgressIncrement { get; set; } = 1;
   public string? Context { get; set; }
   public bool AutoAward { get; set; } = true;
