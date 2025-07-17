@@ -7,41 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, FileText, Users, Calendar, TestTube, BarChart3 } from 'lucide-react';
+import { testingLabApi, TestingRequest, TestingSession } from '@/lib/api/testing-lab/testing-lab-api';
 import Link from 'next/link';
-
-interface TestingRequest {
-  id: string;
-  title: string;
-  description?: string;
-  projectVersionId: string;
-  projectTitle: string;
-  versionNumber: string;
-  status: 'draft' | 'active' | 'completed' | 'cancelled';
-  startDate: string;
-  endDate: string;
-  maxTesters?: number;
-  currentTesterCount: number;
-  createdBy: {
-    id: string;
-    name: string;
-    email: string;
-  };
-}
-
-interface TestingSession {
-  id: string;
-  sessionName: string;
-  sessionDate: string;
-  startTime: string;
-  endTime: string;
-  maxTesters: number;
-  registeredTesterCount: number;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
-  location: {
-    name: string;
-    capacity: number;
-  };
-}
 
 export default function TestingLabPage() {
   const { data: session } = useSession();

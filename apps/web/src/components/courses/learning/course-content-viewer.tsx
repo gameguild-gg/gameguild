@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/compone
 import { Button } from '@game-guild/ui/components/button';
 import { Progress } from '@game-guild/ui/components/progress';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -14,7 +14,6 @@ import {
   Clock, 
   Play,
   FileText,
-  Code,
   Upload,
   MessageSquare,
   Trophy
@@ -393,9 +392,21 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
       <div className="flex">
         {sidebarOpen && (
           <ContentNavigationSidebar
-            modules={courseData.modules}
-            currentItem={currentItem}
-            onItemSelect={handleItemSelect}
+            courseId={courseData.id}
+            modules={courseData.modules.map((module) => ({
+              ...module,
+              contentItems: module.items,
+            }))}
+            currentContentId={currentItem?.id}
+            onContentSelect={(contentId: string, _type: string) => {
+              // Find the item by id across all modules
+              const foundItem = courseData.modules
+                .flatMap((module) => module.items)
+                .find((item) => item.id === contentId);
+              if (foundItem) {
+                handleItemSelect(foundItem);
+              }
+            }}
           />
         )}
         
