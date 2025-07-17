@@ -1,12 +1,17 @@
 # Chess data structures
 
-Before we dive into the algorithms, we need to define the data structures that will represent the chessboard and the pieces. In this section, we will discuss how to represent the chessboard, the pieces, and their movements.
+Before we dive into the algorithms, we need to define the data structures that will represent the chessboard and the
+pieces. In this section, we will discuss how to represent the chessboard, the pieces, and their movements.
 
 ::: note "Chess Data Structures"
-There are several ways to represent the chessboard and pieces in a computer program. The choice of representation can affect the efficiency of the algorithms we will implement later. 
+There are several ways to represent the chessboard and pieces in a computer program. The choice of representation can
+affect the efficiency of the algorithms we will implement later.
 :::
 
-Alternatively you can use a combination of data structures and strategies to represent the chessboard, pieces and other useful information. In general, you can use board centric as 8x8, vector attack or piece centric as Piece-Lists, Piece-Sets, Piece-Maps, or bitboards. We wont cover them in this course, but you can find more information in the [Chess Programming Wiki](https://www.chessprogramming.org/Main_Page).
+Alternatively you can use a combination of data structures and strategies to represent the chessboard, pieces and other
+useful information. In general, you can use board centric as 8x8, vector attack or piece centric as Piece-Lists,
+Piece-Sets, Piece-Maps, or bitboards. We wont cover them in this course, but you can find more information in
+the [Chess Programming Wiki](https://www.chessprogramming.org/Main_Page).
 
 ## Pieces
 

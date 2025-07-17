@@ -85,10 +85,10 @@ export enum UserSortField {
   Email = 'Email',
   CreatedAt = 'CreatedAt',
   UpdatedAt = 'UpdatedAt',
-  Balance = 'Balance'
+  Balance = 'Balance',
 }
 
 export enum SortDirection {
   Ascending = 'Ascending',
-  Descending = 'Descending'
+  Descending = 'Descending',
 }

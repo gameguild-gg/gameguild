@@ -3,12 +3,7 @@ import plugin from 'tailwindcss/plugin';
 
 const config = {
   darkMode: ['class'],
-  content: [
-    './pages/**/*.{ts,tsx,mdx}',
-    './components/**/*.{ts,tsx,mdx}',
-    './app/**/*.{ts,tsx,mdx}',
-    './src/**/*.{ts,tsx,mdx}',
-  ],
+  content: ['./pages/**/*.{ts,tsx,mdx}', './components/**/*.{ts,tsx,mdx}', './app/**/*.{ts,tsx,mdx}', './src/**/*.{ts,tsx,mdx}'],
   prefix: '',
   theme: {
     container: {
@@ -58,18 +53,18 @@ const config = {
           '2': 'hsl(var(--chart-2))',
           '3': 'hsl(var(--chart-3))',
           '4': 'hsl(var(--chart-4))',
-          '5': 'hsl(var(--chart-5))'
+          '5': 'hsl(var(--chart-5))',
         },
         sidebar: {
-  				DEFAULT: 'hsl(var(--sidebar-background))',
-  				foreground: 'hsl(var(--sidebar-foreground))',
-  				primary: 'hsl(var(--sidebar-primary))',
-  				'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-  				accent: 'hsl(var(--sidebar-accent))',
-  				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-  				border: 'hsl(var(--sidebar-border))',
-  				ring: 'hsl(var(--sidebar-ring))'
-  			}
+          DEFAULT: 'hsl(var(--sidebar-background))',
+          foreground: 'hsl(var(--sidebar-foreground))',
+          primary: 'hsl(var(--sidebar-primary))',
+          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+          accent: 'hsl(var(--sidebar-accent))',
+          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+          border: 'hsl(var(--sidebar-border))',
+          ring: 'hsl(var(--sidebar-ring))',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -108,13 +103,7 @@ const config = {
   plugins: [
     require('tailwindcss-animate'),
     require('@tailwindcss/typography'),
-    plugin(function ({
-      matchUtilities,
-      theme,
-    }: {
-      matchUtilities: any;
-      theme: any;
-    }) {
+    plugin(function ({ matchUtilities, theme }: { matchUtilities: any; theme: any }) {
       matchUtilities(
         {
           'text-shadow': (value: any) => ({

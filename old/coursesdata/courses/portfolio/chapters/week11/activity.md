@@ -4,7 +4,8 @@
 
 ## Overview
 
-This mock interview activity will help you practice technical interviews for game development positions. Working in pairs, you'll take turns being the interviewer and candidate, developing essential skills for both roles.
+This mock interview activity will help you practice technical interviews for game development positions. Working in
+pairs, you'll take turns being the interviewer and candidate, developing essential skills for both roles.
 
 ## Session Structure (60 minutes total)
 
@@ -15,15 +16,17 @@ This mock interview activity will help you practice technical interviews for gam
 
 ## Interviewer Instructions
 
-1. Both students at the beginning, should ask your respective pair about the position they are applying for. Choose a game development role that matches your partner's career goals (e.g., Unity Developer, Game Designer, Technical Artist)
+1. Both students at the beginning, should ask your respective pair about the position they are applying for. Choose a
+   game development role that matches your partner's career goals (e.g., Unity Developer, Game Designer, Technical
+   Artist)
 2. Create a Google Doc with the data of the interview, including the questions.
 3. Prepare 5-7 questions covering (you can ask claude/chtgpt to generate some):
 
-    - Technical knowledge (programming languages, engines, tools)
-    - Problem-solving (describe a technical challenge and how to approach it)
-    - Portfolio projects (ask for detailed explanations of their work)
-    - Collaboration (team dynamics, workflow experience)
-    - Industry awareness (current trends, favorite games)
+  - Technical knowledge (programming languages, engines, tools)
+  - Problem-solving (describe a technical challenge and how to approach it)
+  - Portfolio projects (ask for detailed explanations of their work)
+  - Collaboration (team dynamics, workflow experience)
+  - Industry awareness (current trends, favorite games)
 
 4. Take notes during the interview about strengths and areas for improvement
 5. Provide constructive feedback after the session

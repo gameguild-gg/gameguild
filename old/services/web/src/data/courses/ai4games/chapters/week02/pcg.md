@@ -13,13 +13,13 @@
 ---
 
 - **Purpose**:
-    - Increase replayability.
-    - Reduce development costs.
-    - Enable scalability for large or dynamic worlds.
+  - Increase replayability.
+  - Reduce development costs.
+  - Enable scalability for large or dynamic worlds.
 - **Examples**:
-    - Terrain and map generation.
-    - Dungeon layouts and level.
-    - Weapon or character designs.
+  - Terrain and map generation.
+  - Dungeon layouts and level.
+  - Weapon or character designs.
 
 ---
 
@@ -35,43 +35,43 @@
 ## Common PCG Techniques
 
 - **Noise Functions**:
-    - Examples: Perlin Noise, Simplex Noise.
-    - Used for: Terrain generation, textures.
+  - Examples: Perlin Noise, Simplex Noise.
+  - Used for: Terrain generation, textures.
 - **Rule-Based Systems**:
-    - Define rules to combine elements procedurally.
-    - Example: Roguelike dungeon generation.
+  - Define rules to combine elements procedurally.
+  - Example: Roguelike dungeon generation.
 
 ---
 
 - **Agent-Based Systems**:
-    - Agents simulate behavior to shape content.
-    - Example: Road generation in open-world games.
+  - Agents simulate behavior to shape content.
+  - Example: Road generation in open-world games.
 - **Grammar-Based Generation**:
-    - Define grammars to generate content.
-    - Example: City layouts, storylines.
+  - Define grammars to generate content.
+  - Example: City layouts, storylines.
 - **Machine Learning**:
-    - Train models to generate game content.
-    - Example: Neural networks for level design.
+  - Train models to generate game content.
+  - Example: Neural networks for level design.
 
 ---
 
 ## Use Cases in Games
 
 - **World Generation**:
-    - Example: Minecraft’s infinite terrain.
+  - Example: Minecraft’s infinite terrain.
 - **Dungeon Crawlers**:
-    - Example: Diablo’s randomized levels.
+  - Example: Diablo’s randomized levels.
 - **Character Customization**:
-    - Example: Spore’s creature editor.
+  - Example: Spore’s creature editor.
 
 ---
 
 ## Use Cases in Games (continued)
 
 - **Narrative Generation**:
-    - Example: AI-driven storylines in AI Dungeon.
+  - Example: AI-driven storylines in AI Dungeon.
 - **Item Generation**:
-    - Example: Randomized loot in Borderlands.
+  - Example: Randomized loot in Borderlands.
 
 ---
 
@@ -102,12 +102,12 @@
 ## Tools and Frameworks
 
 - **Unity**:
-    - Assets like Gaia, MapMagic for terrain generation.
+  - Assets like Gaia, MapMagic for terrain generation.
 - **Unreal Engine**:
-    - Procedural tools and Blueprints.
+  - Procedural tools and Blueprints.
 - **Standalone Libraries**:
-    - Noise libraries: FastNoise, LibNoise.
-    - PCG libraries: Dungeon Architect.
+  - Noise libraries: FastNoise, LibNoise.
+  - PCG libraries: Dungeon Architect.
 
 ---
 

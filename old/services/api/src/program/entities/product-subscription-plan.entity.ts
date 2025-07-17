@@ -1,8 +1,8 @@
-import { Entity, Column, ManyToOne, JoinColumn, OneToMany, DeleteDateColumn } from 'typeorm';
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum } from 'class-validator';
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityBase } from '../../common/entities/entity.base';
-import { SubscriptionType, SubscriptionBillingInterval } from './enums';
+import { SubscriptionBillingInterval, SubscriptionType } from './enums';
 import { Product } from './product.entity';
 import { UserSubscription } from './user-subscription.entity';
 
@@ -56,7 +56,10 @@ export class ProductSubscriptionPlan extends EntityBase {
   @IsOptional()
   features?: Record<string, any>;
 
-  @ApiProperty({ description: 'Rules for when this subscription plan is available (region, user type, etc.)', required: false })
+  @ApiProperty({
+    description: 'Rules for when this subscription plan is available (region, user type, etc.)',
+    required: false,
+  })
   @Column('jsonb', { nullable: true })
   @IsOptional()
   availabilityRules?: Record<string, any>;

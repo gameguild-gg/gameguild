@@ -14,6 +14,7 @@
 See main test documentation for running and filtering tests by module or type.
 
 ## Coverage Goals
+
 - UserProfile creation, update, deletion
 - Profile data validation
 - API and GraphQL endpoint coverage

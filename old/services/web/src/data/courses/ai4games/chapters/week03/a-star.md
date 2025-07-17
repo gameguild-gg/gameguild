@@ -66,7 +66,8 @@ struct Vector2 {
 
 - The operators `<` and `==` are required to use the Vector2 as a key in a std::map.
 - The `quantized` method is used to convert a position into an index.
-- The `distance` and `distanceSquared` methods are used to calculate the distance between two positions. Is used on A-star to calculate the cost to reach a neighbor or the distance to the goal.
+- The `distance` and `distanceSquared` methods are used to calculate the distance between two positions. Is used on
+  A-star to calculate the cost to reach a neighbor or the distance to the goal.
 
 ```c++
 using Index2 = Vector2<int32_t>;
@@ -89,7 +90,9 @@ This hash function is for the `std::unordered_map` and `std::unordered_set` to w
 
 ## Bucket
 
-In order to have an easy way to query if a game object is in a bucket, we need to use an `std::unordered_set` of pointers to the game objects. In order to index them, we will use an `std::unordered_map` from `Index2` to `std::unordered_set`.
+In order to have an easy way to query if a game object is in a bucket, we need to use an `std::unordered_set` of
+pointers to the game objects. In order to index them, we will use an `std::unordered_map` from `Index2` to
+`std::unordered_set`.
 
 ```c++
 std::unordered_map<Index2, std::unordered_set<GameObject*>> quantizedMap;
@@ -97,7 +100,8 @@ std::unordered_map<Index2, std::unordered_set<GameObject*>> quantizedMap;
 
 ## Costs
 
-Your scenario might have different costs to reach a bucket. You can use an `std::unordered_map` to store the cost of each bucket.
+Your scenario might have different costs to reach a bucket. You can use an `std::unordered_map` to store the cost of
+each bucket.
 
 ```c++
 std::unordered_map<Index2, float> costMap;
@@ -113,7 +117,8 @@ std::unordered_map<Index2, bool> isWall;
 
 ## Priority Queue
 
-In order to store the frontier of visitable buckets, we need to use a `std::priority_queue` of pairs of `float` and `Index2`.
+In order to store the frontier of visitable buckets, we need to use a `std::priority_queue` of pairs of `float` and
+`Index2`.
 
 ```c++
 std::priority_queue<std::pair<float, Index2>> frontier;

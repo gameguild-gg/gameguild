@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/compone
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
-import { Upload, FileText, Code, Award, Clock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Award, Clock, Code, FileText, Loader2, Upload } from 'lucide-react';
 import { useToast } from '@/lib/old/hooks/use-toast';
 
 interface ActivitySubmissionProps {
@@ -47,7 +47,7 @@ export function ActivitySubmission({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
     setFiles(selectedFiles);
-    setSubmissionData(prev => ({ ...prev, fileResponse: selectedFiles }));
+    setSubmissionData((prev) => ({ ...prev, fileResponse: selectedFiles }));
   };
 
   const handleSubmit = async () => {
@@ -65,7 +65,7 @@ export function ActivitySubmission({
 
     try {
       const { submitActivity } = await import('@/lib/courses/server-actions');
-      
+
       const result = await submitActivity({
         activityId,
         activityType,
@@ -76,12 +76,10 @@ export function ActivitySubmission({
 
       if (result.success) {
         const submission = result;
-        
+
         toast({
           title: 'Submission successful',
-          description: isGraded 
-            ? 'Your submission has been sent for grading.'
-            : 'Activity completed successfully!',
+          description: isGraded ? 'Your submission has been sent for grading.' : 'Activity completed successfully!',
         });
 
         onSubmissionComplete?.(result.submission);
@@ -109,7 +107,7 @@ export function ActivitySubmission({
             <Textarea
               placeholder="Enter your response here..."
               value={submissionData.textResponse || ''}
-              onChange={(e) => setSubmissionData(prev => ({ ...prev, textResponse: e.target.value }))}
+              onChange={(e) => setSubmissionData((prev) => ({ ...prev, textResponse: e.target.value }))}
               rows={8}
               className="resize-y"
             />
@@ -123,7 +121,7 @@ export function ActivitySubmission({
             <Textarea
               placeholder="// Enter your code here..."
               value={submissionData.codeResponse || ''}
-              onChange={(e) => setSubmissionData(prev => ({ ...prev, codeResponse: e.target.value }))}
+              onChange={(e) => setSubmissionData((prev) => ({ ...prev, codeResponse: e.target.value }))}
               rows={12}
               className="font-mono text-sm resize-y"
             />
@@ -136,23 +134,11 @@ export function ActivitySubmission({
             <label className="text-sm font-medium">Upload Files</label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-              <input
-                type="file"
-                multiple
-                onChange={handleFileChange}
-                className="hidden"
-                id="file-upload"
-                accept=".pdf,.doc,.docx,.txt,.zip,.png,.jpg,.jpeg"
-              />
-              <label
-                htmlFor="file-upload"
-                className="cursor-pointer text-blue-600 hover:text-blue-800"
-              >
+              <input type="file" multiple onChange={handleFileChange} className="hidden" id="file-upload" accept=".pdf,.doc,.docx,.txt,.zip,.png,.jpg,.jpeg" />
+              <label htmlFor="file-upload" className="cursor-pointer text-blue-600 hover:text-blue-800">
                 Click to upload files
               </label>
-              <p className="text-sm text-gray-500 mt-1">
-                Supported: PDF, DOC, TXT, ZIP, Images (max 10MB each)
-              </p>
+              <p className="text-sm text-gray-500 mt-1">Supported: PDF, DOC, TXT, ZIP, Images (max 10MB each)</p>
             </div>
             {files.length > 0 && (
               <div className="space-y-2">
@@ -170,11 +156,7 @@ export function ActivitySubmission({
         );
 
       default:
-        return (
-          <div className="text-center py-8 text-gray-500">
-            Activity interface not implemented for type: {activityType}
-          </div>
-        );
+        return <div className="text-center py-8 text-gray-500">Activity interface not implemented for type: {activityType}</div>;
     }
   };
 
@@ -219,7 +201,7 @@ export function ActivitySubmission({
         </CardHeader>
         <CardContent className="space-y-6">
           {renderSubmissionInterface()}
-          
+
           <div className="flex items-center justify-between pt-4 border-t">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               {currentAttempts > 0 && (
@@ -229,11 +211,7 @@ export function ActivitySubmission({
                 </>
               )}
             </div>
-            <Button
-              onClick={() => setShowConfirmDialog(true)}
-              disabled={!hasContent() || !canSubmit || isSubmitting}
-              className="px-8"
-            >
+            <Button onClick={() => setShowConfirmDialog(true)} disabled={!hasContent() || !canSubmit || isSubmitting} className="px-8">
               {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {isGraded ? 'Submit for Grading' : 'Submit Activity'}
             </Button>
@@ -248,7 +226,7 @@ export function ActivitySubmission({
           </DialogHeader>
           <div className="space-y-4">
             <p>
-              Are you sure you want to submit this activity? 
+              Are you sure you want to submit this activity?
               {isGraded && ' Once submitted, it will be sent for grading.'}
             </p>
             {attemptsRemaining <= 1 && (
@@ -260,11 +238,7 @@ export function ActivitySubmission({
               </div>
             )}
             <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setShowConfirmDialog(false)}
-                disabled={isSubmitting}
-              >
+              <Button variant="outline" onClick={() => setShowConfirmDialog(false)} disabled={isSubmitting}>
                 Cancel
               </Button>
               <Button onClick={handleSubmit} disabled={isSubmitting}>

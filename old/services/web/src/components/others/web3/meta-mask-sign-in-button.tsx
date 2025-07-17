@@ -10,12 +10,7 @@ export default function MetaMaskSignInButton() {
 
   return (
     <Button variant="outline" onClick={signInWithWeb3} className="flex-1">
-      <img
-        alt="MetaMask"
-        src="/assets/images/metamask-icon.svg"
-        loading="lazy"
-        className="w-[20px] h-[20px] m-2"
-      />
+      <img alt="MetaMask" src="/assets/images/metamask-icon.svg" loading="lazy" className="w-[20px] h-[20px] m-2" />
       Metamask
     </Button>
   );

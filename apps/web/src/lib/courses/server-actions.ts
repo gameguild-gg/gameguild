@@ -15,10 +15,10 @@ interface ActivitySubmissionRequest {
 
 export async function submitActivity(submissionData: ActivitySubmissionRequest) {
   const { auth } = await import('@/auth');
-  
+
   try {
     const session = await auth();
-    
+
     if (!session?.user) {
       throw new Error('Authentication required');
     }
@@ -36,7 +36,7 @@ export async function submitActivity(submissionData: ActivitySubmissionRequest) 
     // 5. Update user progress
 
     const submissionId = `submission_${Date.now()}`;
-    
+
     console.log('Activity submission received:', {
       submissionId,
       userId: session.user.id,
@@ -83,15 +83,12 @@ export async function submitActivity(submissionData: ActivitySubmissionRequest) 
       console.log(`Initiating ${gradingMethod} grading for submission ${submissionId}`);
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       submission: mockSubmission,
       nextStep,
-      message: submissionData.isGraded 
-        ? `Submission received and sent for ${gradingMethod?.replace('_', ' ')} grading.`
-        : 'Activity completed successfully!'
+      message: submissionData.isGraded ? `Submission received and sent for ${gradingMethod?.replace('_', ' ')} grading.` : 'Activity completed successfully!',
     };
-
   } catch (error) {
     console.error('Error processing activity submission:', error);
     throw new Error(error instanceof Error ? error.message : 'Internal server error');
@@ -179,10 +176,10 @@ export async function getCourseProgress(courseId: string): Promise<ProgressData>
       },
     ];
 
-    const completedItems = mockItems.filter(item => item.status === 'completed').length;
+    const completedItems = mockItems.filter((item) => item.status === 'completed').length;
     const progressPercentage = Math.round((completedItems / mockItems.length) * 100);
-    const nextItem = mockItems.find(item => item.status === 'not-started' || item.status === 'in-progress');
-    const remainingItems = mockItems.filter(item => item.status === 'not-started' || item.status === 'in-progress');
+    const nextItem = mockItems.find((item) => item.status === 'not-started' || item.status === 'in-progress');
+    const remainingItems = mockItems.filter((item) => item.status === 'not-started' || item.status === 'in-progress');
     const estimatedTimeToComplete = remainingItems.reduce((total, item) => total + (item.estimatedMinutes || 0), 0);
 
     const progressData: ProgressData = {

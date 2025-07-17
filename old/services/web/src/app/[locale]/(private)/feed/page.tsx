@@ -49,7 +49,7 @@ const contentItems = [
   {
     type: 'Tests',
     title: 'Performance Test',
-    description: 'Test your game\'s performance',
+    description: "Test your game's performance",
   },
   {
     type: 'Jams',
@@ -59,7 +59,7 @@ const contentItems = [
   {
     type: 'Jobs',
     title: 'Game Designer Wanted',
-    description: 'We\'re hiring a game designer',
+    description: "We're hiring a game designer",
   },
   {
     type: 'Code Battles',
@@ -100,39 +100,27 @@ export default function ContentFeed() {
   const router = useRouter();
 
   const toggleContentType = (type: string) => {
-    setSelectedTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
-    );
+    setSelectedTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
   };
 
   const handleCreateButtonClick = () => {
     router.push('/dashboard');
   };
 
-  const filteredContent =
-    selectedTypes.length > 0
-      ? contentItems.filter((item) => selectedTypes.includes(item.type))
-      : contentItems;
+  const filteredContent = selectedTypes.length > 0 ? contentItems.filter((item) => selectedTypes.includes(item.type)) : contentItems;
 
   return (
     <div className="flex min-h-[calc(100vh-80px)] container bg-white px-0">
       {/* Left side navigation */}
       <nav className="w-[260px] bg-gray-100 p-5 flex flex-col">
-        <Button
-          onClick={handleCreateButtonClick}
-          className="mb-6 font-semibold"
-        >
+        <Button onClick={handleCreateButtonClick} className="mb-6 font-semibold">
           CREATE
         </Button>
         <h2 className="text-lg font-semibold mb-4">Browse</h2>
         <div className="grid grid-cols-2 gap-4">
           {contentTypes.map((type) => (
             <div key={type.name} className="flex items-center space-x-2">
-              <Checkbox
-                id={type.name}
-                checked={selectedTypes.includes(type.name)}
-                onCheckedChange={() => toggleContentType(type.name)}
-              />
+              <Checkbox id={type.name} checked={selectedTypes.includes(type.name)} onCheckedChange={() => toggleContentType(type.name)} />
               <label
                 htmlFor={type.name}
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer hover:underline"
@@ -171,14 +159,14 @@ export default function ContentFeed() {
                   <PaginationPrevious href="#" />
                 </PaginationItem>
                 {[...Array(totalPages)]
-                .map((_, i) => (
-                  <PaginationItem key={i}>
-                    <PaginationLink href="#" isActive={i === 0}>
-                      {i + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))
-                .slice(0, 3)}
+                  .map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink href="#" isActive={i === 0}>
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))
+                  .slice(0, 3)}
                 {totalPages > 3 && (
                   <>
                     <PaginationItem>
@@ -202,17 +190,12 @@ export default function ContentFeed() {
 }
 
 function ContentCard({ item }: { item: (typeof contentItems)[0] }) {
-  const Icon =
-    contentTypes.find((type) => type.name === item.type)?.icon || Box;
+  const Icon = contentTypes.find((type) => type.name === item.type)?.icon || Box;
 
   return (
     <Card className="overflow-hidden">
       <div className="aspect-video relative">
-        <img
-          src={`/assets/images/placeholder.svg?height=200&width=400`}
-          alt={item.title}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <img src={`/assets/images/placeholder.svg?height=200&width=400`} alt={item.title} className="absolute inset-0 w-full h-full object-cover" />
       </div>
       <CardContent className="p-3">
         <div className="flex items-center space-x-2 mb-2">

@@ -1,5 +1,5 @@
-import { Entity, Column, ManyToOne, JoinColumn, Index, DeleteDateColumn } from 'typeorm';
-import { IsString, IsNumber, IsOptional, IsEnum, IsJSON } from 'class-validator';
+import { Column, DeleteDateColumn, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { IsEnum, IsJSON, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityBase } from '../../common/entities/entity.base';
 import { SkillProficiencyLevel } from './enums';
@@ -19,7 +19,10 @@ export class TagProficiency extends EntityBase {
   tag: Tag;
 
   @Column({ type: 'enum', enum: SkillProficiencyLevel })
-  @ApiProperty({ enum: SkillProficiencyLevel, description: 'The proficiency level (novice, intermediate, expert, etc.)' })
+  @ApiProperty({
+    enum: SkillProficiencyLevel,
+    description: 'The proficiency level (novice, intermediate, expert, etc.)',
+  })
   @IsEnum(SkillProficiencyLevel)
   proficiencyLevel: SkillProficiencyLevel;
 
@@ -29,7 +32,10 @@ export class TagProficiency extends EntityBase {
   proficiencyLevelValue: number;
 
   @Column('text', { nullable: true })
-  @ApiProperty({ description: 'Description of what this proficiency level means for this specific tag/skill', required: false })
+  @ApiProperty({
+    description: 'Description of what this proficiency level means for this specific tag/skill',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   description?: string;

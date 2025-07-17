@@ -1,16 +1,16 @@
 import {
+  IsEmail as IsEmailCV,
   IsLowercase,
   IsNotEmpty,
+  IsPhoneNumber as IsPhoneNumberCV,
   IsString,
   IsStrongPassword,
   Matches,
   MaxLength,
   MinLength,
-  IsEmail as IsEmailCV,
-  ValidationOptions,
   registerDecorator,
   ValidateIf,
-  IsPhoneNumber as IsPhoneNumberCV,
+  ValidationOptions,
 } from 'class-validator';
 
 export function IsEmail(): PropertyDecorator {

@@ -9,14 +9,7 @@ import SubmitPage from './replay/page';
 import SummaryPage from './summary/page';
 import TournamentPage from './tournament/page';
 
-import {
-  FileAddOutlined,
-  HistoryOutlined,
-  OrderedListOutlined,
-  PieChartOutlined,
-  PlayCircleOutlined,
-  UserSwitchOutlined,
-} from '@ant-design/icons';
+import { FileAddOutlined, HistoryOutlined, OrderedListOutlined, PieChartOutlined, PlayCircleOutlined, UserSwitchOutlined } from '@ant-design/icons';
 import { FloatButton, Layout, Menu, MenuProps, theme } from 'antd';
 import { deleteCookie, getCookie } from 'cookies-next';
 import { useRouter } from 'next/navigation';
@@ -28,12 +21,7 @@ const { Content, Footer, Sider } = Layout;
 
 type MenuItem = Required<MenuProps>['items'][number];
 
-function getItem(
-  label: React.ReactNode,
-  key: React.Key,
-  icon?: React.ReactNode,
-  children?: MenuItem[],
-): MenuItem {
+function getItem(label: React.ReactNode, key: React.Key, icon?: React.ReactNode, children?: MenuItem[]): MenuItem {
   return {
     key,
     icon,
@@ -94,11 +82,7 @@ const items: MenuItemProps[] = [
   },
 ];
 
-export default function CompetitionPage({
-                                          children,
-                                        }: {
-  children: React.ReactNode;
-}) {
+export default function CompetitionPage({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const {
@@ -134,18 +118,8 @@ export default function CompetitionPage({
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <FloatButton
-        shape="circle"
-        type="primary"
-        style={{ bottom: 50, left: 20 }}
-        icon={<UserSwitchOutlined />}
-        onClick={logout}
-      />
-      <Sider
-        collapsible
-        collapsed={collapsed}
-        onCollapse={(value) => setCollapsed(value)}
-      >
+      <FloatButton shape="circle" type="primary" style={{ bottom: 50, left: 20 }} icon={<UserSwitchOutlined />} onClick={logout} />
+      <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
         <div className="demo-logo-vertical" />
         <Menu theme="dark" defaultSelectedKeys={[selectedKey]} mode="inline">
           {items.map((item) => (
@@ -176,9 +150,8 @@ export default function CompetitionPage({
           </div>
         </Content>
         <Footer style={{ textAlign: 'center' }}>
-          Chess AI competition engine ©{new Date().getFullYear()} Created by
-          GameGuild, for Game AI classes at Champlain College. Feel free to use
-          and contribute to this project.
+          Chess AI competition engine ©{new Date().getFullYear()} Created by GameGuild, for Game AI classes at Champlain College. Feel free to use and
+          contribute to this project.
         </Footer>
       </Layout>
     </Layout>

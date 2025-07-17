@@ -1,11 +1,11 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
+import { CallHandler, ExecutionContext, ForbiddenException, Injectable, InternalServerErrorException, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import { UserEntity } from '../../user/entities';
-import { DataSource, ArrayContains } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { ContentUserRolesEnum } from '../auth.enum';
 import { WithRolesEntity } from '../entities/with-roles.entity';
-import { ENTITY_CLASS_KEY, REQUIRED_ROLE_KEY, EntityClassWithRolesField } from '../decorators';
+import { ENTITY_CLASS_KEY, EntityClassWithRolesField, REQUIRED_ROLE_KEY } from '../decorators';
 
 @Injectable()
 export class RequireRoleInterceptor implements NestInterceptor {

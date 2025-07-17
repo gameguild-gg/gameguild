@@ -20,10 +20,7 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata(
-  { params }: Props,
-  parent: ResolvingMetadata,
-): Promise<Metadata> {
+export async function generateMetadata({ params }: Props, parent: ResolvingMetadata): Promise<Metadata> {
   const course = await getCourseBySlug(params.course);
 
   if (!course) {
@@ -54,8 +51,7 @@ export async function generateMetadata(
     };
   return {
     title: course.title,
-    description:
-      course.summary || 'Discover this amazing course on our platform.',
+    description: course.summary || 'Discover this amazing course on our platform.',
     openGraph: {
       title: course.title,
       description: course.summary || 'Learn new skills with this course.',
@@ -88,9 +84,7 @@ export default async function Page({ params }: Readonly<Props>) {
     notFound();
   }
 
-  const imageUrl = course.thumbnail
-    ? `${course.thumbnail.path}/${course.thumbnail.filename}`
-    : '/placeholder.svg?height=400&width=600';
+  const imageUrl = course.thumbnail ? `${course.thumbnail.path}/${course.thumbnail.filename}` : '/placeholder.svg?height=400&width=600';
 
   return (
     <div className="w-full">
@@ -103,31 +97,19 @@ export default async function Page({ params }: Readonly<Props>) {
           className="object-cover h-64 rounded-lg"
         />
       </div>
-      <h2 className="text-2xl font-semibold mb-4 text-center">
-        Welcome to {course.title}
-      </h2>
+      <h2 className="text-2xl font-semibold mb-4 text-center">Welcome to {course.title}</h2>
       <div className="mb-4">
         <CourseSummary summary={course.summary} />
       </div>
       <div className="mb-4">
         {course.price ? (
-          <p className="font-semibold text-center">
-            Price: ${course.price.toFixed(2)}
-          </p>
+          <p className="font-semibold text-center">Price: ${course.price.toFixed(2)}</p>
         ) : (
-          <p className="font-semibold text-green-600 text-center">
-            This course is free!
-          </p>
+          <p className="font-semibold text-green-600 text-center">This course is free!</p>
         )}
-        {course.subscriptionAccess && (
-          <p className="text-blue-600 text-center">
-            This course requires a subscription
-          </p>
-        )}
+        {course.subscriptionAccess && <p className="text-blue-600 text-center">This course requires a subscription</p>}
       </div>
-      <h3 className="text-xl font-semibold mb-2 text-center">
-        Course Contents:
-      </h3>
+      <h3 className="text-xl font-semibold mb-2 text-center">Course Contents:</h3>
       <ul className="list-disc pl-6">
         {course.chapters.map((chapter) => (
           <li key={chapter.id}>
@@ -140,9 +122,7 @@ export default async function Page({ params }: Readonly<Props>) {
           </li>
         ))}
       </ul>
-      <div className="mt-8">
-        {course.body && <CourseDescription body={course.body} />}
-      </div>
+      <div className="mt-8">{course.body && <CourseDescription body={course.body} />}</div>
     </div>
   );
 }

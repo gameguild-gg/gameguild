@@ -110,6 +110,14 @@ class MemFS {
   }
 
   /**
+   * Get the root directory data
+   * @returns The root directory object
+   */
+  getRoot(): Directory {
+    return this.root;
+  }
+
+  /**
    * Resolve the path and return the parent directory and target name.
    * @param path Full path to resolve.
    */
@@ -128,13 +136,5 @@ class MemFS {
     }
 
     return { parent: current, target };
-  }
-
-  /**
-   * Get the root directory data
-   * @returns The root directory object
-   */
-  getRoot(): Directory {
-    return this.root;
   }
 }

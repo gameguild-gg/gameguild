@@ -13,25 +13,25 @@ Your reflection should include the following:
 ### 1. **Portfolio Overview**
 
 - Provide a brief description of each portfolio, including:
-    - Link to the portfolio.
-    - Primary focus or specialization (e.g., game programming, AI, tools development).
+  - Link to the portfolio.
+  - Primary focus or specialization (e.g., game programming, AI, tools development).
 
 ### 2. **Strengths**
 
 - Highlight what you found impressive or effective in each portfolio.
 - Consider aspects such as:
-    - Visual design and layout.
-    - Project selection and presentation.
-    - Clarity of descriptions and explanations.
-    - Technical depth demonstrated.
+  - Visual design and layout.
+  - Project selection and presentation.
+  - Clarity of descriptions and explanations.
+  - Technical depth demonstrated.
 
 ### 3. **Weaknesses**
 
 - Identify areas where the portfolio could be improved.
 - Reflect on elements such as:
-    - Missing or unclear information.
-    - Poor navigation or usability.
-    - Lack of focus or cohesiveness.
+  - Missing or unclear information.
+  - Poor navigation or usability.
+  - Lack of focus or cohesiveness.
 
 ### 4. **Lessons Learned**
 

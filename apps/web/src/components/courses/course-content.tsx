@@ -32,7 +32,7 @@ export function CourseContent({ initialData }: CourseContentProps) {
 // Enhanced CourseGrid that uses the context
 function CourseGridEnhanced() {
   const { state, paginatedCourses } = useCourseContext();
-  
+
   // Convert EnhancedCourse to Course for the grid component
   const coursesForGrid = paginatedCourses.map((course: EnhancedCourse) => ({
     id: course.id,

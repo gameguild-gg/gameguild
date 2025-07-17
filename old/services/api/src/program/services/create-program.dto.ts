@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsJSON, IsArray } from 'class-validator';
+import { IsArray, IsJSON, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProgramDto {
@@ -14,7 +14,11 @@ export class CreateProgramDto {
   @IsJSON()
   body: object;
 
-  @ApiProperty({ description: 'Array of allowed email domains, null if not tenancy-fenced', type: [String], required: false })
+  @ApiProperty({
+    description: 'Array of allowed email domains, null if not tenancy-fenced',
+    type: [String],
+    required: false,
+  })
   @IsOptional()
   @IsArray()
   tenancyDomains?: string[];

@@ -67,12 +67,9 @@ export default function JobBoard() {
       router.push('/connect');
       return;
     }
-    const response = await jobTagsApi.getManyBaseJobTagControllerJobTagEntity(
-      {},
-      { headers: { Authorization: `Bearer ${session.user.accessToken}` } },
-    );
+    const response = await jobTagsApi.getManyBaseJobTagControllerJobTagEntity({}, { headers: { Authorization: `Bearer ${session.user.accessToken}` } });
     if ((response.status = 200)) {
-      setJobTags(response.body as Api.JobTagEntity[] || []);
+      setJobTags((response.body as Api.JobTagEntity[]) || []);
     }
   };
 
@@ -144,9 +141,7 @@ export default function JobBoard() {
     }
   };
 
-  const handleSearchChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleSearchChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchBarValue(event.target.value);
     if (searchBarValue.length > 3) {
       searchJobs();
@@ -162,13 +157,12 @@ export default function JobBoard() {
       router.push('/connect');
       return;
     }
-    const response =
-      await jobApplicationApi.createOneBaseJobApplicationControllerJobApplicationEntity(
-        {
-          job: selectedJob,
-        },
-        { headers: { Authorization: `Bearer ${session.user.accessToken}` } },
-      );
+    const response = await jobApplicationApi.createOneBaseJobApplicationControllerJobApplicationEntity(
+      {
+        job: selectedJob,
+      },
+      { headers: { Authorization: `Bearer ${session.user.accessToken}` } },
+    );
     if (response.status == 201) {
       toast({
         title: 'Sucess!',
@@ -213,21 +207,14 @@ export default function JobBoard() {
       <div className="container mx-auto p-4">
         <div className="mb-6 flex space-x-4">
           <div className="relative flex-grow">
-            <Input
-              value={searchBarValue}
-              onChange={handleSearchChange}
-              className="pl-10"
-              placeholder="Search jobs..."
-            />
+            <Input value={searchBarValue} onChange={handleSearchChange} className="pl-10" placeholder="Search jobs..." />
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
           </div>
           {/* Job Type */}
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[250px] justify-start">
-                {selectedJobTypes.length > 0
-                  ? `${selectedJobTypes}`
-                  : 'Job Types'}
+                {selectedJobTypes.length > 0 ? `${selectedJobTypes}` : 'Job Types'}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[200px] p-0">
@@ -240,18 +227,12 @@ export default function JobBoard() {
                       <CommandItem
                         key={type.value}
                         onSelect={() => {
-                          setSelectedJobTypes((prev) =>
-                            prev.includes(type.value)
-                              ? prev.filter((t) => t !== type.value)
-                              : [...prev, type.value],
-                          );
+                          setSelectedJobTypes((prev) => (prev.includes(type.value) ? prev.filter((t) => t !== type.value) : [...prev, type.value]));
                         }}
                       >
                         <div
                           className={`mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary ${
-                            selectedJobTypes.includes(type.value)
-                              ? 'bg-primary text-primary-foreground'
-                              : 'opacity-50 [&_svg]:invisible'
+                            selectedJobTypes.includes(type.value) ? 'bg-primary text-primary-foreground' : 'opacity-50 [&_svg]:invisible'
                           }`}
                         >
                           <Check className={`h-4 w-4`} />
@@ -267,10 +248,7 @@ export default function JobBoard() {
           {/* Job Skillset */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-[250px] justify-start"
-              >
+              <Button variant="outline" className="w-[250px] justify-start">
                 {selectedTags.length > 0 ? `${selectedTags}` : 'Skills'}
               </Button>
             </PopoverTrigger>
@@ -280,29 +258,24 @@ export default function JobBoard() {
                 <CommandList>
                   <CommandEmpty>No tags found.</CommandEmpty>
                   <CommandGroup>
-                    {jobTags || jobTags?.map((tag: Api.JobTagEntity) => (
-                      <CommandItem
-                        key={tag.id}
-                        onSelect={() => {
-                          setSelectedTags((prev) =>
-                            prev.includes(tag.name)
-                              ? prev.filter((t) => t !== tag.name)
-                              : [...prev, tag.name],
-                          );
-                        }}
-                      >
-                        <div
-                          className={`mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary overflow-auto ${
-                            selectedTags.includes(tag.name)
-                              ? 'bg-primary text-primary-foreground'
-                              : 'opacity-50 [&_svg]:invisible'
-                          }`}
+                    {jobTags ||
+                      jobTags?.map((tag: Api.JobTagEntity) => (
+                        <CommandItem
+                          key={tag.id}
+                          onSelect={() => {
+                            setSelectedTags((prev) => (prev.includes(tag.name) ? prev.filter((t) => t !== tag.name) : [...prev, tag.name]));
+                          }}
                         >
-                          <Check className={`h-4 w-4`} />
-                        </div>
-                        {tag.name}
-                      </CommandItem>
-                    ))}
+                          <div
+                            className={`mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary overflow-auto ${
+                              selectedTags.includes(tag.name) ? 'bg-primary text-primary-foreground' : 'opacity-50 [&_svg]:invisible'
+                            }`}
+                          >
+                            <Check className={`h-4 w-4`} />
+                          </div>
+                          {tag.name}
+                        </CommandItem>
+                      ))}
                   </CommandGroup>
                 </CommandList>
               </Command>
@@ -312,15 +285,9 @@ export default function JobBoard() {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div className="md:col-span-1">
             <ScrollArea className="h-[calc(100vh-200px)]">
-              {(jobs.length == 0) &&
-                <div>There are no available jobs at this time.</div>
-              }
+              {jobs.length == 0 && <div>There are no available jobs at this time.</div>}
               {jobs.map((job) => (
-                <Card
-                  key={job.id}
-                  className={`mb-4 cursor-pointer ${selectedJob?.id === job.id ? 'border-primary' : ''}`}
-                  onClick={() => setSelectedJob(job)}
-                >
+                <Card key={job.id} className={`mb-4 cursor-pointer ${selectedJob?.id === job.id ? 'border-primary' : ''}`} onClick={() => setSelectedJob(job)}>
                   <CardContent className="flex items-start space-x-4 p-4">
                     <Avatar>
                       <AvatarImage src={job.thumbnail} alt={job?.title} />
@@ -328,13 +295,9 @@ export default function JobBoard() {
                     </Avatar>
                     <div>
                       <h3 className="font-semibold">{job.title}</h3>
-                      <p className="text-sm text-gray-500">
-                        {job?.owner?.email}
-                      </p>
+                      <p className="text-sm text-gray-500">{job?.owner?.email}</p>
                       <p className="text-sm text-gray-500">{job?.location}</p>
-                      <p className="text-sm text-gray-500">
-                        {timeAgo(job?.createdAt)}
-                      </p>
+                      <p className="text-sm text-gray-500">{timeAgo(job?.createdAt)}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -346,13 +309,15 @@ export default function JobBoard() {
                     <PaginationItem>
                       <PaginationPrevious href="#" />
                     </PaginationItem>
-                    {[...Array(totalPages)].map((_, i) => (
-                      <PaginationItem key={i}>
-                        <PaginationLink href="#" isActive={i === 0}>
-                          {i + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )).slice(0, 3)}
+                    {[...Array(totalPages)]
+                      .map((_, i) => (
+                        <PaginationItem key={i}>
+                          <PaginationLink href="#" isActive={i === 0}>
+                            {i + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))
+                      .slice(0, 3)}
                     {totalPages > 3 && (
                       <>
                         <PaginationItem>
@@ -377,21 +342,12 @@ export default function JobBoard() {
                 <CardContent className="p-6">
                   <div className="mb-4 flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage
-                        src={selectedJob?.thumbnail}
-                        alt={selectedJob?.owner?.email}
-                      />
-                      <AvatarFallback>
-                        {selectedJob?.owner?.email[0]}
-                      </AvatarFallback>
+                      <AvatarImage src={selectedJob?.thumbnail} alt={selectedJob?.owner?.email} />
+                      <AvatarFallback>{selectedJob?.owner?.email[0]}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h2 className="text-2xl font-bold">
-                        {selectedJob.title}
-                      </h2>
-                      <p className="text-gray-500">
-                        {selectedJob?.owner?.email}
-                      </p>
+                      <h2 className="text-2xl font-bold">{selectedJob.title}</h2>
+                      <p className="text-gray-500">{selectedJob?.owner?.email}</p>
                     </div>
                   </div>
                   <p className="mb-4 text-gray-500">
@@ -414,21 +370,16 @@ export default function JobBoard() {
                   {selectedJob.applied && (
                     <p className="mb-6 bg-gray-100 flex">
                       Already Applied.
-                      <Link className="ml-2 font-semibold text-blue-500 hover:underline cursor-pointer"
-                            href={'/jobs/my-applications/' + selectedJob.slug}>Learn more.</Link>
+                      <Link className="ml-2 font-semibold text-blue-500 hover:underline cursor-pointer" href={'/jobs/my-applications/' + selectedJob.slug}>
+                        Learn more.
+                      </Link>
                     </p>
                   )}
-                  {!selectedJob.applied && (
-                    <Button onClick={() => handleApply(selectedJob)}>
-                      Apply Now
-                    </Button>
-                  )}
+                  {!selectedJob.applied && <Button onClick={() => handleApply(selectedJob)}>Apply Now</Button>}
                 </CardContent>
               </Card>
             )}
-
           </div>
-
         </div>
       </div>
     </div>

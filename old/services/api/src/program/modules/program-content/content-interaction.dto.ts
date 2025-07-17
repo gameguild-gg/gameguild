@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsEnum, IsJSON, IsDate } from 'class-validator';
+import { IsDate, IsEnum, IsJSON, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { ProgressStatus } from '../../entities/enums';

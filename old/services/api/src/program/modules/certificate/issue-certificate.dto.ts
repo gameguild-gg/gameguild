@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsJSON, IsEnum, IsDateString } from 'class-validator';
+import { IsDateString, IsEnum, IsJSON, IsOptional, IsString } from 'class-validator';
 import { CertificateStatus } from '../../entities/enums';
 
 export class IssueCertificateDto {

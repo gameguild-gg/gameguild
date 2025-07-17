@@ -24,13 +24,13 @@ export class RouteRolesClass {
 }
 
 export class RouteContentClass<T extends WithRolesEntity> {
+  public readonly type: T;
+  public readonly role: ContentUserRolesEnum;
+
   constructor(role: ContentUserRolesEnum, type: T) {
     this.type = type;
     this.role = role;
   }
-
-  public readonly type: T;
-  public readonly role: ContentUserRolesEnum;
 }
 
 export const OwnerRoute = <T extends WithRolesEntity>(type: T): RouteContentClass<T> => {

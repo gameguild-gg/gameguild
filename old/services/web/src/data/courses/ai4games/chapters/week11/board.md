@@ -7,9 +7,10 @@ The game state should contain the following information:
 - Turn: which player's turn it is (white or black).
 - Enpassant: the square where the en passant capture can be made.
 - Castling: whether castling is possible for each player and which side.
-- Full-move: the number of full moves made in the game. 
+- Full-move: the number of full moves made in the game.
 - Half-move: the number of half moves made in the game. (50-move rule)
-- History: the history of the game, including the moves made and the positions reached. Can be useful for detecting threefold repetition and for move generation.
+- History: the history of the game, including the moves made and the positions reached. Can be useful for detecting
+  threefold repetition and for move generation.
 
 ``` c++
 // needs 9 bits for the game state
@@ -25,7 +26,9 @@ uint8_t castling:4;      // castling rights bits: 0bKQkq
 
 ## Square-centric approach
 
-A naive approach for representing the chessboard is to use a 2D array of 8x8. Each square can be represented by a single byte, where the first bit represents the color and the last three bits represent the piece type. This representation is simple and easy to understand, but it is not very efficient in terms of memory usage and performance.
+A naive approach for representing the chessboard is to use a 2D array of 8x8. Each square can be represented by a single
+byte, where the first bit represents the color and the last three bits represent the piece type. This representation is
+simple and easy to understand, but it is not very efficient in terms of memory usage and performance.
 
 ``` c++
 // needs only 4 bits, and wastes 4 bits
@@ -42,7 +45,8 @@ struct Board {
 };
 ```
 
-A bit more efficient approach is to store 2 squares in a single byte. This way, we can represent the whole board in 32 bytes. However, we need to shift the bits to get the square.
+A bit more efficient approach is to store 2 squares in a single byte. This way, we can represent the whole board in 32
+bytes. However, we need to shift the bits to get the square.
 
 ``` c++
 // 8x8 but with shifted bits
@@ -68,7 +72,9 @@ struct Board {
 
 ### Piece-centric approach
 
-Another approach is to use a piece-centric representation, where we store the pieces in a list or a map. This way, we can easily access the pieces and their positions on the board. However, this representation is not very efficient in terms of memory usage and performance.
+Another approach is to use a piece-centric representation, where we store the pieces in a list or a map. This way, we
+can easily access the pieces and their positions on the board. However, this representation is not very efficient in
+terms of memory usage and performance.
 
 ``` c++
 // piece centric approach
@@ -94,7 +100,9 @@ struct Board {
 
 ## Bitboard approach
 
-A more advanced approach is to use a bitboard representation, where we use a 64-bit integer to represent the board. Each bit represents a square on the board, and we can use bitwise operations to manipulate the board. This representation is very efficient in terms of performance, consumes more memory, but it is also more complex to implement.
+A more advanced approach is to use a bitboard representation, where we use a 64-bit integer to represent the board. Each
+bit represents a square on the board, and we can use bitwise operations to manipulate the board. This representation is
+very efficient in terms of performance, consumes more memory, but it is also more complex to implement.
 
 ``` c++
 // bitboard approach
@@ -141,7 +149,10 @@ struct Board {
 
 ### Huffman Coding
 
-Huffman coding is a frequency-based compression algorithm that assigns variable-length codes to input characters based on their frequencies. It is a lossless compression technique that is widely used in data compression applications. In the context of chess, Huffman coding can be used to compress the representation of the board and pieces, reducing memory usage and improving performance.
+Huffman coding is a frequency-based compression algorithm that assigns variable-length codes to input characters based
+on their frequencies. It is a lossless compression technique that is widely used in data compression applications. In
+the context of chess, Huffman coding can be used to compress the representation of the board and pieces, reducing memory
+usage and improving performance.
 
 If we linearize a chess board into a 1D array, the initial state would be:
 
@@ -164,9 +175,11 @@ or if you use as string it would be:
 "rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR"
 ```
 
-I recommend first you to explore and visualize the Huffman coding algorithm. You can find a good [visualization here](https://cmps-people.ok.ubc.ca/ylucet/DS/Huffman.html).
+I recommend first you to explore and visualize the Huffman coding algorithm. You can find a
+good [visualization here](https://cmps-people.ok.ubc.ca/ylucet/DS/Huffman.html).
 
-It is out of the scope of this class to explain Huffman coding. But the idea is to assign shorter codes to more frequent pieces and longer codes to less frequent pieces. For example, we can assign the following codes:
+It is out of the scope of this class to explain Huffman coding. But the idea is to assign shorter codes to more frequent
+pieces and longer codes to less frequent pieces. For example, we can assign the following codes:
 
 ``` c++
 // Huffman codes for chess pieces
@@ -187,7 +200,9 @@ enum class PieceCode: std::uint8_t {
 };
 ```
 
-In this approach, we will need a dynamic sized array of to hold the total of `164` bits for the initial state, with the average of `20.5` bytes per board. You will have to implement a encoder and decoder, and use and abuse the data layout to store the data. But we can safely guestimate `24` bytes in the case of promotions.
+In this approach, we will need a dynamic sized array of to hold the total of `164` bits for the initial state, with the
+average of `20.5` bytes per board. You will have to implement a encoder and decoder, and use and abuse the data layout
+to store the data. But we can safely guestimate `24` bytes in the case of promotions.
 
 ::: warning "Warning"
 
@@ -197,8 +212,14 @@ This approach is only efficient for storing the state, not for querying, modifyi
 
 ### Zobrist Hashing
 
-Zobrist hashing is a technique used to efficiently compute a hash value for a chess position. It uses a random number for each piece type and color, and XORs them together to create a unique hash for the position. This allows for fast comparisons of positions and can be used for transposition tables in chess engines. Read more about it on [Chess Programming Wiki](https://www.chessprogramming.org/Zobrist_Hashing).
+Zobrist hashing is a technique used to efficiently compute a hash value for a chess position. It uses a random number
+for each piece type and color, and XORs them together to create a unique hash for the position. This allows for fast
+comparisons of positions and can be used for transposition tables in chess engines. Read more about it
+on [Chess Programming Wiki](https://www.chessprogramming.org/Zobrist_Hashing).
 
 ### Transposition Tables
 
-Transposition tables are used to store previously computed positions and their evaluations. This allows the engine to avoid recomputing the evaluation for the same position, improving performance. The transposition table can be implemented using a hash table, where the key is the Zobrist hash of the position and the value is the evaluation of the position. [Read more about it on Chess Programming Wiki](https://www.chessprogramming.org/Transposition_Table)
+Transposition tables are used to store previously computed positions and their evaluations. This allows the engine to
+avoid recomputing the evaluation for the same position, improving performance. The transposition table can be
+implemented using a hash table, where the key is the Zobrist hash of the position and the value is the evaluation of the
+position. [Read more about it on Chess Programming Wiki](https://www.chessprogramming.org/Transposition_Table)

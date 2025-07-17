@@ -32,10 +32,7 @@ function Header() {
             alignContent: 'center',
           }}
         >
-          <img
-            style={{ width: 135, height: 46, margin: '7px' }}
-            src="/assets/images/logo-text.png"
-          />
+          <img style={{ width: 135, height: 46, margin: '7px' }} src="/assets/images/logo-text.png" />
           &nbsp;
           {/*<a href="/">*/}
           {/*  <span*/}
@@ -108,11 +105,7 @@ function Header() {
               <UserOutlined /> Login
             </span>
           </a>
-          <img
-            width={25}
-            src="/assets/images/language.svg"
-            style={{ margin: '7px' }}
-          />
+          <img width={25} src="/assets/images/language.svg" style={{ margin: '7px' }} />
         </Col>
       </Row>
     </Layout.Header>

@@ -79,21 +79,21 @@ The idea is similar to the tale of Theseus and the Minotaur. Theseus used a ball
 labyrinth. Tremaux's Algorithm is based on the same principle.
 
 1. Start at the entrance of the maze.
-    - Walk into the first path and begin exploring.
+  - Walk into the first path and begin exploring.
 2. Mark the path you are walking on.
-    - If it’s the first time you are walking on this path, leave one mark (e.g., draw a line or place a small object).
-    - If you are walking on a path you’ve already marked once, add a second mark.
+  - If it’s the first time you are walking on this path, leave one mark (e.g., draw a line or place a small object).
+  - If you are walking on a path you’ve already marked once, add a second mark.
 3. At a junction (a place with multiple paths):
-    - Always pick an unmarked path if there is one.
-    - If all paths have been marked once, pick a path with only one mark (never take a path marked twice unless you’re
-      backtracking).
+  - Always pick an unmarked path if there is one.
+  - If all paths have been marked once, pick a path with only one mark (never take a path marked twice unless you’re
+    backtracking).
 4. Dead end (no unmarked paths):
-    - Turn around and go back the way you came, following the marks you left.
+  - Turn around and go back the way you came, following the marks you left.
 5. Continue exploring:
-    - Keep moving through the maze, marking paths as you go, until you either find the exit or have explored every
-      possible path.
+  - Keep moving through the maze, marking paths as you go, until you either find the exit or have explored every
+    possible path.
 6. If you reach the exit, you’re done!
-    - If there’s no way forward and all paths are marked twice, the maze has no exit.
+  - If there’s no way forward and all paths are marked twice, the maze has no exit.
 
 What are the pros and cons of this approach? How efficient is it compared to the previous algorithms?
 

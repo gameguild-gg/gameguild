@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { TenantDomain, CreateTenantDomainRequest } from '@/components/legacy/types/tenant-domain';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { TenantDomain } from '@/components/legacy/types/tenant-domain';
 import { TenantDomainApiClient } from '@/lib/api/tenant-domain-client';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
@@ -10,7 +10,7 @@ import { Checkbox } from '@game-guild/ui/components/checkbox';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Trash2, Edit, Plus, Globe, Shield } from 'lucide-react';
+import { Edit, Globe, Plus, Shield, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TenantService } from '@/lib/tenants/tenant.service';
 

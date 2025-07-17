@@ -152,29 +152,29 @@ would do differently next time. This shows that you are reflective and always lo
 ## General tips
 
 - Keep the Target Audience in Mind
-    - Take Advantage of Your Homepage
-    - Make Your Portfolio Scannable
-    - Minimize Clicks
+  - Take Advantage of Your Homepage
+  - Make Your Portfolio Scannable
+  - Minimize Clicks
 - Remember UX and UI
-    - Go Mobile or Go Home
-    - Optimize Website Performance
-    - Remember Accessibility
+  - Go Mobile or Go Home
+  - Optimize Website Performance
+  - Remember Accessibility
 - Showcase Your Best Work and Skills
-    - Share Your Code and Live Projects
-    - OR Provide Code Samples and GIFs
-    - Boast Freelance and Personal Projects
-    - BUT Be Selective
-    - Prove that You Are on The Same Page
+  - Share Your Code and Live Projects
+  - OR Provide Code Samples and GIFs
+  - Boast Freelance and Personal Projects
+  - BUT Be Selective
+  - Prove that You Are on The Same Page
 - Show Your Personality
-    - Use Custom Domain
-    - Make Use of Introductory Statement
-    - Use Your Tone of Voice
-    - Share Your Motivation (Optional)
+  - Use Custom Domain
+  - Make Use of Introductory Statement
+  - Use Your Tone of Voice
+  - Share Your Motivation (Optional)
 - Maintain Personal Brand
-    - Keep Portfolio Up-to-Date
-    - Include Testimonials
+  - Keep Portfolio Up-to-Date
+  - Include Testimonials
 - Encourage Communication
-    - Call-to-action button or link to contact
+  - Call-to-action button or link to contact
 
 [reference](https://www.actitime.com/productivity/how-to-build-a-great-developer-portfolio#use-your-tone-of-voice)
 

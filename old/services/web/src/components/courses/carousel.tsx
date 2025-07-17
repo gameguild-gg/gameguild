@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from 'react';
 
 interface CarouselProps {
   images: string[];
@@ -13,9 +13,7 @@ const Carousel: React.FC<CarouselProps> = ({ images }) => {
   const nextSlide = (): void => {
     setFadeEffect(true); // Inicia o efeito de transição
     setTimeout(() => {
-      setCurrentIndex((prevIndex) =>
-        prevIndex === images.length - 1 ? 0 : prevIndex + 1
-      );
+      setCurrentIndex((prevIndex) => (prevIndex === images.length - 1 ? 0 : prevIndex + 1));
       setFadeEffect(false); // Remove o efeito após a transição
     }, 500); // Tempo do efeito (em ms)
   };
@@ -44,16 +42,8 @@ const Carousel: React.FC<CarouselProps> = ({ images }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Imagem Atual */}
-      <div
-        className={`carousel-slide relative flex justify-center items-center transition-opacity duration-500 ${
-          fadeEffect ? "opacity-0" : "opacity-100"
-        }`}
-      >
-        <img
-          src={images[currentIndex]}
-          alt={`Slide ${currentIndex + 1}`}
-          className="w-full max-h-[600px] object-contain"
-        />
+      <div className={`carousel-slide relative flex justify-center items-center transition-opacity duration-500 ${fadeEffect ? 'opacity-0' : 'opacity-100'}`}>
+        <img src={images[currentIndex]} alt={`Slide ${currentIndex + 1}`} className="w-full max-h-[600px] object-contain" />
       </div>
 
       {/* Seletores */}
@@ -62,9 +52,7 @@ const Carousel: React.FC<CarouselProps> = ({ images }) => {
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`carousel-dot w-4 h-4 rounded-full ${
-              index === currentIndex ? "bg-blue-500" : "bg-gray-400"
-            }`}
+            className={`carousel-dot w-4 h-4 rounded-full ${index === currentIndex ? 'bg-blue-500' : 'bg-gray-400'}`}
           />
         ))}
       </div>

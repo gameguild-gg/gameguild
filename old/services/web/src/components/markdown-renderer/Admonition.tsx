@@ -1,30 +1,8 @@
 import React from 'react';
-import {
-  AlertCircle,
-  AlertTriangle,
-  BookOpen,
-  Bug,
-  CheckCircle,
-  HelpCircle,
-  Info,
-  Quote,
-  XCircle,
-} from 'lucide-react';
+import { AlertCircle, AlertTriangle, BookOpen, Bug, CheckCircle, HelpCircle, Info, Quote, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type AdmonitionType =
-  | 'note'
-  | 'abstract'
-  | 'info'
-  | 'tip'
-  | 'success'
-  | 'question'
-  | 'warning'
-  | 'failure'
-  | 'danger'
-  | 'bug'
-  | 'example'
-  | 'quote';
+type AdmonitionType = 'note' | 'abstract' | 'info' | 'tip' | 'success' | 'question' | 'warning' | 'failure' | 'danger' | 'bug' | 'example' | 'quote';
 
 interface AdmonitionProps {
   type: AdmonitionType;
@@ -64,17 +42,10 @@ const colorMap: Record<AdmonitionType, string> = {
 
 export function Admonition({ type, title, children }: AdmonitionProps) {
   return (
-    <div
-      className={cn(
-        'admonition rounded-md border-l-4 p-4 mb-4',
-        colorMap[type],
-      )}
-    >
+    <div className={cn('admonition rounded-md border-l-4 p-4 mb-4', colorMap[type])}>
       <div className="flex items-center mb-2">
         {iconMap[type]}
-        <h5 className="ml-2 text-lg font-semibold">
-          {title || type.charAt(0).toUpperCase() + type.slice(1)}
-        </h5>
+        <h5 className="ml-2 text-lg font-semibold">{title || type.charAt(0).toUpperCase() + type.slice(1)}</h5>
       </div>
       <div>{children}</div>
     </div>

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 /**
  * Enhanced API E2E Tests for Game Guild Program Slug Endpoints

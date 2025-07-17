@@ -1,29 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Input } from '@game-guild/ui/components/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
-import {
-  Search,
-  Filter,
-  Clock,
-  Users,
-  Star,
-  Trophy,
-  BookOpen,
-  PlayCircle,
-  Code,
-  Brain,
-  Palette,
-  Zap,
-  ShoppingCart,
-  Eye,
-} from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
+import { BookOpen, Brain, Clock, Code, Eye, Palette, PlayCircle, Search, ShoppingCart, Star, Trophy, Users, Zap } from 'lucide-react';
 
 interface Course {
   id: string;
@@ -54,7 +39,7 @@ interface CourseCatalogProps {
 
 const CategoryIcon = ({ category }: { category: string }) => {
   const iconProps = { className: 'h-5 w-5' };
-  
+
   switch (category.toLowerCase()) {
     case 'programming':
       return <Code {...iconProps} />;
@@ -85,11 +70,7 @@ const LevelBadge = ({ level }: { level: Course['level'] }) => {
   );
 };
 
-const CourseCard = ({ course, onEnroll, onView }: { 
-  course: Course; 
-  onEnroll: (courseId: string) => void; 
-  onView: (courseId: string) => void;
-}) => {
+const CourseCard = ({ course, onEnroll, onView }: { course: Course; onEnroll: (courseId: string) => void; onView: (courseId: string) => void }) => {
   return (
     <Card className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors group">
       <div className="relative">
@@ -102,34 +83,28 @@ const CourseCard = ({ course, onEnroll, onView }: {
             Premium
           </Badge>
         )}
-        {course.isEnrolled && (
-          <Badge className="absolute top-2 left-2 bg-green-600">
-            Enrolled
-          </Badge>
-        )}
+        {course.isEnrolled && <Badge className="absolute top-2 left-2 bg-green-600">Enrolled</Badge>}
       </div>
-      
+
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-lg leading-tight group-hover:text-blue-400 transition-colors">
-            {course.title}
-          </CardTitle>
+          <CardTitle className="text-lg leading-tight group-hover:text-blue-400 transition-colors">{course.title}</CardTitle>
           <div className="flex items-center gap-1 text-sm text-yellow-400">
             <Star className="h-4 w-4 fill-current" />
             {course.rating.toFixed(1)}
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <CategoryIcon category={course.category} />
           <span>{course.category}</span>
           <LevelBadge level={course.level} />
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         <p className="text-gray-300 text-sm line-clamp-2">{course.description}</p>
-        
+
         <div className="flex items-center gap-4 text-sm text-gray-400">
           <span className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
@@ -144,14 +119,12 @@ const CourseCard = ({ course, onEnroll, onView }: {
             {course.contentCount} items
           </span>
         </div>
-        
+
         <div className="flex items-center gap-2 text-sm">
-          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
-            {course.instructor.charAt(0)}
-          </div>
+          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">{course.instructor.charAt(0)}</div>
           <span className="text-gray-300">{course.instructor}</span>
         </div>
-        
+
         {course.isEnrolled && course.progress !== undefined && (
           <div className="space-y-1">
             <div className="flex justify-between text-sm">
@@ -159,19 +132,14 @@ const CourseCard = ({ course, onEnroll, onView }: {
               <span className="text-gray-300">{course.progress}%</span>
             </div>
             <div className="w-full bg-gray-800 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all"
-                style={{ width: `${course.progress}%` }}
-              />
+              <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: `${course.progress}%` }} />
             </div>
           </div>
         )}
-        
+
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-white">
-              {course.price === 0 ? 'Free' : `$${course.price}`}
-            </span>
+            <span className="text-xl font-bold text-white">{course.price === 0 ? 'Free' : `$${course.price}`}</span>
             {course.hasCertificate && (
               <Badge variant="outline" className="text-xs">
                 <Trophy className="h-3 w-3 mr-1" />
@@ -179,22 +147,14 @@ const CourseCard = ({ course, onEnroll, onView }: {
               </Badge>
             )}
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onView(course.id)}
-            >
+            <Button variant="outline" size="sm" onClick={() => onView(course.id)}>
               <Eye className="h-4 w-4 mr-1" />
               View
             </Button>
             {!course.isEnrolled && (
-              <Button
-                size="sm"
-                onClick={() => onEnroll(course.id)}
-                className="flex items-center gap-1"
-              >
+              <Button size="sm" onClick={() => onEnroll(course.id)} className="flex items-center gap-1">
                 {course.price > 0 ? (
                   <>
                     <ShoppingCart className="h-4 w-4" />
@@ -223,7 +183,7 @@ export function CourseCatalog({ initialCourses }: CourseCatalogProps) {
   const [activeTab, setActiveTab] = useState('all');
 
   // Extract unique categories from courses
-  const categories = Array.from(new Set(courses.map(course => course.category)));
+  const categories = Array.from(new Set(courses.map((course) => course.category)));
 
   // Filter and sort courses
   useEffect(() => {
@@ -231,31 +191,32 @@ export function CourseCatalog({ initialCourses }: CourseCatalogProps) {
 
     // Filter by tab
     if (activeTab === 'enrolled') {
-      filtered = filtered.filter(course => course.isEnrolled);
+      filtered = filtered.filter((course) => course.isEnrolled);
     } else if (activeTab === 'free') {
-      filtered = filtered.filter(course => course.price === 0);
+      filtered = filtered.filter((course) => course.price === 0);
     } else if (activeTab === 'premium') {
-      filtered = filtered.filter(course => course.isPremium);
+      filtered = filtered.filter((course) => course.isPremium);
     }
 
     // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter(course =>
-        course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.instructor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      filtered = filtered.filter(
+        (course) =>
+          course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          course.instructor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          course.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase())),
       );
     }
 
     // Filter by category
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(course => course.category === selectedCategory);
+      filtered = filtered.filter((course) => course.category === selectedCategory);
     }
 
     // Filter by level
     if (selectedLevel !== 'all') {
-      filtered = filtered.filter(course => course.level === selectedLevel);
+      filtered = filtered.filter((course) => course.level === selectedLevel);
     }
 
     // Sort courses
@@ -287,16 +248,14 @@ export function CourseCatalog({ initialCourses }: CourseCatalogProps) {
     try {
       // TODO: Implement enrollment logic (GraphQL mutation)
       console.log('Enrolling in course:', courseId);
-      
-      const course = courses.find(c => c.id === courseId);
+
+      const course = courses.find((c) => c.id === courseId);
       if (course && course.price > 0) {
         // Redirect to payment page
         router.push(`/payment?courseId=${courseId}`);
       } else {
         // Free enrollment
-        setCourses(prev => 
-          prev.map(c => c.id === courseId ? { ...c, isEnrolled: true, progress: 0 } : c)
-        );
+        setCourses((prev) => prev.map((c) => (c.id === courseId ? { ...c, isEnrolled: true, progress: 0 } : c)));
       }
     } catch (error) {
       console.error('Failed to enroll:', error);
@@ -348,8 +307,10 @@ export function CourseCatalog({ initialCourses }: CourseCatalogProps) {
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-gray-800">
                   <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map(category => (
-                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -391,13 +352,8 @@ export function CourseCatalog({ initialCourses }: CourseCatalogProps) {
         {/* Course Grid */}
         {filteredCourses.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredCourses.map(course => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                onEnroll={handleEnroll}
-                onView={handleViewCourse}
-              />
+            {filteredCourses.map((course) => (
+              <CourseCard key={course.id} course={course} onEnroll={handleEnroll} onView={handleViewCourse} />
             ))}
           </div>
         ) : (

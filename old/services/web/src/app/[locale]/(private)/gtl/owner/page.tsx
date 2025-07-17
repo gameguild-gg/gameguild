@@ -17,9 +17,7 @@ const GameCard = ({ title, description }) => (
     <div className="p-4">
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-lg font-semibold text-white">{title}</h3>
-        <span className="bg-gray-700 text-xs font-semibold text-gray-300 px-2 py-1 rounded">
-          draft
-        </span>
+        <span className="bg-gray-700 text-xs font-semibold text-gray-300 px-2 py-1 rounded">draft</span>
       </div>
       <p className="text-sm text-gray-400">{description}</p>
     </div>
@@ -32,11 +30,7 @@ const GameGrid = ({ games }) => (
   <ScrollArea className="h-[calc(100vh-300px)]">
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
       {games.map((game, index) => (
-        <GameCard
-          key={index}
-          title={game.title}
-          description={game.description}
-        />
+        <GameCard key={index} title={game.title} description={game.description} />
       ))}
     </div>
   </ScrollArea>
@@ -50,13 +44,9 @@ const TicketBox = ({ ticket, onClick }) => (
   >
     <div className="flex justify-between items-center mb-2">
       <h3 className="text-lg font-semibold text-white">{ticket.title}</h3>
-      <span className="text-xs font-semibold text-gray-300 px-2 py-1 rounded bg-gray-700">
-        {ticket.status}
-      </span>
+      <span className="text-xs font-semibold text-gray-300 px-2 py-1 rounded bg-gray-700">{ticket.status}</span>
     </div>
-    <p className="text-sm text-gray-400">
-      Submitted by: {ticket.owner.username}
-    </p>
+    <p className="text-sm text-gray-400">Submitted by: {ticket.owner.username}</p>
   </div>
 );
 
@@ -82,16 +72,10 @@ const VideoBox = ({ videoStatus, videoTitle, submitter, linkedToTicket }) => (
   <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg p-4">
     <div className="flex justify-between items-center mb-2">
       <h3 className="text-lg font-semibold text-white">{videoTitle}</h3>
-      <span className="text-xs font-semibold text-gray-300 px-2 py-1 rounded bg-gray-700">
-        {videoStatus}
-      </span>
+      <span className="text-xs font-semibold text-gray-300 px-2 py-1 rounded bg-gray-700">{videoStatus}</span>
     </div>
     <p className="text-sm text-gray-400">Submitted by: {submitter}</p>
-    {linkedToTicket && (
-      <span className="text-sm text-pink-400 mt-2 inline-block">
-        Linked to Ticket
-      </span>
-    )}
+    {linkedToTicket && <span className="text-sm text-pink-400 mt-2 inline-block">Linked to Ticket</span>}
   </div>
 );
 
@@ -101,13 +85,7 @@ const VideoGrid = ({ videos }) => (
   <ScrollArea className="h-[calc(100vh-300px)]">
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 p-6">
       {videos.map((video, index) => (
-        <VideoBox
-          key={index}
-          videoStatus={video.videoStatus}
-          videoTitle={video.videoTitle}
-          submitter={video.submitter}
-          linkedToTicket={video.linkedToTicket}
-        />
+        <VideoBox key={index} videoStatus={video.videoStatus} videoTitle={video.videoTitle} submitter={video.submitter} linkedToTicket={video.linkedToTicket} />
       ))}
     </div>
   </ScrollArea>
@@ -186,15 +164,14 @@ export default function Page() {
     if (Boolean(session) && Boolean(session?.user)) {
       setSignedIn(true);
 
-      const procjects =
-        await apiProject.getManyBaseProjectControllerProjectEntity(
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${session?.user?.accessToken}`,
-            },
+      const procjects = await apiProject.getManyBaseProjectControllerProjectEntity(
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${session?.user?.accessToken}`,
           },
-        );
+        },
+      );
 
       if (procjects && Array.isArray(procjects.body)) {
         const ownedProjects: Api.ProjectEntity[] = []; // Temporary array for owned projects
@@ -209,15 +186,14 @@ export default function Page() {
         for (const project of ownedProjects) {
           if (project.tickets && Array.isArray(project.tickets)) {
             for (const ticket of project.tickets) {
-              const pulledTicket =
-                await apiTicket.getOneBaseTicketControllerTicketEntity(
-                  { id: ticket.id },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${session?.user?.accessToken}`,
-                    },
+              const pulledTicket = await apiTicket.getOneBaseTicketControllerTicketEntity(
+                { id: ticket.id },
+                {
+                  headers: {
+                    Authorization: `Bearer ${session?.user?.accessToken}`,
                   },
-                );
+                },
+              );
               updatedTickets.push(pulledTicket.body as Api.TicketEntity); // Push tickets to temporary array
             }
           }
@@ -234,13 +210,9 @@ export default function Page() {
 
   const [videoFilter, setVideoFilter] = useState('All');
 
-  const filteredTickets = tickets.filter(
-    (ticket) => ticketFilter === 'All' || ticket.status === ticketFilter,
-  );
+  const filteredTickets = tickets.filter((ticket) => ticketFilter === 'All' || ticket.status === ticketFilter);
   // Filter videos based on the selected filter status
-  const filteredVideos = videos.filter(
-    (video) => videoFilter === 'All' || video.videoStatus === videoFilter,
-  );
+  const filteredVideos = videos.filter((video) => videoFilter === 'All' || video.videoStatus === videoFilter);
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   const renderContent = () => {
@@ -253,11 +225,7 @@ export default function Page() {
         return (
           <div>
             <div className="flex justify-end mb-4">
-              <select
-                className="bg-gray-800 text-white p-2 rounded"
-                value={ticketFilter}
-                onChange={(e) => setTicketFilter(e.target.value)}
-              >
+              <select className="bg-gray-800 text-white p-2 rounded" value={ticketFilter} onChange={(e) => setTicketFilter(e.target.value)}>
                 <option value="All">ALL</option>
                 <option value="OPEN">OPEN</option>
                 <option value="IN_PROGRESS">IN PROGRESS</option>
@@ -265,21 +233,14 @@ export default function Page() {
                 <option value="CLOSED">CLOSED</option>
               </select>
             </div>
-            <TicketGrid
-              tickets={filteredTickets}
-              onTicketClick={handleTicketClick}
-            />
+            <TicketGrid tickets={filteredTickets} onTicketClick={handleTicketClick} />
           </div>
         );
       case 'Videos':
         return (
           <div>
             <div className="flex justify-end mb-4">
-              <select
-                className="bg-gray-800 text-white p-2 rounded"
-                value={videoFilter}
-                onChange={(e) => setVideoFilter(e.target.value)}
-              >
+              <select className="bg-gray-800 text-white p-2 rounded" value={videoFilter} onChange={(e) => setVideoFilter(e.target.value)}>
                 <option value="All">All</option>
                 <option value="Watched">Watched</option>
                 <option value="Unwatched">Unwatched</option>
@@ -302,27 +263,21 @@ export default function Page() {
       <main className="bg-gray-900 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 rounded-lg shadow-lg">
         <div className="flex-1">
           <div className="p-6">
-            <h1 className="text-2xl font-semibold text-white">
-              Creator Dashboard
-            </h1>
+            <h1 className="text-2xl font-semibold text-white">Creator Dashboard</h1>
           </div>
           <div className="border-t border-gray-700">
             <nav className="flex">
-              {['Projects', 'Analytics', 'Submitted Tickets', 'Videos'].map(
-                (tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-6 py-3 text-sm font-medium ${
-                      activeTab === tab
-                        ? 'text-pink-400 border-b-2 border-pink-400'
-                        : 'text-gray-400 hover:text-gray-200'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ),
-              )}
+              {['Projects', 'Analytics', 'Submitted Tickets', 'Videos'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-3 text-sm font-medium ${
+                    activeTab === tab ? 'text-pink-400 border-b-2 border-pink-400' : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
             </nav>
           </div>
 
@@ -331,10 +286,7 @@ export default function Page() {
             <div className="p-6 text-center">
               {isSignedIn ? (
                 <>
-                  <p className="text-lg mb-4">
-                    It seems that you do not have any projects, please upload
-                    one.
-                  </p>
+                  <p className="text-lg mb-4">It seems that you do not have any projects, please upload one.</p>
                   <button
                     onClick={(e) => {
                       e.preventDefault();
@@ -343,16 +295,11 @@ export default function Page() {
                   >
                     Upload Project
                   </button>
-                  <p className="text-lg mb-4">
-                    Work in progress! Please help us to implement this feature.
-                    Go to our discord or github to contribute.
-                  </p>
+                  <p className="text-lg mb-4">Work in progress! Please help us to implement this feature. Go to our discord or github to contribute.</p>
                 </>
               ) : (
                 <>
-                  <p className="text-lg mb-4">
-                    It seems like you are not signed in, please sign in here.
-                  </p>
+                  <p className="text-lg mb-4">It seems like you are not signed in, please sign in here.</p>
                   <button
                     onClick={() => {
                       // Handle the sign-in logic here (e.g., redirect to sign-in page)

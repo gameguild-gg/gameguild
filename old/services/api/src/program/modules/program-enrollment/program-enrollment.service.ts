@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike, Or, IsNull } from 'typeorm';
+import { ILike, IsNull, Repository } from 'typeorm';
 import { Program, ProgramUser, ProgramUserRole, UserProduct } from '../../entities';
 import { ProgramRoleType } from '../../entities/enums';
-import { EnrollmentRequest, BulkEnrollmentRequest, EnrollmentFilters, EnrollmentStats } from './dtos';
+import { BulkEnrollmentRequest, EnrollmentFilters, EnrollmentRequest, EnrollmentStats } from './dtos';
 
 @Injectable()
 export class ProgramEnrollmentService {
@@ -255,7 +255,7 @@ export class ProgramEnrollmentService {
     // For search functionality, use type-safe repository queries with OR conditions
     if (filters.search) {
       const searchPattern = `%${filters.search}%`;
-      
+
       // Use repository find with type-safe OR conditions for search
       const searchResults = await this.enrollmentRepository.find({
         where: [
@@ -349,7 +349,7 @@ export class ProgramEnrollmentService {
     // For now, returning simplified stats
 
     const completed = 0; // Would calculate from content completion
-    const in_progress = 0; // Would calculate from progress data  
+    const in_progress = 0; // Would calculate from progress data
     const not_started = 0; // Would calculate from enrollment without progress
     const completion_rate = 0; // Would calculate from content completion
     const average_progress = 0; // Would calculate from progress data

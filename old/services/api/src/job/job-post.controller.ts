@@ -7,7 +7,7 @@ import { JobPostEntity } from './entities/job-post.entity';
 import { AuthenticatedRoute, OwnerRoute } from '../auth/auth.enum';
 import { OwnershipEmptyInterceptor } from '../cms/interceptors/ownership-empty-interceptor.service';
 import { WithRolesController } from 'src/cms/with-roles.controller';
-import { CrudController, Crud, Override, CrudRequest, ParsedRequest, CrudRequestInterceptor } from '@dataui/crud';
+import { Crud, CrudController, CrudRequest, CrudRequestInterceptor, Override, ParsedRequest } from '@dataui/crud';
 import { JobPostCreateDto } from './dtos/job-post-create.dto';
 import { ExcludeFieldsPipe } from 'src/cms/pipes/exclude-fields.pipe';
 import { BodyOwnerInject } from 'src/common/decorators/parameter.decorator';

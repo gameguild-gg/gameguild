@@ -1,18 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  AlertTriangle,
-  Bot,
-  CheckCircle,
-  Clock,
-  LayoutDashboard,
-  MonitorPlay,
-  ReceiptText,
-  Rss,
-  Target,
-  Users,
-  Zap,
-} from 'lucide-react';
+import { AlertTriangle, Bot, CheckCircle, Clock, LayoutDashboard, MonitorPlay, ReceiptText, Rss, Target, Users, Zap } from 'lucide-react';
 import { ReactNode } from 'react';
 
 export default function StartupRoadmap() {
@@ -23,12 +11,8 @@ export default function StartupRoadmap() {
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                  Game Guild Roadmap
-                </h1>
-                <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                  Our journey from idea to successful Game Guild community.
-                </p>
+                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">Game Guild Roadmap</h1>
+                <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">Our journey from idea to successful Game Guild community.</p>
               </div>
             </div>
           </div>
@@ -109,13 +93,7 @@ interface RoadmapItemProps {
 }
 
 // todo: fix typings. Type error: Binding element 'icon' implicitly has an 'any' type.
-function RoadmapItem({
-                       icon,
-                       title,
-                       description,
-                       status,
-                       date,
-                     }: RoadmapItemProps) {
+function RoadmapItem({ icon, title, description, status, date }: RoadmapItemProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'done':

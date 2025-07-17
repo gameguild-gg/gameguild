@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document provides a comprehensive overview of the test suite created for the Permission Module in the Game Guild CMS. The test suite covers all three layers of the permission system with unit tests, integration tests, and end-to-end tests.
+This document provides a comprehensive overview of the test suite created for the Permission Module in the Game Guild
+CMS. The test suite covers all three layers of the permission system with unit tests, integration tests, and end-to-end
+tests.
 
 ## Test Structure
 
@@ -30,7 +32,9 @@ src/Tests/Modules/Permission/
 ### 🧪 Unit Tests (87 test methods)
 
 #### 1. WithPermissionTests.cs (17 tests)
+
 **Purpose**: Tests the base permission model and enum functionality
+
 - ✅ Constructor initialization
 - ✅ Permission flag manipulation (add, remove, check)
 - ✅ Bulk permission operations
@@ -39,7 +43,9 @@ src/Tests/Modules/Permission/
 - ✅ Global and user permission flags
 
 #### 2. PermissionServiceTenantTests.cs (28 tests)
+
 **Purpose**: Tests Layer 1 - Tenant-wide permissions
+
 - ✅ Grant tenant permissions (new and existing records)
 - ✅ Check tenant permission hierarchy (user → tenant default → global default)
 - ✅ Revoke tenant permissions
@@ -50,7 +56,9 @@ src/Tests/Modules/Permission/
 - ✅ Edge cases and error scenarios
 
 #### 3. PermissionServiceContentTypeTests.cs (23 tests)
+
 **Purpose**: Tests Layer 2 - Content-type permissions
+
 - ✅ Grant content-type permissions
 - ✅ Check content-type permissions with fallback to tenant permissions
 - ✅ Revoke content-type permissions
@@ -60,7 +68,9 @@ src/Tests/Modules/Permission/
 - ✅ Default content-type permissions
 
 #### 4. PermissionServiceResourceTests.cs (19 tests)
+
 **Purpose**: Tests Layer 3 - Resource-specific permissions using CommentPermission
+
 - ✅ Grant resource permissions
 - ✅ Check resource permissions with hierarchy fallback
 - ✅ Revoke resource permissions
@@ -72,7 +82,9 @@ src/Tests/Modules/Permission/
 ### 🔗 Integration Tests (12 test methods)
 
 #### PermissionSystemIntegrationTests.cs
+
 **Purpose**: Tests cross-layer interactions and complex scenarios
+
 - ✅ Hierarchical permission resolution (Resource → Content-Type → Tenant → Global)
 - ✅ Permission overrides at different layers
 - ✅ Cross-layer permission scenarios
@@ -85,7 +97,9 @@ src/Tests/Modules/Permission/
 ### 🌐 End-to-End Tests (18 test methods)
 
 #### 1. PermissionModuleE2ETests.cs (10 tests)
+
 **Purpose**: Tests permission enforcement through GraphQL and REST APIs
+
 - ✅ GraphQL authentication requirements
 - ✅ GraphQL permission enforcement
 - ✅ REST API authentication requirements
@@ -96,7 +110,9 @@ src/Tests/Modules/Permission/
 - ✅ Cross-tenant isolation enforcement
 
 #### 2. PermissionServiceE2ETests.cs (8 tests)
+
 **Purpose**: Tests permission management operations through APIs
+
 - ✅ Permission granting via GraphQL
 - ✅ Permission checking via GraphQL
 - ✅ Permission listing via GraphQL
@@ -109,7 +125,9 @@ src/Tests/Modules/Permission/
 ### ⚡ Performance Tests (8 test methods)
 
 #### PermissionPerformanceTests.cs
+
 **Purpose**: Tests scalability and performance under load
+
 - ✅ Bulk permission grants (1000 users)
 - ✅ Bulk permission checks (500 users)
 - ✅ Bulk resource operations (1000 resources)
@@ -122,20 +140,25 @@ src/Tests/Modules/Permission/
 ## Key Test Scenarios
 
 ### 🎯 Permission Hierarchy Testing
+
 Tests the three-layer permission resolution system:
+
 1. **Layer 3** (Resource-specific) → **Layer 2** (Content-type) → **Layer 1** (Tenant) → **Global Default**
 2. Higher layers override lower layers
 3. Fallback mechanisms work correctly
 4. No permission leakage between layers
 
 ### 🏢 Multi-Tenant Isolation
+
 - Users in Tenant A cannot access Tenant B resources
 - Default permissions are tenant-specific
 - Cross-tenant permission checks fail appropriately
 - Tenant membership is properly enforced
 
 ### 🔐 Permission Types Coverage
+
 Tests all permission types defined in the system:
+
 - **Interaction**: Read, Comment, Reply, Vote, Share, Report, etc.
 - **Curation**: Categorize, Collection, Series, CrossReference, etc.
 - **Lifecycle**: Draft, Submit, Withdraw, Archive, Restore, Delete, etc.
@@ -146,6 +169,7 @@ Tests all permission types defined in the system:
 - **Publishing**: Publish, Unpublish, Schedule, etc.
 
 ### 🚀 Performance Benchmarks
+
 - **Bulk Operations**: Handle 1000+ users/resources within 5-8 seconds
 - **Individual Checks**: Complete within milliseconds
 - **Memory Usage**: No memory leaks during repeated operations
@@ -153,6 +177,7 @@ Tests all permission types defined in the system:
 - **Database Queries**: Complex queries complete within 1 second
 
 ### 🌐 API Testing Coverage
+
 - **GraphQL Endpoints**: Permission queries and mutations
 - **REST Endpoints**: Permission management operations
 - **Authentication**: JWT token validation
@@ -162,6 +187,7 @@ Tests all permission types defined in the system:
 ## Testing Patterns Used
 
 ### 📋 Test Structure Patterns
+
 1. **Arrange-Act-Assert**: Clear test structure
 2. **In-Memory Database**: Isolated test environments
 3. **Test Data Builders**: Consistent test data creation
@@ -169,6 +195,7 @@ Tests all permission types defined in the system:
 5. **Dispose Pattern**: Proper resource cleanup
 
 ### 🛠️ Testing Tools & Frameworks
+
 - **xUnit**: Primary testing framework
 - **Entity Framework Core In-Memory**: Database testing
 - **ASP.NET Core Test Host**: API testing
@@ -176,6 +203,7 @@ Tests all permission types defined in the system:
 - **HttpClient**: API endpoint testing
 
 ### 🎭 Test Doubles & Mocking
+
 - **In-Memory Database**: Replaces real database
 - **Test JWT Tokens**: Simulates authentication
 - **Mock HTTP Contexts**: Simulates web requests
@@ -184,6 +212,7 @@ Tests all permission types defined in the system:
 ## Running the Tests
 
 ### 🏃‍♂️ Command Line
+
 ```bash
 # Run all permission tests
 dotnet test --filter "namespace:GameGuild.Tests.Modules.Permission"
@@ -197,6 +226,7 @@ dotnet test --filter "FullyQualifiedName~PermissionPerformanceTests"
 ```
 
 ### 🔧 Visual Studio
+
 1. Open Test Explorer
 2. Filter by "Permission"
 3. Run individual tests or test groups
@@ -205,12 +235,14 @@ dotnet test --filter "FullyQualifiedName~PermissionPerformanceTests"
 ## Test Results & Coverage
 
 ### ✅ Expected Test Results
+
 - **Total Tests**: 142 test methods
 - **Pass Rate**: 100%
 - **Code Coverage**: >95% for Permission Module
 - **Performance**: All performance tests pass within thresholds
 
 ### 📊 Coverage Areas
+
 - **Models**: 100% - All permission model functionality
 - **Services**: 98% - Core permission service logic
 - **Integration**: 95% - Cross-module interactions
@@ -220,12 +252,14 @@ dotnet test --filter "FullyQualifiedName~PermissionPerformanceTests"
 ## Maintenance & Updates
 
 ### 🔄 When to Update Tests
+
 1. **New Permission Types**: Add test coverage for new PermissionType enum values
 2. **New Resource Types**: Create new resource permission tests similar to CommentPermission
 3. **API Changes**: Update E2E tests when endpoints change
 4. **Performance Requirements**: Adjust performance thresholds as needed
 
 ### 📝 Test Documentation Standards
+
 - Clear test method names describing the scenario
 - Comprehensive test documentation comments
 - Arrange-Act-Assert structure with clear sections
@@ -235,10 +269,12 @@ dotnet test --filter "FullyQualifiedName~PermissionPerformanceTests"
 ## Conclusion
 
 This comprehensive test suite provides robust coverage of the Permission Module ensuring:
+
 - ✅ **Correctness**: All permission logic works as expected
 - ✅ **Performance**: System scales to production loads
 - ✅ **Security**: No permission leakage or unauthorized access
 - ✅ **Maintainability**: Tests serve as living documentation
 - ✅ **Reliability**: Catches regressions during development
 
-The test suite follows industry best practices and provides confidence in the Permission Module's functionality across all three layers of the DAC (Discretionary Access Control) system.
+The test suite follows industry best practices and provides confidence in the Permission Module's functionality across
+all three layers of the DAC (Discretionary Access Control) system.

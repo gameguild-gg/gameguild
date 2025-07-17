@@ -13,4 +13,3 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to load sandbox' }, { status: 500 });
   }
 }
-

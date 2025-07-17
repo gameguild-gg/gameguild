@@ -4,6 +4,8 @@
   "firstName": "Jane",
   "middleName": "Elizabeth",
   "lastName": "Smith",
-  "idCourses": [1]
+  "idCourses": [
+    1
+  ]
 }
 

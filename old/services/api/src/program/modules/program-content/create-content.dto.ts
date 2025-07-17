@@ -1,7 +1,7 @@
-import { IsString, IsOptional, IsBoolean, IsNumber, IsArray, IsEnum, IsJSON, IsDate, Min } from 'class-validator';
+import { IsArray, IsBoolean, IsDate, IsEnum, IsJSON, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ProgramContentType, GradingMethod } from '../../entities/enums';
+import { GradingMethod, ProgramContentType } from '../../entities/enums';
 
 export class CreateContentDto {
   @ApiProperty({ description: 'ID of the program this content belongs to' })
@@ -35,7 +35,10 @@ export class CreateContentDto {
   @IsJSON()
   body: object;
 
-  @ApiProperty({ description: 'Flag to indicate if this content can be accessed without purchasing the program', required: false })
+  @ApiProperty({
+    description: 'Flag to indicate if this content can be accessed without purchasing the program',
+    required: false,
+  })
   @IsOptional()
   @IsBoolean()
   previewable?: boolean;

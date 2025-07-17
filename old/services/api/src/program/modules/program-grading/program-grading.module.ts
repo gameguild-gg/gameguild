@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { ActivityGrade, ContentInteraction, ProgramUser, ProgramContent } from '../../entities';
+import { ActivityGrade, ContentInteraction, ProgramContent, ProgramUser } from '../../entities';
 
 import { ProgramGradingController } from './program-grading.controller';
 import { ProgramGradingService } from './program-grading.service';

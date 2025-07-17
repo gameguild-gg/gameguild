@@ -44,22 +44,22 @@
 ### Test Page Features (`/[locale]/page.tsx`)
 
 1. **Session Information Display**
-   - User details, tokens, error states
-   - Session debugging information
+  - User details, tokens, error states
+  - Session debugging information
 
 2. **Tenant Context Testing**
-   - Current tenant display
-   - Available tenants list
-   - Tenant switching functionality
+  - Current tenant display
+  - Available tenants list
+  - Tenant switching functionality
 
 3. **Backend Integration Tests**
-   - **Server Action Test**: Tests `getUserTenants()` server action
-   - **Direct API Test**: Tests `/api/test-cms` route that calls CMS `/auth/me`
+  - **Server Action Test**: Tests `getUserTenants()` server action
+  - **Direct API Test**: Tests `/api/test-cms` route that calls CMS `/auth/me`
 
 4. **Authentication Flow**
-   - Google OAuth sign-in
-   - Logout functionality
-   - Navigation to protected routes
+  - Google OAuth sign-in
+  - Logout functionality
+  - Navigation to protected routes
 
 ### API Test Route (`/api/test-cms`)
 

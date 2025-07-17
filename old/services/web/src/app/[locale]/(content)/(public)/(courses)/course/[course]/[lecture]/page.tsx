@@ -12,10 +12,7 @@ interface CourseLecturePageProps {
   params: { course?: string; lecture?: string };
 }
 
-export async function generateMetadata(
-  { params }: CourseLecturePageProps,
-  parent: ResolvingMetadata,
-): Promise<Metadata> {
+export async function generateMetadata({ params }: CourseLecturePageProps, parent: ResolvingMetadata): Promise<Metadata> {
   const course = await getCourseBySlug(params.course);
   const lecture = course?.lectures.find((l) => l.slug === params.lecture);
 
@@ -67,8 +64,7 @@ export async function generateMetadata(
   if (!title) title = course.title.slice(0, 160);
   if (!title) title = 'Discover this amazing course on our platform.';
 
-  const visible =
-    course.visibility === 'PUBLISHED' && lecture.visibility === 'PUBLISHED';
+  const visible = course.visibility === 'PUBLISHED' && lecture.visibility === 'PUBLISHED';
 
   return {
     title: title,
@@ -109,9 +105,7 @@ export default function CourseLecturePage({ params }: CourseLecturePageProps) {
     notFound();
   }
 
-  const lecture = course.chapters
-    .flatMap((chapter) => chapter.lectures || [])
-    .find((l) => l.slug === params.lecture);
+  const lecture = course.chapters.flatMap((chapter) => chapter.lectures || []).find((l) => l.slug === params.lecture);
 
   if (!lecture) {
     notFound();
@@ -127,9 +121,7 @@ export default function CourseLecturePage({ params }: CourseLecturePageProps) {
           </p>
         </>
       )}
-      {lecture.body && (
-        <MarkdownContent content={lecture.body} renderer={lecture.renderer} />
-      )}
+      {lecture.body && <MarkdownContent content={lecture.body} renderer={lecture.renderer} />}
     </div>
   );
 }

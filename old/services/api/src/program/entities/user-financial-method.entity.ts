@@ -1,7 +1,7 @@
-import { Entity, Column, ManyToOne, Index } from 'typeorm';
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsBoolean, IsNumber } from 'class-validator';
+import { Column, Entity, Index, ManyToOne } from 'typeorm';
+import { IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { EntityBase } from '../../common/entities/entity.base';
-import { PaymentMethodType, PaymentMethodStatus } from './enums';
+import { PaymentMethodStatus, PaymentMethodType } from './enums';
 import { UserEntity } from '../../user/entities/user.entity';
 
 @Entity('user_financial_methods')

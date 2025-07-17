@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Shield, Home, ArrowLeft, LogIn } from 'lucide-react';
+import { ArrowLeft, Home, LogIn, Shield } from 'lucide-react';
 
 interface ForbiddenProps {
   title?: string;

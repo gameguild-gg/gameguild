@@ -49,19 +49,14 @@ export default function Page(params: PropsWithLocaleSlugParams) {
   const [project, setProject] = useState<Api.ProjectEntity | null>(null);
   const [session, setSession] = useState<Session | null>();
   const router = useRouter();
-  const [latestVersion, setLastVersion] =
-    useState<Api.ProjectVersionEntity | null>(null);
+  const [latestVersion, setLastVersion] = useState<Api.ProjectVersionEntity | null>(null);
 
   // button to edit visible if the user is the owner of the project
   const IsOwnerButton = () => {
     if (session?.user?.id === project?.owner?.id) {
       // redirect to `/project/${slug}/edit`
       return (
-        <Button
-          className="w-full mb-4 text-lg py-6"
-          size="lg"
-          onClick={() => router.push(`/project/${slug}/edit`)}
-        >
+        <Button className="w-full mb-4 text-lg py-6" size="lg" onClick={() => router.push(`/project/${slug}/edit`)}>
           <Edit className="mr-2" /> Edit Project
         </Button>
       );
@@ -72,11 +67,7 @@ export default function Page(params: PropsWithLocaleSlugParams) {
   const SubmitNewVersionButton = () => {
     if (session?.user?.id === project?.owner?.id) {
       return (
-        <Button
-          className="w-full mb-4 text-lg py-6"
-          size="lg"
-          onClick={() => router.push(`/project/${slug}/edit`)}
-        >
+        <Button className="w-full mb-4 text-lg py-6" size="lg" onClick={() => router.push(`/project/${slug}/edit`)}>
           <Edit className="mr-2" /> Submit New Version
         </Button>
       );
@@ -112,17 +103,9 @@ export default function Page(params: PropsWithLocaleSlugParams) {
     <div className="min-h-screen bg-background">
       {/* Banner */}
       <div className="relative h-64 md:h-96">
-        <Image
-          src="https://placehold.co/400x1200.svg"
-          alt="Game Banner"
-          layout="fill"
-          objectFit="cover"
-          className="brightness-50"
-        />
+        <Image src="https://placehold.co/400x1200.svg" alt="Game Banner" layout="fill" objectFit="cover" className="brightness-50" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white">
-            {project?.title}
-          </h1>
+          <h1 className="text-4xl md:text-6xl font-bold text-white">{project?.title}</h1>
         </div>
       </div>
 
@@ -147,34 +130,10 @@ export default function Page(params: PropsWithLocaleSlugParams) {
 
               {/* Images */}
               <div className="grid grid-cols-2 gap-4">
-                <Image
-                  src="https://placehold.co/300x200.svg"
-                  alt="Featured Image 1"
-                  width={300}
-                  height={200}
-                  className="rounded-lg"
-                />
-                <Image
-                  src="https://placehold.co/300x200.svg"
-                  alt="Featured Image 2"
-                  width={300}
-                  height={200}
-                  className="rounded-lg"
-                />
-                <Image
-                  src="https://placehold.co/300x200.svg"
-                  alt="Featured Image 3"
-                  width={300}
-                  height={200}
-                  className="rounded-lg"
-                />
-                <Image
-                  src="https://placehold.co/300x200.svg"
-                  alt="Featured Image 4"
-                  width={300}
-                  height={200}
-                  className="rounded-lg"
-                />
+                <Image src="https://placehold.co/300x200.svg" alt="Featured Image 1" width={300} height={200} className="rounded-lg" />
+                <Image src="https://placehold.co/300x200.svg" alt="Featured Image 2" width={300} height={200} className="rounded-lg" />
+                <Image src="https://placehold.co/300x200.svg" alt="Featured Image 3" width={300} height={200} className="rounded-lg" />
+                <Image src="https://placehold.co/300x200.svg" alt="Featured Image 4" width={300} height={200} className="rounded-lg" />
               </div>
             </div>
 
@@ -199,14 +158,9 @@ export default function Page(params: PropsWithLocaleSlugParams) {
               <CardContent>
                 <ul className="space-y-2">
                   {project?.versions?.map((version, index) => (
-                    <li
-                      key={index}
-                      className="flex justify-between items-center"
-                    >
+                    <li key={index} className="flex justify-between items-center">
                       <span>{version.version}</span>
-                      <span className="text-muted-foreground">
-                        {version.createdAt}
-                      </span>
+                      <span className="text-muted-foreground">{version.createdAt}</span>
                     </li>
                   ))}
                 </ul>
@@ -246,10 +200,7 @@ export default function Page(params: PropsWithLocaleSlugParams) {
                 <CardTitle>Feedback</CardTitle>
               </CardHeader>
               <CardContent>
-                <Link
-                  href="#"
-                  className="flex items-center text-primary hover:underline"
-                >
+                <Link href="#" className="flex items-center text-primary hover:underline">
                   <MessageSquare className="mr-2" /> Submit Feedback
                 </Link>
                 <p className="mt-2 text-sm text-muted-foreground">

@@ -1,7 +1,7 @@
 import { OkDto } from 'src/common/dtos/ok.dto';
 import { AssetBase } from '../asset.base';
 import { Storage } from '../storage';
-import { GetObjectCommand, PutObjectCommand, DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { ApiConfigService } from '../../common/config.service';
 import { AssetOnDisk, AssetOnDiskWithWidthAndHeight, FileCacheStorageService } from './filecache.storage';
 import { Inject, Injectable, Logger } from '@nestjs/common';
@@ -89,6 +89,7 @@ export class S3ImageStorage extends Storage {
 
     return { success: true };
   }
+
   async get(asset: Partial<AssetBase>): Promise<AssetOnDisk> {
     // fetch from filecache first, then from s3
     const fileOnDisk = await this.filecache.get(asset);

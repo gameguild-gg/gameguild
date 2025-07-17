@@ -1,20 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Button } from '@game-guild/ui/components/button';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Progress } from '@game-guild/ui/components/progress';
-import { 
-  CheckCircle, 
-  Trophy, 
-  Star, 
-  Award, 
-  Clock, 
-  Target,
-  AlertCircle,
-  Sparkles
-} from 'lucide-react';
+import { AlertCircle, Award, CheckCircle, Clock, Sparkles, Star, Target, Trophy } from 'lucide-react';
 import { useToast } from '@/lib/old/hooks/use-toast';
 
 interface CompletionRequirement {
@@ -47,11 +38,7 @@ interface CourseCompletionProps {
   readonly onContinueLearning?: () => void;
 }
 
-export function CourseCompletion({ 
-  courseId, 
-  onCertificateRequest, 
-  onContinueLearning 
-}: CourseCompletionProps) {
+export function CourseCompletion({ courseId, onCertificateRequest, onContinueLearning }: CourseCompletionProps) {
   const [completionData, setCompletionData] = useState<CompletionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingCertificate, setIsGeneratingCertificate] = useState(false);
@@ -101,7 +88,7 @@ export function CourseCompletion({
     if (requirement.completed) {
       return <CheckCircle className="h-5 w-5 text-green-600" />;
     }
-    
+
     switch (requirement.type) {
       case 'quiz':
         return <Target className="h-5 w-5 text-blue-600" />;
@@ -146,25 +133,25 @@ export function CourseCompletion({
   if (!completionData) {
     return (
       <Card>
-        <CardContent className="p-6 text-center text-gray-500">
-          Failed to load completion data
-        </CardContent>
+        <CardContent className="p-6 text-center text-gray-500">Failed to load completion data</CardContent>
       </Card>
     );
   }
 
-  const completedRequirements = completionData.requirements.filter(req => req.completed);
-  const requiredCount = completionData.requirements.filter(req => req.required).length;
-  const completedRequiredCount = completionData.requirements.filter(req => req.required && req.completed).length;
+  const completedRequirements = completionData.requirements.filter((req) => req.completed);
+  const requiredCount = completionData.requirements.filter((req) => req.required).length;
+  const completedRequiredCount = completionData.requirements.filter((req) => req.required && req.completed).length;
 
   return (
     <div className="space-y-6">
       {/* Completion Status Header */}
-      <Card className={`${
-        completionData.isComplete 
-          ? 'border-green-300 bg-gradient-to-r from-green-50 to-emerald-50'
-          : 'border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50'
-      }`}>
+      <Card
+        className={`${
+          completionData.isComplete
+            ? 'border-green-300 bg-gradient-to-r from-green-50 to-emerald-50'
+            : 'border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50'
+        }`}
+      >
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-3">
@@ -178,27 +165,15 @@ export function CourseCompletion({
                 </div>
               )}
               <div>
-                <h2 className={`text-xl font-bold ${
-                  completionData.isComplete ? 'text-green-800' : 'text-blue-800'
-                }`}>
+                <h2 className={`text-xl font-bold ${completionData.isComplete ? 'text-green-800' : 'text-blue-800'}`}>
                   {completionData.isComplete ? 'Course Completed!' : 'Course Progress'}
                 </h2>
-                <p className={`text-sm ${
-                  completionData.isComplete ? 'text-green-600' : 'text-blue-600'
-                }`}>
-                  {completionData.courseTitle}
-                </p>
+                <p className={`text-sm ${completionData.isComplete ? 'text-green-600' : 'text-blue-600'}`}>{completionData.courseTitle}</p>
               </div>
             </CardTitle>
-            
+
             <div className="text-right">
-              <Badge 
-                className={`${
-                  completionData.isComplete 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-blue-500 text-white'
-                } mb-2`}
-              >
+              <Badge className={`${completionData.isComplete ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'} mb-2`}>
                 {completionData.overallProgress}% Complete
               </Badge>
               {completionData.finalGrade && (
@@ -209,15 +184,13 @@ export function CourseCompletion({
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           <Progress value={completionData.overallProgress} className="h-3" />
-          
+
           <div className="grid md:grid-cols-3 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {completedRequirements.length}
-              </div>
+              <div className="text-2xl font-bold text-green-600">{completedRequirements.length}</div>
               <div className="text-sm text-gray-600">Items Completed</div>
             </div>
             <div className="text-center">
@@ -227,9 +200,7 @@ export function CourseCompletion({
               <div className="text-sm text-gray-600">Required Items</div>
             </div>
             <div className="text-center">
-              <div className={`text-2xl font-bold ${
-                completionData.certificateEligible ? 'text-green-600' : 'text-gray-400'
-              }`}>
+              <div className={`text-2xl font-bold ${completionData.certificateEligible ? 'text-green-600' : 'text-gray-400'}`}>
                 {completionData.certificateEligible ? '✓' : '○'}
               </div>
               <div className="text-sm text-gray-600">Certificate Ready</div>
@@ -240,9 +211,7 @@ export function CourseCompletion({
             <div className="text-center p-3 bg-white/50 rounded-lg">
               <div className="flex items-center justify-center gap-2 text-green-700">
                 <Sparkles className="h-4 w-4" />
-                <span className="font-medium">
-                  Completed on {new Date(completionData.completionDate).toLocaleDateString()}
-                </span>
+                <span className="font-medium">Completed on {new Date(completionData.completionDate).toLocaleDateString()}</span>
               </div>
             </div>
           )}
@@ -263,14 +232,12 @@ export function CourseCompletion({
                   requirement.completed
                     ? 'bg-green-50 border-green-200'
                     : requirement.required
-                    ? 'bg-orange-50 border-orange-200'
-                    : 'bg-gray-50 border-gray-200'
+                      ? 'bg-orange-50 border-orange-200'
+                      : 'bg-gray-50 border-gray-200'
                 }`}
               >
-                <div className="flex-shrink-0">
-                  {getRequirementIcon(requirement)}
-                </div>
-                
+                <div className="flex-shrink-0">{getRequirementIcon(requirement)}</div>
+
                 <div className="flex-grow">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-medium">{requirement.title}</h4>
@@ -281,31 +248,20 @@ export function CourseCompletion({
                     )}
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{requirement.description}</p>
-                  
+
                   {requirement.score !== undefined && requirement.minScore !== undefined && (
                     <div className="flex items-center gap-2 text-sm">
                       <span>Score:</span>
-                      <span className={`font-medium ${getGradeColor(requirement.score, requirement.minScore)}`}>
-                        {requirement.score}%
-                      </span>
-                      <span className="text-gray-500">
-                        (min: {requirement.minScore}%)
-                      </span>
+                      <span className={`font-medium ${getGradeColor(requirement.score, requirement.minScore)}`}>{requirement.score}%</span>
+                      <span className="text-gray-500">(min: {requirement.minScore}%)</span>
                     </div>
                   )}
-                  
-                  {requirement.completedAt && (
-                    <div className="text-xs text-gray-500">
-                      Completed: {new Date(requirement.completedAt).toLocaleString()}
-                    </div>
-                  )}
+
+                  {requirement.completedAt && <div className="text-xs text-gray-500">Completed: {new Date(requirement.completedAt).toLocaleString()}</div>}
                 </div>
 
                 <div className="flex-shrink-0">
-                  <Badge 
-                    variant={requirement.completed ? 'default' : 'outline'}
-                    className={requirement.completed ? 'bg-green-500 text-white' : ''}
-                  >
+                  <Badge variant={requirement.completed ? 'default' : 'outline'} className={requirement.completed ? 'bg-green-500 text-white' : ''}>
                     {requirement.completed ? 'Complete' : 'Pending'}
                   </Badge>
                 </div>
@@ -320,37 +276,25 @@ export function CourseCompletion({
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             {completionData.certificateEligible && (
-              <Button
-                onClick={handleGenerateCertificate}
-                disabled={isGeneratingCertificate}
-                className="bg-green-600 hover:bg-green-700 flex-1"
-              >
+              <Button onClick={handleGenerateCertificate} disabled={isGeneratingCertificate} className="bg-green-600 hover:bg-green-700 flex-1">
                 <Award className="h-4 w-4 mr-2" />
                 {isGeneratingCertificate ? 'Generating...' : 'Get Certificate'}
               </Button>
             )}
-            
+
             {!completionData.isComplete && (
-              <Button
-                onClick={onContinueLearning}
-                variant="outline"
-                className="flex-1"
-              >
+              <Button onClick={onContinueLearning} variant="outline" className="flex-1">
                 Continue Learning
               </Button>
             )}
-            
+
             {completionData.isComplete && (
-              <Button
-                onClick={onContinueLearning}
-                variant="outline"
-                className="flex-1"
-              >
+              <Button onClick={onContinueLearning} variant="outline" className="flex-1">
                 Explore More Courses
               </Button>
             )}
           </div>
-          
+
           {!completionData.certificateEligible && completionData.estimatedCompletionDate && (
             <div className="mt-4 text-center text-sm text-gray-600">
               <Clock className="h-4 w-4 inline mr-1" />
@@ -364,10 +308,10 @@ export function CourseCompletion({
 }
 
 /* Completion badge for course cards */
-export function CompletionBadge({ 
-  isComplete, 
-  progress, 
-  certificateAvailable 
+export function CompletionBadge({
+  isComplete,
+  progress,
+  certificateAvailable,
 }: {
   readonly isComplete: boolean;
   readonly progress: number;
@@ -381,18 +325,10 @@ export function CompletionBadge({
       </Badge>
     );
   }
-  
+
   if (progress > 0) {
-    return (
-      <Badge variant="secondary">
-        {progress}% Complete
-      </Badge>
-    );
+    return <Badge variant="secondary">{progress}% Complete</Badge>;
   }
-  
-  return (
-    <Badge variant="outline">
-      Not Started
-    </Badge>
-  );
+
+  return <Badge variant="outline">Not Started</Badge>;
 }

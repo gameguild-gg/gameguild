@@ -3,26 +3,26 @@
 
 async function debugTokenRefresh() {
   console.log('🔍 Debugging token refresh mechanism...');
-  
+
   // Get current session
   const sessionResponse = await fetch('/api/auth/session');
   const session = await sessionResponse.json();
-  
+
   console.log('Current session:', {
     hasSession: !!session,
     hasAccessToken: !!session?.accessToken,
     error: session?.error,
     user: session?.user?.email,
-    expires: session?.expires
+    expires: session?.expires,
   });
-  
+
   if (session?.error === 'RefreshTokenError') {
     console.log('🚨 Token refresh error detected!');
     console.log('Triggering sign in...');
     window.location.href = '/api/auth/signin';
     return;
   }
-  
+
   // Test API call
   console.log('Testing API call...');
   try {
@@ -30,11 +30,11 @@ async function debugTokenRefresh() {
       method: 'GET', // Use GET to just test auth
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
     });
-    
+
     console.log('API Response:', response.status, response.statusText);
-    
+
     if (response.status === 401) {
       console.log('🚨 API returned 401 - token is expired or invalid');
       console.log('Triggering sign in...');

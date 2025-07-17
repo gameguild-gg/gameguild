@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { TenantService } from '@/lib/tenants/tenant.service';
-import { TenantResponse, CreateTenantRequest } from '@/lib/tenants/types';
+import { CreateTenantRequest, TenantResponse } from '@/lib/tenants/types';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
@@ -31,7 +31,7 @@ export function TenantManagementComponent() {
 
   const loadTenants = async () => {
     if (!session?.accessToken) return;
-    
+
     setLoading(true);
     setError(null);
     try {
@@ -54,7 +54,7 @@ export function TenantManagementComponent() {
     try {
       const tenantData: CreateTenantRequest = {
         name: formData.get('name') as string,
-        description: formData.get('description') as string || undefined,
+        description: (formData.get('description') as string) || undefined,
         isActive: formData.get('isActive') === 'on',
       };
 
@@ -101,11 +101,14 @@ export function TenantManagementComponent() {
           <CardDescription>Create a new tenant for your organization</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            handleCreateTenant(formData);
-          }} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              handleCreateTenant(formData);
+            }}
+            className="space-y-4"
+          >
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>

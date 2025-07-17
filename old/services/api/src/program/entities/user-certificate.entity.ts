@@ -1,5 +1,5 @@
-import { Entity, Column, ManyToOne, JoinColumn, Index, DeleteDateColumn } from 'typeorm';
-import { IsString, IsNotEmpty, IsOptional, IsUrl, IsEnum, IsDateString, IsJSON } from 'class-validator';
+import { Column, DeleteDateColumn, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { IsDateString, IsEnum, IsJSON, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityBase } from '../../common/entities/entity.base';
 import { CertificateStatus } from './enums';
@@ -22,13 +22,19 @@ import { Certificate } from './certificate.entity';
 export class UserCertificate extends EntityBase {
   @ManyToOne(() => Program, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'program_id' })
-  @ApiProperty({ description: 'Reference to the program for single program certificates (null for multi-program certs)', required: false })
+  @ApiProperty({
+    description: 'Reference to the program for single program certificates (null for multi-program certs)',
+    required: false,
+  })
   @IsOptional()
   program?: Program;
 
   @ManyToOne(() => Product, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'product_id' })
-  @ApiProperty({ description: 'Reference to the product/bundle for product certificates (null for program-only certs)', required: false })
+  @ApiProperty({
+    description: 'Reference to the product/bundle for product certificates (null for program-only certs)',
+    required: false,
+  })
   @IsOptional()
   product?: Product;
 

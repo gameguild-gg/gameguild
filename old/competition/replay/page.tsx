@@ -34,10 +34,7 @@ export default function ReplayPage() {
     }
     const session = await getSession();
 
-    const response = await api.competitionControllerGetChessMatchResult(
-      matchId,
-      { headers: { Authorization: `Bearer ${session?.user?.accessToken}` } },
-    );
+    const response = await api.competitionControllerGetChessMatchResult(matchId, { headers: { Authorization: `Bearer ${session?.user?.accessToken}` } });
 
     if (response.status === 401) {
       message.error('You are not authorized to view this page.');
@@ -49,9 +46,7 @@ export default function ReplayPage() {
     }
 
     if (response.status === 500) {
-      message.error(
-        'Internal server error. Please report this issue to the community.',
-      );
+      message.error('Internal server error. Please report this issue to the community.');
       message.error(JSON.stringify(response.body));
       setMatchFetched(true);
       return;
@@ -82,14 +77,8 @@ export default function ReplayPage() {
   return (
     <Space direction={'vertical'}>
       <Typography.Title level={1}>Replay Game</Typography.Title>
-      <Typography.Paragraph>
-        {matchData?.players[1] + ' vs ' + matchData?.players[0]}
-      </Typography.Paragraph>
-      <Chessboard
-        position={states[currentStateId]}
-        boardWidth={400}
-        arePiecesDraggable={false}
-      />
+      <Typography.Paragraph>{matchData?.players[1] + ' vs ' + matchData?.players[0]}</Typography.Paragraph>
+      <Chessboard position={states[currentStateId]} boardWidth={400} arePiecesDraggable={false} />
       <Space direction={'horizontal'}>
         <Button
           onClick={() => {

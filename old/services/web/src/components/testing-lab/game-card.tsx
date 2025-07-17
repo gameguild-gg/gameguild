@@ -11,8 +11,7 @@ export function GameCard({ game }: Readonly<Props>) {
   const { title, summary } = game;
 
   return (
-    <Card
-      className="rounded-lg overflow-hidden shadow-lg max-w-[320px] mx-auto hover:shadow-xl transition-all duration-200">
+    <Card className="rounded-lg overflow-hidden shadow-lg max-w-[320px] mx-auto hover:shadow-xl transition-all duration-200">
       <div className="relative">
         <img
           alt="Profile picture"

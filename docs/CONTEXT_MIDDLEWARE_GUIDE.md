@@ -2,10 +2,11 @@
 
 ## Overview
 
-The User and Tenant Context system provides a clean way to access user authentication information and tenant-specific data throughout your application. The system is built with:
+The User and Tenant Context system provides a clean way to access user authentication information and tenant-specific
+data throughout your application. The system is built with:
 
 - **IUserContext**: Interface for accessing current user information
-- **ITenantContext**: Interface for accessing current tenant information  
+- **ITenantContext**: Interface for accessing current tenant information
 - **ContextMiddleware**: Middleware that sets up context for each request
 - **Dependency Injection**: Automatic registration of context services
 
@@ -14,6 +15,7 @@ The User and Tenant Context system provides a clean way to access user authentic
 ### 1. Context Interfaces
 
 #### IUserContext
+
 ```csharp
 public interface IUserContext
 {
@@ -28,6 +30,7 @@ public interface IUserContext
 ```
 
 #### ITenantContext
+
 ```csharp
 public interface ITenantContext
 {
@@ -60,6 +63,7 @@ services.AddContextServices();  // <- Added here
 ```
 
 The `AddContextServices()` extension method registers:
+
 - `HttpContextAccessor`
 - `IUserContext` implementation
 - `ITenantContext` implementation
@@ -176,6 +180,7 @@ public class ProductQueries
 ## Context Data Sources
 
 ### User Context Data Sources
+
 - **Claims**: Standard ASP.NET Core claims from JWT tokens or cookies
 - **ClaimTypes.NameIdentifier**: User ID (mapped to UserId)
 - **ClaimTypes.Email**: User email address
@@ -183,6 +188,7 @@ public class ProductQueries
 - **ClaimTypes.Role**: User roles
 
 ### Tenant Context Data Sources
+
 - **HTTP Headers**: `X-Tenant-Id`, `X-Tenant-Name`
 - **Query Parameters**: `tenantId`, `tenant`
 - **JWT Claims**: `tenant`, `tenant_id`, `tenant_name`
@@ -191,16 +197,19 @@ public class ProductQueries
 ## Security Features
 
 ### Authentication Validation
+
 - Automatically checks if user is authenticated
 - Provides `IsAuthenticated` property for easy checking
 - Handles both authenticated and anonymous requests
 
 ### Role-Based Access Control
+
 - `IsInRole(string role)` method for role checking
 - `Roles` property returns all user roles
 - Works with standard ASP.NET Core role claims
 
 ### Tenant Isolation
+
 - Automatic tenant context extraction
 - Tenant-specific data filtering
 - Multi-tenant application support
@@ -208,6 +217,7 @@ public class ProductQueries
 ## ErrorMessage Handling
 
 The middleware includes comprehensive error handling:
+
 - Logs context information for debugging
 - Handles missing or invalid tenant information
 - Gracefully handles authentication failures
@@ -216,6 +226,7 @@ The middleware includes comprehensive error handling:
 ## Testing
 
 The system includes comprehensive tests:
+
 - Unit tests for context services
 - Integration tests for middleware
 - Example usage patterns
@@ -233,6 +244,8 @@ See `ContextMiddlewareTests.cs` for testing examples.
 
 ## Configuration
 
-The context system works out of the box with minimal configuration. The middleware and services are automatically registered during application startup.
+The context system works out of the box with minimal configuration. The middleware and services are automatically
+registered during application startup.
 
-For custom tenant resolution or additional claims processing, you can extend the `UsersContext` and `TenantContext` services by inheriting from them or implementing the interfaces directly.
+For custom tenant resolution or additional claims processing, you can extend the `UsersContext` and `TenantContext`
+services by inheriting from them or implementing the interfaces directly.

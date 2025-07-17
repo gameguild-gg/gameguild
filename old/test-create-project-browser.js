@@ -4,7 +4,7 @@
 async function createTestProject() {
   try {
     console.log('Creating test project...');
-    
+
     const response = await fetch('/api/test-create-project', {
       method: 'POST',
       headers: {
@@ -20,7 +20,7 @@ async function createTestProject() {
         repositoryUrl: 'https://github.com/example/test',
       }),
     });
-    
+
     if (response.ok) {
       const project = await response.json();
       console.log('Project created successfully:', project);

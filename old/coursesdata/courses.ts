@@ -1,4 +1,4 @@
-import { CourseEntity, ChapterEntity, LectureEntity } from '@/types/course-types';
+import { ChapterEntity, CourseEntity, LectureEntity } from '@/types/course-types';
 import portfolio from '@/data/courses/portfolio';
 import ai4games from '@/data/courses/ai4games';
 import python from '@/data/courses/python';
@@ -18,8 +18,6 @@ courses.forEach((course) => {
 });
 
 // Flatten lectures for easier access if needed
-const allLectures = courses.flatMap((course) =>
-  course.chapters.flatMap((chapter) => chapter.lectures),
-);
+const allLectures = courses.flatMap((course) => course.chapters.flatMap((chapter) => chapter.lectures));
 
 export { courses, allLectures };

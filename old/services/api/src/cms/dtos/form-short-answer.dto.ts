@@ -1,5 +1,4 @@
-import { QuestionBase, QuizQuestionBase } from './question.base';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { QuizQuestionBase } from './question.base';
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import { IsIntegerNumber } from '../../common/decorators/validator.decorator';
 import { ApiProperty } from '@nestjs/swagger';

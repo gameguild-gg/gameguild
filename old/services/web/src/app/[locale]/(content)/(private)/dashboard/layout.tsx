@@ -1,9 +1,7 @@
 import React, { PropsWithChildren } from 'react';
 import Dashboard from '@/components/dashboard';
 
-export default async function Layout({
-                                       children,
-                                     }: Readonly<PropsWithChildren>) {
+export default async function Layout({ children }: Readonly<PropsWithChildren>) {
   return (
     <Dashboard>
       <Dashboard.Sidebar />

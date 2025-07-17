@@ -27,13 +27,9 @@ int main(){
 }
 `,
   );
-  const [description, setDescription] = useState<string>(
-    descriptionText ? descriptionText : 'Description Goes Here',
-  );
+  const [description, setDescription] = useState<string>(descriptionText ? descriptionText : 'Description Goes Here');
 
-  const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(
-    null,
-  );
+  const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(null);
   const [monaco, setMonaco] = useState<Monaco | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef<boolean>(false);
@@ -42,10 +38,7 @@ int main(){
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging.current && containerRef.current) {
-        const newLeftWidth =
-          ((e.clientX - containerRef.current.getBoundingClientRect().left) /
-            containerRef.current.offsetWidth) *
-          100;
+        const newLeftWidth = ((e.clientX - containerRef.current.getBoundingClientRect().left) / containerRef.current.offsetWidth) * 100;
         setLeftWidth(newLeftWidth);
       }
     };
@@ -63,10 +56,7 @@ int main(){
     };
   }, []);
 
-  const editorDidMount = (
-    editor: editor.IStandaloneCodeEditor,
-    monaco: Monaco,
-  ): void => {
+  const editorDidMount = (editor: editor.IStandaloneCodeEditor, monaco: Monaco): void => {
     console.log('editor is ready');
     setEditor(editor);
     setMonaco(monaco);
@@ -89,10 +79,7 @@ int main(){
   }, []);
 
   return (
-    <main
-      style={{ height: '100vh', display: 'flex', flexDirection: 'row' }}
-      ref={containerRef}
-    >
+    <main style={{ height: '100vh', display: 'flex', flexDirection: 'row' }} ref={containerRef}>
       <div
         style={{
           width: `${leftWidth}%`,

@@ -1,17 +1,17 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import {
   Certificate,
-  UserCertificate,
   CertificateBlockchainAnchor,
   CertificateTag,
+  Product,
+  Program,
   ProgramFeedbackSubmission,
   ProgramRatingEntity,
-  Program,
-  Product,
   ProgramUser,
   Tag,
+  UserCertificate,
 } from '../../entities';
 
 import { CertificateController } from './certificate.controller';

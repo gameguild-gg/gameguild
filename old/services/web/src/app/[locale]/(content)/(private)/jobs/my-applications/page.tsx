@@ -20,13 +20,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 
-function ProgressBar({
-                       progress,
-                       failed,
-                     }: {
-  progress: number;
-  failed: boolean;
-}) {
+function ProgressBar({ progress, failed }: { progress: number; failed: boolean }) {
   const steps = [0, 1, 2, 3, 4];
   return (
     <div className="flex justify-between mt-2">
@@ -34,19 +28,10 @@ function ProgressBar({
         <div
           key={step}
           className={`w-12 h-6 flex items-center justify-center ${
-            progress >= step
-              ? failed && step === progress
-                ? 'bg-red-500'
-                : 'bg-green-500'
-              : 'bg-gray-300'
+            progress >= step ? (failed && step === progress ? 'bg-red-500' : 'bg-green-500') : 'bg-gray-300'
           }`}
         >
-          {progress >= step &&
-            (failed && step === progress ? (
-              <X className="w-4 h-4 text-white" />
-            ) : (
-              <Check className="w-4 h-4 text-white" />
-            ))}
+          {progress >= step && (failed && step === progress ? <X className="w-4 h-4 text-white" /> : <Check className="w-4 h-4 text-white" />)}
         </div>
       ))}
     </div>
@@ -55,9 +40,7 @@ function ProgressBar({
 
 export default function MyJobApplications() {
   const [jobTags, setJobTags] = useState<Api.JobTagEntity[] | any>([]);
-  const [jobApplications, setJobApplicatons] = useState<
-    Api.JobApplicationEntity[]
-  >([]);
+  const [jobApplications, setJobApplicatons] = useState<Api.JobApplicationEntity[]>([]);
   const [totalPages, setTotalPages] = useState<number>(1);
 
   const router = useRouter();
@@ -79,10 +62,7 @@ export default function MyJobApplications() {
       router.push('/connect');
       return;
     }
-    const response = await jobTagsApi.getManyBaseJobTagControllerJobTagEntity(
-      {},
-      { headers: { Authorization: `Bearer ${session.user.accessToken}` } },
-    );
+    const response = await jobTagsApi.getManyBaseJobTagControllerJobTagEntity({}, { headers: { Authorization: `Bearer ${session.user.accessToken}` } });
     if ((response.status = 200)) {
       setJobTags((response.body as Api.JobTagEntity[]) || []);
     }
@@ -94,10 +74,9 @@ export default function MyJobApplications() {
       router.push('/connect');
       return;
     }
-    const response =
-      await jobApplicationApi.jobApplicationControllerMyApplications({
-        headers: { Authorization: `Bearer ${session.user.accessToken}` },
-      });
+    const response = await jobApplicationApi.jobApplicationControllerMyApplications({
+      headers: { Authorization: `Bearer ${session.user.accessToken}` },
+    });
     // console.log('API Response:\n',response)
     if (response.status == 200 && response.body?.length > 0) {
       setJobApplicatons(response.body);
@@ -114,10 +93,7 @@ export default function MyJobApplications() {
   const handleGiveUpButton = async (app: Api.JobApplicationEntity) => {
     // TODO: Add Warning
     const session: any = await getSession();
-    const response = await jobApplicationApi.jobApplicationControllerWithdraw(
-      app,
-      { headers: { Authorization: `Bearer ${session.user.accessToken}` } },
-    );
+    const response = await jobApplicationApi.jobApplicationControllerWithdraw(app, { headers: { Authorization: `Bearer ${session.user.accessToken}` } });
     if (response.status == 200) {
       // TODO: sucess toaster
     } else {
@@ -158,10 +134,7 @@ export default function MyJobApplications() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {jobApplications.length > 0 &&
               jobApplications.slice(0, 16).map((app) => (
-                <div
-                  key={app.id}
-                  className="bg-card rounded-lg shadow-md p-4 flex flex-col h-full"
-                >
+                <div key={app.id} className="bg-card rounded-lg shadow-md p-4 flex flex-col h-full">
                   <div className="flex-grow">
                     <div className="flex items-center mb-2">
                       <Avatar>
@@ -172,13 +145,9 @@ export default function MyJobApplications() {
                         />
                         <AvatarFallback>{app?.job?.title[0]}</AvatarFallback>
                       </Avatar>
-                      <span className="font-semibold ml-2">
-                        {app?.job?.title}
-                      </span>
+                      <span className="font-semibold ml-2">{app?.job?.title}</span>
                     </div>
-                    <h3 className="font-bold text-lg mb-2">
-                      {app?.job?.title}
-                    </h3>
+                    <h3 className="font-bold text-lg mb-2">{app?.job?.title}</h3>
                     <div className="flex flex-wrap gap-1 mb-2">
                       {app?.job?.job_tags.map((tag) => (
                         <Badge key={tag.id} variant="secondary">
@@ -189,20 +158,10 @@ export default function MyJobApplications() {
                   </div>
                   <div className="mt-auto mb-0">
                     <div className="font-bold mt-2">Progress</div>
-                    <ProgressBar
-                      progress={app.progress + 1}
-                      failed={app.rejected}
-                    />
+                    <ProgressBar progress={app.progress + 1} failed={app.rejected} />
                     <div className="flex justify-between mt-3">
-                      <Button
-                        onClick={() => handleLearnMoreButton(app?.job?.slug)}
-                      >
-                        Learn More
-                      </Button>
-                      <Button
-                        onClick={() => handleGiveUpButton(app)}
-                        variant="destructive"
-                      >
+                      <Button onClick={() => handleLearnMoreButton(app?.job?.slug)}>Learn More</Button>
+                      <Button onClick={() => handleGiveUpButton(app)} variant="destructive">
                         Give Up
                       </Button>
                     </div>
@@ -219,14 +178,14 @@ export default function MyJobApplications() {
                   <PaginationPrevious href="#" />
                 </PaginationItem>
                 {[...Array(totalPages)]
-                .map((_, i) => (
-                  <PaginationItem key={i}>
-                    <PaginationLink href="#" isActive={i === 0}>
-                      {i + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))
-                .slice(0, 3)}
+                  .map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink href="#" isActive={i === 0}>
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))
+                  .slice(0, 3)}
                 {totalPages > 3 && (
                   <>
                     <PaginationItem>

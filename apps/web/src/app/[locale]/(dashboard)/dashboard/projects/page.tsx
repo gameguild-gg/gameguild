@@ -28,7 +28,7 @@ export default function ProjectsPage() {
       console.log('Creating test project...');
 
       const { testCreateProject } = await import('@/lib/core/actions');
-      
+
       const result = await testCreateProject({
         title: `Test Project ${new Date().toLocaleTimeString()}`,
         description: 'This is a test project created to verify authentication and data flow',
@@ -43,8 +43,8 @@ export default function ProjectsPage() {
         websiteUrl: 'https://example.com',
         repositoryUrl: 'https://github.com/example/test',
       });
-      
-      console.log('Project created successfully:', result);      // Clear all project-related cache
+
+      console.log('Project created successfully:', result); // Clear all project-related cache
       await clearProjectCache();
 
       // Revalidate Next.js cache

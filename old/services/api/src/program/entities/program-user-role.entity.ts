@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, DeleteDateColumn, JoinColumn } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
 import { EntityBase } from '../../common/entities/entity.base';

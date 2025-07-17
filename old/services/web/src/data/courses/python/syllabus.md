@@ -52,48 +52,48 @@ This is a work in progress schedule. It is subject to change. Every change will 
 ### Weekly Schedule
 
 - Week 1: 2025/01/13 - 2025/01/17
-    - Syllabus, Impostor syndrome, the Dunning-Kruger effect, Curiosity and the Growth Mindset
-    - Problem-solving and Algorithmic thinking, Mazes, and the Maze-solving problem
+  - Syllabus, Impostor syndrome, the Dunning-Kruger effect, Curiosity and the Growth Mindset
+  - Problem-solving and Algorithmic thinking, Mazes, and the Maze-solving problem
 - Week 2: 2025/01/20 - 2025/01/24
-    - Introduction to Python and toolset
-    - Variables, data types, and operators
+  - Introduction to Python and toolset
+  - Variables, data types, and operators
 - Week 3: 2025/01/27 - 2025/01/31
-    - Functions
-    - Number types and conversions
+  - Functions
+  - Number types and conversions
 - Week 4: 2025/02/03 - 2025/02/07
-    - Conditionals and Branching structures
+  - Conditionals and Branching structures
 - Week 5: 2025/02/10 - 2025/02/14
-    - Repetition and Iteration
-    - Lists, list-like structures, and strings
+  - Repetition and Iteration
+  - Lists, list-like structures, and strings
 - Week 6: 2025/02/17 - 2025/02/21
-    - Flow control, loops
-    - Iterating lists and strings
-    - Importing modules
+  - Flow control, loops
+  - Iterating lists and strings
+  - Importing modules
 - Week 7: 2025/02/24 - 2025/02/28
-    - Two-dimensional lists (nested lists)
-    - Grading report
+  - Two-dimensional lists (nested lists)
+  - Grading report
 - Week 8: 2025/03/03 - 2025/03/07
-    - Format strings
-    - Functions
-    - Midterm Exam
+  - Format strings
+  - Functions
+  - Midterm Exam
 - Week 9: 2025/03/10 - 2025/03/14
-    - Spring break
+  - Spring break
 - Week 10: 2025/03/17 - 2025/03/21
-    - Dictionaries
-    - ASCII
-    - Caesar cipher
+  - Dictionaries
+  - ASCII
+  - Caesar cipher
 - Week 11: 2025/03/24 - 2025/03/28
-    - File I/O
-    - ErrorMessage handling
-    - Functions
+  - File I/O
+  - ErrorMessage handling
+  - Functions
 - Week 12: 2025/03/31 - 2025/04/04
-    - JSON
-    - APIs
+  - JSON
+  - APIs
 - Week 13: 2025/04/07 - 2025/04/11
-    - APIs
-    - Final project
+  - APIs
+  - Final project
 - Week 14: 2025/04/14 - 2025/04/18
-    - Final project
-    - User Interface
+  - Final project
+  - User Interface
 - Week 15: 2025/04/21 - 2025/04/25
-    - Final project Presentation
+  - Final project Presentation

@@ -5,7 +5,7 @@ import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
-import { Award, Download, Share2, Check, Loader2, Calendar, User } from 'lucide-react';
+import { Award, Calendar, Check, Download, Loader2, Share2, User } from 'lucide-react';
 import { useToast } from '@/lib/old/hooks/use-toast';
 
 interface CertificateProps {
@@ -19,15 +19,15 @@ interface CertificateProps {
   readonly certificateId?: string;
 }
 
-export function CertificateGeneration({ 
-  courseId, 
-  courseTitle, 
-  completionDate, 
+export function CertificateGeneration({
+  courseId,
+  courseTitle,
+  completionDate,
   studentName,
   instructorName = 'Game Guild Academy',
   skillsLearned = [],
   finalGrade,
-  certificateId
+  certificateId,
 }: CertificateProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -40,7 +40,7 @@ export function CertificateGeneration({
 
     try {
       const { generateCertificate } = await import('@/lib/certificates/actions');
-      
+
       const result = await generateCertificate({
         courseId,
         courseTitle,
@@ -53,7 +53,7 @@ export function CertificateGeneration({
 
       if (result.success) {
         setCertificateUrl(result.certificate.downloadUrl);
-        
+
         toast({
           title: 'Certificate generated!',
           description: 'Your certificate of completion has been generated successfully.',
@@ -139,9 +139,7 @@ export function CertificateGeneration({
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center space-y-2">
-            <h3 className="text-xl font-semibold text-green-800">
-              Congratulations, {studentName}!
-            </h3>
+            <h3 className="text-xl font-semibold text-green-800">Congratulations, {studentName}!</h3>
             <p className="text-green-700">
               You have successfully completed <strong>{courseTitle}</strong>
             </p>
@@ -162,11 +160,7 @@ export function CertificateGeneration({
                 <User className="h-4 w-4" />
                 <span>Instructor: {instructorName}</span>
               </div>
-              {certificateId && (
-                <div className="text-xs text-gray-500 font-mono">
-                  Certificate ID: {certificateId}
-                </div>
-              )}
+              {certificateId && <div className="text-xs text-gray-500 font-mono">Certificate ID: {certificateId}</div>}
             </div>
 
             {skillsLearned.length > 0 && (
@@ -190,38 +184,22 @@ export function CertificateGeneration({
 
           <div className="flex flex-col sm:flex-row gap-3">
             {!certificateUrl ? (
-              <Button
-                onClick={handleGenerateCertificate}
-                disabled={isGenerating}
-                className="flex-1 bg-green-600 hover:bg-green-700"
-              >
+              <Button onClick={handleGenerateCertificate} disabled={isGenerating} className="flex-1 bg-green-600 hover:bg-green-700">
                 {isGenerating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 <Award className="h-4 w-4 mr-2" />
                 Generate Certificate
               </Button>
             ) : (
               <>
-                <Button
-                  onClick={handleDownloadCertificate}
-                  disabled={isDownloading}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
-                >
+                <Button onClick={handleDownloadCertificate} disabled={isDownloading} className="flex-1 bg-green-600 hover:bg-green-700">
                   {isDownloading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   <Download className="h-4 w-4 mr-2" />
                   Download PDF
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowPreview(true)}
-                  className="border-green-300 text-green-700 hover:bg-green-50"
-                >
+                <Button variant="outline" onClick={() => setShowPreview(true)} className="border-green-300 text-green-700 hover:bg-green-50">
                   Preview
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleShareCertificate}
-                  className="border-green-300 text-green-700 hover:bg-green-50"
-                >
+                <Button variant="outline" onClick={handleShareCertificate} className="border-green-300 text-green-700 hover:bg-green-50">
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </Button>
@@ -230,8 +208,8 @@ export function CertificateGeneration({
           </div>
 
           <div className="text-center text-xs text-gray-500">
-            This certificate verifies that you have successfully completed all requirements
-            for the course and demonstrates your achievement in game development skills.
+            This certificate verifies that you have successfully completed all requirements for the course and demonstrates your achievement in game development
+            skills.
           </div>
         </CardContent>
       </Card>
@@ -243,13 +221,7 @@ export function CertificateGeneration({
             <DialogTitle>Certificate Preview</DialogTitle>
           </DialogHeader>
           <div className="w-full">
-            {certificateUrl && (
-              <iframe
-                src={certificateUrl}
-                className="w-full h-96 border rounded-lg"
-                title="Certificate Preview"
-              />
-            )}
+            {certificateUrl && <iframe src={certificateUrl} className="w-full h-96 border rounded-lg" title="Certificate Preview" />}
             <div className="flex justify-end gap-2 mt-4">
               <Button variant="outline" onClick={() => setShowPreview(false)}>
                 Close
@@ -268,13 +240,7 @@ export function CertificateGeneration({
 }
 
 /* Component for certificate notification */
-export function CertificateNotification({ 
-  courseTitle, 
-  onViewCertificate 
-}: { 
-  courseTitle: string; 
-  onViewCertificate: () => void;
-}) {
+export function CertificateNotification({ courseTitle, onViewCertificate }: { courseTitle: string; onViewCertificate: () => void }) {
   return (
     <Card className="border-green-300 bg-gradient-to-r from-green-50 to-emerald-50">
       <CardContent className="p-4">
@@ -285,16 +251,10 @@ export function CertificateNotification({
             </div>
             <div>
               <h4 className="font-medium text-green-800">Certificate Ready!</h4>
-              <p className="text-sm text-green-600">
-                Your certificate for "{courseTitle}" is now available
-              </p>
+              <p className="text-sm text-green-600">Your certificate for "{courseTitle}" is now available</p>
             </div>
           </div>
-          <Button
-            onClick={onViewCertificate}
-            size="sm"
-            className="bg-green-600 hover:bg-green-700"
-          >
+          <Button onClick={onViewCertificate} size="sm" className="bg-green-600 hover:bg-green-700">
             View Certificate
           </Button>
         </div>

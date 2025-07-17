@@ -14,7 +14,7 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from '@game-guild/ui/components/sidebar';
-import { Package, Send, Settings, Building2, BookOpen, LayoutDashboard, Users, BarChart3, FileText } from 'lucide-react';
+import { BarChart3, BookOpen, Building2, FileText, LayoutDashboard, Package, Send, Settings, Users } from 'lucide-react';
 import { cookies } from 'next/headers';
 import { DashboardHeader } from './layout/dashboard-header';
 

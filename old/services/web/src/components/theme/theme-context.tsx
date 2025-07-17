@@ -33,9 +33,7 @@ export function ThemeProvider({ children }: Readonly<Props>) {
 
   const value = { state, dispatch };
 
-  return (
-    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

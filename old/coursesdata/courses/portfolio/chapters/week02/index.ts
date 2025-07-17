@@ -18,27 +18,9 @@ week02lectures.push(
   ) as LectureEntity,
 );
 
-week02lectures.push(
-  createLecture(
-    '2-2',
-    'assignment-03',
-    'Assignment 03',
-    'Portfolio Website Wireframe',
-    assignment03,
-    2,
-  ) as LectureEntity,
-);
+week02lectures.push(createLecture('2-2', 'assignment-03', 'Assignment 03', 'Portfolio Website Wireframe', assignment03, 2) as LectureEntity);
 
-week02lectures.push(
-  createLecture(
-    '2-3',
-    'assignment-04',
-    'Assignment 04',
-    'Portfolio Website Prototype',
-    assignment04,
-    3,
-  ) as LectureEntity,
-);
+week02lectures.push(createLecture('2-3', 'assignment-04', 'Assignment 04', 'Portfolio Website Prototype', assignment04, 3) as LectureEntity);
 
 const Chapter02 = createChapter(
   '2',

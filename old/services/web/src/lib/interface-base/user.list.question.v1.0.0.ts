@@ -21,4 +21,3 @@ export interface StudentSubmission {
     passed: boolean;
   }[];
 }
-

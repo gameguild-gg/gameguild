@@ -8,7 +8,7 @@ import { EnhancedCourse } from '@/lib/courses/courses-enhanced.context';
 // Enhanced CourseGrid that uses the context
 export function CourseGridEnhanced() {
   const { state, paginatedCourses } = useCourseContext();
-  
+
   console.log('CourseGridEnhanced - state:', {
     isLoading: state.isLoading,
     coursesCount: state.courses.length,
@@ -16,7 +16,7 @@ export function CourseGridEnhanced() {
     paginatedCoursesCount: paginatedCourses.length,
     filters: state.filters,
   });
-  
+
   // Convert EnhancedCourse to Course for the grid component
   const coursesForGrid = paginatedCourses.map((course: EnhancedCourse) => ({
     id: course.id,
@@ -47,7 +47,13 @@ export function CourseGridEnhanced() {
   }));
 
   console.log('CourseGridEnhanced - coursesForGrid:', coursesForGrid.length, coursesForGrid.slice(0, 2));
-  console.log('CourseGridEnhanced - sample course slugs:', paginatedCourses.slice(0, 3).map(c => ({ title: c.title, slug: c.slug })));
+  console.log(
+    'CourseGridEnhanced - sample course slugs:',
+    paginatedCourses.slice(0, 3).map((c) => ({
+      title: c.title,
+      slug: c.slug,
+    })),
+  );
 
   return <CourseGrid courses={coursesForGrid} loading={state.isLoading} />;
 }

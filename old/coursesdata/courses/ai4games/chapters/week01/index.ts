@@ -6,27 +6,9 @@ import LectureEntity = Api.LectureEntity;
 import ChapterEntity = Api.ChapterEntity;
 
 const week01lectures: LectureEntity[] = [];
-week01lectures.push(
-  createLecture(
-    '1-1',
-    'randomness',
-    'Random and Noise',
-    'Random and Noise!',
-    lecture01,
-    1,
-  ) as LectureEntity,
-);
+week01lectures.push(createLecture('1-1', 'randomness', 'Random and Noise', 'Random and Noise!', lecture01, 1) as LectureEntity);
 
-week01lectures.push(
-  createLecture(
-    '1-2',
-    'readings01',
-    'Readings for Week 1',
-    'Readings for Week 1',
-    readings01,
-    2,
-  ) as LectureEntity,
-);
+week01lectures.push(createLecture('1-2', 'readings01', 'Readings for Week 1', 'Readings for Week 1', readings01, 2) as LectureEntity);
 
 const Chapter01 = createChapter(
   '1',

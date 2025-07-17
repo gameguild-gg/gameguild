@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import 'reveal.js/dist/reveal.css';
 import 'reveal.js/dist/theme/white.css';
@@ -27,12 +26,8 @@ const RevealJS: React.FC<RevealJSProps> = ({ content }) => {
       try {
         // Importação dinâmica
         const revealModule = await import('reveal.js');
-        const markdownModule = await import(
-          'reveal.js/plugin/markdown/markdown.esm.js'
-        );
-        const highlightModule = await import(
-          'reveal.js/plugin/highlight/highlight.esm.js'
-        );
+        const markdownModule = await import('reveal.js/plugin/markdown/markdown.esm.js');
+        const highlightModule = await import('reveal.js/plugin/highlight/highlight.esm.js');
 
         Reveal = revealModule.default;
         Markdown = markdownModule.default;

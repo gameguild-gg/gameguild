@@ -1,5 +1,5 @@
-import { Entity, Column, ManyToOne, JoinColumn, DeleteDateColumn } from 'typeorm';
-import { IsOptional, IsEnum, IsDateString, IsBoolean } from 'class-validator';
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { IsBoolean, IsDateString, IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityBase } from '../../common/entities/entity.base';
 import { SubscriptionStatus } from './enums';
@@ -46,7 +46,10 @@ export class UserSubscription extends EntityBase {
   @IsOptional()
   trialEnd?: Date;
 
-  @ApiProperty({ description: 'Soft delete timestamp - when the subscription was deleted, null if active', required: false })
+  @ApiProperty({
+    description: 'Soft delete timestamp - when the subscription was deleted, null if active',
+    required: false,
+  })
   @DeleteDateColumn()
   deletedAt?: Date;
 

@@ -8,35 +8,10 @@ import ChapterEntity = Api.ChapterEntity;
 
 const week01lectures: LectureEntity[] = [];
 week01lectures.push(
-  createLecture(
-    '1-1',
-    'portfolio',
-    'Introduction to Portfolio',
-    'Welcome to the Game Developer Portfolio course!',
-    lecture01,
-    1,
-  ) as LectureEntity,
+  createLecture('1-1', 'portfolio', 'Introduction to Portfolio', 'Welcome to the Game Developer Portfolio course!', lecture01, 1) as LectureEntity,
 );
-week01lectures.push(
-  createLecture(
-    '1-2',
-    'assignment-01',
-    'Assignment 01',
-    'Solo Project Proposal',
-    assignment01,
-    2,
-  ) as LectureEntity,
-);
-week01lectures.push(
-  createLecture(
-    '1-3',
-    'assignment-02',
-    'Assignment 02',
-    'Portfolio Analysis',
-    assignment02,
-    3,
-  ) as LectureEntity,
-);
+week01lectures.push(createLecture('1-2', 'assignment-01', 'Assignment 01', 'Solo Project Proposal', assignment01, 2) as LectureEntity);
+week01lectures.push(createLecture('1-3', 'assignment-02', 'Assignment 02', 'Portfolio Analysis', assignment02, 3) as LectureEntity);
 
 const Chapter01 = createChapter(
   '1',

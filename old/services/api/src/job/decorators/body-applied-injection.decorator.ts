@@ -1,5 +1,4 @@
-import { createParamDecorator, ExecutionContext, BadRequestException } from '@nestjs/common';
-import { JobPostEntity } from '../entities/job-post.entity';
+import { BadRequestException, createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { JobApplicationEntity } from '../entities/job-application.entity';
 import { UserEntity } from 'src/user/entities';
 

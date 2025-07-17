@@ -7,7 +7,7 @@ import { TenantUserGroupManager } from '@/components/legacy/tenant/tenant-user-g
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
-import { Globe, Users, Network, Shield } from 'lucide-react';
+import { Globe, Network, Shield, Users } from 'lucide-react';
 
 export default function TenantManagementPage() {
   const { data: session } = useSession();

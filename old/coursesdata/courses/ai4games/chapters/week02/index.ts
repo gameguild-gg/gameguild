@@ -19,15 +19,7 @@ week02lectures.push(
 );
 
 week02lectures.push(
-  createLecture(
-    '2-2',
-    'wfc',
-    'Wave Function Collapse',
-    'Wave Function Collapse in Games',
-    wfc,
-    2,
-    Api.LectureEntity.Renderer.Enum.Markdown,
-  ) as LectureEntity,
+  createLecture('2-2', 'wfc', 'Wave Function Collapse', 'Wave Function Collapse in Games', wfc, 2, Api.LectureEntity.Renderer.Enum.Markdown) as LectureEntity,
 );
 
 const Chapter02 = createChapter(

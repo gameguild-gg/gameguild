@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/learn/ui/dialog"
-import { Input } from "@/components/learn/ui/input"
-import { Label } from "@/components/learn/ui/label"
-import { Button } from "@/components/learn/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/learn/ui/select"
-import { toast } from "@/components/learn/ui/use-toast"
+import { useEffect, useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/learn/ui/dialog';
+import { Input } from '@/components/learn/ui/input';
+import { Label } from '@/components/learn/ui/label';
+import { Button } from '@/components/learn/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/learn/ui/select';
 
 interface NewFileModalProps {
   isOpen: boolean;
@@ -35,109 +34,105 @@ const languageExtensions: { [key: string]: string } = {
   markdown: 'md',
   json: 'json',
   yaml: 'yaml',
-  xml: 'xml'
-}
+  xml: 'xml',
+};
 
 export default function NewFileModal({ isOpen, onClose, onNewFile, mode, currentFileCount, maxFiles }: NewFileModalProps) {
-  const [newFileName, setNewFileName] = useState('')
-  const [newFileLanguage, setNewFileLanguage] = useState('javascript')
-  const [showLimitWarning, setShowLimitWarning] = useState(false)
+  const [newFileName, setNewFileName] = useState('');
+  const [newFileLanguage, setNewFileLanguage] = useState('javascript');
+  const [showLimitWarning, setShowLimitWarning] = useState(false);
 
   useEffect(() => {
     if (isOpen && currentFileCount >= maxFiles) {
-      setShowLimitWarning(true)
+      setShowLimitWarning(true);
     } else {
-      setShowLimitWarning(false)
+      setShowLimitWarning(false);
     }
-  }, [isOpen, currentFileCount, maxFiles])
+  }, [isOpen, currentFileCount, maxFiles]);
 
   const handleConfirmNewFile = () => {
     if (currentFileCount >= maxFiles) {
-      setShowLimitWarning(true)
-      return
+      setShowLimitWarning(true);
+      return;
     }
 
     if (newFileName) {
-      const extension = languageExtensions[newFileLanguage] || ''
-      const fullFileName = `${newFileName}${extension ? `.${extension}` : ''}`
-      onNewFile(fullFileName, newFileLanguage)
-      onClose()
-      setNewFileName('')
-      setNewFileLanguage('javascript')
+      const extension = languageExtensions[newFileLanguage] || '';
+      const fullFileName = `${newFileName}${extension ? `.${extension}` : ''}`;
+      onNewFile(fullFileName, newFileLanguage);
+      onClose();
+      setNewFileName('');
+      setNewFileLanguage('javascript');
     }
-  }
+  };
 
   const getDialogStyles = () => {
     switch (mode) {
       case 'light':
-        return 'bg-white text-gray-900'
+        return 'bg-white text-gray-900';
       case 'dark':
-        return 'bg-gray-800 text-gray-100'
+        return 'bg-gray-800 text-gray-100';
       case 'high-contrast':
-        return 'bg-black text-yellow-300 border-2 border-yellow-300'
+        return 'bg-black text-yellow-300 border-2 border-yellow-300';
       default:
-        return ''
+        return '';
     }
-  }
+  };
 
   const getInputStyles = () => {
     switch (mode) {
       case 'light':
-        return 'bg-white text-gray-900 border-gray-300'
+        return 'bg-white text-gray-900 border-gray-300';
       case 'dark':
-        return 'bg-gray-700 text-gray-100 border-gray-600'
+        return 'bg-gray-700 text-gray-100 border-gray-600';
       case 'high-contrast':
-        return 'bg-black text-yellow-300 border-yellow-300'
+        return 'bg-black text-yellow-300 border-yellow-300';
       default:
-        return ''
+        return '';
     }
-  }
+  };
 
   const getSelectStyles = () => {
     switch (mode) {
       case 'light':
-        return 'bg-white text-gray-900 border-gray-300'
+        return 'bg-white text-gray-900 border-gray-300';
       case 'dark':
-        return 'bg-gray-800 text-gray-100 border-gray-600' 
+        return 'bg-gray-800 text-gray-100 border-gray-600';
       case 'high-contrast':
-        return 'bg-black text-yellow-300 border-yellow-300'
+        return 'bg-black text-yellow-300 border-yellow-300';
       default:
-        return ''
+        return '';
     }
-  }
+  };
 
   const getSelectContentStyles = () => {
     switch (mode) {
       case 'light':
-        return 'bg-white text-gray-900'
+        return 'bg-white text-gray-900';
       case 'dark':
-        return 'bg-gray-900 text-gray-100' 
+        return 'bg-gray-900 text-gray-100';
       case 'high-contrast':
-        return 'bg-black text-yellow-300 border border-yellow-300'
+        return 'bg-black text-yellow-300 border border-yellow-300';
       default:
-        return ''
+        return '';
     }
-  }
+  };
 
   const getButtonStyles = (variant: 'primary' | 'secondary') => {
-    const baseStyles = 'px-4 py-2 rounded transition-colors duration-200'
+    const baseStyles = 'px-4 py-2 rounded transition-colors duration-200';
     switch (mode) {
       case 'light':
-        return variant === 'primary'
-          ? `${baseStyles} bg-blue-500 text-white hover:bg-blue-600`
-          : `${baseStyles} bg-gray-200 text-gray-800 hover:bg-gray-300`
+        return variant === 'primary' ? `${baseStyles} bg-blue-500 text-white hover:bg-blue-600` : `${baseStyles} bg-gray-200 text-gray-800 hover:bg-gray-300`;
       case 'dark':
-        return variant === 'primary'
-          ? `${baseStyles} bg-blue-600 text-white hover:bg-blue-700`
-          : `${baseStyles} bg-gray-700 text-gray-200 hover:bg-gray-600`
+        return variant === 'primary' ? `${baseStyles} bg-blue-600 text-white hover:bg-blue-700` : `${baseStyles} bg-gray-700 text-gray-200 hover:bg-gray-600`;
       case 'high-contrast':
         return variant === 'primary'
           ? `${baseStyles} bg-yellow-300 text-black hover:bg-yellow-400`
-          : `${baseStyles} bg-gray-800 text-yellow-300 hover:bg-gray-700 border border-yellow-300`
+          : `${baseStyles} bg-gray-800 text-yellow-300 hover:bg-gray-700 border border-yellow-300`;
       default:
-        return ''
+        return '';
     }
-  }
+  };
 
   if (showLimitWarning) {
     return (
@@ -150,16 +145,16 @@ export default function NewFileModal({ isOpen, onClose, onNewFile, mode, current
             <p className={`text-center ${mode === 'high-contrast' ? 'text-yellow-300' : 'text-red-500'}`}>
               You have reached the maximum number of files ({maxFiles}) allowed for this exercise.
             </p>
-            <p className={`text-center mt-2 ${mode === 'high-contrast' ? 'text-yellow-200' : ''}`}>
-              Please delete an existing file before creating a new one.
-            </p>
+            <p className={`text-center mt-2 ${mode === 'high-contrast' ? 'text-yellow-200' : ''}`}>Please delete an existing file before creating a new one.</p>
           </div>
           <DialogFooter>
-            <Button className={getButtonStyles('primary')} onClick={onClose}>Close</Button>
+            <Button className={getButtonStyles('primary')} onClick={onClose}>
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    )
+    );
   }
 
   return (
@@ -188,17 +183,14 @@ export default function NewFileModal({ isOpen, onClose, onNewFile, mode, current
             <Label htmlFor="language" className={`text-right ${mode === 'high-contrast' ? 'text-yellow-300' : ''}`}>
               Language
             </Label>
-            <Select
-              value={newFileLanguage}
-              onValueChange={setNewFileLanguage}
-            >
+            <Select value={newFileLanguage} onValueChange={setNewFileLanguage}>
               <SelectTrigger className={`col-span-3 ${getSelectStyles()}`}>
                 <SelectValue placeholder="Select a language" />
               </SelectTrigger>
               <SelectContent className={getSelectContentStyles()}>
                 {Object.entries(languageExtensions).map(([lang, ext]) => (
-                  <SelectItem 
-                    key={lang} 
+                  <SelectItem
+                    key={lang}
                     value={lang}
                     className={`
                       ${mode === 'high-contrast' ? 'text-yellow-300 hover:bg-gray-800' : ''}
@@ -213,10 +205,11 @@ export default function NewFileModal({ isOpen, onClose, onNewFile, mode, current
           </div>
         </div>
         <DialogFooter>
-          <Button className={getButtonStyles('primary')} onClick={handleConfirmNewFile}>Confirm</Button>
+          <Button className={getButtonStyles('primary')} onClick={handleConfirmNewFile}>
+            Confirm
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

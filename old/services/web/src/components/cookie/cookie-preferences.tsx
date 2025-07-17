@@ -17,19 +17,13 @@ export default function CookiePreferences({}: Readonly<CookiePreferencesProps>) 
           <CookieIcon className="mr-2" />
           <CardTitle>Cookie Preferences</CardTitle>
         </div>
-        <CardDescription>
-          Manage your cookie settings. You can enable or disable different types
-          of cookies below.
-        </CardDescription>
+        <CardDescription>Manage your cookie settings. You can enable or disable different types of cookies below.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
         <div className="flex justify-between items-start space-y-2">
           <div>
             <Label htmlFor="essential">Essential Cookies</Label>
-            <p className="text-dark-gray-500 text-sm">
-              These cookies are necessary for the website to function and cannot
-              be switched off.
-            </p>
+            <p className="text-dark-gray-500 text-sm">These cookies are necessary for the website to function and cannot be switched off.</p>
           </div>
           <Switch className="ml-auto" id="essential" />
         </div>
@@ -37,8 +31,7 @@ export default function CookiePreferences({}: Readonly<CookiePreferencesProps>) 
           <div>
             <Label htmlFor="analytics">Analytics Cookies</Label>
             <p className="text-dark-gray-500 text-sm">
-              These cookies allow us to count visits and traffic sources, so we
-              can measure and improve the performance of our site.
+              These cookies allow us to count visits and traffic sources, so we can measure and improve the performance of our site.
             </p>
           </div>
           <Switch className="ml-auto" id="analytics" />
@@ -46,9 +39,7 @@ export default function CookiePreferences({}: Readonly<CookiePreferencesProps>) 
         <div className="flex justify-between items-start space-y-2">
           <div>
             <Label htmlFor="marketing">Marketing Cookies</Label>
-            <p className="text-dark-gray-500 text-sm">
-              These cookies help us show you relevant ads.
-            </p>
+            <p className="text-dark-gray-500 text-sm">These cookies help us show you relevant ads.</p>
           </div>
           <Switch className="ml-auto" id="marketing" />
         </div>

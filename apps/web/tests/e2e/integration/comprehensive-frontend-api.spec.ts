@@ -1,4 +1,4 @@
-import { test, expect, Page, BrowserContext, Request, Response } from '@playwright/test';
+import { BrowserContext, expect, Page, Request, Response, test } from '@playwright/test';
 
 /**
  * 🚀 COMPREHENSIVE Frontend-to-API E2E Test Suite

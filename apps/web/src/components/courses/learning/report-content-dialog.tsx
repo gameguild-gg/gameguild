@@ -1,19 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@game-guild/ui/components/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
 import { Button } from '@game-guild/ui/components/button';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { RadioGroup, RadioGroupItem } from '@game-guild/ui/components/radio-group';
 import { Label } from '@game-guild/ui/components/label';
-import { Flag, AlertTriangle, Shield, Copyright, Spam } from 'lucide-react';
+import { AlertTriangle, Copyright, Flag, Shield, Spam } from 'lucide-react';
 
 interface ReportContentDialogProps {
   open: boolean;
@@ -56,13 +49,7 @@ const reportReasons = [
   },
 ];
 
-export function ReportContentDialog({
-  open,
-  onOpenChange,
-  contentId,
-  contentTitle,
-  onSubmit,
-}: ReportContentDialogProps) {
+export function ReportContentDialog({ open, onOpenChange, contentId, contentTitle, onSubmit }: ReportContentDialogProps) {
   const [selectedReason, setSelectedReason] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,7 +71,7 @@ export function ReportContentDialog({
     }
   };
 
-  const selectedReasonData = reportReasons.find(r => r.id === selectedReason);
+  const selectedReasonData = reportReasons.find((r) => r.id === selectedReason);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -101,34 +88,19 @@ export function ReportContentDialog({
 
         <div className="space-y-4 py-4">
           <div>
-            <Label className="text-sm font-medium text-gray-200 mb-3 block">
-              What's wrong with this content?
-            </Label>
-            <RadioGroup
-              value={selectedReason}
-              onValueChange={setSelectedReason}
-              className="space-y-3"
-            >
+            <Label className="text-sm font-medium text-gray-200 mb-3 block">What's wrong with this content?</Label>
+            <RadioGroup value={selectedReason} onValueChange={setSelectedReason} className="space-y-3">
               {reportReasons.map((reason) => {
                 const IconComponent = reason.icon;
                 return (
                   <div key={reason.id} className="flex items-start space-x-3">
-                    <RadioGroupItem
-                      value={reason.id}
-                      id={reason.id}
-                      className="mt-1"
-                    />
+                    <RadioGroupItem value={reason.id} id={reason.id} className="mt-1" />
                     <div className="flex-1">
-                      <Label
-                        htmlFor={reason.id}
-                        className="flex items-center gap-2 cursor-pointer text-gray-200"
-                      >
+                      <Label htmlFor={reason.id} className="flex items-center gap-2 cursor-pointer text-gray-200">
                         <IconComponent className="h-4 w-4" />
                         {reason.label}
                       </Label>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {reason.description}
-                      </p>
+                      <p className="text-xs text-gray-400 mt-1">{reason.description}</p>
                     </div>
                   </div>
                 );
@@ -161,18 +133,10 @@ export function ReportContentDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="border-gray-600"
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-gray-600">
             Cancel
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!selectedReason.trim() || isSubmitting}
-            className="bg-red-600 hover:bg-red-700"
-          >
+          <Button onClick={handleSubmit} disabled={!selectedReason.trim() || isSubmitting} className="bg-red-600 hover:bg-red-700">
             {isSubmitting ? 'Submitting...' : 'Submit Report'}
           </Button>
         </DialogFooter>

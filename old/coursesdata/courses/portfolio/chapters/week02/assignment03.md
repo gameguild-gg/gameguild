@@ -21,9 +21,9 @@
 ## Grading Criteria
 
 - Prototype Submission (50%):
-    - Wireframe/mockup quality.
-    - Implementation of the first draft with a clear structure and placeholders.
-    - Public v0.dev link shared in the forum or published website.
+  - Wireframe/mockup quality.
+  - Implementation of the first draft with a clear structure and placeholders.
+  - Public v0.dev link shared in the forum or published website.
 - Feedback Quality (50%):
-    - Thoughtfulness and constructiveness of your feedback.
-    - Politeness and adherence to the rule of avoiding over-commented portfolios.
+  - Thoughtfulness and constructiveness of your feedback.
+  - Politeness and adherence to the rule of avoiding over-commented portfolios.

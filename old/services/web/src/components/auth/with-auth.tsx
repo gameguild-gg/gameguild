@@ -4,12 +4,8 @@ import { auth } from '@/auth';
 
 export const dynamic = 'force-dynamic';
 
-export function withAuth<TProps extends PropsWithChildren>(
-  WrappedComponent: ComponentType<TProps>,
-): ComponentType<TProps> {
-  const AuthenticatedComponent = async (
-    props: TProps,
-  ): Promise<ReactElement | null> => {
+export function withAuth<TProps extends PropsWithChildren>(WrappedComponent: ComponentType<TProps>): ComponentType<TProps> {
+  const AuthenticatedComponent = async (props: TProps): Promise<ReactElement | null> => {
     const session = await auth();
 
     if (!session?.user) {

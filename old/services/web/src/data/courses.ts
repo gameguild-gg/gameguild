@@ -21,8 +21,6 @@ courses.forEach((course) => {
 });
 
 // Flatten lectures for easier access if needed
-const allLectures = courses.flatMap((course) =>
-  course.chapters.flatMap((chapter) => chapter.lectures),
-);
+const allLectures = courses.flatMap((course) => course.chapters.flatMap((chapter) => chapter.lectures));
 
 export { courses, allLectures };

@@ -1,6 +1,6 @@
-import { Entity, Column, ManyToOne, Index, DeleteDateColumn } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, Index, ManyToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsNumber, IsDate, IsJSON, ValidateNested } from 'class-validator';
+import { IsDate, IsJSON, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { EntityBase } from '../../common/entities/entity.base';
 import { UserCertificate } from './user-certificate.entity';
@@ -72,6 +72,9 @@ export class CertificateBlockchainAnchor extends EntityBase {
   metadata: object | null;
 
   @DeleteDateColumn()
-  @ApiProperty({ description: 'Soft delete timestamp - when the blockchain anchor was deleted, null if active', required: false })
+  @ApiProperty({
+    description: 'Soft delete timestamp - when the blockchain anchor was deleted, null if active',
+    required: false,
+  })
   deletedAt: Date | null;
 }

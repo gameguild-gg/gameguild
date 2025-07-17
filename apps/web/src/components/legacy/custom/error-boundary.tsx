@@ -1,6 +1,6 @@
 'use client';
 
-import { Component, type ReactNode, type ErrorInfo } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Button } from '@game-guild/ui/components/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
@@ -30,10 +30,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.props.onError?.(error, errorInfo);
   }
-
-  private handleReset = (): void => {
-    this.setState({ hasError: false, error: undefined });
-  };
 
   render(): ReactNode {
     if (this.state.hasError) {
@@ -68,4 +64,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     return this.props.children;
   }
+
+  private handleReset = (): void => {
+    this.setState({ hasError: false, error: undefined });
+  };
 }

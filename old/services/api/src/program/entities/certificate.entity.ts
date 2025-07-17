@@ -1,5 +1,5 @@
-import { Entity, Column, OneToMany, ManyToOne, JoinColumn, Index, DeleteDateColumn } from 'typeorm';
-import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsUrl, IsEnum, IsNumber, IsJSON } from 'class-validator';
+import { Column, DeleteDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { IsBoolean, IsEnum, IsJSON, IsNotEmpty, IsNumber, IsOptional, IsString, IsUrl } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityBase } from '../../common/entities/entity.base';
 import { Program } from './program.entity';
@@ -14,13 +14,21 @@ import { CertificateType, VerificationMethod } from './enums';
 @Index((entity) => [entity.certificateType])
 @Index((entity) => [entity.isActive])
 export class Certificate extends EntityBase {
-  @ApiProperty({ type: () => Program, description: 'Reference to specific program (null for multi-program certificates)', required: false })
+  @ApiProperty({
+    type: () => Program,
+    description: 'Reference to specific program (null for multi-program certificates)',
+    required: false,
+  })
   @ManyToOne(() => Program, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'program_id' })
   @IsOptional()
   program?: Program;
 
-  @ApiProperty({ type: () => Product, description: 'Reference to specific product/bundle (null for cross-product certificates)', required: false })
+  @ApiProperty({
+    type: () => Product,
+    description: 'Reference to specific product/bundle (null for cross-product certificates)',
+    required: false,
+  })
   @ManyToOne(() => Product, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'product_id' })
   @IsOptional()
@@ -83,13 +91,19 @@ export class Certificate extends EntityBase {
   requiresRating: boolean;
 
   @Column('float', { nullable: true })
-  @ApiProperty({ description: 'Minimum rating required if rating is mandatory (1-5 scale), null means any rating accepted', required: false })
+  @ApiProperty({
+    description: 'Minimum rating required if rating is mandatory (1-5 scale), null means any rating accepted',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   minimumRating?: number;
 
   @Column('jsonb', { nullable: true })
-  @ApiProperty({ description: 'JSON template defining feedback form structure when requires_feedback is true', required: false })
+  @ApiProperty({
+    description: 'JSON template defining feedback form structure when requires_feedback is true',
+    required: false,
+  })
   @IsOptional()
   @IsJSON()
   feedbackFormTemplate?: object;
@@ -138,7 +152,10 @@ export class Certificate extends EntityBase {
 
   // Metadata and administration
   @Column('jsonb', { nullable: true })
-  @ApiProperty({ description: 'Additional configuration: custom fields, internationalization, visibility, etc.', required: false })
+  @ApiProperty({
+    description: 'Additional configuration: custom fields, internationalization, visibility, etc.',
+    required: false,
+  })
   @IsOptional()
   @IsJSON()
   metadata?: object;
@@ -154,10 +171,18 @@ export class Certificate extends EntityBase {
 
   // Relations
   @OneToMany(() => UserCertificate, (userCert) => userCert.certificate)
-  @ApiProperty({ type: () => UserCertificate, isArray: true, description: 'User certificates issued from this template' })
+  @ApiProperty({
+    type: () => UserCertificate,
+    isArray: true,
+    description: 'User certificates issued from this template',
+  })
   userCertificates: UserCertificate[];
 
   @OneToMany(() => CertificateTag, (certificateTag) => certificateTag.certificate)
-  @ApiProperty({ type: () => CertificateTag, isArray: true, description: 'Tag relationships associated with this certificate' })
+  @ApiProperty({
+    type: () => CertificateTag,
+    isArray: true,
+    description: 'Tag relationships associated with this certificate',
+  })
   certificateTags: CertificateTag[];
 }

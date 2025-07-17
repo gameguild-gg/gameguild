@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { ContentInteraction, ProgramUser, ProgramContent, Program } from '../../entities';
+import { ContentInteraction, Program, ProgramContent, ProgramUser } from '../../entities';
 
 import { ProgramProgressController } from './program-progress.controller';
 import { ProgramProgressService } from './program-progress.service';

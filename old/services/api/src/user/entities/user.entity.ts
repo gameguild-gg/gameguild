@@ -1,21 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Type } from 'class-transformer';
-import { Column, Entity, Index, JoinColumn, JoinTable, ManyToMany, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 
 import { EntityBase } from '../../common/entities/entity.base';
 import { UserProfileEntity } from '../modules/user-profile/entities/user-profile.entity';
 import { CompetitionSubmissionEntity } from '../../competition/entities/competition.submission.entity';
-import { PostEntity } from '../../cms/entities/post.entity';
 import { IsEmail, IsUsername } from '../../common/decorators/validator.decorator';
 import { IsArray, IsBoolean, IsOptional, ValidateNested } from 'class-validator';
 
 // todo: move to user-profile lots of fields from here
 
-
 @Entity({ name: 'user' })
 export class UserEntity extends EntityBase {
   // Local Sign-in
-  
+
   @ApiProperty()
   @Column({
     unique: true,
@@ -29,7 +27,6 @@ export class UserEntity extends EntityBase {
   @IsUsername()
   username: string;
 
-  
   @Column({
     unique: true,
     nullable: true,
@@ -43,7 +40,6 @@ export class UserEntity extends EntityBase {
   @IsEmail()
   email: string;
 
-  
   @Column({ nullable: false, default: false })
   @ApiProperty()
   @IsBoolean()
@@ -60,44 +56,39 @@ export class UserEntity extends EntityBase {
   passwordSalt: string;
 
   // Social Sign-in
-  
+
   @Column({ nullable: true, unique: true, default: null })
   @ApiProperty()
   @Index({ unique: true })
   facebookId: string;
 
-  
   @Column({ nullable: true, unique: true, default: null })
   @ApiProperty()
   @Index({ unique: true })
   googleId: string;
 
-  
   @Column({ nullable: true, unique: true, default: null })
   @ApiProperty()
   @Index({ unique: true })
   githubId: string;
 
-  
   @Column({ nullable: true, unique: true, default: null })
   @ApiProperty()
   @Index({ unique: true })
   appleId: string;
 
-  
   @Column({ nullable: true, unique: true, default: null })
   @ApiProperty()
   @Index({ unique: true })
   linkedinId: string;
 
-  
   @Column({ nullable: true, unique: true, default: null })
   @ApiProperty()
   @Index({ unique: true })
   twitterId: string;
 
   // Web3 Sign-in
-  
+
   @Column({ nullable: true, unique: true, default: null })
   @ApiProperty()
   @Index({ unique: true })
@@ -125,7 +116,7 @@ export class UserEntity extends EntityBase {
   competitionSubmissions: CompetitionSubmissionEntity[];
 
   // chess elo rank
-  
+
   @Column({ type: 'float', default: 400 })
   @ApiProperty()
   elo: number;

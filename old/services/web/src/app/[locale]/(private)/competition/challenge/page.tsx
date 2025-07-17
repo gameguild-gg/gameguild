@@ -45,9 +45,7 @@ const ChallengePage: React.FC = () => {
     }
 
     if (response.status === 500) {
-      message.error(
-        'Internal server error. Please report this issue to the community.',
-      );
+      message.error('Internal server error. Please report this issue to the community.');
       message.error(JSON.stringify(response.body));
       return;
     }
@@ -82,8 +80,7 @@ const ChallengePage: React.FC = () => {
       return;
     }
     // todo: get user from session
-    const userAgent = (JSON.parse(getCookie('user') as string) as UserEntity)
-      .username;
+    const userAgent = (JSON.parse(getCookie('user') as string) as UserEntity).username;
     if (selectedAgentWhite !== userAgent && selectedAgentBlack !== userAgent) {
       message.error('You must be one of the players.');
       return;
@@ -103,9 +100,7 @@ const ChallengePage: React.FC = () => {
     );
 
     if (response.status === 500) {
-      message.error(
-        'Internal server error. Please report this issue to the community.',
-      );
+      message.error('Internal server error. Please report this issue to the community.');
       message.error(JSON.stringify(response.body));
       setRequestInProgress(false);
       return;
@@ -175,31 +170,15 @@ const ChallengePage: React.FC = () => {
           </Dropdown.Button>
           <Button onClick={challengeBot}>Challenge</Button>
         </Space>
-        {requestInProgress ? (
-          <Typography.Text type="warning">
-            Request in progress. Please wait.
-          </Typography.Text>
-        ) : null}
+        {requestInProgress ? <Typography.Text type="warning">Request in progress. Please wait.</Typography.Text> : null}
         {result ? (
           <>
             <Typography.Paragraph>Match ID: {result.id}</Typography.Paragraph>
-            {result.winner ? (
-              <Typography.Paragraph>
-                Winner: {result.winner}
-              </Typography.Paragraph>
-            ) : null}
-            {result.draw ? (
-              <Typography.Paragraph>Draw</Typography.Paragraph>
-            ) : null}
-            <Typography.Paragraph>
-              White: {result.players[0]}
-            </Typography.Paragraph>
-            <Typography.Paragraph>
-              Black: {result.players[1]}
-            </Typography.Paragraph>
-            <Typography.Paragraph>
-              Last State: {result.finalFen}
-            </Typography.Paragraph>
+            {result.winner ? <Typography.Paragraph>Winner: {result.winner}</Typography.Paragraph> : null}
+            {result.draw ? <Typography.Paragraph>Draw</Typography.Paragraph> : null}
+            <Typography.Paragraph>White: {result.players[0]}</Typography.Paragraph>
+            <Typography.Paragraph>Black: {result.players[1]}</Typography.Paragraph>
+            <Typography.Paragraph>Last State: {result.finalFen}</Typography.Paragraph>
             <Typography.Paragraph>
               Moves:{' '}
               {result.moves.map((move) => (

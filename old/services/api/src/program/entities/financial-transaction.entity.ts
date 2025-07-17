@@ -1,5 +1,5 @@
-import { Entity, Column, ManyToOne, JoinColumn, Index, DeleteDateColumn } from 'typeorm';
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, IsJSON } from 'class-validator';
+import { Column, DeleteDateColumn, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { IsEnum, IsJSON, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityBase } from '../../common/entities/entity.base';
 import { UserEntity } from '../../user/entities/user.entity';
@@ -7,7 +7,7 @@ import { Product } from './product.entity';
 import { ProductPricing } from './product-pricing.entity';
 import { ProductSubscriptionPlan } from './product-subscription-plan.entity';
 import { PromoCode } from './promo-code.entity';
-import { TransactionType, TransactionStatus } from './enums';
+import { TransactionStatus, TransactionType } from './enums';
 
 @Entity('financial_transactions')
 @Index((entity) => [entity.fromUser])
@@ -19,13 +19,21 @@ import { TransactionType, TransactionStatus } from './enums';
 @Index((entity) => [entity.createdAt])
 @Index((entity) => [entity.referrerUser])
 export class FinancialTransaction extends EntityBase {
-  @ApiProperty({ type: () => UserEntity, description: 'Source user, null if system credit or external payment', required: false })
+  @ApiProperty({
+    type: () => UserEntity,
+    description: 'Source user, null if system credit or external payment',
+    required: false,
+  })
   @ManyToOne(() => UserEntity, { nullable: true })
   @JoinColumn({ name: 'from_user_id' })
   @IsOptional()
   fromUser?: UserEntity;
 
-  @ApiProperty({ type: () => UserEntity, description: 'Destination user, null if system debit or external payment', required: false })
+  @ApiProperty({
+    type: () => UserEntity,
+    description: 'Destination user, null if system debit or external payment',
+    required: false,
+  })
   @ManyToOne(() => UserEntity, { nullable: true })
   @JoinColumn({ name: 'to_user_id' })
   @IsOptional()
@@ -37,13 +45,21 @@ export class FinancialTransaction extends EntityBase {
   @IsOptional()
   product?: Product;
 
-  @ApiProperty({ type: () => ProductPricing, description: 'Specific pricing used for this transaction', required: false })
+  @ApiProperty({
+    type: () => ProductPricing,
+    description: 'Specific pricing used for this transaction',
+    required: false,
+  })
   @ManyToOne(() => ProductPricing, { nullable: true })
   @JoinColumn({ name: 'pricing_id' })
   @IsOptional()
   pricing?: ProductPricing;
 
-  @ApiProperty({ type: () => ProductSubscriptionPlan, description: 'Subscription plan for subscription transactions', required: false })
+  @ApiProperty({
+    type: () => ProductSubscriptionPlan,
+    description: 'Subscription plan for subscription transactions',
+    required: false,
+  })
   @ManyToOne(() => ProductSubscriptionPlan, { nullable: true })
   @JoinColumn({ name: 'subscription_plan_id' })
   @IsOptional()
@@ -83,7 +99,10 @@ export class FinancialTransaction extends EntityBase {
   referralCommissionAmount?: number;
 
   @Column({ type: 'enum', enum: TransactionStatus })
-  @ApiProperty({ enum: TransactionStatus, description: 'Current status of this transaction (pending, completed, etc.)' })
+  @ApiProperty({
+    enum: TransactionStatus,
+    description: 'Current status of this transaction (pending, completed, etc.)',
+  })
   @IsEnum(TransactionStatus)
   status: TransactionStatus;
 
@@ -100,12 +119,18 @@ export class FinancialTransaction extends EntityBase {
   paymentProviderTransactionId: string;
 
   @Column('jsonb', { nullable: true })
-  @ApiProperty({ description: 'Additional transaction-specific data such as payment details, items, etc.', required: false })
+  @ApiProperty({
+    description: 'Additional transaction-specific data such as payment details, items, etc.',
+    required: false,
+  })
   @IsOptional()
   @IsJSON()
   metadata?: object;
 
   @DeleteDateColumn()
-  @ApiProperty({ description: 'Soft delete timestamp - when the transaction was deleted, null if active', required: false })
+  @ApiProperty({
+    description: 'Soft delete timestamp - when the transaction was deleted, null if active',
+    required: false,
+  })
   deletedAt: Date | null;
 }

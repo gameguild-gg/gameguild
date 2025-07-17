@@ -1,4 +1,4 @@
-import React, { ReactNode, useRef, useEffect } from 'react';
+import React, { ReactNode, useEffect, useRef } from 'react';
 import { Scrollbars } from 'react-custom-scrollbars-2';
 
 interface CustomScrollbarProps {
@@ -38,21 +38,15 @@ const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children, className, 
 
   useEffect(() => {
     // Log the contentRef to check if it's correctly referencing the child element
-    console.log("contentRef:", contentRef);
+    console.log('contentRef:', contentRef);
   }, []);
 
   return (
     <Scrollbars
       className={className}
-      renderTrackVertical={({ style, ...props }) => (
-        <div {...props} style={{ ...style, ...getTrackStyle(), right: 2, bottom: 2, top: 2, width: 8 }} />
-      )}
-      renderThumbVertical={({ style, ...props }) => (
-        <div {...props} style={{ ...style, ...getThumbStyle(), borderRadius: 4 }} />
-      )}
-      renderView={props => (
-        <div {...props} ref={contentRef} style={{ ...props.style, overflowX: 'hidden' }} />
-      )}
+      renderTrackVertical={({ style, ...props }) => <div {...props} style={{ ...style, ...getTrackStyle(), right: 2, bottom: 2, top: 2, width: 8 }} />}
+      renderThumbVertical={({ style, ...props }) => <div {...props} style={{ ...style, ...getThumbStyle(), borderRadius: 4 }} />}
+      renderView={(props) => <div {...props} ref={contentRef} style={{ ...props.style, overflowX: 'hidden' }} />}
     >
       {children}
     </Scrollbars>
@@ -60,4 +54,3 @@ const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children, className, 
 };
 
 export default CustomScrollbar;
-

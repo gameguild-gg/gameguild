@@ -64,9 +64,7 @@ export default function MatchesPage() {
 
   const [matchesTable, setMatchesTable] = React.useState<DataType[]>([]);
 
-  const [matchesData, setMatchesData] = React.useState<
-    MatchSearchResponseDto[]
-  >([]);
+  const [matchesData, setMatchesData] = React.useState<MatchSearchResponseDto[]>([]);
 
   const [matchesFetched, setMatchesFetched] = React.useState<boolean>(false);
 
@@ -94,9 +92,7 @@ export default function MatchesPage() {
     }
 
     if (response.status === 500) {
-      message.error(
-        'Internal server error. Please report this issue to the community.',
-      );
+      message.error('Internal server error. Please report this issue to the community.');
       message.error(JSON.stringify(response.body));
       return;
     }
@@ -112,12 +108,7 @@ export default function MatchesPage() {
       tableData.push({
         key: i,
         matchId: match.id || '',
-        winner:
-          match.winner == null
-            ? 'DRAW'
-            : match.winner === 'Player1'
-              ? match.players[0]
-              : match.players[1],
+        winner: match.winner == null ? 'DRAW' : match.winner === 'Player1' ? match.players[0] : match.players[1],
         white: match.players[0],
         black: match.players[1],
       });

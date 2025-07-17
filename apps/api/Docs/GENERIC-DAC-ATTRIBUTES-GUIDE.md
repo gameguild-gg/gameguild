@@ -2,26 +2,34 @@
 
 ## Overview
 
-The DAC (Discretionary Access Control) system now supports **generic attributes** that eliminate the need to create resource-specific permission attributes. You can use the generic `RequireResourcePermissionAttribute<TPermission, TResource>` or the backward-compatible `RequireResourcePermissionAttribute<TResource>`.
+The DAC (Discretionary Access Control) system now supports **generic attributes** that eliminate the need to create
+resource-specific permission attributes. You can use the generic
+`RequireResourcePermissionAttribute<TPermission, TResource>` or the backward-compatible
+`RequireResourcePermissionAttribute<TResource>`.
 
 ## Available Generic Attributes
 
 ### 1. Tenant-Level Permission Attribute
+
 ```csharp
 [RequireTenantPermission(PermissionType.Create)]
 ```
+
 **Usage:** Operations that affect the entire tenant (user management, tenant settings)
 
 ### 2. Content-Type Permission Attribute
+
 ```csharp
 [RequireContentTypePermission<Product>(PermissionType.Read)]
 [RequireContentTypePermission<Comment>(PermissionType.Review)]
 ```
+
 **Usage:** Operations on entity collections or types (list all products, create new comment)
 
 ### 3. Resource-Level Permission Attributes
 
 #### Option A: Backward-Compatible Single Parameter (Recommended)
+
 ```csharp
 [RequireResourcePermission<Product>(PermissionType.Update)]
 [RequireResourcePermission<Comment>(PermissionType.Delete)]
@@ -29,6 +37,7 @@ The DAC (Discretionary Access Control) system now supports **generic attributes*
 ```
 
 #### Option B: Explicit Two-Parameter (Type-Safe)
+
 ```csharp
 [RequireResourcePermission<ProductPermission, Product>(PermissionType.Update)]
 [RequireResourcePermission<CommentPermission, Comment>(PermissionType.Delete)]
@@ -191,7 +200,8 @@ Notice how **ProgramContent** operations check **Program permissions** instead o
 public async Task<ProgramContent?> GetProgramContentById(Guid id) { ... }
 ```
 
-This demonstrates the **permission inheritance pattern** where child entities derive authorization from their parent resources.
+This demonstrates the **permission inheritance pattern** where child entities derive authorization from their parent
+resources.
 
 ## How It Works
 
@@ -205,7 +215,8 @@ The generic attributes implement a **3-level hierarchical fallback** system:
 
 ### Automatic Type Resolution
 
-The **backward-compatible single parameter version** (`RequireResourcePermission<TResource>`) automatically resolves the permission entity type based on naming convention:
+The **backward-compatible single parameter version** (`RequireResourcePermission<TResource>`) automatically resolves the
+permission entity type based on naming convention:
 
 - `Product` → `ProductPermission`
 - `Comment` → `CommentPermission`
@@ -216,6 +227,7 @@ If you need explicit control or the naming convention doesn't work, use the **tw
 ## Migration from Specific Attributes
 
 ### Before (Resource-Specific Attributes - No Longer Needed)
+
 ```csharp
 // These approaches required creating separate attribute classes for each resource type
 [HttpGet("{id}")]
@@ -226,6 +238,7 @@ public async Task<ActionResult<Comment>> GetComment(Guid id) { ... } // Needed C
 ```
 
 ### After (Generic Attributes - Current Approach)
+
 ```csharp
 // Single generic implementation works for all resource types
 [RequireResourcePermission<Product>(PermissionType.Update)]
@@ -255,6 +268,7 @@ public async Task<ActionResult> GetCommentsForReview() { }
 ### 3. Consistent Parameter Naming
 
 Use consistent route parameter names for resource IDs:
+
 ```csharp
 // Preferred - uses default "id" parameter
 [HttpGet("{id}")]
@@ -318,7 +332,7 @@ To add DAC support for a new resource type:
 
 - The system now uses only generic attributes - no resource-specific attributes are needed
 - All functionality is provided by the three core generic attributes:
-  - `RequireTenantPermissionAttribute` 
+  - `RequireTenantPermissionAttribute`
   - `RequireContentTypePermissionAttribute<TResource>`
   - `RequireResourcePermissionAttribute<TResource>` or `RequireResourcePermissionAttribute<TPermission, TResource>`
 - Clean, maintainable architecture with no deprecated code
@@ -333,6 +347,7 @@ To add DAC support for a new resource type:
 ## Conclusion
 
 The generic DAC attributes provide:
+
 - ✅ **Scalability**: No need to create attributes for each resource type
 - ✅ **Type Safety**: Generic parameters ensure compile-time type checking
 - ✅ **Flexibility**: Both explicit and inferred permission type resolution

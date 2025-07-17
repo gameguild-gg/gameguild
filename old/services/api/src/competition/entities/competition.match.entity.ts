@@ -13,7 +13,6 @@ export enum CompetitionWinner {
   Player2 = 'Player2',
 }
 
-
 @Entity()
 export class CompetitionMatchEntity extends EntityBase {
   @ManyToOne(() => CompetitionRunEntity, (competitionRun) => competitionRun.matches)
@@ -47,14 +46,12 @@ export class CompetitionMatchEntity extends EntityBase {
   })
   winner: CompetitionWinner;
 
-  
   @Column({ type: 'float', nullable: false })
   @ApiProperty()
   @IsNotEmpty({ message: 'error.IsNotEmpty: p1Points should not be empty' })
   @IsNumber({}, { message: 'error.IsNumber: p1Points should be a number' })
   p1Points: number;
 
-  
   @Column({ type: 'float', nullable: false })
   @ApiProperty()
   @IsNotEmpty({ message: 'error.IsNotEmpty: p2Points should not be empty' })

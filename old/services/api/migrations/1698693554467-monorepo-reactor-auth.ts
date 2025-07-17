@@ -1,7 +1,7 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class MonorepoReactorAuth1698693554467 implements MigrationInterface {
-  name = 'MonorepoReactorAuth1698693554467'
+  name = 'MonorepoReactorAuth1698693554467';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`ALTER TABLE "user" DROP CONSTRAINT "FK_f44d0cd18cfd80b0fed7806c3b7"`);
@@ -10,7 +10,9 @@ export class MonorepoReactorAuth1698693554467 implements MigrationInterface {
     await queryRunner.query(`DROP INDEX "public"."IDX_894de7603d8172deb20277c6f5"`);
     await queryRunner.query(`DROP INDEX "public"."IDX_788a2da76636d59b8803d21968"`);
     await queryRunner.query(`DROP INDEX "public"."IDX_4bbf141d0e9ef16b100fedf1a4"`);
-    await queryRunner.query(`CREATE TABLE "user_profile" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_f44d0cd18cfd80b0fed7806c3b7" PRIMARY KEY ("id"))`);
+    await queryRunner.query(
+      `CREATE TABLE "user_profile" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_f44d0cd18cfd80b0fed7806c3b7" PRIMARY KEY ("id"))`,
+    );
     await queryRunner.query(`ALTER TABLE "proposal" DROP COLUMN "title"`);
     await queryRunner.query(`ALTER TABLE "proposal" DROP COLUMN "slug"`);
     await queryRunner.query(`ALTER TABLE "proposal" DROP COLUMN "description"`);
@@ -47,8 +49,11 @@ export class MonorepoReactorAuth1698693554467 implements MigrationInterface {
     await queryRunner.query(`CREATE INDEX "IDX_788a2da76636d59b8803d21968" ON "proposal" ("type") `);
     await queryRunner.query(`CREATE INDEX "IDX_894de7603d8172deb20277c6f5" ON "proposal" ("slug") `);
     await queryRunner.query(`CREATE INDEX "IDX_175c19011e5f5baf732945a311" ON "proposal" ("title") `);
-    await queryRunner.query(`ALTER TABLE "vote" ADD CONSTRAINT "FK_db85a3f8526cbaa2865faf8637f" FOREIGN KEY ("proposal_id") REFERENCES "proposal"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-    await queryRunner.query(`ALTER TABLE "user" ADD CONSTRAINT "FK_f44d0cd18cfd80b0fed7806c3b7" FOREIGN KEY ("profile_id") REFERENCES "user-profile"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+    await queryRunner.query(
+      `ALTER TABLE "vote" ADD CONSTRAINT "FK_db85a3f8526cbaa2865faf8637f" FOREIGN KEY ("proposal_id") REFERENCES "proposal"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user" ADD CONSTRAINT "FK_f44d0cd18cfd80b0fed7806c3b7" FOREIGN KEY ("profile_id") REFERENCES "user-profile"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
   }
-
 }

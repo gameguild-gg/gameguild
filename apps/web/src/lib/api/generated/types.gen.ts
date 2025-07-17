@@ -2,6 +2,262 @@
 
 export type AccessLevel = 0 | 1 | 2 | 5 | 6;
 
+export type AchievementReadable = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  rowVersion?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  name: string;
+  description?: string | null;
+  category: string;
+  type: string;
+  iconUrl?: string | null;
+  color?: string | null;
+  points?: number;
+  isActive?: boolean;
+  isSecret?: boolean;
+  isRepeatable?: boolean;
+  conditions?: string | null;
+  displayOrder?: number;
+  tenantId?: string | null;
+  userAchievements?: Array<UserAchievementReadable> | null;
+  levels?: Array<AchievementLevelReadable> | null;
+  prerequisites?: Array<AchievementPrerequisiteReadable> | null;
+};
+
+export type AchievementWritable = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  rowVersion?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  name: string;
+  description?: string | null;
+  category: string;
+  type: string;
+  iconUrl?: string | null;
+  color?: string | null;
+  points?: number;
+  isActive?: boolean;
+  isSecret?: boolean;
+  isRepeatable?: boolean;
+  conditions?: string | null;
+  displayOrder?: number;
+  tenantId?: string | null;
+  userAchievements?: Array<UserAchievementWritable> | null;
+  levels?: Array<AchievementLevelWritable> | null;
+  prerequisites?: Array<AchievementPrerequisiteWritable> | null;
+};
+
+export type AchievementDto = {
+  id?: string;
+  name?: string | null;
+  description?: string | null;
+  category?: string | null;
+  type?: string | null;
+  iconUrl?: string | null;
+  color?: string | null;
+  points?: number;
+  isActive?: boolean;
+  isSecret?: boolean;
+  isRepeatable?: boolean;
+  conditions?: string | null;
+  displayOrder?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  levels?: Array<AchievementLevelDto> | null;
+  prerequisites?: Array<AchievementDto> | null;
+};
+
+export type AchievementLevelReadable = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  rowVersion?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  achievementId?: string;
+  achievement?: AchievementReadable;
+  level?: number;
+  name: string;
+  description?: string | null;
+  requiredProgress?: number;
+  points?: number;
+  iconUrl?: string | null;
+  color?: string | null;
+};
+
+export type AchievementLevelWritable = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  rowVersion?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  achievementId?: string;
+  achievement?: AchievementWritable;
+  level?: number;
+  name: string;
+  description?: string | null;
+  requiredProgress?: number;
+  points?: number;
+  iconUrl?: string | null;
+  color?: string | null;
+};
+
+export type AchievementLevelDto = {
+  id?: string;
+  level?: number;
+  name?: string | null;
+  description?: string | null;
+  requiredProgress?: number;
+  points?: number;
+  iconUrl?: string | null;
+  color?: string | null;
+};
+
+export type AchievementPopularityDto = {
+  achievementId?: string;
+  name?: string | null;
+  timesEarned?: number;
+  earnRate?: number;
+};
+
+export type AchievementPrerequisiteReadable = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  rowVersion?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  achievementId?: string;
+  achievement?: AchievementReadable;
+  prerequisiteAchievementId?: string;
+  prerequisiteAchievement?: AchievementReadable;
+  requiresCompletion?: boolean;
+  minimumLevel?: number | null;
+};
+
+export type AchievementPrerequisiteWritable = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  rowVersion?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  achievementId?: string;
+  achievement?: AchievementWritable;
+  prerequisiteAchievementId?: string;
+  prerequisiteAchievement?: AchievementWritable;
+  requiresCompletion?: boolean;
+  minimumLevel?: number | null;
+};
+
+export type AchievementPrerequisiteCheckDto = {
+  achievementId?: string;
+  canEarn?: boolean;
+  prerequisites?: Array<PrerequisiteStatusDto> | null;
+};
+
+export type AchievementProgressReadable = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  rowVersion?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  userId?: string;
+  user?: UserReadable;
+  achievementId?: string;
+  achievement?: AchievementReadable;
+  currentProgress?: number;
+  targetProgress?: number;
+  lastUpdated?: string;
+  isCompleted?: boolean;
+  context?: string | null;
+  tenantId?: string | null;
+};
+
+export type AchievementProgressWritable = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  rowVersion?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  userId?: string;
+  user?: UserWritable;
+  achievementId?: string;
+  achievement?: AchievementWritable;
+  currentProgress?: number;
+  targetProgress?: number;
+  lastUpdated?: string;
+  isCompleted?: boolean;
+  context?: string | null;
+  tenantId?: string | null;
+};
+
+export type AchievementProgressDtoReadable = {
+  id?: string;
+  userId?: string;
+  achievementId?: string;
+  achievement?: AchievementDto;
+  currentProgress?: number;
+  targetProgress?: number;
+  readonly progressPercentage?: number;
+  lastUpdated?: string;
+  isCompleted?: boolean;
+  context?: string | null;
+};
+
+export type AchievementProgressDtoWritable = {
+  id?: string;
+  userId?: string;
+  achievementId?: string;
+  achievement?: AchievementDto;
+  currentProgress?: number;
+  targetProgress?: number;
+  lastUpdated?: string;
+  isCompleted?: boolean;
+  context?: string | null;
+};
+
+export type AchievementStatisticsDto = {
+  achievementId?: string;
+  totalEarned?: number;
+  totalUsers?: number;
+  inProgress?: number;
+  completionRate?: number;
+  firstEarned?: string | null;
+  lastEarned?: string | null;
+  totalAchievements?: number;
+  activeAchievements?: number;
+  secretAchievements?: number;
+  repeatableAchievements?: number;
+  usersWithAchievements?: number;
+  totalAchievementsAwarded?: number;
+  achievementsByCategory?: {
+    [key: string]: number;
+  } | null;
+  achievementsByType?: {
+    [key: string]: number;
+  } | null;
+  mostEarnedAchievements?: Array<AchievementPopularityDto> | null;
+  rarestAchievements?: Array<AchievementPopularityDto> | null;
+};
+
+export type AchievementsPageDto = {
+  achievements?: Array<AchievementDto> | null;
+  totalCount?: number;
+  pageNumber?: number;
+  pageSize?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+};
+
 export type ActivityGradeReadable = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
@@ -104,6 +360,22 @@ export type AutoAssignUsersDto = {
   userEmails?: Array<string> | null;
   tenantId?: string | null;
   forceReassignment?: boolean;
+};
+
+export type AwardAchievementRequest = {
+  userId?: string;
+  level?: number | null;
+  progress?: number;
+  maxProgress?: number;
+  context?: string | null;
+  notifyUser?: boolean;
+};
+
+export type BulkAwardAchievementRequest = {
+  userIds?: Array<string> | null;
+  userCriteria?: string | null;
+  context?: string | null;
+  notifyUsers?: boolean;
 };
 
 export type BulkDeleteTenantsDto = {
@@ -570,6 +842,34 @@ export type ContentTypePermissionWritable = {
   tenant?: TenantWritable;
   expiresAt?: string | null;
   contentType: string;
+};
+
+export type CreateAchievementCommand = {
+  name?: string | null;
+  description?: string | null;
+  category?: string | null;
+  type?: string | null;
+  iconUrl?: string | null;
+  color?: string | null;
+  points?: number;
+  isActive?: boolean;
+  isSecret?: boolean;
+  isRepeatable?: boolean;
+  conditions?: string | null;
+  displayOrder?: number;
+  tenantId?: string | null;
+  levels?: Array<CreateAchievementLevelCommand> | null;
+  prerequisiteAchievementIds?: Array<string> | null;
+};
+
+export type CreateAchievementLevelCommand = {
+  level?: number;
+  name?: string | null;
+  description?: string | null;
+  requiredProgress?: number;
+  points?: number;
+  iconUrl?: string | null;
+  color?: string | null;
 };
 
 export type CreateActivityGradeDto = {
@@ -1260,6 +1560,15 @@ export type PostsPageDto = {
   pageSize?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
+};
+
+export type PrerequisiteStatusDto = {
+  prerequisiteAchievementId?: string;
+  name?: string | null;
+  isMet?: boolean;
+  requiresCompletion?: boolean;
+  minimumLevel?: number | null;
+  userLevel?: number | null;
 };
 
 export type PricingDto = {
@@ -2625,6 +2934,10 @@ export type RevenueReport = {
   dataPoints?: Array<RevenueDataPoint> | null;
 };
 
+export type RevokeAchievementRequest = {
+  reason?: string | null;
+};
+
 export type RevokeTokenRequestDto = {
   refreshToken?: string | null;
 };
@@ -3396,6 +3709,29 @@ export type UnpublishProjectResultWritable = {
   error?: string | null;
 };
 
+export type UpdateAchievementCommand = {
+  achievementId?: string;
+  name?: string | null;
+  description?: string | null;
+  category?: string | null;
+  type?: string | null;
+  iconUrl?: string | null;
+  color?: string | null;
+  points?: number | null;
+  isActive?: boolean | null;
+  isSecret?: boolean | null;
+  isRepeatable?: boolean | null;
+  conditions?: string | null;
+  displayOrder?: number | null;
+  userId?: string;
+};
+
+export type UpdateAchievementProgressRequest = {
+  progressIncrement?: number;
+  context?: string | null;
+  autoAward?: boolean;
+};
+
 export type UpdateActivityGradeDto = {
   grade?: number | null;
   feedback?: string | null;
@@ -3602,6 +3938,103 @@ export type UserWritable = {
   credentials?: Array<CredentialWritable> | null;
   tenantPermissions?: Array<TenantPermissionWritable> | null;
   contentTypePermissions?: Array<ContentTypePermissionWritable> | null;
+};
+
+export type UserAchievementReadable = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  rowVersion?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  userId?: string;
+  user?: UserReadable;
+  achievementId?: string;
+  achievement?: AchievementReadable;
+  earnedAt?: string;
+  level?: number | null;
+  progress?: number;
+  maxProgress?: number;
+  isCompleted?: boolean;
+  isNotified?: boolean;
+  context?: string | null;
+  pointsEarned?: number;
+  tenantId?: string | null;
+  earnCount?: number;
+};
+
+export type UserAchievementWritable = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  rowVersion?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  userId?: string;
+  user?: UserWritable;
+  achievementId?: string;
+  achievement?: AchievementWritable;
+  earnedAt?: string;
+  level?: number | null;
+  progress?: number;
+  maxProgress?: number;
+  isCompleted?: boolean;
+  isNotified?: boolean;
+  context?: string | null;
+  pointsEarned?: number;
+  tenantId?: string | null;
+  earnCount?: number;
+};
+
+export type UserAchievementDto = {
+  id?: string;
+  userId?: string;
+  achievementId?: string;
+  achievement?: AchievementDto;
+  earnedAt?: string;
+  level?: number | null;
+  progress?: number;
+  maxProgress?: number;
+  isCompleted?: boolean;
+  isNotified?: boolean;
+  context?: string | null;
+  pointsEarned?: number;
+  earnCount?: number;
+};
+
+export type UserAchievementSummaryDtoReadable = {
+  userId?: string;
+  totalAchievements?: number;
+  totalPoints?: number;
+  completedAchievements?: number;
+  inProgressAchievements?: number;
+  recentAchievements?: Array<UserAchievementDto> | null;
+  nearCompletion?: Array<AchievementProgressDtoReadable> | null;
+  achievementsByCategory?: {
+    [key: string]: number;
+  } | null;
+};
+
+export type UserAchievementSummaryDtoWritable = {
+  userId?: string;
+  totalAchievements?: number;
+  totalPoints?: number;
+  completedAchievements?: number;
+  inProgressAchievements?: number;
+  recentAchievements?: Array<UserAchievementDto> | null;
+  nearCompletion?: Array<AchievementProgressDtoWritable> | null;
+  achievementsByCategory?: {
+    [key: string]: number;
+  } | null;
+};
+
+export type UserAchievementsPageDto = {
+  userAchievements?: Array<UserAchievementDto> | null;
+  totalCount?: number;
+  pageNumber?: number;
+  pageSize?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
 };
 
 export type UserCertificateReadable = {
@@ -3924,6 +4357,199 @@ export type UserSubscriptionSummaryDto = {
 export type VerificationMethod = 0 | 1 | 2;
 
 export type Visibility = 0 | 1 | 2;
+
+export type GetApiAchievementsLeaderboardData = {
+  body?: never;
+  path?: never;
+  query?: {
+    category?: string;
+    limit?: number;
+    orderBy?: string;
+    timeFrame?: string;
+  };
+  url: '/api/achievements/leaderboard';
+};
+
+export type GetApiAchievementsLeaderboardResponses = {
+  /**
+   * OK
+   */
+  200: Array<UserAchievementSummaryDtoReadable>;
+};
+
+export type GetApiAchievementsLeaderboardResponse = GetApiAchievementsLeaderboardResponses[keyof GetApiAchievementsLeaderboardResponses];
+
+export type GetApiAchievementsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    pageNumber?: number;
+    pageSize?: number;
+    category?: string;
+    type?: string;
+    isActive?: boolean;
+    isSecret?: boolean;
+    includeSecrets?: boolean;
+    searchTerm?: string;
+    orderBy?: string;
+    descending?: boolean;
+    tenantId?: string;
+  };
+  url: '/api/Achievements';
+};
+
+export type GetApiAchievementsResponses = {
+  /**
+   * OK
+   */
+  200: AchievementsPageDto;
+};
+
+export type GetApiAchievementsResponse = GetApiAchievementsResponses[keyof GetApiAchievementsResponses];
+
+export type PostApiAchievementsData = {
+  body?: CreateAchievementCommand;
+  path?: never;
+  query?: never;
+  url: '/api/Achievements';
+};
+
+export type PostApiAchievementsResponses = {
+  /**
+   * OK
+   */
+  200: AchievementReadable;
+};
+
+export type PostApiAchievementsResponse = PostApiAchievementsResponses[keyof PostApiAchievementsResponses];
+
+export type DeleteApiAchievementsByAchievementIdData = {
+  body?: never;
+  path: {
+    achievementId: string;
+  };
+  query?: never;
+  url: '/api/Achievements/{achievementId}';
+};
+
+export type DeleteApiAchievementsByAchievementIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetApiAchievementsByAchievementIdData = {
+  body?: never;
+  path: {
+    achievementId: string;
+  };
+  query?: {
+    includeLevels?: boolean;
+    includePrerequisites?: boolean;
+  };
+  url: '/api/Achievements/{achievementId}';
+};
+
+export type GetApiAchievementsByAchievementIdResponses = {
+  /**
+   * OK
+   */
+  200: AchievementReadable;
+};
+
+export type GetApiAchievementsByAchievementIdResponse = GetApiAchievementsByAchievementIdResponses[keyof GetApiAchievementsByAchievementIdResponses];
+
+export type PutApiAchievementsByAchievementIdData = {
+  body?: UpdateAchievementCommand;
+  path: {
+    achievementId: string;
+  };
+  query?: never;
+  url: '/api/Achievements/{achievementId}';
+};
+
+export type PutApiAchievementsByAchievementIdResponses = {
+  /**
+   * OK
+   */
+  200: AchievementReadable;
+};
+
+export type PutApiAchievementsByAchievementIdResponse = PutApiAchievementsByAchievementIdResponses[keyof PutApiAchievementsByAchievementIdResponses];
+
+export type PostApiAchievementsByAchievementIdAwardData = {
+  body?: AwardAchievementRequest;
+  path: {
+    achievementId: string;
+  };
+  query?: never;
+  url: '/api/Achievements/{achievementId}/award';
+};
+
+export type PostApiAchievementsByAchievementIdAwardResponses = {
+  /**
+   * OK
+   */
+  200: UserAchievementReadable;
+};
+
+export type PostApiAchievementsByAchievementIdAwardResponse =
+  PostApiAchievementsByAchievementIdAwardResponses[keyof PostApiAchievementsByAchievementIdAwardResponses];
+
+export type PostApiAchievementsByAchievementIdBulkAwardData = {
+  body?: BulkAwardAchievementRequest;
+  path: {
+    achievementId: string;
+  };
+  query?: never;
+  url: '/api/Achievements/{achievementId}/bulk-award';
+};
+
+export type PostApiAchievementsByAchievementIdBulkAwardResponses = {
+  /**
+   * OK
+   */
+  200: Array<UserAchievementReadable>;
+};
+
+export type PostApiAchievementsByAchievementIdBulkAwardResponse =
+  PostApiAchievementsByAchievementIdBulkAwardResponses[keyof PostApiAchievementsByAchievementIdBulkAwardResponses];
+
+export type GetApiAchievementsByAchievementIdStatisticsData = {
+  body?: never;
+  path: {
+    achievementId: string;
+  };
+  query?: never;
+  url: '/api/Achievements/{achievementId}/statistics';
+};
+
+export type GetApiAchievementsByAchievementIdStatisticsResponses = {
+  /**
+   * OK
+   */
+  200: AchievementStatisticsDto;
+};
+
+export type GetApiAchievementsByAchievementIdStatisticsResponse =
+  GetApiAchievementsByAchievementIdStatisticsResponses[keyof GetApiAchievementsByAchievementIdStatisticsResponses];
+
+export type GetApiAchievementsStatisticsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/Achievements/statistics';
+};
+
+export type GetApiAchievementsStatisticsResponses = {
+  /**
+   * OK
+   */
+  200: AchievementStatisticsDto;
+};
+
+export type GetApiAchievementsStatisticsResponse = GetApiAchievementsStatisticsResponses[keyof GetApiAchievementsStatisticsResponses];
 
 export type PostApiProgramsByProgramIdActivityGradesData = {
   body?: CreateActivityGradeDto;
@@ -8707,6 +9333,176 @@ export type PostTestingFeedbackByFeedbackIdQualityData = {
 };
 
 export type PostTestingFeedbackByFeedbackIdQualityResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetApiUsersByUserIdAchievementsData = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    pageNumber?: number;
+    pageSize?: number;
+    category?: string;
+    type?: string;
+    isCompleted?: boolean;
+    earnedAfter?: string;
+    earnedBefore?: string;
+    orderBy?: string;
+    descending?: boolean;
+  };
+  url: '/api/users/{userId}/achievements';
+};
+
+export type GetApiUsersByUserIdAchievementsResponses = {
+  /**
+   * OK
+   */
+  200: UserAchievementsPageDto;
+};
+
+export type GetApiUsersByUserIdAchievementsResponse = GetApiUsersByUserIdAchievementsResponses[keyof GetApiUsersByUserIdAchievementsResponses];
+
+export type GetApiUsersByUserIdAchievementsProgressData = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    category?: string;
+    onlyInProgress?: boolean;
+  };
+  url: '/api/users/{userId}/achievements/progress';
+};
+
+export type GetApiUsersByUserIdAchievementsProgressResponses = {
+  /**
+   * OK
+   */
+  200: Array<AchievementProgressDtoReadable>;
+};
+
+export type GetApiUsersByUserIdAchievementsProgressResponse =
+  GetApiUsersByUserIdAchievementsProgressResponses[keyof GetApiUsersByUserIdAchievementsProgressResponses];
+
+export type GetApiUsersByUserIdAchievementsSummaryData = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    recentLimit?: number;
+    nearCompletionThreshold?: number;
+  };
+  url: '/api/users/{userId}/achievements/summary';
+};
+
+export type GetApiUsersByUserIdAchievementsSummaryResponses = {
+  /**
+   * OK
+   */
+  200: UserAchievementSummaryDtoReadable;
+};
+
+export type GetApiUsersByUserIdAchievementsSummaryResponse =
+  GetApiUsersByUserIdAchievementsSummaryResponses[keyof GetApiUsersByUserIdAchievementsSummaryResponses];
+
+export type GetApiUsersByUserIdAchievementsAvailableData = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    pageNumber?: number;
+    pageSize?: number;
+    category?: string;
+    onlyEligible?: boolean;
+  };
+  url: '/api/users/{userId}/achievements/available';
+};
+
+export type GetApiUsersByUserIdAchievementsAvailableResponses = {
+  /**
+   * OK
+   */
+  200: AchievementsPageDto;
+};
+
+export type GetApiUsersByUserIdAchievementsAvailableResponse =
+  GetApiUsersByUserIdAchievementsAvailableResponses[keyof GetApiUsersByUserIdAchievementsAvailableResponses];
+
+export type PostApiUsersByUserIdAchievementsByAchievementIdProgressData = {
+  body?: UpdateAchievementProgressRequest;
+  path: {
+    userId: string;
+    achievementId: string;
+  };
+  query?: never;
+  url: '/api/users/{userId}/achievements/{achievementId}/progress';
+};
+
+export type PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses = {
+  /**
+   * OK
+   */
+  200: AchievementProgressReadable;
+};
+
+export type PostApiUsersByUserIdAchievementsByAchievementIdProgressResponse =
+  PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses[keyof PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses];
+
+export type GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData = {
+  body?: never;
+  path: {
+    userId: string;
+    achievementId: string;
+  };
+  query?: never;
+  url: '/api/users/{userId}/achievements/{achievementId}/prerequisites';
+};
+
+export type GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses = {
+  /**
+   * OK
+   */
+  200: AchievementPrerequisiteCheckDto;
+};
+
+export type GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponse =
+  GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses[keyof GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses];
+
+export type PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedData = {
+  body?: never;
+  path: {
+    userId: string;
+    userAchievementId: string;
+  };
+  query?: never;
+  url: '/api/users/{userId}/achievements/{userAchievementId}/mark-notified';
+};
+
+export type PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type DeleteApiUsersByUserIdAchievementsByUserAchievementIdData = {
+  body?: RevokeAchievementRequest;
+  path: {
+    userId: string;
+    userAchievementId: string;
+  };
+  query?: never;
+  url: '/api/users/{userId}/achievements/{userAchievementId}';
+};
+
+export type DeleteApiUsersByUserIdAchievementsByUserAchievementIdResponses = {
   /**
    * OK
    */

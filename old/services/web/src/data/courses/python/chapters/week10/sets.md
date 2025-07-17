@@ -1,6 +1,7 @@
 # Sets in Python
 
-Sets are unordered collections of unique elements in Python. They're useful for removing duplicates and performing mathematical set operations.
+Sets are unordered collections of unique elements in Python. They're useful for removing duplicates and performing
+mathematical set operations.
 
 ## Set Syntax
 
@@ -23,13 +24,13 @@ numbers = set([1, 2, 3, 3, 2, 1])  # Will contain {1, 2, 3}
 Sets, lists, and dictionaries serve different purposes:
 :::
 
-| Sets | Lists | Dictionaries            |
-|------|-------|-------------------------|
-| Unordered collection | Ordered collection | Key-value pairs         |
-| No duplicates | Can contain duplicates | Unique keys with values |
-| No indexing | Access by index | Access by key           |
+| Sets                    | Lists                     | Dictionaries            |
+|-------------------------|---------------------------|-------------------------|
+| Unordered collection    | Ordered collection        | Key-value pairs         |
+| No duplicates           | Can contain duplicates    | Unique keys with values |
+| No indexing             | Access by index           | Access by key           |
 | Fast membership testing | Slower membership testing | Fast key lookup         |
-| Mutable | Mutable | Mutable                 |
+| Mutable                 | Mutable                   | Mutable                 |
 
 ## Basic Set Methods
 
@@ -101,6 +102,7 @@ Sets can only contain hashable (immutable) objects. Lists, dictionaries, and oth
 
 ::: tip "Common Applications"
 Sets are ideal for:
+
 - Removing duplicates from sequences
 - Membership testing
 - Mathematical set operations
@@ -111,7 +113,8 @@ Sets are ideal for:
 {
 "description": "Implement a function to find and return only unique elements from a list.",
 "language": "python",
-"code": "def get_unique_elements(items):\n    # your code goes here\n\n# do not modify the code below\nprint(get_unique_elements([1, 2, 3, 1, 2, 4, 5]))",
+"code": "def get_unique_elements(items):\n # your code goes here\n\n# do not modify the code below\nprint(
+get_unique_elements([1, 2, 3, 1, 2, 4, 5]))",
 "expectedOutput": "{1, 2, 3, 4, 5}"
 }
 !!!
@@ -120,7 +123,8 @@ Sets are ideal for:
 {
 "description": "Create a function that takes two lists and returns elements that appear in either list but not both.",
 "language": "python",
-"code": "def symmetric_difference(list1, list2):\n    # your code goes here\n\n# do not modify the code below\nprint(symmetric_difference([1, 2, 3, 4], [3, 4, 5, 6]))",
+"code": "def symmetric_difference(list1, list2):\n # your code goes here\n\n# do not modify the code below\nprint(
+symmetric_difference([1, 2, 3, 4], [3, 4, 5, 6]))",
 "expectedOutput": "{1, 2, 5, 6}"
 }
 !!!
@@ -129,7 +133,8 @@ Sets are ideal for:
 {
 "description": "Write a function to check if one set is a subset of another set.",
 "language": "python",
-"code": "def is_subset(set1, set2):\n    # your code goes here\n\n# do not modify the code below\nprint(is_subset({1, 2}, {1, 2, 3, 4}))\nprint(is_subset({1, 5}, {1, 2, 3, 4}))",
+"code": "def is_subset(set1, set2):\n # your code goes here\n\n# do not modify the code below\nprint(is_subset({1, 2},
+{1, 2, 3, 4}))\nprint(is_subset({1, 5}, {1, 2, 3, 4}))",
 "expectedOutput": "True\nFalse"
 }
 !!!
@@ -142,4 +147,5 @@ Like lists and dictionaries, Python supports set comprehensions:
 even_squares = {x*x for x in range(10) if x % 2 == 0}
 # Result: {0, 4, 16, 36, 64}
 ```
+
 :::

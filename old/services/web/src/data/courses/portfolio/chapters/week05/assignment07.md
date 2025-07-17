@@ -9,7 +9,9 @@
 
 ::: warning "Important"
 
-You must deliver a 30s demo reel about your work and yourself for the Champlain Senior show. This is a requirement, but you can deliver more in-depth videos to be showcased on the Game Studio showcase website as extra material. So focus on making a 30s demo reel for the Senior show first, and if you have time, make a longer one for the website.
+You must deliver a 30s demo reel about your work and yourself for the Champlain Senior show. This is a requirement, but
+you can deliver more in-depth videos to be showcased on the Game Studio showcase website as extra material. So focus on
+making a 30s demo reel for the Senior show first, and if you have time, make a longer one for the website.
 
 :::
 
@@ -72,25 +74,25 @@ effectively demonstrate various aspects of your technical work, such as:
 ## Submission Instructions
 
 1. **Upload Your Storyboard/Script:**
-    - Post a link to your storyboard or script in the designated forum thread.
-    - **Important:** Make sure you use the Miro storyboard template
-      from [Miro Storyboard Templates](https://miro.com/templates/storyboard/) for your submission.
-    - Ensure that the miro document is accessible.
+  - Post a link to your storyboard or script in the designated forum thread.
+  - **Important:** Make sure you use the Miro storyboard template
+    from [Miro Storyboard Templates](https://miro.com/templates/storyboard/) for your submission.
+  - Ensure that the miro document is accessible.
 
 2. **Share Your Initial Clips:**
-    - Provide a link (or links) to your recorded clips. Acceptable platforms include YouTube (unlisted), Vimeo, or any
-      other suitable video-sharing service.
-    - Make sure the clips are clearly organized and properly labeled.
+  - Provide a link (or links) to your recorded clips. Acceptable platforms include YouTube (unlisted), Vimeo, or any
+    other suitable video-sharing service.
+  - Make sure the clips are clearly organized and properly labeled.
 
 3. **Peer Feedback:**
-    - Review and comment on **at least five** of your peers’ submissions.
-    - **Priority:** Focus on providing feedback to students who have received fewer replies to ensure that everyone gets
-      valuable input.
-    - Your feedback should be constructive, highlighting strengths and offering specific suggestions for improvement.
+  - Review and comment on **at least five** of your peers’ submissions.
+  - **Priority:** Focus on providing feedback to students who have received fewer replies to ensure that everyone gets
+    valuable input.
+  - Your feedback should be constructive, highlighting strengths and offering specific suggestions for improvement.
 
 4. **Deadline:**
-    - All submissions (both storyboard/script and initial clips) must be posted by the assigned deadline.
-    - Late submissions may impact your overall evaluation and the opportunity for peer feedback.
+  - All submissions (both storyboard/script and initial clips) must be posted by the assigned deadline.
+  - Late submissions may impact your overall evaluation and the opportunity for peer feedback.
 
 ---
 
@@ -99,18 +101,18 @@ effectively demonstrate various aspects of your technical work, such as:
 Your work will be evaluated based on the following:
 
 - **Completeness:**
-    - Does your storyboard/script cover all essential components (intro, highlights, outro)?
-    - Are your initial clips of sufficient quality and variety?
+  - Does your storyboard/script cover all essential components (intro, highlights, outro)?
+  - Are your initial clips of sufficient quality and variety?
 
 - **Clarity and Organization:**
-    - Is your storyboard/script well-structured and easy to follow?
-    - Are your clips clearly labeled and organized?
+  - Is your storyboard/script well-structured and easy to follow?
+  - Are your clips clearly labeled and organized?
 
 - **Creativity and Technical Merit:**
-    - Does your content effectively showcase your technical skills and creative vision?
-    - Are the selected clips representative of your best work?
+  - Does your content effectively showcase your technical skills and creative vision?
+  - Are the selected clips representative of your best work?
 
 - **Peer Engagement:**
-    - Did you provide thoughtful and constructive feedback on at least five peer submissions?
-    - Did you prioritize students who received fewer replies?
+  - Did you provide thoughtful and constructive feedback on at least five peer submissions?
+  - Did you prioritize students who received fewer replies?
 

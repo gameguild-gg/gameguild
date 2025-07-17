@@ -30,19 +30,19 @@ export default function SignIn() {
         '__Host-next-auth.csrf-token',
         'session',
         'token',
-        'user'
+        'user',
       ];
-      
-      cookiesToClear.forEach(cookieName => {
+
+      cookiesToClear.forEach((cookieName) => {
         Cookies.remove(cookieName);
         Cookies.remove(cookieName, { path: '/' });
         document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
       });
-      
+
       // Clear localStorage and sessionStorage
       localStorage.clear();
       sessionStorage.clear();
-      
+
       // Remove the cache buster parameter from the URL
       window.history.replaceState({}, document.title, '/connect');
     }

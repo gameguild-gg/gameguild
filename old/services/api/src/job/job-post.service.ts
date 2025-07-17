@@ -8,7 +8,6 @@ import { WithRolesService } from '../cms/with-roles.service';
 import { CrudRequest, Override } from '@dataui/crud';
 import { JobPostCreateDto } from './dtos/job-post-create.dto';
 import { JobTagEntity } from './entities/job-tag.entity';
-import { UserEntity } from 'src/user/entities';
 import { JobPostWithApplicationsDto } from './dtos/job-post-with-applications.dto';
 
 @Injectable()

@@ -12,6 +12,7 @@ export type CompressImageServiceConfig = {
 @Injectable()
 export class CompressImageService {
   constructor(private filecache: FileCacheStorageService) {}
+
   async compressJpeg(filePath: string, config: Partial<CompressImageServiceConfig>) {
     const { width = null, height = null, quality = 70, fit = 'cover' } = config;
     let compressedFilename: string;

@@ -15,13 +15,10 @@ export default function LeaderboardPage(): JSX.Element {
     basePath: process.env.NEXT_PUBLIC_API_URL,
   });
 
-  const [leaderboardData, setLeaderboardData] = React.useState<
-    ChessLeaderboardResponseEntryDto[]
-  >([]);
+  const [leaderboardData, setLeaderboardData] = React.useState<ChessLeaderboardResponseEntryDto[]>([]);
 
   // flag for leaderboard fetched
-  const [leaderboardFetched, setLeaderboardFetched] =
-    React.useState<boolean>(false);
+  const [leaderboardFetched, setLeaderboardFetched] = React.useState<boolean>(false);
 
   useEffect(() => {
     if (!leaderboardFetched) getLeaderboardData();
@@ -47,9 +44,7 @@ export default function LeaderboardPage(): JSX.Element {
     }
 
     if (response.status === 500) {
-      message.error(
-        'Internal server error. Please report this issue to the community.',
-      );
+      message.error('Internal server error. Please report this issue to the community.');
       message.error(JSON.stringify(response.body));
       setLeaderboardFetched(true);
       return;
@@ -87,16 +82,14 @@ export default function LeaderboardPage(): JSX.Element {
   ];
 
   if (leaderboardFetched) {
-    const data: DataType[] = leaderboardData.map(
-      (entry: ChessLeaderboardResponseEntryDto, index: number) => {
-        return {
-          key: index,
-          rank: index + 1,
-          username: entry.username,
-          elo: entry.elo.toFixed(2),
-        };
-      },
-    );
+    const data: DataType[] = leaderboardData.map((entry: ChessLeaderboardResponseEntryDto, index: number) => {
+      return {
+        key: index,
+        rank: index + 1,
+        username: entry.username,
+        elo: entry.elo.toFixed(2),
+      };
+    });
     return (
       <>
         <Typography.Title>Leaderboard</Typography.Title>

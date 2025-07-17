@@ -6,7 +6,7 @@ import { TransferOwnershipRequestDto } from './dtos/transfer-ownership.request.d
 import { WithRolesService } from './with-roles.service';
 import { UserEntity } from '../user/entities';
 import { EditorRequestDto } from './dtos/editor-request.dto';
-import { ApiOkResponse, ApiOperation, getSchemaPath } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
 export class WithRolesController<T extends WithRolesEntity = never> {
   constructor(private withRolesService: WithRolesService<T>) {}

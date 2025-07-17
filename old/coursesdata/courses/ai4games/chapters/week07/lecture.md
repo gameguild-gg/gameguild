@@ -8,19 +8,22 @@
 
 :::
 
-In game development, AI is not just about decision-making and NPC behaviors. Today, we will focuse metrics, analytics, A/B testing, and rules testing tools, which are essential for making data-driven decisions in game AI.
+In game development, AI is not just about decision-making and NPC behaviors. Today, we will focuse metrics, analytics,
+A/B testing, and rules testing tools, which are essential for making data-driven decisions in game AI.
 
 ## 1. Metrics & Analytics
 
 ::: tip "Reasoning"
 
-Metrics and analytics are essential for understanding player behavior, engagement, and monetization. They help us refine mechanics, improve engagement, and optimize monetization.
+Metrics and analytics are essential for understanding player behavior, engagement, and monetization. They help us refine
+mechanics, improve engagement, and optimize monetization.
 
-::: 
+:::
 
 ### Why do we track metrics?
 
-Game AI needs to be measurable to refine mechanics, improve engagement, and optimize monetization. Metrics help us understand:
+Game AI needs to be measurable to refine mechanics, improve engagement, and optimize monetization. Metrics help us
+understand:
 
 - **Player behavior** (movement heatmaps, session length)
 - **Difficulty balancing** (win/loss rates, completion rates)
@@ -37,7 +40,8 @@ Game AI needs to be measurable to refine mechanics, improve engagement, and opti
 
 ::: example "Example"
 
-A multiplayer shooter game might use analytics to track hotspots where players die most often, helping developers rebalance map layouts.
+A multiplayer shooter game might use analytics to track hotspots where players die most often, helping developers
+rebalance map layouts.
 
 :::
 
@@ -45,11 +49,13 @@ A multiplayer shooter game might use analytics to track hotspots where players d
 
 ::: tip "Definition"
 
-A/B testing or split testing is a method of comparing two versions of a webpage or app against each other to determine which one performs better. It is a powerful tool for optimizing game mechanics, monetization, and engagement.
+A/B testing or split testing is a method of comparing two versions of a webpage or app against each other to determine
+which one performs better. It is a powerful tool for optimizing game mechanics, monetization, and engagement.
 
 :::
 
-A/B testing (or split testing) is a controlled experiment where players are divided into groups experiencing different versions of a feature.
+A/B testing (or split testing) is a controlled experiment where players are divided into groups experiencing different
+versions of a feature.
 
 ### A/B testing process
 
@@ -98,7 +104,8 @@ Tools for AI-driven analytics:
 
 ## 4. Machinations: AI-Driven Game Balancing
 
-[Machinations](https://machinations.io) is a visual modeling tool that simulates and analyzes game systems, economies, and AI-driven mechanics before implementation.
+[Machinations](https://machinations.io) is a visual modeling tool that simulates and analyzes game systems, economies,
+and AI-driven mechanics before implementation.
 
 ### Use Cases:
 
@@ -108,16 +115,18 @@ Tools for AI-driven analytics:
 
 ### In Class activity
 
-We are going to use as an example a campaign for Willy Wonka’s Chocolate Factory. Will you be able to visit Wonka’s factory with a limited amount of money and time?
+We are going to use as an example a campaign for Willy Wonka’s Chocolate Factory. Will you be able to visit Wonka’s
+factory with a limited amount of money and time?
 
-1. Access [Willy Wonka at Machinations](https://my.machinations.io/d/willy-wonka-factory-trip/f1c2402d6b5711efa81906fdf218a24f) 
+1.
+Access [Willy Wonka at Machinations](https://my.machinations.io/d/willy-wonka-factory-trip/f1c2402d6b5711efa81906fdf218a24f)
 2. Play with the sliders and see how the game changes.
 3. Answer the following questions:
-   - What is the goal of the game?
-   - What are the resources available?
-   - What are the actions that the player can take?
-   - What are the rewards?
-   - What are the penalties?
+  - What is the goal of the game?
+  - What are the resources available?
+  - What are the actions that the player can take?
+  - What are the rewards?
+  - What are the penalties?
 
 ## In Class activity 2
 
@@ -130,5 +139,7 @@ Discussion Questions:
 
 ## Conclusion
 
-Incorporating metrics, analytics, A/B testing, and machinations allows developers to optimize AI and enhance player experience. Whether using GameAnalytics for behavioral insights, A/B testing difficulty settings with Firebase, or simulating AI economies in Machinations.io, these tools help refine and perfect game AI.
+Incorporating metrics, analytics, A/B testing, and machinations allows developers to optimize AI and enhance player
+experience. Whether using GameAnalytics for behavioral insights, A/B testing difficulty settings with Firebase, or
+simulating AI economies in Machinations.io, these tools help refine and perfect game AI.
 

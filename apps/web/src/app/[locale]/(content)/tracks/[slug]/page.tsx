@@ -8,22 +8,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/compone
 import { Progress } from '@game-guild/ui/components/progress';
 import {
   ArrowLeft,
-  BookOpen,
-  Code,
-  Palette,
-  Gamepad2,
-  Clock,
-  Users,
-  Trophy,
-  Star,
-  CheckCircle,
-  Play,
   Award,
-  Target,
-  Lightbulb,
+  BookOpen,
+  CheckCircle,
+  Clock,
+  Code,
   ExternalLink,
+  Gamepad2,
+  Lightbulb,
+  Palette,
+  Play,
+  Star,
+  Target,
+  Trophy,
+  Users,
 } from 'lucide-react';
-import { TRACK_LEVELS, TRACK_LEVEL_COLORS, Track } from '@/components/legacy/types/tracks';
+import { Track, TRACK_LEVEL_COLORS, TRACK_LEVELS } from '@/components/legacy/types/tracks';
 
 // Type definitions for real course data
 interface RealCourse {

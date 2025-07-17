@@ -1,11 +1,11 @@
 'use client';
 
-import { LogOut, MoveUpRight, Settings, CreditCard, FileText, User } from 'lucide-react';
+import { CreditCard, FileText, LogOut, MoveUpRight, Settings, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
-import { useSession, signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { getApiUsersById } from '@/lib/api/generated';
 import { createClient } from '@/lib/api/generated/client';

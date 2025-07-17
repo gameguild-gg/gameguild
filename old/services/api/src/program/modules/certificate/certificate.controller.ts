@@ -1,7 +1,7 @@
-import { Controller, Post, Get, Body, Param, UseGuards, HttpStatus, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Body, Controller, Get, HttpStatus, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CertificateService } from './certificate.service';
-import { CreateCertificateTemplateDto, IssueCertificateDto, CertificateVerificationResult } from './dtos';
+import { CertificateVerificationResult, CreateCertificateTemplateDto, IssueCertificateDto } from './dtos';
 import { AuthGuard, AuthType } from '../../../auth/guards/auth.guard';
 
 @ApiTags('certificates')

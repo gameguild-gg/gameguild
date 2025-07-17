@@ -12,18 +12,11 @@ import { CompetitionsApi } from '@/types/course-types';
 const { Dragger } = Upload;
 
 // todo: convert to typescript style
-const canUpload = function(file: any, fileList: any[] = []) {
+const canUpload = function (file: any, fileList: any[] = []) {
   const isZip = file.type === 'application/zip' || file.name.endsWith('.zip');
-  const isCppOrH =
-    file.name.endsWith('.cpp') ||
-    file.name.endsWith('.h') ||
-    file.name.endsWith('.hpp');
+  const isCppOrH = file.name.endsWith('.cpp') || file.name.endsWith('.h') || file.name.endsWith('.hpp');
   const isCppOrHList = fileList.every((file) => {
-    return (
-      file.name.endsWith('.cpp') ||
-      file.name.endsWith('.h') ||
-      file.name.endsWith('.hpp')
-    );
+    return file.name.endsWith('.cpp') || file.name.endsWith('.h') || file.name.endsWith('.hpp');
   });
 
   return isCppOrH || isZip || isCppOrHList;
@@ -54,15 +47,9 @@ export default function SubmitPage() {
       const isListOfCppOrH =
         files.length > 1 &&
         files.every((file) => {
-          return (
-            file.name.endsWith('.cpp') ||
-            file.name.endsWith('.h') ||
-            file.name.endsWith('.hpp')
-          );
+          return file.name.endsWith('.cpp') || file.name.endsWith('.h') || file.name.endsWith('.hpp');
         });
-      const isZip =
-        files.length === 1 &&
-        (files[0].type === 'application/zip' || files[0].name.endsWith('.zip'));
+      const isZip = files.length === 1 && (files[0].type === 'application/zip' || files[0].name.endsWith('.zip'));
 
       let zipData: ArrayBuffer | undefined = undefined;
       if (isZip) {
@@ -75,16 +62,10 @@ export default function SubmitPage() {
           return !file.dir && file.name.indexOf('/') === -1;
         });
         const zipFilesAreCppOrH = zipFiles.every((file) => {
-          return (
-            file.name.endsWith('.cpp') ||
-            file.name.endsWith('.h') ||
-            file.name.endsWith('.hpp')
-          );
+          return file.name.endsWith('.cpp') || file.name.endsWith('.h') || file.name.endsWith('.hpp');
         });
         if (!zipFilesAtRoot || !zipFilesAreCppOrH) {
-          message.error(
-            'zip file must contain only cpp and h files at the root',
-          );
+          message.error('zip file must contain only cpp and h files at the root');
           return;
         } else zipData = await files[0].arrayBuffer();
       } else if (isListOfCppOrH) {
@@ -146,9 +127,7 @@ export default function SubmitPage() {
     beforeUpload(file, fileList) {
       const allowed = canUpload(file, fileList);
       if (!allowed) {
-        message.error(
-          'You can only upload a single .zip file or a list of .cpp and .h files!',
-        );
+        message.error('You can only upload a single .zip file or a list of .cpp and .h files!');
       } else setFiles(fileList);
       return allowed || Upload.LIST_IGNORE;
     },
@@ -158,41 +137,24 @@ export default function SubmitPage() {
   return (
     <Space direction={'vertical'}>
       <Typography.Title level={1}>Submit Bot</Typography.Title>
+      <Typography.Paragraph>You can either select all .h and .cpp files or zip them all together.</Typography.Paragraph>
+      <Typography.Paragraph>If you submit via zip, all files should be in the root of the zip file.</Typography.Paragraph>
       <Typography.Paragraph>
-        You can either select all .h and .cpp files or zip them all together.
-      </Typography.Paragraph>
-      <Typography.Paragraph>
-        If you submit via zip, all files should be in the root of the zip file.
-      </Typography.Paragraph>
-      <Typography.Paragraph>
-        Hit submit button and wait for the submission to be validated. It might
-        take a while if the server have restarted or if it is your first
-        submission.
+        Hit submit button and wait for the submission to be validated. It might take a while if the server have restarted or if it is your first submission.
       </Typography.Paragraph>
       <Typography.Paragraph></Typography.Paragraph>
       <Dragger {...uploadProps}>
         <p className="ant-upload-drag-icon">
           <InboxOutlined />
         </p>
-        <p className="ant-upload-text">
-          Click or drag file(s) to this area to upload
-        </p>
+        <p className="ant-upload-text">Click or drag file(s) to this area to upload</p>
         <p className="ant-upload-hint">
-          Support for a single "zip" file or a list of ".cpp" and ".h" files.
-          Strictly prohibit from uploading other files. If you exploit this, you
-          will be banned. I am logging everything you do. I am always watching.
-          I am always listening. I am always waiting. I might even be watching
-          you from behind. Look behind yourself. NOW!
+          Support for a single "zip" file or a list of ".cpp" and ".h" files. Strictly prohibit from uploading other files. If you exploit this, you will be
+          banned. I am logging everything you do. I am always watching. I am always listening. I am always waiting. I might even be watching you from behind.
+          Look behind yourself. NOW!
         </p>
       </Dragger>
-      <Button
-        icon={<UploadOutlined />}
-        type="primary"
-        block
-        danger
-        size="large"
-        onClick={() => doUpload()}
-      >
+      <Button icon={<UploadOutlined />} type="primary" block danger size="large" onClick={() => doUpload()}>
         Submit
       </Button>
       {files.map((file) => (

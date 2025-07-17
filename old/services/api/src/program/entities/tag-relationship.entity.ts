@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn, DeleteDateColumn } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityBase } from '../../common/entities/entity.base';
@@ -17,7 +17,10 @@ export class TagRelationship extends EntityBase {
   @IsOptional()
   metadata?: Record<string, any>;
 
-  @ApiProperty({ description: 'Soft delete timestamp - when the relationship was deleted, null if active', required: false })
+  @ApiProperty({
+    description: 'Soft delete timestamp - when the relationship was deleted, null if active',
+    required: false,
+  })
   @DeleteDateColumn()
   deletedAt?: Date;
 

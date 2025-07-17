@@ -31,13 +31,7 @@ interface Applicant {
 }
 
 // Define the stages
-const stages = [
-  'Applied',
-  'Application Accepted',
-  'Tests and Interviews',
-  'Hiring Proposal Sent',
-  'Hiring Process Complete',
-];
+const stages = ['Applied', 'Application Accepted', 'Tests and Interviews', 'Hiring Proposal Sent', 'Hiring Process Complete'];
 
 export default function JobApplicantManagement({ params }) {
   const [jobPost, setJobPost] = useState<Api.JobPostEntity>();
@@ -82,7 +76,10 @@ export default function JobApplicantManagement({ params }) {
   ]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [currentAction, setCurrentAction] = useState<{ type: 'advance' | 'reject', applicantId: number } | null>(null);
+  const [currentAction, setCurrentAction] = useState<{
+    type: 'advance' | 'reject';
+    applicantId: number;
+  } | null>(null);
 
   const { toast } = useToast();
   const router = useRouter();
@@ -142,8 +139,8 @@ export default function JobApplicantManagement({ params }) {
 
   const confirmAction = () => {
     if (currentAction) {
-      setApplicants(prevApplicants =>
-        prevApplicants.map(applicant => {
+      setApplicants((prevApplicants) =>
+        prevApplicants.map((applicant) => {
           if (applicant.id === currentAction.applicantId) {
             if (currentAction.type === 'advance') {
               return { ...applicant, stage: Math.min(applicant.stage + 1, stages.length - 1) };
@@ -182,56 +179,51 @@ export default function JobApplicantManagement({ params }) {
         <div key={stageIndex} className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">{stage}</h2>
           {applicants
-          .filter(applicant => applicant.stage === stageIndex)
-          .map(applicant => (
-            <Card key={applicant.id} className={`mb-4 rounded-none ${applicant.rejected ? 'opacity-50' : ''}`}>
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="flex items-center">
-                  <Avatar>
-                    <AvatarImage src={applicant.image} alt={applicant.name} />
-                    <AvatarFallback>{applicant.name[0]}</AvatarFallback>
-                  </Avatar>
-                  <span className="ml-3 font-medium">{applicant.name}</span>
-                </div>
-                <div className="space-x-2">
-                  <a target="_blank" href={process.env.NEXT_PUBLIC_WEB_URL + '/user/' + '(user.username)'}
-                     rel="noopener noreferrer">{/*Open on new tab*/}
-                    <Button variant="outline">
-                      <UserSearch />Check Profile
+            .filter((applicant) => applicant.stage === stageIndex)
+            .map((applicant) => (
+              <Card key={applicant.id} className={`mb-4 rounded-none ${applicant.rejected ? 'opacity-50' : ''}`}>
+                <CardContent className="flex items-center justify-between p-4">
+                  <div className="flex items-center">
+                    <Avatar>
+                      <AvatarImage src={applicant.image} alt={applicant.name} />
+                      <AvatarFallback>{applicant.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <span className="ml-3 font-medium">{applicant.name}</span>
+                  </div>
+                  <div className="space-x-2">
+                    <a target="_blank" href={process.env.NEXT_PUBLIC_WEB_URL + '/user/' + '(user.username)'} rel="noopener noreferrer">
+                      {/*Open on new tab*/}
+                      <Button variant="outline">
+                        <UserSearch />
+                        Check Profile
+                      </Button>
+                    </a>
+                    <Button onClick={() => handleAction('advance', applicant.id)} disabled={applicant.rejected || applicant.stage === stages.length - 1}>
+                      <ArrowRight /> Advance Process
                     </Button>
-                  </a>
-                  <Button
-                    onClick={() => handleAction('advance', applicant.id)}
-                    disabled={applicant.rejected || applicant.stage === stages.length - 1}
-                  >
-                    <ArrowRight /> Advance Process
-                  </Button>
-                  <Button variant="outline">
-                    <RotateCcw />Undo
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleAction('reject', applicant.id)}
-                    disabled={applicant.rejected}
-                  >
-                    <X />Reject
-                  </Button>
-                  <Button variant="outline">
-                    <RotateCcw />Undo
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    <Button variant="outline">
+                      <RotateCcw />
+                      Undo
+                    </Button>
+                    <Button variant="destructive" onClick={() => handleAction('reject', applicant.id)} disabled={applicant.rejected}>
+                      <X />
+                      Reject
+                    </Button>
+                    <Button variant="outline">
+                      <RotateCcw />
+                      Undo
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
         </div>
       ))}
 
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {currentAction?.type === 'advance' ? 'Advance Applicant' : 'Reject Applicant'}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{currentAction?.type === 'advance' ? 'Advance Applicant' : 'Reject Applicant'}</AlertDialogTitle>
             <AlertDialogDescription>
               {currentAction?.type === 'advance'
                 ? 'Are you sure you want to advance this applicant to the next stage?'
