@@ -741,7 +741,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       Id = Guid.NewGuid(),
       Title = $"Test Project {Guid.NewGuid().ToString()[..8]}",
       TenantId = tenant.Id,
-      CreatedBy = user.Id,
+      CreatedBy = user,
       CreatedAt = DateTime.UtcNow
     };
 
@@ -749,7 +749,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       Id = Guid.NewGuid(),
       VersionNumber = "v1.0.0",
       ProjectId = project.Id,
-      CreatedBy = user.Id,
+      CreatedBy = user,
       CreatedAt = DateTime.UtcNow
     };
 
@@ -759,7 +759,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       Description = "Test description",
       ProjectVersionId = projectVersion.Id,
       DownloadUrl = "https://example.com/game.zip",
-      InstructionsType = InstructionsType.Inline,
+      InstructionsType = InstructionType.Text,
       InstructionsContent = "Test instructions",
       FeedbackFormContent = "Feedback form",
       MaxTesters = 8,
@@ -767,9 +767,8 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       StartDate = DateTime.UtcNow,
       EndDate = DateTime.UtcNow.AddDays(7),
       Status = status,
-      CreatedBy = user.Id,
-      CreatedAt = DateTime.UtcNow,
-      TenantId = tenant.Id
+      CreatedById = user.Id,
+      CreatedAt = DateTime.UtcNow
     };
 
     context.Projects.Add(project);
