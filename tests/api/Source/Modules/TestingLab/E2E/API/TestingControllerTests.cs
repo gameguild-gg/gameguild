@@ -737,21 +737,8 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
   #region Helper Methods for New Tests
 
   private async Task<TestingRequest> SeedTestingRequestAsync(ApplicationDbContext context, UserModel user, TenantModel tenant, TestingRequestStatus status = TestingRequestStatus.Draft) {
-    var project = new ProjectModel {
-      Id = Guid.NewGuid(),
-      Title = $"Test Project {Guid.NewGuid().ToString()[..8]}",
-      TenantId = tenant.Id,
-      CreatedBy = user,
-      CreatedAt = DateTime.UtcNow
-    };
-
-    var projectVersion = new ProjectVersionModel {
-      Id = Guid.NewGuid(),
-      VersionNumber = "v1.0.0",
-      ProjectId = project.Id,
-      CreatedBy = user,
-      CreatedAt = DateTime.UtcNow
-    };
+    var project = await CreateTestProjectAsync(context, user.Id);
+    var projectVersion = await CreateTestProjectVersionAsync(context, project.Id, user.Id);
 
     var testingRequest = new TestingRequest {
       Id = Guid.NewGuid(),
@@ -771,8 +758,6 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       CreatedAt = DateTime.UtcNow
     };
 
-    context.Projects.Add(project);
-    context.Set<ProjectVersionModel>().Add(projectVersion);
     context.TestingRequests.Add(testingRequest);
     await context.SaveChangesAsync();
 
@@ -782,17 +767,30 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
   private async Task<TestingSession> SeedTestingSessionAsync(ApplicationDbContext context, UserModel user, TenantModel tenant) {
     var testingRequest = await SeedTestingRequestAsync(context, user, tenant);
 
+    var location = new TestingLocation {
+      Id = Guid.NewGuid(),
+      Name = "Test Location",
+      MaxTestersCapacity = 10,
+      MaxProjectsCapacity = 5,
+      Status = LocationStatus.Active,
+      CreatedAt = DateTime.UtcNow
+    };
+
+    context.TestingLocations.Add(location);
+
     var session = new TestingSession {
       Id = Guid.NewGuid(),
       TestingRequestId = testingRequest.Id,
-      StartTime = DateTime.UtcNow,
-      EndTime = DateTime.UtcNow.AddHours(2),
-      LocationId = null,
-      MaxParticipants = 8,
-      CurrentParticipants = 0,
-      CreatedBy = user.Id,
-      CreatedAt = DateTime.UtcNow,
-      TenantId = tenant.Id
+      LocationId = location.Id,
+      SessionName = "Test Session",
+      SessionDate = DateTime.UtcNow.AddDays(2),
+      StartTime = DateTime.UtcNow.AddDays(2).AddHours(9),
+      EndTime = DateTime.UtcNow.AddDays(2).AddHours(17),
+      MaxTesters = 5,
+      Status = SessionStatus.Scheduled,
+      ManagerUserId = user.Id,
+      CreatedById = user.Id,
+      CreatedAt = DateTime.UtcNow
     };
 
     context.TestingSessions.Add(session);
@@ -802,18 +800,29 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
   }
 
   private async Task<TestingFeedback> SeedTestingFeedbackAsync(ApplicationDbContext context, TestingRequest testingRequest, UserModel user) {
+    // Create a feedback form first
+    var feedbackForm = new TestingFeedbackForm {
+      Id = Guid.NewGuid(),
+      TestingRequestId = testingRequest.Id,
+      FormSchema = "{}",
+      CreatedAt = DateTime.UtcNow
+    };
+
+    context.TestingFeedbackForms.Add(feedbackForm);
+
     var feedback = new TestingFeedback {
       Id = Guid.NewGuid(),
       TestingRequestId = testingRequest.Id,
-      SubmittedBy = user.Id,
-      FeedbackResponses = "{\"rating\": 4, \"comments\": \"Good game\"}",
+      FeedbackFormId = feedbackForm.Id,
+      UserId = user.Id,
+      TestingContext = TestingContext.InPerson,
+      FeedbackData = "{\"rating\": 4, \"comments\": \"Good game\"}",
       OverallRating = 4,
       WouldRecommend = true,
       AdditionalNotes = "Test feedback",
-      SubmittedAt = DateTime.UtcNow,
       IsReported = false,
-      QualityRating = FeedbackQuality.Medium,
-      TenantId = testingRequest.TenantId
+      QualityRating = FeedbackQuality.Neutral,
+      CreatedAt = DateTime.UtcNow
     };
 
     context.TestingFeedback.Add(feedback);
