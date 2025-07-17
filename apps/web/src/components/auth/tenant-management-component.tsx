@@ -101,16 +101,20 @@ export function TenantManagementComponent() {
           <CardDescription>Create a new tenant for your organization</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={createFormAction} className="space-y-4">
-            {createState.error && (
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            handleCreateTenant(formData);
+          }} className="space-y-4">
+            {error && (
               <Alert variant="destructive">
-                <AlertDescription>{createState.error}</AlertDescription>
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
-            {createState.success && createState.data && (
+            {createSuccess && (
               <Alert>
-                <AlertDescription>Tenant "{(createState.data as TenantResponse).name}" created successfully!</AlertDescription>
+                <AlertDescription>Tenant created successfully!</AlertDescription>
               </Alert>
             )}
 
@@ -125,7 +129,7 @@ export function TenantManagementComponent() {
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox id="isActive" name="isActive" value="true" defaultChecked disabled={isCreating} />
+              <Checkbox id="isActive" name="isActive" defaultChecked disabled={isCreating} />
               <Label htmlFor="isActive">Active</Label>
             </div>
 
