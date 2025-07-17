@@ -72,24 +72,24 @@ public class AuthorizationBehavior<TRequest, TResponse>(IHttpContextAccessor htt
   }
 
   private static TResponse CreateUnauthorizedResponse<T>() {
-    var error = Error.Failure("Authorization.Unauthorized", "Authentication is required");
+    var error = ErrorMessage.Failure("Authorization.Unauthorized", "Authentication is required");
 
     return CreateErrorResponse<T>(error);
   }
 
   private static TResponse CreateForbiddenResponse<T>() {
-    var error = Error.Failure("Authorization.Forbidden", "Insufficient permissions");
+    var error = ErrorMessage.Failure("Authorization.Forbidden", "Insufficient permissions");
 
     return CreateErrorResponse<T>(error);
   }
 
-  private static TResponse CreateErrorResponse<T>(Error error) {
+  private static TResponse CreateErrorResponse<T>(ErrorMessage error) {
     // Handle Result pattern
     if (typeof(T) == typeof(Result)) return (TResponse)(object)Result.Failure(error);
 
     if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Result<>)) {
       var resultType = typeof(T).GetGenericArguments()[0];
-      var failureMethod = typeof(Result).GetMethod("Failure", [typeof(Error)])!
+      var failureMethod = typeof(Result).GetMethod("Failure", [typeof(ErrorMessage)])!
                                         .MakeGenericMethod(resultType);
 
       return (TResponse)failureMethod.Invoke(null, [error])!;

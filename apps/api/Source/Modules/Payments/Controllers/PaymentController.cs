@@ -77,7 +77,7 @@ public class PaymentController(IMediator mediator) : ControllerBase
   {
     var query = new GetPaymentByIdQuery { PaymentId = id };
     var payment = await mediator.Send(query);
-    if (payment == null) return NotFound();
+    if (payment == null) return PageNotFound();
     return Ok(payment);
   }
 

@@ -287,7 +287,7 @@ mutation RestoreUser($id: UUID!) {
    }
    ```
 
-## Error Handling
+## ErrorMessage Handling
 
 GraphQL provides detailed error messages:
 

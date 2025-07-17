@@ -15,7 +15,7 @@ public class UpdateTenantHandler(ApplicationDbContext context, ILogger<UpdateTen
 
       if (tenant == null)
         return Result.Failure<Tenant>(
-          Common.Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found")
+          Common.ErrorMessage.PageNotFound("Tenant.PageNotFound", $"Tenant with ID {request.Id} not found")
         );
 
       // Check if new name conflicts with another tenant
@@ -25,7 +25,7 @@ public class UpdateTenantHandler(ApplicationDbContext context, ILogger<UpdateTen
 
         if (existingTenant != null)
           return Result.Failure<Tenant>(
-            Common.Error.Conflict("Tenant.NameExists", $"Tenant with name '{request.Name}' already exists")
+            Common.ErrorMessage.Conflict("Tenant.NameExists", $"Tenant with name '{request.Name}' already exists")
           );
       }
 
@@ -36,7 +36,7 @@ public class UpdateTenantHandler(ApplicationDbContext context, ILogger<UpdateTen
 
         if (existingSlug != null)
           return Result.Failure<Tenant>(
-            Common.Error.Conflict("Tenant.SlugExists", $"Tenant with slug '{request.Slug}' already exists")
+            Common.ErrorMessage.Conflict("Tenant.SlugExists", $"Tenant with slug '{request.Slug}' already exists")
           );
       }
 
@@ -60,10 +60,10 @@ public class UpdateTenantHandler(ApplicationDbContext context, ILogger<UpdateTen
       return Result.Success(tenant);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "Error updating tenant {TenantId}", request.Id);
+      logger.LogError(ex, "ErrorMessage updating tenant {TenantId}", request.Id);
 
       return Result.Failure<Tenant>(
-        Common.Error.Failure("Tenant.UpdateFailed", "Failed to update tenant")
+        Common.ErrorMessage.Failure("Tenant.UpdateFailed", "Failed to update tenant")
       );
     }
   }

@@ -160,7 +160,7 @@ public class RefreshTokenHandlerTests
         // Verify error logging
         _mockLogger.Verify(
             x => x.Log(
-                LogLevel.Error,
+                LogLevel.ErrorMessage,
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to process refresh token request")),
                 It.Is<Exception>(ex => ex == expectedException),

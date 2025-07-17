@@ -19,8 +19,8 @@ public class AuthMutations {
   /// <param name="mediator">MediatR mediator for CQRS</param>
   /// <returns>Authentication response with tokens</returns>
   [GraphQLDescription("Registers a new user with email and password")]
-  [Error<ValidationException>]
-  [Error<InvalidOperationException>]
+  [ErrorMessage<ValidationException>]
+  [ErrorMessage<InvalidOperationException>]
   public async Task<SignInResponseDto> LocalSignUp(
     [GraphQLDescription("User registration details")]
     LocalSignUpRequestDto input,
@@ -43,8 +43,8 @@ public class AuthMutations {
   /// <param name="mediator">MediatR mediator for CQRS</param>
   /// <returns>Authentication response with tokens</returns>
   [GraphQLDescription("Authenticates a user with email and password")]
-  [Error<UnauthorizedAccessException>]
-  [Error<ValidationException>]
+  [ErrorMessage<UnauthorizedAccessException>]
+  [ErrorMessage<ValidationException>]
   public async Task<SignInResponseDto> LocalSignIn(
     [GraphQLDescription("User login credentials")]
     LocalSignInRequestDto input,
@@ -64,8 +64,8 @@ public class AuthMutations {
   /// <returns>Success confirmation</returns>
   [GraphQLDescription("Revokes a refresh token to prevent future use")]
   [Authorize] // Requires authentication
-  [Error<UnauthorizedAccessException>]
-  [Error<ValidationException>]
+  [ErrorMessage<UnauthorizedAccessException>]
+  [ErrorMessage<ValidationException>]
   public async Task<bool> RevokeToken(
     [GraphQLDescription("The refresh token to revoke")]
     string refreshToken,
@@ -89,8 +89,8 @@ public class AuthMutations {
   /// <param name="mediator">MediatR mediator for CQRS</param>
   /// <returns>New authentication response with refreshed tokens</returns>
   [GraphQLDescription("Refreshes access token using a valid refresh token")]
-  [Error<UnauthorizedAccessException>]
-  [Error<ValidationException>]
+  [ErrorMessage<UnauthorizedAccessException>]
+  [ErrorMessage<ValidationException>]
   public async Task<SignInResponseDto> RefreshToken(
     [GraphQLDescription("Refresh token to use")]
     string refreshToken,
@@ -110,7 +110,7 @@ public class AuthMutations {
   /// <param name="mediator">MediatR mediator for CQRS</param>
   /// <returns>Challenge data for wallet signing</returns>
   [GraphQLDescription("Generates a challenge for Web3 wallet authentication")]
-  [Error<ValidationException>]
+  [ErrorMessage<ValidationException>]
   public async Task<Web3ChallengeResponseDto> GenerateWeb3Challenge(
     [GraphQLDescription("Web3 challenge request data")]
     Web3ChallengeRequestDto input,
@@ -130,8 +130,8 @@ public class AuthMutations {
   /// <param name="mediator">MediatR mediator for CQRS</param>
   /// <returns>Authentication response with tokens</returns>
   [GraphQLDescription("Verifies a Web3 wallet signature and authenticates the user")]
-  [Error<UnauthorizedAccessException>]
-  [Error<ValidationException>]
+  [ErrorMessage<UnauthorizedAccessException>]
+  [ErrorMessage<ValidationException>]
   public async Task<SignInResponseDto> VerifyWeb3Signature(
     [GraphQLDescription("Web3 signature verification data")]
     Web3VerifyRequestDto input,

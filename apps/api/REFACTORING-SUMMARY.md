@@ -39,7 +39,7 @@ Successfully completed a comprehensive refactoring and modernization of the Game
 #### 4.3 GraphQL Integration
 - **Refactored**: `AuthMutations.cs` for proper CQRS pattern usage
 - **Refactored**: `AuthQueries.cs` for HotChocolate conventions
-- **Added**: Comprehensive error handling using HotChocolate `[Error<T>]` attributes
+- **Added**: Comprehensive error handling using HotChocolate `[ErrorMessage<T>]` attributes
 - **Implemented**: Proper GraphQL documentation and type safety
 
 #### 4.4 REST API Controller
@@ -77,7 +77,7 @@ Successfully completed a comprehensive refactoring and modernization of the Game
 - ✅ **JWT Security**: Proper token validation and error handling
 - ✅ **Environment-aware**: Different configurations for Development/Production
 - ✅ **Comprehensive Logging**: Security events properly logged
-- ✅ **Error Handling**: No sensitive information exposed in error responses
+- ✅ **ErrorMessage Handling**: No sensitive information exposed in error responses
 
 ### Maintainability Improvements
 - ✅ **Modular Design**: Authentication module can be easily extended

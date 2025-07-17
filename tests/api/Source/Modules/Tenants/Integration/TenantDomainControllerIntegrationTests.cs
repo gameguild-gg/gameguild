@@ -584,7 +584,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     var response = await _client.PostAsync("/api/tenant-domains/auto-assign", content);
 
     // Assert
-    Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    Assert.Equal(HttpStatusCode.PageNotFound, response.StatusCode);
 
     // Verify no membership was created
     using var scope = _factory.Services.CreateScope();

@@ -26,10 +26,10 @@ public class GetTenantBySlugHandler(
       return Result.Success(tenant);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "Error retrieving tenant by slug '{TenantSlug}'", request.Slug);
+      logger.LogError(ex, "ErrorMessage retrieving tenant by slug '{TenantSlug}'", request.Slug);
 
       return Result.Failure<Tenant?>(
-        Common.Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant by slug")
+        Common.ErrorMessage.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant by slug")
       );
     }
   }

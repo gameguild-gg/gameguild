@@ -106,7 +106,7 @@ public class ProjectCommandHandlers :
       return new CreateProjectResult { Success = true, Project = project };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error creating project: {Title}", request.Title);
+      _logger.LogError(ex, "ErrorMessage creating project: {Title}", request.Title);
 
       return new CreateProjectResult { Success = false, ErrorMessage = "Failed to create project" };
     }
@@ -153,7 +153,7 @@ public class ProjectCommandHandlers :
       return new UpdateProjectResult { Success = true, Project = project };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error updating project: {ProjectId}", request.ProjectId);
+      _logger.LogError(ex, "ErrorMessage updating project: {ProjectId}", request.ProjectId);
 
       return new UpdateProjectResult { Success = false, ErrorMessage = "Failed to update project" };
     }
@@ -193,7 +193,7 @@ public class ProjectCommandHandlers :
       return new DeleteProjectResult { Success = true };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error deleting project: {ProjectId}", request.ProjectId);
+      _logger.LogError(ex, "ErrorMessage deleting project: {ProjectId}", request.ProjectId);
 
       return new DeleteProjectResult { Success = false, ErrorMessage = "Failed to delete project" };
     }
@@ -224,7 +224,7 @@ public class ProjectCommandHandlers :
       return new PublishProjectResult { Success = true, Project = project };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error publishing project: {ProjectId}", request.ProjectId);
+      _logger.LogError(ex, "ErrorMessage publishing project: {ProjectId}", request.ProjectId);
 
       return new PublishProjectResult { Success = false, ErrorMessage = "Failed to publish project" };
     }
@@ -255,7 +255,7 @@ public class ProjectCommandHandlers :
       return new UnpublishProjectResult { Success = true, Project = project };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error unpublishing project: {ProjectId}", request.ProjectId);
+      _logger.LogError(ex, "ErrorMessage unpublishing project: {ProjectId}", request.ProjectId);
 
       return new UnpublishProjectResult { Success = false, ErrorMessage = "Failed to unpublish project" };
     }
@@ -286,7 +286,7 @@ public class ProjectCommandHandlers :
       return new ArchiveProjectResult { Success = true, Project = project };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error archiving project: {ProjectId}", request.ProjectId);
+      _logger.LogError(ex, "ErrorMessage archiving project: {ProjectId}", request.ProjectId);
 
       return new ArchiveProjectResult { Success = false, ErrorMessage = "Failed to archive project" };
     }

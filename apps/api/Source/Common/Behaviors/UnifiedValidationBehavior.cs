@@ -45,15 +45,15 @@ public class UnifiedValidationBehavior<TRequest, TResponse>(
       if (typeof(TResponse).IsGenericType &&
           typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>)) {
         var resultType = typeof(TResponse).GetGenericArguments()[0];
-        var error = Error.Failure("Validation.Failed", errorMessage);
-        var failureMethod = typeof(Result).GetMethod("Failure", [typeof(Error)])!
+        var error = ErrorMessage.Failure("Validation.Failed", errorMessage);
+        var failureMethod = typeof(Result).GetMethod("Failure", [typeof(ErrorMessage)])!
                                           .MakeGenericMethod(resultType);
 
         return (TResponse)failureMethod.Invoke(null, [error])!;
       }
 
       if (typeof(TResponse) == typeof(Result)) {
-        var error = Error.Failure("Validation.Failed", errorMessage);
+        var error = ErrorMessage.Failure("Validation.Failed", errorMessage);
 
         return (TResponse)(object)Result.Failure(error);
       }

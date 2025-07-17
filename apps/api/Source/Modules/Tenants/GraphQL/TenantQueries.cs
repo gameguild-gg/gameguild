@@ -25,7 +25,7 @@ public class TenantQueries {
     var query = new GetAllTenantsQuery(false);
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) throw new GraphQLException(result.Error.ToString());
+    if (result.IsFailure) throw new GraphQLException(result.ErrorMessage.ToString());
 
     return result.Value;
   }
@@ -46,7 +46,7 @@ public class TenantQueries {
     var query = new GetTenantByIdQuery(id, false);
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) throw new GraphQLException(result.Error.ToString());
+    if (result.IsFailure) throw new GraphQLException(result.ErrorMessage.ToString());
 
     return result.Value;
   }
@@ -67,7 +67,7 @@ public class TenantQueries {
     var query = new GetTenantByNameQuery(name, false);
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) throw new GraphQLException(result.Error.ToString());
+    if (result.IsFailure) throw new GraphQLException(result.ErrorMessage.ToString());
 
     return result.Value;
   }
@@ -88,7 +88,7 @@ public class TenantQueries {
     var query = new GetTenantBySlugQuery(slug, false);
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
+    if (result.IsFailure) throw new GraphQLException(result.ErrorMessage.Description);
 
     return result.Value;
   }
@@ -108,7 +108,7 @@ public class TenantQueries {
     var query = new GetDeletedTenantsQuery();
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
+    if (result.IsFailure) throw new GraphQLException(result.ErrorMessage.Description);
 
     return result.Value;
   }
@@ -128,7 +128,7 @@ public class TenantQueries {
     var query = new GetActiveTenantsQuery();
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
+    if (result.IsFailure) throw new GraphQLException(result.ErrorMessage.Description);
 
     return result.Value;
   }
@@ -157,7 +157,7 @@ public class TenantQueries {
     );
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
+    if (result.IsFailure) throw new GraphQLException(result.ErrorMessage.Description);
 
     return result.Value;
   }
@@ -177,7 +177,7 @@ public class TenantQueries {
     var query = new GetTenantStatisticsQuery();
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
+    if (result.IsFailure) throw new GraphQLException(result.ErrorMessage.Description);
 
     return result.Value;
   }

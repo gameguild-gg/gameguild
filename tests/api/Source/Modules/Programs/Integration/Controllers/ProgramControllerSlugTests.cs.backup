@@ -72,7 +72,7 @@ public class ProgramControllerSlugTests : IDisposable
         var response = await authenticatedClient.GetAsync("/api/program/slug/non-existent-slug");
 
         // Assert
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.PageNotFound, response.StatusCode);
     }
 
     [Fact]

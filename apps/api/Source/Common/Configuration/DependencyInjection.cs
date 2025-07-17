@@ -431,7 +431,7 @@ public static class DependencyInjection {
           }
         }
         catch (Exception ex) {
-          logger?.LogDebug("Test module not available: {Error}", ex.Message);
+          logger?.LogDebug("Test module not available: {ErrorMessage}", ex.Message);
           // Ignore test module registration failures
         }
       };
@@ -575,7 +575,7 @@ public static class DependencyInjection {
         }
       }
       catch (Exception ex) {
-        if (isOptional) { logger?.LogDebug("Optional GraphQL type {TypeName} not available: {Error}", name, ex.Message); }
+        if (isOptional) { logger?.LogDebug("Optional GraphQL type {TypeName} not available: {ErrorMessage}", name, ex.Message); }
         else {
           logger?.LogWarning(ex, "Failed to register GraphQL type {TypeName}", name);
           // In test environments, be more permissive with missing types

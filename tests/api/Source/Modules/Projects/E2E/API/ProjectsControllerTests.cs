@@ -250,7 +250,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     var response = await _client.GetAsync($"/api/projects/{nonExistentId}");
 
     // Assert
-    Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+    Assert.Equal(System.Net.HttpStatusCode.PageNotFound, response.StatusCode);
   }
 
   [Fact]
@@ -315,7 +315,7 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
     var response = await _client.GetAsync("/projects/slug/non-existent-slug");
 
     // Assert
-    Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+    Assert.Equal(System.Net.HttpStatusCode.PageNotFound, response.StatusCode);
   }
 
   [Fact]

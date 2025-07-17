@@ -32,14 +32,14 @@ public class UserSignedUpUserProfileHandler(
       if (result.IsSuccess) { logger.LogInformation("Successfully created UserProfile for user {UserId}", notification.UserId); }
       else {
         logger.LogWarning(
-          "Failed to create UserProfile for user {UserId}: {Error}",
+          "Failed to create UserProfile for user {UserId}: {ErrorMessage}",
           notification.UserId,
-          result.Error?.Description
+          result.ErrorMessage?.Description
         );
       }
     }
     catch (Exception ex) {
-      logger.LogError(ex, "Error creating UserProfile for user {UserId} during signup", notification.UserId);
+      logger.LogError(ex, "ErrorMessage creating UserProfile for user {UserId} during signup", notification.UserId);
       // Don't rethrow - we don't want to break the signup process if profile creation fails
     }
   }

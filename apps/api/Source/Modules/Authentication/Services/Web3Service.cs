@@ -148,7 +148,7 @@ namespace GameGuild.Modules.Authentication {
         return Task.FromResult(true);
       }
       catch (Exception ex) {
-        logger.LogError(ex, "Error verifying Web3 signature for wallet {WalletAddress}", walletAddress);
+        logger.LogError(ex, "ErrorMessage verifying Web3 signature for wallet {WalletAddress}", walletAddress);
 
         return Task.FromResult(false);
       }

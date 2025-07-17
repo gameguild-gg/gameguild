@@ -56,7 +56,7 @@ Infrastructure/
 **Issue**: `IAuthService` not registered
 **Fix**: Add mock implementations or exclude auth modules in pure tests
 
-### 3. Error Handling Expectations
+### 3. ErrorMessage Handling Expectations
 **Issue**: Tests expect 200 OK for GraphQL errors, but HotChocolate returns 400
 **Fix**: Accept both 200 and 400 status codes for invalid queries
 

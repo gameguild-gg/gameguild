@@ -60,7 +60,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
     var query = new GetProductByIdQuery { ProductId = id };
     var product = await mediator.Send(query);
 
-    if (product == null) return NotFound();
+    if (product == null) return PageNotFound();
 
     return Ok(product);
   }
@@ -277,7 +277,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   public async Task<ActionResult<ProductPricing>> GetCurrentPricing(Guid id) {
     var pricing = await mediator.Send(new GetCurrentPricingQuery { ProductId = id });
 
-    if (pricing == null) return NotFound();
+    if (pricing == null) return PageNotFound();
 
     return Ok(pricing);
   }
@@ -349,7 +349,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   public async Task<ActionResult<ProductSubscriptionPlan>> GetSubscriptionPlan(Guid planId) {
     var plan = await mediator.Send(new GetSubscriptionPlanQuery { PlanId = planId });
 
-    if (plan == null) return NotFound();
+    if (plan == null) return PageNotFound();
 
     return Ok(plan);
   }
@@ -375,7 +375,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   public async Task<ActionResult<UserProduct>> GetUserProduct(Guid id, Guid userId) {
     var userProduct = await mediator.Send(new GetUserProductQuery { UserId = userId, ProductId = id });
 
-    if (userProduct == null) return NotFound();
+    if (userProduct == null) return PageNotFound();
 
     return Ok(userProduct);
   }

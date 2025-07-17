@@ -90,7 +90,7 @@ public class ProjectsController : ControllerBase {
 
     var project = await _mediator.Send(query);
 
-    if (project == null) { return NotFound(); }
+    if (project == null) { return PageNotFound(); }
 
     return Ok(project);
   }
@@ -110,7 +110,7 @@ public class ProjectsController : ControllerBase {
 
     var project = await _mediator.Send(query);
 
-    if (project == null) { return NotFound(); }
+    if (project == null) { return PageNotFound(); }
 
     return Ok(project);
   }

@@ -122,7 +122,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
       _logger.LogError(ex, "Failed to create system announcement: {Title}", title);
 
       return Result.Failure<Post>(
-        new Common.Error(
+        new Common.ErrorMessage(
           "PostAnnouncement.CreationFailed",
           $"Failed to create system announcement: {ex.Message}",
           ErrorType.Failure
@@ -199,7 +199,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
       );
 
       return Result.Failure<Post>(
-        new Common.Error(
+        new Common.ErrorMessage(
           "PostAnnouncement.MilestoneCreationFailed",
           $"Failed to create milestone celebration: {ex.Message}",
           ErrorType.Failure
@@ -267,7 +267,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
       _logger.LogError(ex, "Failed to create community update: {UpdateTitle}", title);
 
       return Result.Failure<Post>(
-        new Common.Error(
+        new Common.ErrorMessage(
           "PostAnnouncement.CommunityUpdateFailed",
           $"Failed to create community update: {ex.Message}",
           ErrorType.Failure

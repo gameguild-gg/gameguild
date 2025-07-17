@@ -34,7 +34,7 @@ public class PostMutations {
 
     var result = await mediator.Send(command, cancellationToken);
 
-    if (!result.IsSuccess) { throw new GraphQLException(result.Error.Description); }
+    if (!result.IsSuccess) { throw new GraphQLException(result.ErrorMessage.Description); }
 
     return result.Value;
   }
@@ -57,7 +57,7 @@ public class PostMutations {
 
     var result = await mediator.Send(command, cancellationToken);
 
-    if (!result.IsSuccess) { throw new GraphQLException(result.Error.Description); }
+    if (!result.IsSuccess) { throw new GraphQLException(result.ErrorMessage.Description); }
 
     return result.Value;
   }
@@ -74,7 +74,7 @@ public class PostMutations {
 
     var result = await mediator.Send(command, cancellationToken);
 
-    if (!result.IsSuccess) { throw new GraphQLException(result.Error.Description); }
+    if (!result.IsSuccess) { throw new GraphQLException(result.ErrorMessage.Description); }
 
     return result.Value;
   }
@@ -93,7 +93,7 @@ public class PostMutations {
 
     var result = await mediator.Send(command, cancellationToken);
 
-    if (!result.IsSuccess) { throw new GraphQLException(result.Error.Description); }
+    if (!result.IsSuccess) { throw new GraphQLException(result.ErrorMessage.Description); }
 
     return result.Value;
   }
@@ -111,7 +111,7 @@ public class PostMutations {
 
     var result = await mediator.Send(command, cancellationToken);
 
-    if (!result.IsSuccess) { throw new GraphQLException(result.Error.Description); }
+    if (!result.IsSuccess) { throw new GraphQLException(result.ErrorMessage.Description); }
 
     return result.Value;
   }
@@ -148,7 +148,7 @@ public class PostMutations {
 
     var result = await mediator.Send(command, cancellationToken);
 
-    if (!result.IsSuccess) { throw new GraphQLException(result.Error.Description); }
+    if (!result.IsSuccess) { throw new GraphQLException(result.ErrorMessage.Description); }
 
     return result.Value;
   }

@@ -23,10 +23,10 @@ public class GetActiveTenantsHandler(
       return Result.Success<IEnumerable<Tenant>>(tenants);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "Error retrieving active tenants");
+      logger.LogError(ex, "ErrorMessage retrieving active tenants");
 
       return Result.Failure<IEnumerable<Tenant>>(
-        Common.Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve active tenants")
+        Common.ErrorMessage.Failure("Tenant.RetrievalFailed", "Failed to retrieve active tenants")
       );
     }
   }

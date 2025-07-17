@@ -82,8 +82,8 @@ public class PostsCrudHandlersTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal("Post.NotFound", result.Error.Code);
-        Assert.Equal(ErrorType.NotFound, result.Error.Type);
+        Assert.Equal("Post.PageNotFound", result.ErrorMessage.Code);
+        Assert.Equal(ErrorType.PageNotFound, result.ErrorMessage.Type);
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public class PostsCrudHandlersTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal("Post.NotFound", result.Error.Code);
+        Assert.Equal("Post.PageNotFound", result.ErrorMessage.Code);
     }
 
     #endregion
@@ -161,7 +161,7 @@ public class PostsCrudHandlersTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal("Post.NotFound", result.Error.Code);
+        Assert.Equal("Post.PageNotFound", result.ErrorMessage.Code);
     }
 
     [Fact]
@@ -186,7 +186,7 @@ public class PostsCrudHandlersTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal("Post.Unauthorized", result.Error.Code);
+        Assert.Equal("Post.Unauthorized", result.ErrorMessage.Code);
     }
 
     [Fact]
@@ -258,7 +258,7 @@ public class PostsCrudHandlersTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal("Post.NotFound", result.Error.Code);
+        Assert.Equal("Post.PageNotFound", result.ErrorMessage.Code);
     }
 
     [Fact]
@@ -282,7 +282,7 @@ public class PostsCrudHandlersTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal("Post.Unauthorized", result.Error.Code);
+        Assert.Equal("Post.Unauthorized", result.ErrorMessage.Code);
     }
 
     #endregion
@@ -364,7 +364,7 @@ public class PostsCrudHandlersTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal("Post.NotFound", result.Error.Code);
+        Assert.Equal("Post.PageNotFound", result.ErrorMessage.Code);
     }
 
     #endregion

@@ -41,7 +41,7 @@ public class TenantsController(
     var query = new GetAllTenantsQuery(includeDeleted);
     var result = await getAllTenantsHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return Ok(result.Value);
   }
@@ -57,7 +57,7 @@ public class TenantsController(
     var query = new GetTenantByIdQuery(id, includeDeleted);
     var result = await getTenantByIdHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return Ok(result.Value);
   }
@@ -73,7 +73,7 @@ public class TenantsController(
     var query = new GetTenantByNameQuery(name, includeDeleted);
     var result = await getTenantByNameHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return Ok(result.Value);
   }
@@ -89,7 +89,7 @@ public class TenantsController(
     var query = new GetTenantBySlugQuery(slug, includeDeleted);
     var result = await getTenantBySlugHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return Ok(result.Value);
   }
@@ -103,7 +103,7 @@ public class TenantsController(
     var query = new GetDeletedTenantsQuery();
     var result = await getDeletedTenantsHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return Ok(result.Value);
   }
@@ -117,7 +117,7 @@ public class TenantsController(
     var query = new GetActiveTenantsQuery();
     var result = await getActiveTenantsHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return Ok(result.Value);
   }
@@ -146,7 +146,7 @@ public class TenantsController(
     var query = new SearchTenantsQuery(searchTerm, isActive, includeDeleted, sortBy, sortDescending, limit, offset);
     var result = await searchTenantsHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return Ok(result.Value);
   }
@@ -160,7 +160,7 @@ public class TenantsController(
     var query = new GetTenantStatisticsQuery();
     var result = await getTenantStatisticsHandler.Handle(query, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return Ok(result.Value);
   }
@@ -178,7 +178,7 @@ public class TenantsController(
     var command = new CreateTenantCommand(dto.Name, dto.Description, dto.IsActive, dto.Slug);
     var result = await createTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return CreatedAtAction(nameof(GetTenantById), new { id = result.Value.Id }, result.Value);
   }
@@ -196,7 +196,7 @@ public class TenantsController(
     var command = new UpdateTenantCommand(id, dto.Name, dto.Description, dto.IsActive, dto.Slug);
     var result = await updateTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return Ok(result.Value);
   }
@@ -211,7 +211,7 @@ public class TenantsController(
     var command = new DeleteTenantCommand(id);
     var result = await deleteTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return NoContent();
   }
@@ -226,7 +226,7 @@ public class TenantsController(
     var command = new RestoreTenantCommand(id);
     var result = await restoreTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return NoContent();
   }
@@ -241,7 +241,7 @@ public class TenantsController(
     var command = new HardDeleteTenantCommand(id);
     var result = await hardDeleteTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return NoContent();
   }
@@ -256,7 +256,7 @@ public class TenantsController(
     var command = new ActivateTenantCommand(id);
     var result = await activateTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return NoContent();
   }
@@ -271,7 +271,7 @@ public class TenantsController(
     var command = new DeactivateTenantCommand(id);
     var result = await deactivateTenantHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return NoContent();
   }
@@ -288,7 +288,7 @@ public class TenantsController(
     var command = new BulkDeleteTenantsCommand(dto.TenantIds);
     var result = await bulkDeleteTenantsHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return Ok(result.Value);
   }
@@ -305,7 +305,7 @@ public class TenantsController(
     var command = new BulkRestoreTenantsCommand(dto.TenantIds);
     var result = await bulkRestoreTenantsHandler.Handle(command, CancellationToken.None);
 
-    if (!result.IsSuccess) return BadRequest(result.Error);
+    if (!result.IsSuccess) return BadRequest(result.ErrorMessage);
 
     return Ok(result.Value);
   }
