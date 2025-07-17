@@ -9,6 +9,12 @@ namespace GameGuild.Modules.TestingLab {
 
     public string? Description { get; set; }
 
+    /// <summary>
+    /// URL to download the game build
+    /// </summary>
+    [MaxLength(1000)]
+    public string? DownloadUrl { get; set; }
+
     [Required] public InstructionType InstructionsType { get; set; }
 
     public string? InstructionsContent { get; set; }
@@ -16,6 +22,11 @@ namespace GameGuild.Modules.TestingLab {
     [MaxLength(500)] public string? InstructionsUrl { get; set; }
 
     public Guid? InstructionsFileId { get; set; }
+
+    /// <summary>
+    /// Simple feedback form content (plain text questions)
+    /// </summary>
+    public string? FeedbackFormContent { get; set; }
 
     public int? MaxTesters { get; set; }
 
@@ -30,10 +41,12 @@ namespace GameGuild.Modules.TestingLab {
         ProjectVersionId = ProjectVersionId,
         Title = Title,
         Description = Description,
+        DownloadUrl = DownloadUrl,
         InstructionsType = InstructionsType,
         InstructionsContent = InstructionsContent,
         InstructionsUrl = InstructionsUrl,
         InstructionsFileId = InstructionsFileId,
+        FeedbackFormContent = FeedbackFormContent,
         MaxTesters = MaxTesters,
         StartDate = StartDate,
         EndDate = EndDate,
