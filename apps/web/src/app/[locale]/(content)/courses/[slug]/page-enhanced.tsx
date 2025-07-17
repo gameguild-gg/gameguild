@@ -5,8 +5,10 @@ import { CourseHeader } from '@/components/course/CourseHeader';
 import { CourseOverview } from '@/components/course/CourseOverview';
 import { CourseSidebar } from '@/components/course/CourseSidebar';
 import { CourseAccessCard } from '@/components/course/CourseAccessCard';
-import { Loading } from '@game-guild/ui/components';
-import { ErrorBoundary } from '@game-guild/ui/components';
+import { Skeleton } from '@game-guild/ui/components/skeleton';
+import ErrorBoundary from '@/components/error-boundary';
+
+
 
 interface CourseDetailPageProps {
   params: Promise<{ slug: string }>;

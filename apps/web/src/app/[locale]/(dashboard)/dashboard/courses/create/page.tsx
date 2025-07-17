@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@game-guild/ui/components/button';
-import { Input } from '@game-guild/ui/components';
-import { Textarea } from '@game-guild/ui/components';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Label } from '@game-guild/ui/components';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components';
+import { Input } from '@game-guild/ui/components/input';
+import { Textarea } from '@game-guild/ui/components/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Label } from '@game-guild/ui/components/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { DashboardStats } from '@/components/dashboard/analytics/dashboard-stats';
 import { RecentActivity } from '@/components/dashboard/analytics/recent-activity';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Button } from '@game-guild/ui/components/button';
 import { Plus, Users, BookOpen, DollarSign, TrendingUp } from 'lucide-react';
 

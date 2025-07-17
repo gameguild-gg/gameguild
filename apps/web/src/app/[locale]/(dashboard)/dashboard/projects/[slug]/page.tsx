@@ -7,7 +7,7 @@ import { PropsWithLocaleSlugParams } from '@/types';
 import { getProjectBySlug } from '@/components/projects/actions';
 
 import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { CalendarIcon, Download, Edit, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 

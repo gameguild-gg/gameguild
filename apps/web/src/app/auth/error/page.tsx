@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 
 export default function AuthErrorPage() {
   const searchParams = useSearchParams();

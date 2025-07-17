@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent } from '@game-guild/ui/components';
+import { Card, CardContent } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { BookOpen, Users, Trophy, Zap, Code, Palette, Gamepad2, Headphones, Star, CheckCircle, ArrowRight, PlayCircle } from 'lucide-react';
 
