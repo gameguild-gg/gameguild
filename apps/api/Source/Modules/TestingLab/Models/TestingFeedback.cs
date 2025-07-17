@@ -49,6 +49,17 @@ namespace GameGuild.Modules.TestingLab {
 
     [Required] public string FeedbackData { get; set; } = string.Empty; // JSON
 
+    /// <summary>
+    /// Overall rating (1-10)
+    /// </summary>
+    [Range(1, 10)]
+    public int? OverallRating { get; set; }
+
+    /// <summary>
+    /// Would the tester recommend this game
+    /// </summary>
+    public bool? WouldRecommend { get; set; }
+
     public string? AdditionalNotes { get; set; }
   }
 }

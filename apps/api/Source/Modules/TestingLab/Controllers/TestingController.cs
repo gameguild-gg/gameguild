@@ -504,6 +504,73 @@ public class TestingController(ITestService testService) : ControllerBase {
   }
 
   #endregion
+
+  #region Simplified Testing Workflow Endpoints
+
+  // POST: testing/submit-simple
+  [HttpPost("submit-simple")]
+  [RequireResourcePermission<TestingRequest>(PermissionType.Create)]
+  public async Task<ActionResult<TestingRequest>> SubmitSimpleTestingRequest(CreateSimpleTestingRequestDto requestDto) {
+    try {
+      // Validate model state
+      if (!ModelState.IsValid) return BadRequest(ModelState);
+
+      // Get the current authenticated user's ID
+      var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
+
+      var request = await testService.CreateSimpleTestingRequestAsync(requestDto, userId);
+
+      return CreatedAtAction(nameof(GetTestingRequest), new { id = request.Id }, request);
+    }
+    catch (Exception ex) { return BadRequest($"Error creating testing request: {ex.Message}"); }
+  }
+
+  // POST: testing/feedback
+  [HttpPost("feedback")]
+  [RequireResourcePermission<TestingFeedback>(PermissionType.Create)]
+  public async Task<ActionResult> SubmitFeedback(SubmitFeedbackDto feedbackDto) {
+    try {
+      // Validate model state
+      if (!ModelState.IsValid) return BadRequest(ModelState);
+
+      // Get the current authenticated user's ID
+      var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
+
+      await testService.SubmitFeedbackAsync(feedbackDto, userId);
+
+      return Ok(new { message = "Feedback submitted successfully" });
+    }
+    catch (Exception ex) { return BadRequest($"Error submitting feedback: {ex.Message}"); }
+  }
+
+  // GET: testing/my-requests
+  [HttpGet("my-requests")]
+  [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
+  public async Task<ActionResult<IEnumerable<TestingRequest>>> GetMyTestingRequests() {
+    // Get the current authenticated user's ID
+    var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) return Unauthorized("User ID not found in token");
+
+    var requests = await testService.GetTestingRequestsByCreatorAsync(userId);
+
+    return Ok(requests);
+  }
+
+  // GET: testing/available-for-testing
+  [HttpGet("available-for-testing")]
+  [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
+  public async Task<ActionResult<IEnumerable<TestingRequest>>> GetAvailableTestingRequests() {
+    var requests = await testService.GetActiveTestingRequestsAsync();
+
+    return Ok(requests);
+  }
+
+  #endregion
 }
 
 // DTOs for request bodies
