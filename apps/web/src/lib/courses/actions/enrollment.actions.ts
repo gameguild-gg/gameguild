@@ -60,17 +60,30 @@ const mockProducts = new Map<string, Product>([
 ]);
 
 export async function getCourseEnrollmentStatus(courseSlug: string): Promise<EnrollmentStatus> {
+  console.log('Getting enrollment status for course:', courseSlug);
   const session = await auth();
+  console.log('Session:', session?.user?.id ? 'User logged in' : 'No user session');
 
-  if (!session?.user) {
+  // Development mode - simulate user if not authenticated
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const mockUserId = 'dev-user-123';
+
+  if (!session?.user && !isDevelopment) {
+    console.log('No user session, returning not enrolled');
     return { isEnrolled: false, isFree: false };
   }
 
-  const userId = session.user.id;
+  const userId = session?.user?.id || (isDevelopment ? mockUserId : null);
+  if (!userId) {
+    return { isEnrolled: false, isFree: false };
+  }
+
   const product = mockProducts.get(courseSlug);
+  console.log('Product found:', product ? product.title : 'No product found for this slug');
 
   // If course is not in mock data, return default enrollment status
   if (!product) {
+    console.log('Course not in mock data, returning default free course');
     return {
       isEnrolled: false,
       isFree: true, // Default to free for courses not in mock data
@@ -81,6 +94,7 @@ export async function getCourseEnrollmentStatus(courseSlug: string): Promise<Enr
 
   // Check if user is enrolled
   const enrollment = mockEnrollments.get(userId);
+  console.log('User enrollment:', enrollment);
 
   return {
     isEnrolled: enrollment?.isEnrolled || false,
@@ -93,10 +107,12 @@ export async function getCourseEnrollmentStatus(courseSlug: string): Promise<Enr
 }
 
 export async function getProductsContainingCourse(courseSlug: string): Promise<Product[]> {
+  console.log('Getting products for course:', courseSlug);
   const products = Array.from(mockProducts.values()).filter((product) => product.courses.includes(courseSlug));
 
   // If no products found, create a default product for the course
   if (products.length === 0) {
+    console.log('No products found, creating default product');
     return [
       {
         id: `prod-${courseSlug}`,
@@ -109,36 +125,52 @@ export async function getProductsContainingCourse(courseSlug: string): Promise<P
     ];
   }
 
+  console.log('Found products:', products.map(p => p.title));
   return products;
 }
 
 export async function enrollInFreeCourse(courseSlug: string): Promise<{ success: boolean; message: string }> {
+  console.log('Enrolling in free course:', courseSlug);
   const session = await auth();
+  console.log('Session:', session?.user?.id ? `User ${session.user.id} logged in` : 'No user session');
 
-  if (!session?.user) {
+  // Development mode - simulate user if not authenticated
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const mockUserId = 'dev-user-123';
+
+  if (!session?.user && !isDevelopment) {
+    console.log('No user session, enrollment failed');
+    return { success: false, message: 'Authentication required' };
+  }
+
+  const userId = session?.user?.id || (isDevelopment ? mockUserId : null);
+  if (!userId) {
     return { success: false, message: 'Authentication required' };
   }
 
   const product = mockProducts.get(courseSlug);
+  console.log('Product found:', product ? product.title : 'No product found, treating as free course');
 
   // If course is not in mock data, treat it as a free course and allow enrollment
   if (!product) {
-    const userId = session.user.id;
+    console.log('Enrolling user in default free course');
     mockEnrollments.set(userId, {
       isEnrolled: true,
       isFree: true,
       enrollmentDate: new Date().toISOString(),
       progress: 0,
     });
+    console.log('Enrollment successful for free course');
     return { success: true, message: 'Successfully enrolled in course' };
   }
 
   if (product.price > 0) {
+    console.log('Course requires payment, price:', product.price);
     return { success: false, message: 'This course requires payment' };
   }
 
   // Auto-enroll in free course
-  const userId = session.user.id;
+  console.log('Enrolling user in free course from products');
   mockEnrollments.set(userId, {
     isEnrolled: true,
     isFree: true,
@@ -146,6 +178,7 @@ export async function enrollInFreeCourse(courseSlug: string): Promise<{ success:
     progress: 0,
   });
 
+  console.log('Enrollment successful');
   return { success: true, message: 'Successfully enrolled in course' };
 }
 
