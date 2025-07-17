@@ -4,6 +4,7 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
+  transpilePackages: ['@game-guild/ui'],
   images: {
     remotePatterns: [
       {
@@ -39,6 +40,18 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'lh6.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'sample-videos.com',
         port: '',
         pathname: '/**',
       },
