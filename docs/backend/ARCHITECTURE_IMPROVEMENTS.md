@@ -121,7 +121,7 @@ public class UsersEndpoints : IEndpoint
 }
 ```
 
-## 4. **Enhanced Error Handling**
+## 4. **Enhanced ErrorMessage Handling**
 
 ### Global Exception Handler
 ```csharp
@@ -129,13 +129,13 @@ private static ProblemDetails CreateProblemDetails(Exception exception)
 {
     return exception switch
     {
-        ValidationException => new ProblemDetails { Status = 400, Title = "Validation Error" },
+        ValidationException => new ProblemDetails { Status = 400, Title = "Validation ErrorMessage" },
         ArgumentException => new ProblemDetails { Status = 400, Title = "Bad Request" },
         InvalidOperationException when msg.Contains("not found") => 
             new ProblemDetails { Status = 404, Title = "Not Found" },
         InvalidOperationException when msg.Contains("Concurrency conflict") => 
             new ProblemDetails { Status = 409, Title = "Conflict" },
-        _ => new ProblemDetails { Status = 500, Title = "Server Error" }
+        _ => new ProblemDetails { Status = 500, Title = "Server ErrorMessage" }
     };
 }
 ```
@@ -229,7 +229,7 @@ public class CreateUserDto
 - **Built-in compression** reduces bandwidth
 - **Rate limiting** prevents abuse
 
-### 3. **Better Error Handling**
+### 3. **Better ErrorMessage Handling**
 - **Typed responses** with proper HTTP status codes
 - **Consistent error format** across all endpoints
 - **Detailed problem details** with tracing information
@@ -266,7 +266,7 @@ public class CreateUserDto
 |--------|--------|--------|-------------|
 | Request/Response Time | 100ms | 70ms | 30% faster |
 | Memory Usage | 50MB | 35MB | 30% reduction |
-| Error Handling | Basic | Comprehensive | 100% coverage |
+| ErrorMessage Handling | Basic | Comprehensive | 100% coverage |
 | API Documentation | Basic | Enhanced | Rich OpenAPI |
 
 ## 🔧 **Usage Examples**

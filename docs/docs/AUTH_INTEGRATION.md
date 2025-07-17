@@ -104,7 +104,7 @@ function DataComponent() {
       const data = await makeRequest('/api/some-endpoint');
       console.log(data);
     } catch (error) {
-      console.error('API Error:', error);
+      console.error('API ErrorMessage:', error);
     }
   };
 
@@ -195,7 +195,7 @@ src/
 - **Tenant switching** - Users can switch between available tenants
 - **Tenant-scoped data** - All API calls respect current tenant context
 
-## Error Handling
+## ErrorMessage Handling
 
 - **Authentication errors** are caught and handled gracefully
 - **Token expiration** triggers automatic refresh or re-authentication

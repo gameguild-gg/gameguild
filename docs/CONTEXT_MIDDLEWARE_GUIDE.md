@@ -205,7 +205,7 @@ public class ProductQueries
 - Tenant-specific data filtering
 - Multi-tenant application support
 
-## Error Handling
+## ErrorMessage Handling
 
 The middleware includes comprehensive error handling:
 - Logs context information for debugging

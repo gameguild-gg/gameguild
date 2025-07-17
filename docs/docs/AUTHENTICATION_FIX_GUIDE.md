@@ -1,6 +1,6 @@
-# 🚨 **Authentication Error: CMS Backend Connection Failed**
+# 🚨 **Authentication ErrorMessage: CMS Backend Connection Failed**
 
-## ❌ **Current Error**
+## ❌ **Current ErrorMessage**
 
 ```
 ECONNREFUSED - Cannot connect to CMS backend on http://localhost:5001

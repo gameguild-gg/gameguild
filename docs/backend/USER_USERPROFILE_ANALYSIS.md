@@ -134,7 +134,7 @@ public class GetAllUserProfilesQuery : IRequest<IEnumerable<Models.UserProfile>>
 - **Handlers**: Contain business logic and validation
 - **Notifications**: Handle cross-cutting concerns
 
-### 2. **Error Handling**
+### 2. **ErrorMessage Handling**
 ```csharp
 try
 {
@@ -147,7 +147,7 @@ catch (InvalidOperationException ex) when (ex.Message.Contains("Concurrency conf
 }
 catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
 {
-    return NotFound(new { message = ex.Message });
+    return PageNotFound(new { message = ex.Message });
 }
 ```
 
@@ -268,7 +268,7 @@ The improvements implemented significantly enhance the User and UserProfile modu
 
 1. **Proper CQRS Implementation**: Complete separation of concerns with Commands, Queries, and Handlers
 2. **Enhanced Validation**: Comprehensive validation pipeline with business rule enforcement
-3. **Better Error Handling**: Proper exception handling with appropriate HTTP status codes
+3. **Better ErrorMessage Handling**: Proper exception handling with appropriate HTTP status codes
 4. **Audit and Monitoring**: Complete change tracking and logging
 5. **Scalability**: Pagination, filtering, and optimized queries
 6. **Maintainability**: Clean architecture with proper separation of concerns

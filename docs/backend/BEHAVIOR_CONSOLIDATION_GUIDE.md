@@ -27,7 +27,7 @@ The duplicate behavior classes have been consolidated into a unified, more power
 - Supports both MediatR and Result patterns
 - Enhanced context logging with Serilog
 - Performance monitoring with warnings
-- Error tracking with detailed context
+- ErrorMessage tracking with detailed context
 - Request type detection (Command/Query)
 ```
 

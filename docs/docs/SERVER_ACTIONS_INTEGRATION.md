@@ -168,20 +168,20 @@ All server actions return a consistent state structure:
 
 ```typescript
 type ActionState = {
-  error?: string; // Error message if action failed
+  error?: string; // ErrorMessage message if action failed
   success?: boolean; // True if action succeeded
   message?: string; // Success message (for some actions)
   data?: any; // Response data (varies by action)
 };
 ```
 
-## Error Handling
+## ErrorMessage Handling
 
 Server actions include comprehensive error handling:
 
 1. **Authentication errors** - "Not authenticated"
 2. **Validation errors** - "Email and password are required"
-3. **Backend errors** - Error messages from CMS backend
+3. **Backend errors** - ErrorMessage messages from CMS backend
 4. **Network errors** - "An unexpected error occurred"
 
 ## Integration with NextAuth
@@ -211,7 +211,7 @@ src/lib/auth/
 2. **Form integration** - Works with HTML forms and `useActionState`
 3. **Progressive enhancement** - Works without JavaScript
 4. **Type safety** - Full TypeScript support
-5. **Error handling** - Consistent error states
+5. **ErrorMessage handling** - Consistent error states
 6. **Caching** - Server-side caching benefits
 
 ## Migration from Client-side API
