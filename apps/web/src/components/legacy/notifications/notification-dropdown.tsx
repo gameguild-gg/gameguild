@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Archive, Bell, Check, MoreHorizontal } from 'lucide-react';
-  import { cn } from '@game-guild/ui/lib/utils';
+import { cn } from '@game-guild/ui/lib/utils';
 import { Button } from '@game-guild/ui/components/button';
 import { Badge } from '@game-guild/ui/components/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
