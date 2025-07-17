@@ -3,7 +3,10 @@
 ## 1. Project Overview
 
 - Project Name: GameGuild
-- Purpose: GameGuild is a Game Development Community. It hosts a variety of tools to help game developers and enthusiasts to learn, create, and share games. Including an e-Learning platform, game publishing, testing lab and community management. The platform will be managed by a Decentralized Autonomous Organization (DAO), ensuring community-driven governance and decision-making.
+- Purpose: GameGuild is a Game Development Community. It hosts a variety of tools to help game developers and
+  enthusiasts to learn, create, and share games. Including an e-Learning platform, game publishing, testing lab and
+  community management. The platform will be managed by a Decentralized Autonomous Organization (DAO), ensuring
+  community-driven governance and decision-making.
 
 ## 2. Core Features
 
@@ -83,20 +86,24 @@ Choice Casts:
 - The community votes on one event to become the "Choice Cast", a highlighted meeting in the calendar.
 - The "Choice Cast" is chosen based on votes from the community using platform votes.
 - These meetings are special, community-driven events that receive additional visibility and rewards.
-- The chosen "Choice Cast" will be repeated according to the demand of the community and those present at previous meetings
+- The chosen "Choice Cast" will be repeated according to the demand of the community and those present at previous
+  meetings
 
 Game Jams:
 
-- Game Jams are time-limited events focused on collaborative game development, where participants work together or individually to create games based on a specific theme or challenge.
+- Game Jams are time-limited events focused on collaborative game development, where participants work together or
+  individually to create games based on a specific theme or challenge.
 - Users can propose Game Jam events, which will follow the same submission and approval process as other events.
 - Game Jams can be scheduled to run over a weekend, a week, or another defined period, depending on the event proposal.
-- Participants in Game Jams may receive platform tokens or other rewards based on community votes or judging criteria defined by the event organizer.
+- Participants in Game Jams may receive platform tokens or other rewards based on community votes or judging criteria
+  defined by the event organizer.
 
 Interaction with Events:
 
 - Users can browse a rolling list of available events, including previously approved submissions.
 - Platform tokens can be used to purchase access or reserve spots for events submitted by any user.
-- Historical events remain in the database, allowing users to reengage with past events if the creator reactivates or republishes them.
+- Historical events remain in the database, allowing users to reengage with past events if the creator reactivates or
+  republishes them.
 
 ### 2.5 Content Creators
 
@@ -104,17 +111,21 @@ Blog Functionality:
 
 - A dedicated blog where invited content creators can share articles, tutorials, and other relevant content.
 - Only creators invited by the community or platform administrators can post on the blog.
-- Blog posts serve as a hub for educational material and community discussions, fostering engagement and knowledge-sharing.
+- Blog posts serve as a hub for educational material and community discussions, fostering engagement and
+  knowledge-sharing.
 
 [//]: # (### 2.6 Job Board)
+
 [//]: # (TODO: @Miguel write here your ideas!)
 
 ## 3. DAO Governance
 
 DAO Structure:
 
-- The platform will be governed by a DAO, where stakeholders (instructors, learners, developers, etc.) can participate in decision-making.
-- Governance tokens will be issued to active participants, giving them voting rights on platform policies, feature development, and treasury management.
+- The platform will be governed by a DAO, where stakeholders (instructors, learners, developers, etc.) can participate
+  in decision-making.
+- Governance tokens will be issued to active participants, giving them voting rights on platform policies, feature
+  development, and treasury management.
 
 Proposals and Voting:
 
@@ -124,7 +135,8 @@ Proposals and Voting:
 Revenue Distribution:
 
 - A portion of the platform’s revenue will be directed to the DAO treasury.
-- Community members can propose and vote on the allocation of these funds (e.g., marketing campaigns, platform development, grants for course creators).
+- Community members can propose and vote on the allocation of these funds (e.g., marketing campaigns, platform
+  development, grants for course creators).
 
 ## 4. Technical Requirements
 
@@ -243,4 +255,6 @@ Miscellaneous:
 
 ## 8. Conclusion
 
-GameGuild aims to revolutionize the e-Learning and gaming industry by providing a decentralized platform where users can learn, teach, and engage with innovative content. By leveraging blockchain technology and a DAO governance model, GameGuild will ensure transparency, security, and a community-driven approach to platform management and growth.
+GameGuild aims to revolutionize the e-Learning and gaming industry by providing a decentralized platform where users can
+learn, teach, and engage with innovative content. By leveraging blockchain technology and a DAO governance model,
+GameGuild will ensure transparency, security, and a community-driven approach to platform management and growth.

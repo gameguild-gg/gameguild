@@ -6,14 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/compone
 import { Badge } from '@game-guild/ui/components/badge';
 import { Progress } from '@game-guild/ui/components/progress';
 import {
-  getCourseEnrollmentStatus,
-  enrollInFreeCourse,
   createPaymentIntent,
-  getProductsContainingCourse,
+  enrollInFreeCourse,
   EnrollmentStatus,
+  getCourseEnrollmentStatus,
+  getProductsContainingCourse,
   Product,
 } from '@/lib/courses/actions/enrollment.actions';
-import { Users, Trophy, Star, Lock, CreditCard, Gift, BookOpen } from 'lucide-react';
+import { BookOpen, CreditCard, Gift, Lock, Star, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 

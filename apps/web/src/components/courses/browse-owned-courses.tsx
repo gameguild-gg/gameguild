@@ -6,7 +6,7 @@ import { Button } from '@game-guild/ui/components/button';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Progress } from '@game-guild/ui/components/progress';
 import { Input } from '@game-guild/ui/components/input';
-import { BookOpen, Clock, Trophy, Search, Filter, ChevronRight, Play, CheckCircle, MoreHorizontal, Calendar, Star } from 'lucide-react';
+import { BookOpen, Calendar, CheckCircle, ChevronRight, Clock, Filter, MoreHorizontal, Play, Search, Star, Trophy } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
 
 interface EnrolledCourse {

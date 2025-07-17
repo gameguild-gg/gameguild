@@ -5,7 +5,7 @@ export async function testCmsConnection() {
   const { environment } = await import('@/configs/environment');
   const { getHealth } = await import('@/lib/api/generated');
   const { createClient } = await import('@/lib/api/generated/client');
-  
+
   try {
     // Get the session to extract the access token
     const session = await auth();

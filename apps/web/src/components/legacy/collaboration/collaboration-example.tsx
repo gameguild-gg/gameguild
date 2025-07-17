@@ -3,11 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { 
-  InviteCollaboratorsModal, 
-  InviteCollaboratorsExact,
-  InviteCollaboratorsTheme 
-} from '@/components/collaboration';
+import { InviteCollaboratorsExact, InviteCollaboratorsModal, InviteCollaboratorsTheme } from '@/components/collaboration';
 
 export function CollaborationExample() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,19 +18,15 @@ export function CollaborationExample() {
     <div className="p-8 space-y-6 max-w-4xl mx-auto">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">Invite Collaborators Components</h1>
-        <p className="text-muted-foreground">
-          Different variations of the invite collaborators component with theme support.
-        </p>
+        <p className="text-muted-foreground">Different variations of the invite collaborators component with theme support.</p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Theme-Aware Version */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Theme-Aware</CardTitle>
-            <CardDescription>
-              Automatically adapts to light/dark themes using semantic tokens
-            </CardDescription>
+            <CardDescription>Automatically adapts to light/dark themes using semantic tokens</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => setIsModalOpen(true)} className="w-full">
@@ -47,9 +39,7 @@ export function CollaborationExample() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Exact Match</CardTitle>
-            <CardDescription>
-              Pixel-perfect replica of the original image design
-            </CardDescription>
+            <CardDescription>Pixel-perfect replica of the original image design</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => setIsExactOpen(true)} className="w-full">
@@ -62,9 +52,7 @@ export function CollaborationExample() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Enhanced Theme</CardTitle>
-            <CardDescription>
-              Premium theme-aware version with enhanced styling
-            </CardDescription>
+            <CardDescription>Premium theme-aware version with enhanced styling</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => setIsThemeOpen(true)} className="w-full">
@@ -120,25 +108,13 @@ export function CollaborationExample() {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Modals */}
-      <InviteCollaboratorsModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        onInvite={handleInvite}
-      />
-      
-      <InviteCollaboratorsExact
-        open={isExactOpen}
-        onOpenChange={setIsExactOpen}
-        onInvite={handleInvite}
-      />
-      
-      <InviteCollaboratorsTheme
-        open={isThemeOpen}
-        onOpenChange={setIsThemeOpen}
-        onInvite={handleInvite}
-      />
+      <InviteCollaboratorsModal open={isModalOpen} onOpenChange={setIsModalOpen} onInvite={handleInvite} />
+
+      <InviteCollaboratorsExact open={isExactOpen} onOpenChange={setIsExactOpen} onInvite={handleInvite} />
+
+      <InviteCollaboratorsTheme open={isThemeOpen} onOpenChange={setIsThemeOpen} onInvite={handleInvite} />
     </div>
   );
 }

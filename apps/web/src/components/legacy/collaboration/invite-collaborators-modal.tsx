@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Users, Building, UserPlus } from 'lucide-react';
+import { Building, Search, UserPlus, Users } from 'lucide-react';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
@@ -24,12 +24,7 @@ interface InviteCollaboratorsModalProps {
   teamMembers?: TeamMember[];
 }
 
-export function InviteCollaboratorsModal({ 
-  open, 
-  onOpenChange, 
-  onInvite,
-  teamMembers = []
-}: InviteCollaboratorsModalProps) {
+export function InviteCollaboratorsModal({ open, onOpenChange, onInvite, teamMembers = [] }: InviteCollaboratorsModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('Editor');
 
@@ -39,22 +34,21 @@ export function InviteCollaboratorsModal({
       name: 'Lena Hartfield',
       email: 'lena@hartfield.com',
       avatar: '/avatars/lena.jpg',
-      role: 'Admin'
+      role: 'Admin',
     },
     {
       id: '2',
       name: 'Elliot Grayson',
       email: 'elliot@grayson.com',
       avatar: '/avatars/elliot.jpg',
-      role: 'Editor'
-    }
+      role: 'Editor',
+    },
   ];
 
   const displayMembers = teamMembers.length > 0 ? teamMembers : defaultTeamMembers;
-  
-  const filteredMembers = displayMembers.filter(member =>
-    member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchQuery.toLowerCase())
+
+  const filteredMembers = displayMembers.filter(
+    (member) => member.name.toLowerCase().includes(searchQuery.toLowerCase()) || member.email.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleInvite = () => {
@@ -72,7 +66,7 @@ export function InviteCollaboratorsModal({
   const getInitials = (name: string) => {
     return name
       .split(' ')
-      .map(word => word.charAt(0))
+      .map((word) => word.charAt(0))
       .join('')
       .toUpperCase()
       .slice(0, 2);
@@ -87,12 +81,8 @@ export function InviteCollaboratorsModal({
               <UserPlus className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
-              <DialogTitle className="text-lg font-medium text-foreground">
-                Invite collaborators
-              </DialogTitle>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Invite users to work on projects together
-              </p>
+              <DialogTitle className="text-lg font-medium text-foreground">Invite collaborators</DialogTitle>
+              <p className="text-sm text-muted-foreground mt-0.5">Invite users to work on projects together</p>
             </div>
           </div>
         </DialogHeader>
@@ -100,14 +90,14 @@ export function InviteCollaboratorsModal({
         <div className="space-y-4 mt-4">
           <Tabs defaultValue="team-members" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-muted p-0.5 rounded-lg">
-              <TabsTrigger 
-                value="team-members" 
+              <TabsTrigger
+                value="team-members"
                 className="flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
               >
                 <Users className="h-4 w-4" />
                 Team members
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="organisations"
                 className="flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
               >
@@ -129,26 +119,21 @@ export function InviteCollaboratorsModal({
 
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">Team members</h3>
-                
+
                 {filteredMembers.map((member) => (
                   <div key={member.id} className="flex items-center justify-between py-3">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9">
                         <AvatarImage src={member.avatar} alt={member.name} />
-                        <AvatarFallback className="bg-muted text-foreground text-sm font-medium">
-                          {getInitials(member.name)}
-                        </AvatarFallback>
+                        <AvatarFallback className="bg-muted text-foreground text-sm font-medium">{getInitials(member.name)}</AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="text-sm font-medium text-foreground">{member.name}</p>
                         <p className="text-xs text-muted-foreground">{member.email}</p>
                       </div>
                     </div>
-                    
-                    <Select 
-                      defaultValue={member.role}
-                      onValueChange={(value) => handleRoleChange(member.id, value)}
-                    >
+
+                    <Select defaultValue={member.role} onValueChange={(value) => handleRoleChange(member.id, value)}>
                       <SelectTrigger className="w-20 h-8 bg-muted border border-border text-foreground text-xs rounded-md hover:bg-accent">
                         <SelectValue />
                       </SelectTrigger>
@@ -168,7 +153,7 @@ export function InviteCollaboratorsModal({
                 ))}
               </div>
 
-              {searchQuery && !filteredMembers.some(m => m.email === searchQuery) && (
+              {searchQuery && !filteredMembers.some((m) => m.email === searchQuery) && (
                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg border border-border">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 bg-accent rounded-full flex items-center justify-center">
@@ -179,7 +164,7 @@ export function InviteCollaboratorsModal({
                       <p className="text-xs text-muted-foreground">Send invitation email</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Select value={selectedRole} onValueChange={setSelectedRole}>
                       <SelectTrigger className="w-20 h-8 bg-background border border-border text-foreground text-xs rounded-md">
@@ -197,11 +182,7 @@ export function InviteCollaboratorsModal({
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button
-                      size="sm"
-                      onClick={handleInvite}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs"
-                    >
+                    <Button size="sm" onClick={handleInvite} className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs">
                       Invite
                     </Button>
                   </div>

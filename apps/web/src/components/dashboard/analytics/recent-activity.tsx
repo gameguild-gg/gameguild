@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
 import { ScrollArea } from '@game-guild/ui/components/scroll-area';
-import { User, BookOpen, CreditCard, Settings, UserPlus, UserMinus, DollarSign, Activity, RefreshCw } from 'lucide-react';
+import { Activity, BookOpen, DollarSign, RefreshCw, Settings, User, UserMinus, UserPlus } from 'lucide-react';
 
 interface ActivityItem {
   id: string;

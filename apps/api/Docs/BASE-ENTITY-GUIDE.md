@@ -2,31 +2,32 @@
 
 ## Overview
 
-The Base Entity system provides a foundation for all domain entities in the CMS application, mirroring the functionality of NestJS EntityDto. It includes common properties, validation, and utility methods that all entities inherit.
+The Base Entity system provides a foundation for all domain entities in the CMS application, mirroring the functionality
+of NestJS EntityDto. It includes common properties, validation, and utility methods that all entities inherit.
 
 ## Architecture
 
 ### Core Components
 
 1. **IEntity Interface** (`Common/Entities/IEntity.cs`)
-   - Defines the contract for all entities
-   - Provides both generic and non-generic versions
-   - Ensures consistent entity structure across the application
+  - Defines the contract for all entities
+  - Provides both generic and non-generic versions
+  - Ensures consistent entity structure across the application
 
 2. **BaseEntity<TKey> Class** (`Common/Entities/BaseEntityGeneric.cs`)
-   - Generic base class supporting different ID types
-   - Implements IEntity interface
-   - Provides core functionality for all entities
+  - Generic base class supporting different ID types
+  - Implements IEntity interface
+  - Provides core functionality for all entities
 
 3. **BaseEntity Class** (`Common/Entities/BaseEntity.cs`)
-   - Convenience class that uses `int` as the default ID type
-   - Inherits from `BaseEntity<int>`
-   - Provides static factory methods
+  - Convenience class that uses `int` as the default ID type
+  - Inherits from `BaseEntity<int>`
+  - Provides static factory methods
 
 4. **ModelBuilderExtensions** (`Common/Data/ModelBuilderExtensions.cs`)
-   - Entity Framework configuration extensions
-   - Automatically configures base entity properties
-   - Sets up database constraints and indexes
+  - Entity Framework configuration extensions
+  - Automatically configures base entity properties
+  - Sets up database constraints and indexes
 
 ## Features
 
@@ -50,11 +51,13 @@ public DateTime UpdatedAt { get; set; }        // Last update timestamp
 ### Utility Methods
 
 #### Touch()
+
 ```csharp
 user.Touch(); // Updates UpdatedAt to current UTC time
 ```
 
 #### SetProperties()
+
 ```csharp
 var properties = new Dictionary<string, object?>
 {
@@ -65,6 +68,7 @@ user.SetProperties(properties); // Sets multiple properties at once
 ```
 
 #### Static Factory Methods
+
 ```csharp
 // Create with properties
 var user = BaseEntity.Create<User>(new Dictionary<string, object?>
@@ -78,11 +82,13 @@ var user = BaseEntity.Create<User>();
 ```
 
 #### IsNew Property
+
 ```csharp
 bool isNew = user.IsNew; // Returns true if Id == 0 (not persisted)
 ```
 
 #### ToDictionary()
+
 ```csharp
 var dict = user.ToDictionary(); // Gets all properties as dictionary
 ```
@@ -261,7 +267,8 @@ user.Touch();
 
 ## Testing
 
-The base entity functionality is covered by comprehensive unit tests in `Tests/Common/Entities/BaseEntityTests.cs`. Run tests with:
+The base entity functionality is covered by comprehensive unit tests in `Tests/Common/Entities/BaseEntityTests.cs`. Run
+tests with:
 
 ```bash
 dotnet test --filter "BaseEntityTests"
@@ -296,14 +303,15 @@ Potential improvements to consider:
 
 ## Comparison with NestJS EntityDto
 
-| Feature | NestJS EntityDto | C# BaseEntity |
-|---------|------------------|---------------|
-| Common Properties | ✅ id, createdAt, updatedAt | ✅ Id, CreatedAt, UpdatedAt |
-| Type Safety | ✅ TypeScript interfaces | ✅ C# interfaces and generics |
-| Factory Methods | ✅ Static create methods | ✅ Static Create<T> methods |
-| Partial Updates | ✅ Object spread/assign | ✅ SetProperties dictionary |
-| Validation | ✅ class-validator decorators | ✅ Data annotations |
-| ORM Integration | ✅ TypeORM entities | ✅ EF Core entities |
+| Feature              | NestJS EntityDto                       | C# BaseEntity                  |
+|----------------------|----------------------------------------|--------------------------------|
+| Common Properties    | ✅ id, createdAt, updatedAt             | ✅ Id, CreatedAt, UpdatedAt     |
+| Type Safety          | ✅ TypeScript interfaces                | ✅ C# interfaces and generics   |
+| Factory Methods      | ✅ Static create methods                | ✅ Static Create<T> methods     |
+| Partial Updates      | ✅ Object spread/assign                 | ✅ SetProperties dictionary     |
+| Validation           | ✅ class-validator decorators           | ✅ Data annotations             |
+| ORM Integration      | ✅ TypeORM entities                     | ✅ EF Core entities             |
 | Automatic Timestamps | ✅ @CreateDateColumn, @UpdateDateColumn | ✅ EF Core SaveChanges override |
 
-The C# implementation provides equivalent functionality while leveraging .NET's strong typing and Entity Framework's capabilities.
+The C# implementation provides equivalent functionality while leveraging .NET's strong typing and Entity Framework's
+capabilities.

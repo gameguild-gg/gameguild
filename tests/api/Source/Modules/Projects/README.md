@@ -27,16 +27,19 @@ Project/
 ## 🧪 Test Coverage
 
 ### Unit Tests
+
 - **ProjectService**: Project CRUD operations, business logic
 - **ProjectModel**: Model validation, entity behavior
 - **ProjectPermission**: Access control and permission checks
 
 ### E2E Tests
+
 - **API Tests**: Complete project workflows via REST endpoints
 - **GraphQL Tests**: Project queries and mutations
 - **DAC Integration**: Decentralized Access Control testing
 
 ### Performance Tests
+
 - **ProjectPerformance**: Load testing, query optimization, throughput analysis
 
 ## 🚀 Running Tests

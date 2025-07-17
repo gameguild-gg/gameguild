@@ -2,9 +2,16 @@
   "id": 1,
   "format_ver": "1.0.0",
   "type": "code",
-  "rules": ["inputs: y", "outputs: y", "chars: 500"],
+  "rules": [
+    "inputs: y",
+    "outputs: y",
+    "chars: 500"
+  ],
   "status": 2,
-  "subject": ["javascript", "basic math"],
+  "subject": [
+    "javascript",
+    "basic math"
+  ],
   "title": "Sum of Two Numbers",
   "description": "Write a function that takes two numbers as input and returns their sum.",
   "initialCode": {
@@ -18,15 +25,30 @@
   ],
   "inputs": {
     "1": [
-      [5, 3],
-      [10, -2]
+      [
+        5,
+        3
+      ],
+      [
+        10,
+        -2
+      ]
     ]
   },
   "outputs": {
-    "1": ["8", "8"]
+    "1": [
+      "8",
+      "8"
+    ]
   },
   "outputsScore": {
-    "1": [5, 5]
+    "1": [
+      5,
+      5
+    ]
   },
-  "score": [10, 0]
+  "score": [
+    10,
+    0
+  ]
 }

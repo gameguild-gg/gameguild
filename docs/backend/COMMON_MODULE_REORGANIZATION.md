@@ -3,6 +3,7 @@
 ## ✅ Completed Reorganization
 
 ### Abstractions Folder → Common Module
+
 - **MOVED**: `Abstractions/DependencyInjection.cs` → `Common/Configuration/DependencyInjection.cs`
 - **REMOVED**: Empty `Abstractions` folder structure
 
@@ -66,17 +67,20 @@ Common/
 ## 🔧 Issues Requiring Immediate Fix
 
 ### 1. Namespace Updates Required
+
 - **Program.cs**: Update using statements to new namespace structure
 - **Behavior classes**: Fix namespace conflicts and duplicates
 - **All moved files**: Update namespaces to match new folder structure
 
 ### 2. Build Errors to Address
+
 - **Duplicate class definitions**: `UsersEndpoints` exists in multiple locations
 - **Missing namespace references**: GraphQL, Middleware, etc.
 - **Interface implementations**: DateTimeProvider missing implementation
 - **Serilog dependency**: Missing in UnifiedLoggingBehavior
 
 ### 3. Files Still Need Moving/Cleanup
+
 - **Duplicate endpoints**: Remove or consolidate `Abstractions/Endpoints/`
 - **Legacy files**: Clean up remaining duplicate files
 
@@ -91,7 +95,7 @@ Common/
 ## 🏗️ Clean Architecture Benefits Achieved
 
 - **Separation of Concerns**: Clear boundaries between layers
-- **Dependency Inversion**: Abstractions separated from implementations  
+- **Dependency Inversion**: Abstractions separated from implementations
 - **Testability**: Infrastructure and domain logic cleanly separated
 - **Maintainability**: Organized, predictable structure
 - **Scalability**: Easy to add new features following established patterns
@@ -99,7 +103,7 @@ Common/
 ## 📋 Current Status
 
 - **Folder structure**: ✅ Complete
-- **File movement**: ✅ Complete  
+- **File movement**: ✅ Complete
 - **Namespace updates**: ⏳ In progress
 - **Build success**: ❌ Requires fixes
 - **Integration**: ⏳ Pending namespace fixes

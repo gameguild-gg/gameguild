@@ -1,6 +1,7 @@
 # GameGuild API - Modern Builder Pattern
 
-This document explains the modern, fluent builder pattern implementation for the GameGuild API, following .NET best practices and clean architecture principles.
+This document explains the modern, fluent builder pattern implementation for the GameGuild API, following .NET best
+practices and clean architecture principles.
 
 ## Overview
 
@@ -109,6 +110,7 @@ app.MapHealthChecks("/health")  // JSON health status
 The builder pattern organizes services by architectural layers:
 
 ### 1. Presentation Layer (`AddPresentation`)
+
 - Controllers and API endpoints
 - CORS configuration
 - Swagger/OpenAPI documentation
@@ -116,12 +118,14 @@ The builder pattern organizes services by architectural layers:
 - Response compression
 
 ### 2. Application Layer (`AddApplication`)
+
 - MediatR for CQRS
 - Validation behaviors
 - Domain event handling
 - Pipeline behaviors
 
 ### 3. Infrastructure Layer (`AddInfrastructure`)
+
 - Database configuration
 - Domain modules
 - Authentication services
@@ -139,18 +143,21 @@ Configuration follows the .NET precedence order:
 ## Environment-Specific Features
 
 ### Development
+
 - Enhanced Swagger UI
 - Detailed error pages
 - Sensitive data logging
 - CORS allow all origins
 
 ### Production
+
 - Response compression
 - Rate limiting
 - Security headers
 - Optimized logging
 
 ### Testing
+
 - In-memory database
 - Simplified authentication
 - Fast startup
@@ -220,4 +227,5 @@ await WebApplication
 5. **Follow the builder pattern** for fluent configuration
 6. **Separate concerns** by architectural layer
 
-This modern approach provides a robust, maintainable foundation that scales with your application's complexity while maintaining clean, readable code.
+This modern approach provides a robust, maintainable foundation that scales with your application's complexity while
+maintaining clean, readable code.

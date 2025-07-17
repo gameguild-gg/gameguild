@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Eye, Save, MoreHorizontal, Upload, Info } from 'lucide-react';
+import { Eye, Info, MoreHorizontal, Save, Upload } from 'lucide-react';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent } from '@game-guild/ui/components/card';
 import { Input } from '@game-guild/ui/components/input';

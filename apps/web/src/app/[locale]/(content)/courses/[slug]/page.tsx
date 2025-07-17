@@ -8,7 +8,6 @@ import { CourseFeatures } from '@/components/courses/course/course-features';
 import { CourseSidebar } from '@/components/courses/course/course-sidebar';
 import { Loader2 } from 'lucide-react';
 
-
 // Generate metadata for SEO
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -75,7 +74,7 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
   const { slug } = await params;
 
   return (
-    <Suspense 
+    <Suspense
       fallback={
         <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
           <div className="flex flex-col items-center space-y-4">

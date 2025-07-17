@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Progress } from '@game-guild/ui/components/progress';
 import { Badge } from '@game-guild/ui/components/badge';
-import { CheckCircle, Clock, Trophy, Target, Book, Activity } from 'lucide-react';
+import { Activity, Book, CheckCircle, Clock, Target, Trophy } from 'lucide-react';
 
 interface ProgressItem {
   readonly id: string;
@@ -112,9 +112,7 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
   if (!progressData) {
     return (
       <Card>
-        <CardContent className="p-6 text-center text-gray-500">
-          Failed to load progress data
-        </CardContent>
+        <CardContent className="p-6 text-center text-gray-500">Failed to load progress data</CardContent>
       </Card>
     );
   }
@@ -126,37 +124,27 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Course Progress</span>
-            <Badge variant={progressData.certificateEligible ? 'default' : 'secondary'}>
-              {progressData.progressPercentage}% Complete
-            </Badge>
+            <Badge variant={progressData.certificateEligible ? 'default' : 'secondary'}>{progressData.progressPercentage}% Complete</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <Progress value={progressData.progressPercentage} className="h-3" />
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center space-y-1">
-              <div className="text-2xl font-bold text-blue-600">
-                {progressData.completedItems}
-              </div>
+              <div className="text-2xl font-bold text-blue-600">{progressData.completedItems}</div>
               <div className="text-sm text-gray-600">Completed</div>
             </div>
             <div className="text-center space-y-1">
-              <div className="text-2xl font-bold text-orange-600">
-                {progressData.totalItems - progressData.completedItems}
-              </div>
+              <div className="text-2xl font-bold text-orange-600">{progressData.totalItems - progressData.completedItems}</div>
               <div className="text-sm text-gray-600">Remaining</div>
             </div>
             <div className="text-center space-y-1">
-              <div className="text-2xl font-bold text-green-600">
-                {progressData.currentStreak}
-              </div>
+              <div className="text-2xl font-bold text-green-600">{progressData.currentStreak}</div>
               <div className="text-sm text-gray-600">Day Streak</div>
             </div>
             <div className="text-center space-y-1">
-              <div className="text-2xl font-bold text-purple-600">
-                {formatTime(progressData.timeSpent)}
-              </div>
+              <div className="text-2xl font-bold text-purple-600">{formatTime(progressData.timeSpent)}</div>
               <div className="text-sm text-gray-600">Time Spent</div>
             </div>
           </div>
@@ -164,7 +152,7 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
           {progressData.nextItem && (
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <h4 className="font-medium text-blue-800 mb-2">Up Next:</h4>
-              <div 
+              <div
                 className="flex items-center gap-3 cursor-pointer hover:bg-blue-100 p-2 rounded transition-colors"
                 onClick={() => onItemClick?.(progressData.nextItem!)}
               >
@@ -183,9 +171,7 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
                 <Trophy className="h-5 w-5" />
                 <span className="font-medium">Certificate Ready!</span>
               </div>
-              <p className="text-sm text-green-600 mt-1">
-                You've completed all requirements and can now generate your certificate.
-              </p>
+              <p className="text-sm text-green-600 mt-1">You've completed all requirements and can now generate your certificate.</p>
             </div>
           )}
         </CardContent>
@@ -205,15 +191,13 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
                   item.status === 'completed' || item.status === 'graded'
                     ? 'bg-green-50 border-green-200 hover:bg-green-100'
                     : item.status === 'in-progress'
-                    ? 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                      ? 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
                 }`}
                 onClick={() => onItemClick?.(item)}
               >
-                <div className="flex-shrink-0">
-                  {getStatusIcon(item.status)}
-                </div>
-                
+                <div className="flex-shrink-0">{getStatusIcon(item.status)}</div>
+
                 <div className="flex-grow min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     {getTypeIcon(item.type)}
@@ -224,31 +208,21 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
                       </Badge>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center gap-4 text-sm text-gray-600">
                     <Badge variant="secondary" className="text-xs">
                       {item.type}
                     </Badge>
-                    
-                    {item.completedAt && (
-                      <span>Completed {new Date(item.completedAt).toLocaleDateString()}</span>
-                    )}
-                    
-                    {item.grade !== undefined && (
-                      <span className="font-medium">Grade: {item.grade}%</span>
-                    )}
+
+                    {item.completedAt && <span>Completed {new Date(item.completedAt).toLocaleDateString()}</span>}
+
+                    {item.grade !== undefined && <span className="font-medium">Grade: {item.grade}%</span>}
                   </div>
                 </div>
 
                 <div className="flex-shrink-0">
-                  <Badge 
-                    variant={
-                      item.status === 'completed' || item.status === 'graded' 
-                        ? 'default' 
-                        : item.status === 'in-progress'
-                        ? 'secondary'
-                        : 'outline'
-                    }
+                  <Badge
+                    variant={item.status === 'completed' || item.status === 'graded' ? 'default' : item.status === 'in-progress' ? 'secondary' : 'outline'}
                     className="capitalize"
                   >
                     {item.status.replace('-', ' ')}
@@ -267,13 +241,9 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-orange-600" />
-                <span className="font-medium text-orange-800">
-                  Estimated time to complete:
-                </span>
+                <span className="font-medium text-orange-800">Estimated time to complete:</span>
               </div>
-              <Badge className="bg-orange-600 text-white">
-                ~{progressData.estimatedTimeToComplete}h remaining
-              </Badge>
+              <Badge className="bg-orange-600 text-white">~{progressData.estimatedTimeToComplete}h remaining</Badge>
             </div>
           </CardContent>
         </Card>
@@ -283,10 +253,10 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
 }
 
 /* Compact progress component for course cards */
-export function CompactProgress({ 
-  progressPercentage, 
-  completedItems, 
-  totalItems 
+export function CompactProgress({
+  progressPercentage,
+  completedItems,
+  totalItems,
 }: {
   readonly progressPercentage: number;
   readonly completedItems: number;
@@ -296,12 +266,12 @@ export function CompactProgress({
     <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">
         <span className="text-gray-600">Progress</span>
-        <span className="font-medium">{completedItems}/{totalItems}</span>
+        <span className="font-medium">
+          {completedItems}/{totalItems}
+        </span>
       </div>
       <Progress value={progressPercentage} className="h-2" />
-      <div className="text-right text-xs text-gray-500">
-        {progressPercentage}% complete
-      </div>
+      <div className="text-right text-xs text-gray-500">{progressPercentage}% complete</div>
     </div>
   );
 }

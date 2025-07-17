@@ -5,7 +5,7 @@ import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
-import { Award, Download, Check, Loader2, ExternalLink } from 'lucide-react';
+import { Award, Check, Download, ExternalLink, Loader2 } from 'lucide-react';
 
 interface CertificateNotificationProps {
   readonly courseId: string;

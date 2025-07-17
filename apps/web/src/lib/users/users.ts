@@ -307,7 +307,14 @@ export async function deleteUser(id: string): Promise<{ success: boolean; error?
 /**
  * Toggle user active status (Server Action)
  */
-export async function toggleUserStatus(id: string, currentStatus: boolean): Promise<{ success: boolean; error?: string; user?: User }> {
+export async function toggleUserStatus(
+  id: string,
+  currentStatus: boolean,
+): Promise<{
+  success: boolean;
+  error?: string;
+  user?: User;
+}> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
@@ -465,7 +472,14 @@ export async function getUserStatistics(
 /**
  * Bulk activate users (Server Action)
  */
-export async function bulkActivateUsers(userIds: string[], reason?: string): Promise<{ success: boolean; error?: string; result?: any }> {
+export async function bulkActivateUsers(
+  userIds: string[],
+  reason?: string,
+): Promise<{
+  success: boolean;
+  error?: string;
+  result?: any;
+}> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
     const params = new URLSearchParams();
@@ -502,7 +516,14 @@ export async function bulkActivateUsers(userIds: string[], reason?: string): Pro
 /**
  * Bulk deactivate users (Server Action)
  */
-export async function bulkDeactivateUsers(userIds: string[], reason?: string): Promise<{ success: boolean; error?: string; result?: any }> {
+export async function bulkDeactivateUsers(
+  userIds: string[],
+  reason?: string,
+): Promise<{
+  success: boolean;
+  error?: string;
+  result?: any;
+}> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
     const params = new URLSearchParams();

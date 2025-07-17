@@ -1,7 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { CourseState, CourseAction, CourseData } from '@/components/legacy/types/courses';
+import React, { createContext, ReactNode, useContext, useEffect, useReducer } from 'react';
+import { CourseAction, CourseData, CourseState } from '@/components/legacy/types/courses';
 import { courseReducer, initialCourseState } from '@/lib/courses/reducers/courses.reducer';
 
 interface CourseContextType {

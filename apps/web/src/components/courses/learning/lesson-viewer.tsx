@@ -33,7 +33,7 @@ export function LessonViewer({ item, onComplete }: LessonViewerProps) {
 
   const handleComplete = async () => {
     setIsCompleting(true);
-    
+
     // Simulate reading time
     setTimeout(() => {
       onComplete();
@@ -48,7 +48,7 @@ export function LessonViewer({ item, onComplete }: LessonViewerProps) {
       sections: [
         {
           title: 'Introduction',
-          content: `Game development is the process of creating video games, from initial concept to final release. It involves multiple disciplines including programming, art, design, audio, and project management.`
+          content: `Game development is the process of creating video games, from initial concept to final release. It involves multiple disciplines including programming, art, design, audio, and project management.`,
         },
         {
           title: 'Key Roles in Game Development',
@@ -60,7 +60,7 @@ export function LessonViewer({ item, onComplete }: LessonViewerProps) {
               <li><strong>Audio Designer:</strong> Creates sound effects and music</li>
               <li><strong>Producer:</strong> Manages the project timeline and team coordination</li>
             </ul>
-          `
+          `,
         },
         {
           title: 'Development Process',
@@ -72,16 +72,16 @@ export function LessonViewer({ item, onComplete }: LessonViewerProps) {
               <li><strong>Testing:</strong> Bug fixing and balancing</li>
               <li><strong>Release:</strong> Publishing and distribution</li>
             </ol>
-          `
-        }
-      ]
+          `,
+        },
+      ],
     },
     'lesson-2': {
       title: 'Game Programming Basics',
       sections: [
         {
           title: 'Programming Fundamentals',
-          content: `Before diving into game programming, you need to understand basic programming concepts like variables, functions, loops, and conditions.`
+          content: `Before diving into game programming, you need to understand basic programming concepts like variables, functions, loops, and conditions.`,
         },
         {
           title: 'Game Loop',
@@ -93,7 +93,7 @@ while (game is running) {
   renderGraphics();
 }
             </pre>
-          `
+          `,
         },
         {
           title: 'Common Game Programming Patterns',
@@ -104,16 +104,16 @@ while (game is running) {
               <li><strong>Component System:</strong> Modular approach to game objects</li>
               <li><strong>Object Pooling:</strong> Efficient memory management for frequently created objects</li>
             </ul>
-          `
-        }
-      ]
+          `,
+        },
+      ],
     },
     'lesson-3': {
       title: 'Game Mechanics and Systems',
       sections: [
         {
           title: 'What are Game Mechanics?',
-          content: `Game mechanics are the rules and systems that define how players interact with your game. They create the core gameplay experience.`
+          content: `Game mechanics are the rules and systems that define how players interact with your game. They create the core gameplay experience.`,
         },
         {
           title: 'Types of Game Mechanics',
@@ -125,10 +125,10 @@ while (game is running) {
               <li><strong>Resource Management:</strong> Collecting and spending game resources</li>
               <li><strong>Puzzle Solving:</strong> Mental challenges and problem-solving</li>
             </ul>
-          `
-        }
-      ]
-    }
+          `,
+        },
+      ],
+    },
   };
 
   const content = lessonContent[item.id as keyof typeof lessonContent] || {
@@ -136,9 +136,9 @@ while (game is running) {
     sections: [
       {
         title: 'Content',
-        content: 'This lesson content would be loaded from the course management system.'
-      }
-    ]
+        content: 'This lesson content would be loaded from the course management system.',
+      },
+    ],
   };
 
   if (!hasStarted) {
@@ -146,9 +146,7 @@ while (game is running) {
       <div className="text-center py-12">
         <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
         <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-        <p className="text-gray-400 mb-6 max-w-md mx-auto">
-          {item.description || 'Ready to start this lesson?'}
-        </p>
+        <p className="text-gray-400 mb-6 max-w-md mx-auto">{item.description || 'Ready to start this lesson?'}</p>
         <div className="flex items-center justify-center gap-4 mb-6">
           {item.duration && (
             <div className="flex items-center gap-1 text-sm text-gray-400">
@@ -156,9 +154,7 @@ while (game is running) {
               {item.duration} minutes
             </div>
           )}
-          {item.isRequired && (
-            <Badge variant="secondary">Required</Badge>
-          )}
+          {item.isRequired && <Badge variant="secondary">Required</Badge>}
         </div>
         <Button onClick={handleStart} className="bg-blue-600 hover:bg-blue-700">
           Start Lesson
@@ -174,10 +170,7 @@ while (game is running) {
           <Card key={index} className="bg-gray-900 border-gray-700">
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold mb-4 text-white">{section.title}</h3>
-              <div 
-                className="prose prose-invert max-w-none text-gray-300 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: section.content }}
-              />
+              <div className="prose prose-invert max-w-none text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: section.content }} />
             </CardContent>
           </Card>
         ))}
@@ -189,17 +182,11 @@ while (game is running) {
             <CheckCircle className="h-5 w-5 text-green-500" />
             <span className="text-white font-medium">Ready to mark as complete?</span>
           </div>
-          <Button 
-            onClick={handleComplete}
-            disabled={isCompleting}
-            className="bg-green-600 hover:bg-green-700"
-          >
+          <Button onClick={handleComplete} disabled={isCompleting} className="bg-green-600 hover:bg-green-700">
             {isCompleting ? 'Completing...' : 'Mark Complete'}
           </Button>
         </div>
-        <p className="text-gray-400 text-sm mt-2">
-          Marking this lesson as complete will unlock the next content item.
-        </p>
+        <p className="text-gray-400 text-sm mt-2">Marking this lesson as complete will unlock the next content item.</p>
       </div>
     </div>
   );

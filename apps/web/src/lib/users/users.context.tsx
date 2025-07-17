@@ -771,10 +771,18 @@ export function useUserFilters() {
     setSearch: (search: string) => dispatch({ type: 'SET_SEARCH', payload: search }),
     setActiveFilter: (isActive: boolean | 'all') => dispatch({ type: 'SET_ACTIVE_FILTER', payload: isActive }),
     setRoleFilter: (role: string | 'all') => dispatch({ type: 'SET_ROLE_FILTER', payload: role }),
-    setSubscriptionFilter: (status: 'active' | 'inactive' | 'expired' | 'all') => dispatch({ type: 'SET_SUBSCRIPTION_FILTER', payload: status }),
+    setSubscriptionFilter: (status: 'active' | 'inactive' | 'expired' | 'all') =>
+      dispatch({
+        type: 'SET_SUBSCRIPTION_FILTER',
+        payload: status,
+      }),
     setBalanceRange: (range: { min?: number; max?: number }) => dispatch({ type: 'SET_BALANCE_RANGE', payload: range }),
     setDateRange: (range: { start?: Date; end?: Date }) => dispatch({ type: 'SET_DATE_RANGE', payload: range }),
-    setSort: (sortBy: UserFilters['sortBy'], sortOrder: UserFilters['sortOrder']) => dispatch({ type: 'SET_SORT', payload: { sortBy, sortOrder } }),
+    setSort: (sortBy: UserFilters['sortBy'], sortOrder: UserFilters['sortOrder']) =>
+      dispatch({
+        type: 'SET_SORT',
+        payload: { sortBy, sortOrder },
+      }),
     resetFilters: () => dispatch({ type: 'RESET_FILTERS' }),
     clearSearchHistory: () => dispatch({ type: 'CLEAR_SEARCH_HISTORY' }),
   };
@@ -829,8 +837,16 @@ export function useUserOperations() {
     addUser: (user: User) => dispatch({ type: 'ADD_USER', payload: user }),
     updateUser: (user: User) => dispatch({ type: 'UPDATE_USER', payload: user }),
     deleteUser: (id: string) => dispatch({ type: 'DELETE_USER', payload: id }),
-    setOperationStatus: (status: Partial<UserOperationStatus>) => dispatch({ type: 'SET_OPERATION_STATUS', payload: status }),
-    setBulkProgress: (progress: UserState['bulkOperationProgress']) => dispatch({ type: 'SET_BULK_PROGRESS', payload: progress }),
+    setOperationStatus: (status: Partial<UserOperationStatus>) =>
+      dispatch({
+        type: 'SET_OPERATION_STATUS',
+        payload: status,
+      }),
+    setBulkProgress: (progress: UserState['bulkOperationProgress']) =>
+      dispatch({
+        type: 'SET_BULK_PROGRESS',
+        payload: progress,
+      }),
     optimizeState: () => dispatch({ type: 'OPTIMIZE_STATE' }),
   };
 }

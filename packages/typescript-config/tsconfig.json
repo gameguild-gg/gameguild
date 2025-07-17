@@ -6,7 +6,7 @@
 
     /* Projects */
     /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
-     "incremental": false,
+    "incremental": false,
     /* Enable constraints that allow a TypeScript project to be used with project references. */
     // "composite": true,
     /* Specify the path to .tsbuildinfo incremental compilation file. */

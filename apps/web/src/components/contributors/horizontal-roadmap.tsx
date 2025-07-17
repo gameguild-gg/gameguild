@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { MapPin, Code, BookOpen, Zap } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 interface RoadmapMilestone {
   id: string;
@@ -141,11 +141,15 @@ export function HorizontalRoadmap() {
             <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-lg p-6 shadow-lg">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">{currentMilestone.title}</h3>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+                    {currentMilestone.title}
+                  </h3>
                   <p className="text-slate-300">{currentMilestone.description}</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-1">{currentMilestone.progress}%</div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-1">
+                    {currentMilestone.progress}%
+                  </div>
                   <div className="text-xs text-slate-400 uppercase tracking-wide">Complete</div>
                 </div>
               </div>
@@ -155,7 +159,11 @@ export function HorizontalRoadmap() {
                 <div className="w-full bg-slate-700 rounded-full h-3">
                   <div
                     className={`h-3 rounded-full transition-all duration-500 ${
-                      currentMilestone.status === 'completed' ? 'bg-gradient-to-r from-green-500 to-emerald-500' : currentMilestone.status === 'current' ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-slate-500 to-slate-600'
+                      currentMilestone.status === 'completed'
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                        : currentMilestone.status === 'current'
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-500'
+                          : 'bg-gradient-to-r from-slate-500 to-slate-600'
                     }`}
                     style={{ width: `${currentMilestone.progress}%` }}
                   ></div>

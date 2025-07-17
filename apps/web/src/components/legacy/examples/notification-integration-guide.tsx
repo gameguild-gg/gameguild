@@ -14,7 +14,7 @@ export function NotificationIntegrationGuide() {
             <h3 className="text-lg font-semibold mb-3">1. Wrap your app with NotificationProvider</h3>
             <div className="bg-muted/50 p-4 rounded-lg">
               <pre className="text-sm">
-{`// In your layout.tsx or main app component
+                {`// In your layout.tsx or main app component
 
 
 export default function RootLayout({ children }) {
@@ -36,7 +36,7 @@ export default function RootLayout({ children }) {
             <h3 className="text-lg font-semibold mb-3">2. Use notification helpers in any component</h3>
             <div className="bg-muted/50 p-4 rounded-lg">
               <pre className="text-sm">
-{`// In any component
+                {`// In any component
 
 
 export function MyComponent() {
@@ -61,7 +61,7 @@ export function MyComponent() {
             <h3 className="text-lg font-semibold mb-3">3. Advanced usage with custom options</h3>
             <div className="bg-muted/50 p-4 rounded-lg">
               <pre className="text-sm">
-{`// Custom notification with action button
+                {`// Custom notification with action button
 warning(
   'Storage space low', 
   'You have used 85% of your storage.',

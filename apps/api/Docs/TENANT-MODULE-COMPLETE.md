@@ -2,11 +2,14 @@
 
 ## 📋 Overview
 
-The Tenant module for the C# ASP.NET Core CMS application has been fully implemented, providing comprehensive multi-tenancy support with roles and permissions. This module enables organizations to manage multiple tenants with proper user segregation and role-based access control.
+The Tenant module for the C# ASP.NET Core CMS application has been fully implemented, providing comprehensive
+multi-tenancy support with roles and permissions. This module enables organizations to manage multiple tenants with
+proper user segregation and role-based access control.
 
 ## ✅ Implementation Status: COMPLETE
 
 ### 🏗️ Database Schema
+
 - **Tenant**: Core tenant entity with name, description, and status
 - **TenantRole**: Role definitions within tenant contexts
 - **UserTenant**: Junction table for user-tenant relationships
@@ -16,6 +19,7 @@ The Tenant module for the C# ASP.NET Core CMS application has been fully impleme
 ### 🔧 Core Components
 
 #### 1. Models (`src/Modules/Tenant/Models/`)
+
 - ✅ `Tenant.cs` - Main tenant entity
 - ✅ `TenantRole.cs` - Tenant-specific roles
 - ✅ `UserTenant.cs` - User-tenant relationships
@@ -23,6 +27,7 @@ The Tenant module for the C# ASP.NET Core CMS application has been fully impleme
 - ✅ All models inherit from `BaseEntity` (UUID, timestamps, soft delete, versioning)
 
 #### 2. Services (`src/Modules/Tenant/Services/`)
+
 - ✅ `ITenantService.cs` & `TenantService.cs` - Tenant management
 - ✅ `ITenantRoleService.cs` & `TenantRoleService.cs` - Role management
 - ✅ Comprehensive CRUD operations
@@ -30,11 +35,13 @@ The Tenant module for the C# ASP.NET Core CMS application has been fully impleme
 - ✅ User-tenant relationship management
 
 #### 3. DTOs (`src/Modules/Tenant/Dtos/`)
+
 - ✅ `CreateTenantDto.cs` & `UpdateTenantDto.cs`
 - ✅ `CreateTenantRoleDto.cs` & `UpdateTenantRoleDto.cs`
 - ✅ Input validation and data transfer patterns
 
 #### 4. GraphQL API (`src/Modules/Tenant/GraphQL/`)
+
 - ✅ `TenantQueries.cs` - 10 comprehensive query operations
 - ✅ `TenantMutations.cs` - 11 mutation operations
 - ✅ `TenantInputs.cs` - 7 input type classes
@@ -42,6 +49,7 @@ The Tenant module for the C# ASP.NET Core CMS application has been fully impleme
 - ✅ Proper HotChocolate integration
 
 #### 5. Database Integration
+
 - ✅ `ApplicationDbContext.cs` - EF Core configuration
 - ✅ Migration: `20250603140000_AddTenantEntities.cs`
 - ✅ Complete table relationships and constraints
@@ -50,18 +58,21 @@ The Tenant module for the C# ASP.NET Core CMS application has been fully impleme
 ## 🚀 Features Implemented
 
 ### Multi-Tenancy Support
+
 - Tenant creation and management
 - Active/inactive tenant states
 - Soft delete with restore functionality
 - Unique tenant naming constraints
 
 ### Role-Based Access Control
+
 - Tenant-specific role definitions
 - Flexible permission system (JSON-based)
 - Role expiration support
 - User-role assignments within tenant contexts
 
 ### User-Tenant Relationships
+
 - Many-to-many user-tenant associations
 - Join date tracking
 - Active relationship management
@@ -70,6 +81,7 @@ The Tenant module for the C# ASP.NET Core CMS application has been fully impleme
 ### GraphQL API Operations
 
 #### Queries (10 operations)
+
 1. `getTenants` - List all active tenants
 2. `getTenantById` - Get specific tenant
 3. `getActiveTenants` - List only active tenants
@@ -82,6 +94,7 @@ The Tenant module for the C# ASP.NET Core CMS application has been fully impleme
 10. `getUserTenantRoles` - Get user's roles in tenants
 
 #### Mutations (11 operations)
+
 1. `createTenant` - Create new tenant
 2. `updateTenant` - Update existing tenant
 3. `softDeleteTenant` - Soft delete tenant
@@ -97,17 +110,20 @@ The Tenant module for the C# ASP.NET Core CMS application has been fully impleme
 ## 🔗 Integration Points
 
 ### Entity Framework Core
+
 - Automatic migrations with `context.Database.Migrate()`
 - Soft delete query filters
 - Optimistic concurrency control
 - PostgreSQL/SQLite compatibility
 
 ### Service Registration
+
 - Dependency injection in `ServiceCollectionExtensions.cs`
 - GraphQL type registration in `Program.cs`
 - Service lifecycle management
 
 ### Base Entity Integration
+
 - UUID primary keys
 - Automatic timestamp management
 - Version control for optimistic concurrency
@@ -135,6 +151,7 @@ Credentials (Id, UserId, TenantId, Type, Value, Metadata, ExpiresAt, ...)
 ## 🧪 Testing Readiness
 
 ### GraphQL Endpoints
+
 ```
 POST /graphql
 
@@ -167,6 +184,7 @@ mutation {
 ```
 
 ### Service Usage
+
 ```csharp
 // Inject services
 ITenantService tenantService
@@ -192,8 +210,8 @@ var role = await roleService.CreateTenantRoleAsync(new CreateTenantRoleDto {
 
 ## 🔄 Migration Instructions
 
-1. **Automatic (Recommended)**: 
-   - Run `dotnet run` - migrations apply automatically
+1. **Automatic (Recommended)**:
+  - Run `dotnet run` - migrations apply automatically
 
 2. **Manual**:
    ```bash
@@ -203,6 +221,7 @@ var role = await roleService.CreateTenantRoleAsync(new CreateTenantRoleDto {
 ## 📝 Next Steps
 
 The Tenant module is **production-ready** with:
+
 - ✅ Complete database schema
 - ✅ Full CRUD operations
 - ✅ GraphQL API
@@ -211,6 +230,7 @@ The Tenant module is **production-ready** with:
 - ✅ Migration scripts
 
 ### Optional Enhancements:
+
 - Authentication middleware integration
 - Permission validation middleware
 - Tenant isolation middleware

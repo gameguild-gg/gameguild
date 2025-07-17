@@ -27,6 +27,7 @@ Auth/
 ## 🧪 Test Coverage
 
 ### Unit Tests
+
 - **AuthService**: Registration, login, token management, error handling
 - **JwtTokenService**: Token generation, validation, expiration
 - **TenantAuthService**: Multi-tenant authentication flows
@@ -35,11 +36,13 @@ Auth/
 - **LocalSignUpHandler**: Registration workflow handling
 
 ### E2E Tests
+
 - **API Tests**: Complete authentication workflows via REST endpoints
 - **GraphQL Tests**: Authentication mutations and queries
 - **Integration Tests**: Multi-service authentication scenarios
 
 ### Performance Tests
+
 - *Planned*: Authentication throughput, token generation performance
 
 ## 🚀 Running Tests

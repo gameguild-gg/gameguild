@@ -2,9 +2,17 @@
   "id": 4,
   "format_ver": "1.0.0",
   "type": "code",
-  "rules": ["inputs: y", "outputs: y", "chars: 1500", "files: 2"],
+  "rules": [
+    "inputs: y",
+    "outputs: y",
+    "chars: 1500",
+    "files: 2"
+  ],
   "status": 1,
-  "subject": ["javascript", "prime numbers"],
+  "subject": [
+    "javascript",
+    "prime numbers"
+  ],
   "title": "Prime Number Generator",
   "description": "Write a function that generates all prime numbers up to a given limit.",
   "initialCode": {
@@ -21,8 +29,22 @@
       "name": "helpers.js"
     }
   ],
-  "inputs": [[10, 20]],
-  "outputs": ["2,3,5,7", "2,3,5,7,11,13,17,19"],
-  "outputsScore": [5, 5],
-  "score": [10, 0]
+  "inputs": [
+    [
+      10,
+      20
+    ]
+  ],
+  "outputs": [
+    "2,3,5,7",
+    "2,3,5,7,11,13,17,19"
+  ],
+  "outputsScore": [
+    5,
+    5
+  ],
+  "score": [
+    10,
+    0
+  ]
 }

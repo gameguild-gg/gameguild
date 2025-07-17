@@ -1,14 +1,13 @@
 import { auth } from '@/auth';
 import { getCourseBySlug } from '@/lib/courses/actions';
-import { redirect } from 'next/navigation';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Progress } from '@game-guild/ui/components/progress';
-import { ArrowLeft, Clock, Play, CheckCircle, FileText, Video, Code, Award } from 'lucide-react';
+import { ArrowLeft, Award, CheckCircle, Clock, Code, FileText, Play, Video } from 'lucide-react';
 
 const levelColors = {
   1: 'bg-green-500/10 border-green-500 text-green-400',

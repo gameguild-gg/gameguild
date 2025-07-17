@@ -203,7 +203,10 @@ function mapDifficultyToLevel(difficulty: number): CourseLevel {
 /**
  * Get enhanced course data with filters
  */
-export async function getEnhancedCourseData(filters?: CourseFilters): Promise<{ courses: EnhancedCourse[]; total: number }> {
+export async function getEnhancedCourseData(filters?: CourseFilters): Promise<{
+  courses: EnhancedCourse[];
+  total: number;
+}> {
   return getCachedEnhancedCourseData(filters);
 }
 
@@ -243,7 +246,14 @@ export async function getEnhancedCourseById(id: string): Promise<EnhancedCourse 
 /**
  * Create course (Server Action)
  */
-export async function createEnhancedCourse(prevState: any, formData: FormData): Promise<{ success: boolean; error?: string; course?: EnhancedCourse }> {
+export async function createEnhancedCourse(
+  prevState: any,
+  formData: FormData,
+): Promise<{
+  success: boolean;
+  error?: string;
+  course?: EnhancedCourse;
+}> {
   try {
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
@@ -456,7 +466,14 @@ export async function deleteEnhancedCourse(id: string): Promise<{ success: boole
 /**
  * Publish/Unpublish course (Server Action)
  */
-export async function toggleCoursePublishStatus(id: string, currentStatus: string): Promise<{ success: boolean; error?: string; course?: EnhancedCourse }> {
+export async function toggleCoursePublishStatus(
+  id: string,
+  currentStatus: string,
+): Promise<{
+  success: boolean;
+  error?: string;
+  course?: EnhancedCourse;
+}> {
   try {
     const newStatus = currentStatus === 'published' ? 'draft' : 'published';
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
@@ -530,7 +547,14 @@ export async function revalidateEnhancedCourseData(): Promise<void> {
 /**
  * Duplicate course (Server Action)
  */
-export async function duplicateCourse(id: string, newTitle?: string): Promise<{ success: boolean; error?: string; course?: EnhancedCourse }> {
+export async function duplicateCourse(
+  id: string,
+  newTitle?: string,
+): Promise<{
+  success: boolean;
+  error?: string;
+  course?: EnhancedCourse;
+}> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 

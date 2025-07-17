@@ -80,7 +80,7 @@ async function fetchAllIssues(state: 'open' | 'closed' | 'all') {
           };
         }
         return issue;
-      })
+      }),
     );
 
     allIssues = allIssues.concat(issuesWithReviews);

@@ -1,14 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Users, Building, UserPlus } from 'lucide-react';
+import { Building, ChevronDown, Search, UserPlus, Users } from 'lucide-react';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
-import { ChevronDown } from 'lucide-react';
 
 interface TeamMember {
   id: string;
@@ -25,12 +24,7 @@ interface InviteCollaboratorsProps {
   teamMembers?: TeamMember[];
 }
 
-export function InviteCollaborators({ 
-  open, 
-  onOpenChange, 
-  onInvite,
-  teamMembers = []
-}: InviteCollaboratorsProps) {
+export function InviteCollaborators({ open, onOpenChange, onInvite, teamMembers = [] }: InviteCollaboratorsProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('Editor');
 
@@ -40,22 +34,21 @@ export function InviteCollaborators({
       name: 'Lena Hartfield',
       email: 'lena@hartfield.com',
       avatar: undefined, // Will show initials
-      role: 'Admin'
+      role: 'Admin',
     },
     {
       id: '2',
       name: 'Elliot Grayson',
       email: 'elliot@grayson.com',
       avatar: undefined, // Will show initials
-      role: 'Editor'
-    }
+      role: 'Editor',
+    },
   ];
 
   const displayMembers = teamMembers.length > 0 ? teamMembers : defaultTeamMembers;
-  
-  const filteredMembers = displayMembers.filter(member =>
-    member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchQuery.toLowerCase())
+
+  const filteredMembers = displayMembers.filter(
+    (member) => member.name.toLowerCase().includes(searchQuery.toLowerCase()) || member.email.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleInvite = () => {
@@ -72,7 +65,7 @@ export function InviteCollaborators({
   const getInitials = (name: string) => {
     return name
       .split(' ')
-      .map(word => word.charAt(0))
+      .map((word) => word.charAt(0))
       .join('')
       .toUpperCase()
       .slice(0, 2);
@@ -80,14 +73,7 @@ export function InviteCollaborators({
 
   const getAvatarBg = (name: string) => {
     // Generate consistent colors for avatars based on name
-    const colors = [
-      'bg-blue-500',
-      'bg-green-500', 
-      'bg-purple-500',
-      'bg-orange-500',
-      'bg-pink-500',
-      'bg-indigo-500'
-    ];
+    const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500', 'bg-indigo-500'];
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
   };
@@ -102,12 +88,8 @@ export function InviteCollaborators({
               <UserPlus className="h-5 w-5 text-gray-400" />
             </div>
             <div>
-              <DialogTitle className="text-lg font-medium text-white">
-                Invite collaborators
-              </DialogTitle>
-              <p className="text-sm text-gray-400 mt-0.5">
-                Invite users to work on projects together
-              </p>
+              <DialogTitle className="text-lg font-medium text-white">Invite collaborators</DialogTitle>
+              <p className="text-sm text-gray-400 mt-0.5">Invite users to work on projects together</p>
             </div>
           </div>
         </DialogHeader>
@@ -117,14 +99,14 @@ export function InviteCollaborators({
           <Tabs defaultValue="team-members" className="w-full">
             {/* Tab Navigation */}
             <TabsList className="grid w-full grid-cols-2 bg-[#2a2a2a] p-1 rounded-lg h-auto">
-              <TabsTrigger 
-                value="team-members" 
+              <TabsTrigger
+                value="team-members"
                 className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-md data-[state=active]:bg-[#3a3a3a] data-[state=active]:text-white text-gray-400 transition-all"
               >
                 <Users className="h-4 w-4" />
                 Team members
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="organisations"
                 className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-md data-[state=active]:bg-[#3a3a3a] data-[state=active]:text-white text-gray-500 transition-all"
               >
@@ -149,7 +131,7 @@ export function InviteCollaborators({
               {/* Team Members Section */}
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-gray-400">Team members</h3>
-                
+
                 <div className="space-y-3">
                   {filteredMembers.map((member) => (
                     <div key={member.id} className="flex items-center justify-between">
@@ -165,12 +147,9 @@ export function InviteCollaborators({
                           <p className="text-xs text-gray-400">{member.email}</p>
                         </div>
                       </div>
-                      
+
                       {/* Role Selector */}
-                      <Select 
-                        defaultValue={member.role}
-                        onValueChange={(value) => handleRoleChange(member.id, value)}
-                      >
+                      <Select defaultValue={member.role} onValueChange={(value) => handleRoleChange(member.id, value)}>
                         <SelectTrigger className="w-auto min-w-[80px] h-8 bg-[#2a2a2a] border-[#3a3a3a] text-white text-sm rounded-md hover:bg-[#3a3a3a] focus:ring-0 focus-visible:ring-0">
                           <SelectValue />
                           <ChevronDown className="h-4 w-4 ml-1 text-gray-400" />
@@ -193,7 +172,7 @@ export function InviteCollaborators({
               </div>
 
               {/* Invite New User Section */}
-              {searchQuery && !filteredMembers.some(m => m.email === searchQuery) && (
+              {searchQuery && !filteredMembers.some((m) => m.email === searchQuery) && (
                 <div className="flex items-center justify-between p-3 bg-[#2a2a2a] rounded-lg border border-[#3a3a3a]">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 bg-[#3a3a3a] rounded-full flex items-center justify-center">
@@ -204,7 +183,7 @@ export function InviteCollaborators({
                       <p className="text-xs text-gray-400">Send invitation email</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Select value={selectedRole} onValueChange={setSelectedRole}>
                       <SelectTrigger className="w-auto min-w-[80px] h-8 bg-[#1a1a1a] border-[#3a3a3a] text-white text-sm rounded-md">
@@ -223,11 +202,7 @@ export function InviteCollaborators({
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button
-                      size="sm"
-                      onClick={handleInvite}
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 h-8"
-                    >
+                    <Button size="sm" onClick={handleInvite} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 h-8">
                       Invite
                     </Button>
                   </div>

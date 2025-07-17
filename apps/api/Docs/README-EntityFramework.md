@@ -2,7 +2,8 @@
 
 ## Overview
 
-This CMS project is configured to use **SQLite** for local development and **PostgreSQL** for production environments. This setup provides the best of both worlds:
+This CMS project is configured to use **SQLite** for local development and **PostgreSQL** for production environments.
+This setup provides the best of both worlds:
 
 - **Development**: SQLite requires no setup, works locally, and is perfect for development
 - **Production**: PostgreSQL provides enterprise-grade performance and features
@@ -32,6 +33,7 @@ else
 ### Connection Strings
 
 #### Development (SQLite)
+
 ```json
 // appsettings.Development.json
 {
@@ -42,6 +44,7 @@ else
 ```
 
 #### Production (PostgreSQL)
+
 ```json
 // appsettings.Production.json
 {
@@ -84,9 +87,11 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
 
 ### Cross-Database Compatibility
 
-Entity Framework Core migrations are designed to be database-agnostic for most common operations. The following work seamlessly across SQLite and PostgreSQL:
+Entity Framework Core migrations are designed to be database-agnostic for most common operations. The following work
+seamlessly across SQLite and PostgreSQL:
 
 ✅ **Compatible Operations:**
+
 - Basic table creation
 - Column definitions (string, int, DateTime, bool)
 - Primary keys and foreign keys
@@ -94,6 +99,7 @@ Entity Framework Core migrations are designed to be database-agnostic for most c
 - Data annotations (`[Required]`, `[MaxLength]`, etc.)
 
 ⚠️ **Considerations:**
+
 - Use EF Core data types instead of database-specific types
 - Avoid raw SQL in migrations when possible
 - Test migrations on both database types if using advanced features
@@ -110,22 +116,29 @@ The project includes both database providers:
 ## Development Workflow
 
 ### 1. Create Migration
+
 ```bash
 dotnet ef migrations add YourMigrationName
 ```
 
 ### 2. Database Auto-Creation
+
 The database is automatically created and updated when you run the application:
+
 ```bash
 dotnet run
 ```
+
 **No manual database commands needed!** The app will:
+
 - Create `app.db` if it doesn't exist
 - Apply any pending migrations automatically
 - Start the web server
 
 ### 3. Manual Database Update (Optional)
+
 If you prefer manual control:
+
 ```bash
 dotnet ef database update
 ```
@@ -133,14 +146,17 @@ dotnet ef database update
 ## Production Deployment
 
 ### 1. Set Environment
+
 ```bash
 export ASPNETCORE_ENVIRONMENT=Production
 ```
 
 ### 2. Update Connection String
+
 Update `appsettings.Production.json` with your PostgreSQL connection details.
 
 ### 3. Run Migrations
+
 ```bash
 dotnet ef database update --environment Production
 ```

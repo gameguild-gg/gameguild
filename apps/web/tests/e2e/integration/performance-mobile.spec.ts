@@ -1,4 +1,4 @@
-import { test, expect, devices } from '@playwright/test';
+import { devices, expect, test } from '@playwright/test';
 
 /**
  * Performance and Mobile E2E Tests

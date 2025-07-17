@@ -2,21 +2,26 @@
 
 ## Overview
 
-The Posts module is a domain-driven module that provides posting functionality and automatically listens to domain events from other modules to create contextual posts about user activities. This module demonstrates the power of domain-driven design with event-driven architecture.
+The Posts module is a domain-driven module that provides posting functionality and automatically listens to domain
+events from other modules to create contextual posts about user activities. This module demonstrates the power of
+domain-driven design with event-driven architecture.
 
 ## Architecture
 
 ### Domain Event Listeners
 
-The Posts module includes several domain event handlers that automatically create posts when certain events occur in the system:
+The Posts module includes several domain event handlers that automatically create posts when certain events occur in the
+system:
 
 #### 1. UserProfileDomainEventHandler
+
 Listens to UserProfile events and creates posts about user profile activities:
 
 - **UserProfileCreatedEvent**: Creates a welcome post when a user profile is created
 - **UserProfileUpdatedEvent**: Creates an activity post when significant profile changes occur (DisplayName, Bio, Title)
 
 #### 2. UserDomainEventHandler
+
 Listens to User events and creates posts about user account activities:
 
 - **UserCreatedEvent**: Creates a registration announcement post when a new user joins
@@ -28,14 +33,18 @@ Listens to User events and creates posts about user account activities:
 The module also includes enhanced event handlers for post-specific events:
 
 #### 3. PostCreatedEventHandler
+
 Handles post creation with sophisticated side effects:
+
 - Updates user statistics based on post type
 - Handles search indexing (placeholder for future integration)
 - Manages real-time notifications (placeholder for SignalR)
 - Tracks analytics and engagement metrics
 
 #### 4. PostLikedEventHandler
+
 Handles post likes with comprehensive features:
+
 - Notifies post owners (except self-likes)
 - Updates user reputation/karma systems
 - Tracks engagement analytics
@@ -43,7 +52,9 @@ Handles post likes with comprehensive features:
 - Checks for milestone achievements (10, 50, 100, 500, 1000 likes)
 
 #### 5. PostDeletedEventHandler
+
 Handles post deletion with proper cleanup:
+
 - Removes posts from search indexes
 - Cleans up related data for hard deletes
 - Updates deletion analytics
@@ -53,6 +64,7 @@ Handles post deletion with proper cleanup:
 ### Services
 
 #### PostAnnouncementService
+
 A service for creating system-generated announcement posts:
 
 - **CreateSystemAnnouncementAsync**: Creates official system announcements
@@ -64,6 +76,7 @@ A service for creating system-generated announcement posts:
 ### 1. Domain Events Automatically Creating Posts
 
 When a user creates a profile:
+
 ```csharp
 // This happens in UserProfile module
 await eventPublisher.PublishAsync(new UserProfileCreatedEvent(
@@ -183,16 +196,16 @@ public static IServiceCollection AddPostsModule(this IServiceCollection services
 
 The module creates different types of posts based on the triggering events:
 
-| Post Type | Trigger Event | Description |
-|-----------|---------------|-------------|
-| `user_signup` | UserProfileCreatedEvent | Welcome post for new users |
-| `user_registration` | UserCreatedEvent | Registration announcement |
-| `profile_update` | UserProfileUpdatedEvent | Profile change activity |
-| `user_activation` | UserActivatedEvent | Account reactivation notice |
-| `user_deactivation` | UserDeactivatedEvent | Farewell message |
-| `system_announcement` | Manual via API | Official system announcements |
-| `milestone_celebration` | Manual via API | User achievement celebrations |
-| `community_update` | Manual via API | Community news and updates |
+| Post Type               | Trigger Event           | Description                   |
+|-------------------------|-------------------------|-------------------------------|
+| `user_signup`           | UserProfileCreatedEvent | Welcome post for new users    |
+| `user_registration`     | UserCreatedEvent        | Registration announcement     |
+| `profile_update`        | UserProfileUpdatedEvent | Profile change activity       |
+| `user_activation`       | UserActivatedEvent      | Account reactivation notice   |
+| `user_deactivation`     | UserDeactivatedEvent    | Farewell message              |
+| `system_announcement`   | Manual via API          | Official system announcements |
+| `milestone_celebration` | Manual via API          | User achievement celebrations |
+| `community_update`      | Manual via API          | Community news and updates    |
 
 ## ErrorMessage Handling
 
@@ -244,9 +257,12 @@ Key metrics to monitor:
 
 ## Conclusion
 
-The Posts module demonstrates how to build a modern, event-driven system that responds intelligently to activities across the application. By listening to domain events, it creates a rich, contextual social feed that keeps users engaged and informed about community activities.
+The Posts module demonstrates how to build a modern, event-driven system that responds intelligently to activities
+across the application. By listening to domain events, it creates a rich, contextual social feed that keeps users
+engaged and informed about community activities.
 
 The module serves as an excellent example of:
+
 - Domain-Driven Design principles
 - Event-Driven Architecture
 - Clean Architecture patterns

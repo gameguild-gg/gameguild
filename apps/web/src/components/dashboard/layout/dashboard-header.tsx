@@ -1,11 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, Search, Settings, User, LogOut, Moon, Sun } from 'lucide-react';
+import { Bell, LogOut, Moon, Search, Settings, Sun, User } from 'lucide-react';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Badge } from '@game-guild/ui/components/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@game-guild/ui/components/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
 import { useTheme } from 'next-themes';
 

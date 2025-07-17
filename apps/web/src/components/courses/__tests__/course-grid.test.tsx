@@ -1,7 +1,7 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { fireEvent, screen } from '@testing-library/react';
 import { CourseGrid } from '@/components/courses/course-grid';
-import { render, mockCourseData } from '../../../../tests/test/utils';
+import { mockCourseData, render } from '../../../../tests/test/utils';
 
 // Mock the useRouter hook
 const mockPush = jest.fn();
