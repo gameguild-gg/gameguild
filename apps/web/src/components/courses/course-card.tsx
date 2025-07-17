@@ -17,6 +17,7 @@ interface Course {
   rating: number;
   price: number;
   image: string;
+  slug: string;
   instructor: {
     name: string;
     avatar: string;
@@ -85,7 +86,7 @@ export function CourseCard({ course, variant = 'default' }: CourseCardProps) {
 
           <div className="absolute bottom-4 right-4">
             <Button size="sm" asChild>
-              <Link href={`/courses/${course.id}`}>
+              <Link href={`/courses/${course.slug}`}>
                 View Course
                 <ArrowRight className="h-3 w-3 ml-1" />
               </Link>
@@ -143,7 +144,7 @@ export function CourseCard({ course, variant = 'default' }: CourseCardProps) {
         <div className="flex items-center justify-between">
           <div className="text-2xl font-bold">${course.price}</div>
           <Button asChild>
-            <Link href={`/courses/${course.id}`}>{course.isEnrolled ? 'Continue' : 'Enroll Now'}</Link>
+            <Link href={`/courses/${course.slug}`}>{course.isEnrolled ? 'Continue' : 'Enroll Now'}</Link>
           </Button>
         </div>
       </CardContent>

@@ -12,6 +12,7 @@ interface Course {
   rating: number;
   price: number;
   image: string;
+  slug: string;
   instructor: {
     name: string;
     avatar: string;
