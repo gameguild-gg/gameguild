@@ -12,14 +12,14 @@ public class AchievementResolvers {
     [Parent] Achievement achievement,
     [Service] IAchievementLevelDataLoader achievementLevelLoader,
     CancellationToken cancellationToken) {
-    return await achievementLevelLoader.LoadAsync(achievement.Id, cancellationToken);
+    return await achievementLevelLoader.LoadAsync(achievement.Id, cancellationToken) ?? Enumerable.Empty<AchievementLevel>();
   }
 
   public async Task<IEnumerable<AchievementPrerequisite>> GetPrerequisitesAsync(
     [Parent] Achievement achievement,
     [Service] IAchievementPrerequisiteDataLoader prerequisiteLoader,
     CancellationToken cancellationToken) {
-    return await prerequisiteLoader.LoadAsync(achievement.Id, cancellationToken);
+    return await prerequisiteLoader.LoadAsync(achievement.Id, cancellationToken) ?? Enumerable.Empty<AchievementPrerequisite>();
   }
 
   public async Task<IEnumerable<UserAchievement>> GetUserAchievementsAsync(
@@ -28,14 +28,15 @@ public class AchievementResolvers {
     int first = 10,
     CancellationToken cancellationToken = default) {
     var userAchievements = await userAchievementLoader.LoadAsync(achievement.Id, cancellationToken);
-    return userAchievements.Take(first);
+    return userAchievements?.Take(first) ?? Enumerable.Empty<UserAchievement>();
   }
 
   public async Task<AchievementStatisticsDto> GetStatisticsAsync(
     [Parent] Achievement achievement,
     [Service] IAchievementStatisticsDataLoader statisticsLoader,
     CancellationToken cancellationToken) {
-    return await statisticsLoader.LoadAsync(achievement.Id, cancellationToken);
+    return await statisticsLoader.LoadAsync(achievement.Id, cancellationToken) ?? 
+           new AchievementStatisticsDto { AchievementId = achievement.Id };
   }
 
   public async Task<int> GetEarnCountAsync(

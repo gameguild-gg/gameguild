@@ -192,7 +192,7 @@ public class AchievementEarnCountDataLoader : BatchDataLoader<Guid, int>, IAchie
     IDbContextFactory<ApplicationDbContext> dbContextFactory,
     IBatchScheduler batchScheduler,
     DataLoaderOptions? options = null)
-    : base(batchScheduler, options) {
+    : base(batchScheduler, options ?? new DataLoaderOptions()) {
     _dbContextFactory = dbContextFactory;
   }
 
