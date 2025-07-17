@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from 'react';
 import { useUserContext, useUserFilters, useUserSelection, useUserPagination } from '@/lib/users/users.context';
-import { createUserAction, updateUserAction, deleteUserAction, toggleUserStatusAction, revalidateUsersDataAction } from '@/lib/actions/user-management';
+import { createUserAction, updateUserAction, deleteUserAction, toggleUserStatusAction, revalidateUsersDataAction } from '@/lib/users/user-management';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
