@@ -6,7 +6,7 @@
 
     /* Projects */
     /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
-    // "incremental": true,
+     "incremental": false,
     /* Enable constraints that allow a TypeScript project to be used with project references. */
     // "composite": true,
     /* Specify the path to .tsbuildinfo incremental compilation file. */
@@ -49,7 +49,7 @@
     "moduleDetection": "force",
     /* Modules */
     /* Specify what module code is generated. */
-    "module": "NodeNext",
+    "module": "ESNext",
     /* Specify the root folder within your source files. */
     // "rootDir": "./",
     /* Specify how TypeScript looks up a file from a given module specifier. */

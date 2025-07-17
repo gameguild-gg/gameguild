@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
 
 type Props = {
   error: Error & { digest?: string };

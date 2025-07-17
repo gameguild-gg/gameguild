@@ -1,8 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
-import { Button } from '@game-guild/ui/components';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { FileQuestion, Home, ArrowLeft, Search } from 'lucide-react';
+
+import { ArrowLeft, FileQuestion, Home, Search } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Button } from '@game-guild/ui/components/button';
 
 export default function NotFound() {
   return (

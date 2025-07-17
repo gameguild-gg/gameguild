@@ -3,13 +3,14 @@
 import * as React from 'react';
 import { Archive, Bell, Check, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@game-guild/ui/components';
-import { Badge } from '@game-guild/ui/components';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components';
-import { Popover, PopoverContent, PopoverTrigger } from '@game-guild/ui/components';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components';
-import { ScrollArea } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
+import { Badge } from '@game-guild/ui/components/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
+import { ScrollArea } from '@game-guild/ui/components/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '@game-guild/ui/components/popover';
 import type { Notification, NotificationFilters } from '@/types/notification';
 import {
   acceptProjectInvite,

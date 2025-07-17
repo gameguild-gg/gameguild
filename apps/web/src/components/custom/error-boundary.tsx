@@ -1,8 +1,8 @@
 'use client';
 
 import { Component, type ReactNode, type ErrorInfo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Button } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Button } from '@game-guild/ui/components/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface ErrorBoundaryState {

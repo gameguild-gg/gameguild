@@ -1,5 +1,5 @@
 import { Clock, PauseCircle, Rocket } from 'lucide-react';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@game-guild/ui/components';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@game-guild/ui/components/hover-card';
 import Link from 'next/link';
 import { ProjectListItem } from '@/components/projects/actions';
 

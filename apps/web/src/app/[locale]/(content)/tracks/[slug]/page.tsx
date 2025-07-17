@@ -2,8 +2,8 @@ import { getTrackBySlug } from '@/lib/tracks/actions';
 import { getCourseData } from '@/lib/courses/actions';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Badge } from '@game-guild/ui/components';
-import { Button } from '@game-guild/ui/components';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
 import { Progress } from '@game-guild/ui/components';
 import {

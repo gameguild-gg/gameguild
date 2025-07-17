@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@game-guild/ui/components';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
-import { Badge } from '@game-guild/ui/components';
-import { Progress } from '@game-guild/ui/components';
-import { Separator } from '@game-guild/ui/components';
-import { ScrollArea } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Progress } from '@game-guild/ui/components/progress';
+import { Separator } from '@game-guild/ui/components/separator';
+import { ScrollArea } from '@game-guild/ui/components/scroll-area';
 import {
   BookOpen,
   CheckCircle2,

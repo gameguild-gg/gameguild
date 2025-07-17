@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { Eye, Save, MoreHorizontal, Upload, Info } from 'lucide-react';
-import { Button } from '@game-guild/ui/components';
-import { Card, CardContent } from '@game-guild/ui/components';
-import { Input } from '@game-guild/ui/components';
-import { Label } from '@game-guild/ui/components';
-import { Textarea } from '@game-guild/ui/components';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components';
-import { Badge } from '@game-guild/ui/components';
+import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent } from '@game-guild/ui/components/card';
+import { Input } from '@game-guild/ui/components/input';
+import { Label } from '@game-guild/ui/components/label';
+import { Textarea } from '@game-guild/ui/components/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
+import { Badge } from '@game-guild/ui/components/badge';
 
 interface GameProject {
   title: string;
