@@ -28,9 +28,6 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ],
-      "@game-guild/ui/*": [
-        "../../packages/ui/src/*"
       ]
     }
   },

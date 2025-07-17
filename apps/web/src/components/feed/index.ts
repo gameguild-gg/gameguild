@@ -4,6 +4,7 @@ export { SocialMediaFeed } from './social-media-feed';
 export { PostCard } from './post-card';
 export { FeedHeader } from './feed-header';
 export { PostFilters } from './post-filters';
+export { PostFiltersStatic } from './post-filters-static';
 export { PostsList } from './posts-list';
 export { LoadMore } from './load-more';
 export { PinnedPosts } from './pinned-posts';
