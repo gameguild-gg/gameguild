@@ -10,9 +10,9 @@ export default async function Layout({ children, params }: LayoutProps): Promise
   const session = await auth();
 
   // Check if user is authenticated (either regular user or admin)
-  if (!session) redirect('/sign-in');
+  // if (!session) redirect('/sign-in');
 
-  if (session.error === 'RefreshTokenError') redirect('/sign-in');
+  // if (session.error === 'RefreshTokenError') redirect('/sign-in');
 
   return <>{children}</>;
 }
