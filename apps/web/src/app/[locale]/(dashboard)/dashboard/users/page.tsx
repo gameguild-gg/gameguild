@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
-import { getUsersData } from '@/lib/actions/users';
+import { getUsersData } from '@/lib/users/users.actions';
 import { UserProvider } from '@/lib/users/users.context';
 import { UserManagementContent } from '@/components/dashboard/users/user-management-content';
 import { Loader2 } from 'lucide-react';

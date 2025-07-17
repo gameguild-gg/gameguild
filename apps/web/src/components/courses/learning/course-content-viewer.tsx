@@ -62,6 +62,8 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [certificateEligibility, setCertificateEligibility] = useState<any>(null);
+  const [showCertificateNotification, setShowCertificateNotification] = useState(false);
 
   const loadCourseData = useCallback(async () => {
     try {
@@ -253,6 +255,24 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
 
     setCourseData(updatedCourseData);
 
+    // Check for certificate eligibility when course is 100% complete
+    if (updatedCourseData.overallProgress === 100) {
+      try {
+        const result = await CourseCompletionCertificateService.handleCourseCompletion(
+          courseData.id,
+          updatedCourseData,
+          'Current Student', // In real app, get from user context
+        );
+
+        if (result.showCertificateNotification) {
+          setCertificateEligibility(result.eligibility);
+          setShowCertificateNotification(true);
+        }
+      } catch (error) {
+        console.error('Error checking certificate eligibility:', error);
+      }
+    }
+
     // Move to next available item
     const nextItem = findNextAvailableItem(updatedCourseData, itemId);
     if (nextItem) {
@@ -298,6 +318,34 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
         setCurrentItem(nextItem);
       }
     }
+  };
+
+  const handleGenerateCertificate = async () => {
+    if (!certificateEligibility) return;
+
+    try {
+      const result = await CourseCompletionCertificateService.generateCertificate({
+        courseId: certificateEligibility.courseId,
+        courseTitle: certificateEligibility.courseTitle,
+        studentName: 'Current Student', // In real app, get from user context
+        completionDate: certificateEligibility.completedAt.toISOString(),
+        finalGrade: certificateEligibility.finalGrade,
+      });
+
+      if (result.success) {
+        console.log('Certificate generated successfully!', result);
+        // TODO: Show success notification or open certificate
+      } else {
+        console.error('Failed to generate certificate:', result.error);
+      }
+    } catch (error) {
+      console.error('Error generating certificate:', error);
+    }
+  };
+
+  const handleViewCertificate = () => {
+    // TODO: Open certificate viewer or download
+    console.log('View certificate requested');
   };
 
   const handleReportContent = async (reason: string, description: string) => {
@@ -414,6 +462,21 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
 
         <main className={`flex-1 ${sidebarOpen ? 'ml-80' : ''}`}>
           <div className="container mx-auto px-4 py-8">
+            {/* Certificate Notification */}
+            {showCertificateNotification && certificateEligibility && (
+              <div className="mb-6">
+                <CertificateNotification
+                  courseId={certificateEligibility.courseId}
+                  courseTitle={certificateEligibility.courseTitle}
+                  completionDate={certificateEligibility.completedAt.toISOString()}
+                  studentName="Current Student"
+                  finalGrade={certificateEligibility.finalGrade}
+                  onGenerateCertificate={handleGenerateCertificate}
+                  onViewCertificate={handleViewCertificate}
+                />
+              </div>
+            )}
+
             {currentItem && (
               <>
                 {/* Navigation Controls */}
