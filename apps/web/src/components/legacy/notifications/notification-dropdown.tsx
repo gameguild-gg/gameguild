@@ -2,15 +2,15 @@
 
 import * as React from 'react';
 import { Archive, Bell, Check, MoreHorizontal } from 'lucide-react';
-import { cn } from '@game-guild/ui/lib/utils';
-import { Button } from '@game-guild/ui/components/button';
-import { Badge } from '@game-guild/ui/components/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
-import { ScrollArea } from '@game-guild/ui/components/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from '@game-guild/ui/components/popover';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NotificationFilters, Notification as AppNotification } from '@/components/legacy/types/notification';
 import {
   acceptProjectInvite,

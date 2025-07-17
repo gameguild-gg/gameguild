@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Button } from '@game-guild/ui/components/button';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Textarea } from '@game-guild/ui/components/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Clock, Download, Eye, FileText, MessageSquare, Send, Star, User } from 'lucide-react';
 
 interface PeerReviewSubmission {

@@ -7,12 +7,12 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useRouter } from 'next/navigation';
 import slugify from 'slugify';
-import { useToast } from '@game-guild/ui/components/sonner';
+import { useToast } from '@/components/ui/sonner';
 import { getSession } from 'next-auth/react';
 import Image from 'next/image';
 
-import { Button } from '@game-guild/ui/components/button';
-import { Textarea } from '@game-guild/ui/components/textarea';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Plus, X } from 'lucide-react';
 import { FileUploader } from '@/components/custom/file-uploader';
 

@@ -2,11 +2,11 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Card, CardContent } from '@game-guild/ui/components/card';
-import { Button } from '@game-guild/ui/components/button';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
-import { Progress } from '@game-guild/ui/components/progress';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
 import { User } from '@/components/legacy/types/user';
 

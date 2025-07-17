@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function NotificationIntegrationGuide() {
   return (

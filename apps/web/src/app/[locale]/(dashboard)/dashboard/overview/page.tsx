@@ -1,8 +1,8 @@
 import React from 'react';
 import { DashboardStats } from '@/components/dashboard/analytics/dashboard-stats';
 import { RecentActivity } from '@/components/dashboard/analytics/recent-activity';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Button } from '@game-guild/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { BookOpen, DollarSign, Plus, TrendingUp, Users } from 'lucide-react';
 
 export default async function Page() {
