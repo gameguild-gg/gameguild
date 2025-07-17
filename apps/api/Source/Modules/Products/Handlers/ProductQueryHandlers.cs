@@ -196,8 +196,9 @@ public class ProductQueryHandlers :
 
       var query = _context.Products.AsQueryable();
 
-      // Apply access control
-      query = ApplyAccessControl(query);
+      // For statistics, we don't apply access control as they should show global data
+      // Only filter out soft-deleted products
+      query = query.Where(p => p.DeletedAt == null);
 
       // Apply optional filters
       if (request.ProductId.HasValue) {

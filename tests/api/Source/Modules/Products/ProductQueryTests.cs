@@ -170,8 +170,8 @@ public class ProductQueryTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Single(result);
-        Assert.Equal(GameGuild.Common.ProductType.Program, result.First().Type);
+        Assert.Equal(2, result.Count());
+        Assert.All(result, p => Assert.Equal(GameGuild.Common.ProductType.Program, p.Type));
     }
 
     [Fact]
