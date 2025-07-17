@@ -31,12 +31,8 @@ export class Boilerplate1685746740989 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(
-      `ALTER TABLE "event" DROP CONSTRAINT "FK_25cfbefb1f85a771e03c6cbf105"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "user" DROP CONSTRAINT "FK_f44d0cd18cfd80b0fed7806c3b7"`,
-    );
+    await queryRunner.query(`ALTER TABLE "event" DROP CONSTRAINT "FK_25cfbefb1f85a771e03c6cbf105"`);
+    await queryRunner.query(`ALTER TABLE "user" DROP CONSTRAINT "FK_f44d0cd18cfd80b0fed7806c3b7"`);
     await queryRunner.query(`DROP TABLE "chapter"`);
     await queryRunner.query(`DROP TABLE "post"`);
     await queryRunner.query(`DROP TABLE "event"`);

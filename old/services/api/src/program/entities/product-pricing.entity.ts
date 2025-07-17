@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn, OneToMany, DeleteDateColumn } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { IsNumber, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityBase } from '../../common/entities/entity.base';
@@ -22,7 +22,10 @@ export class ProductPricing extends EntityBase {
   @IsNumber()
   taxRate: number;
 
-  @ApiProperty({ description: 'Rules for when this pricing is available (e.g., time-limited offers, regional pricing)', required: false })
+  @ApiProperty({
+    description: 'Rules for when this pricing is available (e.g., time-limited offers, regional pricing)',
+    required: false,
+  })
   @Column('jsonb', { nullable: true })
   @IsOptional()
   availabilityRules?: Record<string, any>;
@@ -37,7 +40,11 @@ export class ProductPricing extends EntityBase {
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @ApiProperty({ type: () => FinancialTransaction, isArray: true, description: 'Financial transactions associated with this pricing' })
+  @ApiProperty({
+    type: () => FinancialTransaction,
+    isArray: true,
+    description: 'Financial transactions associated with this pricing',
+  })
   @OneToMany(() => FinancialTransaction, (transaction) => transaction.pricing)
   transactions: FinancialTransaction[];
 }

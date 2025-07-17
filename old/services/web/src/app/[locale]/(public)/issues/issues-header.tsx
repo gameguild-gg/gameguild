@@ -20,10 +20,7 @@ export function IssuesHeader() {
   const pathname = usePathname();
   const { replace } = useRouter();
 
-  const params = useMemo(
-    () => new URLSearchParams(searchParams),
-    [searchParams],
-  );
+  const params = useMemo(() => new URLSearchParams(searchParams), [searchParams]);
 
   function handleSearch(term: string) {
     if (term) {
@@ -46,12 +43,7 @@ export function IssuesHeader() {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
       <div className="flex flex-1 items-center gap-2">
-        <Input
-          placeholder="Search issues..."
-          className="max-w-xs"
-          defaultValue={searchParams.get('q') ?? ''}
-          onChange={(e) => handleSearch(e.target.value)}
-        />
+        <Input placeholder="Search issues..." className="max-w-xs" defaultValue={searchParams.get('q') ?? ''} onChange={(e) => handleSearch(e.target.value)} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="gap-2">
@@ -64,39 +56,19 @@ export function IssuesHeader() {
             <DropdownMenuLabel>Filter by</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onSelect={() => handleFilter('author', 'all')}>
-                All Authors
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => handleFilter('author', '@me')}>
-                Created by me
-              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleFilter('author', 'all')}>All Authors</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleFilter('author', '@me')}>Created by me</DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem
-                onSelect={() => handleFilter('assignee', 'all')}
-              >
-                All Assignees
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => handleFilter('assignee', '@me')}
-              >
-                Assigned to me
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => handleFilter('assignee', 'none')}
-              >
-                Unassigned
-              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleFilter('assignee', 'all')}>All Assignees</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleFilter('assignee', '@me')}>Assigned to me</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleFilter('assignee', 'none')}>Unassigned</DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onSelect={() => handleFilter('label', 'all')}>
-                All Labels
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => handleFilter('label', 'none')}>
-                Unlabeled
-              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleFilter('label', 'all')}>All Labels</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleFilter('label', 'none')}>Unlabeled</DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -112,32 +84,12 @@ export function IssuesHeader() {
             <DropdownMenuLabel>Sort by</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onSelect={() => handleFilter('sort', 'newest')}>
-                Newest
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => handleFilter('sort', 'oldest')}>
-                Oldest
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => handleFilter('sort', 'most-commented')}
-              >
-                Most commented
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => handleFilter('sort', 'least-commented')}
-              >
-                Least commented
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => handleFilter('sort', 'recently-updated')}
-              >
-                Recently updated
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => handleFilter('sort', 'least-recently-updated')}
-              >
-                Least recently updated
-              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleFilter('sort', 'newest')}>Newest</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleFilter('sort', 'oldest')}>Oldest</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleFilter('sort', 'most-commented')}>Most commented</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleFilter('sort', 'least-commented')}>Least commented</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleFilter('sort', 'recently-updated')}>Recently updated</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleFilter('sort', 'least-recently-updated')}>Least recently updated</DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>

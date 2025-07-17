@@ -2,9 +2,17 @@
   "id": 3,
   "format_ver": "1.0.0",
   "type": "code",
-  "rules": ["inputs: y", "outputs: y", "chars: 1000", "files: 2"],
+  "rules": [
+    "inputs: y",
+    "outputs: y",
+    "chars: 1000",
+    "files: 2"
+  ],
   "status": 3,
-  "subject": ["javascript", "palindrome"],
+  "subject": [
+    "javascript",
+    "palindrome"
+  ],
   "title": "Palindrome Checker",
   "description": "Write a function that checks if a given string is a palindrome.",
   "initialCode": {
@@ -21,8 +29,22 @@
       "name": "helpers.js"
     }
   ],
-  "inputs": [["racecar", "hello"]],
-  "outputs": ["true", "false"],
-  "outputsScore": [5, 5],
-  "score": [10, 0]
+  "inputs": [
+    [
+      "racecar",
+      "hello"
+    ]
+  ],
+  "outputs": [
+    "true",
+    "false"
+  ],
+  "outputsScore": [
+    5,
+    5
+  ],
+  "score": [
+    10,
+    0
+  ]
 }

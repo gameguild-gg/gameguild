@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, Index } from 'typeorm';
+import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';

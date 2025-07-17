@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Users, Building, UserPlus, ChevronDown } from 'lucide-react';
+import { Building, ChevronDown, Search, UserPlus, Users } from 'lucide-react';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
@@ -24,12 +24,7 @@ interface InviteCollaboratorsThemeProps {
   teamMembers?: TeamMember[];
 }
 
-export function InviteCollaboratorsTheme({ 
-  open, 
-  onOpenChange, 
-  onInvite,
-  teamMembers = []
-}: InviteCollaboratorsThemeProps) {
+export function InviteCollaboratorsTheme({ open, onOpenChange, onInvite, teamMembers = [] }: InviteCollaboratorsThemeProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('Editor');
 
@@ -39,22 +34,21 @@ export function InviteCollaboratorsTheme({
       name: 'Lena Hartfield',
       email: 'lena@hartfield.com',
       avatar: undefined,
-      role: 'Admin'
+      role: 'Admin',
     },
     {
       id: '2',
       name: 'Elliot Grayson',
       email: 'elliot@grayson.com',
       avatar: undefined,
-      role: 'Editor'
-    }
+      role: 'Editor',
+    },
   ];
 
   const displayMembers = teamMembers.length > 0 ? teamMembers : defaultTeamMembers;
-  
-  const filteredMembers = displayMembers.filter(member =>
-    member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchQuery.toLowerCase())
+
+  const filteredMembers = displayMembers.filter(
+    (member) => member.name.toLowerCase().includes(searchQuery.toLowerCase()) || member.email.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleInvite = () => {
@@ -71,7 +65,7 @@ export function InviteCollaboratorsTheme({
   const getInitials = (name: string) => {
     return name
       .split(' ')
-      .map(word => word.charAt(0))
+      .map((word) => word.charAt(0))
       .join('')
       .toUpperCase()
       .slice(0, 2);
@@ -84,7 +78,7 @@ export function InviteCollaboratorsTheme({
       { bg: 'bg-purple-500', text: 'text-white' },
       { bg: 'bg-orange-500', text: 'text-white' },
       { bg: 'bg-pink-500', text: 'text-white' },
-      { bg: 'bg-indigo-500', text: 'text-white' }
+      { bg: 'bg-indigo-500', text: 'text-white' },
     ];
     const index = name.charCodeAt(0) % colorPairs.length;
     return colorPairs[index];
@@ -100,12 +94,8 @@ export function InviteCollaboratorsTheme({
               <UserPlus className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
-              <DialogTitle className="text-lg font-medium text-foreground">
-                Invite collaborators
-              </DialogTitle>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Invite users to work on projects together
-              </p>
+              <DialogTitle className="text-lg font-medium text-foreground">Invite collaborators</DialogTitle>
+              <p className="text-sm text-muted-foreground mt-0.5">Invite users to work on projects together</p>
             </div>
           </div>
         </DialogHeader>
@@ -115,14 +105,14 @@ export function InviteCollaboratorsTheme({
           <Tabs defaultValue="team-members" className="w-full">
             {/* Tab Navigation */}
             <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-lg h-auto border border-border/30">
-              <TabsTrigger 
-                value="team-members" 
+              <TabsTrigger
+                value="team-members"
                 className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/40 text-muted-foreground transition-all"
               >
                 <Users className="h-4 w-4" />
                 Team members
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="organisations"
                 className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/40 text-muted-foreground transition-all"
               >
@@ -147,7 +137,7 @@ export function InviteCollaboratorsTheme({
               {/* Team Members Section */}
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-muted-foreground">Team members</h3>
-                
+
                 <div className="space-y-3">
                   {filteredMembers.map((member) => {
                     const avatarColors = getAvatarColors(member.name);
@@ -165,12 +155,9 @@ export function InviteCollaboratorsTheme({
                             <p className="text-xs text-muted-foreground">{member.email}</p>
                           </div>
                         </div>
-                        
+
                         {/* Role Selector */}
-                        <Select 
-                          defaultValue={member.role}
-                          onValueChange={(value) => handleRoleChange(member.id, value)}
-                        >
+                        <Select defaultValue={member.role} onValueChange={(value) => handleRoleChange(member.id, value)}>
                           <SelectTrigger className="w-auto min-w-[80px] h-8 bg-muted/50 border-border text-foreground text-sm rounded-md hover:bg-muted transition-colors">
                             <SelectValue />
                             <ChevronDown className="h-4 w-4 ml-1 text-muted-foreground" />
@@ -194,7 +181,7 @@ export function InviteCollaboratorsTheme({
               </div>
 
               {/* Invite New User Section */}
-              {searchQuery && !filteredMembers.some(m => m.email === searchQuery) && (
+              {searchQuery && !filteredMembers.some((m) => m.email === searchQuery) && (
                 <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border/40">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center border border-border/40">
@@ -205,7 +192,7 @@ export function InviteCollaboratorsTheme({
                       <p className="text-xs text-muted-foreground">Send invitation email</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Select value={selectedRole} onValueChange={setSelectedRole}>
                       <SelectTrigger className="w-auto min-w-[80px] h-8 bg-background border-border text-foreground text-sm rounded-md">
@@ -224,11 +211,7 @@ export function InviteCollaboratorsTheme({
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button
-                      size="sm"
-                      onClick={handleInvite}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm px-3 h-8"
-                    >
+                    <Button size="sm" onClick={handleInvite} className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm px-3 h-8">
                       Invite
                     </Button>
                   </div>

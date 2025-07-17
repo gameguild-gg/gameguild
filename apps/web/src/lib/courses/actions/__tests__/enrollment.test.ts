@@ -1,5 +1,5 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { getCourseEnrollmentStatus, getProductsContainingCourse, enrollInFreeCourse } from '@/lib/courses/actions/enrollment.actions';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { enrollInFreeCourse, getCourseEnrollmentStatus, getProductsContainingCourse } from '@/lib/courses/actions/enrollment.actions';
 
 // Mock the auth module
 jest.mock('@/auth', () => ({

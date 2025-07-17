@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, FileText, Users, Calendar, TestTube, BarChart3 } from 'lucide-react';
+import { BarChart3, Calendar, FileText, TestTube, Upload, Users } from 'lucide-react';
 import { testingLabApi, TestingRequest, TestingSession } from '@/lib/api/testing-lab/testing-lab-api';
 import Link from 'next/link';
 
@@ -36,18 +36,15 @@ export default function TestingLabPage() {
   const fetchTestingData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch data from API
-      const [requestsData, sessionsData] = await Promise.all([
-        testingLabApi.getAvailableTestingRequests(),
-        testingLabApi.getTestingSessions(),
-      ]);
-      
+      const [requestsData, sessionsData] = await Promise.all([testingLabApi.getAvailableTestingRequests(), testingLabApi.getTestingSessions()]);
+
       setTestingRequests(requestsData);
       setTestingSessions(sessionsData);
     } catch (error) {
       console.error('Error fetching testing data:', error);
-      
+
       // Fallback to mock data for now
       setTestingRequests([
         {
@@ -132,11 +129,9 @@ export default function TestingLabPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Testing Lab</h1>
-          <p className="text-muted-foreground">
-            Submit, test, and manage game projects for Capstone teams
-          </p>
+          <p className="text-muted-foreground">Submit, test, and manage game projects for Capstone teams</p>
         </div>
-        
+
         {(userRole === 'student' || userRole === 'professor') && (
           <div className="flex gap-2">
             <Link href="/dashboard/testing-lab/submit">
@@ -161,9 +156,7 @@ export default function TestingLabPage() {
         <TabsList>
           <TabsTrigger value="testing-requests">Testing Requests</TabsTrigger>
           <TabsTrigger value="sessions">Testing Sessions</TabsTrigger>
-          {userRole === 'professor' && (
-            <TabsTrigger value="attendance">Attendance Reports</TabsTrigger>
-          )}
+          {userRole === 'professor' && <TabsTrigger value="attendance">Attendance Reports</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="testing-requests" className="space-y-4">
@@ -178,23 +171,23 @@ export default function TestingLabPage() {
                         {request.projectTitle} - {request.versionNumber}
                       </CardDescription>
                     </div>
-                    <Badge className={getStatusColor(request.status)}>
-                      {request.status}
-                    </Badge>
+                    <Badge className={getStatusColor(request.status)}>{request.status}</Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {request.description}
-                  </p>
-                  
+                  <p className="text-sm text-muted-foreground mb-4">{request.description}</p>
+
                   <div className="flex justify-between items-center text-sm">
                     <div className="flex gap-4">
-                      <span>📅 {new Date(request.startDate).toLocaleDateString()} - {new Date(request.endDate).toLocaleDateString()}</span>
-                      <span>👥 {request.currentTesterCount}/{request.maxTesters || 'Unlimited'} testers</span>
+                      <span>
+                        📅 {new Date(request.startDate).toLocaleDateString()} - {new Date(request.endDate).toLocaleDateString()}
+                      </span>
+                      <span>
+                        👥 {request.currentTesterCount}/{request.maxTesters || 'Unlimited'} testers
+                      </span>
                       <span>👨‍💻 {request.createdBy.name}</span>
                     </div>
-                    
+
                     <div className="flex gap-2">
                       <Link href={`/dashboard/testing-lab/requests/${request.id}`}>
                         <Button size="sm" variant="outline">
@@ -213,15 +206,13 @@ export default function TestingLabPage() {
                 </CardContent>
               </Card>
             ))}
-            
+
             {testingRequests.length === 0 && (
               <Card>
                 <CardContent className="text-center py-8">
                   <TestTube className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">No Testing Requests</h3>
-                  <p className="text-muted-foreground mb-4">
-                    No active testing requests at the moment.
-                  </p>
+                  <p className="text-muted-foreground mb-4">No active testing requests at the moment.</p>
                   {userRole === 'student' && (
                     <Link href="/dashboard/testing-lab/submit">
                       <Button>
@@ -248,19 +239,21 @@ export default function TestingLabPage() {
                         {session.location.name} - {session.maxTesters} capacity
                       </CardDescription>
                     </div>
-                    <Badge className={getStatusColor(session.status)}>
-                      {session.status}
-                    </Badge>
+                    <Badge className={getStatusColor(session.status)}>{session.status}</Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="flex justify-between items-center text-sm">
                     <div className="flex gap-4">
                       <span>📅 {new Date(session.sessionDate).toLocaleDateString()}</span>
-                      <span>🕐 {session.startTime} - {session.endTime}</span>
-                      <span>👥 {session.registeredTesterCount}/{session.maxTesters} registered</span>
+                      <span>
+                        🕐 {session.startTime} - {session.endTime}
+                      </span>
+                      <span>
+                        👥 {session.registeredTesterCount}/{session.maxTesters} registered
+                      </span>
                     </div>
-                    
+
                     <div className="flex gap-2">
                       <Link href={`/dashboard/testing-lab/sessions/${session.id}/register`}>
                         <Button size="sm" variant="outline">
@@ -279,15 +272,13 @@ export default function TestingLabPage() {
                 </CardContent>
               </Card>
             ))}
-            
+
             {testingSessions.length === 0 && (
               <Card>
                 <CardContent className="text-center py-8">
                   <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">No Testing Sessions</h3>
-                  <p className="text-muted-foreground mb-4">
-                    No testing sessions scheduled at the moment.
-                  </p>
+                  <p className="text-muted-foreground mb-4">No testing sessions scheduled at the moment.</p>
                   {userRole === 'professor' && (
                     <Link href="/dashboard/testing-lab/sessions/create">
                       <Button>
@@ -310,17 +301,13 @@ export default function TestingLabPage() {
                   <BarChart3 className="mr-2 h-5 w-5" />
                   Attendance Reports
                 </CardTitle>
-                <CardDescription>
-                  Track student attendance and testing participation for grading purposes
-                </CardDescription>
+                <CardDescription>Track student attendance and testing participation for grading purposes</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8">
                   <BarChart3 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">Attendance Tracking</h3>
-                  <p className="text-muted-foreground mb-4">
-                    View detailed attendance reports for your students across testing sessions.
-                  </p>
+                  <p className="text-muted-foreground mb-4">View detailed attendance reports for your students across testing sessions.</p>
                   <Link href="/dashboard/testing-lab/attendance">
                     <Button>
                       <BarChart3 className="mr-2 h-4 w-4" />

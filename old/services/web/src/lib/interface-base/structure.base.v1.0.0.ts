@@ -4,4 +4,3 @@ export interface HierarchyBasev1_0_0 {
   idRole: string;
   colorMode?: 'light' | 'dark' | 'high-contrast'; // Added colorMode attribute
 }
-

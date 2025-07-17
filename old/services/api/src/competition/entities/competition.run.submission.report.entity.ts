@@ -7,14 +7,12 @@ import { CompetitionRunEntity } from './competition.run.entity';
 import { CompetitionSubmissionEntity } from './competition.submission.entity';
 import { EntityBase } from '../../common/entities/entity.base';
 import { UserEntity } from '../../user/entities';
-import { IsArray, IsNotEmpty, IsNumber, ValidateNested } from 'class-validator';
+import { IsNotEmpty, IsNumber, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { IsIntegerNumber } from '../../common/decorators/validator.decorator';
 
-
 @Entity()
 export class CompetitionRunSubmissionReportEntity extends EntityBase {
-  
   @Column({ type: 'integer', default: 0 })
   @ApiProperty()
   @IsNotEmpty({ message: 'error.IsNotEmpty: winsAsP1 should not be empty' })
@@ -23,7 +21,6 @@ export class CompetitionRunSubmissionReportEntity extends EntityBase {
   })
   winsAsP1: number;
 
-  
   @Column({ type: 'integer', default: 0 })
   @ApiProperty()
   @IsNotEmpty({ message: 'error.IsNotEmpty: winsAsP2 should not be empty' })
@@ -32,7 +29,6 @@ export class CompetitionRunSubmissionReportEntity extends EntityBase {
   })
   winsAsP2: number;
 
-  
   @Column({ type: 'integer', default: 0 })
   @ApiProperty()
   @IsNotEmpty({ message: 'error.IsNotEmpty: totalWins should not be empty' })

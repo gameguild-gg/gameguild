@@ -12,29 +12,32 @@ export const GlobalRankingTable: React.FC<GlobalRankingTableProps> = ({ contribu
   const allContributors = contributors;
 
   const getRankColorClasses = (rank: number) => {
-    if (rank === 1) return {
-      bg: 'bg-gradient-to-r from-yellow-400/10 to-amber-300/5 hover:from-yellow-400/15 hover:to-amber-300/8',
-      border: 'border-yellow-400/40',
-      rankBg: 'bg-gradient-to-r from-yellow-400 to-amber-300',
-      textColor: 'text-yellow-300'
-    };
-    if (rank === 2) return {
-      bg: 'bg-gradient-to-r from-slate-300/10 to-gray-400/5 hover:from-slate-300/15 hover:to-gray-400/8',
-      border: 'border-slate-300/40',
-      rankBg: 'bg-gradient-to-r from-slate-300 to-gray-400',
-      textColor: 'text-slate-300'
-    };
-    if (rank === 3) return {
-      bg: 'bg-gradient-to-r from-orange-400/10 to-amber-500/5 hover:from-orange-400/15 hover:to-amber-500/8',
-      border: 'border-orange-400/40',
-      rankBg: 'bg-gradient-to-r from-orange-400 to-amber-500',
-      textColor: 'text-orange-300'
-    };
+    if (rank === 1)
+      return {
+        bg: 'bg-gradient-to-r from-yellow-400/10 to-amber-300/5 hover:from-yellow-400/15 hover:to-amber-300/8',
+        border: 'border-yellow-400/40',
+        rankBg: 'bg-gradient-to-r from-yellow-400 to-amber-300',
+        textColor: 'text-yellow-300',
+      };
+    if (rank === 2)
+      return {
+        bg: 'bg-gradient-to-r from-slate-300/10 to-gray-400/5 hover:from-slate-300/15 hover:to-gray-400/8',
+        border: 'border-slate-300/40',
+        rankBg: 'bg-gradient-to-r from-slate-300 to-gray-400',
+        textColor: 'text-slate-300',
+      };
+    if (rank === 3)
+      return {
+        bg: 'bg-gradient-to-r from-orange-400/10 to-amber-500/5 hover:from-orange-400/15 hover:to-amber-500/8',
+        border: 'border-orange-400/40',
+        rankBg: 'bg-gradient-to-r from-orange-400 to-amber-500',
+        textColor: 'text-orange-300',
+      };
     return {
       bg: 'hover:bg-slate-800/30 hover:shadow-lg',
       border: '',
       rankBg: 'bg-gradient-to-br from-slate-700 to-slate-800',
-      textColor: 'text-slate-300'
+      textColor: 'text-slate-300',
     };
   };
 
@@ -71,8 +74,8 @@ export const GlobalRankingTable: React.FC<GlobalRankingTableProps> = ({ contribu
             const colorClasses = getRankColorClasses(rank);
 
             return (
-              <div 
-                key={contributor.login} 
+              <div
+                key={contributor.login}
                 className={`grid grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr] gap-6 px-6 py-3 items-center transition-all duration-300 cursor-pointer ${colorClasses.bg} ${colorClasses.border ? `border-l-4 ${colorClasses.border}` : ''}`}
               >
                 {/* Rank */}
@@ -85,16 +88,14 @@ export const GlobalRankingTable: React.FC<GlobalRankingTableProps> = ({ contribu
                 {/* User */}
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <Image 
-                      src={contributor.avatar_url} 
-                      alt={contributor.name || contributor.login} 
-                      width={40} 
-                      height={40} 
-                      className="rounded-full ring-2 ring-slate-600/50" 
+                    <Image
+                      src={contributor.avatar_url}
+                      alt={contributor.name || contributor.login}
+                      width={40}
+                      height={40}
+                      className="rounded-full ring-2 ring-slate-600/50"
                     />
-                    {rank <= 3 && (
-                      <div className={`absolute -top-1 -right-1 w-4 h-4 ${colorClasses.rankBg} rounded-full border-2 border-slate-800`}></div>
-                    )}
+                    {rank <= 3 && <div className={`absolute -top-1 -right-1 w-4 h-4 ${colorClasses.rankBg} rounded-full border-2 border-slate-800`}></div>}
                   </div>
                   <div>
                     <div className={`${colorClasses.textColor} font-semibold`}>{contributor.name || contributor.login}</div>

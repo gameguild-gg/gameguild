@@ -29,42 +29,31 @@ function Home() {
         '__Host-next-auth.csrf-token',
         'session',
         'token',
-        'user'
+        'user',
       ];
-      
-      cookiesToClear.forEach(cookieName => {
+
+      cookiesToClear.forEach((cookieName) => {
         Cookies.remove(cookieName);
         Cookies.remove(cookieName, { path: '/' });
         document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
       });
-      
+
       // Clear localStorage and sessionStorage
       localStorage.clear();
       sessionStorage.clear();
-      
+
       // Remove the cache buster parameter from the URL
       window.history.replaceState({}, document.title, '/');
     }
   }, [cacheBuster]);
 
   return (
-    <div
-      className="text-center block text-[#ffffff] bg-[#101014] items-center content-center overflow-hidden w-full z-5">
-
+    <div className="text-center block text-[#ffffff] bg-[#101014] items-center content-center overflow-hidden w-full z-5">
       <div className="absolute h-[600px] w-full object-none overflow-hidden -z-5">
-        <Image
-          src="/assets/images/background-hexagons-1.jpg"
-          alt="background"
-          layout="fill"
-          objectFit="cover"
-          objectPosition="center"
-          quality={60}
-        />
+        <Image src="/assets/images/background-hexagons-1.jpg" alt="background" layout="fill" objectFit="cover" objectPosition="center" quality={60} />
       </div>
 
-      <div
-        className="absolute w-full lg:flex h-[400px] overflow-hidden items-center grid grid-cols-1 mx-auto z-10">
-
+      <div className="absolute w-full lg:flex h-[400px] overflow-hidden items-center grid grid-cols-1 mx-auto z-10">
         <div className="z-10 text-black mx-auto">
           <div className="text-7xl font-semibold  text-shadow-lg shadow-white">Let's Build Dreams Together!</div>
           <br />
@@ -72,19 +61,11 @@ function Home() {
         </div>
       </div>
 
-      <div className="h-[500px]">
-        {/*espaço vazio para texto e vídeo de fundo coexistirem*/}
-      </div>
+      <div className="h-[500px]">{/*espaço vazio para texto e vídeo de fundo coexistirem*/}</div>
 
       <div className="relative justify-between max-w-[1440px] w-full items-center bg-[#18181c] lg:flex mx-auto z-30">
         <div>
-          <Image
-            src="/assets/images/header2.jpeg"
-            alt="header2"
-            width={480}
-            height={480}
-            className="w-full"
-          />
+          <Image src="/assets/images/header2.jpeg" alt="header2" width={480} height={480} className="w-full" />
         </div>
         <div>
           <div className="text-neutral-50 rounded-lg p-4 shadow">
@@ -106,13 +87,7 @@ function Home() {
           </div>
         </div>
         <div>
-          <Image
-            src="/assets/images/header3.jpeg"
-            alt="header3"
-            width={480}
-            height={480}
-            className="w-full"
-          />
+          <Image src="/assets/images/header3.jpeg" alt="header3" width={480} height={480} className="w-full" />
         </div>
       </div>
 
@@ -120,13 +95,7 @@ function Home() {
 
       <div className="justify-between max-w-[1440px] w-full mx-auto lg:flex items-center content-center bg-[#18181c]">
         <div>
-          <Image
-            src="/assets/images/header1.jpeg"
-            alt="header1"
-            width={480}
-            height={480}
-            className="w-full lg:max-w-[480px]"
-          />
+          <Image src="/assets/images/header1.jpeg" alt="header1" width={480} height={480} className="w-full lg:max-w-[480px]" />
         </div>
         <div>
           <div className="text-neutral-50 rounded-lg p-4 shadow">
@@ -140,8 +109,7 @@ function Home() {
 
       <div className="h-10"></div>
 
-      <div
-        className="relative justify-between max-w-[1440px] w-full items-center bg-[#18181c] lg:flex mx-auto z-30">
+      <div className="relative justify-between max-w-[1440px] w-full items-center bg-[#18181c] lg:flex mx-auto z-30">
         <div></div>
 
         <div>
@@ -160,9 +128,7 @@ function Home() {
             className="p-[10px] m-auto"
           />
         </div>
-
       </div>
-
     </div>
   );
 }

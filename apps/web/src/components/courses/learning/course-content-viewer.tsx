@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Button } from '@game-guild/ui/components/button';
 import { Progress } from '@game-guild/ui/components/progress';
 import { Badge } from '@game-guild/ui/components/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
-import { ChevronLeft, ChevronRight, BookOpen, CheckCircle, Clock, Play, FileText, Upload, MessageSquare, Trophy, Flag, MoreVertical } from 'lucide-react';
+import { BookOpen, CheckCircle, ChevronLeft, ChevronRight, Clock, FileText, Flag, MessageSquare, MoreVertical, Play, Trophy, Upload } from 'lucide-react';
 import { ContentNavigationSidebar } from './content-navigation-sidebar';
 import { LessonViewer } from './lesson-viewer';
 import { ActivityComponent } from './activity-component';

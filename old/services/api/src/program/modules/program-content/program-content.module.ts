@@ -1,7 +1,7 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { ActivityGrade, ContentInteraction, ProgramContent, Program, ProgramUser } from '../../entities';
+import { ActivityGrade, ContentInteraction, Program, ProgramContent, ProgramUser } from '../../entities';
 import { ProgramModule } from '../../program.module';
 import { ProgramContentController } from './program-content.controller';
 import { ProgramContentService } from './program-content.service';

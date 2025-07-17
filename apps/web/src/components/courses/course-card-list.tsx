@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Progress } from '@game-guild/ui/components/progress';
-import { Book, Code, Paintbrush, Music } from 'lucide-react';
+import { Book, Code, Music, Paintbrush } from 'lucide-react';
 import { Course, COURSE_LEVEL_NAMES } from '@/components/legacy/types/courses';
 
 interface CourseCardProps {

@@ -12,11 +12,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Upload, Link as LinkIcon, FileText, AlertCircle } from 'lucide-react';
+import { AlertCircle, CalendarIcon, FileText, Link as LinkIcon, Upload } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { format } from 'date-fns';
 import { cn } from '@game-guild/ui/lib/utils';
-import { testingLabApi, CreateSimpleTestingRequestDto } from '@/lib/api/testing-lab/testing-lab-api';
+import { CreateSimpleTestingRequestDto, testingLabApi } from '@/lib/api/testing-lab/testing-lab-api';
 
 interface SubmissionForm {
   title: string;
@@ -67,7 +67,7 @@ export default function SubmitVersionPage() {
     try {
       // Validate required fields
       const validationErrors: string[] = [];
-      
+
       if (!form.title.trim()) validationErrors.push('Title is required');
       if (!form.versionNumber.trim()) validationErrors.push('Version number is required');
       if (form.submissionType === 'url' && !form.downloadUrl?.trim()) {
@@ -105,7 +105,7 @@ export default function SubmitVersionPage() {
 
       // Submit to API
       await testingLabApi.createSimpleTestingRequest(submitData);
-      
+
       // Redirect to testing lab page
       router.push('/dashboard/testing-lab');
     } catch (error) {
@@ -117,7 +117,7 @@ export default function SubmitVersionPage() {
   };
 
   const updateForm = (field: keyof SubmissionForm, value: any) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const teamName = session?.user?.email ? getTeamFromEmail(session.user.email) : '';
@@ -126,9 +126,7 @@ export default function SubmitVersionPage() {
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Submit Version for Testing</h1>
-        <p className="text-muted-foreground">
-          Submit a new version of your project for community testing
-        </p>
+        <p className="text-muted-foreground">Submit a new version of your project for community testing</p>
       </div>
 
       {errors.length > 0 && (
@@ -149,22 +147,13 @@ export default function SubmitVersionPage() {
         <Card>
           <CardHeader>
             <CardTitle>Project Information</CardTitle>
-            <CardDescription>
-              Basic information about your project and version
-            </CardDescription>
+            <CardDescription>Basic information about your project and version</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="team">Team</Label>
-              <Input
-                id="team"
-                value={teamName}
-                disabled
-                className="bg-muted"
-              />
-              <p className="text-sm text-muted-foreground mt-1">
-                Automatically detected from your email domain
-              </p>
+              <Input id="team" value={teamName} disabled className="bg-muted" />
+              <p className="text-sm text-muted-foreground mt-1">Automatically detected from your email domain</p>
             </div>
 
             <div>
@@ -206,18 +195,12 @@ export default function SubmitVersionPage() {
         <Card>
           <CardHeader>
             <CardTitle>Game Submission</CardTitle>
-            <CardDescription>
-              How testers will access your game
-            </CardDescription>
+            <CardDescription>How testers will access your game</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <Label>Submission Type *</Label>
-              <RadioGroup
-                value={form.submissionType}
-                onValueChange={(value: 'file' | 'url') => updateForm('submissionType', value)}
-                className="mt-2"
-              >
+              <RadioGroup value={form.submissionType} onValueChange={(value: 'file' | 'url') => updateForm('submissionType', value)} className="mt-2">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="url" id="url" />
                   <Label htmlFor="url" className="flex items-center">
@@ -245,9 +228,7 @@ export default function SubmitVersionPage() {
                   onChange={(e) => updateForm('downloadUrl', e.target.value)}
                   required
                 />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Link to where testers can download your game build
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">Link to where testers can download your game build</p>
               </div>
             )}
 
@@ -268,9 +249,7 @@ export default function SubmitVersionPage() {
         <Card>
           <CardHeader>
             <CardTitle>Testing Instructions</CardTitle>
-            <CardDescription>
-              Guide testers on how to test your game effectively
-            </CardDescription>
+            <CardDescription>Guide testers on how to test your game effectively</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -339,9 +318,7 @@ export default function SubmitVersionPage() {
         <Card>
           <CardHeader>
             <CardTitle>Feedback Form</CardTitle>
-            <CardDescription>
-              Define what feedback you want from testers
-            </CardDescription>
+            <CardDescription>Define what feedback you want from testers</CardDescription>
           </CardHeader>
           <CardContent>
             <div>
@@ -354,9 +331,7 @@ export default function SubmitVersionPage() {
                 rows={8}
                 required
               />
-              <p className="text-sm text-muted-foreground mt-1">
-                Provide specific questions or criteria you want testers to evaluate
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">Provide specific questions or criteria you want testers to evaluate</p>
             </div>
           </CardContent>
         </Card>
@@ -365,9 +340,7 @@ export default function SubmitVersionPage() {
         <Card>
           <CardHeader>
             <CardTitle>Testing Configuration</CardTitle>
-            <CardDescription>
-              Optional settings for your testing request
-            </CardDescription>
+            <CardDescription>Optional settings for your testing request</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -387,68 +360,44 @@ export default function SubmitVersionPage() {
                 <Label>Testing Period</Label>
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div>
-                    <Label htmlFor="startDate" className="text-sm">Start Date</Label>
+                    <Label htmlFor="startDate" className="text-sm">
+                      Start Date
+                    </Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !form.startDate && 'text-muted-foreground'
-                          )}
-                        >
+                        <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !form.startDate && 'text-muted-foreground')}>
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {form.startDate ? format(form.startDate, 'PPP') : 'Pick a date'}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={form.startDate}
-                          onSelect={(date) => updateForm('startDate', date)}
-                          initialFocus
-                        />
+                        <Calendar mode="single" selected={form.startDate} onSelect={(date) => updateForm('startDate', date)} initialFocus />
                       </PopoverContent>
                     </Popover>
                   </div>
                   <div>
-                    <Label htmlFor="endDate" className="text-sm">End Date</Label>
+                    <Label htmlFor="endDate" className="text-sm">
+                      End Date
+                    </Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !form.endDate && 'text-muted-foreground'
-                          )}
-                        >
+                        <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !form.endDate && 'text-muted-foreground')}>
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {form.endDate ? format(form.endDate, 'PPP') : 'Pick a date'}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={form.endDate}
-                          onSelect={(date) => updateForm('endDate', date)}
-                          initialFocus
-                        />
+                        <Calendar mode="single" selected={form.endDate} onSelect={(date) => updateForm('endDate', date)} initialFocus />
                       </PopoverContent>
                     </Popover>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Leave empty to keep the testing request open indefinitely
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">Leave empty to keep the testing request open indefinitely</p>
               </div>
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox
-                id="requiresTeamAccess"
-                checked={form.requiresTeamAccess}
-                onCheckedChange={(checked) => updateForm('requiresTeamAccess', checked)}
-              />
+              <Checkbox id="requiresTeamAccess" checked={form.requiresTeamAccess} onCheckedChange={(checked) => updateForm('requiresTeamAccess', checked)} />
               <Label htmlFor="requiresTeamAccess" className="text-sm">
                 Requires team repository access (for builds from private repos)
               </Label>
@@ -458,12 +407,7 @@ export default function SubmitVersionPage() {
 
         {/* Submit Button */}
         <div className="flex justify-between">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-            disabled={submitting}
-          >
+          <Button type="button" variant="outline" onClick={() => router.back()} disabled={submitting}>
             Cancel
           </Button>
           <Button type="submit" disabled={submitting}>

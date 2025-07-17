@@ -2,31 +2,40 @@
 
 ## Overview
 
-This project implements the CQRS (Command Query Responsibility Segregation) pattern using **MediatR** library, providing clean separation between commands (writes) and queries (reads).
+This project implements the CQRS (Command Query Responsibility Segregation) pattern using **MediatR** library, providing
+clean separation between commands (writes) and queries (reads).
 
 ## Architecture
 
 ### Commands
+
 Commands represent write operations that change the state of the system:
+
 - `LocalSignUpCommand` - User registration
 - `LocalSignInCommand` - User authentication
 - `UpdateUserProfileCommand` - Profile updates
 - `CreateUserCommand` - User creation
 
 ### Queries
+
 Queries represent read operations that retrieve data:
+
 - `GetUserByEmailQuery` - Find user by email
 - `GetAllUsersQuery` - Get all users
 - `GetUserProfileByUserIdQuery` - Get user profile
 
 ### Handlers
+
 Each command and query has a corresponding handler:
+
 - `LocalSignUpHandler` - Handles user registration
 - `GetUserByEmailQueryHandler` - Handles user lookup
 - `UpdateUserProfileHandler` - Handles profile updates
 
 ### Notifications
+
 Domain events for side effects:
+
 - `UserSignedUpNotification` - Published when user registers
 - `UserProfileUpdatedNotification` - Published when profile changes
 
@@ -87,21 +96,25 @@ public class AuthMutations
 ## Benefits
 
 ### 1. **Separation of Concerns**
+
 - Commands handle business logic and validation
 - Queries handle data retrieval optimization
 - Clear separation between reads and writes
 
 ### 2. **Scalability**
+
 - Different scaling strategies for reads vs writes
 - Independent optimization of command and query sides
 - Easier to implement read replicas
 
 ### 3. **Testability**
+
 - Each handler can be unit tested independently
 - Mock dependencies easily with interfaces
 - Clear input/output contracts
 
 ### 4. **Maintainability**
+
 - Single responsibility principle
 - Easy to add new features without affecting existing code
 - Clear code organization
@@ -109,6 +122,7 @@ public class AuthMutations
 ## Pipeline Behaviors
 
 ### Logging Behavior
+
 Automatically logs all requests and responses:
 
 ```csharp
@@ -125,6 +139,7 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
 ```
 
 ### Validation Behavior
+
 Validates requests using FluentValidation:
 
 ```csharp
@@ -177,6 +192,7 @@ public class LocalSignUpHandlerTests
 ## Migration from Service Pattern
 
 ### Before (Service Pattern)
+
 ```csharp
 public async Task<SignInResponseDto> LocalSignUp([FromBody] LocalSignUpRequestDto request)
 {
@@ -185,6 +201,7 @@ public async Task<SignInResponseDto> LocalSignUp([FromBody] LocalSignUpRequestDt
 ```
 
 ### After (CQRS Pattern)
+
 ```csharp
 public async Task<SignInResponseDto> LocalSignUp([FromBody] LocalSignUpRequestDto request)
 {
@@ -202,24 +219,29 @@ public async Task<SignInResponseDto> LocalSignUp([FromBody] LocalSignUpRequestDt
 ## Best Practices
 
 ### 1. **Command Naming**
+
 - Use imperative verbs: `CreateUser`, `UpdateProfile`, `DeletePost`
 - Be specific about the action: `ActivateUser` vs `UpdateUser`
 
 ### 2. **Query Naming**
+
 - Use descriptive names: `GetUserByEmail`, `GetActiveUsers`
 - Include filtering criteria in the name when relevant
 
 ### 3. **Handler Organization**
+
 - One handler per command/query
 - Keep handlers focused and single-purpose
 - Use dependency injection for services
 
 ### 4. **Validation**
+
 - Validate in command handlers, not controllers
 - Use domain-specific validation rules
 - Throw meaningful exceptions
 
 ### 5. **Notifications**
+
 - Use for cross-cutting concerns (logging, email, analytics)
 - Keep notification handlers lightweight
 - Don't fail the main operation if notification fails
@@ -227,16 +249,19 @@ public async Task<SignInResponseDto> LocalSignUp([FromBody] LocalSignUpRequestDt
 ## Performance Considerations
 
 ### 1. **Query Optimization**
+
 - Use read-optimized models for queries
 - Consider caching for frequently accessed data
 - Use projection to return only needed fields
 
 ### 2. **Command Optimization**
+
 - Validate early to avoid expensive operations
 - Use transactions for data consistency
 - Consider async processing for heavy operations
 
 ### 3. **Monitoring**
+
 - Log command/query execution times
 - Monitor handler performance
 - Track business metrics

@@ -82,14 +82,14 @@ interface ApiProgram {
 function transformProgramToCourse(program: ApiProgram): Course {
   // Generate slug from title if not provided
   const slug = program.slug || generateSlugFromTitle(program.title);
-  
+
   // Debug logging
-  console.log('Transforming course:', { 
-    title: program.title, 
-    originalSlug: program.slug, 
-    generatedSlug: slug 
+  console.log('Transforming course:', {
+    title: program.title,
+    originalSlug: program.slug,
+    generatedSlug: slug,
   });
-  
+
   return {
     id: program.id as CourseId,
     title: program.title,

@@ -6,7 +6,6 @@ import { CourseManagementContent } from '@/components/dashboard/courses/course-m
 import { Loader2 } from 'lucide-react';
 import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
 
-
 export const metadata: Metadata = {
   title: 'Course Management | Game Guild Dashboard',
   description: 'Create, edit, and manage courses in the Game Guild platform.',
@@ -50,7 +49,13 @@ export default async function CoursesManagementPage({ searchParams }: CoursesPag
 
         <ErrorBoundary fallback={<div className="text-red-500">Failed to load course management interface</div>}>
           <CourseProvider initialCourses={courseData.courses}>
-            <Suspense fallback={<div className="flex items-center justify-center p-4"><Loader2 className="h-4 w-4 animate-spin" /></div>}>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center p-4">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </div>
+              }
+            >
               <CourseManagementContent />
             </Suspense>
           </CourseProvider>

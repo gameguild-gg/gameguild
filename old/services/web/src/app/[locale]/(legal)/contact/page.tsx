@@ -1,5 +1,4 @@
 import React from 'react';
-import MarkdownRenderer from '@/components/markdown-renderer/markdown-renderer';
 import { MarkdownContent } from '@/components/markdown-content';
 
 const markdownContent: string = `

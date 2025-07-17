@@ -1,5 +1,5 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsDateString } from 'class-validator';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityBase } from '../../common/entities/entity.base';
 import { KycProvider, KycVerificationStatus } from './enums';

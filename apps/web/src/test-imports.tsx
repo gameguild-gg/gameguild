@@ -1,5 +1,5 @@
 // Test imports to identify which component is undefined
-import { ContributorsHeader, TopContributorsSection, GlobalRankingTable, ProjectStats, HorizontalRoadmap, HowToContribute } from '@/components/contributors';
+import { ContributorsHeader, GlobalRankingTable, HorizontalRoadmap, HowToContribute, ProjectStats, TopContributorsSection } from '@/components/contributors';
 
 console.log('ContributorsHeader:', ContributorsHeader);
 console.log('TopContributorsSection:', TopContributorsSection);

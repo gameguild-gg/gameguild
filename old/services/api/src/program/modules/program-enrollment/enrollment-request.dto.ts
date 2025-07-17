@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsJSON } from 'class-validator';
+import { IsJSON, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class EnrollmentRequest {

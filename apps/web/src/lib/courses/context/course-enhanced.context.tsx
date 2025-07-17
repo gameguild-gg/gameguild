@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useReducer } from 'react';
 import { CourseArea, CourseLevel } from '@/components/legacy/types/courses';
 
 // Enhanced course types
@@ -475,10 +475,18 @@ export function useCourseFilters() {
     setSearch: (search: string) => dispatch({ type: 'SET_SEARCH', payload: search }),
     setAreaFilter: (area: CourseArea | 'all') => dispatch({ type: 'SET_AREA_FILTER', payload: area }),
     setLevelFilter: (level: CourseLevel | 'all') => dispatch({ type: 'SET_LEVEL_FILTER', payload: level }),
-    setStatusFilter: (status: 'draft' | 'published' | 'archived' | 'all') => dispatch({ type: 'SET_STATUS_FILTER', payload: status }),
+    setStatusFilter: (status: 'draft' | 'published' | 'archived' | 'all') =>
+      dispatch({
+        type: 'SET_STATUS_FILTER',
+        payload: status,
+      }),
     setInstructorFilter: (instructor: string) => dispatch({ type: 'SET_INSTRUCTOR_FILTER', payload: instructor }),
     setTagFilter: (tag: string) => dispatch({ type: 'SET_TAG_FILTER', payload: tag }),
-    setSort: (sortBy: CourseFilters['sortBy'], sortOrder: CourseFilters['sortOrder']) => dispatch({ type: 'SET_SORT', payload: { sortBy, sortOrder } }),
+    setSort: (sortBy: CourseFilters['sortBy'], sortOrder: CourseFilters['sortOrder']) =>
+      dispatch({
+        type: 'SET_SORT',
+        payload: { sortBy, sortOrder },
+      }),
     resetFilters: () => dispatch({ type: 'RESET_FILTERS' }),
   };
 }

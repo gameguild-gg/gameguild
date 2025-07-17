@@ -44,7 +44,7 @@ async function fetchGitHubContributors(): Promise<Contributor[]> {
 
   try {
     const octokit = createOctokit();
-    
+
     const { data: contributors } = await octokit.rest.repos.listContributors({
       owner: REPO_OWNER,
       repo: REPO_NAME,
@@ -80,7 +80,7 @@ async function fetchUserDetails(username: string): Promise<Partial<Contributor>>
 
   try {
     const octokit = createOctokit();
-    
+
     const { data: user } = await octokit.rest.users.getByUsername({
       username,
     });
@@ -106,7 +106,7 @@ async function fetchContributorStats(): Promise<GitHubCommitStats[]> {
 
   try {
     const octokit = createOctokit();
-    
+
     const { data: stats } = await octokit.rest.repos.getContributorsStats({
       owner: REPO_OWNER,
       repo: REPO_NAME,
@@ -195,7 +195,7 @@ export async function getContributors(): Promise<Contributor[]> {
 export async function getRepositoryStats() {
   try {
     const octokit = createOctokit();
-    
+
     const { data: repo } = await octokit.rest.repos.get({
       owner: REPO_OWNER,
       repo: REPO_NAME,

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsArray, IsJSON } from 'class-validator';
+import { IsArray, IsJSON, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ProgramFilters {

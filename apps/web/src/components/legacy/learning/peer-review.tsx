@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Slider } from '@game-guild/ui/components/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
-import { Users, Star, AlertTriangle, CheckCircle, Clock, Flag, ThumbsUp, ThumbsDown, Loader2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Loader2, Star, ThumbsDown, ThumbsUp, Users } from 'lucide-react';
 import { useToast } from '@/lib/old/hooks/use-toast';
 import { ReportButton } from '@/components/common/report-button';
 
@@ -55,7 +55,7 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
     // Initialize criteria scores
     if (rubric) {
       const initialScores: Record<string, number> = {};
-      rubric.forEach(criteria => {
+      rubric.forEach((criteria) => {
         initialScores[criteria.name] = Math.floor(criteria.maxScore * 0.75); // Default to 75%
       });
       setCriteriaScores(initialScores);
@@ -63,9 +63,9 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
   }, [rubric]);
 
   const handleCriteriaScoreChange = (criteriaName: string, value: number[]) => {
-    setCriteriaScores(prev => ({
+    setCriteriaScores((prev) => ({
       ...prev,
-      [criteriaName]: value[0]
+      [criteriaName]: value[0],
     }));
   };
 
@@ -178,13 +178,7 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
             <div className="space-y-3">
               <label className="text-sm font-medium">Overall Score (0-100)</label>
               <div className="space-y-2">
-                <Slider
-                  value={score}
-                  onValueChange={setScore}
-                  max={100}
-                  step={1}
-                  className="w-full"
-                />
+                <Slider value={score} onValueChange={setScore} max={100} step={1} className="w-full" />
                 <div className="text-center">
                   <span className="text-lg font-mono">{score[0]}/100</span>
                 </div>
@@ -212,31 +206,17 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
               rows={6}
               className="resize-y"
             />
-            <p className="text-xs text-gray-500">
-              Minimum 10 characters required. Current: {feedback.length}
-            </p>
+            <p className="text-xs text-gray-500">Minimum 10 characters required. Current: {feedback.length}</p>
           </div>
 
           {/* Review Quality Self-Assessment */}
           <div className="space-y-3">
             <label className="text-sm font-medium">Rate the quality of your review (1-5 stars)</label>
             <div className="flex items-center gap-4">
-              <Slider
-                value={qualityRating}
-                onValueChange={setQualityRating}
-                max={5}
-                min={1}
-                step={1}
-                className="flex-1"
-              />
+              <Slider value={qualityRating} onValueChange={setQualityRating} max={5} min={1} step={1} className="flex-1" />
               <div className="flex items-center gap-1">
                 {Array.from({ length: 5 }, (_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-4 w-4 ${
-                      i < qualityRating[0] ? 'text-yellow-500 fill-current' : 'text-gray-300'
-                    }`}
-                  />
+                  <Star key={i} className={`h-4 w-4 ${i < qualityRating[0] ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} />
                 ))}
                 <span className="ml-2 text-sm font-mono">{qualityRating[0]}/5</span>
               </div>
@@ -245,14 +225,8 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
 
           {/* Submit Button */}
           <div className="flex items-center justify-between pt-4 border-t">
-            <p className="text-xs text-gray-500">
-              Your review will be sent to the student and may be used for grading.
-            </p>
-            <Button
-              onClick={() => setShowConfirmDialog(true)}
-              disabled={!isValidReview || isSubmitting}
-              className="px-8"
-            >
+            <p className="text-xs text-gray-500">Your review will be sent to the student and may be used for grading.</p>
+            <Button onClick={() => setShowConfirmDialog(true)} disabled={!isValidReview || isSubmitting} className="px-8">
               Submit Review
             </Button>
           </div>
@@ -280,15 +254,9 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
                 </div>
               </div>
             </div>
-            <p className="text-sm text-gray-600">
-              Are you sure you want to submit this peer review? Once submitted, it cannot be edited.
-            </p>
+            <p className="text-sm text-gray-600">Are you sure you want to submit this peer review? Once submitted, it cannot be edited.</p>
             <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setShowConfirmDialog(false)}
-                disabled={isSubmitting}
-              >
+              <Button variant="outline" onClick={() => setShowConfirmDialog(false)} disabled={isSubmitting}>
                 Cancel
               </Button>
               <Button onClick={handleSubmitReview} disabled={isSubmitting}>
@@ -334,11 +302,7 @@ export function ReceivedPeerReviews({ submissionId }: { submissionId: string }) 
       });
 
       if (response.ok) {
-        setReviews(prev => 
-          prev.map(review => 
-            review.id === reviewId ? { ...review, isAccepted: true } : review
-          )
-        );
+        setReviews((prev) => prev.map((review) => (review.id === reviewId ? { ...review, isAccepted: true } : review)));
         toast({
           title: 'Review accepted',
           description: 'You have accepted this peer review.',
@@ -361,11 +325,7 @@ export function ReceivedPeerReviews({ submissionId }: { submissionId: string }) 
       });
 
       if (response.ok) {
-        setReviews(prev => 
-          prev.map(review => 
-            review.id === reviewId ? { ...review, isAccepted: false } : review
-          )
-        );
+        setReviews((prev) => prev.map((review) => (review.id === reviewId ? { ...review, isAccepted: false } : review)));
         toast({
           title: 'Review rejected',
           description: 'You have rejected this review. A new reviewer will be assigned.',
@@ -427,13 +387,7 @@ export function ReceivedPeerReviews({ submissionId }: { submissionId: string }) 
                     Rejected
                   </Badge>
                 )}
-                <ReportButton
-                  reportType="review"
-                  targetId={review.id}
-                  targetTitle={`Review by ${review.reviewerName}`}
-                  variant="ghost"
-                  size="sm"
-                />
+                <ReportButton reportType="review" targetId={review.id} targetTitle={`Review by ${review.reviewerName}`} variant="ghost" size="sm" />
               </div>
             </div>
           </CardHeader>
@@ -441,23 +395,14 @@ export function ReceivedPeerReviews({ submissionId }: { submissionId: string }) 
             <div className="p-3 bg-gray-50 rounded-lg">
               <p className="text-sm leading-relaxed">{review.feedback}</p>
             </div>
-            
+
             {review.isAccepted === undefined && (
               <div className="flex gap-2 justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleRejectReview(review.id)}
-                  className="text-red-600 border-red-300 hover:bg-red-50"
-                >
+                <Button variant="outline" size="sm" onClick={() => handleRejectReview(review.id)} className="text-red-600 border-red-300 hover:bg-red-50">
                   <ThumbsDown className="h-4 w-4 mr-1" />
                   Reject Review
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={() => handleAcceptReview(review.id)}
-                  className="bg-green-600 hover:bg-green-700"
-                >
+                <Button size="sm" onClick={() => handleAcceptReview(review.id)} className="bg-green-600 hover:bg-green-700">
                   <ThumbsUp className="h-4 w-4 mr-1" />
                   Accept Review
                 </Button>

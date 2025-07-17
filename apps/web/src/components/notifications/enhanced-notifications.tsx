@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
@@ -9,29 +9,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/compone
 import { ScrollArea } from '@game-guild/ui/components/scroll-area';
 import { Separator } from '@game-guild/ui/components/separator';
 import { Switch } from '@game-guild/ui/components/switch';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
 import {
+  AlertCircle,
   Bell,
   BookOpen,
-  Trophy,
-  Users,
-  MessageSquare,
-  Calendar,
-  Star,
-  Gift,
-  AlertCircle,
   CheckCircle,
   Clock,
-  Filter,
-  MoreHorizontal,
-  Archive,
-  Trash2,
-  Settings,
-  Volume2,
-  Mail,
-  Smartphone,
   Eye,
   EyeOff,
+  Filter,
+  Gift,
+  Mail,
+  MoreHorizontal,
+  Settings,
+  Smartphone,
+  Star,
+  Trash2,
+  Trophy,
+  Users,
 } from 'lucide-react';
 
 // Enhanced notification types
@@ -207,12 +203,30 @@ export default function EnhancedNotifications() {
 
   // Mark notification as read
   const markAsRead = (id: string) => {
-    setNotifications((prev) => prev.map((notification) => (notification.id === id ? { ...notification, isRead: true } : notification)));
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        notification.id === id
+          ? {
+              ...notification,
+              isRead: true,
+            }
+          : notification,
+      ),
+    );
   };
 
   // Toggle star
   const toggleStar = (id: string) => {
-    setNotifications((prev) => prev.map((notification) => (notification.id === id ? { ...notification, isStarred: !notification.isStarred } : notification)));
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        notification.id === id
+          ? {
+              ...notification,
+              isStarred: !notification.isStarred,
+            }
+          : notification,
+      ),
+    );
   };
 
   // Mark all as read
@@ -301,7 +315,15 @@ export default function EnhancedNotifications() {
                     <Trophy className="h-4 w-4 text-yellow-600" />
                     <span>Achievements</span>
                   </div>
-                  <Switch checked={settings.achievements} onCheckedChange={(checked) => setSettings((prev) => ({ ...prev, achievements: checked }))} />
+                  <Switch
+                    checked={settings.achievements}
+                    onCheckedChange={(checked) =>
+                      setSettings((prev) => ({
+                        ...prev,
+                        achievements: checked,
+                      }))
+                    }
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">

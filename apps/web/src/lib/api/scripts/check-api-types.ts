@@ -13,6 +13,7 @@ interface SwaggerSpec {
   info?: SwaggerInfo;
   openapi?: string;
   swagger?: string;
+
   [key: string]: unknown;
 }
 

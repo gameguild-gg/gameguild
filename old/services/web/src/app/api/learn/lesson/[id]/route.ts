@@ -4,10 +4,7 @@ import path from 'path';
 import { LessonUpdateRequestv1_0_0, LessonUpdateResponsev1_0_0 } from '@/lib/interface-base/lesson.update.v1.0.0';
 import { LessonBasev1_0_0 } from '@/lib/interface-base/lesson.base.v1.0.0';
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const updateData: LessonUpdateRequestv1_0_0 = await request.json();
 
@@ -24,7 +21,7 @@ export async function PUT(
 
     const response: LessonUpdateResponsev1_0_0 = {
       message: 'Lesson updated successfully',
-      updatedLesson: lessonData
+      updatedLesson: lessonData,
     };
 
     return NextResponse.json(response);
@@ -33,4 +30,3 @@ export async function PUT(
     return NextResponse.json({ error: 'Failed to update lesson' }, { status: 500 });
   }
 }
-

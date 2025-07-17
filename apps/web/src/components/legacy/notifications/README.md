@@ -2,7 +2,8 @@
 
 ## Overview
 
-A complete notification system has been implemented for your Next.js 15+ app with modern design patterns, TypeScript support, and server actions integration. The system includes:
+A complete notification system has been implemented for your Next.js 15+ app with modern design patterns, TypeScript
+support, and server actions integration. The system includes:
 
 ## Features
 
@@ -46,7 +47,7 @@ The notification system is already integrated into your header component:
 import { NotificationDropdown } from '@/components/common/notifications';
 
 // In your header component
-<NotificationDropdown />;
+<NotificationDropdown/>;
 ```
 
 ### With Context Provider (Optional)

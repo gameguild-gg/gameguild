@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThan, Equal, IsNull, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
-import { ProgramContent, ContentInteraction, ActivityGrade, Program, ProgramUser, UserProduct } from '../../entities';
-import { ProgramContentType, ProgressStatus } from '../../entities/enums';
-import { CreateContentDto, UpdateContentDto, ContentInteractionDto, ContentFilters, ContentProgress } from './dtos';
+import { Equal, IsNull, LessThanOrEqual, MoreThan, MoreThanOrEqual, Repository } from 'typeorm';
+import { ActivityGrade, ContentInteraction, Program, ProgramContent, ProgramUser } from '../../entities';
+import { ProgressStatus } from '../../entities/enums';
+import { ContentFilters, ContentInteractionDto, ContentProgress, CreateContentDto, UpdateContentDto } from './dtos';
 
 @Injectable()
 export class ProgramContentService {

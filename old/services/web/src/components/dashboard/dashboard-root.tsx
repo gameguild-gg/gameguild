@@ -5,7 +5,5 @@ type Props = {
 };
 
 export default function DashboardRoot({ children }: Readonly<Props>) {
-  return (
-    <div className="flex flex-grow justify-between bg-gray-100">{children}</div>
-  );
+  return <div className="flex flex-grow justify-between bg-gray-100">{children}</div>;
 }

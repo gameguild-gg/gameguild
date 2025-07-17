@@ -1,4 +1,4 @@
-import { ValidationOptions, registerDecorator } from 'class-validator';
+import { registerDecorator, ValidationOptions } from 'class-validator';
 import { isSlug } from '../validators/IsSlug.validator';
 
 export function IsSlug(validationOptions?: ValidationOptions) {

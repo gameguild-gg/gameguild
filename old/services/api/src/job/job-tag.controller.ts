@@ -4,7 +4,7 @@ import { JobTagService } from './job-tag.service';
 import { Auth } from '../auth/decorators/http.decorator';
 import { JobTagEntity } from './entities/job-tag.entity';
 import { AuthenticatedRoute } from '../auth/auth.enum';
-import { CrudController, Crud } from '@dataui/crud';
+import { Crud, CrudController } from '@dataui/crud';
 
 @Crud({
   model: {

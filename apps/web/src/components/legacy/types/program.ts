@@ -31,7 +31,7 @@ export interface Program {
 export enum EnrollmentStatus {
   Open = 'Open',
   Closed = 'Closed',
-  Waitlist = 'Waitlist'
+  Waitlist = 'Waitlist',
 }
 
 export enum ProgramCategory {
@@ -42,27 +42,27 @@ export enum ProgramCategory {
   Audio = 'Audio',
   Business = 'Business',
   Marketing = 'Marketing',
-  Other = 'Other'
+  Other = 'Other',
 }
 
 export enum ProgramDifficulty {
   Beginner = 'Beginner',
   Intermediate = 'Intermediate',
   Advanced = 'Advanced',
-  Expert = 'Expert'
+  Expert = 'Expert',
 }
 
 export enum ContentVisibility {
   Public = 'Public',
   Private = 'Private',
-  Unlisted = 'Unlisted'
+  Unlisted = 'Unlisted',
 }
 
 export enum ContentStatus {
   Draft = 'Draft',
   InReview = 'InReview',
   Published = 'Published',
-  Archived = 'Archived'
+  Archived = 'Archived',
 }
 
 export interface CreateProgramRequest {
@@ -130,12 +130,12 @@ export enum ProgramSortField {
   EnrollmentCount = 'EnrollmentCount',
   CompletionRate = 'CompletionRate',
   Rating = 'Rating',
-  Revenue = 'Revenue'
+  Revenue = 'Revenue',
 }
 
 export enum SortDirection {
   Ascending = 'Ascending',
-  Descending = 'Descending'
+  Descending = 'Descending',
 }
 
 export interface BulkProgramOperation {

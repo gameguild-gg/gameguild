@@ -12,15 +12,7 @@ interface CertificateRequest {
 
 export async function generateCertificate(certificateData: CertificateRequest) {
   try {
-    const { 
-      courseId, 
-      courseTitle, 
-      studentName, 
-      completionDate, 
-      instructorName = 'Game Guild Academy',
-      skillsLearned = [],
-      finalGrade 
-    } = certificateData;
+    const { courseId, courseTitle, studentName, completionDate, instructorName = 'Game Guild Academy', skillsLearned = [], finalGrade } = certificateData;
 
     // Validate required fields
     if (!courseId || !courseTitle || !studentName || !completionDate) {
@@ -46,23 +38,19 @@ export async function generateCertificate(certificateData: CertificateRequest) {
       templateType: 'completion',
       validationUrl: `https://certificates.gameguild.gg/verify/${certificateId}`,
       downloadUrl: `https://api.gameguild.gg/certificates/${certificateId}/download`,
-      
+
       // PDF generation would happen here in a real implementation
       pdfGenerated: true,
       pdfSize: '2.1 MB',
-      
+
       // Blockchain verification (mock)
       blockchainHash: `0x${Math.random().toString(16).substr(2, 64)}`,
       blockchainNetwork: 'Polygon',
       blockchainVerified: true,
-      
+
       // Achievement badges
-      badges: [
-        'Course Completion',
-        ...(finalGrade && finalGrade >= 90 ? ['Excellence Award'] : []),
-        ...(skillsLearned.length > 5 ? ['Skill Master'] : []),
-      ],
-      
+      badges: ['Course Completion', ...(finalGrade && finalGrade >= 90 ? ['Excellence Award'] : []), ...(skillsLearned.length > 5 ? ['Skill Master'] : [])],
+
       // Social sharing
       shareableUrl: `https://certificates.gameguild.gg/share/${certificateId}`,
       twitterText: `I just completed "${courseTitle}" at Game Guild Academy! 🎮 #GameDev #Learning`,
@@ -89,7 +77,6 @@ export async function generateCertificate(certificateData: CertificateRequest) {
       certificate,
       message: 'Certificate generated successfully!',
     };
-
   } catch (error) {
     console.error('Error generating certificate:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to generate certificate');

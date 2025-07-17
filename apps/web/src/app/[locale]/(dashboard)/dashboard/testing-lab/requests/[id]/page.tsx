@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
@@ -10,9 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Download, FileText, Send, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Download, FileText, Send } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { testingLabApi, TestingRequest, SubmitFeedbackDto } from '@/lib/api/testing-lab/testing-lab-api';
+import { SubmitFeedbackDto, testingLabApi, TestingRequest } from '@/lib/api/testing-lab/testing-lab-api';
 
 interface FeedbackSubmission {
   userId: string;
@@ -46,22 +46,23 @@ export default function TestingRequestPage() {
   const fetchTestingRequest = async (id: string) => {
     try {
       setLoading(true);
-      
+
       // Fetch from API
       const requestData = await testingLabApi.getTestingRequest(id);
       setRequest(requestData);
 
       if (session?.user?.id) {
-        setFeedback(prev => ({ ...prev, userId: session.user.id }));
+        setFeedback((prev) => ({ ...prev, userId: session.user.id }));
       }
     } catch (error) {
       console.error('Error fetching testing request:', error);
-      
+
       // Fallback to mock data
       setRequest({
         id,
         title: 'Alpha Build Testing - Team 01',
-        description: 'Testing the core gameplay mechanics for our RPG game. This version includes the basic combat system, inventory management, and character progression.',
+        description:
+          'Testing the core gameplay mechanics for our RPG game. This version includes the basic combat system, inventory management, and character progression.',
         projectVersionId: 'pv1',
         downloadUrl: 'https://drive.google.com/file/d/example123/view',
         instructionsType: 'inline',
@@ -101,9 +102,9 @@ export default function TestingRequestPage() {
           },
         },
       });
-      
+
       if (session?.user?.id) {
-        setFeedback(prev => ({ ...prev, userId: session.user.id }));
+        setFeedback((prev) => ({ ...prev, userId: session.user.id }));
       }
     } finally {
       setLoading(false);
@@ -115,7 +116,7 @@ export default function TestingRequestPage() {
 
     try {
       setSubmittingFeedback(true);
-      
+
       // Create the feedback DTO
       const feedbackData: SubmitFeedbackDto = {
         testingRequestId: request.id,
@@ -124,10 +125,10 @@ export default function TestingRequestPage() {
         wouldRecommend: feedback.wouldRecommend,
         additionalNotes: feedback.additionalNotes,
       };
-      
+
       // Submit feedback to API
       await testingLabApi.submitFeedback(feedbackData);
-      
+
       // Show success message and redirect
       alert('Feedback submitted successfully!');
       router.push('/dashboard/testing-lab');
@@ -140,9 +141,9 @@ export default function TestingRequestPage() {
   };
 
   const updateFeedbackResponse = (question: string, answer: string) => {
-    setFeedback(prev => ({
+    setFeedback((prev) => ({
       ...prev,
-      responses: { ...prev.responses, [question]: answer }
+      responses: { ...prev.responses, [question]: answer },
     }));
   };
 
@@ -195,19 +196,15 @@ export default function TestingRequestPage() {
     );
   }
 
-  const feedbackQuestions = request.feedbackFormContent?.split('\n').filter(q => q.trim()) || [];
+  const feedbackQuestions = request.feedbackFormContent?.split('\n').filter((q) => q.trim()) || [];
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
-        <Button
-          variant="outline"
-          onClick={() => router.back()}
-          className="mb-4"
-        >
+        <Button variant="outline" onClick={() => router.back()} className="mb-4">
           ← Back to Testing Lab
         </Button>
-        
+
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-bold mb-2">{request.title}</h1>
@@ -235,7 +232,7 @@ export default function TestingRequestPage() {
                 <p className="text-sm text-muted-foreground mt-1">{request.description}</p>
               </div>
             )}
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium">Testing Period</Label>
@@ -250,7 +247,7 @@ export default function TestingRequestPage() {
                 </p>
               </div>
             </div>
-            
+
             <div>
               <Label className="text-sm font-medium">Created by</Label>
               <p className="text-sm text-muted-foreground mt-1">{request.createdBy.name}</p>
@@ -268,12 +265,7 @@ export default function TestingRequestPage() {
               <div>
                 <Label className="text-sm font-medium">Download Game</Label>
                 <div className="mt-2">
-                  <a 
-                    href={request.downloadUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-block"
-                  >
+                  <a href={request.downloadUrl} target="_blank" rel="noopener noreferrer" className="inline-block">
                     <Button>
                       <Download className="mr-2 h-4 w-4" />
                       Download Game Build
@@ -282,9 +274,9 @@ export default function TestingRequestPage() {
                 </div>
               </div>
             )}
-            
+
             <Separator />
-            
+
             <div>
               <Label className="text-sm font-medium">Testing Instructions</Label>
               {request.instructionsType === 'inline' && request.instructionsContent && (
@@ -294,12 +286,7 @@ export default function TestingRequestPage() {
               )}
               {request.instructionsType === 'url' && request.instructionsUrl && (
                 <div className="mt-2">
-                  <a 
-                    href={request.instructionsUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-block"
-                  >
+                  <a href={request.instructionsUrl} target="_blank" rel="noopener noreferrer" className="inline-block">
                     <Button variant="outline">
                       <FileText className="mr-2 h-4 w-4" />
                       View Instructions
@@ -315,9 +302,7 @@ export default function TestingRequestPage() {
         <Card>
           <CardHeader>
             <CardTitle>Submit Your Feedback</CardTitle>
-            <CardDescription>
-              Please test the game following the instructions above, then provide your feedback
-            </CardDescription>
+            <CardDescription>Please test the game following the instructions above, then provide your feedback</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {feedbackQuestions.map((question, index) => (
@@ -332,30 +317,32 @@ export default function TestingRequestPage() {
                 />
               </div>
             ))}
-            
+
             <Separator />
-            
+
             <div>
               <Label className="text-sm font-medium">Overall Rating</Label>
               <RadioGroup
                 value={feedback.rating.toString()}
-                onValueChange={(value) => setFeedback(prev => ({ ...prev, rating: parseInt(value) }))}
+                onValueChange={(value) => setFeedback((prev) => ({ ...prev, rating: parseInt(value) }))}
                 className="flex mt-2"
               >
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
                   <div key={rating} className="flex items-center space-x-1">
                     <RadioGroupItem value={rating.toString()} id={`rating-${rating}`} />
-                    <Label htmlFor={`rating-${rating}`} className="text-sm">{rating}</Label>
+                    <Label htmlFor={`rating-${rating}`} className="text-sm">
+                      {rating}
+                    </Label>
                   </div>
                 ))}
               </RadioGroup>
             </div>
-            
+
             <div>
               <Label className="text-sm font-medium">Would you recommend this game to others?</Label>
               <RadioGroup
                 value={feedback.wouldRecommend.toString()}
-                onValueChange={(value) => setFeedback(prev => ({ ...prev, wouldRecommend: value === 'true' }))}
+                onValueChange={(value) => setFeedback((prev) => ({ ...prev, wouldRecommend: value === 'true' }))}
                 className="mt-2"
               >
                 <div className="flex items-center space-x-2">
@@ -368,24 +355,23 @@ export default function TestingRequestPage() {
                 </div>
               </RadioGroup>
             </div>
-            
+
             <div>
-              <Label htmlFor="additionalNotes" className="text-sm font-medium">Additional Notes (Optional)</Label>
+              <Label htmlFor="additionalNotes" className="text-sm font-medium">
+                Additional Notes (Optional)
+              </Label>
               <Textarea
                 id="additionalNotes"
                 className="mt-2"
                 placeholder="Any additional comments, suggestions, or observations..."
                 value={feedback.additionalNotes}
-                onChange={(e) => setFeedback(prev => ({ ...prev, additionalNotes: e.target.value }))}
+                onChange={(e) => setFeedback((prev) => ({ ...prev, additionalNotes: e.target.value }))}
                 rows={4}
               />
             </div>
-            
+
             <div className="flex justify-end">
-              <Button 
-                onClick={handleFeedbackSubmit}
-                disabled={submittingFeedback || !session?.user}
-              >
+              <Button onClick={handleFeedbackSubmit} disabled={submittingFeedback || !session?.user}>
                 <Send className="mr-2 h-4 w-4" />
                 {submittingFeedback ? 'Submitting...' : 'Submit Feedback'}
               </Button>

@@ -1,24 +1,9 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  Request,
-  HttpStatus,
-  HttpException,
-  ParseUUIDPipe,
-  ValidationPipe,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsNumber, IsArray, Min, Max, IsEnum } from 'class-validator';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, ParseUUIDPipe, Post, Put, Query, Request, ValidationPipe } from '@nestjs/common';
+import { ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { IsArray, IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 
 import { ProgramService } from '../services/program.service';
-import { CreateProgramDto, UpdateProgramDto, ProgramFilters } from '../services/dtos';
+import { CreateProgramDto, ProgramFilters, UpdateProgramDto } from '../services/dtos';
 import { ProgramRoleType } from '../entities/enums';
 import { Program } from '../entities';
 
@@ -104,7 +89,7 @@ export class AssignRoleDto {
 // Helper function to handle error responses
 function handleError(error: unknown): never {
   const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-  
+
   if (errorMessage.includes('not found')) {
     throw new HttpException(errorMessage, HttpStatus.NOT_FOUND);
   }
@@ -114,7 +99,7 @@ function handleError(error: unknown): never {
   if (errorMessage.includes('already exists') || errorMessage.includes('already linked')) {
     throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
   }
-  
+
   throw new HttpException(errorMessage, HttpStatus.INTERNAL_SERVER_ERROR);
 }
 
@@ -261,7 +246,10 @@ export class ProgramController {
       const requestUserId = req.user?.id || 'mock-user-id';
 
       // Check if requesting user has permission to assign roles
-      const hasPermission = await this.programService.checkUserPermission(programId, requestUserId, [ProgramRoleType.INSTRUCTOR, ProgramRoleType.ADMINISTRATOR]);
+      const hasPermission = await this.programService.checkUserPermission(programId, requestUserId, [
+        ProgramRoleType.INSTRUCTOR,
+        ProgramRoleType.ADMINISTRATOR,
+      ]);
 
       if (!hasPermission) {
         throw new HttpException('Insufficient permissions to assign roles', HttpStatus.FORBIDDEN);
@@ -293,7 +281,10 @@ export class ProgramController {
     try {
       const requestUserId = req.user?.id || 'mock-user-id';
 
-      const hasPermission = await this.programService.checkUserPermission(programId, requestUserId, [ProgramRoleType.INSTRUCTOR, ProgramRoleType.ADMINISTRATOR]);
+      const hasPermission = await this.programService.checkUserPermission(programId, requestUserId, [
+        ProgramRoleType.INSTRUCTOR,
+        ProgramRoleType.ADMINISTRATOR,
+      ]);
 
       if (!hasPermission) {
         throw new HttpException('Insufficient permissions to remove roles', HttpStatus.FORBIDDEN);
@@ -313,7 +304,12 @@ export class ProgramController {
   @ApiParam({ name: 'id', description: 'Program UUID' })
   @ApiParam({ name: 'userId', description: 'User UUID' })
   @ApiResponse({ status: 200, description: 'User roles retrieved successfully' })
-  async getUserRoles(@Param('id', ParseUUIDPipe) programId: string, @Param('userId', ParseUUIDPipe) userId: string): Promise<{ roles: string[] }> {
+  async getUserRoles(
+    @Param('id', ParseUUIDPipe) programId: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
+  ): Promise<{
+    roles: string[];
+  }> {
     try {
       const roles = await this.programService.getUserRoles(programId, userId);
       return { roles };
@@ -434,7 +430,12 @@ export class ProgramController {
   @ApiOperation({ summary: 'Check user access to program' })
   @ApiParam({ name: 'id', description: 'Program UUID' })
   @ApiResponse({ status: 200, description: 'Access check completed' })
-  async checkAccess(@Param('id', ParseUUIDPipe) programId: string, @Request() req: any): Promise<{ has_access: boolean }> {
+  async checkAccess(
+    @Param('id', ParseUUIDPipe) programId: string,
+    @Request() req: any,
+  ): Promise<{
+    has_access: boolean;
+  }> {
     try {
       const userId = req.user?.id || 'mock-user-id';
       const hasAccess = await this.programService.checkUserAccess(programId, userId);

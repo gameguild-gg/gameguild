@@ -20,9 +20,9 @@ export function useCodeExecution(files: CodeFile[], settings: Settings) {
     try {
       const context = {
         console: {
-          log: (...args: any[]) => setOutput(prev => prev + args.join(' ') + '\n'),
-          error: (...args: any[]) => setOutput(prev => prev + 'Error: ' + args.join(' ') + '\n'),
-        }
+          log: (...args: any[]) => setOutput((prev) => prev + args.join(' ') + '\n'),
+          error: (...args: any[]) => setOutput((prev) => prev + 'Error: ' + args.join(' ') + '\n'),
+        },
       };
       const func = new Function('context', `with(context){${code}}`);
       func(context);
@@ -60,7 +60,9 @@ export function useCodeExecution(files: CodeFile[], settings: Settings) {
         case 'ruby':
         case 'lua':
           // Future implementation: Transpile to JavaScript
-          setOutput(`Execution for ${language} files is not yet implemented. Future steps:\n1. Transpile ${language} to JavaScript\n2. Execute the resulting JavaScript code`);
+          setOutput(
+            `Execution for ${language} files is not yet implemented. Future steps:\n1. Transpile ${language} to JavaScript\n2. Execute the resulting JavaScript code`,
+          );
           break;
         default:
           setOutput(`Running ${file.name}...\n\nContent:\n${file.content}\n\nNote: Execution for ${language} files is not implemented in this environment.`);
@@ -70,8 +72,8 @@ export function useCodeExecution(files: CodeFile[], settings: Settings) {
 
   const runApplication = (activeFileName: string) => {
     const indexFileName = settings.runSettings.applicationFileName || activeFileName;
-    const indexFile = files.find(file => file.name === indexFileName);
-    
+    const indexFile = files.find((file) => file.name === indexFileName);
+
     if (!indexFile) {
       setOutput(`Application file "${indexFileName}" not found.`);
       return;
@@ -85,10 +87,10 @@ export function useCodeExecution(files: CodeFile[], settings: Settings) {
 
       // Process CSS
       const styleLinks = doc.querySelectorAll('link[rel="stylesheet"]');
-      styleLinks.forEach(link => {
+      styleLinks.forEach((link) => {
         const href = link.getAttribute('href');
         if (href) {
-          const cssFile = files.find(file => file.name === href);
+          const cssFile = files.find((file) => file.name === href);
           if (cssFile) {
             const style = doc.createElement('style');
             style.textContent = cssFile.content;
@@ -99,10 +101,10 @@ export function useCodeExecution(files: CodeFile[], settings: Settings) {
 
       // Process JS
       const scripts = doc.querySelectorAll('script');
-      scripts.forEach(script => {
+      scripts.forEach((script) => {
         const src = script.getAttribute('src');
         if (src) {
-          const jsFile = files.find(file => file.name === src);
+          const jsFile = files.find((file) => file.name === src);
           if (jsFile) {
             script.removeAttribute('src');
             script.textContent = jsFile.content;
@@ -115,7 +117,7 @@ export function useCodeExecution(files: CodeFile[], settings: Settings) {
 
     if (indexFile.name.endsWith('.html')) {
       const processedHTML = processHTML(indexFile.content);
-      setOutput(prev => prev + `Processed HTML:\n${processedHTML}\n`);
+      setOutput((prev) => prev + `Processed HTML:\n${processedHTML}\n`);
 
       const newWindow = window.open();
       if (newWindow) {
@@ -129,4 +131,3 @@ export function useCodeExecution(files: CodeFile[], settings: Settings) {
 
   return { output, runFile, runApplication };
 }
-

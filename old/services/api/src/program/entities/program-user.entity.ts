@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, OneToMany, Index, DeleteDateColumn, JoinColumn } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsJSON } from 'class-validator';
 import { EntityBase } from '../../common/entities/entity.base';
@@ -47,6 +47,10 @@ export class ProgramUser extends EntityBase {
   contentInteractions: ContentInteraction[];
 
   @OneToMany(() => ProgramUserRole, (programUserRole) => programUserRole.programUser)
-  @ApiProperty({ type: () => ProgramUserRole, isArray: true, description: 'Roles assigned to this user in the program' })
+  @ApiProperty({
+    type: () => ProgramUserRole,
+    isArray: true,
+    description: 'Roles assigned to this user in the program',
+  })
   roles: ProgramUserRole[];
 }

@@ -2,7 +2,8 @@
 
 ## Overview
 
-The CMS now includes a GraphQL API powered by HotChocolate with Banana Cake Pop as the GraphQL IDE. GraphQL provides a flexible and efficient way to query and manipulate data.
+The CMS now includes a GraphQL API powered by HotChocolate with Banana Cake Pop as the GraphQL IDE. GraphQL provides a
+flexible and efficient way to query and manipulate data.
 
 ## Endpoints
 
@@ -14,6 +15,7 @@ The CMS now includes a GraphQL API powered by HotChocolate with Banana Cake Pop 
 ### Types
 
 #### User (with EntityBase Support)
+
 ```graphql
 type User {
   # BaseEntity Properties
@@ -51,6 +53,7 @@ input UpdateUserInput {
 ### Queries
 
 #### Get All Users (Active Only)
+
 ```graphql
 query GetUsers {
   users {
@@ -68,6 +71,7 @@ query GetUsers {
 ```
 
 #### Get User By ID
+
 ```graphql
 query GetUserById($id: UUID!) {
   userById(id: $id) {
@@ -85,6 +89,7 @@ query GetUserById($id: UUID!) {
 ```
 
 #### Get Active Users Only
+
 ```graphql
 query GetActiveUsers {
   activeUsers {
@@ -100,6 +105,7 @@ query GetActiveUsers {
 ```
 
 #### Get Deleted Users
+
 ```graphql
 query GetDeletedUsers {
   deletedUsers {
@@ -115,6 +121,7 @@ query GetDeletedUsers {
   }
 }
 ```
+
 ```graphql
 query GetActiveUsers {
   activeUsers {
@@ -133,6 +140,7 @@ query GetActiveUsers {
 ### Mutations
 
 #### Create User
+
 ```graphql
 mutation CreateUser($input: CreateUserInput!) {
   createUser(input: $input) {
@@ -150,6 +158,7 @@ mutation CreateUser($input: CreateUserInput!) {
 ```
 
 **Variables:**
+
 ```json
 {
   "input": {
@@ -161,6 +170,7 @@ mutation CreateUser($input: CreateUserInput!) {
 ```
 
 #### Update User
+
 ```graphql
 mutation UpdateUser($input: UpdateUserInput!) {
   updateUser(input: $input) {
@@ -178,6 +188,7 @@ mutation UpdateUser($input: UpdateUserInput!) {
 ```
 
 **Variables:**
+
 ```json
 {
   "input": {
@@ -189,6 +200,7 @@ mutation UpdateUser($input: UpdateUserInput!) {
 ```
 
 #### Delete User
+
 ```graphql
 mutation DeleteUser($id: UUID!) {
   deleteUser(id: $id)
@@ -196,6 +208,7 @@ mutation DeleteUser($id: UUID!) {
 ```
 
 **Variables:**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000"
@@ -203,6 +216,7 @@ mutation DeleteUser($id: UUID!) {
 ```
 
 #### Soft Delete User
+
 ```graphql
 mutation SoftDeleteUser($id: UUID!) {
   softDeleteUser(id: $id)
@@ -210,6 +224,7 @@ mutation SoftDeleteUser($id: UUID!) {
 ```
 
 **Variables:**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000"
@@ -217,6 +232,7 @@ mutation SoftDeleteUser($id: UUID!) {
 ```
 
 #### Restore User
+
 ```graphql
 mutation RestoreUser($id: UUID!) {
   restoreUser(id: $id)
@@ -224,6 +240,7 @@ mutation RestoreUser($id: UUID!) {
 ```
 
 **Variables:**
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000"
@@ -233,6 +250,7 @@ mutation RestoreUser($id: UUID!) {
 ## Features
 
 ### Banana Cake Pop IDE
+
 - **Interactive Query Builder**: Build queries visually
 - **Schema Documentation**: Explore the complete API schema
 - **Query Validation**: Real-time syntax checking
@@ -240,6 +258,7 @@ mutation RestoreUser($id: UUID!) {
 - **Response Formatting**: Beautiful JSON response formatting
 
 ### Benefits of GraphQL
+
 1. **Flexible Queries**: Request exactly the data you need
 2. **Single Endpoint**: One URL for all operations
 3. **Strong Typing**: Schema-first development
@@ -283,7 +302,7 @@ mutation RestoreUser($id: UUID!) {
      }
    }
    ```
-     }
+   }
    }
    ```
 
@@ -306,7 +325,8 @@ GraphQL provides detailed error messages:
 ## Integration with REST API
 
 Both REST and GraphQL APIs are available:
-- **REST API**: `http://localhost:5002/api/users` 
+
+- **REST API**: `http://localhost:5002/api/users`
 - **GraphQL API**: `http://localhost:5002/graphql`
 - **Swagger UI**: `http://localhost:5002/swagger`
 

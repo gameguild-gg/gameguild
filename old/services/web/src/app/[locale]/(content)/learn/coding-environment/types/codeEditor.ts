@@ -10,4 +10,3 @@ export interface CodeFile {
   content: string;
   history: History;
 }
-

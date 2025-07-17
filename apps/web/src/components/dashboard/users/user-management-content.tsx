@@ -1,8 +1,8 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
-import { useUserContext, useUserFilters, useUserSelection, useUserPagination } from '@/lib/users/users.context';
-import { createUserAction, updateUserAction, deleteUserAction, toggleUserStatusAction, revalidateUsersDataAction } from '@/lib/users/user-management';
+import { useActionState, useEffect, useState } from 'react';
+import { useUserContext, useUserFilters, useUserPagination, useUserSelection } from '@/lib/users/users.context';
+import { createUserAction, deleteUserAction, revalidateUsersDataAction, toggleUserStatusAction, updateUserAction } from '@/lib/users/user-management';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
@@ -14,9 +14,7 @@ import { Checkbox } from '@game-guild/ui/components/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
 import { Label } from '@game-guild/ui/components/label';
-import { Loader2 } from "lucide-react";
-import { Users, Plus, Search, Filter, MoreHorizontal, Edit, Trash2, UserCheck, UserX, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
+import { Edit, Filter, Loader2, MoreHorizontal, Plus, RefreshCw, Search, Trash2, UserCheck, Users, UserX } from 'lucide-react';
 
 interface UserManagementContentProps {
   initialPagination?: {

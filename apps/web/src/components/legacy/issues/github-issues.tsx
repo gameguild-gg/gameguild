@@ -86,7 +86,7 @@ export default function GitHubIssues() {
 
     try {
       const { getAllGitHubIssues } = await import('@/lib/integrations/github/actions');
-      
+
       const data = await getAllGitHubIssues(issueState as 'open' | 'closed' | 'all');
       const issuesArray = Array.isArray(data.issues) ? data.issues : [];
       setIssues(issuesArray);

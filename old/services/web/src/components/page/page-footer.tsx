@@ -21,16 +21,10 @@ function PageFooter({ children }: Readonly<Props>) {
         >
           <div className="flex">
             <a href="#">
-              <img
-                style={{ width: 30, height: 30, margin: 3 }}
-                src="/assets/images/whatsapp-icon.svg"
-              />
+              <img style={{ width: 30, height: 30, margin: 3 }} src="/assets/images/whatsapp-icon.svg" />
             </a>
             <a href="#">
-              <img
-                style={{ width: 30, height: 30, margin: 3 }}
-                src="/assets/images/discord-icon.svg"
-              />
+              <img style={{ width: 30, height: 30, margin: 3 }} src="/assets/images/discord-icon.svg" />
             </a>
           </div>
           <div>Game Guild © 2024 All Rights Reserved</div>

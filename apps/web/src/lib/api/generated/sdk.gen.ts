@@ -2,6 +2,26 @@
 
 import type { Options as ClientOptions, TDataShape, Client } from './client/index.js';
 import type {
+  GetApiAchievementsLeaderboardData,
+  GetApiAchievementsLeaderboardResponses,
+  GetApiAchievementsData,
+  GetApiAchievementsResponses,
+  PostApiAchievementsData,
+  PostApiAchievementsResponses,
+  DeleteApiAchievementsByAchievementIdData,
+  DeleteApiAchievementsByAchievementIdResponses,
+  GetApiAchievementsByAchievementIdData,
+  GetApiAchievementsByAchievementIdResponses,
+  PutApiAchievementsByAchievementIdData,
+  PutApiAchievementsByAchievementIdResponses,
+  PostApiAchievementsByAchievementIdAwardData,
+  PostApiAchievementsByAchievementIdAwardResponses,
+  PostApiAchievementsByAchievementIdBulkAwardData,
+  PostApiAchievementsByAchievementIdBulkAwardResponses,
+  GetApiAchievementsByAchievementIdStatisticsData,
+  GetApiAchievementsByAchievementIdStatisticsResponses,
+  GetApiAchievementsStatisticsData,
+  GetApiAchievementsStatisticsResponses,
   PostApiProgramsByProgramIdActivityGradesData,
   PostApiProgramsByProgramIdActivityGradesResponses,
   GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdData,
@@ -528,6 +548,22 @@ import type {
   PostTestingFeedbackByFeedbackIdReportResponses,
   PostTestingFeedbackByFeedbackIdQualityData,
   PostTestingFeedbackByFeedbackIdQualityResponses,
+  GetApiUsersByUserIdAchievementsData,
+  GetApiUsersByUserIdAchievementsResponses,
+  GetApiUsersByUserIdAchievementsProgressData,
+  GetApiUsersByUserIdAchievementsProgressResponses,
+  GetApiUsersByUserIdAchievementsSummaryData,
+  GetApiUsersByUserIdAchievementsSummaryResponses,
+  GetApiUsersByUserIdAchievementsAvailableData,
+  GetApiUsersByUserIdAchievementsAvailableResponses,
+  PostApiUsersByUserIdAchievementsByAchievementIdProgressData,
+  PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses,
+  GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData,
+  GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses,
+  PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedData,
+  PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedResponses,
+  DeleteApiUsersByUserIdAchievementsByUserAchievementIdData,
+  DeleteApiUsersByUserIdAchievementsByUserAchievementIdResponses,
   GetApiUserProfilesData,
   GetApiUserProfilesResponses,
   PostApiUserProfilesData,
@@ -581,6 +617,104 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
    * used to access values that aren't defined as part of the SDK function.
    */
   meta?: Record<string, unknown>;
+};
+
+export const getApiAchievementsLeaderboard = <ThrowOnError extends boolean = false>(options?: Options<GetApiAchievementsLeaderboardData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiAchievementsLeaderboardResponses, unknown, ThrowOnError>({
+    url: '/api/achievements/leaderboard',
+    ...options,
+  });
+};
+
+export const getApiAchievements = <ThrowOnError extends boolean = false>(options?: Options<GetApiAchievementsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiAchievementsResponses, unknown, ThrowOnError>({
+    url: '/api/Achievements',
+    ...options,
+  });
+};
+
+export const postApiAchievements = <ThrowOnError extends boolean = false>(options?: Options<PostApiAchievementsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiAchievementsResponses, unknown, ThrowOnError>({
+    url: '/api/Achievements',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const deleteApiAchievementsByAchievementId = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiAchievementsByAchievementIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiAchievementsByAchievementIdResponses, unknown, ThrowOnError>({
+    url: '/api/Achievements/{achievementId}',
+    ...options,
+  });
+};
+
+export const getApiAchievementsByAchievementId = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiAchievementsByAchievementIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiAchievementsByAchievementIdResponses, unknown, ThrowOnError>({
+    url: '/api/Achievements/{achievementId}',
+    ...options,
+  });
+};
+
+export const putApiAchievementsByAchievementId = <ThrowOnError extends boolean = false>(
+  options: Options<PutApiAchievementsByAchievementIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutApiAchievementsByAchievementIdResponses, unknown, ThrowOnError>({
+    url: '/api/Achievements/{achievementId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postApiAchievementsByAchievementIdAward = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiAchievementsByAchievementIdAwardData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiAchievementsByAchievementIdAwardResponses, unknown, ThrowOnError>({
+    url: '/api/Achievements/{achievementId}/award',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postApiAchievementsByAchievementIdBulkAward = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiAchievementsByAchievementIdBulkAwardData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiAchievementsByAchievementIdBulkAwardResponses, unknown, ThrowOnError>({
+    url: '/api/Achievements/{achievementId}/bulk-award',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiAchievementsByAchievementIdStatistics = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiAchievementsByAchievementIdStatisticsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiAchievementsByAchievementIdStatisticsResponses, unknown, ThrowOnError>({
+    url: '/api/Achievements/{achievementId}/statistics',
+    ...options,
+  });
+};
+
+export const getApiAchievementsStatistics = <ThrowOnError extends boolean = false>(options?: Options<GetApiAchievementsStatisticsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiAchievementsStatisticsResponses, unknown, ThrowOnError>({
+    url: '/api/Achievements/statistics',
+    ...options,
+  });
 };
 
 export const postApiProgramsByProgramIdActivityGrades = <ThrowOnError extends boolean = false>(
@@ -2877,6 +3011,84 @@ export const postTestingFeedbackByFeedbackIdQuality = <ThrowOnError extends bool
 ) => {
   return (options.client ?? _heyApiClient).post<PostTestingFeedbackByFeedbackIdQualityResponses, unknown, ThrowOnError>({
     url: '/Testing/feedback/{feedbackId}/quality',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiUsersByUserIdAchievements = <ThrowOnError extends boolean = false>(options: Options<GetApiUsersByUserIdAchievementsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsResponses, unknown, ThrowOnError>({
+    url: '/api/users/{userId}/achievements',
+    ...options,
+  });
+};
+
+export const getApiUsersByUserIdAchievementsProgress = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiUsersByUserIdAchievementsProgressData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsProgressResponses, unknown, ThrowOnError>({
+    url: '/api/users/{userId}/achievements/progress',
+    ...options,
+  });
+};
+
+export const getApiUsersByUserIdAchievementsSummary = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiUsersByUserIdAchievementsSummaryData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsSummaryResponses, unknown, ThrowOnError>({
+    url: '/api/users/{userId}/achievements/summary',
+    ...options,
+  });
+};
+
+export const getApiUsersByUserIdAchievementsAvailable = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiUsersByUserIdAchievementsAvailableData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsAvailableResponses, unknown, ThrowOnError>({
+    url: '/api/users/{userId}/achievements/available',
+    ...options,
+  });
+};
+
+export const postApiUsersByUserIdAchievementsByAchievementIdProgress = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiUsersByUserIdAchievementsByAchievementIdProgressData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses, unknown, ThrowOnError>({
+    url: '/api/users/{userId}/achievements/{achievementId}/progress',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiUsersByUserIdAchievementsByAchievementIdPrerequisites = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses, unknown, ThrowOnError>({
+    url: '/api/users/{userId}/achievements/{achievementId}/prerequisites',
+    ...options,
+  });
+};
+
+export const postApiUsersByUserIdAchievementsByUserAchievementIdMarkNotified = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedResponses, unknown, ThrowOnError>({
+    url: '/api/users/{userId}/achievements/{userAchievementId}/mark-notified',
+    ...options,
+  });
+};
+
+export const deleteApiUsersByUserIdAchievementsByUserAchievementId = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiUsersByUserIdAchievementsByUserAchievementIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiUsersByUserIdAchievementsByUserAchievementIdResponses, unknown, ThrowOnError>({
+    url: '/api/users/{userId}/achievements/{userAchievementId}',
     ...options,
     headers: {
       'Content-Type': 'application/json',

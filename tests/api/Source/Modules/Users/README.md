@@ -14,6 +14,7 @@
 See main test documentation for running and filtering tests by module or type.
 
 ## Coverage Goals
+
 - User creation, update, deletion
 - Authentication and authorization
 - Profile retrieval and update

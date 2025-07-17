@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, Snowflake, Trophy } from 'lucide-react';
+import { Snowflake, Trophy, Users } from 'lucide-react';
 import { Card, CardContent } from '@game-guild/ui/components/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
 

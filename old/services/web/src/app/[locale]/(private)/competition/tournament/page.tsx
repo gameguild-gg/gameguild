@@ -15,21 +15,18 @@ export default function TournamentPage() {
   });
 
   const router = useRouter();
-  const [lastCompetitionState, setLastCompetitionState] = React.useState<
-    CompetitionRunSubmissionReportEntity[] | null
-  >(null);
+  const [lastCompetitionState, setLastCompetitionState] = React.useState<CompetitionRunSubmissionReportEntity[] | null>(null);
 
   const [dataFetched, setDataFetched] = React.useState(false);
 
   const fetchData = async () => {
     try {
       const session = await getSession();
-      const response =
-        await api.competitionControllerGetLatestChessCompetitionReport({
-          headers: {
-            Authorization: `Bearer ${session?.user?.accessToken}`,
-          },
-        });
+      const response = await api.competitionControllerGetLatestChessCompetitionReport({
+        headers: {
+          Authorization: `Bearer ${session?.user?.accessToken}`,
+        },
+      });
 
       if (response.status === 401) {
         message.error('You are not authorized to view this page.');
@@ -112,19 +109,13 @@ export default function TournamentPage() {
   if (lastCompetitionState) {
     // get the oldest updatedAt from the lastCompetitionState array
     for (let i = 0; i < lastCompetitionState.length; i++) {
-      if (
-        lastRunDate === null ||
-        new Date(lastCompetitionState[i].updatedAt) > lastRunDate
-      )
-        lastRunDate = new Date(lastCompetitionState[i].updatedAt);
+      if (lastRunDate === null || new Date(lastCompetitionState[i].updatedAt) > lastRunDate) lastRunDate = new Date(lastCompetitionState[i].updatedAt);
     }
   }
 
   let lastRunDateString: string = 'None';
   if (lastRunDate) {
-    lastRunDateString =
-      moment(lastRunDate).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss') +
-      ' EST';
+    lastRunDateString = moment(lastRunDate).tz('America/New_York').format('YYYY-MM-DD HH:mm:ss') + ' EST';
   }
 
   // print a table of all reports from all users from lastCompetitionState
@@ -132,18 +123,8 @@ export default function TournamentPage() {
     <>
       <Typography.Title level={1}>Tournament</Typography.Title>
       <Typography.Title level={2}>Last Competition State</Typography.Title>
-      <Typography.Paragraph>
-        Last Run: {lastRunDateString}. Please don't run the tournament too
-        often. Once each a day is fine.
-      </Typography.Paragraph>
-      <Button
-        icon={<RedoOutlined />}
-        type="primary"
-        block
-        danger
-        size="large"
-        onClick={triggerTournament}
-      >
+      <Typography.Paragraph>Last Run: {lastRunDateString}. Please don't run the tournament too often. Once each a day is fine.</Typography.Paragraph>
+      <Button icon={<RedoOutlined />} type="primary" block danger size="large" onClick={triggerTournament}>
         Trigger a tournament
       </Button>
       <Table columns={columns} dataSource={data} />

@@ -152,12 +152,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
 
   return (
     <>
-      <ReactMarkdown 
-        className="markdown-content" 
-        remarkPlugins={[remarkGfm, remarkMath]} 
-        rehypePlugins={[rehypeRaw, rehypeKatex]}
-        components={components}
-      >
+      <ReactMarkdown className="markdown-content" remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={components}>
         {processedContent}
       </ReactMarkdown>
       <style jsx global>{`

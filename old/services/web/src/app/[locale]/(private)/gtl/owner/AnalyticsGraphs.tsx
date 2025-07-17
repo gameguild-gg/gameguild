@@ -26,17 +26,7 @@ const getYAxisDomain = (value: number) => {
 };
 
 // Graph component that renders the bar chart for a specific data set
-const Graph = ({
-                 data,
-                 dataKey,
-                 color,
-                 title,
-               }: {
-  data: any[];
-  dataKey: string;
-  color: string;
-  title: string;
-}) => {
+const Graph = ({ data, dataKey, color, title }: { data: any[]; dataKey: string; color: string; title: string }) => {
   const maxValue = Math.max(...data.map((item) => item[dataKey]));
   const [yAxisDomain, setYAxisDomain] = useState(getYAxisDomain(maxValue));
 

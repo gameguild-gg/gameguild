@@ -3,6 +3,7 @@
 ## Issues Fixed
 
 ### 1. **JWT Token Expiration Problem**
+
 ```
 warn: AuthConfiguration[0]
 JWT authentication failed: IDX10223: Lifetime validation failed. The token is expired. 
@@ -10,11 +11,13 @@ ValidTo (UTC): '6/19/2025 9:38:16 PM', Current time (UTC): '6/21/2025 4:23:02 AM
 ```
 
 ### 2. **Token Refresh Not Working Properly**
+
 The token refresh mechanism wasn't handling expired tokens correctly.
 
 ## Solutions Implemented
 
 ### ✅ **Enhanced Token Refresh Logic**
+
 **File**: `apps/web/src/configs/auth.config.ts`
 
 ```typescript
@@ -56,6 +59,7 @@ if (expiresAt && now > expiresAt && token.refreshToken) {
 ```
 
 ### ✅ **Enhanced Authentication ErrorMessage Handling**
+
 **File**: `apps/web/src/components/projects/actions.ts`
 
 ```typescript
@@ -90,6 +94,7 @@ if (!response.ok) {
 ```
 
 ### ✅ **Force Re-Authentication Mechanism**
+
 **File**: `apps/web/src/app/[locale]/(dashboard)/dashboard/projects/page.tsx`
 
 ```typescript
@@ -111,6 +116,7 @@ if ((session as any)?.error === 'RefreshTokenError') {
 ```
 
 ### ✅ **Comprehensive Cache Revalidation with Authentication**
+
 ```typescript
 // Multi-layer cache invalidation after project creation
 if (response.ok) {

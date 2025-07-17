@@ -164,10 +164,10 @@ Icons by [Icons8](https://icons8.com/)
 This project is available under a dual-license model:
 
 1. **Open Source License:** [GNU AGPL v3.0](./LICENSE)
-    - For non-commercial, open-source use or commercial with less than 1000 users.
-    - Must comply with AGPL terms, including providing source code for modifications.
+  - For non-commercial, open-source use or commercial with less than 1000 users.
+  - Must comply with AGPL terms, including providing source code for modifications.
 
 2. **Commercial License:** [Commercial License](old/COMMERCIAL_LICENSE.md)
-    - For commercial use exceeding 1000 users.
-    - Contact us for terms on discord.
+  - For commercial use exceeding 1000 users.
+  - Contact us for terms on discord.
  

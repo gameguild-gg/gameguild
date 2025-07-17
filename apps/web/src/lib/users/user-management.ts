@@ -23,7 +23,7 @@ export interface UserActionState extends ActionState {
 export async function createUserAction(prevState: ActionState, formData: FormData): Promise<UserActionState> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-    
+
     const userData = {
       username: formData.get('username') as string,
       email: formData.get('email') as string,
@@ -45,10 +45,10 @@ export async function createUserAction(prevState: ActionState, formData: FormDat
     }
 
     const user = await response.json();
-    
+
     // Revalidate cache
     revalidateTag('users');
-    
+
     return { success: true, user };
   } catch (error) {
     console.error('Error creating user:', error);
@@ -65,7 +65,7 @@ export async function createUserAction(prevState: ActionState, formData: FormDat
 export async function updateUserAction(id: string, prevState: ActionState, formData: FormData): Promise<UserActionState> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-    
+
     const userData: Partial<UpdateUserRequest> = {
       username: formData.get('username') as string,
       email: formData.get('email') as string,
@@ -87,11 +87,11 @@ export async function updateUserAction(id: string, prevState: ActionState, formD
     }
 
     const user = await response.json();
-    
+
     // Revalidate cache
     revalidateTag('users');
     revalidateTag('user-detail');
-    
+
     return { success: true, user };
   } catch (error) {
     console.error('Error updating user:', error);
@@ -137,7 +137,14 @@ export async function deleteUserAction(id: string): Promise<{ success: boolean; 
 /**
  * Client-safe user status toggle
  */
-export async function toggleUserStatusAction(id: string, currentStatus: boolean): Promise<{ success: boolean; error?: string; user?: User }> {
+export async function toggleUserStatusAction(
+  id: string,
+  currentStatus: boolean,
+): Promise<{
+  success: boolean;
+  error?: string;
+  user?: User;
+}> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
@@ -154,7 +161,7 @@ export async function toggleUserStatusAction(id: string, currentStatus: boolean)
     }
 
     const user = await response.json();
-    
+
     // Revalidate cache
     revalidateTag('users');
     revalidateTag('user-detail');

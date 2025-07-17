@@ -15,12 +15,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
       // Add any paths you want to disallow
-      disallow: [
-        '/api/',
-        '/admin/',
-        '/_next/',
-        '/dashboard/private/',
-      ],
+      disallow: ['/api/', '/admin/', '/_next/', '/dashboard/private/'],
     },
     sitemap: `${baseUrl}/sitemap.xml`,
   };

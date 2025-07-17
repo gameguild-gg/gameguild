@@ -69,9 +69,7 @@ export default function CreatorDashboard() {
         router.push('/projects/create');
         break;
       default:
-        alert(
-          'Not implemented yet! Help us develop this feature! Talk to us on Discord!',
-        );
+        alert('Not implemented yet! Help us develop this feature! Talk to us on Discord!');
         break;
     }
   };
@@ -108,10 +106,7 @@ export default function CreatorDashboard() {
           <TabsContent key={type} value={type} className="space-y-6">
             {type == ContentTypes.ALL && <div className="h-16"></div>}
             {type !== ContentTypes.ALL && (
-              <Button
-                onClick={() => handleCreateNewButton(type)}
-                className="mb-6"
-              >
+              <Button onClick={() => handleCreateNewButton(type)} className="mb-6">
                 Create New {type.slice(0, -1)}
               </Button>
             )}
@@ -124,12 +119,7 @@ export default function CreatorDashboard() {
                     <Card key={item.id} className="rounded-none">
                       <CardContent className="p-0 flex h-24">
                         <div className="relative w-24 h-full">
-                          <Image
-                            src={item.image}
-                            alt={item.title}
-                            layout="fill"
-                            objectFit="cover"
-                          />
+                          <Image src={item.image} alt={item.title} layout="fill" objectFit="cover" />
                         </div>
                         <div className="flex-1 flex flex-col justify-between p-4">
                           <h3 className="font-medium">{item.title}</h3>
@@ -145,9 +135,7 @@ export default function CreatorDashboard() {
                 </div>
               </div>
               <div>
-                <h2 className="text-2xl font-semibold mb-4">
-                  Views (Last 10 Days)
-                </h2>
+                <h2 className="text-2xl font-semibold mb-4">Views (Last 10 Days)</h2>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={viewsData}>

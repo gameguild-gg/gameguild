@@ -4,7 +4,7 @@ import { Card } from '@game-guild/ui/components/card';
 import { Contributor } from '@/lib/contributors';
 import { ContributorStats } from './contributor-stats';
 import { numberToAbbreviation } from '@/lib/utils';
-import { Trophy, Award } from 'lucide-react';
+import { Award, Trophy } from 'lucide-react';
 
 interface ContributorLeaderboardCardProps {
   contributor: Contributor;
@@ -58,13 +58,7 @@ export const ContributorLeaderboardCard: React.FC<ContributorLeaderboardCardProp
 
       {/* Avatar and Name */}
       <div className="flex items-center gap-4 mb-4 mt-4">
-        <Image
-          src={contributor.avatar_url}
-          alt={contributor.name || contributor.login}
-          width={64}
-          height={64}
-          className="rounded-full"
-        />
+        <Image src={contributor.avatar_url} alt={contributor.name || contributor.login} width={64} height={64} className="rounded-full" />
         <div>
           <h3 className="text-xl font-bold text-white">{contributor.name || contributor.login}</h3>
           <p className="text-slate-400">@{contributor.login}</p>

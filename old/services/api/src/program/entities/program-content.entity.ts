@@ -1,8 +1,8 @@
-import { Entity, Column, ManyToOne, OneToMany, Index, DeleteDateColumn, JoinColumn } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, IsBoolean, IsJSON, IsDate } from 'class-validator';
+import { IsBoolean, IsDate, IsEnum, IsJSON, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { EntityBase } from '../../common/entities/entity.base';
-import { ProgramContentType, GradingMethod } from './enums';
+import { GradingMethod, ProgramContentType } from './enums';
 import { Program } from './program.entity';
 import { ContentInteraction } from './content-interaction.entity';
 
@@ -22,7 +22,11 @@ export class ProgramContent extends EntityBase {
   @JoinColumn({ name: 'program_id' })
   program: Program;
 
-  @ApiProperty({ type: () => ProgramContent, description: 'Self-referential for hierarchical structure, null if top-level content', required: false })
+  @ApiProperty({
+    type: () => ProgramContent,
+    description: 'Self-referential for hierarchical structure, null if top-level content',
+    required: false,
+  })
   @ManyToOne(() => ProgramContent, (programContent) => programContent.children, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'parent_id' })
   @IsOptional()
@@ -67,7 +71,10 @@ export class ProgramContent extends EntityBase {
   dueDate: Date | null;
 
   @Column({ type: 'timestamp', nullable: true })
-  @ApiProperty({ description: 'When this content becomes available to users, null if always available', required: false })
+  @ApiProperty({
+    description: 'When this content becomes available to users, null if always available',
+    required: false,
+  })
   @IsOptional()
   @IsDate()
   availableFrom: Date | null;
@@ -79,7 +86,11 @@ export class ProgramContent extends EntityBase {
   availableTo: Date | null;
 
   @Column({ type: 'enum', enum: GradingMethod, nullable: true })
-  @ApiProperty({ enum: GradingMethod, description: 'Method used to grade this content (null for pages)', required: false })
+  @ApiProperty({
+    enum: GradingMethod,
+    description: 'Method used to grade this content (null for pages)',
+    required: false,
+  })
   @IsOptional()
   @IsEnum(GradingMethod)
   gradingMethod: GradingMethod | null;
@@ -110,7 +121,10 @@ export class ProgramContent extends EntityBase {
   fileResponseExtensions: string[] | null;
 
   @Column({ type: 'jsonb', nullable: true })
-  @ApiProperty({ description: 'Detailed rubric configuration for consistent grading, including criteria and point values', required: false })
+  @ApiProperty({
+    description: 'Detailed rubric configuration for consistent grading, including criteria and point values',
+    required: false,
+  })
   @IsOptional()
   @IsJSON()
   gradingRubric: object | null;
@@ -130,7 +144,11 @@ export class ProgramContent extends EntityBase {
   @OneToMany(() => ContentInteraction, (interaction) => interaction.content)
   interactions: ContentInteraction[];
 
-  @ApiProperty({ type: () => ProgramContent, isArray: true, description: 'Child content items in hierarchical structure' })
+  @ApiProperty({
+    type: () => ProgramContent,
+    isArray: true,
+    description: 'Child content items in hierarchical structure',
+  })
   @OneToMany(() => ProgramContent, (programContent) => programContent.parent)
   children: ProgramContent[];
 }

@@ -2,7 +2,9 @@
 
 ## Overview
 
-In this assignment, you will research a job position, write a tailored cover letter, and provide constructive feedback to your peers. The goal is to refine your ability to present yourself effectively while helping others improve their applications.
+In this assignment, you will research a job position, write a tailored cover letter, and provide constructive feedback
+to your peers. The goal is to refine your ability to present yourself effectively while helping others improve their
+applications.
 
 ---
 
@@ -10,15 +12,19 @@ In this assignment, you will research a job position, write a tailored cover let
 
 ### 1. Research a Job Position
 
-Find a **game programming or game development** job posting that interests you and **share the link** in the designated Canvas forum thread.
+Find a **game programming or game development** job posting that interests you and **share the link** in the designated
+Canvas forum thread.
 
 ### 2. Write Your Cover Letter
 
 Using the job description as a guide, write a **tailored cover letter** that:
+
 - Matches **your skills and experience** with the job’s requirements.
-- Uses a **tone appropriate for the game industry**—relaxed yet professional, incorporating enthusiasm for the company’s work.
+- Uses a **tone appropriate for the game industry**—relaxed yet professional, incorporating enthusiasm for the company’s
+  work.
 - Applies the **argument-evidence-impact** approach to highlight your strengths with concrete examples.
-- Includes a **strong introduction** that captures attention. Be bold, confident, humble, and catchy, but don't be exaggerated, use too much dramatic, and don't use cliches.
+- Includes a **strong introduction** that captures attention. Be bold, confident, humble, and catchy, but don't be
+  exaggerated, use too much dramatic, and don't use cliches.
 - Ends with a **clear call to action**, encouraging the employer to take the next step.
 
 Post both the job link and your cover letter in the forum.
@@ -27,9 +33,11 @@ Post both the job link and your cover letter in the forum.
 
 ## 3. Peer Review
 
-Read and evaluate at least **five** of your peers' submissions. **Prioritize reviewing posts with fewer replies** to ensure everyone receives feedback.
+Read and evaluate at least **five** of your peers' submissions. **Prioritize reviewing posts with fewer replies** to
+ensure everyone receives feedback.
 
 When reviewing, focus on:
+
 - **Clarity & Structure:** Is the letter well-organized and easy to follow?
 - **Tone & Personalization:** Does it reflect the right balance of professionalism and enthusiasm?
 - **Relevance to Job Posting:** Is the letter tailored to the specific role?
@@ -41,8 +49,10 @@ Provide **specific and constructive feedback**—point out strengths and suggest
 ---
 
 ## Submission Instructions
+
 1. **Post:** Your job link and cover letter in the Canvas forum.
 2. **Review:** At least five peers, focusing on those with fewer responses.
 3. **Engage:** Offer helpful, detailed feedback.
 
-This exercise will sharpen your ability to present yourself compellingly while strengthening the class community through peer learning.
+This exercise will sharpen your ability to present yourself compellingly while strengthening the class community through
+peer learning.

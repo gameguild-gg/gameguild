@@ -5,7 +5,7 @@ import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader } from '@game-guild/ui/components/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
-import { Star, Clock, Users, BookOpen, ArrowRight } from 'lucide-react';
+import { ArrowRight, Clock, Star, Users } from 'lucide-react';
 import Link from 'next/link';
 
 interface Course {

@@ -2,7 +2,6 @@ import globals from 'globals';
 import eslint from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import nextJsPlugin from '@next/eslint-plugin-next';
 import prettierPlugin from 'eslint-plugin-prettier';
 import prettierConfig from '@game-guild/prettier-config';
 import reactPlugin from 'eslint-plugin-react';

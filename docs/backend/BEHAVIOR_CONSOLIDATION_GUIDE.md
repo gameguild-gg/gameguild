@@ -2,17 +2,20 @@
 
 ## Overview
 
-The duplicate behavior classes have been consolidated into a unified, more powerful behavior system that supports both MediatR and Clean Architecture patterns.
+The duplicate behavior classes have been consolidated into a unified, more powerful behavior system that supports both
+MediatR and Clean Architecture patterns.
 
 ## What Was Consolidated
 
 ### Old Files (Deprecated)
+
 1. **Common/Behaviors/LoggingBehavior.cs** - Basic MediatR logging
 2. **Common/Behaviors/ValidationBehavior.cs** - DataAnnotations only
 3. **Abstractions/Behaviors/LoggingDecorator.cs** - Result pattern logging
 4. **Abstractions/Behaviors/ValidationDecorator.cs** - FluentValidation decorators
 
 ### New Unified Files
+
 1. **UnifiedLoggingBehavior.cs** - Supports both MediatR and Result patterns
 2. **UnifiedValidationBehavior.cs** - Supports both DataAnnotations and FluentValidation
 3. **PerformanceBehavior.cs** - Performance monitoring and memory tracking
@@ -22,6 +25,7 @@ The duplicate behavior classes have been consolidated into a unified, more power
 ## Key Improvements
 
 ### 1. **Unified Logging**
+
 ```csharp
 // Features:
 - Supports both MediatR and Result patterns
@@ -32,6 +36,7 @@ The duplicate behavior classes have been consolidated into a unified, more power
 ```
 
 ### 2. **Enhanced Validation**
+
 ```csharp
 // Features:
 - DataAnnotations support (backward compatibility)
@@ -42,6 +47,7 @@ The duplicate behavior classes have been consolidated into a unified, more power
 ```
 
 ### 3. **Performance Monitoring**
+
 ```csharp
 // Features:
 - Request duration tracking
@@ -52,6 +58,7 @@ The duplicate behavior classes have been consolidated into a unified, more power
 ```
 
 ### 4. **Intelligent Caching**
+
 ```csharp
 // Usage example:
 public class GetUserQuery : IRequest<Result<User>>, ICachedRequest
@@ -65,6 +72,7 @@ public class GetUserQuery : IRequest<Result<User>>, ICachedRequest
 ```
 
 ### 5. **Authorization Support**
+
 ```csharp
 // Usage example:
 public class CreateUserCommand : IRequest<Result<User>>, IAuthorizedRequest
@@ -90,10 +98,12 @@ The behaviors are executed in this order (important for proper functionality):
 ## Migration Steps
 
 ### Phase 1: Update DI Registration ✅
+
 - Updated `DependencyInjection.cs` to use unified behaviors
 - Commented out old behavior registrations in `Program.cs`
 
 ### Phase 2: Update Commands/Queries (Optional)
+
 ```csharp
 // Add caching to queries:
 public class GetAllUsersQuery : IRequest<Result<IEnumerable<User>>>, ICachedRequest
@@ -114,6 +124,7 @@ public class DeleteUserCommand : IRequest<Result>, IAuthorizedRequest
 ```
 
 ### Phase 3: Add FluentValidation (Recommended)
+
 ```csharp
 // Create validators for better validation:
 public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
@@ -141,24 +152,28 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 ## Benefits
 
 ### 1. **Performance**
+
 - 30% faster logging with optimized context
 - Memory usage monitoring prevents leaks
 - Intelligent caching reduces database load
 - Early validation prevents unnecessary processing
 
 ### 2. **Security**
+
 - Built-in authorization checks
 - Role and permission-based access
 - Custom authorization logic support
 - Detailed security audit logs
 
 ### 3. **Maintainability**
+
 - Single behavior classes instead of duplicates
 - Consistent error handling patterns
 - Unified logging format
 - Better testability
 
 ### 4. **Developer Experience**
+
 - Rich logging with context
 - Clear validation error messages
 - Performance insights
@@ -178,7 +193,8 @@ rm apps/api/Source/Abstractions/Behaviors/ValidationDecorator.cs
 
 ## Testing
 
-The unified behaviors maintain backward compatibility, so existing functionality should work without changes. However, test the following:
+The unified behaviors maintain backward compatibility, so existing functionality should work without changes. However,
+test the following:
 
 1. **Request Processing** - Ensure all requests still work
 2. **Validation** - Check both DataAnnotations and custom validation

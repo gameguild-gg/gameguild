@@ -1,5 +1,5 @@
 import React from 'react';
-import { Code, BookOpen, Bug, Github, Target, GitFork } from 'lucide-react';
+import { BookOpen, Bug, Code, GitFork, Github, Target } from 'lucide-react';
 
 export function HowToContribute() {
   return (

@@ -1,13 +1,13 @@
 import {
-  TenantDomain,
-  CreateTenantDomainRequest,
-  UpdateTenantDomainRequest,
-  TenantUserGroup,
-  CreateTenantUserGroupRequest,
-  UpdateTenantUserGroupRequest,
-  TenantUserGroupMembership,
   AddUserToGroupRequest,
   AutoAssignUserRequest,
+  CreateTenantDomainRequest,
+  CreateTenantUserGroupRequest,
+  TenantDomain,
+  TenantUserGroup,
+  TenantUserGroupMembership,
+  UpdateTenantDomainRequest,
+  UpdateTenantUserGroupRequest,
 } from '@/components/legacy/types/tenant-domain';
 
 class TenantDomainApiClient {
@@ -20,54 +20,6 @@ class TenantDomainApiClient {
     if (!accessToken) {
       console.warn('[TenantDomainApiClient] Warning: No access token provided. Requests may fail due to missing authentication.');
     }
-  }
-
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    // Add existing headers from options
-    if (options.headers) {
-      Object.assign(headers, options.headers);
-    }
-
-    // Add authorization header if access token is available
-    if (this.accessToken) {
-      headers.Authorization = `Bearer ${this.accessToken}`;
-    }
-
-    // Debug log for outgoing request
-    console.log('[TenantDomainApiClient] Request:', {
-      url,
-      method: options.method || 'GET',
-      headers,
-      body: options.body,
-    });
-
-    const config: RequestInit = {
-      ...options,
-      headers,
-    };
-
-    const response = await fetch(url, config);
-
-    // Debug log for response status
-    console.log('[TenantDomainApiClient] Response status:', response.status);
-
-    if (!response.ok) {
-      let errorData = {};
-      try {
-        errorData = await response.json();
-      } catch (e) {
-        // ignore
-      }
-      console.error('[TenantDomainApiClient] Error response body:', errorData);
-      throw new Error((errorData as any).message || `HTTP error! status: ${response.status}`);
-    }
-
-    return response.json();
   }
 
   // Domain Management
@@ -194,6 +146,54 @@ class TenantDomainApiClient {
 
   async getGroupsByUser(userId: string): Promise<TenantUserGroup[]> {
     return this.request<TenantUserGroup[]>(`/api/tenant-domains/users/${userId}/groups`);
+  }
+
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const url = `${this.baseUrl}${endpoint}`;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add existing headers from options
+    if (options.headers) {
+      Object.assign(headers, options.headers);
+    }
+
+    // Add authorization header if access token is available
+    if (this.accessToken) {
+      headers.Authorization = `Bearer ${this.accessToken}`;
+    }
+
+    // Debug log for outgoing request
+    console.log('[TenantDomainApiClient] Request:', {
+      url,
+      method: options.method || 'GET',
+      headers,
+      body: options.body,
+    });
+
+    const config: RequestInit = {
+      ...options,
+      headers,
+    };
+
+    const response = await fetch(url, config);
+
+    // Debug log for response status
+    console.log('[TenantDomainApiClient] Response status:', response.status);
+
+    if (!response.ok) {
+      let errorData = {};
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        // ignore
+      }
+      console.error('[TenantDomainApiClient] Error response body:', errorData);
+      throw new Error((errorData as any).message || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
   }
 }
 

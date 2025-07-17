@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useSession } from 'next-auth/react';
 import { testingLabApi } from '@/lib/api/testing-lab/testing-lab-api';
 import TestingLabPage from '../page';

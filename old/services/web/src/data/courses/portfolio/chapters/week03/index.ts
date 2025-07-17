@@ -6,27 +6,9 @@ import LectureEntity = Api.LectureEntity;
 import ChapterEntity = Api.ChapterEntity;
 
 const week03lectures: LectureEntity[] = [];
-week03lectures.push(
-  createLecture(
-    '3-1',
-    'linkedin-profile',
-    'LinkedIn Profile',
-    'Setting up your LinkedIn profile.',
-    lecture03,
-    1,
-  ) as LectureEntity,
-);
+week03lectures.push(createLecture('3-1', 'linkedin-profile', 'LinkedIn Profile', 'Setting up your LinkedIn profile.', lecture03, 1) as LectureEntity);
 
-week03lectures.push(
-  createLecture(
-    '3-2',
-    'assignment-05',
-    'Assignment 05',
-    'LinkedIn Profile Assignment',
-    assignment05,
-    2,
-  ) as LectureEntity,
-);
+week03lectures.push(createLecture('3-2', 'assignment-05', 'Assignment 05', 'LinkedIn Profile Assignment', assignment05, 2) as LectureEntity);
 
 const Chapter03 = createChapter(
   '3',

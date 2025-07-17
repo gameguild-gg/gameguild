@@ -1,28 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Progress } from '@game-guild/ui/components/progress';
-import { Separator } from '@game-guild/ui/components/separator';
 import { ScrollArea } from '@game-guild/ui/components/scroll-area';
-import {
-  BookOpen,
-  CheckCircle2,
-  Clock,
-  PlayCircle,
-  FileText,
-  Code,
-  MessageSquare,
-  Trophy,
-  AlertTriangle,
-  Star,
-  Users,
-  ArrowLeft,
-  ArrowRight,
-} from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock, Code, FileText, MessageSquare, PlayCircle, Trophy, Users } from 'lucide-react';
 
 interface ContentItem {
   id: string;
@@ -57,7 +42,7 @@ interface CourseViewerProps {
 
 const ContentTypeIcon = ({ type }: { type: ContentItem['type'] }) => {
   const iconProps = { className: 'h-4 w-4' };
-  
+
   switch (type) {
     case 'page':
       return <FileText {...iconProps} />;
@@ -103,11 +88,11 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
     try {
       // TODO: Implement GraphQL mutation for enrollment
       console.log('Enrolling in course:', courseId);
-      
+
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setCourse(prev => ({ ...prev, isEnrolled: true }));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setCourse((prev) => ({ ...prev, isEnrolled: true }));
     } catch (error) {
       console.error('Failed to enroll:', error);
     } finally {
@@ -120,25 +105,20 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
     try {
       // TODO: Implement GraphQL mutation for content completion
       console.log('Marking content as complete:', contentId);
-      
+
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setCourse(prev => ({
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setCourse((prev) => ({
         ...prev,
-        contents: prev.contents.map(content =>
-          content.id === contentId
-            ? { ...content, isCompleted: true, progress: 100 }
-            : content
-        )
+        contents: prev.contents.map((content) => (content.id === contentId ? { ...content, isCompleted: true, progress: 100 } : content)),
       }));
-      
+
       // Update overall course progress
-      const completedCount = course.contents.filter(c => c.isCompleted).length + 1;
+      const completedCount = course.contents.filter((c) => c.isCompleted).length + 1;
       const newProgress = (completedCount / course.contents.length) * 100;
-      
-      setCourse(prev => ({ ...prev, progress: newProgress }));
-      
+
+      setCourse((prev) => ({ ...prev, progress: newProgress }));
     } catch (error) {
       console.error('Failed to complete content:', error);
     } finally {
@@ -195,10 +175,7 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
                   <h3 className="text-lg font-semibold mb-4">Course Content</h3>
                   <div className="space-y-2">
                     {course.contents.map((content, index) => (
-                      <div
-                        key={content.id}
-                        className="flex items-center gap-3 p-3 rounded-lg bg-gray-800/50"
-                      >
+                      <div key={content.id} className="flex items-center gap-3 p-3 rounded-lg bg-gray-800/50">
                         <ContentTypeIcon type={content.type} />
                         <div className="flex-1">
                           <div className="font-medium">{content.title}</div>
@@ -211,12 +188,7 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
                   </div>
                 </div>
 
-                <Button
-                  onClick={handleEnroll}
-                  disabled={isLoading}
-                  className="w-full"
-                  size="lg"
-                >
+                <Button onClick={handleEnroll} disabled={isLoading} className="w-full" size="lg">
                   {isLoading ? 'Enrolling...' : 'Enroll in Course'}
                 </Button>
               </CardContent>
@@ -238,9 +210,7 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
                 <CardTitle className="text-lg">{course.title}</CardTitle>
                 <div className="space-y-2">
                   <Progress value={course.progress} className="h-2" />
-                  <div className="text-sm text-gray-400">
-                    {Math.round(course.progress)}% complete
-                  </div>
+                  <div className="text-sm text-gray-400">{Math.round(course.progress)}% complete</div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -250,31 +220,19 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
                       <div
                         key={content.id}
                         className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                          index === currentContentIndex
-                            ? 'bg-blue-600'
-                            : content.isLocked
-                            ? 'bg-gray-800/30 opacity-50'
-                            : 'bg-gray-800/50 hover:bg-gray-800'
+                          index === currentContentIndex ? 'bg-blue-600' : content.isLocked ? 'bg-gray-800/30 opacity-50' : 'bg-gray-800/50 hover:bg-gray-800'
                         }`}
                         onClick={() => !content.isLocked && setCurrentContentIndex(index)}
                       >
                         <div className="flex items-center gap-2">
                           <ContentTypeIcon type={content.type} />
-                          {content.isCompleted && (
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          )}
-                          {content.isLocked && (
-                            <div className="h-4 w-4 rounded-full bg-gray-600" />
-                          )}
+                          {content.isCompleted && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                          {content.isLocked && <div className="h-4 w-4 rounded-full bg-gray-600" />}
                         </div>
                         <div className="mt-2">
                           <div className="font-medium text-sm">{content.title}</div>
-                          <div className="text-xs text-gray-400">
-                            {content.duration} min
-                          </div>
-                          {content.progress > 0 && content.progress < 100 && (
-                            <Progress value={content.progress} className="h-1 mt-1" />
-                          )}
+                          <div className="text-xs text-gray-400">{content.duration} min</div>
+                          {content.progress > 0 && content.progress < 100 && <Progress value={content.progress} className="h-1 mt-1" />}
                         </div>
                       </div>
                     ))}
@@ -296,20 +254,15 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
                     </CardTitle>
                     <div className="flex items-center gap-4 text-sm text-gray-400 mt-2">
                       <span>{currentContent.duration} minutes</span>
-                      {currentContent.isRequired && (
-                        <Badge variant="outline">Required</Badge>
-                      )}
+                      {currentContent.isRequired && <Badge variant="outline">Required</Badge>}
                       {currentContent.score !== undefined && (
-                        <span>Score: {currentContent.score}/{currentContent.maxScore}</span>
+                        <span>
+                          Score: {currentContent.score}/{currentContent.maxScore}
+                        </span>
                       )}
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={reportContent}
-                    className="text-gray-400 hover:text-white"
-                  >
+                  <Button variant="ghost" size="sm" onClick={reportContent} className="text-gray-400 hover:text-white">
                     <AlertTriangle className="h-4 w-4" />
                     Report
                   </Button>
@@ -323,7 +276,7 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
                       <PlayCircle className="h-16 w-16 text-gray-400" />
                     </div>
                   )}
-                  
+
                   {currentContent.type === 'page' && (
                     <div className="prose prose-invert max-w-none">
                       <h3>Content: {currentContent.title}</h3>
@@ -331,16 +284,14 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
                       {/* Content would be rendered here */}
                     </div>
                   )}
-                  
+
                   {currentContent.type === 'assignment' && (
                     <div className="space-y-4">
                       <h3 className="text-xl font-semibold">Assignment: {currentContent.title}</h3>
                       <p className="text-gray-300">{currentContent.description}</p>
                       <div className="bg-gray-800 p-4 rounded-lg">
                         <h4 className="font-medium mb-2">Instructions:</h4>
-                        <p className="text-sm text-gray-300">
-                          Complete the assignment and submit your work for review.
-                        </p>
+                        <p className="text-sm text-gray-300">Complete the assignment and submit your work for review.</p>
                       </div>
                     </div>
                   )}
@@ -348,28 +299,19 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
 
                 {/* Action Buttons */}
                 <div className="flex items-center justify-between">
-                  <Button
-                    variant="outline"
-                    onClick={handlePrevious}
-                    disabled={!canGoPrevious}
-                    className="flex items-center gap-2"
-                  >
+                  <Button variant="outline" onClick={handlePrevious} disabled={!canGoPrevious} className="flex items-center gap-2">
                     <ArrowLeft className="h-4 w-4" />
                     Previous
                   </Button>
 
                   <div className="flex items-center gap-4">
                     {!currentContent.isCompleted && (
-                      <Button
-                        onClick={() => handleContentComplete(currentContent.id)}
-                        disabled={isLoading}
-                        className="flex items-center gap-2"
-                      >
+                      <Button onClick={() => handleContentComplete(currentContent.id)} disabled={isLoading} className="flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4" />
                         Mark Complete
                       </Button>
                     )}
-                    
+
                     {currentContent.isCompleted && (
                       <Badge variant="secondary" className="flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4" />
@@ -378,11 +320,7 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
                     )}
                   </div>
 
-                  <Button
-                    onClick={handleNext}
-                    disabled={getNextAvailableIndex() === -1}
-                    className="flex items-center gap-2"
-                  >
+                  <Button onClick={handleNext} disabled={getNextAvailableIndex() === -1} className="flex items-center gap-2">
                     Next
                     <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -395,11 +333,9 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
                       <div className="text-center space-y-4">
                         <Trophy className="h-12 w-12 text-yellow-500 mx-auto" />
                         <div>
-                          <h3 className="text-xl font-semibold text-green-400">
-                            Congratulations!
-                          </h3>
+                          <h3 className="text-xl font-semibold text-green-400">Congratulations!</h3>
                           <p className="text-gray-300">
-                            You have completed this course. 
+                            You have completed this course.
                             {course.certificate && ' Your certificate is now available!'}
                           </p>
                         </div>

@@ -31,8 +31,7 @@ export default function DashboardHeader({ children }: Readonly<Props>) {
 
                     <p className="text-muted-foreground">
                       Search{' '}
-                      <kbd
-                        className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                      <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
                         <span className="text-base">⌘K</span>
                       </kbd>
                     </p>
@@ -78,9 +77,7 @@ export default function DashboardHeader({ children }: Readonly<Props>) {
                 {/*    />*/}
                 {/*  </div>*/}
                 {/*</div>*/}
-                <DialogFooter>
-                  {/*<Button type="submit">Save changes</Button>*/}
-                </DialogFooter>
+                <DialogFooter>{/*<Button type="submit">Save changes</Button>*/}</DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
@@ -90,11 +87,7 @@ export default function DashboardHeader({ children }: Readonly<Props>) {
           <div className="ml-4 flex items-center md:ml-6 gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="overflow-hidden rounded-full"
-                >
+                <Button variant="ghost" size="icon" className="overflow-hidden rounded-full">
                   <Bell className="size-6" />
                 </Button>
               </DropdownMenuTrigger>
@@ -111,10 +104,7 @@ export default function DashboardHeader({ children }: Readonly<Props>) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar>
-                  <AvatarImage
-                    src="https://github.com/shadcn.png"
-                    alt="@shadcn"
-                  />
+                  <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 export interface Lesson {
   id: string;
@@ -69,11 +69,7 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setCourseData((prev) => ({ ...prev, ...data }));
   };
 
-  return (
-    <CourseContext.Provider value={{ courseData, updateCourseData }}>
-      {children}
-    </CourseContext.Provider>
-  );
+  return <CourseContext.Provider value={{ courseData, updateCourseData }}>{children}</CourseContext.Provider>;
 };
 
 export const useCourseContext = () => useContext(CourseContext);

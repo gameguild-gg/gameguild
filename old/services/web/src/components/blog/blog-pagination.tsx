@@ -55,10 +55,7 @@ export function BlogPagination({ page = 1, pages }: Readonly<Props>) {
             &gt;
           </Link>
           &nbsp;&nbsp;
-          <Link
-            href={`/blog/page/${pages}`}
-            className="text-white tracking-[-0.15em]"
-          >
+          <Link href={`/blog/page/${pages}`} className="text-white tracking-[-0.15em]">
             &gt;&gt;
           </Link>
         </span>

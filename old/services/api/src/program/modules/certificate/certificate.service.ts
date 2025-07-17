@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Equal, IsNull, MoreThan, LessThanOrEqual, Not } from 'typeorm';
+import { Equal, IsNull, LessThanOrEqual, MoreThan, Repository } from 'typeorm';
 import * as crypto from 'crypto';
 import { Certificate, CertificateBlockchainAnchor, CertificateTag, Product, Program, ProgramUser, Tag, UserCertificate } from '../../entities';
 import { UserEntity } from '../../../user/entities/user.entity';
@@ -375,14 +375,14 @@ export class CertificateService {
 
     // Active certificates (not revoked and not expired)
     const activeWhereConditions = [];
-    
+
     // Active certificates with no expiration date
     activeWhereConditions.push({
       ...baseWhere,
       status: Equal(CertificateStatus.ACTIVE),
       expiresAt: IsNull(),
     });
-    
+
     // Active certificates that haven't expired yet
     activeWhereConditions.push({
       ...baseWhere,

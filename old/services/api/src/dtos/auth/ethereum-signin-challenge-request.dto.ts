@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEthereumAddress, IsInt, IsNotEmpty, IsNumberString, IsString } from 'class-validator';
+import { IsEthereumAddress, IsNotEmpty, IsString } from 'class-validator';
 
 export class EthereumSigninChallengeRequestDto {
   @ApiProperty()

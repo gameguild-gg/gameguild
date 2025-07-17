@@ -43,15 +43,12 @@ async function generateDbml() {
     });
 
     // sort relations by name
-    entity.relations.sort((a, b) =>
-      a.propertyName.localeCompare(b.propertyName),
-    );
+    entity.relations.sort((a, b) => a.propertyName.localeCompare(b.propertyName));
 
     // Ensure all relations are included as fields with type of the related entity
     // if it is an array, add [] to the type
     entity.relations.forEach((relation) => {
-      TableRegistry[entity.name][relation.propertyName] =
-        relation.inverseEntityMetadata.name;
+      TableRegistry[entity.name][relation.propertyName] = relation.inverseEntityMetadata.name;
     });
   });
 
@@ -88,10 +85,7 @@ async function generateDbml() {
       const toKey = `${to}.${relation.inverseSidePropertyPath}`;
 
       // ensure the oposite relation does not exist
-      if (
-        !RelationRegistry[toKey] ||
-        (RelationRegistry[toKey] && !RelationRegistry[toKey][fromKey])
-      ) {
+      if (!RelationRegistry[toKey] || (RelationRegistry[toKey] && !RelationRegistry[toKey][fromKey])) {
         if (!RelationRegistry[fromKey]) {
           RelationRegistry[fromKey] = {};
         }

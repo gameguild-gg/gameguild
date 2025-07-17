@@ -1,21 +1,20 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Progress } from '@game-guild/ui/components/progress';
 
-
 import {
-  getCourseEnrollmentStatus,
-  enrollInFreeCourse,
   createPaymentIntent,
-  getProductsContainingCourse,
+  enrollInFreeCourse,
   type EnrollmentStatus,
+  getCourseEnrollmentStatus,
+  getProductsContainingCourse,
   type Product,
 } from '@/lib/courses/actions/enrollment.actions';
-import { Users, Trophy, Star, Lock, CreditCard, Gift, BookOpen, Loader2 } from 'lucide-react';
+import { BookOpen, CreditCard, Gift, Loader2, Lock, Star, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 

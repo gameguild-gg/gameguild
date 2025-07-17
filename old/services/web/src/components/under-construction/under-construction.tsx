@@ -1,9 +1,9 @@
-import { AlertTriangle } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import Link from 'next/link'
+import { AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 interface UnderConstructionProps {
-  pageName: string
+  pageName: string;
 }
 
 export default function UnderConstruction({ pageName }: UnderConstructionProps) {
@@ -14,11 +14,8 @@ export default function UnderConstruction({ pageName }: UnderConstructionProps) 
       <p className="text-xl mb-4 text-center">The {pageName} page is coming soon!</p>
       <p className="text-lg mb-8 text-center max-w-md">We're working hard to bring you an amazing experience. Please check back later.</p>
       <Button asChild>
-        <Link href="/old/services/web/public">
-          Return to Home
-        </Link>
+        <Link href="/old/services/web/public">Return to Home</Link>
       </Button>
     </div>
-  )
+  );
 }
-

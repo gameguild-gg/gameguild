@@ -8,8 +8,6 @@ import CourseAccessCard from '@/components/courses/course/course-access-card';
 import { Skeleton } from '@game-guild/ui/components/skeleton';
 import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
 
-
-
 interface CourseDetailPageProps {
   params: Promise<{ slug: string }>;
 }

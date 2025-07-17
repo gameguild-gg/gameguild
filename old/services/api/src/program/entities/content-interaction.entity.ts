@@ -1,6 +1,6 @@
-import { Entity, Column, ManyToOne, OneToMany, JoinColumn, Index, DeleteDateColumn } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEnum, IsNumber, IsJSON, IsDate } from 'class-validator';
+import { IsDate, IsEnum, IsJSON, IsNumber, IsOptional, IsString } from 'class-validator';
 import { EntityBase } from '../../common/entities/entity.base';
 import { ProgressStatus } from './enums';
 import { ProgramUser } from './program-user.entity';
@@ -49,7 +49,10 @@ export class ContentInteraction extends EntityBase {
   submittedAt: Date | null;
 
   @Column({ type: 'jsonb', nullable: true })
-  @ApiProperty({ description: 'Structured data containing quiz answers with question IDs and selected responses', required: false })
+  @ApiProperty({
+    description: 'Structured data containing quiz answers with question IDs and selected responses',
+    required: false,
+  })
   @IsOptional()
   @IsJSON()
   answers: object | null;
@@ -90,7 +93,10 @@ export class ContentInteraction extends EntityBase {
 
   @ManyToOne(() => ProgramContent, (content) => content.interactions, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'content_id' })
-  @ApiProperty({ type: () => ProgramContent, description: 'Reference to the program content item being interacted with' })
+  @ApiProperty({
+    type: () => ProgramContent,
+    description: 'Reference to the program content item being interacted with',
+  })
   content: ProgramContent;
 
   @OneToMany(() => ActivityGrade, (grade) => grade.contentInteraction)

@@ -1,5 +1,5 @@
-import { Entity, Column, OneToMany, Index, DeleteDateColumn } from 'typeorm';
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsJSON } from 'class-validator';
+import { Column, DeleteDateColumn, Entity, Index, OneToMany } from 'typeorm';
+import { IsEnum, IsJSON, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityBase } from '../../common/entities/entity.base';
 import { TagType } from './enums';

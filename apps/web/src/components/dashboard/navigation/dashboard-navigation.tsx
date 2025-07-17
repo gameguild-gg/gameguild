@@ -6,8 +6,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@game-guild/ui/lib/utils';
 import { Button } from '@game-guild/ui/components/button';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Separator } from '@game-guild/ui/components/separator';
-import { LayoutDashboard, Users, BookOpen, Settings, BarChart3, FileText, Bell, Search, Plus, ChevronDown, Menu, X } from 'lucide-react';
+import { BarChart3, Bell, BookOpen, ChevronDown, FileText, LayoutDashboard, Menu, Plus, Search, Settings, Users, X } from 'lucide-react';
 
 interface NavigationItem {
   title: string;

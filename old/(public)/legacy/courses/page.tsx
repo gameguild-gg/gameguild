@@ -36,11 +36,7 @@ export default async function Page() {
       <div className="w-[1440px] max-w-full min-h-screen mx-auto bg-white p-2 ">
         {/*Search Bar Row*/}
         <div className="flex h-[45px] text-center items-center">
-          <input
-            type="text"
-            placeholder="Search..."
-            className="h-[40px] border-2 border-black rounded-full p-2 w-full"
-          />
+          <input type="text" placeholder="Search..." className="h-[40px] border-2 border-black rounded-full p-2 w-full" />
 
           <button onClick={handleSearchButton} className="px-2">
             <Search />
@@ -50,11 +46,7 @@ export default async function Page() {
           </button>
         </div>
         {/*Search Settings*/}
-        <div
-          className={`bg-neutral-500 text-white p-2 my-2 rounded-lg ${searchSettingsVisible ? '' : 'hidden'} `}
-        >
-          [ Search Settings Here ]
-        </div>
+        <div className={`bg-neutral-500 text-white p-2 my-2 rounded-lg ${searchSettingsVisible ? '' : 'hidden'} `}>[ Search Settings Here ]</div>
         {/*Courses List*/}
         <div className="h-full grid grid-cols-1 md:grid-cols-4 justify-around md:mx-[0px]">
           {courses.map((c: any, i) => (
@@ -62,10 +54,7 @@ export default async function Page() {
               className="group bg-white border-2 shadow rounded-lg w-full md:w-[345px] h-[285px] m-2 hover:scale-105 duration-300 overflow-hidden cursor-pointer"
               key={i}
             >
-              <img
-                src="/assets/images/placeholder.svg"
-                className="w-full object-none h-[170px]"
-              />
+              <img src="/assets/images/placeholder.svg" className="w-full object-none h-[170px]" />
               <div className="font-bold p-2">{c.name}</div>
               <div className="p-2 text-neutral-700">{c.description}</div>
             </div>

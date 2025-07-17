@@ -1,6 +1,5 @@
 import { Controller, Get, Redirect } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
-import { Auth, PublicRoute } from './auth';
 
 @Controller()
 export class AppController {

@@ -2,7 +2,14 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
 import { Button } from '../../ui/button';
 import { Bell, Search } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@game-guild/ui/components/dropdown-menu';
 import { Dialog, DialogContent, DialogFooter, DialogTrigger } from '@game-guild/ui/components/dialog';
 
 type Props = {

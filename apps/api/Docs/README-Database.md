@@ -2,7 +2,8 @@
 
 ## Overview
 
-This project uses SQLite for development and PostgreSQL for production. Database files are **never committed to git** for security and practical reasons.
+This project uses SQLite for development and PostgreSQL for production. Database files are **never committed to git**
+for security and practical reasons.
 
 ## Database File Exclusion
 
@@ -26,6 +27,7 @@ The following files are excluded from git via `.gitignore`:
 ## Local Development
 
 ### First Time Setup
+
 ```bash
 # Clone the repository
 git clone <repository-url>
@@ -36,12 +38,14 @@ dotnet run
 ```
 
 The application will:
+
 1. Load environment variables from `.env`
 2. Create `app.db` SQLite file if it doesn't exist
 3. Apply all pending migrations automatically
 4. Start the web server
 
 ### Reset Local Database
+
 ```bash
 # Stop the application (Ctrl+C)
 # Delete the database file
@@ -52,6 +56,7 @@ dotnet run
 ```
 
 ### Backup/Restore (if needed)
+
 ```bash
 # Create a backup
 cp app.db app.db.backup
@@ -72,10 +77,12 @@ DB_CONNECTION_STRING=Host=your-db-host;Database=gameguild_cms;Username=your-user
 ## Migration Management
 
 Migrations are handled automatically:
+
 - **Development**: Applied on application startup
 - **Production**: Applied on application startup (use migration scripts for critical deployments)
 
 ### Create New Migration
+
 ```bash
 # Add a new migration
 dotnet ef migrations add YourMigrationName
@@ -85,6 +92,7 @@ dotnet ef migrations add YourMigrationName
 ```
 
 ### Manual Migration Commands (if needed)
+
 ```bash
 # Apply migrations manually
 dotnet ef database update
@@ -105,6 +113,7 @@ dotnet ef migrations script
 ## Troubleshooting
 
 ### "Database file is locked"
+
 ```bash
 # Make sure the application is not running
 # Check for zombie processes
@@ -116,6 +125,7 @@ dotnet run
 ```
 
 ### "Migration already applied"
+
 ```bash
 # Check migration status
 dotnet ef migrations list
@@ -126,7 +136,9 @@ dotnet run
 ```
 
 ### "Connection string not found"
+
 Check that your `.env` file exists and contains:
+
 ```
 DB_CONNECTION_STRING=Data Source=app.db
 ```

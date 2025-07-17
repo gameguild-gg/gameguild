@@ -3,10 +3,7 @@ import dynamic from 'next/dynamic';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 
-const MDEditor = dynamic(
-  () => import('@uiw/react-md-editor').then((mod) => mod.default),
-  { ssr: false }
-);
+const MDEditor = dynamic(() => import('@uiw/react-md-editor').then((mod) => mod.default), { ssr: false });
 
 interface MarkdownEditorProps {
   value: string;
@@ -19,13 +16,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({ value, onChange, mode }
 
   return (
     <div className={`markdown-editor ${mode}`}>
-      <MDEditor
-        value={value}
-        onChange={(val) => onChange(val)}
-        preview="edit"
-        height={400}
-        data-color-mode={editorTheme}
-      />
+      <MDEditor value={value} onChange={(val) => onChange(val)} preview="edit" height={400} data-color-mode={editorTheme} />
       <style jsx global>{`
         .markdown-editor.light .w-md-editor {
           background-color: #ffffff;
@@ -65,4 +56,3 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({ value, onChange, mode }
 };
 
 export default MarkdownEditor;
-

@@ -105,7 +105,7 @@ export const authConfig: NextAuthConfig = {
           return false;
         }
 
-       console.log('📨 [AUTH DEBUG] Google ID token received, length:', account.id_token.length);
+        console.log('📨 [AUTH DEBUG] Google ID token received, length:', account.id_token.length);
 
         try {
           console.log('🚀 [AUTH DEBUG] Attempting Google ID token validation with CMS backend:', environment.apiBaseUrl);

@@ -1,6 +1,6 @@
-import { Entity, Column, ManyToOne, Index } from 'typeorm';
+import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsDate, ValidateNested } from 'class-validator';
+import { IsDate, IsNotEmpty, IsNumber, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { EntityBase } from '../../common/entities/entity.base';
 import { PromoCode } from './promo-code.entity';

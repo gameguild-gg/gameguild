@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function UserProfilePage({ params }: PageProps) {
   const { username } = await params;
-  
+
   console.log('🔍 [USER PAGE] Loading profile for username:', username);
 
   // Get user data from the backend API

@@ -4,7 +4,7 @@ import { JobApplicationService } from './job-application.service';
 import { Auth } from '../auth/decorators/http.decorator';
 import { JobApplicationEntity } from './entities/job-application.entity';
 import { AuthenticatedRoute } from '../auth/auth.enum';
-import { CrudController, Crud, CrudRequest, Override, ParsedRequest } from '@dataui/crud';
+import { Crud, CrudController, CrudRequest, Override, ParsedRequest } from '@dataui/crud';
 import { ExcludeFieldsPipe } from 'src/cms/pipes/exclude-fields.pipe';
 import { BodyApplicantInject } from './decorators/body-applicant-injection.decorator';
 import { JobAplicationCreateDto } from './dtos/job-aplication-create.dto';

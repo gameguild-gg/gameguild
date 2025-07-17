@@ -2,11 +2,13 @@
 
 ## Overview
 
-The new DependencyInjection.cs file introduces a Clean Architecture approach that can be integrated with the existing GameGuild architecture. Here's how to modernize the current setup:
+The new DependencyInjection.cs file introduces a Clean Architecture approach that can be integrated with the existing
+GameGuild architecture. Here's how to modernize the current setup:
 
 ## Current vs. Improved Architecture
 
 ### Current Program.cs Integration
+
 ```csharp
 // Replace the existing service registration pattern with:
 
@@ -42,11 +44,13 @@ app.Run();
 ## Benefits of the New Architecture
 
 ### 1. **Dual API Support**
+
 - **Legacy Controllers**: Existing REST API controllers remain functional
 - **Modern Endpoints**: New minimal API endpoints with better performance
 - **Gradual Migration**: Can migrate endpoints one by one
 
 ### 2. **Enhanced ErrorMessage Handling**
+
 ```csharp
 // Old approach
 catch (Exception ex)
@@ -69,6 +73,7 @@ catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
 ```
 
 ### 3. **CQRS with Result Pattern**
+
 ```csharp
 // Handler returns Result<T> for better error handling
 public async Task<Result<User>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -84,6 +89,7 @@ public async Task<Result<User>> Handle(CreateUserCommand request, CancellationTo
 ```
 
 ### 4. **Domain Events Integration**
+
 ```csharp
 // Entities can raise domain events
 public class User : BaseEntity, IHasDomainEvents
@@ -102,18 +108,21 @@ public class User : BaseEntity, IHasDomainEvents
 ## Migration Strategy
 
 ### Phase 1: Infrastructure Setup
+
 1. ✅ Add new DI container structure
-2. ✅ Add enhanced exception handling  
+2. ✅ Add enhanced exception handling
 3. ✅ Add domain event infrastructure
 4. ✅ Add Result pattern abstractions
 
 ### Phase 2: Endpoint Migration
+
 1. Create new endpoints alongside existing controllers
 2. Migrate high-traffic endpoints first
 3. Update frontend to use new endpoints
 4. Remove old controllers gradually
 
 ### Phase 3: Domain Events
+
 1. Add IHasDomainEvents to entities
 2. Implement domain event handlers
 3. Replace direct service calls with domain events
@@ -121,6 +130,7 @@ public class User : BaseEntity, IHasDomainEvents
 ## Example Implementation
 
 ### New User Endpoint (Clean Architecture)
+
 ```csharp
 group.MapPost("/", async (CreateUserDto dto, IMediator mediator) =>
 {
@@ -137,6 +147,7 @@ group.MapPost("/", async (CreateUserDto dto, IMediator mediator) =>
 ```
 
 ### Domain Event Handler
+
 ```csharp
 public class UserCreatedHandler : IDomainEventHandler<UserCreatedEvent>
 {
@@ -152,16 +163,19 @@ public class UserCreatedHandler : IDomainEventHandler<UserCreatedEvent>
 ## Performance Benefits
 
 ### 1. **Minimal API Performance**
+
 - 30% faster than controllers
 - Lower memory allocation
 - Better throughput
 
 ### 2. **Response Compression**
+
 - Automatic Brotli/Gzip compression
 - Reduces bandwidth usage
 - Faster client response times
 
 ### 3. **Rate Limiting**
+
 - Built-in rate limiting
 - Prevents API abuse
 - Configurable per endpoint
@@ -169,6 +183,7 @@ public class UserCreatedHandler : IDomainEventHandler<UserCreatedEvent>
 ## Testing Improvements
 
 ### 1. **Better Testability**
+
 ```csharp
 [Test]
 public async Task CreateUser_WithValidData_ShouldReturnSuccess()
@@ -186,6 +201,7 @@ public async Task CreateUser_WithValidData_ShouldReturnSuccess()
 ```
 
 ### 2. **Integration Testing**
+
 ```csharp
 [Test]
 public async Task POST_Users_ShouldCreateUser()
@@ -204,14 +220,17 @@ public async Task POST_Users_ShouldCreateUser()
 ## Recommendations
 
 ### Immediate Actions
+
 1. **Keep existing controllers** for backward compatibility
 2. **Add new endpoints** for new features
 3. **Implement gradual migration** strategy
 
 ### Long-term Goals
+
 1. **Complete CQRS implementation** across all modules
 2. **Domain events** for cross-cutting concerns
 3. **Result pattern** for all operations
 4. **Clean Architecture** principles throughout
 
-This approach provides a smooth transition path while immediately benefiting from modern patterns and improved performance.
+This approach provides a smooth transition path while immediately benefiting from modern patterns and improved
+performance.

@@ -1,42 +1,51 @@
-import React from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/learn/ui/dialog"
-import { Button } from "@/components/learn/ui/button"
-import { AlertTriangle } from 'lucide-react'
+import React from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/learn/ui/dialog';
+import { Button } from '@/components/learn/ui/button';
+import { AlertTriangle } from 'lucide-react';
 
 interface SubmissionWarningDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onSubmit: () => void
-  conflicts: { fileName: string; reason: string }[]
-  failedTests: number
-  totalTests: number
-  mode: 'light' | 'dark' | 'high-contrast'
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: () => void;
+  conflicts: { fileName: string; reason: string }[];
+  failedTests: number;
+  totalTests: number;
+  mode: 'light' | 'dark' | 'high-contrast';
 }
 
 export function SubmissionWarningDialog({ isOpen, onClose, onSubmit, conflicts, failedTests, totalTests, mode }: SubmissionWarningDialogProps) {
   const getBackgroundColor = () => {
     switch (mode) {
-      case 'light': return 'bg-yellow-50'
-      case 'dark': return 'bg-yellow-900'
-      case 'high-contrast': return 'bg-black'
+      case 'light':
+        return 'bg-yellow-50';
+      case 'dark':
+        return 'bg-yellow-900';
+      case 'high-contrast':
+        return 'bg-black';
     }
-  }
+  };
 
   const getTextColor = () => {
     switch (mode) {
-      case 'light': return 'text-yellow-800'
-      case 'dark': return 'text-yellow-200'
-      case 'high-contrast': return 'text-yellow-300'
+      case 'light':
+        return 'text-yellow-800';
+      case 'dark':
+        return 'text-yellow-200';
+      case 'high-contrast':
+        return 'text-yellow-300';
     }
-  }
+  };
 
   const getBorderColor = () => {
     switch (mode) {
-      case 'light': return 'border-yellow-400'
-      case 'dark': return 'border-yellow-700'
-      case 'high-contrast': return 'border-yellow-300'
+      case 'light':
+        return 'border-yellow-400';
+      case 'dark':
+        return 'border-yellow-700';
+      case 'high-contrast':
+        return 'border-yellow-300';
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -60,22 +69,26 @@ export function SubmissionWarningDialog({ isOpen, onClose, onSubmit, conflicts, 
           </ul>
         </div>
         <DialogFooter>
-          <Button 
+          <Button
             onClick={onClose}
             className={`${
-              mode === 'light' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' :
-              mode === 'dark' ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' :
-              'bg-yellow-300 text-black hover:bg-yellow-400'
+              mode === 'light'
+                ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                : mode === 'dark'
+                  ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                  : 'bg-yellow-300 text-black hover:bg-yellow-400'
             }`}
           >
             Return
           </Button>
-          <Button 
+          <Button
             onClick={onSubmit}
             className={`${
-              mode === 'light' ? 'bg-yellow-500 text-white hover:bg-yellow-600' :
-              mode === 'dark' ? 'bg-yellow-600 text-white hover:bg-yellow-700' :
-              'bg-yellow-300 text-black hover:bg-yellow-400'
+              mode === 'light'
+                ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+                : mode === 'dark'
+                  ? 'bg-yellow-600 text-white hover:bg-yellow-700'
+                  : 'bg-yellow-300 text-black hover:bg-yellow-400'
             }`}
           >
             Submit Anyway
@@ -83,6 +96,5 @@ export function SubmissionWarningDialog({ isOpen, onClose, onSubmit, conflicts, 
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

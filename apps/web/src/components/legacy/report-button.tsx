@@ -5,7 +5,7 @@ import { Button } from '@game-guild/ui/components/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { Flag, AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle, Flag, Loader2 } from 'lucide-react';
 import { useToast } from '@/lib/old/hooks/use-toast';
 
 interface ReportButtonProps {
@@ -64,7 +64,7 @@ export function ReportButton({ reportType, targetId, targetTitle, variant = 'gho
 
     try {
       const { submitReport } = await import('@/lib/core/actions');
-      
+
       const result = await submitReport({
         reportType,
         targetId,
@@ -119,7 +119,7 @@ export function ReportButton({ reportType, targetId, targetTitle, variant = 'gho
               <strong>Reporting:</strong> {targetTitle}
             </div>
           )}
-          
+
           <div className="space-y-2">
             <label className="text-sm font-medium">Reason for reporting</label>
             <Select value={reason} onValueChange={setReason}>
@@ -160,4 +160,3 @@ export function ReportButton({ reportType, targetId, targetTitle, variant = 'gho
     </Dialog>
   );
 }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      

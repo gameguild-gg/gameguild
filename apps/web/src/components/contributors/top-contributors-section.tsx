@@ -26,14 +26,14 @@ export const TopContributorsSection: React.FC<TopContributorsSectionProps> = ({ 
             <ContributorLeaderboardCard key={topContributors[1].login} contributor={topContributors[1]} rank={2} showMedal={true} />
           </div>
         )}
-        
+
         {/* 1st Place - Center (Elevated) */}
         {topContributors[0] && (
           <div className="transform translate-y-0 z-10 scale-110">
             <ContributorLeaderboardCard key={topContributors[0].login} contributor={topContributors[0]} rank={1} showMedal={true} />
           </div>
         )}
-        
+
         {/* 3rd Place - Right */}
         {topContributors[2] && (
           <div className="transform translate-y-16">

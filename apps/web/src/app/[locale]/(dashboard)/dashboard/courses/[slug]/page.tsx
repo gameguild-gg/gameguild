@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game
 import { Badge } from '@game-guild/ui/components/badge';
 import { getCourseBySlug } from '@/lib/courses/actions';
 import { Course } from '@/components/legacy/types/courses';
-import { ArrowLeft, Edit, Eye, Users, Clock, BookOpen } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, Edit, Eye, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CourseDetailPage() {

@@ -18,13 +18,7 @@ export default async function Page({ params: { slug } }: Readonly<Props>) {
             <br />
             <div className="text-5xl">{post.title}</div>
             <br />
-            {post.feature_image && (
-              <img
-                src={post.feature_image as string}
-                alt={post.feature_image_alt as string}
-                className="object-cover w-full h-[675px]"
-              />
-            )}
+            {post.feature_image && <img src={post.feature_image as string} alt={post.feature_image_alt as string} className="object-cover w-full h-[675px]" />}
             <br />
             <div
               dangerouslySetInnerHTML={{ __html: post?.html as string }}

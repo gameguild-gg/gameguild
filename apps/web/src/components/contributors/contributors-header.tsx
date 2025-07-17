@@ -1,6 +1,6 @@
 import React from 'react';
 import { numberToAbbreviation } from '@/lib/utils';
-import { Users, UserCheck, Rocket, Code, Zap } from 'lucide-react';
+import { Code, Rocket, UserCheck, Users, Zap } from 'lucide-react';
 
 interface ContributorsHeaderProps {
   totalContributors: number;
@@ -15,7 +15,9 @@ export function ContributorsHeader({ totalContributors, totalParticipated }: Con
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Total Contributors */}
         <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-lg p-6 text-center shadow-lg">
-          <div className="text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">{numberToAbbreviation(totalContributors)}</div>
+          <div className="text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+            {numberToAbbreviation(totalContributors)}
+          </div>
           <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
             <Users className="w-4 h-4" />
             Total Contributors
@@ -24,7 +26,9 @@ export function ContributorsHeader({ totalContributors, totalParticipated }: Con
 
         {/* Active Contributors */}
         <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-lg p-6 text-center shadow-lg">
-          <div className="text-6xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-2">{numberToAbbreviation(totalParticipated)}</div>
+          <div className="text-6xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-2">
+            {numberToAbbreviation(totalParticipated)}
+          </div>
           <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
             <UserCheck className="w-4 h-4" />
             Active Contributors
@@ -40,9 +44,7 @@ export function ContributorsHeader({ totalContributors, totalParticipated }: Con
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-white mb-2">Start Contributing Today!</h3>
-                <p className="text-slate-400">
-                  Join our amazing community of developers and help make Game Guild even better. Every contribution counts!
-                </p>
+                <p className="text-slate-400">Join our amazing community of developers and help make Game Guild even better. Every contribution counts!</p>
                 <div className="flex items-center gap-2 mt-3 text-sm text-purple-400 font-medium">
                   <span>Learn how to contribute</span>
                   <span>↓</span>

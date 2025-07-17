@@ -1,5 +1,5 @@
-import { Entity, Column, ManyToOne, JoinColumn, DeleteDateColumn } from 'typeorm';
-import { IsNumber, IsBoolean } from 'class-validator';
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { IsBoolean, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityBase } from '../../common/entities/entity.base';
 import { Product } from './product.entity';
@@ -17,7 +17,10 @@ export class ProductProgram extends EntityBase {
   @IsBoolean()
   isPrimary: boolean;
 
-  @ApiProperty({ description: 'Soft delete timestamp - when the relationship was deleted, null if active', required: false })
+  @ApiProperty({
+    description: 'Soft delete timestamp - when the relationship was deleted, null if active',
+    required: false,
+  })
   @DeleteDateColumn()
   deletedAt?: Date;
 

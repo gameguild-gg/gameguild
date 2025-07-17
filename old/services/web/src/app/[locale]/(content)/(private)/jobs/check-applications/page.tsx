@@ -21,9 +21,7 @@ import {
 
 export default function CheckApplications() {
   const [jobTags, setJobTags] = useState<Api.JobTagEntity[] | any>([]);
-  const [jobApplications, setJobApplicatons] = useState<
-    Api.JobApplicationEntity[]
-  >([]);
+  const [jobApplications, setJobApplicatons] = useState<Api.JobApplicationEntity[]>([]);
   const [totalPages, setTotalPages] = useState<number>(1);
 
   const router = useRouter();
@@ -45,10 +43,7 @@ export default function CheckApplications() {
       router.push('/connect');
       return;
     }
-    const response = await jobTagsApi.getManyBaseJobTagControllerJobTagEntity(
-      {},
-      { headers: { Authorization: `Bearer ${session.user.accessToken}` } },
-    );
+    const response = await jobTagsApi.getManyBaseJobTagControllerJobTagEntity({}, { headers: { Authorization: `Bearer ${session.user.accessToken}` } });
     if ((response.status = 200)) {
       setJobTags((response.body as Api.JobTagEntity[]) || []);
     }
@@ -60,15 +55,11 @@ export default function CheckApplications() {
       router.push('/connect');
       return;
     }
-    const response =
-      await jobApplicationApi.jobApplicationControllerMyApplications({
-        headers: { Authorization: `Bearer ${session.user.accessToken}` },
-      });
+    const response = await jobApplicationApi.jobApplicationControllerMyApplications({
+      headers: { Authorization: `Bearer ${session.user.accessToken}` },
+    });
     // console.log('API Response:\n',response)
-    if (
-      response.status == 200 &&
-      (response.body as Api.JobApplicationEntity[])?.length > 0
-    ) {
+    if (response.status == 200 && (response.body as Api.JobApplicationEntity[])?.length > 0) {
       setJobApplicatons(response.body as Api.JobApplicationEntity[]);
       setTotalPages(Math.ceil((response.body as any[]).length / 12));
     } else {
@@ -83,10 +74,7 @@ export default function CheckApplications() {
   const handleGiveUpButton = async (app: Api.JobApplicationEntity) => {
     // TODO: Add Warning
     const session: any = await getSession();
-    const response = await jobApplicationApi.jobApplicationControllerWithdraw(
-      app,
-      { headers: { Authorization: `Bearer ${session.user.accessToken}` } },
-    );
+    const response = await jobApplicationApi.jobApplicationControllerWithdraw(app, { headers: { Authorization: `Bearer ${session.user.accessToken}` } });
     if (response.status == 200) {
       // TODO: sucess toaster
     } else {
@@ -127,23 +115,16 @@ export default function CheckApplications() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {jobApplications.length > 0 &&
               jobApplications.slice(0, 16).map((app) => (
-                <div
-                  key={app.id}
-                  className="bg-card rounded-lg shadow-md p-4 flex flex-col h-full"
-                >
+                <div key={app.id} className="bg-card rounded-lg shadow-md p-4 flex flex-col h-full">
                   <div className="flex-grow">
                     <div className="flex items-center mb-2">
                       <Avatar>
                         {/*<AvatarImage src={app?.job?.thumbnail} alt={app?.job?.title} />*/}
                         <AvatarFallback>{app?.job?.title[0]}</AvatarFallback>
                       </Avatar>
-                      <span className="font-semibold ml-2">
-                        {app?.job?.title}
-                      </span>
+                      <span className="font-semibold ml-2">{app?.job?.title}</span>
                     </div>
-                    <h3 className="font-bold text-lg mb-2">
-                      {app?.job?.title}
-                    </h3>
+                    <h3 className="font-bold text-lg mb-2">{app?.job?.title}</h3>
                     <div className="flex flex-wrap gap-1 mb-2">
                       {app?.job?.job_tags.map((tag) => (
                         <Badge key={tag.id} variant="secondary">
@@ -154,15 +135,8 @@ export default function CheckApplications() {
                   </div>
                   <div className="mt-auto mb-0">
                     <div className="flex justify-between mt-3">
-                      <Button
-                        onClick={() => handleLearnMoreButton(app?.job?.slug)}
-                      >
-                        Learn More
-                      </Button>
-                      <Button
-                        onClick={() => handleGiveUpButton(app)}
-                        variant="destructive"
-                      >
+                      <Button onClick={() => handleLearnMoreButton(app?.job?.slug)}>Learn More</Button>
+                      <Button onClick={() => handleGiveUpButton(app)} variant="destructive">
                         Cancel
                       </Button>
                     </div>
@@ -179,14 +153,14 @@ export default function CheckApplications() {
                   <PaginationPrevious href="#" />
                 </PaginationItem>
                 {[...Array(totalPages)]
-                .map((_, i) => (
-                  <PaginationItem key={i}>
-                    <PaginationLink href="#" isActive={i === 0}>
-                      {i + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))
-                .slice(0, 3)}
+                  .map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink href="#" isActive={i === 0}>
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))
+                  .slice(0, 3)}
                 {totalPages > 3 && (
                   <>
                     <PaginationItem>

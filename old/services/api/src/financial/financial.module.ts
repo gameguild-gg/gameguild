@@ -1,15 +1,15 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import {
   FinancialTransaction,
-  UserFinancialMethod,
-  UserSubscription,
   ProductPricing,
   ProductSubscriptionPlan,
   PromoCode,
   PromoCodeUse,
+  UserFinancialMethod,
   UserProduct,
+  UserSubscription,
 } from '../program/entities';
 
 import { FinancialController } from './financial.controller';

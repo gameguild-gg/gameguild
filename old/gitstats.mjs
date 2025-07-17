@@ -6,26 +6,23 @@ const { analyzeCommits } = require('@semantic-release/commit-analyzer');
 async function getNextVersion() {
   try {
     const git = simpleGit();
-    
+
     // Get all commits since last tag
     const tags = await git.tags();
     const latestTag = tags.latest || 'v0.0.0';
     const commits = await git.log(['--format=%B%n%n%H', `${latestTag}..HEAD`]);
-    
+
     // Parse commits into conventional format
-    const parsedCommits = commits.all.map(commit => ({
+    const parsedCommits = commits.all.map((commit) => ({
       hash: commit.hash,
       message: commit.message,
       subject: commit.message.split('\n')[0],
       body: commit.message.split('\n').slice(1).join('\n'),
-      type: commit.message.split(':')[0].toLowerCase()
+      type: commit.message.split(':')[0].toLowerCase(),
     }));
 
     // Analyze commits to determine next version
-    const nextRelease = await analyzeCommits(
-      { preset: 'angular' },
-      { commits: parsedCommits, logger: console }
-    );
+    const nextRelease = await analyzeCommits({ preset: 'angular' }, { commits: parsedCommits, logger: console });
 
     // If no version bump is needed, use the latest tag
     if (!nextRelease) {
@@ -42,7 +39,7 @@ async function getNextVersion() {
 async function generateGitStats() {
   console.log('Generating git stats...');
   const STATS_FILE_PATH = path.join(process.cwd(), 'git-stats.json');
-  
+
   try {
     const git = simpleGit();
 
@@ -52,12 +49,7 @@ async function generateGitStats() {
     // Filter out unwanted lines
     log = log
       .split('\n')
-      .filter(
-        (line) =>
-          !line.includes('package-lock.json') &&
-          !line.includes('yarn.lock') &&
-          !line.includes('node_modules/'),
-      )
+      .filter((line) => !line.includes('package-lock.json') && !line.includes('yarn.lock') && !line.includes('node_modules/'))
       .join('\n');
 
     // Parse the log to calculate stats
@@ -76,9 +68,7 @@ async function generateGitStats() {
         }
       } else {
         // If the line contains stats
-        const [additions, deletions] = line
-          .split('\t')
-          .map((x) => parseInt(x, 10) || 0);
+        const [additions, deletions] = line.split('\t').map((x) => parseInt(x, 10) || 0);
         stats[currentAuthor].additions += additions;
         stats[currentAuthor].deletions += deletions;
       }
@@ -123,9 +113,7 @@ async function generateGitStats() {
     }
 
     // sort by sum of additions and deletions
-    newStats.sort(
-      (a, b) => b.additions + b.deletions - (a.additions + a.deletions),
-    );
+    newStats.sort((a, b) => b.additions + b.deletions - (a.additions + a.deletions));
 
     return newStats;
   } catch (error) {
@@ -146,20 +134,16 @@ async function getCommitHash() {
 
 async function main() {
   try {
-    const [stats, nextVersion, commit] = await Promise.all([
-      generateGitStats(),
-      getNextVersion(),
-      getCommitHash()
-    ]);
-    
+    const [stats, nextVersion, commit] = await Promise.all([generateGitStats(), getNextVersion(), getCommitHash()]);
+
     const fullVersion = `${nextVersion}.${commit.trim()}`;
-    
+
     const output = {
       version: fullVersion,
       stats,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
     };
-    
+
     fs.writeFileSync('git-stats.json', JSON.stringify(output, null, 2));
     console.log('Successfully generated git-stats.json');
   } catch (error) {
@@ -168,4 +152,4 @@ async function main() {
   }
 }
 
-main(); 
+main();

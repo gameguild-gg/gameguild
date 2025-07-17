@@ -17,20 +17,20 @@ one with 30 seconds will be presented at the Senior Show.
 :::
 
 - **Clarity and Conciseness:**
-    - Keep your reel short and focused;
-    - Ensure that each segment clearly conveys a specific skill or project highlight.
+  - Keep your reel short and focused;
+  - Ensure that each segment clearly conveys a specific skill or project highlight.
 
 - **Engaging Storytelling:**
-    - Create a narrative that flows logically from start to finish.
-    - Include a brief introduction about yourself and your programming background.
+  - Create a narrative that flows logically from start to finish.
+  - Include a brief introduction about yourself and your programming background.
 
 - **Visual Appeal:**
-    - Use high-quality footage and clear visuals.
-    - Include captions or overlays to emphasize key technical aspects.
+  - Use high-quality footage and clear visuals.
+  - Include captions or overlays to emphasize key technical aspects.
 
 - **Demonstration of Technical Prowess:**
-    - Show off unique aspects of your projects (e.g., game mechanics, debugging processes, AI behavior).
-    - Include segments that demonstrate problem-solving and innovation.
+  - Show off unique aspects of your projects (e.g., game mechanics, debugging processes, AI behavior).
+  - Include segments that demonstrate problem-solving and innovation.
 
 !!! quiz
 {
@@ -59,12 +59,12 @@ one with 30 seconds will be presented at the Senior Show.
   that viewers experience the full depth and versatility of your game.
 
 - **Stunning Visuals:**
-    - If you worked in a field related to visuals, highlight the visual quality of your game by showcasing
-      high-resolution graphics, fluid animations, dramatic lighting, and eye-catching special effects that bring the
-      game world to life. This will keep the audience engaged and impressed.
-    - If you are a tools developer, or your main focus is on the technical non-visual side of game development, you can
-      still include visuals that demonstrate the impact of your work. Don't a short demo reels for teaching the audience
-      about the technical aspects of your work.
+  - If you worked in a field related to visuals, highlight the visual quality of your game by showcasing
+    high-resolution graphics, fluid animations, dramatic lighting, and eye-catching special effects that bring the
+    game world to life. This will keep the audience engaged and impressed.
+  - If you are a tools developer, or your main focus is on the technical non-visual side of game development, you can
+    still include visuals that demonstrate the impact of your work. Don't a short demo reels for teaching the audience
+    about the technical aspects of your work.
 
 - **Immersive Audio:**  
   Incorporate the game’s audio elements—such as crisp sound effects, a memorable musical score, and expressive voice
@@ -329,11 +329,11 @@ To transform your raw footage into a polished demo reel, you'll need to use vide
 popular tools:
 
 - **DaVinci Resolve:**
-    - A powerful, free (with a paid version available) tool known for its color grading and editing capabilities.
+  - A powerful, free (with a paid version available) tool known for its color grading and editing capabilities.
 - **Adobe Premiere Pro:**
-    - A professional-grade editing suite with extensive features.
+  - A professional-grade editing suite with extensive features.
 - **Other Options:**
-    - Final Cut Pro, iMovie, or even open-source tools like Shotcut for beginners.
+  - Final Cut Pro, iMovie, or even open-source tools like Shotcut for beginners.
 
 These tools allow you to trim clips, add transitions, overlay text, and adjust the audio to create a smooth,
 professional presentation.
@@ -357,16 +357,16 @@ professional presentation.
 Your demo reel should clearly present the technical aspects of your work. Here are some tips:
 
 - **Screen Recordings:**
-    - Capture high-quality footage of your projects in action.
-    - Focus on dynamic scenes that highlight game mechanics, debugging sessions, or AI behavior.
+  - Capture high-quality footage of your projects in action.
+  - Focus on dynamic scenes that highlight game mechanics, debugging sessions, or AI behavior.
 
 - **Annotations and Overlays:**
-    - Use text overlays or callouts to explain what the viewer is seeing.
-    - Highlight key features, performance metrics, or unique technical solutions.
+  - Use text overlays or callouts to explain what the viewer is seeing.
+  - Highlight key features, performance metrics, or unique technical solutions.
 
 - **Mix of Perspectives:**
-    - Combine direct footage of your code or debugging sessions with in-game or application footage.
-    - Ensure a balanced mix so the technical depth is evident without overwhelming the viewer.
+  - Combine direct footage of your code or debugging sessions with in-game or application footage.
+  - Ensure a balanced mix so the technical depth is evident without overwhelming the viewer.
 
 !!! quiz
 {

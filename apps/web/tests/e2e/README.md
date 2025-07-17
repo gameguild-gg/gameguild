@@ -2,7 +2,8 @@
 
 ## Overview
 
-This document summarizes the comprehensive E2E test suite created for the Game Guild application, specifically focusing on slug-based course navigation and API integration.
+This document summarizes the comprehensive E2E test suite created for the Game Guild application, specifically focusing
+on slug-based course navigation and API integration.
 
 ## Test Structure
 
@@ -190,4 +191,5 @@ The E2E test suite provides comprehensive coverage of the slug-based navigation 
 - Performance requirements are met
 - Data consistency is maintained across the application
 
-The test suite is ready for CI/CD integration and provides a solid foundation for continued development and testing of the Game Guild application.
+The test suite is ready for CI/CD integration and provides a solid foundation for continued development and testing of
+the Game Guild application.

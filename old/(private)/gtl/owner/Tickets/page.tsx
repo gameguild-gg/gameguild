@@ -39,19 +39,11 @@ export default function TicketDetail() {
   }, [id, router]);
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        Loading...
-      </div>
-    );
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
 
   if (!ticket) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        Ticket not found
-      </div>
-    );
+    return <div className="flex justify-center items-center h-screen">Ticket not found</div>;
   }
 
   return (
@@ -72,8 +64,7 @@ export default function TicketDetail() {
             <span className="text-gray-400">Game:</span> {ticket.project.title}
           </div>
           <div className="mb-4">
-            <span className="text-gray-400">Submitted by:</span>{' '}
-            {ticket.owner.username}
+            <span className="text-gray-400">Submitted by:</span> {ticket.owner.username}
           </div>
           <div className="mb-4">
             <span className="text-gray-400">Description:</span>

@@ -21,7 +21,17 @@ export interface Product {
 }
 
 // Mock data for demonstration
-const mockEnrollments = new Map<string, EnrollmentStatus>([['user1', { isEnrolled: true, isFree: true, enrollmentDate: '2024-01-15', progress: 45 }]]);
+const mockEnrollments = new Map<string, EnrollmentStatus>([
+  [
+    'user1',
+    {
+      isEnrolled: true,
+      isFree: true,
+      enrollmentDate: '2024-01-15',
+      progress: 45,
+    },
+  ],
+]);
 
 const mockProducts = new Map<string, Product>([
   [
@@ -125,7 +135,10 @@ export async function getProductsContainingCourse(courseSlug: string): Promise<P
     ];
   }
 
-  console.log('Found products:', products.map(p => p.title));
+  console.log(
+    'Found products:',
+    products.map((p) => p.title),
+  );
   return products;
 }
 
@@ -182,7 +195,11 @@ export async function enrollInFreeCourse(courseSlug: string): Promise<{ success:
   return { success: true, message: 'Successfully enrolled in course' };
 }
 
-export async function createPaymentIntent(productId: string): Promise<{ success: boolean; paymentUrl?: string; message: string }> {
+export async function createPaymentIntent(productId: string): Promise<{
+  success: boolean;
+  paymentUrl?: string;
+  message: string;
+}> {
   const session = await auth();
 
   if (!session?.user) {
@@ -212,7 +229,13 @@ export async function createPaymentIntent(productId: string): Promise<{ success:
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function processPaymentSuccess(productId: string, _paymentIntentId: string): Promise<{ success: boolean; message: string }> {
+export async function processPaymentSuccess(
+  productId: string,
+  _paymentIntentId: string,
+): Promise<{
+  success: boolean;
+  message: string;
+}> {
   const session = await auth();
 
   if (!session?.user) {

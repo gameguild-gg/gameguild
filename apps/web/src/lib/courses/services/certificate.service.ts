@@ -115,6 +115,35 @@ export class CourseCompletionCertificateService {
   }
 
   /**
+   * Trigger certificate notification when course is completed
+   */
+  static async handleCourseCompletion(courseId: string, studentProgress: any, studentName: string) {
+    const eligibility = await this.checkCertificateEligibility(courseId, studentProgress);
+
+    if (eligibility.isEligible) {
+      console.log(`🎉 Certificate available for ${studentName} - Course: ${eligibility.courseTitle}`);
+
+      // In a real implementation, this would:
+      // 1. Send notification to student
+      // 2. Update student's dashboard
+      // 3. Trigger email notification
+      // 4. Log achievement in analytics
+
+      return {
+        showCertificateNotification: true,
+        eligibility,
+      };
+    } else {
+      console.log(`Certificate not yet available for ${studentName}. Missing requirements:`, eligibility.missingRequirements);
+
+      return {
+        showCertificateNotification: false,
+        eligibility,
+      };
+    }
+  }
+
+  /**
    * Calculate completion percentage based on student progress
    */
   private static calculateCompletionPercentage(studentProgress: any): number {
@@ -152,34 +181,5 @@ export class CourseCompletionCertificateService {
     const completedRequiredItems = requiredItems.filter((item: any) => item.status === 'completed');
 
     return requiredItems.length > 0 && completedRequiredItems.length === requiredItems.length;
-  }
-
-  /**
-   * Trigger certificate notification when course is completed
-   */
-  static async handleCourseCompletion(courseId: string, studentProgress: any, studentName: string) {
-    const eligibility = await this.checkCertificateEligibility(courseId, studentProgress);
-
-    if (eligibility.isEligible) {
-      console.log(`🎉 Certificate available for ${studentName} - Course: ${eligibility.courseTitle}`);
-
-      // In a real implementation, this would:
-      // 1. Send notification to student
-      // 2. Update student's dashboard
-      // 3. Trigger email notification
-      // 4. Log achievement in analytics
-
-      return {
-        showCertificateNotification: true,
-        eligibility,
-      };
-    } else {
-      console.log(`Certificate not yet available for ${studentName}. Missing requirements:`, eligibility.missingRequirements);
-
-      return {
-        showCertificateNotification: false,
-        eligibility,
-      };
-    }
   }
 }

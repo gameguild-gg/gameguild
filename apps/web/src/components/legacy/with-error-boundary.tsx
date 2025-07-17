@@ -17,7 +17,12 @@ interface WithErrorBoundaryProps {
 }
 
 export function withErrorBoundary<P extends object>(WrappedComponent: React.ComponentType<P>, errorBoundaryProps?: WithErrorBoundaryProps) {
-  return class WithErrorBoundaryComponent extends Component<P & { errorBoundaryProps?: WithErrorBoundaryProps }, ErrorBoundaryState> {
+  return class WithErrorBoundaryComponent extends Component<
+    P & {
+      errorBoundaryProps?: WithErrorBoundaryProps;
+    },
+    ErrorBoundaryState
+  > {
     constructor(props: P & { errorBoundaryProps?: WithErrorBoundaryProps }) {
       super(props);
       this.state = { hasError: false };

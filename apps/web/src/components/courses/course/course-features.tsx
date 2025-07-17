@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Award, Play, Users, Trophy, Clock } from 'lucide-react';
+import { Award, Clock, Play, Trophy, Users } from 'lucide-react';
 
 const COURSE_FEATURES = [
   {

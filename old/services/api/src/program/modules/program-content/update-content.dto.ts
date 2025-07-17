@@ -1,7 +1,7 @@
-import { IsString, IsOptional, IsBoolean, IsNumber, IsArray, IsEnum, IsJSON, IsDate, Min } from 'class-validator';
+import { IsArray, IsBoolean, IsDate, IsEnum, IsJSON, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ProgramContentType, GradingMethod } from '../../entities/enums';
+import { GradingMethod, ProgramContentType } from '../../entities/enums';
 
 export class UpdateContentDto {
   @ApiProperty({ description: 'ID of the parent content for hierarchical structure', required: false })
@@ -34,7 +34,10 @@ export class UpdateContentDto {
   @IsJSON()
   body?: object;
 
-  @ApiProperty({ description: 'Flag to indicate if this content can be accessed without purchasing the program', required: false })
+  @ApiProperty({
+    description: 'Flag to indicate if this content can be accessed without purchasing the program',
+    required: false,
+  })
   @IsOptional()
   @IsBoolean()
   previewable?: boolean;

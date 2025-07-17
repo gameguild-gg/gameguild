@@ -29,7 +29,7 @@ export class ContentReportService {
   static async createReport(request: CreateReportRequest): Promise<CreateReportResponse> {
     try {
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const report: ContentReport = {
         id: `report-${Date.now()}`,
@@ -64,11 +64,8 @@ export class ContentReportService {
     return this.reports;
   }
 
-  static async updateReportStatus(
-    reportId: string, 
-    status: ContentReport['status']
-  ): Promise<boolean> {
-    const report = this.reports.find(r => r.id === reportId);
+  static async updateReportStatus(reportId: string, status: ContentReport['status']): Promise<boolean> {
+    const report = this.reports.find((r) => r.id === reportId);
     if (report) {
       report.status = status;
       return true;

@@ -14,9 +14,7 @@ export default function ErrorPage() {
         className="mx-auto aspect-[2/1] overflow-hidden rounded-lg object-contain object-center"
       />
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-          Oops! Something went wrong.
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Oops! Something went wrong.</h1>
         <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
           An unexpected error has occurred. Please try again later.
         </p>

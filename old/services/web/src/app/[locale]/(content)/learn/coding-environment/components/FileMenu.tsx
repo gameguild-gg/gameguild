@@ -1,45 +1,25 @@
-import { useState, useRef, useEffect } from "react"
-import {
-  ChevronDown,
-  File,
-  FolderOpen,
-  Save,
-  Edit,
-  Trash2,
-  FileUp,
-  Download,
-  RefreshCw,
-  FolderPlus,
-  UploadIcon as FolderUpload,
-} from "lucide-react"
-import NewFileModal from "./NewFileModal"
-import RenameFileModal from "./RenameFileModal"
-import DeleteFileModal from "./DeleteFileModal"
-import ImportFileButton from "./ImportFileButton"
-import ExportFilesModal from "./ExportFilesModal"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/learn/ui/dialog"
-import { Button } from "@/components/learn/ui/button"
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, Download, Edit, File, FileUp, FolderPlus, RefreshCw, Trash2, UploadIcon as FolderUpload } from 'lucide-react';
+import NewFileModal from './NewFileModal';
+import RenameFileModal from './RenameFileModal';
+import DeleteFileModal from './DeleteFileModal';
+import ExportFilesModal from './ExportFilesModal';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/learn/ui/dialog';
+import { Button } from '@/components/learn/ui/button';
 
 interface FileMenuProps {
-  mode: "light" | "dark" | "high-contrast"
-  onNewFile: (name: string, language: string) => void
-  onRenameFile: (oldName: string, newName: string) => void
-  onDeleteFile: (name: string) => void
-  onImportFile: (file: File) => void
-  onExportFiles: (exportAll: boolean, singleFileName?: string) => void
-  onExportOpenFiles: () => void
-  activeFileName: string
-  currentFileCount: number
-  maxFiles: number
-  onReset: () => void
-  onImportFolder: () => void
+  mode: 'light' | 'dark' | 'high-contrast';
+  onNewFile: (name: string, language: string) => void;
+  onRenameFile: (oldName: string, newName: string) => void;
+  onDeleteFile: (name: string) => void;
+  onImportFile: (file: File) => void;
+  onExportFiles: (exportAll: boolean, singleFileName?: string) => void;
+  onExportOpenFiles: () => void;
+  activeFileName: string;
+  currentFileCount: number;
+  maxFiles: number;
+  onReset: () => void;
+  onImportFolder: () => void;
 }
 
 export default function FileMenu({
@@ -56,117 +36,109 @@ export default function FileMenu({
   onReset,
   onImportFolder,
 }: FileMenuProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isNewFileModalOpen, setIsNewFileModalOpen] = useState(false)
-  const [isRenameFileModalOpen, setIsRenameFileModalOpen] = useState(false)
-  const [isDeleteFileModalOpen, setIsDeleteFileModalOpen] = useState(false)
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false)
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
-  const [isResetConfirmationOpen, setIsResetConfirmationOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
-  const [importFileInput, setImportFileInput] = useState<HTMLInputElement | null>(null)
+  const [isOpen, setIsOpen] = useState(false);
+  const [isNewFileModalOpen, setIsNewFileModalOpen] = useState(false);
+  const [isRenameFileModalOpen, setIsRenameFileModalOpen] = useState(false);
+  const [isDeleteFileModalOpen, setIsDeleteFileModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isResetConfirmationOpen, setIsResetConfirmationOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [importFileInput, setImportFileInput] = useState<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+        setIsOpen(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
-  const toggleMenu = () => setIsOpen(!isOpen)
+  const toggleMenu = () => setIsOpen(!isOpen);
 
   const getMenuItemClass = (mode: string) => `
     flex items-center px-4 py-2 text-sm w-full text-left transition-colors duration-200
-    ${
-      mode === "light"
-        ? "text-gray-700 hover:bg-gray-100"
-        : mode === "dark"
-          ? "text-gray-300 hover:bg-gray-700"
-          : "text-yellow-300 hover:bg-yellow-900"
-    }
-  `
+    ${mode === 'light' ? 'text-gray-700 hover:bg-gray-100' : mode === 'dark' ? 'text-gray-300 hover:bg-gray-700' : 'text-yellow-300 hover:bg-yellow-900'}
+  `;
 
   const getMenuStyles = (mode: string) => {
     switch (mode) {
-      case "light":
-        return "bg-white border border-gray-200 shadow-lg"
-      case "dark":
-        return "bg-gray-800 border border-gray-700 shadow-lg"
-      case "high-contrast":
-        return "bg-black border border-yellow-300 shadow-lg"
+      case 'light':
+        return 'bg-white border border-gray-200 shadow-lg';
+      case 'dark':
+        return 'bg-gray-800 border border-gray-700 shadow-lg';
+      case 'high-contrast':
+        return 'bg-black border border-yellow-300 shadow-lg';
       default:
-        return ""
+        return '';
     }
-  }
+  };
 
   const getDialogStyles = (mode: string) => {
     switch (mode) {
-      case "light":
-        return "bg-white border border-gray-200 shadow-lg"
-      case "dark":
-        return "bg-gray-800 border border-gray-700 shadow-lg"
-      case "high-contrast":
-        return "bg-black border border-yellow-300 shadow-lg"
+      case 'light':
+        return 'bg-white border border-gray-200 shadow-lg';
+      case 'dark':
+        return 'bg-gray-800 border border-gray-700 shadow-lg';
+      case 'high-contrast':
+        return 'bg-black border border-yellow-300 shadow-lg';
       default:
-        return ""
+        return '';
     }
-  }
+  };
 
   const handleResetConfirm = () => {
-    onReset()
-    setIsResetConfirmationOpen(false)
-  }
+    onReset();
+    setIsResetConfirmationOpen(false);
+  };
 
   const handleImportFileClick = () => {
     if (importFileInput) {
-      importFileInput.click()
+      importFileInput.click();
     }
-  }
+  };
 
   const handleImport = (file: File | undefined) => {
     if (file) {
-      onImportFile(file)
+      onImportFile(file);
     }
-    setIsImportModalOpen(false)
-  }
+    setIsImportModalOpen(false);
+  };
 
   const handleImportFolderClick = () => {
-    onImportFolder()
-    setIsImportModalOpen(false) // Close after import
-  }
+    onImportFolder();
+    setIsImportModalOpen(false); // Close after import
+  };
 
   return (
     <div className="relative" ref={menuRef}>
       <button
         onClick={toggleMenu}
         className={`flex items-center space-x-1 px-3 py-1 rounded transition-colors duration-200 ${
-          mode === "light"
-            ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            : mode === "dark"
-              ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
-              : "bg-yellow-300 text-black hover:bg-yellow-400"
+          mode === 'light'
+            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            : mode === 'dark'
+              ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+              : 'bg-yellow-300 text-black hover:bg-yellow-400'
         }`}
       >
         <span>File</span>
         <ChevronDown className="w-4 h-4" />
       </button>
       {isOpen && (
-        <div
-          className={`absolute left-0 mt-2 w-56 rounded-md ${getMenuStyles(mode)} ring-1 ring-black ring-opacity-5 z-10`}
-        >
+        <div className={`absolute left-0 mt-2 w-56 rounded-md ${getMenuStyles(mode)} ring-1 ring-black ring-opacity-5 z-10`}>
           <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
             <button
               onClick={() => {
-                setIsNewFileModalOpen(true)
-                setIsOpen(false)
+                setIsNewFileModalOpen(true);
+                setIsOpen(false);
               }}
-              className={`${getMenuItemClass(mode)} ${currentFileCount >= maxFiles ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`${getMenuItemClass(mode)} ${currentFileCount >= maxFiles ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={currentFileCount >= maxFiles}
             >
               <File className="mr-2 h-4 w-4" />
@@ -174,8 +146,8 @@ export default function FileMenu({
             </button>
             <button
               onClick={() => {
-                setIsRenameFileModalOpen(true)
-                setIsOpen(false)
+                setIsRenameFileModalOpen(true);
+                setIsOpen(false);
               }}
               className={getMenuItemClass(mode)}
             >
@@ -184,8 +156,8 @@ export default function FileMenu({
             </button>
             <button
               onClick={() => {
-                setIsDeleteFileModalOpen(true)
-                setIsOpen(false)
+                setIsDeleteFileModalOpen(true);
+                setIsOpen(false);
               }}
               className={getMenuItemClass(mode)}
             >
@@ -194,20 +166,20 @@ export default function FileMenu({
             </button>
             <button
               onClick={() => {
-                setIsImportModalOpen(true)
-                setIsOpen(false)
+                setIsImportModalOpen(true);
+                setIsOpen(false);
               }}
               className={getMenuItemClass(mode)}
             >
-              {" "}
+              {' '}
               {/* Import button */}
               <FolderPlus className="mr-2 h-4 w-4" />
               Import
             </button>
             <button
               onClick={() => {
-                setIsExportModalOpen(true)
-                setIsOpen(false)
+                setIsExportModalOpen(true);
+                setIsOpen(false);
               }}
               className={getMenuItemClass(mode)}
             >
@@ -241,7 +213,7 @@ export default function FileMenu({
               type="file"
               ref={(input) => setImportFileInput(input)}
               onChange={(e) => handleImport(e.target.files?.[0])}
-              style={{ display: "none" }}
+              style={{ display: 'none' }}
               accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.go,.html,.css,.md,.json,.yaml,.xml,.rb,.rs,.cs"
             />
             <Button
@@ -300,6 +272,5 @@ export default function FileMenu({
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
-

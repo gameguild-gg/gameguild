@@ -1,68 +1,50 @@
-import type React from "react"
-import { useState, useEffect, useMemo } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import type React from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  type QuestionTypev1_0_0,
-  type CodeQuestionv1_0_0,
   type AnswerQuestionv1_0_0,
+  type CodeQuestionv1_0_0,
   type MultipleChoiceQuestionv1_0_0,
   QuestionStatus,
-} from "@/lib/interface-base/question.base.v1.0.0"
-import { UserListQuestionv1_0_0 } from "@/lib/interface-base/user.list.question.v1.0.0"
-import { toast } from "@/components/learn/ui/use-toast"
-import type { UserBasev1_0_0 } from "@/lib/interface-base/user.base.v1.0.0"
-import Link from "next/link"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/learn/ui/dialog"
-import Image from "next/image"
-import ReactMarkdown from "react-markdown"
-import { Button as UIButton } from "@/components/learn/ui/button"
-import { Input } from "@/components/learn/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/learn/ui/select"
-import { Label } from "@/components/learn/ui/label"
-import { useState as useState2 } from "react"
-import {
-  Dialog as Dialog2,
-  DialogContent as DialogContent2,
-  DialogHeader as DialogHeader2,
-  DialogTitle as DialogTitle2,
-  DialogFooter as DialogFooter2,
-} from "@/components/learn/ui/dialog"
-import { Button } from "@/components/learn/ui/button"
-import { EssayQuestionSubmissionv1_0_0 } from "@/lib/interface-base/question.submission.v1.0.0"
+  type QuestionTypev1_0_0,
+} from '@/lib/interface-base/question.base.v1.0.0';
+import { toast } from '@/components/learn/ui/use-toast';
+import type { UserBasev1_0_0 } from '@/lib/interface-base/user.base.v1.0.0';
+import Link from 'next/link';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/learn/ui/dialog';
+import ReactMarkdown from 'react-markdown';
+import { Button as UIButton, Button } from '@/components/learn/ui/button';
+import { Input } from '@/components/learn/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/learn/ui/select';
+import { Label } from '@/components/learn/ui/label';
+import { EssayQuestionSubmissionv1_0_0 } from '@/lib/interface-base/question.submission.v1.0.0';
+
 // import SubmissionDetails from './SubmissionDetails';
 
 interface TeacherQuestionDetailProps {
-  question: QuestionTypev1_0_0
-  mode: "light" | "dark" | "high-contrast"
-  courseId: string
+  question: QuestionTypev1_0_0;
+  mode: 'light' | 'dark' | 'high-contrast';
+  courseId: string;
 }
 
 interface StudentDetails {
-  user: UserBasev1_0_0
-  email: string
-  profilePicture?: string
+  user: UserBasev1_0_0;
+  email: string;
+  profilePicture?: string;
 }
 
 interface SubmissionDetailsProps {
-  submission: CodeQuestionv1_0_0 | AnswerQuestionv1_0_0 | MultipleChoiceQuestionv1_0_0 | EssayQuestionSubmissionv1_0_0
-  mode: "light" | "dark" | "high-contrast"
-  onClose: () => void
-  courseId: string
-  assessmentId: number
-  userId: string | null
-  role: string | null
-  moduleId: string | null
-  initialScore: number
-  maxScore: number
-  onScoreChange: (newScore: number) => void
-  question: QuestionTypev1_0_0
+  submission: CodeQuestionv1_0_0 | AnswerQuestionv1_0_0 | MultipleChoiceQuestionv1_0_0 | EssayQuestionSubmissionv1_0_0;
+  mode: 'light' | 'dark' | 'high-contrast';
+  onClose: () => void;
+  courseId: string;
+  assessmentId: number;
+  userId: string | null;
+  role: string | null;
+  moduleId: string | null;
+  initialScore: number;
+  maxScore: number;
+  onScoreChange: (newScore: number) => void;
+  question: QuestionTypev1_0_0;
 }
 
 const SubmissionDetailsComponent: React.FC<SubmissionDetailsProps> = ({
@@ -80,57 +62,51 @@ const SubmissionDetailsComponent: React.FC<SubmissionDetailsProps> = ({
   question,
 }) => {
   const [score, setScore] = useState<number>(() => {
-    const initialScoreNumber = Number(initialScore)
-    return isNaN(initialScoreNumber) ? 0 : initialScoreNumber
-  })
-  const actualOutput =
-    submission.type === "code"
-      ? (submission as CodeQuestionv1_0_0)?.testResults?.map((result) => result.actualOutput).join("\n")
-      : ""
-  const expectedOutput =
-    submission.type === "code"
-      ? (submission as CodeQuestionv1_0_0)?.testResults?.map((result) => result.expectedOutput).join("\n")
-      : ""
-  const testResults = submission.type === "code" ? (submission as CodeQuestionv1_0_0)?.testResults || [] : []
-  const submissionId = `${submission.id}user${userId}`
+    const initialScoreNumber = Number(initialScore);
+    return isNaN(initialScoreNumber) ? 0 : initialScoreNumber;
+  });
+  const actualOutput = submission.type === 'code' ? (submission as CodeQuestionv1_0_0)?.testResults?.map((result) => result.actualOutput).join('\n') : '';
+  const expectedOutput = submission.type === 'code' ? (submission as CodeQuestionv1_0_0)?.testResults?.map((result) => result.expectedOutput).join('\n') : '';
+  const testResults = submission.type === 'code' ? (submission as CodeQuestionv1_0_0)?.testResults || [] : [];
+  const submissionId = `${submission.id}user${userId}`;
 
   const handleViewCode = () => {
-    setShowStudentCode(true)
-  }
+    setShowStudentCode(true);
+  };
 
   const handleCloseCode = () => {
-    setShowStudentCode(false)
-  }
+    setShowStudentCode(false);
+  };
 
-  const [calculatedScore, setCalculatedScore] = useState(0)
-  const [additionalScore, setAdditionalScore] = useState(0)
+  const [calculatedScore, setCalculatedScore] = useState(0);
+  const [additionalScore, setAdditionalScore] = useState(0);
 
   useEffect(() => {
     const totalScore =
-      submission.type === "code"
+      submission.type === 'code'
         ? submission.testResults.reduce((acc, result, index) => {
             if (result.actualOutput === result.expectedOutput) {
-              const score = question.outputsScore?.[index] || 0
+              const score = question.outputsScore?.[index] || 0;
               return acc + score[index];
             }
-            return acc
+            return acc;
           }, 0)
-        : 0
+        : 0;
 
-    setCalculatedScore(Math.min(totalScore, maxScore))
-    setAdditionalScore(Number(initialScore) - totalScore)
-  }, [submission, question, initialScore, maxScore])
+    setCalculatedScore(Math.min(totalScore, maxScore));
+    setAdditionalScore(Number(initialScore) - totalScore);
+  }, [submission, question, initialScore, maxScore]);
 
   const handleScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newAdditionalScore = Math.max(0, Math.min(Number.parseInt(e.target.value) || 0, maxScore - calculatedScore))
-    setAdditionalScore(newAdditionalScore)
-  }
+    const newAdditionalScore = Math.max(0, Math.min(Number.parseInt(e.target.value) || 0, maxScore - calculatedScore));
+    setAdditionalScore(newAdditionalScore);
+  };
 
   const handleSaveScore = () => {
-    const finalScore = Math.min(calculatedScore + additionalScore, maxScore)
-    onScoreChange(finalScore)
-    onClose()
-  }
+    const finalScore = Math.min(calculatedScore + additionalScore, maxScore);
+    onScoreChange(finalScore);
+    onClose();
+  };
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -173,33 +149,21 @@ const SubmissionDetailsComponent: React.FC<SubmissionDetailsProps> = ({
             </div>
           </div>
 
-          {submission.type === "code" && (
+          {submission.type === 'code' && (
             <>
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actual Output
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Expected Output
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Score
                     </th>
                   </tr>
@@ -209,13 +173,9 @@ const SubmissionDetailsComponent: React.FC<SubmissionDetailsProps> = ({
                     <tr key={index}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {result.actualOutput === result.expectedOutput ? (
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            Pass
-                          </span>
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Pass</span>
                         ) : (
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                            Fail
-                          </span>
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Fail</span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -250,7 +210,7 @@ const SubmissionDetailsComponent: React.FC<SubmissionDetailsProps> = ({
             </>
           )}
 
-          {submission.type === "answer" && (
+          {submission.type === 'answer' && (
             <>
               <div>
                 <h3 className="text-lg font-semibold mb-2">Submitted Answer:</h3>
@@ -262,7 +222,7 @@ const SubmissionDetailsComponent: React.FC<SubmissionDetailsProps> = ({
               </div>
             </>
           )}
-          {submission.type === "multiple-choice" && (
+          {submission.type === 'multiple-choice' && (
             <>
               <div>
                 <h3 className="text-lg font-semibold mb-2">Submitted Answers:</h3>
@@ -282,7 +242,7 @@ const SubmissionDetailsComponent: React.FC<SubmissionDetailsProps> = ({
               </div>
             </>
           )}
-          {submission.type === "essay" && (
+          {submission.type === 'essay' && (
             <>
               <div>
                 <h3 className="text-lg font-semibold mb-2">Submitted Essay:</h3>
@@ -301,56 +261,53 @@ const SubmissionDetailsComponent: React.FC<SubmissionDetailsProps> = ({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const TeacherQuestionDetail = ({ question, mode, courseId }: TeacherQuestionDetailProps) => {
-  const [submissions, setSubmissions] = useState<{ [key: string]: any }>({})
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [viewingSubmission, setViewingSubmission] = useState<string | null>(null)
-  const [showStudentDetails, setShowStudentDetails] = useState<string | null>(null)
-  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [submissions, setSubmissions] = useState<{ [key: string]: any }>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [viewingSubmission, setViewingSubmission] = useState<string | null>(null);
+  const [showStudentDetails, setShowStudentDetails] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const filteredSubmissions = useMemo(() => {
-    if (statusFilter === "all") {
-      return submissions
+    if (statusFilter === 'all') {
+      return submissions;
     }
     return Object.fromEntries(
-      Object.entries(submissions).filter(
-        ([_, submissionData]) =>
-          submissionData.submission && submissionData.submission.status.toString() === statusFilter,
-      ),
-    )
-  }, [submissions, statusFilter])
+      Object.entries(submissions).filter(([_, submissionData]) => submissionData.submission && submissionData.submission.status.toString() === statusFilter),
+    );
+  }, [submissions, statusFilter]);
 
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
-        setIsLoading(true)
-        const response = await fetch(`../../../../api/learn/teach/question/${question.id}?courseId=${courseId}`)
+        setIsLoading(true);
+        const response = await fetch(`../../../../api/learn/teach/question/${question.id}?courseId=${courseId}`);
         if (!response.ok) {
-          throw new Error("Failed to fetch student submissions")
+          throw new Error('Failed to fetch student submissions');
         }
-        const data = await response.json()
-        setSubmissions(data.submissions || {})
+        const data = await response.json();
+        setSubmissions(data.submissions || {});
       } catch (error) {
-        console.error("Error fetching student submissions:", error)
-        setError("Failed to load student submissions")
+        console.error('Error fetching student submissions:', error);
+        setError('Failed to load student submissions');
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchSubmissions()
-  }, [question.id, courseId])
+    fetchSubmissions();
+  }, [question.id, courseId]);
 
   if (isLoading) {
-    return <div>Loading submissions...</div>
+    return <div>Loading submissions...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>
+    return <div>Error: {error}</div>;
   }
 
   return (
@@ -377,48 +334,29 @@ const TeacherQuestionDetail = ({ question, mode, courseId }: TeacherQuestionDeta
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Student
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Score
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {Object.entries(filteredSubmissions).map(([userId, submissionData]) => {
-              const { user, submission, maxScore, score } = submissionData
+              const { user, submission, maxScore, score } = submissionData;
               return (
                 <tr key={user.idUser}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div
-                        className="flex-shrink-0 h-10 w-10 cursor-pointer"
-                        onClick={() => setShowStudentDetails(userId)}
-                      >
-                        <img
-                          className="h-10 w-10 rounded-full"
-                          src={user.profilePicture || "/placeholder.svg"}
-                          alt=""
-                        />
+                      <div className="flex-shrink-0 h-10 w-10 cursor-pointer" onClick={() => setShowStudentDetails(userId)}>
+                        <img className="h-10 w-10 rounded-full" src={user.profilePicture || '/placeholder.svg'} alt="" />
                       </div>
                       <div className="ml-4 cursor-pointer" onClick={() => setShowStudentDetails(userId)}>
                         <div className="text-sm font-medium text-gray-900">{`${user.firstName} ${user.lastName}`}</div>
@@ -427,7 +365,7 @@ const TeacherQuestionDetail = ({ question, mode, courseId }: TeacherQuestionDeta
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      {submission ? QuestionStatus[submission.status] : "Not Submitted"}
+                      {submission ? QuestionStatus[submission.status] : 'Not Submitted'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -435,11 +373,7 @@ const TeacherQuestionDetail = ({ question, mode, courseId }: TeacherQuestionDeta
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     {submission ? (
-                      <Button
-                        variant="link"
-                        onClick={() => setViewingSubmission(userId)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
+                      <Button variant="link" onClick={() => setViewingSubmission(userId)} className="text-indigo-600 hover:text-indigo-900">
                         View
                       </Button>
                     ) : (
@@ -447,7 +381,7 @@ const TeacherQuestionDetail = ({ question, mode, courseId }: TeacherQuestionDeta
                     )}
                   </td>
                 </tr>
-              )
+              );
             })}
           </tbody>
         </table>
@@ -470,9 +404,9 @@ const TeacherQuestionDetail = ({ question, mode, courseId }: TeacherQuestionDeta
           onScoreChange={async (newScore) => {
             try {
               const response = await fetch(`../../../../api/learn/update-score`, {
-                method: "POST",
+                method: 'POST',
                 headers: {
-                  "Content-Type": "application/json",
+                  'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                   courseId,
@@ -480,10 +414,10 @@ const TeacherQuestionDetail = ({ question, mode, courseId }: TeacherQuestionDeta
                   userId: viewingSubmission,
                   newScore,
                 }),
-              })
+              });
 
               if (!response.ok) {
-                throw new Error("Failed to update score")
+                throw new Error('Failed to update score');
               }
 
               setSubmissions((prev) => ({
@@ -492,19 +426,19 @@ const TeacherQuestionDetail = ({ question, mode, courseId }: TeacherQuestionDeta
                   ...prev[viewingSubmission],
                   score: newScore,
                 },
-              }))
+              }));
 
               toast({
-                title: "Score updated",
+                title: 'Score updated',
                 description: "The student's score has been successfully updated.",
-              })
+              });
             } catch (error) {
-              console.error("Error updating score:", error)
+              console.error('Error updating score:', error);
               toast({
-                title: "Error",
-                description: "Failed to update the score. Please try again.",
-                variant: "destructive",
-              })
+                title: 'Error',
+                description: 'Failed to update the score. Please try again.',
+                variant: 'destructive',
+              });
             }
           }}
           question={question}
@@ -520,11 +454,7 @@ const TeacherQuestionDetail = ({ question, mode, courseId }: TeacherQuestionDeta
             <div className="mt-4">
               <div className="flex items-center">
                 <div className="flex-shrink-0 h-10 w-10">
-                  <img
-                    className="h-10 w-10 rounded-full"
-                    src={submissions[showStudentDetails].user.profilePicture || "/placeholder.svg"}
-                    alt=""
-                  />
+                  <img className="h-10 w-10 rounded-full" src={submissions[showStudentDetails].user.profilePicture || '/placeholder.svg'} alt="" />
                 </div>
                 <div className="ml-4">
                   <div className="text-sm font-medium text-gray-900">{`${submissions[showStudentDetails].user.firstName} ${submissions[showStudentDetails].user.lastName}`}</div>
@@ -539,12 +469,11 @@ const TeacherQuestionDetail = ({ question, mode, courseId }: TeacherQuestionDeta
         </Dialog>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default TeacherQuestionDetail
+export default TeacherQuestionDetail;
 
 function setShowStudentCode(arg0: boolean) {
-  throw new Error("Function not implemented.")
+  throw new Error('Function not implemented.');
 }
-

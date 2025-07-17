@@ -25,11 +25,7 @@ export interface StatisticsResponse {
  * Client-side function to fetch user statistics
  * This is compatible with client components and doesn't use server-side caching
  */
-export async function fetchUserStatistics(
-  fromDate?: string,
-  toDate?: string,
-  includeDeleted: boolean = false,
-): Promise<StatisticsResponse> {
+export async function fetchUserStatistics(fromDate?: string, toDate?: string, includeDeleted: boolean = false): Promise<StatisticsResponse> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
     const params = new URLSearchParams({

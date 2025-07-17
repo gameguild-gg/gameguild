@@ -9,17 +9,7 @@ import { Textarea } from '@game-guild/ui/components/textarea';
 import { RadioGroup, RadioGroupItem } from '@game-guild/ui/components/radio-group';
 import { Label } from '@game-guild/ui/components/label';
 import { Checkbox } from '@game-guild/ui/components/checkbox';
-import { 
-  Play, 
-  FileText, 
-  Code, 
-  Upload, 
-  MessageSquare, 
-  CheckCircle,
-  Clock,
-  Send,
-  Save
-} from 'lucide-react';
+import { Clock, Code, FileText, MessageSquare, Play, Save, Send, Upload } from 'lucide-react';
 import { submitActivity } from '@/lib/courses/server-actions';
 
 interface ContentItem {
@@ -62,25 +52,25 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    
+
     try {
       const submissionData = {
         activityId: item.id,
         activityType: item.activityType || 'text',
         content: submission,
         isGraded: item.type === 'quiz' || item.type === 'assignment',
-        attempt: 1
+        attempt: 1,
       };
 
       const result = await submitActivity(submissionData);
-      
+
       if (result.success) {
         // Calculate score for quiz
         let score;
         if (item.type === 'quiz') {
           score = calculateQuizScore();
         }
-        
+
         onComplete(score);
       } else {
         console.error('Submission failed:', result.message);
@@ -102,7 +92,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
     quiz.questions.forEach((question) => {
       totalPoints += question.points;
       const userAnswer = submission[question.id];
-      
+
       if (question.type === 'multiple-choice' || question.type === 'true-false') {
         if (userAnswer === question.correctAnswer) {
           earnedPoints += question.points;
@@ -110,8 +100,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
       } else if (question.type === 'multiple-select') {
         const correct = question.correctAnswer as string[];
         const user = userAnswer as string[];
-        if (user && correct && user.length === correct.length && 
-            user.every(answer => correct.includes(answer))) {
+        if (user && correct && user.length === correct.length && user.every((answer) => correct.includes(answer))) {
           earnedPoints += question.points;
         }
       }
@@ -136,37 +125,26 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
               'A loop that only runs once',
               'A continuous cycle that updates game state and renders graphics',
               'A loop used for loading game assets',
-              'A debugging tool for games'
+              'A debugging tool for games',
             ],
             correctAnswer: 'A continuous cycle that updates game state and renders graphics',
-            points: 10
+            points: 10,
           },
           {
             id: 'q2',
             question: 'Which programming pattern is commonly used for game events?',
             type: 'multiple-choice' as const,
-            options: [
-              'Singleton Pattern',
-              'Observer Pattern',
-              'Factory Pattern',
-              'Decorator Pattern'
-            ],
+            options: ['Singleton Pattern', 'Observer Pattern', 'Factory Pattern', 'Decorator Pattern'],
             correctAnswer: 'Observer Pattern',
-            points: 10
+            points: 10,
           },
           {
             id: 'q3',
             question: 'Select all that are components of a typical game loop:',
             type: 'multiple-select' as const,
-            options: [
-              'Process Input',
-              'Update Game State',
-              'Render Graphics',
-              'Save Game Data',
-              'Load Assets'
-            ],
+            options: ['Process Input', 'Update Game State', 'Render Graphics', 'Save Game Data', 'Load Assets'],
             correctAnswer: ['Process Input', 'Update Game State', 'Render Graphics'],
-            points: 15
+            points: 15,
           },
           {
             id: 'q4',
@@ -174,10 +152,10 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
             type: 'true-false' as const,
             options: ['True', 'False'],
             correctAnswer: 'True',
-            points: 5
-          }
-        ]
-      }
+            points: 5,
+          },
+        ],
+      },
     };
 
     return quizzes[item.id as keyof typeof quizzes];
@@ -211,9 +189,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
           <h3 className="text-lg font-semibold">
             Question {currentStep + 1} of {quiz.questions.length}
           </h3>
-          <Badge variant="outline">
-            {currentQuestion.points} points
-          </Badge>
+          <Badge variant="outline">{currentQuestion.points} points</Badge>
         </div>
 
         <Card className="bg-gray-900 border-gray-700">
@@ -222,8 +198,8 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
 
             {currentQuestion.type === 'multiple-choice' || currentQuestion.type === 'true-false' ? (
               <RadioGroup
-                value={submission[currentQuestion.id] as string || ''}
-                onValueChange={(value) => setSubmission(prev => ({ ...prev, [currentQuestion.id]: value }))}
+                value={(submission[currentQuestion.id] as string) || ''}
+                onValueChange={(value) => setSubmission((prev) => ({ ...prev, [currentQuestion.id]: value }))}
               >
                 {currentQuestion.options?.map((option, index) => (
                   <div key={index} className="flex items-center space-x-2">
@@ -240,13 +216,11 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
                   <div key={index} className="flex items-center space-x-2">
                     <Checkbox
                       id={`option-${index}`}
-                      checked={(submission[currentQuestion.id] as string[] || []).includes(option)}
+                      checked={((submission[currentQuestion.id] as string[]) || []).includes(option)}
                       onCheckedChange={(checked) => {
-                        const current = submission[currentQuestion.id] as string[] || [];
-                        const updated = checked 
-                          ? [...current, option]
-                          : current.filter(item => item !== option);
-                        setSubmission(prev => ({ ...prev, [currentQuestion.id]: updated }));
+                        const current = (submission[currentQuestion.id] as string[]) || [];
+                        const updated = checked ? [...current, option] : current.filter((item) => item !== option);
+                        setSubmission((prev) => ({ ...prev, [currentQuestion.id]: updated }));
                       }}
                     />
                     <Label htmlFor={`option-${index}`} className="text-gray-300">
@@ -258,8 +232,8 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
             ) : (
               <Textarea
                 placeholder="Enter your answer..."
-                value={submission[currentQuestion.id] as string || ''}
-                onChange={(e) => setSubmission(prev => ({ ...prev, [currentQuestion.id]: e.target.value }))}
+                value={(submission[currentQuestion.id] as string) || ''}
+                onChange={(e) => setSubmission((prev) => ({ ...prev, [currentQuestion.id]: e.target.value }))}
                 className="bg-gray-800 border-gray-600 text-white"
               />
             )}
@@ -267,28 +241,16 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
         </Card>
 
         <div className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-            disabled={currentStep === 0}
-            className="border-gray-600"
-          >
+          <Button variant="outline" onClick={() => setCurrentStep(Math.max(0, currentStep - 1))} disabled={currentStep === 0} className="border-gray-600">
             Previous
           </Button>
-          
+
           {isLastQuestion ? (
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="bg-green-600 hover:bg-green-700"
-            >
+            <Button onClick={handleSubmit} disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
               {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
             </Button>
           ) : (
-            <Button
-              onClick={() => setCurrentStep(Math.min(quiz.questions.length - 1, currentStep + 1))}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
+            <Button onClick={() => setCurrentStep(Math.min(quiz.questions.length - 1, currentStep + 1))} className="bg-blue-600 hover:bg-blue-700">
               Next
             </Button>
           )}
@@ -304,10 +266,8 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
           <CardTitle>Activity Instructions</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-300 mb-4">
-            {item.description || 'Complete this text-based activity by providing your response below.'}
-          </p>
-          
+          <p className="text-gray-300 mb-4">{item.description || 'Complete this text-based activity by providing your response below.'}</p>
+
           {item.id === 'activity-1' && (
             <div className="bg-gray-800 p-4 rounded border border-gray-600">
               <h4 className="font-semibold mb-2">Setup Instructions:</h4>
@@ -330,28 +290,22 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
         <CardContent>
           <Textarea
             placeholder="Describe your setup process, any challenges encountered, and what you learned..."
-            value={submission.response as string || ''}
-            onChange={(e) => setSubmission(prev => ({ ...prev, response: e.target.value }))}
+            value={(submission.response as string) || ''}
+            onChange={(e) => setSubmission((prev) => ({ ...prev, response: e.target.value }))}
             className="bg-gray-800 border-gray-600 text-white min-h-[200px]"
           />
-          <p className="text-sm text-gray-400 mt-2">
-            Minimum 100 words required for completion.
-          </p>
+          <p className="text-sm text-gray-400 mt-2">Minimum 100 words required for completion.</p>
         </CardContent>
       </Card>
 
       <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          onClick={() => setSubmission(prev => ({ ...prev, saved: true }))}
-          className="border-gray-600"
-        >
+        <Button variant="outline" onClick={() => setSubmission((prev) => ({ ...prev, saved: true }))} className="border-gray-600">
           <Save className="h-4 w-4 mr-2" />
           Save Draft
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={isSubmitting || (submission.response as string || '').length < 100}
+          disabled={isSubmitting || ((submission.response as string) || '').length < 100}
           className="bg-green-600 hover:bg-green-700"
         >
           <Send className="h-4 w-4 mr-2" />
@@ -368,10 +322,8 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
           <CardTitle>Coding Challenge</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-300 mb-4">
-            Create a simple player movement script based on the lesson content.
-          </p>
-          
+          <p className="text-gray-300 mb-4">Create a simple player movement script based on the lesson content.</p>
+
           <div className="bg-gray-800 p-4 rounded border border-gray-600 mb-4">
             <h4 className="font-semibold mb-2">Requirements:</h4>
             <ul className="list-disc list-inside space-y-1 text-gray-300">
@@ -395,30 +347,30 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
               <Input
                 id="language"
                 placeholder="e.g., C#, JavaScript, GDScript"
-                value={submission.language as string || ''}
-                onChange={(e) => setSubmission(prev => ({ ...prev, language: e.target.value }))}
+                value={(submission.language as string) || ''}
+                onChange={(e) => setSubmission((prev) => ({ ...prev, language: e.target.value }))}
                 className="bg-gray-800 border-gray-600 text-white"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="code">Your Code</Label>
               <Textarea
                 id="code"
                 placeholder="Paste your player movement script here..."
-                value={submission.code as string || ''}
-                onChange={(e) => setSubmission(prev => ({ ...prev, code: e.target.value }))}
+                value={(submission.code as string) || ''}
+                onChange={(e) => setSubmission((prev) => ({ ...prev, code: e.target.value }))}
                 className="bg-gray-800 border-gray-600 text-white font-mono min-h-[300px]"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="explanation">Code Explanation</Label>
               <Textarea
                 id="explanation"
                 placeholder="Explain how your code works and any challenges you faced..."
-                value={submission.explanation as string || ''}
-                onChange={(e) => setSubmission(prev => ({ ...prev, explanation: e.target.value }))}
+                value={(submission.explanation as string) || ''}
+                onChange={(e) => setSubmission((prev) => ({ ...prev, explanation: e.target.value }))}
                 className="bg-gray-800 border-gray-600 text-white min-h-[150px]"
               />
             </div>
@@ -427,19 +379,11 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
       </Card>
 
       <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          onClick={() => setSubmission(prev => ({ ...prev, saved: true }))}
-          className="border-gray-600"
-        >
+        <Button variant="outline" onClick={() => setSubmission((prev) => ({ ...prev, saved: true }))} className="border-gray-600">
           <Save className="h-4 w-4 mr-2" />
           Save Draft
         </Button>
-        <Button
-          onClick={handleSubmit}
-          disabled={isSubmitting || !(submission.code as string || '').trim()}
-          className="bg-green-600 hover:bg-green-700"
-        >
+        <Button onClick={handleSubmit} disabled={isSubmitting || !((submission.code as string) || '').trim()} className="bg-green-600 hover:bg-green-700">
           <Send className="h-4 w-4 mr-2" />
           {isSubmitting ? 'Submitting...' : 'Submit Code'}
         </Button>
@@ -452,9 +396,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
       <div className="text-center py-12">
         {getActivityIcon()}
         <h3 className="text-xl font-semibold mb-2 mt-4">{item.title}</h3>
-        <p className="text-gray-400 mb-6 max-w-md mx-auto">
-          {item.description || 'Ready to start this activity?'}
-        </p>
+        <p className="text-gray-400 mb-6 max-w-md mx-auto">{item.description || 'Ready to start this activity?'}</p>
         <div className="flex items-center justify-center gap-4 mb-6">
           {item.duration && (
             <div className="flex items-center gap-1 text-sm text-gray-400">
@@ -462,9 +404,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
               {item.duration} minutes
             </div>
           )}
-          {item.isRequired && (
-            <Badge variant="secondary">Required</Badge>
-          )}
+          {item.isRequired && <Badge variant="secondary">Required</Badge>}
         </div>
         <Button onClick={handleStart} className="bg-blue-600 hover:bg-blue-700">
           Start Activity

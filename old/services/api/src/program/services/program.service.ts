@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike, Or, IsNull, ArrayContains } from 'typeorm';
+import { ArrayContains, ILike, IsNull, Repository } from 'typeorm';
 import { Product, ProductProgram, Program, ProgramFeedbackSubmission, ProgramRatingEntity, ProgramUser, ProgramUserRole, UserProduct } from '../entities';
 import { CreateProgramDto, ProgramFilters, ProgramStats, UpdateProgramDto } from './dtos';
 import { ProgramRoleType } from '../entities/enums';
@@ -62,8 +62,8 @@ export class ProgramService {
         deletedAt: IsNull(),
         summary: ILike(searchPattern),
       };
-      
-      // Use type-safe repository find with OR conditions for search  
+
+      // Use type-safe repository find with OR conditions for search
       const searchWhereConditions = [
         // Search by program slug
         {
@@ -73,12 +73,12 @@ export class ProgramService {
         },
         // Search by program summary
         {
-          deletedAt: IsNull(), 
+          deletedAt: IsNull(),
           summary: ILike(searchPattern),
           ...(filters?.tenancyDomains?.length && { tenancyDomains: ArrayContains(filters.tenancyDomains) }),
         },
       ];
-      
+
       return this.programRepository.find({
         where: searchWhereConditions,
       });

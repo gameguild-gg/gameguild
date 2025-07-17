@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 
-
 type Props = {
   error: Error & { digest?: string };
   reset: () => void;

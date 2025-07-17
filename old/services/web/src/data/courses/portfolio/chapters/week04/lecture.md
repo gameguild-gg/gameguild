@@ -1,12 +1,16 @@
 # Week 4: Polishing Code Repositories
 
-A polished repository can significantly impact how potential employers and collaborators view your work. We will cover best practices, documentation strategies, GitHub profile setup, and even how to leverage badges to highlight key repository metrics.
+A polished repository can significantly impact how potential employers and collaborators view your work. We will cover
+best practices, documentation strategies, GitHub profile setup, and even how to leverage badges to highlight key
+repository metrics.
 
 ---
 
 ## Introduction
 
-Your code repositories are not just storage spaces for your projects—they are reflections of your coding style, attention to detail, and professionalism. A well-organized repository with clear documentation can help others (and potential employers) understand your work quickly.
+Your code repositories are not just storage spaces for your projects—they are reflections of your coding style,
+attention to detail, and professionalism. A well-organized repository with clear documentation can help others (and
+potential employers) understand your work quickly.
 
 !!! quiz
 {
@@ -29,8 +33,10 @@ Your code repositories are not just storage spaces for your projects—they are 
 When presenting your code on platforms like GitHub, consider the following:
 
 - **Consistency:** Maintain a uniform coding style, commit messages, and documentation throughout your project.
-- **Clarity:** Organize key files such as the `README.md`, documentation, and test directories to be immediately accessible.
-- **Visibility:** Highlight important aspects of your project using visuals, diagrams, or even short demo clips embedded within the README.
+- **Clarity:** Organize key files such as the `README.md`, documentation, and test directories to be immediately
+  accessible.
+- **Visibility:** Highlight important aspects of your project using visuals, diagrams, or even short demo clips embedded
+  within the README.
 
 ::: tip "Key Reminder"
 **Tip:** Think of your repository as a portfolio piece. Every detail counts!
@@ -54,18 +60,22 @@ When presenting your code on platforms like GitHub, consider the following:
 
 ## Writing Effective READMEs and Documentation
 
-A strong README is essential. Below we break down two very different types of READMEs you will encounter and create on GitHub:
+A strong README is essential. Below we break down two very different types of READMEs you will encounter and create on
+GitHub:
 
 ### GitHub User Profile README
 
-A **GitHub User Profile README** is designed to showcase who you are as a developer. It’s the first thing visitors see when they visit your profile.
+A **GitHub User Profile README** is designed to showcase who you are as a developer. It’s the first thing visitors see
+when they visit your profile.
 
 **Purpose:**
+
 - **Personal Branding:** Introduce yourself, your interests, skills, and achievements.
 - **Portfolio Showcase:** Highlight selected projects, contributions, and any other relevant personal accomplishments.
 - **Engagement:** Use visuals, links, and even animated GIFs to make your profile engaging.
 
 **Best Practices:**
+
 - Write a short, friendly introduction.
 - Include links to your projects, blogs, or social media.
 - Use images or graphics to enhance your narrative.
@@ -76,7 +86,8 @@ Explore a curated list of [Awesome GitHub Profiles](https://bit.ly/awesome-gh)
 :::
 
 ::: tip "User Profile README Tip"
-**Tip:** Your GitHub User Profile README is your personal storefront. Make sure it reflects your personality and professionalism.
+**Tip:** Your GitHub User Profile README is your personal storefront. Make sure it reflects your personality and
+professionalism.
 :::
 
 !!! quiz
@@ -97,14 +108,17 @@ Explore a curated list of [Awesome GitHub Profiles](https://bit.ly/awesome-gh)
 
 ### Effective GitHub Repo README
 
-An **Effective GitHub Repo README** is project-specific and is designed to help users understand, install, and use a particular codebase.
+An **Effective GitHub Repo README** is project-specific and is designed to help users understand, install, and use a
+particular codebase.
 
 **Purpose:**
+
 - **Project Overview:** Explain what the project does, its features, and its intended use.
 - **Technical Instructions:** Provide installation steps, usage examples, configuration details, and how to contribute.
 - **Documentation:** Serve as a central guide for anyone who wishes to use or collaborate on the project.
 
 **Best Practices:**
+
 - Start with a clear project title and description.
 - Include badges that display key project information (e.g., build status, license, version).
 - Organize content with a Table of Contents, installation instructions, usage examples, and contribution guidelines.
@@ -112,6 +126,7 @@ An **Effective GitHub Repo README** is project-specific and is designed to help 
 
 ::: tip "Effective Repo README Example"
 A strong repository README might include:
+
 - **Title and Badges:** Project name with badges for build status, version, and license.
 - **Introduction:** A concise description of what the project does.
 - **Table of Contents:** Links to installation, usage, and contribution sections.
@@ -122,7 +137,8 @@ A strong repository README might include:
   :::
 
 ::: example "Effective Repo README Example"
-For more inspiration on well-crafted repository READMEs, check out this curated list: [Awesome README](https://github.com/matiassingers/awesome-readme).
+For more inspiration on well-crafted repository READMEs, check out this curated
+list: [Awesome README](https://github.com/matiassingers/awesome-readme).
 :::
 
 !!! quiz
@@ -150,7 +166,8 @@ An organized repository makes navigation intuitive:
 - **Documentation:** Supplement code comments with external documentation files using Markdown or similar formats.
 
 ::: warning "Avoid Clutter"
-**Warning:** A messy repository with files scattered across many directories without clear labeling can confuse reviewers. Regularly review your structure.
+**Warning:** A messy repository with files scattered across many directories without clear labeling can confuse
+reviewers. Regularly review your structure.
 :::
 
 !!! quiz
@@ -174,11 +191,14 @@ An organized repository makes navigation intuitive:
 Your GitHub profile is your personal brand on the platform. It’s the first place many will visit to learn about you.
 
 - **Profile Customization:** Ensure your profile is complete and professional.
-- **Follow the Guide:** Read [GitHub's Official Documentation](https://docs.github.com/en/get-started/start-your-journey/setting-up-your-profile) to learn how to set up and optimize your GitHub profile.
+- **Follow the Guide:**
+  Read [GitHub's Official Documentation](https://docs.github.com/en/get-started/start-your-journey/setting-up-your-profile)
+  to learn how to set up and optimize your GitHub profile.
 - **Showcase Projects:** Pin your best projects so that visitors immediately see your strongest work.
 
 ::: tip "Profile Setup"
-**Tip:** A well-maintained GitHub profile reflects your commitment to best practices and your attention to detail. Take time to update your bio, add a professional photo, and list your skills.
+**Tip:** A well-maintained GitHub profile reflects your commitment to best practices and your attention to detail. Take
+time to update your bio, add a professional photo, and list your skills.
 :::
 
 !!! quiz
@@ -210,6 +230,7 @@ Badges can quickly convey important information about your project:
 
 ::: example "Badge Examples"
 Consider adding badges for:
+
 - **Build Status:** Indicate whether your project is passing all tests.
 - **License:** Show the type of license used.
 - **Version:** Display the current release version.
@@ -242,4 +263,6 @@ Consider adding badges for:
 
 ## Conclusion
 
-A polished GitHub repository and an engaging profile can significantly enhance your professional image. By following best practices, organizing your code effectively, and utilizing modern tools like badges, you can showcase your technical skills in a way that stands out to employers and collaborators.
+A polished GitHub repository and an engaging profile can significantly enhance your professional image. By following
+best practices, organizing your code effectively, and utilizing modern tools like badges, you can showcase your
+technical skills in a way that stands out to employers and collaborators.

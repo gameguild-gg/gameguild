@@ -1,11 +1,10 @@
 import { Body, Controller, Get, Logger, Param, Post } from '@nestjs/common';
-import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { AuthUser } from './decorators';
-import { LocalSignUpDto, LocalSignInDto } from '../dtos/auth';
+import { Auth, AuthUser } from './decorators';
+import { LocalSignUpDto } from '../dtos/auth';
 import { LocalSignInResponseDto } from '../dtos/auth/local-sign-in.response.dto';
 import { UserEntity } from '../user/entities';
-import { Auth } from './decorators';
 import { EthereumSigninValidateRequestDto } from '../dtos/auth/ethereum-signin-validate-request.dto';
 import { EthereumSigninChallengeRequestDto } from '../dtos/auth/ethereum-signin-challenge-request.dto';
 import { EthereumSigninChallengeResponseDto } from '../dtos/auth/ethereum-signin-challenge-response.dto';

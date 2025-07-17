@@ -1,47 +1,43 @@
-import React from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/learn/ui/dialog"
-import { Button } from "@/components/learn/ui/button"
+import React from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/learn/ui/dialog';
+import { Button } from '@/components/learn/ui/button';
 
 interface ResetConfirmationDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => void
-  mode: 'light' | 'dark' | 'high-contrast'
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  mode: 'light' | 'dark' | 'high-contrast';
 }
 
 export function ResetConfirmationDialog({ isOpen, onClose, onConfirm, mode }: ResetConfirmationDialogProps) {
   const getDialogStyles = () => {
     switch (mode) {
       case 'light':
-        return 'bg-white text-gray-900'
+        return 'bg-white text-gray-900';
       case 'dark':
-        return 'bg-gray-800 text-gray-100'
+        return 'bg-gray-800 text-gray-100';
       case 'high-contrast':
-        return 'bg-black text-yellow-300 border-2 border-yellow-300'
+        return 'bg-black text-yellow-300 border-2 border-yellow-300';
       default:
-        return ''
+        return '';
     }
-  }
+  };
 
   const getButtonStyles = (variant: 'primary' | 'secondary') => {
-    const baseStyles = 'px-4 py-2 rounded transition-colors duration-200'
+    const baseStyles = 'px-4 py-2 rounded transition-colors duration-200';
     switch (mode) {
       case 'light':
-        return variant === 'primary'
-          ? `${baseStyles} bg-red-500 text-white hover:bg-red-600`
-          : `${baseStyles} bg-gray-200 text-gray-800 hover:bg-gray-300`
+        return variant === 'primary' ? `${baseStyles} bg-red-500 text-white hover:bg-red-600` : `${baseStyles} bg-gray-200 text-gray-800 hover:bg-gray-300`;
       case 'dark':
-        return variant === 'primary'
-          ? `${baseStyles} bg-red-600 text-white hover:bg-red-700`
-          : `${baseStyles} bg-gray-700 text-gray-200 hover:bg-gray-600`
+        return variant === 'primary' ? `${baseStyles} bg-red-600 text-white hover:bg-red-700` : `${baseStyles} bg-gray-700 text-gray-200 hover:bg-gray-600`;
       case 'high-contrast':
         return variant === 'primary'
           ? `${baseStyles} bg-yellow-300 text-black hover:bg-yellow-400`
-          : `${baseStyles} bg-gray-800 text-yellow-300 hover:bg-gray-700 border border-yellow-300`
+          : `${baseStyles} bg-gray-800 text-yellow-300 hover:bg-gray-700 border border-yellow-300`;
       default:
-        return ''
+        return '';
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -53,11 +49,14 @@ export function ResetConfirmationDialog({ isOpen, onClose, onConfirm, mode }: Re
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button className={getButtonStyles('secondary')} onClick={onClose}>No</Button>
-          <Button className={getButtonStyles('primary')} onClick={onConfirm}>Yes</Button>
+          <Button className={getButtonStyles('secondary')} onClick={onClose}>
+            No
+          </Button>
+          <Button className={getButtonStyles('primary')} onClick={onConfirm}>
+            Yes
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

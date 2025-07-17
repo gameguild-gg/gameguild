@@ -2,7 +2,7 @@
 
 import { UserProfileEntity } from '../entities/user-profile.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsUrl, Length, MaxLength } from 'class-validator';
+import { IsOptional, IsString, Length } from 'class-validator';
 import { IPickFields } from '../../../../types';
 
 type AllowedFields = 'bio' | 'familyName' | 'givenName';

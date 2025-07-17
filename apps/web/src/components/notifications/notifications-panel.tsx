@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, X, Check, ExternalLink, MoreHorizontal } from 'lucide-react';
+import { Bell, Check, ExternalLink, MoreHorizontal, X } from 'lucide-react';
 import { Button } from '@game-guild/ui/components/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
 import { Badge } from '@game-guild/ui/components/badge';

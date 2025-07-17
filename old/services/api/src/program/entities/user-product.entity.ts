@@ -1,8 +1,8 @@
-import { Entity, Column, ManyToOne, JoinColumn, OneToMany, Index, DeleteDateColumn } from 'typeorm';
-import { IsOptional, IsEnum, IsDateString, IsJSON } from 'class-validator';
+import { Column, DeleteDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { IsDateString, IsEnum, IsJSON, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityBase } from '../../common/entities/entity.base';
-import { ProductAcquisitionType, ProductAccessStatus } from './enums';
+import { ProductAccessStatus, ProductAcquisitionType } from './enums';
 import { UserEntity } from '../../user/entities/user.entity';
 import { Product } from './product.entity';
 import { ProgramUser } from './program-user.entity';
@@ -26,7 +26,11 @@ export class UserProduct extends EntityBase {
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @ApiProperty({ type: () => UserSubscription, description: 'If product access is through subscription', required: false })
+  @ApiProperty({
+    type: () => UserSubscription,
+    description: 'If product access is through subscription',
+    required: false,
+  })
   @ManyToOne(() => UserSubscription, { nullable: true })
   @JoinColumn({ name: 'subscription_id' })
   @IsOptional()
@@ -37,7 +41,11 @@ export class UserProduct extends EntityBase {
   @ApiProperty({ description: 'How the product was acquired (purchased, subscription, gift, etc.)' })
   acquisitionType: ProductAcquisitionType;
 
-  @ApiProperty({ type: () => FinancialTransaction, description: 'Reference to the transaction if purchased', required: false })
+  @ApiProperty({
+    type: () => FinancialTransaction,
+    description: 'Reference to the transaction if purchased',
+    required: false,
+  })
   @ManyToOne(() => FinancialTransaction, { nullable: true })
   @JoinColumn({ name: 'purchase_transaction_id' })
   @IsOptional()
@@ -65,11 +73,18 @@ export class UserProduct extends EntityBase {
   metadata: object;
 
   @DeleteDateColumn()
-  @ApiProperty({ description: 'Soft delete timestamp - when the access record was deleted, null if active', required: false })
+  @ApiProperty({
+    description: 'Soft delete timestamp - when the access record was deleted, null if active',
+    required: false,
+  })
   deletedAt: Date | null;
 
   // Relations
-  @ApiProperty({ type: () => ProgramUser, isArray: true, description: 'Program user entries associated with this product access' })
+  @ApiProperty({
+    type: () => ProgramUser,
+    isArray: true,
+    description: 'Program user entries associated with this product access',
+  })
   @OneToMany(() => ProgramUser, (programUser) => programUser.userProduct)
   programUsers: ProgramUser[];
 }

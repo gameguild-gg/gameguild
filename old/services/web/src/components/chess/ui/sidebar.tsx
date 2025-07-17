@@ -326,7 +326,14 @@ const SidebarMenuButton = React.forwardRef<
       data-sidebar="menu-button"
       data-size={size}
       data-active={isActive}
-      className={cn(sidebarMenuButtonVariants({ variant, size }), 'group-data-[collapsible=icon]:!h-10 group-data-[collapsible=icon]:!w-10', className)}
+      className={cn(
+        sidebarMenuButtonVariants({
+          variant,
+          size,
+        }),
+        'group-data-[collapsible=icon]:!h-10 group-data-[collapsible=icon]:!w-10',
+        className,
+      )}
       {...props}
     />
   );

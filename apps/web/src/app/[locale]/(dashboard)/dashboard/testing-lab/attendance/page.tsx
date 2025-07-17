@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,8 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { BarChart3, Download, Filter, Users, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { testingLabApi, StudentAttendanceData, SessionAttendanceData } from '@/lib/api/testing-lab/testing-lab-api';
+import { Calendar, CheckCircle, Clock, Download, Users, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
 interface StudentAttendance {
@@ -57,7 +56,7 @@ export default function AttendanceReportsPage() {
   const fetchAttendanceData = async () => {
     try {
       setLoading(true);
-      
+
       // For now, use mock data. In production, these would be API calls
       setStudentData([
         {
@@ -164,10 +163,11 @@ export default function AttendanceReportsPage() {
     }
   };
 
-  const filteredStudents = studentData.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.team.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredStudents = studentData.filter((student) => {
+    const matchesSearch =
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.team.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || student.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
@@ -176,18 +176,20 @@ export default function AttendanceReportsPage() {
     const headers = ['Name', 'Email', 'Team', 'Block 1', 'Block 2', 'Block 3', 'Block 4', 'Total Sessions', 'Games Tested', 'Status'];
     const csvContent = [
       headers.join(','),
-      ...filteredStudents.map(student => [
-        student.name,
-        student.email,
-        student.team,
-        student.block1Sessions,
-        student.block2Sessions,
-        student.block3Sessions,
-        student.block4Sessions,
-        student.totalSessions,
-        student.totalGamesTested,
-        student.status,
-      ].join(','))
+      ...filteredStudents.map((student) =>
+        [
+          student.name,
+          student.email,
+          student.team,
+          student.block1Sessions,
+          student.block2Sessions,
+          student.block3Sessions,
+          student.block4Sessions,
+          student.totalSessions,
+          student.totalGamesTested,
+          student.status,
+        ].join(','),
+      ),
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -214,20 +216,16 @@ export default function AttendanceReportsPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Testing Lab Attendance Reports</h1>
-          <p className="text-muted-foreground">
-            Track student participation and attendance for grading purposes
-          </p>
+          <p className="text-muted-foreground">Track student participation and attendance for grading purposes</p>
         </div>
-        
+
         <div className="flex gap-2">
           <Button onClick={exportToCSV} variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
           <Link href="/dashboard/testing-lab">
-            <Button variant="ghost">
-              Back to Testing Lab
-            </Button>
+            <Button variant="ghost">Back to Testing Lab</Button>
           </Link>
         </div>
       </div>
@@ -246,20 +244,13 @@ export default function AttendanceReportsPage() {
                 <Users className="mr-2 h-5 w-5" />
                 Student Attendance Tracking
               </CardTitle>
-              <CardDescription>
-                Monitor individual student progress across the 4 semester blocks
-              </CardDescription>
+              <CardDescription>Monitor individual student progress across the 4 semester blocks</CardDescription>
             </CardHeader>
             <CardContent>
               {/* Filters */}
               <div className="flex gap-4 mb-6">
                 <div className="flex-1">
-                  <Input
-                    placeholder="Search students..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="max-w-sm"
-                  />
+                  <Input placeholder="Search students..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="max-w-sm" />
                 </div>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                   <SelectTrigger className="w-48">
@@ -330,9 +321,7 @@ export default function AttendanceReportsPage() {
                 <Calendar className="mr-2 h-5 w-5" />
                 Testing Session Reports
               </CardTitle>
-              <CardDescription>
-                Track attendance and participation for each testing session
-              </CardDescription>
+              <CardDescription>Track attendance and participation for each testing session</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
@@ -359,9 +348,15 @@ export default function AttendanceReportsPage() {
                         <TableCell className="text-center">{session.studentsRegistered}</TableCell>
                         <TableCell className="text-center">{session.studentsAttended}</TableCell>
                         <TableCell className="text-center">
-                          <Badge className={session.attendanceRate >= 80 ? 'bg-green-100 text-green-800' : 
-                                          session.attendanceRate >= 60 ? 'bg-yellow-100 text-yellow-800' : 
-                                          'bg-red-100 text-red-800'}>
+                          <Badge
+                            className={
+                              session.attendanceRate >= 80
+                                ? 'bg-green-100 text-green-800'
+                                : session.attendanceRate >= 60
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                            }
+                          >
                             {session.attendanceRate.toFixed(1)}%
                           </Badge>
                         </TableCell>
@@ -384,54 +379,40 @@ export default function AttendanceReportsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{studentData.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  Across all teams
-                </p>
+                <p className="text-xs text-muted-foreground">Across all teams</p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">On Track</CardTitle>
                 <CheckCircle className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  {studentData.filter(s => s.status === 'onTrack').length}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Meeting requirements
-                </p>
+                <div className="text-2xl font-bold text-green-600">{studentData.filter((s) => s.status === 'onTrack').length}</div>
+                <p className="text-xs text-muted-foreground">Meeting requirements</p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">At Risk</CardTitle>
                 <Clock className="h-4 w-4 text-yellow-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">
-                  {studentData.filter(s => s.status === 'atRisk').length}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Need attention
-                </p>
+                <div className="text-2xl font-bold text-yellow-600">{studentData.filter((s) => s.status === 'atRisk').length}</div>
+                <p className="text-xs text-muted-foreground">Need attention</p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Failing</CardTitle>
                 <XCircle className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">
-                  {studentData.filter(s => s.status === 'failing').length}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Immediate intervention
-                </p>
+                <div className="text-2xl font-bold text-red-600">{studentData.filter((s) => s.status === 'failing').length}</div>
+                <p className="text-xs text-muted-foreground">Immediate intervention</p>
               </CardContent>
             </Card>
           </div>
@@ -439,9 +420,7 @@ export default function AttendanceReportsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Semester Requirements Overview</CardTitle>
-              <CardDescription>
-                Student progress toward semester testing requirements
-              </CardDescription>
+              <CardDescription>Student progress toward semester testing requirements</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -454,13 +433,12 @@ export default function AttendanceReportsPage() {
                     <li>Submit at least 1 version of their team's game for testing</li>
                   </ul>
                 </div>
-                
+
                 <div className="pt-4 border-t">
                   <h4 className="font-medium mb-2">Grade Integration Notes:</h4>
                   <p className="text-sm text-muted-foreground">
-                    This attendance data can be exported as CSV and integrated into your course grading system. 
-                    Students failing to meet the minimum requirements should receive targeted support to ensure 
-                    they complete the testing lab component successfully.
+                    This attendance data can be exported as CSV and integrated into your course grading system. Students failing to meet the minimum
+                    requirements should receive targeted support to ensure they complete the testing lab component successfully.
                   </p>
                 </div>
               </div>

@@ -1,6 +1,9 @@
 # Loops
 
-Loops are fundamental in Python for performing repetitive tasks. Python's for loop iterates over sequences (like lists, strings, or ranges) in a clean and readable way. In this lecture, we’ll explore several common looping techniques and dive into some advanced topics such as controlling ranges, sorting selections, nested loops, breaking out of nested loops, and common loop patterns.
+Loops are fundamental in Python for performing repetitive tasks. Python's for loop iterates over sequences (like lists,
+strings, or ranges) in a clean and readable way. In this lecture, we’ll explore several common looping techniques and
+dive into some advanced topics such as controlling ranges, sorting selections, nested loops, breaking out of nested
+loops, and common loop patterns.
 
 <details> 
 
@@ -8,9 +11,9 @@ Loops are fundamental in Python for performing repetitive tasks. Python's for lo
 
 - range: Iterate over a sequence of numbers with full control over start, stop, and step.
 - list: Iterate directly over each element in a list.
-enumerate with index: Get both the index and the element simultaneously.
-sorted: Sort a list and iterate over its elements.
-sorted and subset: Sort a list (e.g., of grades) and select a subset (e.g., the three lowest grades).
+  enumerate with index: Get both the index and the element simultaneously.
+  sorted: Sort a list and iterate over its elements.
+  sorted and subset: Sort a list (e.g., of grades) and select a subset (e.g., the three lowest grades).
 - Nested loops: Loop inside another loop.
 - Breaking nested loops: Techniques to exit multiple loops elegantly.
 - Loop Patterns: Common patterns such as accumulators, filtering, flags, and more.
@@ -58,7 +61,7 @@ for i in range(10, 0, -2):  # Generates numbers 10, 8, 6, 4, 2
 {
 "description": "Implement a function to print numbers from 10 to 2 in reverse order jumping by 2.",
 "language": "python",
-"code": "def print_reverse():\n   # your code goes here\n\n# do not modify the code below\nprint_reverse()",
+"code": "def print_reverse():\n # your code goes here\n\n# do not modify the code below\nprint_reverse()",
 "expectedOutput": "10\n8\n6\n4\n2"
 }
 !!!
@@ -90,16 +93,19 @@ for index, fruit in enumerate(fruits):
 
 !!! code
 {
-"description": "Implement a function to print the index and value of each element in a list in the format 'Index {index}: {value}'.",
+"description": "Implement a function to print the index and value of each element in a list in the format 'Index
+{index}: {value}'.",
 "language": "python",
-"code": "def print_index_and_value(cities):\n    # your code goes here\n\n# do not modify the code below\nprint_index_and_value(['New York', 'Los Angeles', 'Chicago'])",
+"code": "def print_index_and_value(cities):\n # your code goes here\n\n# do not modify the code
+below\nprint_index_and_value(['New York', 'Los Angeles', 'Chicago'])",
 "expectedOutput": "Index 0: New York\nIndex 1: Los Angeles\nIndex 2: Chicago"
 }
 !!!
 
 ## 4. For in sorted with ranges
 
-You can use `sorted()` to sort a list and then select a subset. For example, suppose you have a list of grades and want to print the three lowest grades:
+You can use `sorted()` to sort a list and then select a subset. For example, suppose you have a list of grades and want
+to print the three lowest grades:
 
 ``` python
 grades = [88, 92, 79, 85, 95, 70]
@@ -112,11 +118,13 @@ for grade in sorted(grades)[:3]: # slice the first 3 elements
 
 ## 5. Loop Patterns
 
-Beyond the basic loop constructs, several common patterns help you solve recurring problems more elegantly. These include accumulators, filtering, flags, and more.
+Beyond the basic loop constructs, several common patterns help you solve recurring problems more elegantly. These
+include accumulators, filtering, flags, and more.
 
 ### 5.1 Accumulator Pattern
 
-The accumulator pattern is used to combine or sum up values from a loop. This pattern is useful for aggregating data, such as summing numbers or concatenating strings.
+The accumulator pattern is used to combine or sum up values from a loop. This pattern is useful for aggregating data,
+such as summing numbers or concatenating strings.
 
 ``` python
 # Example: Summing a List of Numbers
@@ -139,14 +147,16 @@ print(sentence.strip())
 {
 "description": "Implement a function to calculate the product of all numbers in a list.",
 "language": "python",
-"code": "def product_of_list(numbers):\n    # your code goes here\n\n# do not modify the code below\nprint(product_of_list([1, 2, 3, 4]))",
+"code": "def product_of_list(numbers):\n # your code goes here\n\n# do not modify the code below\nprint(
+product_of_list([1, 2, 3, 4]))",
 "expectedOutput": "24"
 }
 !!!
 
 ### 5.2 Filtering Pattern
 
-The filtering pattern involves iterating over a sequence and selecting only those elements that meet a specified condition. Often, you store the filtered elements in a new list.
+The filtering pattern involves iterating over a sequence and selecting only those elements that meet a specified
+condition. Often, you store the filtered elements in a new list.
 
 ``` python
 # Example: Filtering Even Numbers
@@ -162,14 +172,19 @@ print("Even numbers:", evens)
 {
 "description": "Implement a function to filter all leap years from a list of years.",
 "language": "python",
-"code": "#A year is a leap year if it's evenly divisible by 4. For example, 2024 and 2028 are leap years.\nA year that's divisible by 100, but not by 400, is not a leap year. For example, 1700, 1800, and 1900 were not leap years.\nA year that's divisible by 400 is a leap year. For example, 2000 and 2400 are leap years.\n\ndef filter_leap_years(years):\n    # your code goes here\n\n# do not modify the code below\nprint(filter_leap_years([1700,1800,1900,2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008]))",
+"code": "#A year is a leap year if it's evenly divisible by 4. For example, 2024 and 2028 are leap years.\nA year that's
+divisible by 100, but not by 400, is not a leap year. For example, 1700, 1800, and 1900 were not leap years.\nA year
+that's divisible by 400 is a leap year. For example, 2000 and 2400 are leap years.\n\ndef filter_leap_years(years):\n #
+your code goes here\n\n# do not modify the code below\nprint(
+filter_leap_years([1700,1800,1900,2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008]))",
 "expectedOutput": "[2000, 2004, 2008]"
 }
 !!!
 
 ### 5.3 Search or Flag Pattern
 
-The flag pattern uses a boolean variable (flag) to signal when a condition has been met during iteration. This is especially useful for terminating loops early when a desired condition occurs.
+The flag pattern uses a boolean variable (flag) to signal when a condition has been met during iteration. This is
+especially useful for terminating loops early when a desired condition occurs.
 
 ``` python
 # Example: Finding a Specific Element
@@ -190,7 +205,8 @@ else:
 {
 "description": "Implement a function to check if a list contains negative numbers.",
 "language": "python",
-"code": "def contains_negative(numbers):\n    # your code goes here\n\n# do not modify the code below\nprint(contains_negative([1, 2, -3, 4]))",
+"code": "def contains_negative(numbers):\n # your code goes here\n\n# do not modify the code below\nprint(
+contains_negative([1, 2, -3, 4]))",
 "expectedOutput": "True"
 }
 !!!
@@ -212,7 +228,8 @@ print("Number of reds:", count_red)  # Output: Number of reds: 3
 {
 "description": "Implement a function to count the number of vowels in a string.",
 "language": "python",
-"code": "def count_vowels(s):\n    # your code goes here\n\n# do not modify the code below\nprint(count_vowels('Hello World'))",
+"code": "def count_vowels(s):\n # your code goes here\n\n# do not modify the code below\nprint(count_vowels('Hello
+World'))",
 "expectedOutput": "3"
 }
 !!!
@@ -249,7 +266,8 @@ print("First negative number:", first_negative)
 {
 "description": "Implement a function to find the first float number in a list.",
 "language": "python",
-"code": "def find_first_float(numbers):\n    # your code goes here\n\n# do not modify the code below\nprint(find_first_float([1, 2, 3.5, 4, 5]))",
+"code": "def find_first_float(numbers):\n # your code goes here\n\n# do not modify the code below\nprint(
+find_first_float([1, 2, 3.5, 4, 5]))",
 "expectedOutput": "3.5"
 }
 !!!
@@ -271,7 +289,8 @@ print("Maximum value:", max_value)  # Output: Maximum value: 9
 {
 "description": "Implement a function to find the minimum value in a list.",
 "language": "python",
-"code": "def find_min(numbers):\n    # your code goes here\n\n# do not modify the code below\nprint(find_min([3, 1, 4, 1, 5, 9]))",
+"code": "def find_min(numbers):\n # your code goes here\n\n# do not modify the code below\nprint(
+find_min([3, 1, 4, 1, 5, 9]))",
 "expectedOutput": "1"
 }
 !!!

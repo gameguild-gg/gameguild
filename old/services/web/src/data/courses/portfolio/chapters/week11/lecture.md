@@ -6,18 +6,24 @@ Today we will talk about the different types of interview and common processes c
 
 ## Common hiring flow
 
-1. **Application Analysis**: The company reviews your resume and cover letter to see if you meet the basic qualifications for the position.
-2. **Behavioral Interview**: Usually the first interview, where they ask about your experiences and how you handle different situations.
+1. **Application Analysis**: The company reviews your resume and cover letter to see if you meet the basic
+   qualifications for the position.
+2. **Behavioral Interview**: Usually the first interview, where they ask about your experiences and how you handle
+   different situations.
 3. **Technical Assessment**: Some companies may ask you to complete a coding test or project.
 4. **Technical Interview**: You will be asked to solve coding problems or answer technical questions related to the job.
 5. **System Design Interview**: For more senior positions, you may be asked to design a system or architecture.
-6. **Final Interview**: This is often with higher management or team leads, focusing on your fit within the company culture and team dynamics. Usually it is done in a panel format, and in loco.
+6. **Final Interview**: This is often with higher management or team leads, focusing on your fit within the company
+   culture and team dynamics. Usually it is done in a panel format, and in loco.
 7. **Offer**: If you pass all the interviews, you will receive a job offer.
 8. **Negotiation**: You can negotiate your salary and benefits.
 9. **Onboarding**: If you accept the offer, you will go through the onboarding process to get you set up in the company.
-10. **Time-based evaluation**: After a few months, you will have a performance review to evaluate your progress and fit within the company.
+10. **Time-based evaluation**: After a few months, you will have a performance review to evaluate your progress and fit
+    within the company.
 
-And don't forget, when they ask you if you have any questions, always ask about the company culture, team dynamics, and what success looks like in the role. This shows your interest in the company and helps you assess if it's a good fit for you.
+And don't forget, when they ask you if you have any questions, always ask about the company culture, team dynamics, and
+what success looks like in the role. This shows your interest in the company and helps you assess if it's a good fit for
+you.
 
 ![meme](https://i.imgur.com/NAo9HEF.jpeg)
 

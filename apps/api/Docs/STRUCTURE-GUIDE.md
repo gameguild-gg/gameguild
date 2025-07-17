@@ -42,21 +42,22 @@ src/
 
 ## 🔄 NestJS to C# Mapping
 
-| NestJS Concept | C# ASP.NET Core Equivalent | Location |
-|----------------|----------------------------|----------|
-| Module | Service Registration + Extensions | `Common/Extensions/` |
-| Controller | Controller | `Modules/*/Controllers/` |
-| Service | Service (with Interface) | `Modules/*/Services/` |
-| DTO | DTO Classes | `Modules/*/Dtos/` |
-| Entity | Model Classes | `Modules/*/Models/` |
-| Guard | Middleware/Filters | `Common/Middleware/` |
-| Pipe | Model Validation | Built-in with `[ApiController]` |
-| Interceptor | Middleware | `Common/Middleware/` |
-| Exception Filter | Exception Middleware | `Common/Middleware/` |
+| NestJS Concept   | C# ASP.NET Core Equivalent        | Location                        |
+|------------------|-----------------------------------|---------------------------------|
+| Module           | Service Registration + Extensions | `Common/Extensions/`            |
+| Controller       | Controller                        | `Modules/*/Controllers/`        |
+| Service          | Service (with Interface)          | `Modules/*/Services/`           |
+| DTO              | DTO Classes                       | `Modules/*/Dtos/`               |
+| Entity           | Model Classes                     | `Modules/*/Models/`             |
+| Guard            | Middleware/Filters                | `Common/Middleware/`            |
+| Pipe             | Model Validation                  | Built-in with `[ApiController]` |
+| Interceptor      | Middleware                        | `Common/Middleware/`            |
+| Exception Filter | Exception Middleware              | `Common/Middleware/`            |
 
 ## 🚀 Features Implemented
 
 ### ✅ Completed
+
 - **Modular Structure**: Organized by feature modules (User module)
 - **Service Layer**: Dependency injection with interfaces
 - **DTOs**: Request/Response data transfer objects
@@ -67,6 +68,7 @@ src/
 - **Service Extensions**: Modular service registration
 
 ### 🔄 Ready to Add
+
 - **Authentication Module**: JWT-based auth (like NestJS AuthModule)
 - **CORS Configuration**: Cross-origin resource sharing
 - **Rate Limiting**: Request throttling
@@ -78,6 +80,7 @@ src/
 ## 🛠️ Next Steps
 
 ### 1. Database Migration
+
 ```bash
 # Create a new migration for the restructured model
 dotnet ef migrations add UserModelRestructure
@@ -87,18 +90,23 @@ dotnet ef database update
 ```
 
 ### 2. Add PostgreSQL Connection
+
 Update your `.env` file:
+
 ```
 DB_CONNECTION_STRING=Host=localhost;Database=gameguild_cms;Username=postgres;Password=your_password
 ```
 
 ### 3. Test the API
+
 - **REST API**: `https://localhost:5001/users`
 - **GraphQL**: `https://localhost:5001/graphql`
 - **Swagger**: `https://localhost:5001/swagger`
 
 ### 4. Add More Modules
+
 Follow the User module pattern to add:
+
 - Auth module (`Modules/Auth/`)
 - Content module (`Modules/Content/`)
 - Other feature modules

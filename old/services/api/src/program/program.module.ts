@@ -1,18 +1,18 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 // Core entities
 import {
-  Program,
-  ProgramContent,
-  ProgramUser,
-  ProgramUserRole,
-  ContentInteraction,
   ActivityGrade,
+  ContentInteraction,
   Product,
   ProductProgram,
-  ProgramRatingEntity,
+  Program,
+  ProgramContent,
   ProgramFeedbackSubmission,
+  ProgramRatingEntity,
+  ProgramUser,
+  ProgramUserRole,
   UserProduct,
 } from './entities';
 

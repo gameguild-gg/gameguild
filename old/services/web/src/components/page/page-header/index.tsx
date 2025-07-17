@@ -14,10 +14,10 @@ const PageHeader: React.FunctionComponent<Readonly<Props>> & {
   // todo: if the user is logged or not, between a button to connect or the user icon with the username
 
   /*
-          <Button variant="ghost" className="flex items-center space-x-2">
-            <span>username</span>
-            <ChevronDown size={16} />
-          </Button>
+   <Button variant="ghost" className="flex items-center space-x-2">
+   <span>username</span>
+   <ChevronDown size={16} />
+   </Button>
    */
 
   return (

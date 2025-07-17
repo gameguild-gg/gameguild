@@ -52,53 +52,53 @@ Randomness can be measured in different ways, and some of the most common metric
 [Source](https://github.com/covexp/cuda-noise)
 
 1. Value Noise
-    - A grid filled with random values, which are interpolated to create smooth gradients.
-    - Uses: Basic procedural texture generation, less common due to Perlin/Simplex improvements.
+  - A grid filled with random values, which are interpolated to create smooth gradients.
+  - Uses: Basic procedural texture generation, less common due to Perlin/Simplex improvements.
 2. Perlin Noise
-    - Characteristics: Smooth gradient noise; produces continuous, organic patterns.
-    - Uses: Terrain generation, cloud formation, and procedural textures.
-    - [wiki](https://en.wikipedia.org/wiki/Perlin_noise)
+  - Characteristics: Smooth gradient noise; produces continuous, organic patterns.
+  - Uses: Terrain generation, cloud formation, and procedural textures.
+  - [wiki](https://en.wikipedia.org/wiki/Perlin_noise)
 3. Simplex Noise
-    - Characteristics: Improved version of Perlin noise; computationally cheaper and less grid-aligned artifacts.
-    - Uses: Terrain generation, water simulations, and texture synthesis.
+  - Characteristics: Improved version of Perlin noise; computationally cheaper and less grid-aligned artifacts.
+  - Uses: Terrain generation, water simulations, and texture synthesis.
 4. Gaussian Noise
-    - Characteristics: Noise distributed in a bell-curve (Gaussian) distribution.
-    - Uses: Image post-processing, procedural randomness with realistic distribution.
+  - Characteristics: Noise distributed in a bell-curve (Gaussian) distribution.
+  - Uses: Image post-processing, procedural randomness with realistic distribution.
 5. Wavelet Noise
-    - Characteristics: Alternative to Perlin noise with higher performance in some cases.
-    - Uses: Advanced procedural generation techniques.
+  - Characteristics: Alternative to Perlin noise with higher performance in some cases.
+  - Uses: Advanced procedural generation techniques.
 6. Cellular Noise
-    - Characteristics: Grid-like patterns, related to Voronoi and Worley.
-    - Uses: Procedural maps and natural patterns.
+  - Characteristics: Grid-like patterns, related to Voronoi and Worley.
+  - Uses: Procedural maps and natural patterns.
 7. Voronoi Noise
-    - Characteristics: Creates cell-like patterns based on distance to nearest points.
-    - Uses: Procedural textures like cracked surfaces, cell structures, and organic patterns.
-    - ![Voronoise](https://iquilezles.org/articles/voronoise/gfx01.jpg)
-    - [ShdarerToy](https://www.shadertoy.com/embed/Xd23Dh)
+  - Characteristics: Creates cell-like patterns based on distance to nearest points.
+  - Uses: Procedural textures like cracked surfaces, cell structures, and organic patterns.
+  - ![Voronoise](https://iquilezles.org/articles/voronoise/gfx01.jpg)
+  - [ShdarerToy](https://www.shadertoy.com/embed/Xd23Dh)
 8. Worley Noise
-    - Characteristics: Distance-based noise, often similar to Voronoi, emphasizing distance metrics.
-    - Uses: Organic textures (e.g., stone, skin), and effects like lava or veins.
-    - [wiki](https://en.wikipedia.org/wiki/Worley_noise)
+  - Characteristics: Distance-based noise, often similar to Voronoi, emphasizing distance metrics.
+  - Uses: Organic textures (e.g., stone, skin), and effects like lava or veins.
+  - [wiki](https://en.wikipedia.org/wiki/Worley_noise)
 9. Ridged Noise
-    - Characteristics: Inverts and enhances peaks of Perlin or Simplex noise.
-    - Uses: Mountain range generation and sharp geological structures.
-    - [Explanation](https://iquilezles.org/articles/morenoise/)
-    - [video](https://www.youtube.com/watch?v=gsJHzBTPG0Y)
+  - Characteristics: Inverts and enhances peaks of Perlin or Simplex noise.
+  - Uses: Mountain range generation and sharp geological structures.
+  - [Explanation](https://iquilezles.org/articles/morenoise/)
+  - [video](https://www.youtube.com/watch?v=gsJHzBTPG0Y)
 
 ### Transformations
 
 1. Fractal Noise
-    - Characteristics: Layers (octaves) of noise combined to create more complex, hierarchical patterns.
-    - Uses: Realistic terrain, clouds, and texture details.
+  - Characteristics: Layers (octaves) of noise combined to create more complex, hierarchical patterns.
+  - Uses: Realistic terrain, clouds, and texture details.
 2. Domain Warping
-    - Characteristics: Noise modified by another noise to create distorted, chaotic effects.
-    - Uses: Alien terrain, surreal textures, and unpredictable natural patterns.
+  - Characteristics: Noise modified by another noise to create distorted, chaotic effects.
+  - Uses: Alien terrain, surreal textures, and unpredictable natural patterns.
 3. FBM (Fractional Brownian Motion)
-    - Characteristics: Combines multiple noise layers with different frequencies and amplitudes.
-    - Uses: Clouds, terrains, and water.
+  - Characteristics: Combines multiple noise layers with different frequencies and amplitudes.
+  - Uses: Clouds, terrains, and water.
 4. Turbulence Noise
-    - Characteristics: Absolute value of noise combined for "chaotic" patterns.
-    - Uses: Fire, smoke, and abstract textures.
+  - Characteristics: Absolute value of noise combined for "chaotic" patterns.
+  - Uses: Fire, smoke, and abstract textures.
 
 ### In class Activity
 

@@ -1,20 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Progress } from '@game-guild/ui/components/progress';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
-import { 
-  Trophy, 
-  Target, 
-  Clock, 
-  BookOpen, 
-  CheckCircle,
-  Star,
-  Award,
-  TrendingUp
-} from 'lucide-react';
+import { Award, BookOpen, CheckCircle, Clock, Star, Target, TrendingUp, Trophy } from 'lucide-react';
 
 interface ProgressItem {
   id: string;
@@ -110,9 +101,7 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
   if (!progressData) {
     return (
       <Card className="bg-gray-800 border-gray-700">
-        <CardContent className="p-6 text-center text-gray-500">
-          Failed to load progress data
-        </CardContent>
+        <CardContent className="p-6 text-center text-gray-500">Failed to load progress data</CardContent>
       </Card>
     );
   }
@@ -124,37 +113,27 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="text-white">Course Progress</span>
-            <Badge variant={progressData.certificateEligible ? 'default' : 'secondary'}>
-              {progressData.progressPercentage}% Complete
-            </Badge>
+            <Badge variant={progressData.certificateEligible ? 'default' : 'secondary'}>{progressData.progressPercentage}% Complete</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <Progress value={progressData.progressPercentage} className="h-3" />
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center space-y-1">
-              <div className="text-2xl font-bold text-blue-600">
-                {progressData.completedItems}
-              </div>
+              <div className="text-2xl font-bold text-blue-600">{progressData.completedItems}</div>
               <div className="text-sm text-gray-400">Completed</div>
             </div>
             <div className="text-center space-y-1">
-              <div className="text-2xl font-bold text-orange-600">
-                {progressData.totalItems - progressData.completedItems}
-              </div>
+              <div className="text-2xl font-bold text-orange-600">{progressData.totalItems - progressData.completedItems}</div>
               <div className="text-sm text-gray-400">Remaining</div>
             </div>
             <div className="text-center space-y-1">
-              <div className="text-2xl font-bold text-green-600">
-                {progressData.currentStreak}
-              </div>
+              <div className="text-2xl font-bold text-green-600">{progressData.currentStreak}</div>
               <div className="text-sm text-gray-400">Day Streak</div>
             </div>
             <div className="text-center space-y-1">
-              <div className="text-2xl font-bold text-purple-600">
-                {formatTime(progressData.timeSpent)}
-              </div>
+              <div className="text-2xl font-bold text-purple-600">{formatTime(progressData.timeSpent)}</div>
               <div className="text-sm text-gray-400">Time Spent</div>
             </div>
           </div>
@@ -165,9 +144,7 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
                 <Trophy className="h-5 w-5" />
                 <span className="font-medium">Certificate Eligible!</span>
               </div>
-              <p className="text-green-300 text-sm mt-1">
-                You've completed enough of the course to earn a certificate.
-              </p>
+              <p className="text-green-300 text-sm mt-1">You've completed enough of the course to earn a certificate.</p>
             </div>
           )}
 
@@ -179,16 +156,10 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
                     <Target className="h-5 w-5" />
                     <span className="font-medium">Up Next</span>
                   </div>
-                  <p className="text-blue-300 text-sm mt-1">
-                    {progressData.nextItem.title}
-                  </p>
+                  <p className="text-blue-300 text-sm mt-1">{progressData.nextItem.title}</p>
                 </div>
                 {onItemClick && (
-                  <Button
-                    size="sm"
-                    onClick={() => onItemClick(progressData.nextItem!)}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
+                  <Button size="sm" onClick={() => onItemClick(progressData.nextItem!)} className="bg-blue-600 hover:bg-blue-700">
                     Continue
                   </Button>
                 )}
@@ -208,9 +179,7 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
             {progressData.items.map((item, index) => (
               <div
                 key={item.id}
-                className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${
-                  onItemClick ? 'cursor-pointer hover:bg-gray-700' : ''
-                } ${
+                className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${onItemClick ? 'cursor-pointer hover:bg-gray-700' : ''} ${
                   item.status === 'completed' || item.status === 'graded'
                     ? 'bg-green-900/20 border-green-800'
                     : item.status === 'in-progress'
@@ -219,22 +188,18 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
                 }`}
                 onClick={() => onItemClick?.(item)}
               >
-                <div className="flex-shrink-0">
-                  {getStatusIcon(item.status)}
-                </div>
-                
+                <div className="flex-shrink-0">{getStatusIcon(item.status)}</div>
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={`font-medium ${getStatusColor(item.status)}`}>
-                      {item.title}
-                    </span>
+                    <span className={`font-medium ${getStatusColor(item.status)}`}>{item.title}</span>
                     {item.required && (
                       <Badge variant="secondary" className="text-xs">
                         Required
                       </Badge>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
                     <span className="capitalize">{item.type}</span>
                     {item.estimatedMinutes && (
@@ -243,11 +208,7 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
                         {item.estimatedMinutes}m
                       </span>
                     )}
-                    {item.completedAt && (
-                      <span>
-                        Completed {new Date(item.completedAt).toLocaleDateString()}
-                      </span>
-                    )}
+                    {item.completedAt && <span>Completed {new Date(item.completedAt).toLocaleDateString()}</span>}
                     {item.grade !== undefined && (
                       <span className="flex items-center gap-1 text-green-400">
                         <Star className="h-3 w-3" />
@@ -258,9 +219,7 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
                 </div>
 
                 <div className="flex-shrink-0">
-                  <span className="text-xs text-gray-500">
-                    #{index + 1}
-                  </span>
+                  <span className="text-xs text-gray-500">#{index + 1}</span>
                 </div>
               </div>
             ))}
@@ -280,25 +239,19 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-4 bg-gray-900 rounded-lg">
               <TrendingUp className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-              <div className="text-lg font-bold text-white">
-                {Math.round(progressData.progressPercentage)}%
-              </div>
+              <div className="text-lg font-bold text-white">{Math.round(progressData.progressPercentage)}%</div>
               <div className="text-sm text-gray-400">Course Progress</div>
             </div>
-            
+
             <div className="text-center p-4 bg-gray-900 rounded-lg">
               <Target className="h-8 w-8 text-green-500 mx-auto mb-2" />
-              <div className="text-lg font-bold text-white">
-                {progressData.items.filter(item => item.status === 'completed').length}
-              </div>
+              <div className="text-lg font-bold text-white">{progressData.items.filter((item) => item.status === 'completed').length}</div>
               <div className="text-sm text-gray-400">Items Completed</div>
             </div>
-            
+
             <div className="text-center p-4 bg-gray-900 rounded-lg">
               <Clock className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-              <div className="text-lg font-bold text-white">
-                {formatTime(progressData.timeSpent)}
-              </div>
+              <div className="text-lg font-bold text-white">{formatTime(progressData.timeSpent)}</div>
               <div className="text-sm text-gray-400">Time Invested</div>
             </div>
           </div>
@@ -309,10 +262,10 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
 }
 
 /* Compact progress component for course cards */
-export function CompactProgress({ 
-  progressPercentage, 
-  completedItems, 
-  totalItems 
+export function CompactProgress({
+  progressPercentage,
+  completedItems,
+  totalItems,
 }: {
   readonly progressPercentage: number;
   readonly completedItems: number;

@@ -6,16 +6,7 @@ import ChapterEntity = Api.ChapterEntity;
 
 const week01lectures: LectureEntity[] = [];
 
-week01lectures.push(
-  createLecture(
-    '1-1',
-    'intro',
-    'Course Introduction',
-    'Welcome to the Python Programming course!',
-    lecture01,
-    1,
-  ) as LectureEntity,
-);
+week01lectures.push(createLecture('1-1', 'intro', 'Course Introduction', 'Welcome to the Python Programming course!', lecture01, 1) as LectureEntity);
 
 const chapter01: ChapterEntity = createChapter(
   '1',

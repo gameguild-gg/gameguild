@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server'
-import fs from 'fs/promises'
-import path from 'path'
+import { NextResponse } from 'next/server';
+import fs from 'fs/promises';
+import path from 'path';
 import { UserListQuestionv1_0_0 } from '@/lib/interface-base/user.list.question.v1.0.0';
 import { UserBasev1_0_0 } from '@/lib/interface-base/user.base.v1.0.0';
 
@@ -24,7 +24,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     }
 
     const filePath = path.join(process.cwd(), 'src', 'docs', 'teach', `userListQuestion${params.id}.json`);
-    
+
     let fileContents: string;
     try {
       fileContents = await fs.readFile(filePath, 'utf8');
@@ -37,24 +37,27 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const userListData: UserListQuestionv1_0_0 = JSON.parse(fileContents);
 
-    const filteredSubmissions = (await Promise.all(
-      Object.entries(userListData.submissions).map(async ([userId, submissionData]) => {
-        const userData = await getUserData(userId);
-        if (userData && userData.idCourses.includes(parseInt(courseId))) {
-          return { userId, submissionData };
-        }
-        return null;
-      })
-    )).filter(Boolean);
-    
+    const filteredSubmissions = (
+      await Promise.all(
+        Object.entries(userListData.submissions).map(async ([userId, submissionData]) => {
+          const userData = await getUserData(userId);
+          if (userData && userData.idCourses.includes(parseInt(courseId))) {
+            return { userId, submissionData };
+          }
+          return null;
+        }),
+      )
+    ).filter(Boolean);
 
     const filteredUserList: UserListQuestionv1_0_0 = {
-      submissions: filteredSubmissions.reduce((acc, submission) => {
-        acc[submission.userId] = submission.submissionData;
-        return acc;
-      }, {} as { [userId: string]: any })
+      submissions: filteredSubmissions.reduce(
+        (acc, submission) => {
+          acc[submission.userId] = submission.submissionData;
+          return acc;
+        },
+        {} as { [userId: string]: any },
+      ),
     };
-    
 
     return NextResponse.json(filteredUserList);
   } catch (error) {
@@ -62,4 +65,3 @@ export async function GET(request: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: 'Failed to load user list' }, { status: 500 });
   }
 }
-

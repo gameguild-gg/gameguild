@@ -7,4 +7,3 @@ export interface AssessmentBasev1_0_0 {
   scoreTotal: { maxDate: string; discount: number[] }[];
   scoreLetters: { scoreRange: number[]; letter: string }[];
 }
-

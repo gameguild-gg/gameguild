@@ -6,7 +6,6 @@ import { UserManagementContent } from '@/components/dashboard/users/user-managem
 import { Loader2 } from 'lucide-react';
 import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
 
-
 export const metadata: Metadata = {
   title: 'User Management | Game Guild Dashboard',
   description: 'Manage users, permissions, and access control in the Game Guild platform.',
@@ -39,7 +38,13 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
 
         <ErrorBoundary fallback={<div className="text-red-500">Failed to load user management interface</div>}>
           <UserProvider initialUsers={userData.users}>
-            <Suspense fallback={<div className="flex items-center justify-center p-4"><Loader2 className="h-4 w-4 animate-spin" /></div>}>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center p-4">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </div>
+              }
+            >
               <UserManagementContent initialPagination={userData.pagination} />
             </Suspense>
           </UserProvider>

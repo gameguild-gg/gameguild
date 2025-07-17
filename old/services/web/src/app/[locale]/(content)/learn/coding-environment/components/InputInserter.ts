@@ -29,9 +29,7 @@ inputs = ${singleInput !== null ? JSON.stringify(singleInput) : inputString}
 ${code}`;
 
     case 'rust':
-      const rustInputs = singleInput !== null
-        ? `"${singleInput}"`
-        : fileInputs.map((i: any) => `"${i}"`).join(", ");
+      const rustInputs = singleInput !== null ? `"${singleInput}"` : fileInputs.map((i: any) => `"${i}"`).join(', ');
       return `// Insert inputs
 let inputs = ${singleInput !== null ? rustInputs : `vec![${rustInputs}]`};
 
@@ -39,9 +37,7 @@ ${code}`;
 
     case 'c':
     case 'cpp':
-      const cInputs = singleInput !== null
-        ? `"${singleInput}"`
-        : fileInputs.map((i: any) => `"${i}"`).join(", ");
+      const cInputs = singleInput !== null ? `"${singleInput}"` : fileInputs.map((i: any) => `"${i}"`).join(', ');
       return `// Insert inputs
 char *inputs[] = {${cInputs}};
 
@@ -49,7 +45,7 @@ ${code}`;
 
     case 'lua':
       return `-- Insert inputs
-inputs = {${fileInputs.map((i: any) => `"${i}"`).join(", ")}}
+inputs = {${fileInputs.map((i: any) => `"${i}"`).join(', ')}}
 
 ${code}`;
 
@@ -70,4 +66,3 @@ ${code}`;
       return code;
   }
 }
-

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsMimeType, IsNotEmpty, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
+import { IsEnum, IsMimeType, IsNotEmpty, IsPositive, IsString, MaxLength } from 'class-validator';
 import { Column, Index } from 'typeorm';
 import { EntityBase } from '../common/entities/entity.base';
 import { IsIntegerNumber } from '../common/decorators/validator.decorator';
@@ -13,7 +13,6 @@ export enum AssetSourceType {
 
 // Base asset entity. This should be extended by other entities that need to store assets.
 export class AssetBase extends EntityBase {
-  
   @ApiProperty()
   @IsNotEmpty()
   @IsEnum(AssetSourceType)
@@ -21,7 +20,6 @@ export class AssetBase extends EntityBase {
   @Index({ unique: false })
   readonly source: AssetSourceType;
 
-  
   @ApiProperty()
   @IsNotEmpty()
   @IsString()

@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityBase } from '../../common/entities/entity.base';
@@ -13,7 +13,10 @@ export class CertificateTag extends EntityBase {
   @IsEnum(CertificateTagRelationshipType)
   type: CertificateTagRelationshipType;
 
-  @ApiProperty({ description: 'Additional tag-specific data like specific competencies, context, etc.', required: false })
+  @ApiProperty({
+    description: 'Additional tag-specific data like specific competencies, context, etc.',
+    required: false,
+  })
   @Column('jsonb', { nullable: true })
   @IsOptional()
   metadata?: Record<string, any>;
@@ -24,7 +27,10 @@ export class CertificateTag extends EntityBase {
   @JoinColumn({ name: 'certificate_id' })
   certificate: Certificate;
 
-  @ApiProperty({ type: () => TagProficiency, description: 'The tag proficiency level associated with this certificate' })
+  @ApiProperty({
+    type: () => TagProficiency,
+    description: 'The tag proficiency level associated with this certificate',
+  })
   @ManyToOne(() => TagProficiency, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'tag_id' })
   tagProficiency: TagProficiency;

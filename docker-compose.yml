@@ -89,8 +89,8 @@ services:
       test: [ 'CMD', 'curl', '-f', 'http://127.0.0.1:9000/minio/health/live' ]
       interval: 10s
       start_period: 10s
-#      start_interval: 1s
-    security_opt: ['no-new-privileges:true']
+    #      start_interval: 1s
+    security_opt: [ 'no-new-privileges:true' ]
 
   adminer:
     image: adminer

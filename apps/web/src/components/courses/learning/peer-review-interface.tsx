@@ -5,10 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/compone
 import { Button } from '@game-guild/ui/components/button';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Textarea } from '@game-guild/ui/components/textarea';
-import { Input } from '@game-guild/ui/components/input';
-import { Progress } from '@game-guild/ui/components/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
-import { Star, User, Clock, Eye, MessageSquare, ThumbsUp, ThumbsDown, Send, FileText, Download, Upload } from 'lucide-react';
+import { Clock, Download, Eye, FileText, MessageSquare, Send, Star, User } from 'lucide-react';
 
 interface PeerReviewSubmission {
   id: string;

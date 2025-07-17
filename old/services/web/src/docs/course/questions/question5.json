@@ -4,8 +4,14 @@
   "type": "answer",
   "rules": [],
   "status": 1,
-  "subject": ["javascript", "objects"],
-  "score": [10, 0],
+  "subject": [
+    "javascript",
+    "objects"
+  ],
+  "score": [
+    10,
+    0
+  ],
   "title": "Creating Objects in JavaScript",
   "description": "This question explores different ways to create objects in JavaScript.",
   "question": "What are the two main ways to create objects in JavaScript?",

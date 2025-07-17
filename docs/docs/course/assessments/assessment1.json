@@ -3,7 +3,12 @@
   "idQuestions": [
     {
       "title": "Tab 1",
-      "questions": [1, 8, 9, 10]
+      "questions": [
+        1,
+        8,
+        9,
+        10
+      ]
     }
   ],
   "title": "JavaScript Assessment 1",
@@ -12,36 +17,60 @@
   "scoreTotal": [
     {
       "maxDate": "2025-01-02T00:00:00.000Z",
-      "discount": [100, 0]
+      "discount": [
+        100,
+        0
+      ]
     },
     {
       "maxDate": "2025-01-22T00:00:00.000Z",
-      "discount": [90, 10]
+      "discount": [
+        90,
+        10
+      ]
     },
     {
       "maxDate": "2025-01-29T00:00:00.000Z",
-      "discount": [80, 20]
+      "discount": [
+        80,
+        20
+      ]
     }
   ],
   "scoreLetters": [
     {
-      "scoreRange": [90, 100],
+      "scoreRange": [
+        90,
+        100
+      ],
       "letter": "A"
     },
     {
-      "scoreRange": [80, 89],
+      "scoreRange": [
+        80,
+        89
+      ],
       "letter": "B"
     },
     {
-      "scoreRange": [70, 79],
+      "scoreRange": [
+        70,
+        79
+      ],
       "letter": "C"
     },
     {
-      "scoreRange": [60, 69],
+      "scoreRange": [
+        60,
+        69
+      ],
       "letter": "D"
     },
     {
-      "scoreRange": [0, 59],
+      "scoreRange": [
+        0,
+        59
+      ],
       "letter": "F"
     }
   ]

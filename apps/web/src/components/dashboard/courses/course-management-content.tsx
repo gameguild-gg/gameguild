@@ -1,8 +1,8 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
-import { useCourseContext, useCourseFilters, useCourseSelection, useCoursePagination } from '@/lib/courses';
-import { createCourse, updateCourse, deleteCourse, publishCourse, duplicateCourse, bulkUpdateCourses, revalidateCoursesData } from '@/lib/courses/actions';
+import { useActionState, useEffect, useState } from 'react';
+import { useCourseContext, useCourseFilters, useCoursePagination, useCourseSelection } from '@/lib/courses';
+import { bulkUpdateCourses, createCourse, deleteCourse, duplicateCourse, publishCourse, revalidateCoursesData, updateCourse } from '@/lib/courses/actions';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
@@ -14,9 +14,25 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
 import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
-import { Loader2 } from "lucide-react";
-import { BookOpen, Plus, Search, Filter, MoreHorizontal, Edit, Trash2, Eye, Play, Copy, RefreshCw, Grid, List, BarChart3, Calendar, Users } from 'lucide-react';
-import { useState } from 'react';
+import {
+  BarChart3,
+  BookOpen,
+  Calendar,
+  Copy,
+  Edit,
+  Eye,
+  Filter,
+  Grid,
+  List,
+  Loader2,
+  MoreHorizontal,
+  Play,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2,
+  Users,
+} from 'lucide-react';
 
 interface CourseManagementContentProps {
   initialPagination?: {

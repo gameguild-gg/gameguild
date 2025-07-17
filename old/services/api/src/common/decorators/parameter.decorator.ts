@@ -1,17 +1,8 @@
-import {
-  BadRequestException,
-  createParamDecorator,
-  ExecutionContext,
-  Param,
-  ParseUUIDPipe,
-  PipeTransform,
-  UnprocessableEntityException,
-  ValidationPipe,
-} from '@nestjs/common';
+import { BadRequestException, createParamDecorator, ExecutionContext, Param, ParseUUIDPipe, PipeTransform, UnprocessableEntityException } from '@nestjs/common';
 import { Type } from '@nestjs/common/interfaces';
 import { UserEntity } from '../../user/entities';
 import { WithRolesEntity } from '../../auth/entities/with-roles.entity';
-import { plainToClass, plainToInstance } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import 'reflect-metadata';
 

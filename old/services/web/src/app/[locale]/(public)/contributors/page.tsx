@@ -41,12 +41,7 @@ async function generateGitStats(): Promise<GitStats[]> {
     // Filter out unwanted lines in a cross-platform way
     log = log
       .split('\n')
-      .filter(
-        (line) =>
-          !line.includes('package-lock.json') &&
-          !line.includes('yarn.lock') &&
-          !line.includes('node_modules/'),
-      )
+      .filter((line) => !line.includes('package-lock.json') && !line.includes('yarn.lock') && !line.includes('node_modules/'))
       .join('\n');
 
     // Parse the log to calculate stats
@@ -65,9 +60,7 @@ async function generateGitStats(): Promise<GitStats[]> {
         }
       } else {
         // If the line contains stats
-        const [additions, deletions] = line
-          .split('\t')
-          .map((x) => parseInt(x, 10) || 0);
+        const [additions, deletions] = line.split('\t').map((x) => parseInt(x, 10) || 0);
         stats[currentAuthor].additions += additions;
         stats[currentAuthor].deletions += deletions;
       }
@@ -114,9 +107,7 @@ async function generateGitStats(): Promise<GitStats[]> {
     }
 
     // sort by sum of additions and deletions
-    newStats.sort(
-      (a, b) => b.additions + b.deletions - (a.additions + a.deletions),
-    );
+    newStats.sort((a, b) => b.additions + b.deletions - (a.additions + a.deletions));
 
     return newStats;
   } catch (error) {
@@ -128,19 +119,13 @@ async function generateGitStats(): Promise<GitStats[]> {
 // Get contributors data from GitHub and generate git stats directly
 async function getContributors(): Promise<Contributor[]> {
   // Fetch GitHub contributors
-  const res = await fetch(
-    'https://api.github.com/repos/gameguild-gg/website/contributors',
-    { next: { revalidate: 3600 } },
-  );
+  const res = await fetch('https://api.github.com/repos/gameguild-gg/website/contributors', { next: { revalidate: 3600 } });
 
   if (!res.ok) throw new Error('Failed to fetch contributors');
-  
+
   // Remove users semantic-release-bot and dependabot[bot] and LMD9977 from contributors
   const contributors = (await res.json()).filter(
-    (contributor: Contributor) =>
-      contributor.login !== 'semantic-release-bot' &&
-      contributor.login !== 'LMD9977' &&
-      contributor.login !== 'dependabot[bot]',
+    (contributor: Contributor) => contributor.login !== 'semantic-release-bot' && contributor.login !== 'LMD9977' && contributor.login !== 'dependabot[bot]',
   ) as Contributor[];
 
   try {
@@ -149,7 +134,7 @@ async function getContributors(): Promise<Contributor[]> {
 
     // Get additions and deletions from git stats and add them to the contributors
     for (const contributor of contributors) {
-      const stat = stats.find(stat => stat.username === contributor.login);
+      const stat = stats.find((stat) => stat.username === contributor.login);
       if (stat) {
         contributor.additions = stat.additions;
         contributor.deletions = stat.deletions;
@@ -157,9 +142,7 @@ async function getContributors(): Promise<Contributor[]> {
     }
 
     // Sort contributors by number of additions and deletions
-    contributors.sort(
-      (a, b) => b.additions + b.deletions - (a.additions + a.deletions),
-    );
+    contributors.sort((a, b) => b.additions + b.deletions - (a.additions + a.deletions));
   } catch (error) {
     console.error('Error fetching git stats:', error);
     // Still return contributors even if stats can't be fetched
@@ -193,43 +176,28 @@ export default async function ContributorsPage() {
       </h2>
       <div className="gap-6 justify-center flex">
         <Button>
-          <Link
-            href="https://github.com/gameguild-gg/website/"
-            className="font-bold text-center flex items-center justify-center gap-1"
-          >
+          <Link href="https://github.com/gameguild-gg/website/" className="font-bold text-center flex items-center justify-center gap-1">
             <Github /> Github Repo
           </Link>
         </Button>
         <Button>
           <Link href="https://github.com/gameguild-gg/website/stargazers">
-            <img
-              alt="GitHub Repo stars"
-              src="https://img.shields.io/github/stars/gameguild-gg/website?style=social"
-            />
+            <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/gameguild-gg/website?style=social" />
           </Link>
         </Button>
         <Button>
           <Link href="https://github.com/gameguild-gg/website/commits/">
-            <img
-              alt="GitHub Last Commit"
-              src="https://img.shields.io/github/last-commit/gameguild-gg/website"
-            />
+            <img alt="GitHub Last Commit" src="https://img.shields.io/github/last-commit/gameguild-gg/website" />
           </Link>
         </Button>
         <Button>
           <Link href="https://status.gameguild.gg/status/gg">
-            <img
-              alt="Uptime 30d"
-              src="https://status.gameguild.gg/api/badge/1/uptime/720?label=Uptime%20(30d)"
-            />
+            <img alt="Uptime 30d" src="https://status.gameguild.gg/api/badge/1/uptime/720?label=Uptime%20(30d)" />
           </Link>
         </Button>
         <Button>
           <Link href="https://discord.gg/tac5fZ2bGh">
-            <img
-              alt="Discord chat"
-              src="https://img.shields.io/discord/956922983727915078?logo=discord"
-            />
+            <img alt="Discord chat" src="https://img.shields.io/discord/956922983727915078?logo=discord" />
           </Link>
         </Button>
       </div>
@@ -238,9 +206,7 @@ export default async function ContributorsPage() {
           <ContributorCard key={contributor.login} {...contributor} />
         ))}
       </div>
-      <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-6 mt-8">
-        Repo Visualization
-      </h2>
+      <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-6 mt-8">Repo Visualization</h2>
       <div className="flex flex-wrap justify-center gap-4">
         <Link href="https://github.com/gameguild-gg/website/stargazers">
           <img
@@ -255,24 +221,14 @@ export default async function ContributorsPage() {
             alt="star history"
           />
         </Link>
-        <video
-          className="w-full max-w-lg mx-auto"
-          src="https://gameguild-gg.github.io/website/gource.mp4"
-          controls
-          loop
-          autoPlay
-          muted
-        >
+        <video className="w-full max-w-lg mx-auto" src="https://gameguild-gg.github.io/website/gource.mp4" controls loop autoPlay muted>
           Your browser does not support the video tag.
         </video>
       </div>
-      <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-6 mt-8">
-        OpenCollective Contributors
-      </h2>
+      <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-6 mt-8">OpenCollective Contributors</h2>
       <p>
-        While we are applying to OpenCollective, we are not able to accept any
-        donations. But you can still support us by contributing to our GitHub
-        repository, and being part of our community on whatsapp and discord.
+        While we are applying to OpenCollective, we are not able to accept any donations. But you can still support us by contributing to our GitHub repository,
+        and being part of our community on whatsapp and discord.
       </p>
     </div>
   );

@@ -28,7 +28,6 @@ export interface Contributor {
   deletions: number;
 }
 
-
 export default function ContributorCard(contributor: Contributor) {
   if (!contributor) return null;
 

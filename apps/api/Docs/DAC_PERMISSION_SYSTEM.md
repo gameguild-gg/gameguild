@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document describes the implementation of a 3-layer Discretionary Access Control (DAC) permission system for the multi-tenant CMS. The system provides hierarchical permission checks across three layers: **Tenant**, **Content-Type**, and **Resource**, using `PermissionType` flags for granular access control.
+This document describes the implementation of a 3-layer Discretionary Access Control (DAC) permission system for the
+multi-tenant CMS. The system provides hierarchical permission checks across three layers: **Tenant**, **Content-Type**,
+and **Resource**, using `PermissionType` flags for granular access control.
 
 ## Architecture
 
@@ -17,8 +19,9 @@ The DAC system operates on three distinct layers with hierarchical permission ch
 ### Hierarchical Permission Logic
 
 Permission checks follow a hierarchical fallback pattern:
+
 - **Resource-level** checks: Resource → Content-Type → Tenant
-- **Content-type-level** checks: Content-Type → Tenant  
+- **Content-type-level** checks: Content-Type → Tenant
 - **Tenant-level** checks: Tenant only
 
 If a permission is not found at a specific layer, the system automatically checks the next higher layer.
@@ -98,6 +101,7 @@ public async Task<ActionResult> CreateTenantSettings([FromBody] TenantSettingsDt
 ```
 
 **Usage Pattern:**
+
 - Used for tenant-wide operations
 - Extracts user and tenant context from JWT token
 - Checks only tenant-level permissions
@@ -127,6 +131,7 @@ public async Task<ActionResult<IEnumerable<CommentDto>>> GetCommentsForReview()
 ```
 
 **Usage Pattern:**
+
 - Used for operations on entity collections or types
 - Generic template parameter specifies the entity type
 - Checks content-type permissions with tenant fallback
@@ -163,6 +168,7 @@ public async Task<ActionResult<CommentDto>> ApproveComment(Guid id)
 ```
 
 **Usage Pattern:**
+
 - Used for operations on specific resource instances
 - Generic template parameter specifies the entity type
 - Resource ID extracted from route parameter (default: "id")
@@ -329,6 +335,7 @@ public async Task<ActionResult<IEnumerable<CommentDto>>> GetComments() { }
 ### 4. Context from JWT Token
 
 The system automatically extracts user and tenant context from JWT tokens:
+
 - `ClaimTypes.NameIdentifier` for user ID
 - `"tenant_id"` claim for tenant ID
 - Resource ID comes from route parameters, not JWT
@@ -336,6 +343,7 @@ The system automatically extracts user and tenant context from JWT tokens:
 ### 5. Hierarchical Permission Design
 
 Design permissions with hierarchy in mind:
+
 - Grant broader permissions at higher levels for administrative users
 - Grant specific permissions at lower levels for regular users
 - The system will automatically check fallback layers
@@ -347,7 +355,7 @@ Design permissions with hierarchy in mind:
 The system uses a single `WithPermissions` base class with concrete implementations for each resource type:
 
 - `TenantPermissions` table for tenant-level permissions
-- `ContentTypePermissions` table for content-type permissions  
+- `ContentTypePermissions` table for content-type permissions
 - `CommentPermissions` table for comment resource permissions
 - Additional `{Entity}Permissions` tables for other resource types
 
@@ -369,6 +377,7 @@ The system uses a single `WithPermissions` base class with concrete implementati
 ### Adding New Resource Types
 
 1. Create a new permission entity:
+
 ```csharp
 public class ArticlePermission : ResourcePermission<Article>
 {
@@ -377,11 +386,13 @@ public class ArticlePermission : ResourcePermission<Article>
 ```
 
 2. Add to DbContext:
+
 ```csharp
 public DbSet<ArticlePermission> ArticlePermissions { get; set; }
 ```
 
 3. Use in controllers:
+
 ```csharp
 [RequireResourcePermission<Article>(PermissionType.Read)]
 public async Task<ActionResult<ArticleDto>> GetArticle(Guid id) { }
@@ -401,4 +412,5 @@ public enum PermissionType
 }
 ```
 
-This DAC system provides a clean, type-safe, and hierarchical approach to permission management while maintaining excellent developer experience through generic templates and minimal configuration requirements.
+This DAC system provides a clean, type-safe, and hierarchical approach to permission management while maintaining
+excellent developer experience through generic templates and minimal configuration requirements.

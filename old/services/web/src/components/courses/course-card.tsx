@@ -10,35 +10,20 @@ interface CourseCardProps {
 
 export function CourseCard({ course }: CourseCardProps) {
   try {
-    const imageUrl = course.thumbnail
-      ? `${course.thumbnail.path}/${course.thumbnail.filename}`
-      : '/placeholder.svg?height=200&width=300';
+    const imageUrl = course.thumbnail ? `${course.thumbnail.path}/${course.thumbnail.filename}` : '/placeholder.svg?height=200&width=300';
 
     return (
       <Card className="overflow-hidden h-full flex flex-col">
         <div className="relative h-48">
-          <Image
-            src={imageUrl}
-            alt={course.thumbnail?.description || course.title}
-            fill
-            className="object-cover"
-          />
+          <Image src={imageUrl} alt={course.thumbnail?.description || course.title} fill className="object-cover" />
         </div>
         <CardHeader>
           <CardTitle>{course.title}</CardTitle>
         </CardHeader>
         <CardContent className="flex-grow">
           <p className="text-sm text-gray-600">{course.summary}</p>
-          <p className="mt-2 font-semibold">
-            {course.price ? (
-              <span>${course.price.toFixed(2)}</span>
-            ) : (
-              <span className="text-green-600">Free Course</span>
-            )}
-          </p>
-          {course.subscriptionAccess && (
-            <p className="text-sm text-blue-600">Requires Subscription</p>
-          )}
+          <p className="mt-2 font-semibold">{course.price ? <span>${course.price.toFixed(2)}</span> : <span className="text-green-600">Free Course</span>}</p>
+          {course.subscriptionAccess && <p className="text-sm text-blue-600">Requires Subscription</p>}
         </CardContent>
         <CardFooter>
           <Button className="w-full">View Course</Button>
