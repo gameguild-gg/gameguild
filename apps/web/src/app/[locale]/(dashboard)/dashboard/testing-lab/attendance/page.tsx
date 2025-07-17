@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { BarChart3, Download, Filter, Users, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { testingLabApi, StudentAttendanceData, SessionAttendanceData } from '@/lib/api/testing-lab/testing-lab-api';
 import Link from 'next/link';
 
 interface StudentAttendance {
