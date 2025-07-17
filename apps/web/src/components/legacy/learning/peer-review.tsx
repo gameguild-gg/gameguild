@@ -9,7 +9,7 @@ import { Slider } from '@game-guild/ui/components/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
 import { Users, Star, AlertTriangle, CheckCircle, Clock, Flag, ThumbsUp, ThumbsDown, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ReportButton } from '@/components/common/ReportButton';
+import { ReportButton } from '@/components/common/report-button';
 
 interface PeerReviewProps {
   readonly submissionId: string;

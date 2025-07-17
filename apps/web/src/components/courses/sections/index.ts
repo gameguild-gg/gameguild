@@ -1,1 +1,1 @@
-export { default as ExploreMoreSection } from './ExploreMoreSection';
+export { default as ExploreMoreSection } from './explore-more-section';

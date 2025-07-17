@@ -1,7 +1,7 @@
 import baseConfig from '@game-guild/eslint-config';
 import { FlatCompat } from '@eslint/eslintrc';
 
-import nextConfig from 'eslint-config-next';
+// import nextConfig from 'eslint-config-next';
 
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
@@ -18,7 +18,7 @@ const config = [
       },
     },
   }),
-  ...nextConfig,
+  // ...nextConfig,
   // Override rules for generated API code
   {
     files: ['src/lib/api/generated/**/*.{ts,js}'],

@@ -37,7 +37,7 @@ public class ContextMiddlewareTests
 
         // Create context services with the test HTTP context
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
-        var userContext = new UserContext(httpContextAccessor);
+        var userContext = new UsersContext(httpContextAccessor);
         var tenantContext = new TenantContext(httpContextAccessor);
 
         // Act
@@ -47,7 +47,7 @@ public class ContextMiddlewareTests
         Assert.True(userContext.IsAuthenticated);
         Assert.Equal(Guid.Parse(testUserId), userContext.UserId);
         Assert.Equal("test@example.com", userContext.Email);
-        Assert.NotNull(httpContext.Items["UserContext"]);
+        Assert.NotNull(httpContext.Items["UsersContext"]);
         Assert.NotNull(httpContext.Items["TenantContext"]);
     }
 
@@ -58,7 +58,7 @@ public class ContextMiddlewareTests
         var testUserId = Guid.NewGuid().ToString();
         var httpContext = CreateHttpContextWithUser(testUserId, "test@example.com", "TestTenant");
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
-        var userContext = new UserContext(httpContextAccessor);
+        var userContext = new UsersContext(httpContextAccessor);
 
         // Act & Assert
         Assert.True(userContext.IsAuthenticated);
@@ -88,7 +88,7 @@ public class ContextMiddlewareTests
         // Arrange
         var httpContext = new DefaultHttpContext();
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
-        var userContext = new UserContext(httpContextAccessor);
+        var userContext = new UsersContext(httpContextAccessor);
 
         // Act & Assert
         Assert.False(userContext.IsAuthenticated);

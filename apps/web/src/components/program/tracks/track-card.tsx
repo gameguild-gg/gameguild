@@ -8,7 +8,7 @@ import { Progress } from '@game-guild/ui/components/progress';
 import { Book, Code, Paintbrush } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@game-guild/ui/components/tooltip';
 import Image from 'next/image';
-import { Track, TRACK_LEVELS, TRACK_LEVEL_COLORS } from '@/types/tracks';
+import { Track, TRACK_LEVEL_COLORS, TRACK_LEVELS } from '@/types/tracks';
 
 const areaIcons = {
   programming: Code,

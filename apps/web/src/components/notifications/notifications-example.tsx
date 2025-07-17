@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Notifications } from '@/components/notification';
+import { Notifications } from '@/components/notifications';
 
 export function NotificationsExample() {
   const [isOpen, setIsOpen] = useState(false);
@@ -94,7 +94,7 @@ export function NotificationsExample() {
         </CardHeader>
         <CardContent>
           <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
-            {`import { Notifications } from '@/components/notification';
+            {`import { Notifications } from '@/components/notifications';
 
 <Notifications
   notifications={customNotifications}

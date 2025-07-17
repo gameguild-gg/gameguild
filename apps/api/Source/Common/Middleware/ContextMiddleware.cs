@@ -25,7 +25,7 @@ public class ContextMiddleware {
       }
 
       // Add context information to HttpContext items for easy access
-      context.Items["UserContext"] = userContext;
+      context.Items["UsersContext"] = userContext;
       context.Items["TenantContext"] = tenantContext;
       context.Items["UserId"] = userContext.UserId;
       context.Items["TenantId"] = tenantContext.TenantId;
@@ -57,7 +57,7 @@ public static class ContextMiddlewareExtensions {
   /// </summary>
   public static IServiceCollection AddContextServices(this IServiceCollection services) {
     services.AddHttpContextAccessor();
-    services.AddScoped<IUserContext, UserContext>();
+    services.AddScoped<IUserContext, UsersContext>();
     services.AddScoped<ITenantContext, TenantContext>();
 
     return services;

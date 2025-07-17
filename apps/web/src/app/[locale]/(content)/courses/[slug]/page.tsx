@@ -1,11 +1,11 @@
 import { getCourseBySlug } from '@/lib/courses/services/course.service';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
-import { CourseHeader } from '@/components/course/CourseHeader';
-import { CourseOverview } from '@/components/course/CourseOverview';
-import { CourseTools } from '@/components/course/CourseTools';
-import { CourseFeatures } from '@/components/course/CourseFeatures';
-import { CourseSidebar } from '@/components/course/CourseSidebar';
+import { CourseHeader } from '@/components/courses/course/course-header';
+import { CourseOverview } from '@/components/courses/course/course-overview';
+import { CourseTools } from '@/components/courses/course/course-tools';
+import { CourseFeatures } from '@/components/courses/course/course-features';
+import { CourseSidebar } from '@/components/courses/course/course-sidebar';
 
 
 // Generate metadata for SEO

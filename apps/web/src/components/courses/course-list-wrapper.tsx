@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import CourseList from './CourseList';
+import CourseList from './course-list';
 import type { Course } from '@/types/courses';
 
 export default function CourseListWrapper({ courses }: { courses: Course[] }) {
