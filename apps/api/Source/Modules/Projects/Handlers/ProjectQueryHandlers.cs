@@ -83,7 +83,7 @@ public class ProjectQueryHandlers :
       return await query.ToListAsync(cancellationToken);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting all projects");
+      _logger.LogError(ex, "Error getting all projects");
 
       return Enumerable.Empty<Project>();
     }
@@ -121,7 +121,7 @@ public class ProjectQueryHandlers :
       return project;
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting project by ID: {ProjectId}", request.ProjectId);
+      _logger.LogError(ex, "Error getting project by ID: {ProjectId}", request.ProjectId);
 
       return null;
     }
@@ -151,7 +151,7 @@ public class ProjectQueryHandlers :
       return await query.FirstOrDefaultAsync(cancellationToken);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting project by slug: {Slug}", request.Slug);
+      _logger.LogError(ex, "Error getting project by slug: {Slug}", request.Slug);
 
       return null;
     }
@@ -174,7 +174,7 @@ public class ProjectQueryHandlers :
       return await query.ToListAsync(cancellationToken);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting projects by category: {CategoryId}", request.CategoryId);
+      _logger.LogError(ex, "Error getting projects by category: {CategoryId}", request.CategoryId);
 
       return Enumerable.Empty<Project>();
     }
@@ -197,7 +197,7 @@ public class ProjectQueryHandlers :
       return await query.ToListAsync(cancellationToken);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting projects by creator: {CreatorId}", request.CreatorId);
+      _logger.LogError(ex, "Error getting projects by creator: {CreatorId}", request.CreatorId);
 
       return Enumerable.Empty<Project>();
     }
@@ -220,7 +220,7 @@ public class ProjectQueryHandlers :
       return await query.ToListAsync(cancellationToken);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting projects by status: {Status}", request.Status);
+      _logger.LogError(ex, "Error getting projects by status: {Status}", request.Status);
 
       return Enumerable.Empty<Project>();
     }
@@ -232,7 +232,7 @@ public class ProjectQueryHandlers :
       return Task.FromResult(Enumerable.Empty<Project>());
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting deleted projects");
+      _logger.LogError(ex, "Error getting deleted projects");
 
       return Task.FromResult(Enumerable.Empty<Project>());
     }
@@ -272,7 +272,7 @@ public class ProjectQueryHandlers :
       return await query.ToListAsync(cancellationToken);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage searching projects");
+      _logger.LogError(ex, "Error searching projects");
 
       return Enumerable.Empty<Project>();
     }
@@ -281,7 +281,7 @@ public class ProjectQueryHandlers :
   public async Task<ProjectStatistics> Handle(GetProjectStatisticsQuery request, CancellationToken cancellationToken) {
     try { return await GetProjectStatistics(request.ProjectId, cancellationToken, request.FromDate, request.ToDate); }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting project statistics: {ProjectId}", request.ProjectId);
+      _logger.LogError(ex, "Error getting project statistics: {ProjectId}", request.ProjectId);
 
       return new ProjectStatistics();
     }
@@ -304,7 +304,7 @@ public class ProjectQueryHandlers :
       return await query.ToListAsync(cancellationToken);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting popular projects");
+      _logger.LogError(ex, "Error getting popular projects");
 
       return Enumerable.Empty<Project>();
     }
@@ -326,7 +326,7 @@ public class ProjectQueryHandlers :
       return await query.ToListAsync(cancellationToken);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting recent projects");
+      _logger.LogError(ex, "Error getting recent projects");
 
       return Enumerable.Empty<Project>();
     }
@@ -349,7 +349,7 @@ public class ProjectQueryHandlers :
       return await query.ToListAsync(cancellationToken);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage getting featured projects");
+      _logger.LogError(ex, "Error getting featured projects");
 
       return Enumerable.Empty<Project>();
     }

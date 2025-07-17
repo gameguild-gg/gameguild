@@ -46,10 +46,10 @@ public class BulkRestoreUserProfilesHandler(ApplicationDbContext context, ILogge
       return Result.Success(restoredCount);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "ErrorMessage during bulk restore of user profiles");
+      logger.LogError(ex, "Error during bulk restore of user profiles");
 
       return Result.Failure<int>(
-        Common.ErrorMessage.Failure("UserProfile.BulkRestoreFailed", "Failed to bulk restore user profiles")
+        Common.Error.Failure("UserProfile.BulkRestoreFailed", "Failed to bulk restore user profiles")
       );
     }
   }

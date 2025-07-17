@@ -41,11 +41,11 @@ public class GraphQLCQRSInfrastructureValidationTests : IClassFixture<TestServer
     [Fact]
     public async Task GraphQL_Should_Handle_Invalid_Queries_Gracefully()
     {
-        // Test 2: ErrorMessage handling infrastructure
+        // Test 2: Error handling infrastructure
         var invalidQuery = @"{ invalidField { nonExistentSubField } }";
         var response = await ExecuteGraphQLQuery(invalidQuery);
         
-        _output.WriteLine($"ErrorMessage Handling Response: {response.Content}");
+        _output.WriteLine($"Error Handling Response: {response.Content}");
         
         // GraphQL should handle validation errors gracefully - either 200 OK with errors or 400 BadRequest
         // Both are acceptable for validation errors according to GraphQL implementations
@@ -111,8 +111,8 @@ public class GraphQLCQRSInfrastructureValidationTests : IClassFixture<TestServer
         
         _output.WriteLine($"Endpoint Availability: Status={response.StatusCode}");
         
-        // Should not be PageNotFound (GraphQL endpoint exists)
-        Assert.NotEqual(System.Net.HttpStatusCode.PageNotFound, response.StatusCode);
+        // Should not be NotFound (GraphQL endpoint exists)
+        Assert.NotEqual(System.Net.HttpStatusCode.NotFound, response.StatusCode);
         
         // May return MethodNotAllowed (405) for GET without query param - that's fine
         // May return BadRequest (400) - that's also fine for GraphQL

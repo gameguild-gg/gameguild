@@ -29,7 +29,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   public async Task<ActionResult<TestingRequest>> GetTestingRequest(Guid id) {
     var request = await testService.GetTestingRequestByIdAsync(id);
 
-    if (request == null) return PageNotFound();
+    if (request == null) return NotFound();
 
     return Ok(request);
   }
@@ -40,7 +40,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   public async Task<ActionResult<TestingRequest>> GetTestingRequestWithDetails(Guid id) {
     var request = await testService.GetTestingRequestByIdWithDetailsAsync(id);
 
-    if (request == null) return PageNotFound();
+    if (request == null) return NotFound();
 
     return Ok(request);
   } // POST: testing/requests
@@ -62,7 +62,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
       return CreatedAtAction(nameof(GetTestingRequest), new { id = createdRequest.Id }, createdRequest);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage creating testing request: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error creating testing request: {ex.Message}"); }
   }
 
   // PUT: testing/requests/{id}
@@ -76,8 +76,8 @@ public class TestingController(ITestService testService) : ControllerBase {
 
       return Ok(updatedRequest);
     }
-    catch (InvalidOperationException ex) { return PageNotFound(ex.Message); }
-    catch (Exception ex) { return BadRequest($"ErrorMessage updating testing request: {ex.Message}"); }
+    catch (InvalidOperationException ex) { return NotFound(ex.Message); }
+    catch (Exception ex) { return BadRequest($"Error updating testing request: {ex.Message}"); }
   }
 
   // DELETE: testing/requests/{id}
@@ -86,7 +86,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   public async Task<ActionResult> DeleteTestingRequest(Guid id) {
     var result = await testService.DeleteTestingRequestAsync(id);
 
-    if (!result) return PageNotFound();
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -97,7 +97,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   public async Task<ActionResult> RestoreTestingRequest(Guid id) {
     var result = await testService.RestoreTestingRequestAsync(id);
 
-    if (!result) return PageNotFound();
+    if (!result) return NotFound();
 
     return Ok();
   }
@@ -124,7 +124,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   public async Task<ActionResult<TestingSession>> GetTestingSession(Guid id) {
     var session = await testService.GetTestingSessionByIdAsync(id);
 
-    if (session == null) return PageNotFound();
+    if (session == null) return NotFound();
 
     return Ok(session);
   }
@@ -135,7 +135,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   public async Task<ActionResult<TestingSession>> GetTestingSessionWithDetails(Guid id) {
     var session = await testService.GetTestingSessionByIdWithDetailsAsync(id);
 
-    if (session == null) return PageNotFound();
+    if (session == null) return NotFound();
 
     return Ok(session);
   }
@@ -155,7 +155,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
       return CreatedAtAction(nameof(GetTestingSession), new { id = createdSession.Id }, createdSession);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage creating testing session: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error creating testing session: {ex.Message}"); }
   }
 
   // PUT: testing/sessions/{id}
@@ -169,8 +169,8 @@ public class TestingController(ITestService testService) : ControllerBase {
 
       return Ok(updatedSession);
     }
-    catch (InvalidOperationException ex) { return PageNotFound(ex.Message); }
-    catch (Exception ex) { return BadRequest($"ErrorMessage updating testing session: {ex.Message}"); }
+    catch (InvalidOperationException ex) { return NotFound(ex.Message); }
+    catch (Exception ex) { return BadRequest($"Error updating testing session: {ex.Message}"); }
   }
 
   // DELETE: testing/sessions/{id}
@@ -179,7 +179,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   public async Task<ActionResult> DeleteTestingSession(Guid id) {
     var result = await testService.DeleteTestingSessionAsync(id);
 
-    if (!result) return PageNotFound();
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -190,7 +190,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   public async Task<ActionResult> RestoreTestingSession(Guid id) {
     var result = await testService.RestoreTestingSessionAsync(id);
 
-    if (!result) return PageNotFound();
+    if (!result) return NotFound();
 
     return Ok();
   }
@@ -297,7 +297,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
       return Ok(participant);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage adding participant: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error adding participant: {ex.Message}"); }
   }
 
   // DELETE: testing/requests/{requestId}/participants/{userId}
@@ -306,7 +306,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   public async Task<ActionResult> RemoveParticipant(Guid requestId, Guid userId) {
     var result = await testService.RemoveParticipantAsync(requestId, userId);
 
-    if (!result) return PageNotFound();
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -351,7 +351,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
       return Ok(registration);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage registering for session: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error registering for session: {ex.Message}"); }
   }
 
   // DELETE: testing/sessions/{sessionId}/register
@@ -365,7 +365,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
     var result = await testService.UnregisterFromSessionAsync(sessionId, userId);
 
-    if (!result) return PageNotFound();
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -397,7 +397,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
       return Ok(waitlistEntry);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage adding to waitlist: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error adding to waitlist: {ex.Message}"); }
   }
 
   // DELETE: testing/sessions/{sessionId}/waitlist
@@ -411,7 +411,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
     var result = await testService.RemoveFromWaitlistAsync(sessionId, userId);
 
-    if (!result) return PageNotFound();
+    if (!result) return NotFound();
 
     return NoContent();
   }
@@ -451,7 +451,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
       return Ok(feedback);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage adding feedback: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error adding feedback: {ex.Message}"); }
   }
 
   // GET: testing/requests/{requestId}/feedback
@@ -524,7 +524,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
       return CreatedAtAction(nameof(GetTestingRequest), new { id = request.Id }, request);
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage creating testing request: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error creating testing request: {ex.Message}"); }
   }
 
   // POST: testing/feedback
@@ -544,7 +544,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
       return Ok(new { message = "Feedback submitted successfully" });
     }
-    catch (Exception ex) { return BadRequest($"ErrorMessage submitting feedback: {ex.Message}"); }
+    catch (Exception ex) { return BadRequest($"Error submitting feedback: {ex.Message}"); }
   }
 
   // GET: testing/my-requests
@@ -579,7 +579,7 @@ public class TestingController(ITestService testService) : ControllerBase {
       return Ok(report);
     }
     catch (Exception ex) {
-      return BadRequest($"ErrorMessage generating student attendance report: {ex.Message}");
+      return BadRequest($"Error generating student attendance report: {ex.Message}");
     }
   }
 
@@ -592,7 +592,7 @@ public class TestingController(ITestService testService) : ControllerBase {
       return Ok(report);
     }
     catch (Exception ex) {
-      return BadRequest($"ErrorMessage generating session attendance report: {ex.Message}");
+      return BadRequest($"Error generating session attendance report: {ex.Message}");
     }
   }
 
@@ -612,7 +612,7 @@ public class TestingController(ITestService testService) : ControllerBase {
       return Ok(new { message = "Attendance updated successfully" });
     }
     catch (Exception ex) {
-      return BadRequest($"ErrorMessage updating attendance: {ex.Message}");
+      return BadRequest($"Error updating attendance: {ex.Message}");
     }
   }
 
@@ -632,7 +632,7 @@ public class TestingController(ITestService testService) : ControllerBase {
       return Ok(new { message = "Feedback reported successfully" });
     }
     catch (Exception ex) {
-      return BadRequest($"ErrorMessage reporting feedback: {ex.Message}");
+      return BadRequest($"Error reporting feedback: {ex.Message}");
     }
   }
 
@@ -652,7 +652,7 @@ public class TestingController(ITestService testService) : ControllerBase {
       return Ok(new { message = "Feedback quality rated successfully" });
     }
     catch (Exception ex) {
-      return BadRequest($"ErrorMessage rating feedback quality: {ex.Message}");
+      return BadRequest($"Error rating feedback quality: {ex.Message}");
     }
   }
 

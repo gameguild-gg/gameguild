@@ -23,7 +23,7 @@ public class UserProfileQueries {
 
     var result = await mediator.Send(query);
 
-    if (!result.IsSuccess) throw new GraphQLException(result.ErrorMessage.Description);
+    if (!result.IsSuccess) throw new GraphQLException(result.Error.Description);
 
     return result.Value;
   }
@@ -36,7 +36,7 @@ public class UserProfileQueries {
 
     var result = await mediator.Send(query);
 
-    if (!result.IsSuccess) throw new GraphQLException(result.ErrorMessage.Description);
+    if (!result.IsSuccess) throw new GraphQLException(result.Error.Description);
 
     return result.Value;
   }
@@ -49,7 +49,7 @@ public class UserProfileQueries {
 
     var result = await mediator.Send(query);
 
-    if (!result.IsSuccess) throw new GraphQLException(result.ErrorMessage.Description);
+    if (!result.IsSuccess) throw new GraphQLException(result.Error.Description);
 
     return result.Value;
   }

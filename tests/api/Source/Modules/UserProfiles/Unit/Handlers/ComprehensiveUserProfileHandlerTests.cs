@@ -131,7 +131,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
 
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("already exists", result.ErrorMessage.Description);
+            Assert.Contains("already exists", result.Error.Description);
         }
 
         #endregion
@@ -198,7 +198,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
 
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("not found", result.ErrorMessage.Description);
+            Assert.Contains("not found", result.Error.Description);
         }
 
         #endregion
@@ -257,7 +257,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
 
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("not found", result.ErrorMessage.Description);
+            Assert.Contains("not found", result.Error.Description);
         }
 
         #endregion

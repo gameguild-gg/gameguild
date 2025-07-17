@@ -6,7 +6,7 @@ import { Bug, Lightbulb, ListChecks, MessageCircle, MessageSquare } from 'lucide
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@game-guild/ui/components/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
 import { Button } from '@game-guild/ui/components/button';
-import { cn } from '@/lib/utils';
+import { cn } from '@game-guild/ui/lib/utils';
 
 interface FloatingFeedbackButtonProps {
   className?: string;

@@ -105,7 +105,7 @@ public class ProgramCatalogE2ETests : IClassFixture<TestWebApplicationFactory>, 
 
         // Should succeed with authentication
         Assert.True(contentResponse.IsSuccessStatusCode ||
-                    contentResponse.StatusCode == System.Net.HttpStatusCode.PageNotFound);
+                    contentResponse.StatusCode == System.Net.HttpStatusCode.NotFound);
 
         // 4. Navigate between courses using slugs
         var advancedCourseResponse = await _client.GetAsync($"/api/program/slug/{advancedCourse.Slug}");

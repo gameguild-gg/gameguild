@@ -63,7 +63,7 @@ public class PaymentsController : ControllerBase {
 
     var payment = await _mediator.Send(query);
 
-    if (payment == null) { return PageNotFound(); }
+    if (payment == null) { return NotFound(); }
 
     return Ok(payment);
   }

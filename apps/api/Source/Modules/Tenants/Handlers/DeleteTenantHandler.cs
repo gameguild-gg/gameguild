@@ -20,7 +20,7 @@ public class DeleteTenantHandler(
 
       if (tenant == null)
         return Result.Failure<bool>(
-          Common.ErrorMessage.PageNotFound("Tenant.PageNotFound", $"Tenant with ID {request.Id} not found")
+          Common.Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found")
         );
 
       tenant.SoftDelete();
@@ -37,10 +37,10 @@ public class DeleteTenantHandler(
       return Result.Success(true);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "ErrorMessage deleting tenant {TenantId}", request.Id);
+      logger.LogError(ex, "Error deleting tenant {TenantId}", request.Id);
 
       return Result.Failure<bool>(
-        Common.ErrorMessage.Failure("Tenant.DeleteFailed", "Failed to delete tenant")
+        Common.Error.Failure("Tenant.DeleteFailed", "Failed to delete tenant")
       );
     }
   }

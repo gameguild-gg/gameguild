@@ -22,7 +22,7 @@ The Test module has been successfully refactored to modernize its architecture, 
 - **Implemented TestService** (`src/Modules/Test/Services/TestService.cs`):
   - Complete business logic implementation
   - Proper Entity Framework queries with navigation properties
-  - ErrorMessage handling and validation
+  - Error handling and validation
   - Follows the same patterns as ProjectService
 
 ### ✅ 3. Controller Implementation

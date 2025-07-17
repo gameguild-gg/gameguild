@@ -576,7 +576,7 @@ public class PostServiceComprehensiveTests : IDisposable
 
     #endregion
 
-    #region ErrorMessage Handling
+    #region Error Handling
 
     [Fact]
     public async Task UpdatePostAsync_Should_Throw_When_Post_Not_Found()

@@ -20,7 +20,7 @@ public class RestoreTenantHandler(
 
       if (tenant == null)
         return Result.Failure<bool>(
-          Common.ErrorMessage.PageNotFound("Tenant.PageNotFound", $"Deleted tenant with ID {request.Id} not found")
+          Common.Error.NotFound("Tenant.NotFound", $"Deleted tenant with ID {request.Id} not found")
         );
 
       tenant.Restore();
@@ -37,10 +37,10 @@ public class RestoreTenantHandler(
       return Result.Success(true);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "ErrorMessage restoring tenant {TenantId}", request.Id);
+      logger.LogError(ex, "Error restoring tenant {TenantId}", request.Id);
 
       return Result.Failure<bool>(
-        Common.ErrorMessage.Failure("Tenant.RestoreFailed", "Failed to restore tenant")
+        Common.Error.Failure("Tenant.RestoreFailed", "Failed to restore tenant")
       );
     }
   }

@@ -31,14 +31,14 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
   public async Task<CreatePaymentResult> Handle(CreatePaymentCommand request, CancellationToken cancellationToken) {
     try {
       // Validate user authorization
-      if (_userContext.UserId != request.UserId && !_userContext.IsInRole("Admin")) { return new CreatePaymentResult { Success = false, ErrorMessage = "Unauthorized to create payment for this user" }; }
+      if (_userContext.UserId != request.UserId && !_userContext.IsInRole("Admin")) { return new CreatePaymentResult { Success = false, Error = "Unauthorized to create payment for this user" }; }
 
       // Validate product exists if specified
       if (request.ProductId.HasValue) {
         var productExists = await _context.Products
                                           .AnyAsync(p => p.Id == request.ProductId.Value, cancellationToken);
 
-        if (!productExists) { return new CreatePaymentResult { Success = false, ErrorMessage = "Product not found" }; }
+        if (!productExists) { return new CreatePaymentResult { Success = false, Error = "Product not found" }; }
       }
 
       // Create payment entity
@@ -62,9 +62,9 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
       };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage creating payment for user {UserId}", request.UserId);
+      _logger.LogError(ex, "Error creating payment for user {UserId}", request.UserId);
 
-      return new CreatePaymentResult { Success = false, ErrorMessage = "Failed to create payment" };
+      return new CreatePaymentResult { Success = false, Error = "Failed to create payment" };
     }
   }
 }
@@ -92,7 +92,7 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
       var payment = await _context.Payments
                                   .FirstOrDefaultAsync(p => p.Id == request.PaymentId, cancellationToken);
 
-      if (payment == null) { return new ProcessPaymentResult { Success = false, ErrorMessage = "Payment not found" }; }
+      if (payment == null) { return new ProcessPaymentResult { Success = false, Error = "Payment not found" }; }
 
       // Set provider transaction ID
       payment.ProviderTransactionId = request.ProviderTransactionId;
@@ -162,9 +162,9 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
       return new ProcessPaymentResult { Success = true, Payment = payment, AutoEnrollTriggered = autoEnrollTriggered };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage processing payment {PaymentId}", request.PaymentId);
+      _logger.LogError(ex, "Error processing payment {PaymentId}", request.PaymentId);
 
-      return new ProcessPaymentResult { Success = false, ErrorMessage = "Failed to process payment" };
+      return new ProcessPaymentResult { Success = false, Error = "Failed to process payment" };
     }
   }
 }
@@ -193,16 +193,16 @@ public class RefundPaymentCommandHandler : IRequestHandler<RefundPaymentCommand,
                                   .Include(p => p.Refunds)
                                   .FirstOrDefaultAsync(p => p.Id == request.PaymentId, cancellationToken);
 
-      if (payment == null) { return new RefundPaymentResult { Success = false, ErrorMessage = "Payment not found" }; }
+      if (payment == null) { return new RefundPaymentResult { Success = false, Error = "Payment not found" }; }
 
       // Check authorization
-      if (!_userContext.IsInRole("Admin") && payment.UserId != _userContext.UserId) { return new RefundPaymentResult { Success = false, ErrorMessage = "Unauthorized to refund this payment" }; }
+      if (!_userContext.IsInRole("Admin") && payment.UserId != _userContext.UserId) { return new RefundPaymentResult { Success = false, Error = "Unauthorized to refund this payment" }; }
 
       // Calculate refund amount
       var totalRefunded = payment.Refunds.Where(r => r.Status == RefundStatus.Succeeded).Sum(r => r.RefundAmount);
       var refundAmount = request.RefundAmount ?? (payment.Amount - totalRefunded);
 
-      if (refundAmount <= 0 || totalRefunded + refundAmount > payment.Amount) { return new RefundPaymentResult { Success = false, ErrorMessage = "Invalid refund amount" }; }
+      if (refundAmount <= 0 || totalRefunded + refundAmount > payment.Amount) { return new RefundPaymentResult { Success = false, Error = "Invalid refund amount" }; }
 
       // Create refund record
       var refund = new PaymentRefund {
@@ -227,9 +227,9 @@ public class RefundPaymentCommandHandler : IRequestHandler<RefundPaymentCommand,
       return new RefundPaymentResult { Success = true, Refund = refund };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage refunding payment {PaymentId}", request.PaymentId);
+      _logger.LogError(ex, "Error refunding payment {PaymentId}", request.PaymentId);
 
-      return new RefundPaymentResult { Success = false, ErrorMessage = "Failed to process refund" };
+      return new RefundPaymentResult { Success = false, Error = "Failed to process refund" };
     }
   }
 }
@@ -258,17 +258,17 @@ public class CancelPaymentCommandHandler : IRequestHandler<CancelPaymentCommand,
                                   .FirstOrDefaultAsync(p => p.Id == request.PaymentId, cancellationToken);
 
       if (payment == null) {
-        return new CancelPaymentResult { Success = false, ErrorMessage = "Payment not found" };
+        return new CancelPaymentResult { Success = false, Error = "Payment not found" };
       }
 
       // Check authorization
       if (!_userContext.IsInRole("Admin") && payment.UserId != _userContext.UserId) {
-        return new CancelPaymentResult { Success = false, ErrorMessage = "Unauthorized to cancel this payment" };
+        return new CancelPaymentResult { Success = false, Error = "Unauthorized to cancel this payment" };
       }
 
       // Only allow cancellation of pending payments
       if (payment.Status != PaymentStatus.Pending) {
-        return new CancelPaymentResult { Success = false, ErrorMessage = "Only pending payments can be cancelled" };
+        return new CancelPaymentResult { Success = false, Error = "Only pending payments can be cancelled" };
       }
 
       // Update payment status to cancelled
@@ -292,9 +292,9 @@ public class CancelPaymentCommandHandler : IRequestHandler<CancelPaymentCommand,
       return new CancelPaymentResult { Success = true, Payment = payment };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage cancelling payment {PaymentId}", request.PaymentId);
+      _logger.LogError(ex, "Error cancelling payment {PaymentId}", request.PaymentId);
 
-      return new CancelPaymentResult { Success = false, ErrorMessage = "Failed to cancel payment" };
+      return new CancelPaymentResult { Success = false, Error = "Failed to cancel payment" };
     }
   }
 }

@@ -205,7 +205,7 @@ public class UserSignUpPostHandlerTests
             SignUpTime = DateTime.UtcNow
         };
 
-        var mockResult = GameGuild.Common.Result.Failure<Post>(new GameGuild.Common.ErrorMessage(
+        var mockResult = GameGuild.Common.Result.Failure<Post>(new GameGuild.Common.Error(
             "CreatePost.Failed",
             "Failed to create post"
         ));

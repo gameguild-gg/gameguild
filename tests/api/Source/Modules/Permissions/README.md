@@ -157,7 +157,7 @@ Tests all permission types defined in the system:
 - **REST Endpoints**: Permission management operations
 - **Authentication**: JWT token validation
 - **Authorization**: Permission-based access control
-- **ErrorMessage Handling**: Proper error responses for insufficient permissions
+- **Error Handling**: Proper error responses for insufficient permissions
 
 ## Testing Patterns Used
 
@@ -230,7 +230,7 @@ dotnet test --filter "FullyQualifiedName~PermissionPerformanceTests"
 - Comprehensive test documentation comments
 - Arrange-Act-Assert structure with clear sections
 - Performance benchmarks documented in test names
-- ErrorMessage scenarios explicitly tested and documented
+- Error scenarios explicitly tested and documented
 
 ## Conclusion
 

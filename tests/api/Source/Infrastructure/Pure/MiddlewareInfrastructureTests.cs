@@ -164,7 +164,7 @@ public class MiddlewareInfrastructureTests
         Assert.True(successResponse.IsSuccessStatusCode);
         Assert.Equal("Success", await successResponse.Content.ReadAsStringAsync());
 
-        // ErrorMessage response should be handled gracefully
+        // Error response should be handled gracefully
         Assert.False(errorResponse.IsSuccessStatusCode);
         Assert.Equal(System.Net.HttpStatusCode.InternalServerError, errorResponse.StatusCode);
 

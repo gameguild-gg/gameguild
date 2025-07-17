@@ -56,7 +56,7 @@ namespace GameGuild.Tests.Modules.Users.E2E.API {
       if (registerResponse.StatusCode != HttpStatusCode.Created) {
         var errorContent = await registerResponse.Content.ReadAsStringAsync();
         Console.WriteLine($"Registration failed with status: {registerResponse.StatusCode}");
-        Console.WriteLine($"ErrorMessage content: {errorContent}");
+        Console.WriteLine($"Error content: {errorContent}");
       }
 
       // Assert - Register
@@ -142,7 +142,7 @@ namespace GameGuild.Tests.Modules.Users.E2E.API {
       var getResponse = await _client.GetAsync($"/api/users/{_userId}");
 
       // Assert - Should not find deleted user
-      Assert.Equal(HttpStatusCode.PageNotFound, getResponse.StatusCode);
+      Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
     public void Dispose() {

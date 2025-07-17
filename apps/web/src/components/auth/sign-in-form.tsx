@@ -3,7 +3,7 @@
 import React, { ComponentPropsWithoutRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { cn } from '@/lib/utils';
+import { cn } from '@game-guild/ui/lib/utils';
 import { Button } from '@game-guild/ui/components/button';
 import { Label } from '@game-guild/ui/components/label';
 import { Input } from '@game-guild/ui/components/input';

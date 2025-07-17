@@ -142,7 +142,7 @@ public class ContentInteractionController(
 
       var interaction = await contentInteractionService.GetInteractionAsync(programUserId, contentId);
 
-      if (interaction == null) return PageNotFound("Interaction not found.");
+      if (interaction == null) return NotFound("Interaction not found.");
 
       return Ok(interaction.ToDto());
     }
