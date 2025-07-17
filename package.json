@@ -52,8 +52,12 @@
     "@semantic-release/release-notes-generator": "^14.0.1",
     "eslint": "^9",
     "prettier": "^3.5.2",
+    "next": "15.3.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "rimraf": "^6",
     "syncpack": "^13.0.3",
+    "tailwindcss": "^4.1.11",
     "typescript": "^5"
   }
 }
