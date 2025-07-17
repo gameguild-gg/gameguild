@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { AlertTriangle, BarChart3, Home, RefreshCw } from 'lucide-react';
 
 interface DashboardErrorProps {

@@ -1,5 +1,5 @@
 import { ComponentShowcase } from '@/components/showcase';
-import { NotificationProvider } from '@game-guild/ui/components';
+
 
 export default function ComponentsPage() {
   return (
