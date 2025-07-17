@@ -238,9 +238,9 @@ export async function getProjects(): Promise<ProjectListItem[]> {
   try {
     console.log('=== DEBUG: getProjects called ===');
     const timestamp = Date.now();
-    console.log('Fetching projects from:', `${CMS_API_URL}/projects?_t=${timestamp}`);
+    console.log('Fetching projects from:', `${CMS_API_URL}/api/projects?_t=${timestamp}`);
 
-    const response = await makeApiCall(`${CMS_API_URL}/projects?_t=${timestamp}`, {
+    const response = await makeApiCall(`${CMS_API_URL}/api/projects?_t=${timestamp}`, {
       method: 'GET',
       cache: 'no-store', // Disable cache for dynamic user data
       next: {
@@ -304,7 +304,7 @@ export async function createProject(projectData: {
       DevelopmentStatus: 0, // DevelopmentStatus.Planning (default)
     };
 
-    const response = await makeApiCall(`${CMS_API_URL}/projects`, {
+    const response = await makeApiCall(`${CMS_API_URL}/api/projects`, {
       method: 'POST',
       body: JSON.stringify(cmsProjectData),
     });
@@ -352,9 +352,9 @@ export async function createProject(projectData: {
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
   try {
     const timestamp = Date.now();
-    console.log('Fetching project by slug:', `${CMS_API_URL}/projects/slug/${slug}?_t=${timestamp}`);
+    console.log('Fetching project by slug:', `${CMS_API_URL}/api/projects/slug/${slug}?_t=${timestamp}`);
 
-    const response = await makeApiCall(`${CMS_API_URL}/projects/slug/${slug}?_t=${timestamp}`, {
+    const response = await makeApiCall(`${CMS_API_URL}/api/projects/slug/${slug}?_t=${timestamp}`, {
       method: 'GET',
       cache: 'no-store', // Disable cache for dynamic user data
       next: {

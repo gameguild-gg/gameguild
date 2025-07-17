@@ -714,6 +714,21 @@ export type CreateProjectResultWritable = {
   errorMessage?: string | null;
 };
 
+export type CreateSimpleTestingRequestDto = {
+  title: string;
+  description?: string | null;
+  versionNumber: string;
+  downloadUrl?: string | null;
+  instructionsType: InstructionType;
+  instructionsContent?: string | null;
+  instructionsUrl?: string | null;
+  feedbackFormContent?: string | null;
+  maxTesters?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  teamIdentifier: string;
+};
+
 export type CreateSubscriptionDto = {
   subscriptionPlanId?: string;
   paymentMethodId?: string | null;
@@ -750,10 +765,12 @@ export type CreateTestingRequestDto = {
   projectVersionId: string;
   title: string;
   description?: string | null;
+  downloadUrl?: string | null;
   instructionsType: InstructionType;
   instructionsContent?: string | null;
   instructionsUrl?: string | null;
   instructionsFileId?: string | null;
+  feedbackFormContent?: string | null;
   maxTesters?: number | null;
   startDate: string;
   endDate: string;
@@ -876,6 +893,8 @@ export type EngagementMetricsDto = {
 };
 
 export type EnrollmentStatus = 0 | 1 | 2 | 3 | 4 | 5;
+
+export type FeedbackQuality = 1 | 2 | 3;
 
 export type FeedbackRequest = {
   feedbackFormId?: string;
@@ -2470,6 +2489,10 @@ export type PublishProjectResultWritable = {
   errorMessage?: string | null;
 };
 
+export type RateFeedbackQualityDto = {
+  quality?: FeedbackQuality;
+};
+
 export type RefreshTokenRequestDto = {
   refreshToken?: string | null;
   tenantId?: string | null;
@@ -2496,6 +2519,10 @@ export type RejectProgramDto = {
 
 export type ReorderContentDto = {
   contentIds?: Array<string> | null;
+};
+
+export type ReportFeedbackDto = {
+  reason?: string | null;
 };
 
 export type ResourceLocalizationReadable = {
@@ -2731,6 +2758,15 @@ export type SubmitContentRequest = {
   programUserId?: string;
   contentId?: string;
   submissionData?: string | null;
+};
+
+export type SubmitFeedbackDto = {
+  testingRequestId: string;
+  feedbackResponses: string;
+  overallRating?: number | null;
+  wouldRecommend?: boolean | null;
+  additionalNotes?: string | null;
+  sessionId?: string | null;
 };
 
 export type SubscriptionBillingInterval = 0 | 1 | 2 | 3;
@@ -3087,7 +3123,15 @@ export type TestingFeedbackReadable = {
   session?: TestingSessionReadable;
   testingContext: TestingContext;
   feedbackData: string;
+  overallRating?: number | null;
+  wouldRecommend?: boolean | null;
   additionalNotes?: string | null;
+  isReported?: boolean;
+  qualityRating?: FeedbackQuality;
+  reportReason?: string | null;
+  reportedByUserId?: string | null;
+  reportedByUser?: UserReadable;
+  reportedAt?: string | null;
 };
 
 export type TestingFeedbackWritable = {
@@ -3107,7 +3151,15 @@ export type TestingFeedbackWritable = {
   session?: TestingSessionWritable;
   testingContext: TestingContext;
   feedbackData: string;
+  overallRating?: number | null;
+  wouldRecommend?: boolean | null;
   additionalNotes?: string | null;
+  isReported?: boolean;
+  qualityRating?: FeedbackQuality;
+  reportReason?: string | null;
+  reportedByUserId?: string | null;
+  reportedByUser?: UserWritable;
+  reportedAt?: string | null;
 };
 
 export type TestingFeedbackFormReadable = {
@@ -3229,10 +3281,12 @@ export type TestingRequestReadable = {
   projectVersion?: ProjectVersionReadable;
   title: string;
   description?: string | null;
+  downloadUrl?: string | null;
   instructionsType: InstructionType;
   instructionsContent?: string | null;
   instructionsUrl?: string | null;
   instructionsFileId?: string | null;
+  feedbackFormContent?: string | null;
   maxTesters?: number | null;
   currentTesterCount?: number;
   startDate: string;
@@ -3253,10 +3307,12 @@ export type TestingRequestWritable = {
   projectVersion?: ProjectVersionWritable;
   title: string;
   description?: string | null;
+  downloadUrl?: string | null;
   instructionsType: InstructionType;
   instructionsContent?: string | null;
   instructionsUrl?: string | null;
   instructionsFileId?: string | null;
+  feedbackFormContent?: string | null;
   maxTesters?: number | null;
   currentTesterCount?: number;
   startDate: string;
@@ -3344,6 +3400,11 @@ export type UpdateActivityGradeDto = {
   grade?: number | null;
   feedback?: string | null;
   gradingDetails?: string | null;
+};
+
+export type UpdateAttendanceDto = {
+  userId?: string;
+  attendanceStatus?: AttendanceStatus;
 };
 
 export type UpdateContentDto = {
@@ -8508,6 +8569,144 @@ export type GetTestingUsersByUserIdActivityData = {
 };
 
 export type GetTestingUsersByUserIdActivityResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PostTestingSubmitSimpleData = {
+  body?: CreateSimpleTestingRequestDto;
+  path?: never;
+  query?: never;
+  url: '/Testing/submit-simple';
+};
+
+export type PostTestingSubmitSimpleResponses = {
+  /**
+   * OK
+   */
+  200: TestingRequestReadable;
+};
+
+export type PostTestingSubmitSimpleResponse = PostTestingSubmitSimpleResponses[keyof PostTestingSubmitSimpleResponses];
+
+export type PostTestingFeedbackData = {
+  body?: SubmitFeedbackDto;
+  path?: never;
+  query?: never;
+  url: '/Testing/feedback';
+};
+
+export type PostTestingFeedbackResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetTestingMyRequestsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/Testing/my-requests';
+};
+
+export type GetTestingMyRequestsResponses = {
+  /**
+   * OK
+   */
+  200: Array<TestingRequestReadable>;
+};
+
+export type GetTestingMyRequestsResponse = GetTestingMyRequestsResponses[keyof GetTestingMyRequestsResponses];
+
+export type GetTestingAvailableForTestingData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/Testing/available-for-testing';
+};
+
+export type GetTestingAvailableForTestingResponses = {
+  /**
+   * OK
+   */
+  200: Array<TestingRequestReadable>;
+};
+
+export type GetTestingAvailableForTestingResponse = GetTestingAvailableForTestingResponses[keyof GetTestingAvailableForTestingResponses];
+
+export type GetTestingAttendanceStudentsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/Testing/attendance/students';
+};
+
+export type GetTestingAttendanceStudentsResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetTestingAttendanceSessionsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/Testing/attendance/sessions';
+};
+
+export type GetTestingAttendanceSessionsResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PostTestingSessionsBySessionIdAttendanceData = {
+  body?: UpdateAttendanceDto;
+  path: {
+    sessionId: string;
+  };
+  query?: never;
+  url: '/Testing/sessions/{sessionId}/attendance';
+};
+
+export type PostTestingSessionsBySessionIdAttendanceResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PostTestingFeedbackByFeedbackIdReportData = {
+  body?: ReportFeedbackDto;
+  path: {
+    feedbackId: string;
+  };
+  query?: never;
+  url: '/Testing/feedback/{feedbackId}/report';
+};
+
+export type PostTestingFeedbackByFeedbackIdReportResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PostTestingFeedbackByFeedbackIdQualityData = {
+  body?: RateFeedbackQualityDto;
+  path: {
+    feedbackId: string;
+  };
+  query?: never;
+  url: '/Testing/feedback/{feedbackId}/quality';
+};
+
+export type PostTestingFeedbackByFeedbackIdQualityResponses = {
   /**
    * OK
    */
