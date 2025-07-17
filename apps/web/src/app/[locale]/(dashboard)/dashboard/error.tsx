@@ -1,16 +1,10 @@
+// Error boundaries must be Client Components.
 'use client';
 
-import { Button } from '@game-guild/ui/components/button';
+import React from 'react';
+import { ErrorMessage } from '@/components/errors/error-message';
+import { ErrorProps } from '@/types';
 
-type Props = {
-  error: Error & { digest?: string };
-  reset: () => void;
-};
-
-export default function Error({ error, reset }: Readonly<Props>) {
-  return (
-    <div>
-      <Button onClick={reset}>Reset</Button>
-    </div>
-  );
+export default function Error({ error, reset }: ErrorProps): React.JSX.Element {
+  return <ErrorMessage error={error} reset={reset} />;
 }
