@@ -77,7 +77,7 @@ public class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavio
   }
 
   private static LogLevel GetLogLevel(long elapsedMilliseconds, bool hasError) {
-    if (hasError) return LogLevel.ErrorMessage;
+    if (hasError) return LogLevel.Error;
 
     return elapsedMilliseconds switch { > CriticalRequestThresholdMs => LogLevel.Critical, > SlowRequestThresholdMs => LogLevel.Warning, _ => LogLevel.Information };
   }

@@ -28,7 +28,7 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
       ValidationException validationException => new ProblemDetails {
         Status = StatusCodes.Status400BadRequest,
         Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-        Title = "Validation ErrorMessage",
+        Title = "Validation Error",
         Detail = validationException.Message,
         Extensions = new Dictionary<string, object?> { ["errors"] = new[] { validationException.Message } },
       },
@@ -47,7 +47,7 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
       UnauthorizedAccessException => new ProblemDetails {
         Status = StatusCodes.Status401Unauthorized, Type = "https://tools.ietf.org/html/rfc7235#section-3.1", Title = "Unauthorized", Detail = "Authentication is required to access this resource",
       },
-      _ => new ProblemDetails { Status = StatusCodes.Status500InternalServerError, Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1", Title = "Server ErrorMessage", Detail = "An unexpected error occurred while processing your request" },
+      _ => new ProblemDetails { Status = StatusCodes.Status500InternalServerError, Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1", Title = "Server Error", Detail = "An unexpected error occurred while processing your request" },
     };
   }
 }

@@ -273,7 +273,7 @@ public record CreateProductResult {
 
   public Product? Product { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record UpdateProductResult {
@@ -281,13 +281,13 @@ public record UpdateProductResult {
 
   public Product? Product { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record DeleteProductResult {
   public bool Success { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record AddProductPricingResult {
@@ -295,7 +295,7 @@ public record AddProductPricingResult {
 
   public ProductPricing? Pricing { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record GrantUserProductAccessResult {
@@ -303,13 +303,13 @@ public record GrantUserProductAccessResult {
 
   public UserProduct? UserProduct { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record RevokeUserProductAccessResult {
   public bool Success { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record PublishProductResult {
@@ -317,7 +317,7 @@ public record PublishProductResult {
 
   public Product? Product { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record UnpublishProductResult {
@@ -325,7 +325,7 @@ public record UnpublishProductResult {
 
   public Product? Product { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record ArchiveProductResult {
@@ -333,7 +333,7 @@ public record ArchiveProductResult {
 
   public Product? Product { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record SetProductVisibilityResult {
@@ -341,19 +341,19 @@ public record SetProductVisibilityResult {
 
   public Product? Product { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record AddToBundleResult {
   public bool Success { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record RemoveFromBundleResult {
   public bool Success { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record SetPricingResult {
@@ -361,7 +361,7 @@ public record SetPricingResult {
 
   public ProductPricing? Pricing { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record CreateSubscriptionPlanResult {
@@ -369,7 +369,7 @@ public record CreateSubscriptionPlanResult {
 
   public ProductSubscriptionPlan? Plan { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record GrantUserAccessResult {
@@ -377,11 +377,11 @@ public record GrantUserAccessResult {
 
   public UserProduct? UserProduct { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record RevokeUserAccessResult {
   public bool Success { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }

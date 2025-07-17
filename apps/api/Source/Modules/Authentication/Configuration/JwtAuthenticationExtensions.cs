@@ -104,7 +104,7 @@ public static class JwtAuthenticationExtensions {
     // Don't expose detailed error information in production
     if (context.HttpContext.RequestServices
                .GetRequiredService<IWebHostEnvironment>()
-               .IsDevelopment()) { context.Response.Headers.Append("Auth-ErrorMessage", context.Exception.Message); }
+               .IsDevelopment()) { context.Response.Headers.Append("Auth-Error", context.Exception.Message); }
 
     return Task.CompletedTask;
   }

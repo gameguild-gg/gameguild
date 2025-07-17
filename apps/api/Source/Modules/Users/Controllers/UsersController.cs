@@ -53,7 +53,7 @@ public class UsersController(IMediator mediator) : ControllerBase {
 
     var user = await mediator.Send(query);
 
-    if (user == null) return PageNotFound($"User with ID {id} not found");
+    if (user == null) return NotFound($"User with ID {id} not found");
 
     var userDto = new UserResponseDto {
       Id = user.Id,
@@ -139,7 +139,7 @@ public class UsersController(IMediator mediator) : ControllerBase {
 
     var result = await mediator.Send(command);
 
-    if (!result) return PageNotFound($"User with ID {id} not found or already deleted");
+    if (!result) return NotFound($"User with ID {id} not found or already deleted");
 
     return NoContent();
   }
@@ -153,7 +153,7 @@ public class UsersController(IMediator mediator) : ControllerBase {
 
     var result = await mediator.Send(command);
 
-    if (!result) return PageNotFound($"User with ID {id} not found or not deleted");
+    if (!result) return NotFound($"User with ID {id} not found or not deleted");
 
     return NoContent();
   }

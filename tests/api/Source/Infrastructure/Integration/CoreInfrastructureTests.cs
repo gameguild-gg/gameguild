@@ -122,7 +122,7 @@ public class CoreInfrastructureTests : IClassFixture<TestServerFixture>
         _output.WriteLine($"Invalid Endpoint Response Status: {response.StatusCode}");
         
         // Should return 404 or other appropriate status (not crash)
-        Assert.True(response.StatusCode == System.Net.HttpStatusCode.PageNotFound ||
+        Assert.True(response.StatusCode == System.Net.HttpStatusCode.NotFound ||
                    response.StatusCode == System.Net.HttpStatusCode.MethodNotAllowed,
                    $"Expected 404 or 405, got {response.StatusCode}");
         

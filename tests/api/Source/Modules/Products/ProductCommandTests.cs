@@ -184,7 +184,7 @@ public class ProductCommandTests : IDisposable
 
         // Assert
         Assert.False(result.Success);
-        Assert.Contains("Product not found", result.ErrorMessage);
+        Assert.Contains("Product not found", result.Error);
     }
 
     [Fact]
@@ -292,7 +292,7 @@ public class ProductCommandTests : IDisposable
 
         // Assert
         Assert.False(result.Success);
-        Assert.Contains("Name is required", result.ErrorMessage);
+        Assert.Contains("Name is required", result.Error);
     }
 
     [Fact]
@@ -316,7 +316,7 @@ public class ProductCommandTests : IDisposable
 
         // Assert
         Assert.False(result.Success);
-        Assert.Contains("Unauthorized", result.ErrorMessage);
+        Assert.Contains("Unauthorized", result.Error);
     }
 
     // Helper methods

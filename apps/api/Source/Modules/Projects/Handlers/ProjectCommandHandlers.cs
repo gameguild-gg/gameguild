@@ -49,7 +49,7 @@ public class ProjectCommandHandlers :
       _logger.LogInformation("Creating project: {Title} by user {UserId}", request.Title, _userContext.UserId);
 
       // Validate user permissions
-      if (!_userContext.IsAuthenticated || _userContext.UserId == null) { return new CreateProjectResult { Success = false, ErrorMessage = "User must be authenticated" }; }
+      if (!_userContext.IsAuthenticated || _userContext.UserId == null) { return new CreateProjectResult { Success = false, Error = "User must be authenticated" }; }
 
       // Create project entity
       var project = new Project {
@@ -106,9 +106,9 @@ public class ProjectCommandHandlers :
       return new CreateProjectResult { Success = true, Project = project };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage creating project: {Title}", request.Title);
+      _logger.LogError(ex, "Error creating project: {Title}", request.Title);
 
-      return new CreateProjectResult { Success = false, ErrorMessage = "Failed to create project" };
+      return new CreateProjectResult { Success = false, Error = "Failed to create project" };
     }
   }
 
@@ -120,7 +120,7 @@ public class ProjectCommandHandlers :
                                   .Include(p => p.Collaborators)
                                   .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
 
-      if (project == null) { return new UpdateProjectResult { Success = false, ErrorMessage = "Project not found" }; }
+      if (project == null) { return new UpdateProjectResult { Success = false, Error = "Project not found" }; }
 
       // Check authorization - user must have edit permissions
       var hasEditPermission = project.Collaborators.Any(c =>
@@ -129,7 +129,7 @@ public class ProjectCommandHandlers :
                                                           c.Permissions.Contains(PermissionType.Edit.ToString())
       );
 
-      if (!hasEditPermission) { return new UpdateProjectResult { Success = false, ErrorMessage = "Unauthorized to update this project" }; }
+      if (!hasEditPermission) { return new UpdateProjectResult { Success = false, Error = "Unauthorized to update this project" }; }
 
       // Update fields
       if (request.Title != null) project.Title = request.Title;
@@ -153,9 +153,9 @@ public class ProjectCommandHandlers :
       return new UpdateProjectResult { Success = true, Project = project };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage updating project: {ProjectId}", request.ProjectId);
+      _logger.LogError(ex, "Error updating project: {ProjectId}", request.ProjectId);
 
-      return new UpdateProjectResult { Success = false, ErrorMessage = "Failed to update project" };
+      return new UpdateProjectResult { Success = false, Error = "Failed to update project" };
     }
   }
 
@@ -167,7 +167,7 @@ public class ProjectCommandHandlers :
                                   .Include(p => p.Collaborators)
                                   .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
 
-      if (project == null) { return new DeleteProjectResult { Success = false, ErrorMessage = "Project not found" }; }
+      if (project == null) { return new DeleteProjectResult { Success = false, Error = "Project not found" }; }
 
       // Check authorization - user must have delete permissions
       var hasDeletePermission = project.Collaborators.Any(c =>
@@ -176,7 +176,7 @@ public class ProjectCommandHandlers :
                                                             c.Permissions.Contains(PermissionType.Delete.ToString())
       );
 
-      if (!hasDeletePermission) { return new DeleteProjectResult { Success = false, ErrorMessage = "Unauthorized to delete this project" }; }
+      if (!hasDeletePermission) { return new DeleteProjectResult { Success = false, Error = "Unauthorized to delete this project" }; }
 
       if (request.SoftDelete) {
         // Mark as deleted but preserve data
@@ -193,9 +193,9 @@ public class ProjectCommandHandlers :
       return new DeleteProjectResult { Success = true };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage deleting project: {ProjectId}", request.ProjectId);
+      _logger.LogError(ex, "Error deleting project: {ProjectId}", request.ProjectId);
 
-      return new DeleteProjectResult { Success = false, ErrorMessage = "Failed to delete project" };
+      return new DeleteProjectResult { Success = false, Error = "Failed to delete project" };
     }
   }
 
@@ -205,7 +205,7 @@ public class ProjectCommandHandlers :
                                   .Include(p => p.Collaborators)
                                   .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
 
-      if (project == null) { return new PublishProjectResult { Success = false, ErrorMessage = "Project not found" }; }
+      if (project == null) { return new PublishProjectResult { Success = false, Error = "Project not found" }; }
 
       // Check authorization - user must have publish permissions
       var hasPublishPermission = project.Collaborators.Any(c =>
@@ -214,7 +214,7 @@ public class ProjectCommandHandlers :
                                                              c.Permissions.Contains(PermissionType.Publish.ToString())
       );
 
-      if (!hasPublishPermission) { return new PublishProjectResult { Success = false, ErrorMessage = "Unauthorized to publish this project" }; }
+      if (!hasPublishPermission) { return new PublishProjectResult { Success = false, Error = "Unauthorized to publish this project" }; }
 
       project.Status = ContentStatus.Published;
       project.UpdatedAt = DateTime.UtcNow;
@@ -224,9 +224,9 @@ public class ProjectCommandHandlers :
       return new PublishProjectResult { Success = true, Project = project };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage publishing project: {ProjectId}", request.ProjectId);
+      _logger.LogError(ex, "Error publishing project: {ProjectId}", request.ProjectId);
 
-      return new PublishProjectResult { Success = false, ErrorMessage = "Failed to publish project" };
+      return new PublishProjectResult { Success = false, Error = "Failed to publish project" };
     }
   }
 
@@ -236,7 +236,7 @@ public class ProjectCommandHandlers :
                                   .Include(p => p.Collaborators)
                                   .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
 
-      if (project == null) { return new UnpublishProjectResult { Success = false, ErrorMessage = "Project not found" }; }
+      if (project == null) { return new UnpublishProjectResult { Success = false, Error = "Project not found" }; }
 
       // Check authorization - user must have unpublish permissions
       var hasUnpublishPermission = project.Collaborators.Any(c =>
@@ -245,7 +245,7 @@ public class ProjectCommandHandlers :
                                                                c.Permissions.Contains(PermissionType.Unpublish.ToString())
       );
 
-      if (!hasUnpublishPermission) { return new UnpublishProjectResult { Success = false, ErrorMessage = "Unauthorized to unpublish this project" }; }
+      if (!hasUnpublishPermission) { return new UnpublishProjectResult { Success = false, Error = "Unauthorized to unpublish this project" }; }
 
       project.Status = ContentStatus.Draft;
       project.UpdatedAt = DateTime.UtcNow;
@@ -255,9 +255,9 @@ public class ProjectCommandHandlers :
       return new UnpublishProjectResult { Success = true, Project = project };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage unpublishing project: {ProjectId}", request.ProjectId);
+      _logger.LogError(ex, "Error unpublishing project: {ProjectId}", request.ProjectId);
 
-      return new UnpublishProjectResult { Success = false, ErrorMessage = "Failed to unpublish project" };
+      return new UnpublishProjectResult { Success = false, Error = "Failed to unpublish project" };
     }
   }
 
@@ -267,7 +267,7 @@ public class ProjectCommandHandlers :
                                   .Include(p => p.Collaborators)
                                   .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
 
-      if (project == null) { return new ArchiveProjectResult { Success = false, ErrorMessage = "Project not found" }; }
+      if (project == null) { return new ArchiveProjectResult { Success = false, Error = "Project not found" }; }
 
       // Check authorization - user must have archive permissions
       var hasArchivePermission = project.Collaborators.Any(c =>
@@ -276,7 +276,7 @@ public class ProjectCommandHandlers :
                                                              c.Permissions.Contains(PermissionType.Archive.ToString())
       );
 
-      if (!hasArchivePermission) { return new ArchiveProjectResult { Success = false, ErrorMessage = "Unauthorized to archive this project" }; }
+      if (!hasArchivePermission) { return new ArchiveProjectResult { Success = false, Error = "Unauthorized to archive this project" }; }
 
       project.Status = ContentStatus.Archived;
       project.UpdatedAt = DateTime.UtcNow;
@@ -286,9 +286,9 @@ public class ProjectCommandHandlers :
       return new ArchiveProjectResult { Success = true, Project = project };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "ErrorMessage archiving project: {ProjectId}", request.ProjectId);
+      _logger.LogError(ex, "Error archiving project: {ProjectId}", request.ProjectId);
 
-      return new ArchiveProjectResult { Success = false, ErrorMessage = "Failed to archive project" };
+      return new ArchiveProjectResult { Success = false, Error = "Failed to archive project" };
     }
   }
 

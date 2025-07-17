@@ -196,7 +196,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     var response = await _client.GetAsync($"/testing/requests/{nonExistentId}");
 
     // Assert
-    Assert.Equal(System.Net.HttpStatusCode.PageNotFound, response.StatusCode);
+    Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
   }
 
   [Fact]

@@ -6,7 +6,7 @@
 public class ActivityGradeResult {
   public bool Success { get; set; }
 
-  public string? ErrorMessage { get; set; }
+  public string? Error { get; set; }
 
   public ActivityGrade? Grade { get; set; }
 }

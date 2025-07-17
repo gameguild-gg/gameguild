@@ -131,7 +131,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
       var response = await _client.GetAsync($"/api/UserProfiles/{nonexistentId}");
 
       // Assert
-      Assert.Equal(HttpStatusCode.PageNotFound, response.StatusCode);
+      Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
@@ -167,7 +167,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
       var getResponse = await _client.GetAsync($"/api/UserProfiles/{profileId}");
 
       // Assert - Should not find deleted profile
-      Assert.Equal(HttpStatusCode.PageNotFound, getResponse.StatusCode);
+      Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
   }
 }

@@ -6,7 +6,7 @@
 public class ContentInteractionResult {
   public bool Success { get; set; }
 
-  public string? ErrorMessage { get; set; }
+  public string? Error { get; set; }
 
   public ContentInteraction? Interaction { get; set; }
 }

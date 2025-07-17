@@ -28,20 +28,6 @@ export interface Contributor {
   deletions: number;
 }
 
-// convert the number to a string with K if it is over 1000, and M if it is over 1,000,000 and round to 1 decimal.
-function contributionsToString(contributions: number): string {
-  if (contributions) {
-    if (contributions > 1000000) {
-      return `${(contributions / 1000000).toFixed(1)}M`;
-    }
-    if (contributions > 1000) {
-      return `${(contributions / 1000).toFixed(1)}K`;
-    }
-    return contributions.toFixed(1);
-  } else {
-    return '0';
-  }
-}
 
 export default function ContributorCard(contributor: Contributor) {
   if (!contributor) return null;

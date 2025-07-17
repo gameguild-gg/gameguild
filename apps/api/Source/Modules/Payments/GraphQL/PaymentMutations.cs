@@ -32,9 +32,9 @@ public class PaymentMutations {
 
       var result = await mediator.Send(command, cancellationToken);
 
-      return new CreatePaymentPayload { Success = result.Success, Payment = result.Payment, ErrorMessage = result.ErrorMessage, ClientSecret = result.ClientSecret };
+      return new CreatePaymentPayload { Success = result.Success, Payment = result.Payment, Error = result.Error, ClientSecret = result.ClientSecret };
     }
-    catch (Exception ex) { return new CreatePaymentPayload { Success = false, ErrorMessage = ex.Message }; }
+    catch (Exception ex) { return new CreatePaymentPayload { Success = false, Error = ex.Message }; }
   }
 
   /// <summary>
@@ -50,9 +50,9 @@ public class PaymentMutations {
 
       var result = await mediator.Send(command, cancellationToken);
 
-      return new ProcessPaymentPayload { Success = result.Success, Payment = result.Payment, ErrorMessage = result.ErrorMessage, AutoEnrollTriggered = result.AutoEnrollTriggered };
+      return new ProcessPaymentPayload { Success = result.Success, Payment = result.Payment, Error = result.Error, AutoEnrollTriggered = result.AutoEnrollTriggered };
     }
-    catch (Exception ex) { return new ProcessPaymentPayload { Success = false, ErrorMessage = ex.Message }; }
+    catch (Exception ex) { return new ProcessPaymentPayload { Success = false, Error = ex.Message }; }
   }
 
   /// <summary>
@@ -69,9 +69,9 @@ public class PaymentMutations {
 
       var result = await mediator.Send(command, cancellationToken);
 
-      return new RefundPaymentPayload { Success = result.Success, Refund = result.Refund, ErrorMessage = result.ErrorMessage };
+      return new RefundPaymentPayload { Success = result.Success, Refund = result.Refund, Error = result.Error };
     }
-    catch (Exception ex) { return new RefundPaymentPayload { Success = false, ErrorMessage = ex.Message }; }
+    catch (Exception ex) { return new RefundPaymentPayload { Success = false, Error = ex.Message }; }
   }
 
   /// <summary>
@@ -88,9 +88,9 @@ public class PaymentMutations {
 
       var result = await mediator.Send(command, cancellationToken);
 
-      return new CancelPaymentPayload { Success = result.Success, Payment = result.Payment, ErrorMessage = result.ErrorMessage };
+      return new CancelPaymentPayload { Success = result.Success, Payment = result.Payment, Error = result.Error };
     }
-    catch (Exception ex) { return new CancelPaymentPayload { Success = false, ErrorMessage = ex.Message }; }
+    catch (Exception ex) { return new CancelPaymentPayload { Success = false, Error = ex.Message }; }
   }
 }
 
@@ -145,7 +145,7 @@ public record CreatePaymentPayload {
 
   public Payment? Payment { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 
   public string? ClientSecret { get; init; }
 }
@@ -155,7 +155,7 @@ public record ProcessPaymentPayload {
 
   public Payment? Payment { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 
   public bool AutoEnrollTriggered { get; init; }
 }
@@ -165,7 +165,7 @@ public record RefundPaymentPayload {
 
   public PaymentRefund? Refund { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }
 
 public record CancelPaymentPayload {
@@ -173,5 +173,5 @@ public record CancelPaymentPayload {
 
   public Payment? Payment { get; init; }
 
-  public string? ErrorMessage { get; init; }
+  public string? Error { get; init; }
 }

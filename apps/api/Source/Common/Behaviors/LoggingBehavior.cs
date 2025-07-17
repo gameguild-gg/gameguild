@@ -44,8 +44,8 @@ public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TReque
             "Completed {RequestName} with error in {ElapsedMilliseconds}ms: {ErrorCode} - {ErrorDescription} (RequestId: {RequestId})",
             requestName,
             stopwatch.ElapsedMilliseconds,
-            result.ErrorMessage.Code,
-            result.ErrorMessage.Description,
+            result.Error.Code,
+            result.Error.Description,
             requestId
           );
       }
@@ -73,7 +73,7 @@ public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TReque
       stopwatch.Stop();
       logger.LogError(
         ex,
-        "ErrorMessage processing {RequestName} after {ElapsedMilliseconds}ms: {ErrorMessage} (RequestId: {RequestId})",
+        "Error processing {RequestName} after {ElapsedMilliseconds}ms: {Error} (RequestId: {RequestId})",
         requestName,
         stopwatch.ElapsedMilliseconds,
         ex.Message,

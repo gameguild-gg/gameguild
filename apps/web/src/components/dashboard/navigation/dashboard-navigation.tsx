@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
+import { cn } from '@game-guild/ui/lib/utils';
 import { Button } from '@game-guild/ui/components/button';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Separator } from '@game-guild/ui/components/separator';

@@ -1,6 +1,6 @@
 import React, { PropsWithChildren } from 'react';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
+import { cn } from '@game-guild/ui/lib/utils';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 

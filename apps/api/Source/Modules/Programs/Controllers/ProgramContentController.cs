@@ -46,7 +46,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   public async Task<ActionResult<ProgramContentDto>> GetContent(Guid programId, Guid id) {
     var content = await contentService.GetContentByIdAsync(id);
 
-    if (content == null || content.ProgramId != programId) return PageNotFound();
+    if (content == null || content.ProgramId != programId) return NotFound();
 
     var contentDto = content.ToDto();
 
@@ -88,7 +88,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
 
     var existingContent = await contentService.GetContentByIdAsync(id);
 
-    if (existingContent == null || existingContent.ProgramId != programId) return PageNotFound();
+    if (existingContent == null || existingContent.ProgramId != programId) return NotFound();
 
     // Apply updates from DTO
     existingContent.ApplyUpdates(updateDto);
@@ -107,11 +107,11 @@ public class ProgramContentController(IProgramContentService contentService) : C
   public async Task<ActionResult> DeleteContent(Guid programId, Guid id) {
     var content = await contentService.GetContentByIdAsync(id);
 
-    if (content == null || content.ProgramId != programId) return PageNotFound();
+    if (content == null || content.ProgramId != programId) return NotFound();
 
     var deleted = await contentService.DeleteContentAsync(id);
 
-    if (!deleted) return PageNotFound();
+    if (!deleted) return NotFound();
 
     return NoContent();
   }
@@ -125,7 +125,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
     // Verify parent belongs to the program
     var parent = await contentService.GetContentByIdAsync(parentId);
 
-    if (parent == null || parent.ProgramId != programId) return PageNotFound("Parent content not found or does not belong to this program");
+    if (parent == null || parent.ProgramId != programId) return NotFound("Parent content not found or does not belong to this program");
 
     var children = await contentService.GetContentByParentAsync(parentId);
     var childrenDtos = children.ToDtos();
@@ -158,7 +158,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
 
     var content = await contentService.GetContentByIdAsync(id);
 
-    if (content == null || content.ProgramId != programId) return PageNotFound();
+    if (content == null || content.ProgramId != programId) return NotFound();
 
     var success = await contentService.MoveContentAsync(id, moveDto.NewParentId, moveDto.NewSortOrder);
 
