@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 // import { getTracksData } from '@/lib/tracks/actions';
-// Remove TrackProvider import since it doesn't exist
-// import { TrackProvider } from '@/lib/tracks';
+import { TrackProvider } from '@/lib/tracks/context/tracks.context';
 import { TrackFilters } from '@/components/tracks/track-filters';
 import { TrackGrid } from '@/components/tracks/track-grid';
 
@@ -19,8 +18,10 @@ async function TracksContent() {
         </div>
 
         <Suspense fallback={<div className="text-center py-10">Loading tracks...</div>}>
-          <TrackFilters />
-          <TrackGrid />
+          <TrackProvider>
+            <TrackFilters />
+            <TrackGrid />
+          </TrackProvider>
         </Suspense>
       </div>
     );

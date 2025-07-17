@@ -398,6 +398,22 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       "TestingSession",
       [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
     );
+
+    // Grant content type permissions for TestingFeedback
+    await permissionService.GrantContentTypePermissionAsync(
+      userId,
+      tenantId,
+      "TestingFeedback",
+      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete, PermissionType.Report]
+    );
+
+    // Grant content type permissions for SessionRegistration
+    await permissionService.GrantContentTypePermissionAsync(
+      userId,
+      tenantId,
+      "SessionRegistration",
+      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete]
+    );
   }
 
   private Task<string> CreateJwtTokenForUserAsync(UserModel user, TenantModel tenant) {
@@ -695,6 +711,13 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
 
     // Act
     var response = await _client.PostAsync($"/testing/feedback/{feedback.Id}/quality", content);
+
+    // Debug: Print response content if not successful
+    if (!response.IsSuccessStatusCode) {
+      var errorContent = await response.Content.ReadAsStringAsync();
+      _output.WriteLine($"Response Status: {response.StatusCode}");
+      _output.WriteLine($"Response Content: {errorContent}");
+    }
 
     // Assert
     response.EnsureSuccessStatusCode();
