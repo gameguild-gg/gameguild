@@ -72,7 +72,7 @@ export async function submitReport(reportData: ReportRequest) {
 
 export async function testCreateProject(projectData: any) {
   const { auth } = await import('@/auth');
-  const { createProject } = await import('@/components/projects/actions');
+  const { createProject } = await import('@/components/legacy/projects/actions');
   try {
     const session = await auth();
     if (!session || !session.accessToken) {

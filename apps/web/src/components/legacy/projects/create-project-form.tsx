@@ -13,7 +13,7 @@ import { Bold, CircleHelp, Code, ExternalLink, HelpCircle, ImageIcon, Italic, Li
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@game-guild/ui/components/tooltip';
 
 import { Tabs, TabsContent } from '@game-guild/ui/components/tabs';
-import { createProject, Project } from '@/components/projects/actions';
+import { createProject, Project } from '@/components/legacy/projects/actions';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@game-guild/ui/components/hover-card';
 
 interface NewProjectFormProps {
