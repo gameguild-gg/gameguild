@@ -51,7 +51,7 @@ Performance benchmarks for:
 #### Services (`Unit/Services/TestServiceTests.cs`)
 - Business logic validation
 - Service method behavior
-- Error handling
+- ErrorMessage handling
 - Data transformation
 
 ## Test Data and Fixtures

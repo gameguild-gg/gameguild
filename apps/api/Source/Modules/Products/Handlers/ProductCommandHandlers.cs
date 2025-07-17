@@ -78,7 +78,7 @@ public class ProductCommandHandlers :
       return new CreateProductResult { Success = true, Product = product };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error creating product: {Name}", request.Name);
+      _logger.LogError(ex, "ErrorMessage creating product: {Name}", request.Name);
 
       return new CreateProductResult { Success = false, ErrorMessage = $"Failed to create product: {ex.Message}" };
     }
@@ -134,7 +134,7 @@ public class ProductCommandHandlers :
       return new UpdateProductResult { Success = true, Product = product };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error updating product: {ProductId}", request.ProductId);
+      _logger.LogError(ex, "ErrorMessage updating product: {ProductId}", request.ProductId);
 
       return new UpdateProductResult { Success = false, ErrorMessage = $"Failed to update product: {ex.Message}" };
     }
@@ -162,7 +162,7 @@ public class ProductCommandHandlers :
       return new DeleteProductResult { Success = true };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error deleting product: {ProductId}", request.ProductId);
+      _logger.LogError(ex, "ErrorMessage deleting product: {ProductId}", request.ProductId);
 
       return new DeleteProductResult { Success = false, ErrorMessage = $"Failed to delete product: {ex.Message}" };
     }
@@ -191,7 +191,7 @@ public class ProductCommandHandlers :
       return new PublishProductResult { Success = true, Product = product };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error publishing product: {ProductId}", request.ProductId);
+      _logger.LogError(ex, "ErrorMessage publishing product: {ProductId}", request.ProductId);
 
       return new PublishProductResult { Success = false, ErrorMessage = $"Failed to publish product: {ex.Message}" };
     }
@@ -220,7 +220,7 @@ public class ProductCommandHandlers :
       return new UnpublishProductResult { Success = true, Product = product };
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Error unpublishing product: {ProductId}", request.ProductId);
+      _logger.LogError(ex, "ErrorMessage unpublishing product: {ProductId}", request.ProductId);
 
       return new UnpublishProductResult { Success = false, ErrorMessage = $"Failed to unpublish product: {ex.Message}" };
     }

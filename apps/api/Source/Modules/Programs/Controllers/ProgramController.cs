@@ -152,7 +152,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<ProgramEntity>> GetProgram(Guid id) {
     var program = await programService.GetProgramByIdAsync(id);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -165,7 +165,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<ProgramEntity>> GetProgramWithContent(Guid id) {
     var program = await programService.GetProgramWithContentAsync(id);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -180,7 +180,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
 
     var program = await programService.UpdateProgramAsync(id, updateDto);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -193,7 +193,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult> DeleteProgram(Guid id) {
     var existingProgram = await programService.GetProgramByIdAsync(id);
 
-    if (existingProgram == null) return NotFound();
+    if (existingProgram == null) return PageNotFound();
 
     await programService.DeleteProgramAsync(id);
 
@@ -210,7 +210,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
 
     var program = await programService.CloneProgramAsync(id, cloneDto.NewTitle);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return CreatedAtAction(nameof(GetProgram), new { id = program.Id }, program);
   }
@@ -241,7 +241,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
       // If program is published and public, it will be returned; if not found, null will be returned
     }
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -258,7 +258,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
 
     var content = await programService.AddContentAsync(id, contentDto);
 
-    if (content == null) return NotFound("Program not found");
+    if (content == null) return PageNotFound("Program not found");
 
     return Ok(content);
   }
@@ -276,7 +276,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
 
     var content = await programService.UpdateContentAsync(id, contentId, contentDto);
 
-    if (content == null) return NotFound();
+    if (content == null) return PageNotFound();
 
     return Ok(content);
   }
@@ -289,7 +289,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult> RemoveContent(Guid id, Guid contentId) {
     var success = await programService.RemoveContentAsync(id, contentId);
 
-    if (!success) return NotFound();
+    if (!success) return PageNotFound();
 
     return NoContent();
   }
@@ -304,7 +304,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
 
     var program = await programService.ReorderContentAsync(id, reorderDto.ContentIds);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return NoContent();
   }
@@ -319,7 +319,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<UserProgressDto>> AddUserToProgram(Guid id, Guid userId) {
     var progress = await programService.AddUserToProgramAsync(id, userId);
 
-    if (progress == null) return NotFound();
+    if (progress == null) return PageNotFound();
 
     return Ok(progress);
   }
@@ -332,7 +332,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult> RemoveUserFromProgram(Guid id, Guid userId) {
     var success = await programService.RemoveUserFromProgramAsync(id, userId);
 
-    if (!success) return NotFound();
+    if (!success) return PageNotFound();
 
     return NoContent();
   }
@@ -359,7 +359,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<UserProgressDto>> GetUserProgress(Guid id, Guid userId) {
     var progress = await programService.GetUserProgressDtoAsync(id, userId);
 
-    if (progress == null) return NotFound();
+    if (progress == null) return PageNotFound();
 
     return Ok(progress);
   }
@@ -377,7 +377,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
 
     var progress = await programService.UpdateUserProgressAsync(id, userId, progressDto);
 
-    if (progress == null) return NotFound();
+    if (progress == null) return PageNotFound();
 
     return Ok(progress);
   }
@@ -390,7 +390,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult> MarkContentCompleted(Guid id, Guid userId, Guid contentId) {
     var success = await programService.MarkContentCompletedAsync(id, userId, contentId);
 
-    if (!success) return NotFound();
+    if (!success) return PageNotFound();
 
     return NoContent();
   }
@@ -403,7 +403,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult> ResetUserProgress(Guid id, Guid userId) {
     var success = await programService.ResetUserProgressAsync(id, userId);
 
-    if (!success) return NotFound();
+    if (!success) return PageNotFound();
 
     return NoContent();
   }
@@ -418,7 +418,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<ProgramEntity>> SubmitProgram(Guid id) {
     var program = await programService.SubmitProgramAsync(id);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -431,7 +431,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<ProgramEntity>> ApproveProgram(Guid id) {
     var program = await programService.ApproveProgramAsync(id);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -446,7 +446,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
 
     var program = await programService.RejectProgramAsync(id, rejectDto.Reason);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -459,7 +459,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<ProgramEntity>> WithdrawProgram(Guid id) {
     var program = await programService.WithdrawProgramAsync(id);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -472,7 +472,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<ProgramEntity>> ArchiveProgram(Guid id) {
     var program = await programService.ArchiveProgramAsync(id);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -485,7 +485,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<ProgramEntity>> RestoreProgram(Guid id) {
     var program = await programService.RestoreProgramAsync(id);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -500,7 +500,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<ProgramEntity>> PublishProgram(Guid id) {
     var program = await programService.PublishProgramAsync(id);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -513,7 +513,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<ProgramEntity>> UnpublishProgram(Guid id) {
     var program = await programService.UnpublishProgramAsync(id);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -528,7 +528,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
 
     var program = await programService.ScheduleProgramAsync(id, scheduleDto.PublishAt);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -545,7 +545,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
 
     var program = await programService.EnableMonetizationAsync(id, monetizationDto);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -558,7 +558,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<ProgramEntity>> DisableMonetization(Guid id) {
     var program = await programService.DisableMonetizationAsync(id);
 
-    if (program == null) return NotFound();
+    if (program == null) return PageNotFound();
 
     return Ok(program);
   }
@@ -571,7 +571,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<PricingDto>> GetProgramPricing(Guid id) {
     var pricing = await programService.GetProgramPricingAsync(id);
 
-    if (pricing == null) return NotFound();
+    if (pricing == null) return PageNotFound();
 
     return Ok(pricing);
   }
@@ -586,7 +586,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
 
     var pricing = await programService.UpdateProgramPricingAsync(id, pricingDto);
 
-    if (pricing == null) return NotFound();
+    if (pricing == null) return PageNotFound();
 
     return Ok(pricing);
   }
@@ -601,7 +601,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<ProgramAnalyticsDto>> GetProgramAnalytics(Guid id) {
     var analytics = await programService.GetProgramAnalyticsAsync(id);
 
-    if (analytics == null) return NotFound();
+    if (analytics == null) return PageNotFound();
 
     return Ok(analytics);
   }
@@ -614,7 +614,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<CompletionRatesDto>> GetCompletionRates(Guid id) {
     var rates = await programService.GetCompletionRatesAsync(id);
 
-    if (rates == null) return NotFound();
+    if (rates == null) return PageNotFound();
 
     return Ok(rates);
   }
@@ -627,7 +627,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<EngagementMetricsDto>> GetEngagementMetrics(Guid id) {
     var metrics = await programService.GetEngagementMetricsAsync(id);
 
-    if (metrics == null) return NotFound();
+    if (metrics == null) return PageNotFound();
 
     return Ok(metrics);
   }
@@ -640,7 +640,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult<RevenueAnalyticsDto>> GetRevenueAnalytics(Guid id) {
     var revenue = await programService.GetRevenueAnalyticsAsync(id);
 
-    if (revenue == null) return NotFound();
+    if (revenue == null) return PageNotFound();
 
     return Ok(revenue);
   }
@@ -660,7 +660,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
 
     var productId = await programService.CreateProductFromProgramAsync(id, productDto);
 
-    if (productId == null) return NotFound();
+    if (productId == null) return PageNotFound();
 
     return Ok(new { ProductId = productId });
   }
@@ -673,7 +673,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult> LinkProgramToProduct(Guid id, Guid productId) {
     var success = await programService.LinkProgramToProductAsync(id, productId);
 
-    if (!success) return NotFound();
+    if (!success) return PageNotFound();
 
     return NoContent();
   }
@@ -686,7 +686,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   public async Task<ActionResult> UnlinkProgramFromProduct(Guid id, Guid productId) {
     var success = await programService.UnlinkProgramFromProductAsync(id, productId);
 
-    if (!success) return NotFound();
+    if (!success) return PageNotFound();
 
     return NoContent();
   }

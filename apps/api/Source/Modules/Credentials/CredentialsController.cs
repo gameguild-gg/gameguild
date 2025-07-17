@@ -79,7 +79,7 @@ public class CredentialsController : ControllerBase {
       var query = new GetCredentialByIdQuery(id);
       var credential = await _mediator.Send(query);
 
-      if (credential == null) return NotFound($"Credential with ID {id} not found");
+      if (credential == null) return PageNotFound($"Credential with ID {id} not found");
 
       return Ok(MapToResponseDto(credential));
     }
@@ -104,7 +104,7 @@ public class CredentialsController : ControllerBase {
       var query = new GetCredentialByUserIdAndTypeQuery(userId, type);
       var credential = await _mediator.Send(query);
 
-      if (credential == null) return NotFound($"Credential of type '{type}' for user {userId} not found");
+      if (credential == null) return PageNotFound($"Credential of type '{type}' for user {userId} not found");
 
       return Ok(MapToResponseDto(credential));
     }
@@ -178,7 +178,7 @@ public class CredentialsController : ControllerBase {
 
       return Ok(response);
     }
-    catch (ArgumentException ex) { return NotFound(ex.Message); }
+    catch (ArgumentException ex) { return PageNotFound(ex.Message); }
     catch (Exception ex) {
       _logger.LogError(ex, "Failed to update credential {CredentialId}", id);
 
@@ -199,7 +199,7 @@ public class CredentialsController : ControllerBase {
       var command = new SoftDeleteCredentialCommand(id);
       var result = await _mediator.Send(command);
 
-      if (!result) return NotFound($"Credential with ID {id} not found");
+      if (!result) return PageNotFound($"Credential with ID {id} not found");
 
       return NoContent();
     }
@@ -223,7 +223,7 @@ public class CredentialsController : ControllerBase {
       var command = new RestoreCredentialCommand(id);
       var result = await _mediator.Send(command);
 
-      if (!result) return NotFound($"Deleted credential with ID {id} not found");
+      if (!result) return PageNotFound($"Deleted credential with ID {id} not found");
 
       return NoContent();
     }
@@ -247,7 +247,7 @@ public class CredentialsController : ControllerBase {
       var command = new HardDeleteCredentialCommand(id);
       var result = await _mediator.Send(command);
 
-      if (!result) return NotFound($"Credential with ID {id} not found");
+      if (!result) return PageNotFound($"Credential with ID {id} not found");
 
       return NoContent();
     }
@@ -271,7 +271,7 @@ public class CredentialsController : ControllerBase {
       var command = new MarkCredentialAsUsedCommand(id);
       var result = await _mediator.Send(command);
 
-      if (!result) return NotFound($"Credential with ID {id} not found");
+      if (!result) return PageNotFound($"Credential with ID {id} not found");
 
       return NoContent();
     }
@@ -295,7 +295,7 @@ public class CredentialsController : ControllerBase {
       var command = new DeactivateCredentialCommand(id);
       var result = await _mediator.Send(command);
 
-      if (!result) return NotFound($"Credential with ID {id} not found");
+      if (!result) return PageNotFound($"Credential with ID {id} not found");
 
       return NoContent();
     }
@@ -319,7 +319,7 @@ public class CredentialsController : ControllerBase {
       var command = new ActivateCredentialCommand(id);
       var result = await _mediator.Send(command);
 
-      if (!result) return NotFound($"Credential with ID {id} not found");
+      if (!result) return PageNotFound($"Credential with ID {id} not found");
 
       return NoContent();
     }

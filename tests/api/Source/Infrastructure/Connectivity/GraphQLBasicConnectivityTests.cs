@@ -33,7 +33,7 @@ public class GraphQLBasicConnectivityTests : IClassFixture<TestServerFixture>
 
         // GraphQL typically doesn't respond to GET (unless introspection), but endpoint should exist
         // We expect either 400 (Bad Request) or 405 (Method Not Allowed) for GET requests
-        Assert.True(response.StatusCode != System.Net.HttpStatusCode.NotFound, 
+        Assert.True(response.StatusCode != System.Net.HttpStatusCode.PageNotFound,
             "GraphQL endpoint should exist (not return 404)");
         
         _output.WriteLine("✅ GraphQL endpoint exists");
@@ -53,7 +53,7 @@ public class GraphQLBasicConnectivityTests : IClassFixture<TestServerFixture>
         _output.WriteLine($"POST /graphql (empty) Response: {responseString}");
 
         // Should get some kind of error response, not a 404
-        Assert.True(response.StatusCode != System.Net.HttpStatusCode.NotFound, 
+        Assert.True(response.StatusCode != System.Net.HttpStatusCode.PageNotFound,
             "GraphQL endpoint should handle POST requests (not return 404)");
         
         _output.WriteLine("✅ GraphQL endpoint handles POST requests");
@@ -73,7 +73,7 @@ public class GraphQLBasicConnectivityTests : IClassFixture<TestServerFixture>
         _output.WriteLine($"POST /graphql (malformed) Response: {responseString}");
 
         // Should handle malformed JSON gracefully
-        Assert.True(response.StatusCode != System.Net.HttpStatusCode.NotFound, 
+        Assert.True(response.StatusCode != System.Net.HttpStatusCode.PageNotFound,
             "GraphQL should handle malformed JSON (not return 404)");
         
         _output.WriteLine("✅ GraphQL endpoint handles malformed JSON");
@@ -98,7 +98,7 @@ public class GraphQLBasicConnectivityTests : IClassFixture<TestServerFixture>
         _output.WriteLine($"POST /graphql (no query) Response: {responseString}");
 
         // Should return an error about missing query
-        Assert.True(response.StatusCode != System.Net.HttpStatusCode.NotFound, 
+        Assert.True(response.StatusCode != System.Net.HttpStatusCode.PageNotFound,
             "GraphQL should handle requests without query field (not return 404)");
         
         _output.WriteLine("✅ GraphQL endpoint handles requests without query field");
@@ -128,7 +128,7 @@ public class GraphQLBasicConnectivityTests : IClassFixture<TestServerFixture>
         }
         catch (Exception ex)
         {
-            _output.WriteLine($"Error getting GraphQL services: {ex.Message}");
+            _output.WriteLine($"ErrorMessage getting GraphQL services: {ex.Message}");
         }
 
         _output.WriteLine("✅ Service listing completed");

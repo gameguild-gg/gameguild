@@ -20,7 +20,7 @@ public class DomainEventProcessorService(ILogger<DomainEventProcessorService> lo
         break;
       }
       catch (Exception ex) {
-        logger.LogError(ex, "Error occurred while processing domain events");
+        logger.LogError(ex, "ErrorMessage occurred while processing domain events");
         await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken); // Wait longer on error
       }
     }

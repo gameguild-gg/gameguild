@@ -26,10 +26,10 @@ public class GetTenantByIdHandler(
       return Result.Success(tenant);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "Error retrieving tenant {TenantId}", request.Id);
+      logger.LogError(ex, "ErrorMessage retrieving tenant {TenantId}", request.Id);
 
       return Result.Failure<Tenant?>(
-        Common.Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant")
+        Common.ErrorMessage.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant")
       );
     }
   }

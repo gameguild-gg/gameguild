@@ -20,7 +20,7 @@ public class DeactivateTenantHandler(
 
       if (tenant == null)
         return Result.Failure<bool>(
-          Common.Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found")
+          Common.ErrorMessage.PageNotFound("Tenant.PageNotFound", $"Tenant with ID {request.Id} not found")
         );
 
       if (!tenant.IsActive) return Result.Success(true); // Already inactive
@@ -40,10 +40,10 @@ public class DeactivateTenantHandler(
       return Result.Success(true);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "Error deactivating tenant {TenantId}", request.Id);
+      logger.LogError(ex, "ErrorMessage deactivating tenant {TenantId}", request.Id);
 
       return Result.Failure<bool>(
-        Common.Error.Failure("Tenant.DeactivationFailed", "Failed to deactivate tenant")
+        Common.ErrorMessage.Failure("Tenant.DeactivationFailed", "Failed to deactivate tenant")
       );
     }
   }

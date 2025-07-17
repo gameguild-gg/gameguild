@@ -84,10 +84,10 @@ public class CreatePostHandler(
       return Result.Success(post);
     }
     catch (Exception ex) {
-      logger.LogError(ex, "Error creating post for user {AuthorId}", request.AuthorId);
+      logger.LogError(ex, "ErrorMessage creating post for user {AuthorId}", request.AuthorId);
 
       return Result.Failure<Post>(
-        new Common.Error(
+        new Common.ErrorMessage(
           "CreatePost.Failed",
           $"Failed to create post: {ex.Message}",
           ErrorType.Failure
