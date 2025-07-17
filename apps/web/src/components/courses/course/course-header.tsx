@@ -1,8 +1,8 @@
 import type { Course } from '@/components/legacy/types/course-enhanced';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button } from '@game-guild/ui/components/button';
-import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
 import { getCourseLevelConfig } from '@/lib/courses/services/course.service';
 

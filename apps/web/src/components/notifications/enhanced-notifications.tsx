@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
-import { ScrollArea } from '@game-guild/ui/components/scroll-area';
-import { Separator } from '@game-guild/ui/components/separator';
-import { Switch } from '@game-guild/ui/components/switch';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
   AlertCircle,
   Bell,

@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
-import { ScrollArea } from '@game-guild/ui/components/scroll-area';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Activity, BookOpen, DollarSign, RefreshCw, Settings, User, UserMinus, UserPlus } from 'lucide-react';
 
 interface ActivityItem {

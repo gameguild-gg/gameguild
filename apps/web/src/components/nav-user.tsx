@@ -2,8 +2,8 @@
 
 import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles } from 'lucide-react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@game-guild/ui/components/sidebar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +12,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@game-guild/ui/components/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 
 export function NavUser({
   user,

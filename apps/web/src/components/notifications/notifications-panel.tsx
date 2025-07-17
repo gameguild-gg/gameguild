@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { Bell, Check, ExternalLink, MoreHorizontal, X } from 'lucide-react';
-import { Button } from '@game-guild/ui/components/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface NotificationUser {
   id: string;

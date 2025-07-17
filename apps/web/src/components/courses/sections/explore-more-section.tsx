@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Button } from '@game-guild/ui/components/button';
+import { Button } from '@/components/ui/button';
 
 const ExploreMoreSection: React.FC = () => {
   return (

@@ -5,7 +5,7 @@ import { CourseHeader } from '@/components/courses/course/course-header';
 import { CourseOverview } from '@/components/courses/course/course-overview';
 import { CourseSidebar } from '@/components/courses/course/course-sidebar';
 import CourseAccessCard from '@/components/courses/course/course-access-card';
-import { Skeleton } from '@game-guild/ui/components/skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
 
 interface CourseDetailPageProps {

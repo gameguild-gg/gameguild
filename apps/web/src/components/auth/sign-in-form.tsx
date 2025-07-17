@@ -2,11 +2,11 @@
 
 import React, { ComponentPropsWithoutRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { cn } from '@game-guild/ui/lib/utils';
-import { Button } from '@game-guild/ui/components/button';
-import { Label } from '@game-guild/ui/components/label';
-import { Input } from '@game-guild/ui/components/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { signIn } from '@/auth';
 import { useAuthError } from '@/lib/hooks/useAuthError';
 import { Link } from '@/i18n/navigation';

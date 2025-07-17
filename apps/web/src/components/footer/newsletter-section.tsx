@@ -1,6 +1,6 @@
 import React from 'react';
-import { Button } from '@game-guild/ui/components/button';
-import { Input } from '@game-guild/ui/components/input';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Mail, Send } from 'lucide-react';
 
 export function NewsletterSection() {

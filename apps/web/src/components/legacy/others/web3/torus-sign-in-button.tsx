@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@game-guild/ui/components/button';
+import { Button } from '@/components/ui/button';
 import React from 'react';
 
 export default function TorusSignInButton() {

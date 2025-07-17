@@ -3,7 +3,7 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Heart, MessageCircle, Share2, Pin, User, Calendar } from 'lucide-react';
-import { cn } from '@game-guild/ui/lib/utils';
+import { cn } from '@/lib/utils';
 import type { PostDto } from '@/lib/feed';
 
 interface PostCardProps {

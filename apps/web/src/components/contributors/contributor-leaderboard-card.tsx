@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import { Card } from '@game-guild/ui/components/card';
+import { Card } from '@/components/ui/card';
 import { Contributor } from '@/lib/contributors';
 import { ContributorStats } from './contributor-stats';
 import { numberToAbbreviation } from '@/lib/utils';

@@ -2,9 +2,9 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Progress } from '@game-guild/ui/components/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Book, Code, Music, Paintbrush } from 'lucide-react';
 import { Course, COURSE_LEVEL_NAMES } from '@/components/legacy/types/courses';
 

@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSession } from 'next-auth/react';
-import { Button } from '@game-guild/ui/components/button';
-import { Input } from '@game-guild/ui/components/input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Bell, ChevronDown, ChevronUp, Globe, Menu, Search, X } from 'lucide-react';
 
 /**

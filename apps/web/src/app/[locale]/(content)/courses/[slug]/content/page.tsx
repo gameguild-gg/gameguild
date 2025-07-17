@@ -3,10 +3,10 @@ import { getCourseBySlug } from '@/lib/courses/actions';
 import { notFound, redirect } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Progress } from '@game-guild/ui/components/progress';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, Award, CheckCircle, Clock, Code, FileText, Play, Video } from 'lucide-react';
 
 const levelColors = {

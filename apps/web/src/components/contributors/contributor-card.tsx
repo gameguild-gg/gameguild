@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader } from '@game-guild/ui/components/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Contributor } from '@/lib/contributors';
 
 type Props = {

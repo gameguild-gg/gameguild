@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent } from '@game-guild/ui/components/card';
-import { Button } from '@game-guild/ui/components/button';
-import { Badge } from '@game-guild/ui/components/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { BookOpen, CheckCircle, Clock } from 'lucide-react';
 
 interface ContentItem {

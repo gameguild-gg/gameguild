@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { getCourseBySlug } from '@/lib/courses/actions';
 import { Course } from '@/components/legacy/types/courses';
 import { ArrowLeft, BookOpen, Clock, Edit, Eye, Users } from 'lucide-react';

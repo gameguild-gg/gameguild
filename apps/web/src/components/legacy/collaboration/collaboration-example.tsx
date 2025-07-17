@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { InviteCollaboratorsExact, InviteCollaboratorsModal, InviteCollaboratorsTheme } from '@/components/collaboration';
 
 export function CollaborationExample() {

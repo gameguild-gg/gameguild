@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { Check, X } from 'lucide-react';
-import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent } from '@game-guild/ui/components/card';
-import { Input } from '@game-guild/ui/components/input';
-import { Switch } from '@game-guild/ui/components/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface ThemeOption {
   id: string;

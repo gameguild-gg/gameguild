@@ -1,6 +1,6 @@
 import React from 'react';
 import { cva, VariantProps } from 'class-variance-authority';
-import { cn } from '@game-guild/ui/lib/utils';
+import { cn } from '@/lib/utils';
 
 const Variants = cva('flex flex-grow', {
   variants: {

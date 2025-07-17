@@ -1,9 +1,9 @@
 'use client';
 
 import { Lock, MessageCircle, Plus, Trophy } from 'lucide-react';
-import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent } from '@game-guild/ui/components/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface GroupMember {
   id: string;

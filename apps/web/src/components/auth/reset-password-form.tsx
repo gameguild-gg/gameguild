@@ -1,7 +1,7 @@
 'use client';
 
 import React, { FunctionComponent, PropsWithChildren } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ResetPasswordFormProps {
   email: string;

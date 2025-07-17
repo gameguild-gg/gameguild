@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from 'react';
 import Image from 'next/image';
 
-import { cn } from '@game-guild/ui/lib/utils';
+import { cn } from '@/lib/utils';
 
 import {
   NavigationMenu,
@@ -9,7 +9,7 @@ import {
   NavigationMenuItem,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from '@game-guild/ui/components/navigation-menu';
+} from '@/components/ui/navigation-menu';
 import { NavigationMenuLink } from '@radix-ui/react-navigation-menu';
 import { NotificationDropdown } from '@/components/legacy/notifications';
 import { UserProfileDropdown } from '@/components/legacy/profile';

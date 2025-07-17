@@ -1,6 +1,6 @@
 import React, { PropsWithChildren } from 'react';
 import Link from 'next/link';
-import { cn } from '@game-guild/ui/lib/utils';
+import { cn } from '@/lib/utils';
 import { NewsletterSection } from './newsletter-section';
 import { CommunityInfo } from './community-info';
 import { NavigationLinks } from './navigation-links';

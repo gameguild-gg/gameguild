@@ -15,7 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { AlertCircle, CalendarIcon, FileText, Link as LinkIcon, Upload } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { format } from 'date-fns';
-import { cn } from '@game-guild/ui/lib/utils';
+import { cn } from '@/lib/utils';
 import { CreateSimpleTestingRequestDto, testingLabApi } from '@/lib/api/testing-lab/testing-lab-api';
 
 interface SubmissionForm {

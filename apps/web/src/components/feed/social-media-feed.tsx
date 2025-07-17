@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, User, Verified, Play, Pause } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { cn } from '@game-guild/ui/lib/utils';
+import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import './feed.css';
 

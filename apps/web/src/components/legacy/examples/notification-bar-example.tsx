@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function NotificationBarExample() {
   const { success, error, warning, info } = useNotificationHelpers();

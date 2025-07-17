@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { ChevronsUpDown, Plus } from 'lucide-react';
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@game-guild/ui/components/sidebar';
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from '@game-guild/ui/components/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 
 export function TeamSwitcher({
   teams,

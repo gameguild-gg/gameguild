@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { Button } from '@game-guild/ui/components/button';
-import { Input } from '@game-guild/ui/components/input';
-import { Label } from '@game-guild/ui/components/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 

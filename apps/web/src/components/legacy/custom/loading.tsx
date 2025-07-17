@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
-import { cn } from '@game-guild/ui/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface LoadingProps {
   readonly children?: ReactNode;
