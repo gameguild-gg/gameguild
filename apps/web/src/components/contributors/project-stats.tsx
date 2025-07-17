@@ -35,12 +35,6 @@ export function ProjectStats() {
       value: '988M',
       change: '+5%',
     },
-    {
-      icon: '�',
-      label: 'Repositories',
-      value: '988M',
-      change: '+5%',
-    },
   ];
 
   const bottomRowStats: ProjectStat[] = [
