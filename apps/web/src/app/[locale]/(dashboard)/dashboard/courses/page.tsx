@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@game-guild/ui/components/button';
-import { Input } from '@game-guild/ui/components';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components';
+import { Input } from '@game-guild/ui/components/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { getCourseData, revalidateCourseData } from '@/lib/courses/actions';
 import { Course } from '@/types/courses';
