@@ -2,6 +2,7 @@ using GameGuild.Modules.Projects;
 using GameGuild.Modules.Subscriptions.Services;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.TestingLab;
+using GameGuild.Modules.UserAchievements;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Credentials;
@@ -151,5 +152,10 @@ public static class ServiceCollectionExtensions {
     services.AddScoped<IPostService, PostService>();
 
     return services;
+  }
+
+  public static IServiceCollection AddUserAchievementsModule(this IServiceCollection services) {
+    // Register UserAchievements module services
+    return services.AddUserAchievementsModule();
   }
 }
