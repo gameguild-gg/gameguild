@@ -157,7 +157,7 @@ The implementation follows Next.js 15+ best practices:
 - React hooks for state management
 - Accessibility considerations
 - Performance optimizations
-- Error handling and loading states
+- ErrorMessage handling and loading states
 
 ## Testing
 

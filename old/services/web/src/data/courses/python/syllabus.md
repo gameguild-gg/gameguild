@@ -84,7 +84,7 @@ This is a work in progress schedule. It is subject to change. Every change will 
     - Caesar cipher
 - Week 11: 2025/03/24 - 2025/03/28
     - File I/O
-    - Error handling
+    - ErrorMessage handling
     - Functions
 - Week 12: 2025/03/31 - 2025/04/04
     - JSON

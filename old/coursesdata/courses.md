@@ -42,7 +42,7 @@ To add a quiz, you can use the following structure:
 "title": "Basic `if-else` Quiz",
 "question": "What will be printed when `x = 3` in the following code?\n\n
 ```python\nif x > 5:\n    print(\"Greater than 5\")\nelse:\n    print(\"5 or less\")\n```",
-"options": ["Greater than 5", "5 or less", "No output", "Error"],
+"options": ["Greater than 5", "5 or less", "No output", "ErrorMessage"],
 "answers": ["5 or less"]
 }
 !!!

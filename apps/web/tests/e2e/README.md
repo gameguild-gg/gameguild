@@ -15,7 +15,7 @@ This document summarizes the comprehensive E2E test suite created for the Game G
   - ✅ Public API endpoint validation (`/api/program/published`)
   - ✅ Slug format validation (URL-safe, lowercase, hyphens only)
   - ✅ Individual program slug endpoint testing (`/api/program/slug/{slug}`)
-  - ✅ Error handling for invalid slugs (404/401 responses)
+  - ✅ ErrorMessage handling for invalid slugs (404/401 responses)
   - ✅ Data consistency between endpoints
   - ✅ Concurrent request handling
   - ✅ Response time validation
@@ -68,7 +68,7 @@ This document summarizes the comprehensive E2E test suite created for the Game G
 ```
 🚀 API E2E Test Results:
 ✅ API slug endpoints working correctly
-✅ Error handling implemented properly
+✅ ErrorMessage handling implemented properly
 ✅ Response structure contains required fields
 ✅ Slug format validation (URL-safe: ^[a-z0-9-]+$)
 ✅ Authentication handling (401 for protected endpoints)
@@ -80,7 +80,7 @@ This document summarizes the comprehensive E2E test suite created for the Game G
 1. **Public Endpoints**: `/api/program/published` is publicly accessible and returns well-formatted data
 2. **Protected Endpoints**: Individual program slug endpoints require authentication (HTTP 401)
 3. **Slug Format**: All program slugs follow proper URL-safe format
-4. **Error Handling**: Invalid slugs properly return 404 or 401 responses
+4. **ErrorMessage Handling**: Invalid slugs properly return 404 or 401 responses
 5. **Data Consistency**: Program data structure is consistent across endpoints
 
 ## Slug-based Navigation Implementation
@@ -153,7 +153,7 @@ npx playwright test e2e/integration/
 ### ✅ Completed
 
 - [x] API slug endpoint testing
-- [x] Error handling validation
+- [x] ErrorMessage handling validation
 - [x] Slug format validation
 - [x] Data structure validation
 - [x] Authentication handling
@@ -173,7 +173,7 @@ npx playwright test e2e/integration/
 ## Best Practices Implemented
 
 1. **Type Safety**: Proper TypeScript types in test files
-2. **Error Handling**: Graceful handling of API errors and edge cases
+2. **ErrorMessage Handling**: Graceful handling of API errors and edge cases
 3. **Test Isolation**: Each test is independent and can run separately
 4. **Data Validation**: Comprehensive validation of API responses
 5. **Performance**: Response time validation and concurrent request testing
@@ -186,7 +186,7 @@ The E2E test suite provides comprehensive coverage of the slug-based navigation 
 
 - API endpoints correctly handle slug-based requests
 - Frontend components properly integrate with slug-based URLs
-- Error states are handled gracefully
+- ErrorMessage states are handled gracefully
 - Performance requirements are met
 - Data consistency is maintained across the application
 
