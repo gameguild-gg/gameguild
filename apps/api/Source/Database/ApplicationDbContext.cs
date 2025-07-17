@@ -20,6 +20,7 @@ using GameGuild.Modules.Subscriptions.Models;
 using GameGuild.Modules.Tags.Models;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.TestingLab;
+using GameGuild.Modules.UserAchievements;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
@@ -197,6 +198,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<DiscountCode> DiscountCodes { get; set; }
 
   public DbSet<UserFinancialMethod> UserFinancialMethods { get; set; }
+
+  // User Achievements Management DbSets
+  public DbSet<Achievement> Achievements { get; set; }
+
+  public DbSet<UserAchievement> UserAchievements { get; set; }
+
+  public DbSet<AchievementLevel> AchievementLevels { get; set; }
+
+  public DbSet<AchievementPrerequisite> AchievementPrerequisites { get; set; }
+
+  public DbSet<AchievementProgress> AchievementProgress { get; set; }
 
   public DbSet<FinancialTransaction> FinancialTransactions { get; set; }
 
