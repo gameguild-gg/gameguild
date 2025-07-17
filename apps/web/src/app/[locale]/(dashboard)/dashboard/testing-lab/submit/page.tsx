@@ -16,6 +16,7 @@ import { CalendarIcon, Upload, Link as LinkIcon, FileText, AlertCircle } from 'l
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { testingLabApi, CreateSimpleTestingRequestDto } from '@/lib/api/testing-lab/testing-lab-api';
 
 interface SubmissionForm {
   title: string;
@@ -85,11 +86,25 @@ export default function SubmitVersionPage() {
         return;
       }
 
-      // TODO: Submit to API
-      console.log('Submitting testing request:', form);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Create the DTO for API submission
+      const teamName = session?.user?.email ? getTeamFromEmail(session.user.email) : '';
+      const submitData: CreateSimpleTestingRequestDto = {
+        title: form.title,
+        description: form.description,
+        versionNumber: form.versionNumber,
+        downloadUrl: form.downloadUrl,
+        instructionsType: form.testingInstructionsType,
+        instructionsContent: form.testingInstructions,
+        instructionsUrl: form.testingInstructionsUrl,
+        feedbackFormContent: form.feedbackForm,
+        maxTesters: form.maxTesters,
+        startDate: form.startDate?.toISOString(),
+        endDate: form.endDate?.toISOString(),
+        teamIdentifier: teamName,
+      };
+
+      // Submit to API
+      await testingLabApi.createSimpleTestingRequest(submitData);
       
       // Redirect to testing lab page
       router.push('/dashboard/testing-lab');

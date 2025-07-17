@@ -36,27 +36,48 @@ export default function TestingLabPage() {
   const fetchTestingData = async () => {
     try {
       setLoading(true);
-      // TODO: Implement API calls to fetch testing requests and sessions
-      // For now, using mock data
+      
+      // Fetch data from API
+      const [requestsData, sessionsData] = await Promise.all([
+        testingLabApi.getAvailableTestingRequests(),
+        testingLabApi.getTestingSessions(),
+      ]);
+      
+      setTestingRequests(requestsData);
+      setTestingSessions(sessionsData);
+    } catch (error) {
+      console.error('Error fetching testing data:', error);
+      
+      // Fallback to mock data for now
       setTestingRequests([
         {
           id: '1',
           title: 'Alpha Build Testing - Team 01',
           description: 'Testing the core gameplay mechanics for our RPG game',
           projectVersionId: 'pv1',
-          projectTitle: 'fa23-capstone-2023-24-t01',
-          versionNumber: 'v0.1.0-alpha',
-          status: 'active',
-          startDate: '2024-01-15',
-          endDate: '2024-01-22',
+          downloadUrl: 'https://drive.google.com/file/d/example123/view',
+          instructionsType: 'inline',
+          instructionsContent: 'Test the game thoroughly...',
+          feedbackFormContent: 'Please rate the game...',
           maxTesters: 8,
           currentTesterCount: 3,
+          startDate: '2024-01-15',
+          endDate: '2024-01-22',
+          status: 'open',
           createdBy: {
             id: 'u1',
             name: 'John Developer',
-            email: 'john.dev@mymail.champlain.edu'
-          }
-        }
+            email: 'john.dev@mymail.champlain.edu',
+          },
+          projectVersion: {
+            id: 'pv1',
+            versionNumber: 'v0.1.0-alpha',
+            project: {
+              id: 'p1',
+              title: 'fa23-capstone-2023-24-t01',
+            },
+          },
+        },
       ]);
 
       setTestingSessions([
@@ -70,13 +91,12 @@ export default function TestingLabPage() {
           registeredTesterCount: 12,
           status: 'scheduled',
           location: {
+            id: 'l1',
             name: 'Room A101',
-            capacity: 16
-          }
-        }
+            capacity: 16,
+          },
+        },
       ]);
-    } catch (error) {
-      console.error('Error fetching testing data:', error);
     } finally {
       setLoading(false);
     }

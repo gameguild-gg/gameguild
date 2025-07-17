@@ -12,30 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Download, FileText, Send, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
-interface TestingRequest {
-  id: string;
-  title: string;
-  description?: string;
-  projectVersionId: string;
-  projectTitle: string;
-  versionNumber: string;
-  status: 'draft' | 'active' | 'completed' | 'cancelled';
-  startDate: string;
-  endDate: string;
-  downloadUrl?: string;
-  instructionsType: 'inline' | 'file' | 'url';
-  instructionsContent?: string;
-  instructionsUrl?: string;
-  feedbackForm: string;
-  maxTesters?: number;
-  currentTesterCount: number;
-  createdBy: {
-    id: string;
-    name: string;
-    email: string;
-  };
-}
+import { testingLabApi, TestingRequest, SubmitFeedbackDto } from '@/lib/api/testing-lab/testing-lab-api';
 
 interface FeedbackSubmission {
   userId: string;
@@ -69,18 +46,23 @@ export default function TestingRequestPage() {
   const fetchTestingRequest = async (id: string) => {
     try {
       setLoading(true);
-      // TODO: Implement API call
-      // Mock data for now
+      
+      // Fetch from API
+      const requestData = await testingLabApi.getTestingRequest(id);
+      setRequest(requestData);
+
+      if (session?.user?.id) {
+        setFeedback(prev => ({ ...prev, userId: session.user.id }));
+      }
+    } catch (error) {
+      console.error('Error fetching testing request:', error);
+      
+      // Fallback to mock data
       setRequest({
         id,
         title: 'Alpha Build Testing - Team 01',
         description: 'Testing the core gameplay mechanics for our RPG game. This version includes the basic combat system, inventory management, and character progression.',
         projectVersionId: 'pv1',
-        projectTitle: 'fa23-capstone-2023-24-t01',
-        versionNumber: 'v0.1.0-alpha',
-        status: 'active',
-        startDate: '2024-01-15',
-        endDate: '2024-01-22',
         downloadUrl: 'https://drive.google.com/file/d/example123/view',
         instructionsType: 'inline',
         instructionsContent: `1. Download and extract the game files to a folder on your desktop
@@ -92,7 +74,7 @@ export default function TestingRequestPage() {
 7. Look for any bugs, glitches, or usability issues
 8. Pay attention to game balance and difficulty
 9. Test for at least 30 minutes of gameplay`,
-        feedbackForm: `1. How intuitive is the game's control scheme? (1-10)
+        feedbackFormContent: `1. How intuitive is the game's control scheme? (1-10)
 2. Did you encounter any bugs or glitches? Please describe.
 3. How would you rate the visual design and art style? (1-10)
 4. Was the tutorial clear and helpful?
@@ -102,18 +84,27 @@ export default function TestingRequestPage() {
 8. Overall rating (1-10)?`,
         maxTesters: 8,
         currentTesterCount: 3,
+        startDate: '2024-01-15',
+        endDate: '2024-01-22',
+        status: 'open',
         createdBy: {
           id: 'u1',
           name: 'John Developer',
-          email: 'john.dev@mymail.champlain.edu'
-        }
+          email: 'john.dev@mymail.champlain.edu',
+        },
+        projectVersion: {
+          id: 'pv1',
+          versionNumber: 'v0.1.0-alpha',
+          project: {
+            id: 'p1',
+            title: 'fa23-capstone-2023-24-t01',
+          },
+        },
       });
-
+      
       if (session?.user?.id) {
         setFeedback(prev => ({ ...prev, userId: session.user.id }));
       }
-    } catch (error) {
-      console.error('Error fetching testing request:', error);
     } finally {
       setLoading(false);
     }
@@ -125,11 +116,17 @@ export default function TestingRequestPage() {
     try {
       setSubmittingFeedback(true);
       
-      // TODO: Submit feedback to API
-      console.log('Submitting feedback:', feedback);
+      // Create the feedback DTO
+      const feedbackData: SubmitFeedbackDto = {
+        testingRequestId: request.id,
+        feedbackResponses: JSON.stringify(feedback.responses),
+        overallRating: feedback.rating,
+        wouldRecommend: feedback.wouldRecommend,
+        additionalNotes: feedback.additionalNotes,
+      };
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Submit feedback to API
+      await testingLabApi.submitFeedback(feedbackData);
       
       // Show success message and redirect
       alert('Feedback submitted successfully!');
@@ -198,7 +195,7 @@ export default function TestingRequestPage() {
     );
   }
 
-  const feedbackQuestions = request.feedbackForm.split('\n').filter(q => q.trim());
+  const feedbackQuestions = request.feedbackFormContent?.split('\n').filter(q => q.trim()) || [];
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
