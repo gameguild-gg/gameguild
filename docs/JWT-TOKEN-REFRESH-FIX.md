@@ -55,7 +55,7 @@ if (expiresAt && now > expiresAt && token.refreshToken) {
 }
 ```
 
-### ✅ **Enhanced Authentication Error Handling**
+### ✅ **Enhanced Authentication ErrorMessage Handling**
 **File**: `apps/web/src/components/projects/actions.ts`
 
 ```typescript
@@ -66,7 +66,7 @@ async function getAuthHeaders() {
   // Check for token refresh errors
   if ((session as any)?.error === 'RefreshTokenError') {
     console.error('🚨 Token refresh error detected - user needs to re-authenticate');
-    throw new Error('Authentication token expired. Please sign in again.');
+    throw new ErrorMessage('Authentication token expired. Please sign in again.');
   }
   
   if (session?.accessToken) {
@@ -83,7 +83,7 @@ async function getAuthHeaders() {
 if (!response.ok) {
   if (response.status === 401) {
     console.error('🚨 Unauthorized access - token may be expired');
-    throw new Error('Authentication token expired. Please sign in again.');
+    throw new ErrorMessage('Authentication token expired. Please sign in again.');
   }
   // ... other error handling
 }
@@ -139,12 +139,12 @@ if (response.ok) {
 1. **Debug Panel**: Shows authentication status, token presence, and session errors
 2. **Force Re-Auth Button**: Manually trigger fresh authentication
 3. **Enhanced Logging**: Comprehensive console logging for debugging
-4. **Error State Handling**: Automatic detection and handling of token expiration
+4. **ErrorMessage State Handling**: Automatic detection and handling of token expiration
 
 ### ✅ **User Experience Improvements**
 
 1. **Automatic Re-authentication**: Seamless redirect to login when tokens expire
-2. **Clear Error Messages**: User-friendly messages about session expiration
+2. **Clear ErrorMessage Messages**: User-friendly messages about session expiration
 3. **Manual Override**: Users can force re-authentication if needed
 4. **Real-time Feedback**: Debug panel shows current authentication state
 

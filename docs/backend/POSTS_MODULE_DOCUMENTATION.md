@@ -194,7 +194,7 @@ The module creates different types of posts based on the triggering events:
 | `milestone_celebration` | Manual via API | User achievement celebrations |
 | `community_update` | Manual via API | Community news and updates |
 
-## Error Handling
+## ErrorMessage Handling
 
 All domain event handlers include comprehensive error handling:
 
@@ -230,7 +230,7 @@ Key metrics to monitor:
 - Post creation rate by type
 - Event processing latency
 - User engagement rates
-- Error rates in event handlers
+- ErrorMessage rates in event handlers
 - Search indexing performance
 - Notification delivery rates
 

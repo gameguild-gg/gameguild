@@ -55,7 +55,7 @@ This document outlines the comprehensive improvements made to the GameGuild web 
   - Responsive grid layout with mobile optimization
   - Hover effects and smooth animations
   - Loading states and skeleton screens
-  - Error handling with fallback images
+  - ErrorMessage handling with fallback images
 
 ### Technical Implementation:
 - **React Hooks**: `useMemo`, `useCallback` for performance optimization
