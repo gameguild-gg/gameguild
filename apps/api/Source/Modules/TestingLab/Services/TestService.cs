@@ -577,4 +577,142 @@ public class TestService(ApplicationDbContext context) : ITestService {
   }
 
   #endregion
+
+  #region Simplified Testing Workflow
+
+  public async Task<TestingRequest> CreateSimpleTestingRequestAsync(CreateSimpleTestingRequestDto requestDto, Guid userId) {
+    // First, we need to create or find a project and project version
+    // For simplicity, we'll create a project based on the team identifier if it doesn't exist
+    
+    var existingProject = await context.Projects
+        .FirstOrDefaultAsync(p => p.Title == requestDto.TeamIdentifier && p.DeletedAt == null);
+
+    Guid projectId;
+    if (existingProject == null) {
+      // Create a new project for this team
+      var newProject = new GameGuild.Modules.Projects.Project {
+        Id = Guid.NewGuid(),
+        Title = requestDto.TeamIdentifier,
+        ShortDescription = $"Capstone project for {requestDto.TeamIdentifier}",
+        Description = $"Capstone project repository for team {requestDto.TeamIdentifier}",
+        Status = "Active",
+        Visibility = "Public",
+        Category = "Games",
+        CreatedById = userId,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+      };
+      
+      context.Projects.Add(newProject);
+      await context.SaveChangesAsync();
+      projectId = newProject.Id;
+    } else {
+      projectId = existingProject.Id;
+    }
+
+    // Create a project version
+    var projectVersion = new GameGuild.Modules.Projects.ProjectVersion {
+      Id = Guid.NewGuid(),
+      ProjectId = projectId,
+      VersionNumber = requestDto.VersionNumber,
+      ReleaseNotes = requestDto.Description,
+      Status = "published",
+      CreatedById = userId,
+      CreatedAt = DateTime.UtcNow,
+      UpdatedAt = DateTime.UtcNow
+    };
+
+    context.ProjectVersions.Add(projectVersion);
+    await context.SaveChangesAsync();
+
+    // Create the testing request
+    var testingRequest = new TestingRequest {
+      Id = Guid.NewGuid(),
+      ProjectVersionId = projectVersion.Id,
+      Title = requestDto.Title,
+      Description = requestDto.Description,
+      DownloadUrl = requestDto.DownloadUrl,
+      InstructionsType = requestDto.InstructionsType,
+      InstructionsContent = requestDto.InstructionsContent,
+      InstructionsUrl = requestDto.InstructionsUrl,
+      FeedbackFormContent = requestDto.FeedbackFormContent,
+      MaxTesters = requestDto.MaxTesters,
+      StartDate = requestDto.StartDate ?? DateTime.UtcNow,
+      EndDate = requestDto.EndDate ?? DateTime.UtcNow.AddDays(30), // Default 30 days
+      Status = TestingRequestStatus.Active,
+      CreatedById = userId,
+      CreatedAt = DateTime.UtcNow,
+      UpdatedAt = DateTime.UtcNow
+    };
+
+    context.TestingRequests.Add(testingRequest);
+    await context.SaveChangesAsync();
+
+    return await GetTestingRequestByIdAsync(testingRequest.Id) ?? testingRequest;
+  }
+
+  public async Task SubmitFeedbackAsync(SubmitFeedbackDto feedbackDto, Guid userId) {
+    // Create a feedback form if it doesn't exist for this request
+    var existingForm = await context.TestingFeedbackForms
+        .FirstOrDefaultAsync(f => f.TestingRequestId == feedbackDto.TestingRequestId);
+
+    Guid feedbackFormId;
+    if (existingForm == null) {
+      var feedbackForm = new TestingFeedbackForm {
+        Id = Guid.NewGuid(),
+        TestingRequestId = feedbackDto.TestingRequestId,
+        FormSchema = "{ \"type\": \"simple\", \"questions\": [] }", // Simple form
+        IsForOnline = true,
+        IsForSessions = true,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+      };
+
+      context.TestingFeedbackForms.Add(feedbackForm);
+      await context.SaveChangesAsync();
+      feedbackFormId = feedbackForm.Id;
+    } else {
+      feedbackFormId = existingForm.Id;
+    }
+
+    // Create the feedback
+    var feedback = new TestingFeedback {
+      Id = Guid.NewGuid(),
+      TestingRequestId = feedbackDto.TestingRequestId,
+      FeedbackFormId = feedbackFormId,
+      UserId = userId,
+      SessionId = feedbackDto.SessionId,
+      TestingContext = TestingContext.Online, // Assume online for simple submissions
+      FeedbackData = feedbackDto.FeedbackResponses,
+      OverallRating = feedbackDto.OverallRating,
+      WouldRecommend = feedbackDto.WouldRecommend,
+      AdditionalNotes = feedbackDto.AdditionalNotes,
+      CreatedAt = DateTime.UtcNow,
+      UpdatedAt = DateTime.UtcNow
+    };
+
+    context.TestingFeedback.Add(feedback);
+
+    // Update tester count on the request
+    var testingRequest = await context.TestingRequests.FindAsync(feedbackDto.TestingRequestId);
+    if (testingRequest != null) {
+      testingRequest.CurrentTesterCount = await context.TestingFeedback
+          .CountAsync(f => f.TestingRequestId == feedbackDto.TestingRequestId);
+      testingRequest.UpdatedAt = DateTime.UtcNow;
+    }
+
+    await context.SaveChangesAsync();
+  }
+
+  public async Task<IEnumerable<TestingRequest>> GetActiveTestingRequestsAsync() {
+    return await context.TestingRequests
+        .Where(tr => tr.DeletedAt == null && tr.Status == TestingRequestStatus.Active)
+        .Include(tr => tr.ProjectVersion)
+            .ThenInclude(pv => pv.Project)
+        .Include(tr => tr.CreatedBy)
+        .OrderByDescending(tr => tr.CreatedAt)
+        .ToListAsync();
+  }
+
+  #endregion
 }

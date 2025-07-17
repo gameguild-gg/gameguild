@@ -246,4 +246,23 @@ public interface ITestService {
   Task<object> GetUserTestingActivityAsync(Guid userId);
 
   #endregion
+
+  #region Simplified Testing Workflow
+
+  /// <summary>
+  /// Create a simple testing request without requiring existing ProjectVersion
+  /// </summary>
+  Task<TestingRequest> CreateSimpleTestingRequestAsync(CreateSimpleTestingRequestDto requestDto, Guid userId);
+
+  /// <summary>
+  /// Submit simple feedback for a testing request
+  /// </summary>
+  Task SubmitFeedbackAsync(SubmitFeedbackDto feedbackDto, Guid userId);
+
+  /// <summary>
+  /// Get active testing requests available for testing
+  /// </summary>
+  Task<IEnumerable<TestingRequest>> GetActiveTestingRequestsAsync();
+
+  #endregion
 }
