@@ -1,4 +1,4 @@
-import { apiClient } from '../api/api-client.ts';
+import { apiClient } from '../api/api-client';
 import { LocalSignInRequest, LocalSignUpRequest, RefreshTokenRequest, RefreshTokenResponse, SignInResponse } from '@/types/auth';
 
 export class AuthService {

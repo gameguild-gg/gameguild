@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
-import { useTenant } from '@/lib/tenant/tenant-provider.tsx';
-import { TenantSelector } from '@/components/auth/TenantSelector.tsx';
-import { TenantService } from '@/lib/services/tenant.service.ts';
+import { useTenant } from '@/lib/tenant/tenant-provider';
+import { TenantSelector } from '@/components/auth/TenantSelector';
+import { TenantService } from '@/lib/services/tenant.service';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Separator } from '@game-guild/ui/components/separator';
-import { environment } from '@/configs/environment.ts';
+import { environment } from '@/configs/environment';
 
 export default function Page(): React.JSX.Element {
   const { data: session, status } = useSession();

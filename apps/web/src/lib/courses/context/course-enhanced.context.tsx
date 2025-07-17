@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { CourseArea, CourseLevel } from '@/types/courses.ts';
+import { CourseArea, CourseLevel } from '@/types/courses';
 
 // Enhanced course types
 export interface CourseAnalytics {

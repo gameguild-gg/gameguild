@@ -1,9 +1,9 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
-import { getUsersData } from '@/lib/actions/users.ts';
-import { UserProvider } from '@/lib/users/user-context.tsx';
+import { getUsersData } from '@/lib/actions/users';
+import { UserProvider } from '@/lib/users/user-context';
 import { UserManagementContent } from '@/components/dashboard/users/user-management-content';
-import { LoadingSpinner } from '@game-guild/ui/components/spinner';
+import { Loader2 } from 'lucide-react';
 import ErrorBoundary from '@/components/error-boundary';
 
 
@@ -39,7 +39,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
 
         <ErrorBoundary fallback={<div className="text-red-500">Failed to load user management interface</div>}>
           <UserProvider initialUsers={userData.users}>
-            <Suspense fallback={<LoadingSpinner />}>
+            <Suspense fallback={<div className="flex items-center justify-center p-4"><Loader2 className="h-4 w-4 animate-spin" /></div>}>
               <UserManagementContent initialPagination={userData.pagination} />
             </Suspense>
           </UserProvider>

@@ -14,7 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
 import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
-import { LoadingSpinner } from '@game-guild/ui/components/spinner';
+import { Loader2 } from "lucide-react";
 import { BookOpen, Plus, Search, Filter, MoreHorizontal, Edit, Trash2, Eye, Play, Copy, RefreshCw, Grid, List, BarChart3, Calendar, Users } from 'lucide-react';
 import { useState } from 'react';
 
@@ -217,7 +217,7 @@ export function CourseManagementContent({ initialPagination }: CourseManagementC
                   <Button type="submit" disabled={isCreatingCourse}>
                     {isCreatingCourse ? (
                       <>
-                        <LoadingSpinner size="sm" className="mr-2" />
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         Creating...
                       </>
                     ) : (
@@ -329,7 +329,7 @@ export function CourseManagementContent({ initialPagination }: CourseManagementC
               {state.isLoading ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8">
-                    <LoadingSpinner />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   </TableCell>
                 </TableRow>
               ) : paginatedCourses.length === 0 ? (
@@ -427,7 +427,7 @@ export function CourseManagementContent({ initialPagination }: CourseManagementC
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {state.isLoading ? (
             <div className="col-span-full flex justify-center py-8">
-              <LoadingSpinner />
+              <Loader2 className="h-4 w-4 animate-spin" />
             </div>
           ) : paginatedCourses.length === 0 ? (
             <div className="col-span-full text-center py-8 text-gray-500">No courses found</div>
@@ -599,7 +599,7 @@ export function CourseManagementContent({ initialPagination }: CourseManagementC
                 <Button type="submit" disabled={isUpdatingCourse}>
                   {isUpdatingCourse ? (
                     <>
-                      <LoadingSpinner size="sm" className="mr-2" />
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       Updating...
                     </>
                   ) : (

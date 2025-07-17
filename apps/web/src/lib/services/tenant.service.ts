@@ -1,4 +1,4 @@
-import { apiClient } from '../api/api-client.ts';
+import { apiClient } from '../api/api-client';
 import { CreateTenantRequest, TenantResponse, UpdateTenantRequest } from '@/lib/tenant/types';
 
 export class TenantService {

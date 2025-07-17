@@ -6,7 +6,7 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
-import { User, UpdateUserRequest } from '@/types/user.ts';
+import { User, UpdateUserRequest } from '@/types/user';
 
 export interface ActionState {
   success: boolean;
