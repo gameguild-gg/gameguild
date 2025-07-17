@@ -795,4 +795,37 @@ public class TestService(ApplicationDbContext context) : ITestService {
   }
 
   #endregion
+
+  #region Feedback Reporting
+
+  public async Task ReportFeedbackAsync(Guid feedbackId, string reason, Guid reportedByUserId) {
+    var feedback = await context.TestingFeedback
+        .FirstOrDefaultAsync(tf => tf.Id == feedbackId);
+
+    if (feedback == null) {
+      throw new ArgumentException("Feedback not found");
+    }
+
+    feedback.IsReported = true;
+    feedback.ReportReason = reason;
+    feedback.ReportedByUserId = reportedByUserId;
+    feedback.ReportedAt = DateTime.UtcNow;
+
+    await context.SaveChangesAsync();
+  }
+
+  public async Task RateFeedbackQualityAsync(Guid feedbackId, FeedbackQuality quality, Guid ratedByUserId) {
+    var feedback = await context.TestingFeedback
+        .FirstOrDefaultAsync(tf => tf.Id == feedbackId);
+
+    if (feedback == null) {
+      throw new ArgumentException("Feedback not found");
+    }
+
+    feedback.QualityRating = quality;
+
+    await context.SaveChangesAsync();
+  }
+
+  #endregion
 }
