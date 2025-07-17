@@ -6,11 +6,11 @@ namespace GameGuild.Common;
 /// <summary>
 /// Implementation of user context from HTTP context
 /// </summary>
-public class UserContext : IUserContext {
+public class UsersContext : IUserContext {
   private readonly IHttpContextAccessor _httpContextAccessor;
   private readonly ClaimsPrincipal? _user;
 
-  public UserContext(IHttpContextAccessor httpContextAccessor) {
+  public UsersContext(IHttpContextAccessor httpContextAccessor) {
     _httpContextAccessor = httpContextAccessor;
     _user = _httpContextAccessor.HttpContext?.User;
   }

@@ -1,1 +1,1 @@
-export { default as UserProfileDropdown } from './UserProfileDropdown';
+export { default as UserProfileDropdown } from './user-profile-dropdown';

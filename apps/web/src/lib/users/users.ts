@@ -1,9 +1,5 @@
 import { revalidateTag, unstable_cache } from 'next/cache';
-import {
-  User,
-  UpdateUserRequest,
-  PagedResult,
-} from '@/types/user';
+import { PagedResult, UpdateUserRequest, User } from '@/types/user';
 
 export interface UserData {
   users: User[];
@@ -431,7 +427,7 @@ export async function searchUsers(query: string, limit: number = 10): Promise<Us
 export async function getUserStatistics(
   fromDate?: string,
   toDate?: string,
-  includeDeleted: boolean = false
+  includeDeleted: boolean = false,
 ): Promise<{ success: boolean; error?: string; statistics?: any }> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
@@ -469,10 +465,7 @@ export async function getUserStatistics(
 /**
  * Bulk activate users (Server Action)
  */
-export async function bulkActivateUsers(
-  userIds: string[],
-  reason?: string
-): Promise<{ success: boolean; error?: string; result?: any }> {
+export async function bulkActivateUsers(userIds: string[], reason?: string): Promise<{ success: boolean; error?: string; result?: any }> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
     const params = new URLSearchParams();
@@ -492,7 +485,7 @@ export async function bulkActivateUsers(
     }
 
     const result = await response.json();
-    
+
     // Revalidate caches
     await revalidateUsersData();
 
@@ -509,10 +502,7 @@ export async function bulkActivateUsers(
 /**
  * Bulk deactivate users (Server Action)
  */
-export async function bulkDeactivateUsers(
-  userIds: string[],
-  reason?: string
-): Promise<{ success: boolean; error?: string; result?: any }> {
+export async function bulkDeactivateUsers(userIds: string[], reason?: string): Promise<{ success: boolean; error?: string; result?: any }> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
     const params = new URLSearchParams();
@@ -532,7 +522,7 @@ export async function bulkDeactivateUsers(
     }
 
     const result = await response.json();
-    
+
     // Revalidate caches
     await revalidateUsersData();
 
@@ -545,5 +535,3 @@ export async function bulkDeactivateUsers(
     };
   }
 }
-
-

@@ -235,4 +235,4 @@ See `ContextMiddlewareTests.cs` for testing examples.
 
 The context system works out of the box with minimal configuration. The middleware and services are automatically registered during application startup.
 
-For custom tenant resolution or additional claims processing, you can extend the `UserContext` and `TenantContext` services by inheriting from them or implementing the interfaces directly.
+For custom tenant resolution or additional claims processing, you can extend the `UsersContext` and `TenantContext` services by inheriting from them or implementing the interfaces directly.

@@ -3,7 +3,7 @@ namespace GameGuild.Common.Authorization;
 /// <summary>
 /// Represents user context for 3-layer DAC authorization
 /// </summary>
-public class UserContext {
+public class UsersContext {
   /// <summary>
   /// Gets or sets the user identifier
   /// </summary>

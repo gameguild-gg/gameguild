@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useTenant } from '@/lib/tenant/tenant-provider';
-import { TenantSelector } from '@/components/auth/TenantSelector';
+import { TenantSelector } from '@/components/auth/tenant-selector';
 import { TenantService } from '@/lib/services/tenant.service';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';

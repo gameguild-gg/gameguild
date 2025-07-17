@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect } from 'react';
-import { useUserContext, useUserFilters, useUserSelection, useUserPagination } from '@/lib/users/user-context';
+import { useUserContext, useUserFilters, useUserSelection, useUserPagination } from '@/lib/users/users.context';
 import { createUserAction, updateUserAction, deleteUserAction, toggleUserStatusAction, revalidateUsersDataAction } from '@/lib/actions/user-management';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';

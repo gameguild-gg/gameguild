@@ -36,10 +36,10 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
     await next(context);
   }
 
-  private static ValueTask<UserContext?> GetUserContextAsync(IMiddlewareContext context) {
+  private static ValueTask<UsersContext?> GetUserContextAsync(IMiddlewareContext context) {
     var httpContext = context.Services.GetService<IHttpContextAccessor>()?.HttpContext;
 
-    if (httpContext?.User?.Identity?.IsAuthenticated != true) return ValueTask.FromResult<UserContext?>(null);
+    if (httpContext?.User?.Identity?.IsAuthenticated != true) return ValueTask.FromResult<UsersContext?>(null);
 
     var claims = httpContext.User.Claims;
     var userIdClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -49,9 +49,9 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
         tenantIdClaim == null ||
         !Guid.TryParse(userIdClaim, out var userId) ||
         !Guid.TryParse(tenantIdClaim, out var tenantId))
-      return ValueTask.FromResult<UserContext?>(null);
+      return ValueTask.FromResult<UsersContext?>(null);
 
-    return ValueTask.FromResult<UserContext?>(new UserContext { UserId = userId, TenantId = tenantId });
+    return ValueTask.FromResult<UsersContext?>(new UsersContext { UserId = userId, TenantId = tenantId });
   }
 
   private static DACAuthorizationAttribute? GetDACAttribute(IMiddlewareContext context) {
@@ -78,7 +78,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
   }
 
   private async ValueTask<bool> CheckPermissionAsync(
-    IPermissionService permissionService, UserContext userContext,
+    IPermissionService permissionService, UsersContext userContext,
     DACAuthorizationAttribute dacAttribute, IMiddlewareContext context
   ) {
     return dacAttribute switch {
@@ -116,7 +116,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
 
   private static async ValueTask<bool> CheckTenantPermissionAsync(
     IPermissionService permissionService,
-    UserContext userContext, RequireTenantPermissionAttribute attribute
+    UsersContext userContext, RequireTenantPermissionAttribute attribute
   ) {
     return await permissionService.HasTenantPermissionAsync(
              userContext.UserId,
@@ -127,7 +127,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
 
   private static async ValueTask<bool> CheckContentTypePermissionDynamicAsync(
     IPermissionService permissionService,
-    UserContext userContext, DACAuthorizationAttribute attribute
+    UsersContext userContext, DACAuthorizationAttribute attribute
   ) {
     var entityType = attribute.GetType().GetGenericArguments()[0];
     var requiredPermissionProperty = attribute.GetType().GetProperty("RequiredPermission");
@@ -143,7 +143,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
 
   private async ValueTask<bool> CheckResourcePermissionDynamicAsync(
     IPermissionService permissionService,
-    UserContext userContext, DACAuthorizationAttribute attribute, IMiddlewareContext context
+    UsersContext userContext, DACAuthorizationAttribute attribute, IMiddlewareContext context
   ) {
     var resourceIdParameterProperty = attribute.GetType().GetProperty("ResourceIdParameterName");
     var resourceIdParameter = resourceIdParameterProperty?.GetValue(attribute) as string ?? "id";

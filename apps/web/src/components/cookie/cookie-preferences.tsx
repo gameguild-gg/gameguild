@@ -9,7 +9,7 @@ import { Switch } from '@game-guild/ui/components/switch';
 
 type CookiePreferencesProps = {};
 
-export default function CookiePreferences({}: Readonly<CookiePreferencesProps>) {
+export const CookiePreferences = ({}: Readonly<CookiePreferencesProps>): React.JSX.Element => {
   return (
     <Card key="1" className="w-full max-w-lg">
       <CardHeader className="border-b border-dark-gray-300 pb-4">
@@ -52,4 +52,4 @@ export default function CookiePreferences({}: Readonly<CookiePreferencesProps>) 
       </CardFooter>
     </Card>
   );
-}
+};

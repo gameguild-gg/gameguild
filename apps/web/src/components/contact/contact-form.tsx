@@ -7,7 +7,7 @@ import { ContactFormState, submitContactForm } from '@/lib/old/contact/actions';
 
 const initialState: ContactFormState = {};
 
-export default function ContactForm(): React.JSX.Element {
+export const ContactForm = (): React.JSX.Element => {
   const [state, formAction] = useFormState(submitContactForm, initialState);
 
   return (
@@ -15,4 +15,4 @@ export default function ContactForm(): React.JSX.Element {
       <SubmitButton>Submit</SubmitButton>
     </form>
   );
-}
+};

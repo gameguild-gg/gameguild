@@ -5,7 +5,7 @@ import { CookieIcon } from 'lucide-react';
 
 type CookieConsentProps = {};
 
-export default function CookieConsent({}: Readonly<CookieConsentProps>) {
+export const CookieConsent = ({}: Readonly<CookieConsentProps>): React.JSX.Element => {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
@@ -40,4 +40,4 @@ export default function CookieConsent({}: Readonly<CookieConsentProps>) {
       )}
     </>
   );
-}
+};

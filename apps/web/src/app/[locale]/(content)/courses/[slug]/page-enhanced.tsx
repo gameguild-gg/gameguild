@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getCourseBySlug, getCourseLevelConfig } from '@/lib/courses/services/course.service';
-import { CourseHeader } from '@/components/course/CourseHeader';
-import { CourseOverview } from '@/components/course/CourseOverview';
-import { CourseSidebar } from '@/components/course/CourseSidebar';
-import { CourseAccessCard } from '@/components/course/CourseAccessCard';
+import { CourseHeader } from '@/components/courses/course/course-header';
+import { CourseOverview } from '@/components/courses/course/course-overview';
+import { CourseSidebar } from '@/components/courses/course/course-sidebar';
+import CourseAccessCard from '@/components/courses/course/course-access-card';
 import { Skeleton } from '@game-guild/ui/components/skeleton';
 import ErrorBoundary from '@/components/error-boundary';
 
