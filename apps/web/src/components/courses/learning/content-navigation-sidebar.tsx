@@ -5,7 +5,7 @@ import { Card, CardContent } from '@game-guild/ui/components/card';
 import { Button } from '@game-guild/ui/components/button';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Progress } from '@game-guild/ui/components/progress';
-import { ScrollArea } from '@game-guild/ui/components/scroll-area';
+// import { ScrollArea } from '@game-guild/ui/components/scroll-area';
 import { 
   BookOpen, 
   CheckCircle, 
@@ -116,7 +116,7 @@ export function ContentNavigationSidebar({ modules, currentItem, onItemSelect }:
         <h2 className="text-lg font-semibold text-white">Course Contents</h2>
       </div>
       
-      <ScrollArea className="flex-1 p-4">
+      <div className="flex-1 p-4 overflow-y-auto">
         <div className="space-y-4">
           {modules.map((module) => (
             <Card key={module.id} className="bg-gray-800 border-gray-700">
@@ -193,7 +193,7 @@ export function ContentNavigationSidebar({ modules, currentItem, onItemSelect }:
             </Card>
           ))}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
