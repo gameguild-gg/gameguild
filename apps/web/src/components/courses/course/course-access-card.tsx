@@ -244,10 +244,14 @@ export default function CourseAccessCard({ courseSlug }: Omit<CourseAccessCardPr
 
   const loadEnrollmentData = useCallback(async () => {
     try {
+      console.log('Loading enrollment data for course:', courseSlug);
       setLoading(true);
       setError(null);
 
       const [enrollmentStatus, availableProducts] = await Promise.all([getCourseEnrollmentStatus(courseSlug), getProductsContainingCourse(courseSlug)]);
+
+      console.log('Enrollment status:', enrollmentStatus);
+      console.log('Available products:', availableProducts);
 
       setEnrollment(enrollmentStatus);
       setProducts(availableProducts);
@@ -265,15 +269,20 @@ export default function CourseAccessCard({ courseSlug }: Omit<CourseAccessCardPr
 
   const handleFreeCourseEnrollment = useCallback(async () => {
     try {
+      console.log('Starting free course enrollment for:', courseSlug);
       setEnrolling(true);
       setError(null);
 
       const result = await enrollInFreeCourse(courseSlug);
+      console.log('Enrollment result:', result);
 
       if (result.success) {
+        console.log('Enrollment successful, updating status...');
         const updatedStatus = await getCourseEnrollmentStatus(courseSlug);
+        console.log('Updated enrollment status:', updatedStatus);
         setEnrollment(updatedStatus);
       } else {
+        console.error('Enrollment failed:', result.message);
         setError(result.message);
       }
     } catch (err) {
