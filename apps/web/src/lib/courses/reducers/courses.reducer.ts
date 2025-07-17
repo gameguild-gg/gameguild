@@ -1,4 +1,4 @@
-import { CourseState, CourseAction, INITIAL_FILTERS } from '@/types/courses';
+import { CourseState, CourseAction, INITIAL_FILTERS } from '@/components/legacy/types/courses';
 
 export const initialCourseState: CourseState = {
   data: null,

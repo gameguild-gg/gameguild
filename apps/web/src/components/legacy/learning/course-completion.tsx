@@ -15,7 +15,7 @@ import {
   AlertCircle,
   Sparkles
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/lib/old/hooks/use-toast';
 
 interface CompletionRequirement {
   readonly id: string;

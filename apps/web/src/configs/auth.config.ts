@@ -3,7 +3,7 @@ import Credentials from 'next-auth/providers/credentials';
 import { environment } from '@/configs/environment';
 import { NextAuthConfig } from 'next-auth';
 import { apiClient } from '@/lib/api/api-client';
-import { SignInResponse } from '@/types/auth';
+import { SignInResponse } from '@/components/legacy/types/auth';
 import { getJwtExpiryDate } from '@/lib/utils/jwt-utils';
 
 export const authConfig: NextAuthConfig = {

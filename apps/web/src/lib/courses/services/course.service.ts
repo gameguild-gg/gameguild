@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
-import type { Course, CourseId, Result } from '@/types/course-enhanced';
-import { COURSE_LEVELS } from '@/types/course-enhanced';
+import type { Course, CourseId, Result } from '@/components/legacy/types/course-enhanced';
+import { COURSE_LEVELS } from '@/components/legacy/types/course-enhanced';
 
 // Cache configuration
 const CACHE_TAGS = {

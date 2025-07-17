@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import type { Notification, NotificationResponse } from '@/types/notification';
-import { getNotifications } from '@/lib/notifications/actions/notifications.actions';
+import type { Notification, NotificationResponse } from '@/components/legacy/types/notification';
+import { getNotifications } from '@/lib/notifications/notifications.actions';
 
 interface NotificationContextValue {
   notifications: Notification[];

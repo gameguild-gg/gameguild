@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { TenantDomain, CreateTenantDomainRequest } from '@/types/tenant-domain';
+import { TenantDomain, CreateTenantDomainRequest } from '@/components/legacy/types/tenant-domain';
 import { TenantDomainApiClient } from '@/lib/api/tenant-domain-client';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from '@game-guild/ui/components/badge';
 import { Trash2, Edit, Plus, Globe, Shield } from 'lucide-react';
 import { toast } from 'sonner';
-import { TenantService } from '@/lib/services/tenant.service';
+import { TenantService } from '@/lib/tenants/tenant.service';
 
 interface TenantDomainManagerProps {
   tenantId: string | null;

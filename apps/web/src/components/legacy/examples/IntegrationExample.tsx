@@ -2,14 +2,14 @@
 
 import React, { useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
-import { useAuthenticatedApi, useTenant } from '@/lib/tenants/tenant-provider';
+import { useAuthenticatedApi, useTenant } from '@/lib/tenant/tenant-provider';
 import { TenantSelector } from '@/components/auth/tenant-selector';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { TenantService } from '@/lib/tenants/tenant.service';
-import { useAuthError } from '@/lib/old/hooks/useAuthError';
+import { useAuthError } from '@/hooks/useAuthError';
 
 export function ExampleIntegrationComponent() {
   const { data: session } = useSession();

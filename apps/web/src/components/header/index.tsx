@@ -1,241 +1,113 @@
-'use client';
+import React, { PropsWithChildren } from 'react';
+import Image from 'next/image';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { getSession } from 'next-auth/react';
-import { Button } from '@game-guild/ui/components/button';
-import { Input } from '@game-guild/ui/components/input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/avatar';
-import { Bell, ChevronDown, ChevronUp, Globe, Menu, Search, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-/**
- * Main Header
- */
-export default function Header() {
-  const [user, setUser] = useState<any>(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMoreOpen, setIsMoreOpen] = useState(false);
-  const [isComplexOpen, setIsComplexOpen] = useState(false);
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from '@game-guild/ui/components/navigation-menu';
+import { NavigationMenuLink } from '@radix-ui/react-navigation-menu';
+import { NotificationDropdown } from '@/components/legacy/notifications';
+import { UserProfileDropdown } from '@/components/legacy/profile';
 
-  const menuItems = ['Blog', 'Courses']; // ToDo: Jams, Events, Jobs, Tests, Projects
-  const moreItems = ['Roadmap', 'Contributors', 'Issues', 'Code of Conduct', 'Security', 'Privacy Policy', 'Terms of Service', 'Contact', 'About', 'License'];
+type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>;
 
-  const complexItems = [
-    { name: 'Learn', href: `/learn` },
-    {
-      name: 'Code',
-      href: '/learn/coding-environment?id=0&type=sandbox&userId=&role=',
-    },
-  ];
-
-  const languages = ['English', 'Spanish', 'Portuguese', 'French', 'German'];
-
-  const router = useRouter();
-
-  useEffect(() => {
-    // Only fetch the session once when the component mounts
-    // Next.js will handle session updates through its built-in mechanisms
-    // No need for polling which can cause performance issues
-    getUserData();
-  }, []); // Only run once on mount
-
-  const getUserData = async () => {
-    try {
-      const session = await getSession();
-      if (session && session.user) {
-        setUser(session.user);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('Error getting session:', error);
-      setUser(null);
-    }
-  };
-
+const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children, ...props }) => {
   return (
-    <header className="bg-neutral-900 h-[70px] flex items-center justify-between px-4 text-white">
-      <div className="flex items-center">
-        <Link href="/" className="mr-4">
-          <img src="/assets/images/logo-text.png" className="h-[40px] my-auto mx-[10px]" />
-        </Link>
-        <nav className="hidden md:flex space-x-2 h-[50px] p-0">
-          {menuItems.map((item) => (
-            <button key={item} onClick={() => router.push(`/${item.toLowerCase()}`)} className="px-2 my-0 hover:text-gray-400 transition-colors h-full">
-              {item}
-            </button>
-          ))}
-          <DropdownMenu open={isMoreOpen} onOpenChange={setIsMoreOpen}>
-            <DropdownMenuTrigger className="flex px-2 items-center hover:text-gray-400 transition-colors">
-              Institutional {isMoreOpen ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-neutral-900 text-white border-0">
-              {moreItems.map((item) => (
-                <Link key={item} href={`/` + item.toLowerCase().replace(/\s/g, '')}>
-                  <DropdownMenuItem>{item}</DropdownMenuItem>
-                </Link>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu open={isComplexOpen} onOpenChange={setIsComplexOpen}>
-            <DropdownMenuTrigger className="flex px-2 items-center hover:text-gray-400 transition-colors">
-              Learn {isMoreOpen ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-neutral-900 text-white border-0">
-              {complexItems.map((item) => (
-                <DropdownMenuItem key={item.name}>
-                  <Link href={item.href} className=" hover:text-gray-400 transition-colors">
-                    {item.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </nav>
-      </div>
-      <div className="hidden md:flex items-center space-x-4">
-        {isSearchOpen ? (
-          <div className="relative text-white w-80">
-            <Input type="text" placeholder="Search..." className="pl-10 pr-10 py-2 rounded-full bg-neutral-800 text-white placeholder:text-gray-200" />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-200" />
-            <button onClick={() => setIsSearchOpen(false)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-200 hover:text-white">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        ) : (
-          <button onClick={() => setIsSearchOpen(true)} className="hover:text-gray-200 transition-colors">
-            <Search />
-          </button>
-        )}
-        <DropdownMenu>
-          <DropdownMenuTrigger className="hover:text-gray-400 transition-colors">
-            <Globe />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {languages.map((lang) => (
-              <DropdownMenuItem key={lang}>{lang}</DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        {user ? (
-          <div className="flex items-center space-x-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger className="hover:text-gray-400 transition-colors">
-                <Bell />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuLabel>Empty</DropdownMenuLabel>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger>
-                {/*<img src={user.avatar} alt={user.name[0]} className="w-8 h-8 rounded-full" />*/}
-                <Avatar className="mx-2">
-                  <AvatarImage src={user.image} alt={user.name} />
-                  <AvatarFallback className="bg-neutral-50 text-neutral-950">{user.name[0]}</AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => router.push('/profile/edit')}>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={
-                    // redirect to /disconnect
-                    async () => {
-                      router.push('/disconnect');
-                    }
-                  }
-                >
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ) : (
-          <Button
-            onClick={() => router.push('/connect')}
-            variant="outline"
-            className="bg-white text-black font-semibold text-base rounded-md hover:bg-gray-200"
-          >
-            Connect
-          </Button>
-        )}
-      </div>
-      <div className="md:hidden">
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-white items-center">
-          {isMobileMenuOpen ? <X size={42} /> : <Menu size={42} />}
-        </button>
-      </div>
-      {isMobileMenuOpen && (
-        <div className="absolute top-[70px] left-0 right-0 bg-neutral-900 p-4 md:hidden z-30">
-          <div className="flex flex-col space-y-4">
-            <Input type="text" placeholder="Search..." className="pl-10 pr-10 py-2 rounded-full bg-neutral-800 text-white" />
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center justify-between w-full">
-                <span>Language</span>
-                <Globe />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                {languages.map((lang) => (
-                  <DropdownMenuItem key={lang}>{lang}</DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {user ? (
-              <>
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center justify-between w-full">
-                    <span>Notifications</span>
-                    <Bell />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>Notification 1</DropdownMenuItem>
-                    <DropdownMenuItem>Notification 2</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center space-x-2">
-                    <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
-                    <span>{user.name}</span>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>Profile</DropdownMenuItem>
-                    <DropdownMenuItem>Settings</DropdownMenuItem>
-                    <DropdownMenuItem>Logout</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            ) : (
-              <Button
-                onClick={() => router.push('/connect')}
-                variant="outline"
-                className="bg-white text-black font-semibold rounded-md hover:bg-gray-200 w-full"
-              >
-                Connect
-              </Button>
-            )}
-            {menuItems.map((item) => (
-              <Link key={item} href={`/${item.toLowerCase()}`} className="hover:text-gray-400 transition-colors">
-                {item}
-              </Link>
-            ))}
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center justify-between w-full">
-                <span>More</span>
-                <ChevronDown className="h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-neutral-900 text-white">
-                {moreItems.map((item) => (
-                  <DropdownMenuItem key={item}>{item}</DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+    <header className={cn('w-full border-b border-border bg-background/80 backdrop-blur sticky top-0 z-30', className)} {...props}>
+      <div className="container mx-auto px-4 flex justify-between items-center py-4">
+        <div className="flex space-x-8 items-center">
+          <Image src="/assets/images/logo-text-2.png" width={135} height={46} className="my-auto mx-[10px]" alt="Logo" />
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Getting started</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                    <ListItem href="/docs" title="Introduction">
+                      Re-usable components built using Radix UI and Tailwind CSS.
+                    </ListItem>
+                    <ListItem href="/docs/installation" title="Installation">
+                      How to install dependencies and structure your app.
+                    </ListItem>
+                    <ListItem href="/docs/primitives/typography" title="Typography">
+                      Styles for headings, paragraphs, lists...etc
+                    </ListItem>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Courses</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                    <ListItem href="/courses" title="Courses">
+                      Learn about our learning pathways and start your journey.
+                    </ListItem>
+                    <ListItem href="/courses/catalog" title="Course Catalog">
+                      Browse and filter through all available courses.
+                    </ListItem>
+                    <ListItem href="/tracks" title="Learning Tracks">
+                      Explore structured learning paths from beginner to expert.
+                    </ListItem>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Jobs</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                    <ListItem href="/jobs" title="Job Board">
+                      Find and apply for jobs.
+                    </ListItem>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Blogs</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                    <ListItem href="/blog" title="Blog">
+                      Read the latest articles and news.
+                    </ListItem>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
         </div>
-      )}
+        <div className="flex items-center space-x-4">
+          <NotificationDropdown />
+          <UserProfileDropdown />
+        </div>
+        {children}
+      </div>
     </header>
   );
-}
+};
+
+const ListItem = React.forwardRef<React.ElementRef<'a'>, React.ComponentPropsWithoutRef<'a'>>(({ className, title, children, ...props }, ref) => {
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <a
+          ref={ref}
+          className={cn(
+            'block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
+            className,
+          )}
+          {...props}
+        >
+          <div className="text-sm font-medium leading-none">{title}</div>
+          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">{children}</p>
+        </a>
+      </NavigationMenuLink>
+    </li>
+  );
+});
+ListItem.displayName = 'ListItem';
+
+export default Header;

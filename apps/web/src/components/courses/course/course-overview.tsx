@@ -1,4 +1,4 @@
-import type { Course } from '@/types/course-enhanced';
+import type { Course } from '@/components/legacy/types/course-enhanced';
 import { Badge } from '@game-guild/ui/components/badge';
 import { CheckCircle, Target } from 'lucide-react';
 import { getCourseLevelConfig } from '@/lib/courses/services/course.service';

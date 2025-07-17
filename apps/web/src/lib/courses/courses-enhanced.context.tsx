@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { CourseArea, CourseLevel } from '@/types/courses';
+import { CourseArea, CourseLevel } from '@/components/legacy/types/courses';
 
 // Enhanced course types
 export interface CourseAnalytics {

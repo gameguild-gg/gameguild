@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@game-guild/ui/components/a
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
 import { ScrollArea } from '@game-guild/ui/components/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@game-guild/ui/components/popover';
-import type { Notification, NotificationFilters } from '@/types/notification';
+import { NotificationFilters } from '@/components/legacy/types/notification';
 import {
   acceptProjectInvite,
   archiveNotification,
@@ -19,8 +19,8 @@ import {
   getNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
-} from '@/lib/notifications/actions/notifications.actions';
-import { useToast } from '@/lib/hooks/use-toast';
+} from '@/lib/notifications/notifications.actions';
+import { useToast } from '@/lib/old/hooks/use-toast';
 
 interface NotificationDropdownProps {
   className?: string;

@@ -23,7 +23,7 @@ import {
   Lightbulb,
   ExternalLink,
 } from 'lucide-react';
-import { TRACK_LEVELS, TRACK_LEVEL_COLORS, Track } from '@/types/tracks';
+import { TRACK_LEVELS, TRACK_LEVEL_COLORS, Track } from '@/components/legacy/types/tracks';
 
 // Type definitions for real course data
 interface RealCourse {

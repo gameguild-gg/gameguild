@@ -4,8 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { TrackCard } from './track-card';
-import { useFilteredTracks } from '@/lib/hooks/use-tracks';
-
+import { useFilteredTracks } from '@/lib/tracks/use-tracks';
 
 export function TrackGrid() {
   const router = useRouter();

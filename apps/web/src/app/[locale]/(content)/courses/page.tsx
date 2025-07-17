@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
-import { BookOpen, Users, Trophy, Zap, Code, Palette, Gamepad2, Headphones, Star, CheckCircle, ArrowRight, PlayCircle } from 'lucide-react';
+import { ArrowRight, BookOpen, CheckCircle, Code, Gamepad2, Headphones, Palette, PlayCircle, Star, Trophy, Users, Zap } from 'lucide-react';
 
 export default function CoursesLandingPage() {
   return (

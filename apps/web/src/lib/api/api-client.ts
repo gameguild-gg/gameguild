@@ -1,5 +1,5 @@
 import { environment } from '@/configs/environment';
-import { OAuthSignInRequest, RefreshTokenRequest, RefreshTokenResponse, SignInResponse } from '@/types/auth';
+import { OAuthSignInRequest, RefreshTokenRequest, RefreshTokenResponse, SignInResponse } from '@/components/legacy/types/auth';
 
 class ApiClient {
   private baseUrl: string;
