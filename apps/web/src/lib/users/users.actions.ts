@@ -1,5 +1,5 @@
 import { revalidateTag, unstable_cache } from 'next/cache';
-import { User, UpdateUserRequest, PagedResult } from '@/types/user';
+import { PagedResult, UpdateUserRequest, User } from '@/types/user';
 
 export interface UserData {
   users: User[];
@@ -432,11 +432,11 @@ export async function searchUsers(query: string, limit: number = 10): Promise<Us
         deletedAt: profile.deletedAt,
         isDeleted: profile.isDeleted,
       }));
-      
+
       console.log('✅ [SEARCH DEBUG] Transformed users:', users.length);
       return users;
     }
-    
+
     return [];
   } catch (error) {
     console.error('❌ [SEARCH DEBUG] Error searching users:', error);
@@ -565,13 +565,13 @@ export async function bulkDeactivateUsers(userIds: string[], reason?: string): P
 export async function getUserByUsername(username: string): Promise<User | null> {
   try {
     console.log('🔍 [USER DEBUG] Searching for user:', username);
-    
+
     // Search for users with matching name or email
     const users = await searchUsers(username, 50);
-    
+
     if (!users || users.length === 0) {
       console.log('❌ [USER DEBUG] No users found in UserProfiles, creating mock user for demonstration');
-      
+
       // For demonstration purposes, create a mock user based on the username
       // In a real app, you would either:
       // 1. Automatically create a UserProfile when a user registers
@@ -588,7 +588,7 @@ export async function getUserByUsername(username: string): Promise<User | null> 
         updatedAt: new Date().toISOString(),
         isDeleted: false,
       };
-      
+
       console.log('✅ [USER DEBUG] Created mock user for demonstration:', mockUser.name);
       return mockUser;
     }
@@ -596,9 +596,7 @@ export async function getUserByUsername(username: string): Promise<User | null> 
     console.log('📊 [USER DEBUG] Search found users:', users.length);
 
     // Look for exact match first (case insensitive)
-    const exactMatch = users.find(
-      (user: User) => user.name?.toLowerCase() === username.toLowerCase() || user.email?.toLowerCase() === username.toLowerCase()
-    );
+    const exactMatch = users.find((user: User) => user.name?.toLowerCase() === username.toLowerCase() || user.email?.toLowerCase() === username.toLowerCase());
 
     if (exactMatch) {
       console.log('✅ [USER DEBUG] Exact match found:', exactMatch.name || exactMatch.email);
@@ -651,7 +649,7 @@ export async function getCurrentUser(): Promise<User | null> {
     if (!result.users || result.users.length === 0) {
       return null;
     }
-    
+
     // For now, return the first user as current user
     // In a real app, this would get the current session user
     return result.users[0];

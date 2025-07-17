@@ -1,4 +1,4 @@
-import CourseCard from './course-card-duplicate';
+import CourseCard from './course-card-list';
 import type { Course } from '@/types/courses';
 
 export default function CourseList({ courses }: { courses: Course[] }) {
