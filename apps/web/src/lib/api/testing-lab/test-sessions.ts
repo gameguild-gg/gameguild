@@ -1,5 +1,6 @@
 export interface TestSession {
   id: string;
+  slug: string;
   title: string;
   description: string;
   gameTitle: string;
@@ -27,6 +28,7 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
   return [
     {
       id: '1',
+      slug: 'stellar-odyssey-alpha-gameplay',
       title: 'Alpha Gameplay Testing',
       description: 'Test core mechanics and provide feedback on game flow and difficulty balance.',
       gameTitle: 'Stellar Odyssey',
@@ -42,11 +44,12 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       skillLevel: 'intermediate',
       rewards: {
         type: 'credits',
-        value: '50 testing credits'
-      }
+        value: '50 testing credits',
+      },
     },
     {
       id: '2',
+      slug: 'puzzle-quest-mobile-ux-study',
       title: 'UI/UX Usability Study',
       description: 'Evaluate user interface design and user experience flow for mobile puzzle game.',
       gameTitle: 'Puzzle Quest Mobile',
@@ -62,11 +65,12 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       skillLevel: 'any',
       rewards: {
         type: 'certificate',
-        value: 'UX Testing Certificate'
-      }
+        value: 'UX Testing Certificate',
+      },
     },
     {
       id: '3',
+      slug: 'arena-champions-multiplayer-beta',
       title: 'Multiplayer Beta Testing',
       description: 'Test online multiplayer features, server stability, and competitive balance.',
       gameTitle: 'Arena Champions',
@@ -82,11 +86,12 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       skillLevel: 'advanced',
       rewards: {
         type: 'game-key',
-        value: 'Free game copy on release'
-      }
+        value: 'Free game copy on release',
+      },
     },
     {
       id: '4',
+      slug: 'adventure-quest-accessibility-testing',
       title: 'Accessibility Testing Session',
       description: 'Test game accessibility features and provide feedback on inclusivity options.',
       gameTitle: 'Adventure Quest',
@@ -102,11 +107,12 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       skillLevel: 'any',
       rewards: {
         type: 'feedback',
-        value: 'Developer feedback session'
-      }
+        value: 'Developer feedback session',
+      },
     },
     {
       id: '5',
+      slug: 'mystic-realms-bug-hunting',
       title: 'Bug Hunting Session',
       description: 'Systematically test for bugs, glitches, and edge cases in pre-release build.',
       gameTitle: 'Mystic Realms',
@@ -122,13 +128,18 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       skillLevel: 'intermediate',
       rewards: {
         type: 'credits',
-        value: '75 testing credits + Bug bounty'
-      }
-    }
+        value: '75 testing credits + Bug bounty',
+      },
+    },
   ];
 }
 
 export async function getTestSession(id: string): Promise<TestSession | null> {
   const sessions = await getAvailableTestSessions();
-  return sessions.find(session => session.id === id) || null;
+  return sessions.find((session) => session.id === id) || null;
+}
+
+export async function getTestSessionBySlug(slug: string): Promise<TestSession | null> {
+  const sessions = await getAvailableTestSessions();
+  return sessions.find((session) => session.slug === slug) || null;
 }
