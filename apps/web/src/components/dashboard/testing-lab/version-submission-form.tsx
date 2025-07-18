@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { testingLabApi } from '@/lib/api/testing-lab/testing-lab-api';
 import { Upload, FileText, Link as LinkIcon, Save, Send, AlertCircle } from 'lucide-react';
 
 interface SubmissionForm {
@@ -64,21 +65,36 @@ export function VersionSubmissionForm() {
 
     try {
       // Validate required fields
-      if (!form.title || !form.versionNumber || !form.downloadUrl) {
+      if (!form.title || !form.versionNumber || !form.teamIdentifier) {
         throw new Error('Please fill in all required fields');
       }
 
-      // API call would go here
-      console.log('Submitting:', { ...form, isDraft: saveAsDraft });
+      // Prepare submission data
+      const submissionData = {
+        title: form.title.trim(),
+        description: form.description.trim() || undefined,
+        versionNumber: form.versionNumber.trim(),
+        teamIdentifier: form.teamIdentifier.trim(),
+        downloadUrl: form.downloadUrl.trim() || undefined,
+        instructionsType: form.instructionsType as 'inline' | 'url' | 'file',
+        instructionsContent: form.instructionsType === 'inline' ? form.instructionsContent.trim() || undefined : undefined,
+        instructionsUrl: form.instructionsType === 'url' ? form.instructionsUrl.trim() || undefined : undefined,
+        feedbackFormContent: form.feedbackFormContent.trim() || undefined,
+        maxTesters: form.maxTesters > 0 ? form.maxTesters : undefined,
+        startDate: form.startDate || undefined,
+        endDate: form.endDate || undefined,
+      };
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Submit to API
+      const response = await testingLabApi.createSimpleTestingRequest(submissionData);
+      
+      console.log('Submission successful:', response);
 
       // Redirect to testing lab dashboard
       router.push('/dashboard/testing-lab');
     } catch (error) {
       console.error('Submission error:', error);
-      // Handle error (show toast notification)
+      alert('Failed to submit version. Please try again.');
     } finally {
       setIsSubmitting(false);
       setIsDraft(false);
