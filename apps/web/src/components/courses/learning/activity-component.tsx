@@ -164,15 +164,15 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
   const getActivityIcon = () => {
     switch (item.activityType || item.type) {
       case 'text':
-        return <FileText className="h-16 w-16 text-gray-400" />;
+        return <FileText className="h-16 w-16 text-blue-400" />;
       case 'code':
-        return <Code className="h-16 w-16 text-gray-400" />;
+        return <Code className="h-16 w-16 text-purple-400" />;
       case 'file':
-        return <Upload className="h-16 w-16 text-gray-400" />;
+        return <Upload className="h-16 w-16 text-green-400" />;
       case 'quiz':
-        return <MessageSquare className="h-16 w-16 text-gray-400" />;
+        return <MessageSquare className="h-16 w-16 text-yellow-400" />;
       default:
-        return <Play className="h-16 w-16 text-gray-400" />;
+        return <Play className="h-16 w-16 text-slate-400" />;
     }
   };
 
@@ -192,9 +192,9 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
           <Badge variant="outline">{currentQuestion.points} points</Badge>
         </div>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm border-slate-700/50 shadow-lg">
           <CardContent className="p-6">
-            <h4 className="text-lg mb-4">{currentQuestion.question}</h4>
+            <h4 className="text-lg mb-4 text-white">{currentQuestion.question}</h4>
 
             {currentQuestion.type === 'multiple-choice' || currentQuestion.type === 'true-false' ? (
               <RadioGroup
@@ -204,7 +204,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
                 {currentQuestion.options?.map((option, index) => (
                   <div key={index} className="flex items-center space-x-2">
                     <RadioGroupItem value={option} id={`option-${index}`} />
-                    <Label htmlFor={`option-${index}`} className="text-gray-300">
+                    <Label htmlFor={`option-${index}`} className="text-slate-300">
                       {option}
                     </Label>
                   </div>
@@ -261,17 +261,17 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
 
   const renderTextActivity = () => (
     <div className="space-y-6">
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm border-slate-700/50 shadow-lg">
         <CardHeader>
-          <CardTitle>Activity Instructions</CardTitle>
+          <CardTitle className="text-white">Activity Instructions</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-300 mb-4">{item.description || 'Complete this text-based activity by providing your response below.'}</p>
+          <p className="text-slate-400 mb-4">{item.description || 'Complete this text-based activity by providing your response below.'}</p>
 
           {item.id === 'activity-1' && (
-            <div className="bg-gray-800 p-4 rounded border border-gray-600">
-              <h4 className="font-semibold mb-2">Setup Instructions:</h4>
-              <ol className="list-decimal list-inside space-y-2 text-gray-300">
+            <div className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 p-4 rounded border border-slate-600 backdrop-blur-sm">
+              <h4 className="font-semibold mb-2 text-white">Setup Instructions:</h4>
+              <ol className="list-decimal list-inside space-y-2 text-slate-400">
                 <li>Download and install your preferred game engine (Unity, Unreal Engine, or Godot)</li>
                 <li>Set up a code editor (Visual Studio Code, Visual Studio, or similar)</li>
                 <li>Create a new project in your chosen engine</li>
@@ -283,30 +283,30 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
         </CardContent>
       </Card>
 
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm border-slate-700/50 shadow-lg">
         <CardHeader>
-          <CardTitle>Your Response</CardTitle>
+          <CardTitle className="text-white">Your Response</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
             placeholder="Describe your setup process, any challenges encountered, and what you learned..."
             value={(submission.response as string) || ''}
             onChange={(e) => setSubmission((prev) => ({ ...prev, response: e.target.value }))}
-            className="bg-gray-800 border-gray-600 text-white min-h-[200px]"
+            className="bg-slate-800/50 border-slate-600 text-white min-h-[200px] backdrop-blur-sm"
           />
-          <p className="text-sm text-gray-400 mt-2">Minimum 100 words required for completion.</p>
+          <p className="text-sm text-slate-400 mt-2">Minimum 100 words required for completion.</p>
         </CardContent>
       </Card>
 
       <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={() => setSubmission((prev) => ({ ...prev, saved: true }))} className="border-gray-600">
+        <Button variant="outline" onClick={() => setSubmission((prev) => ({ ...prev, saved: true }))} className="bg-slate-800/50 border-slate-600 text-slate-200 hover:bg-slate-700/50 hover:border-slate-500">
           <Save className="h-4 w-4 mr-2" />
           Save Draft
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting || ((submission.response as string) || '').length < 100}
-          className="bg-green-600 hover:bg-green-700"
+          className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 border-0 shadow-lg hover:shadow-xl hover:shadow-green-500/25 transition-all"
         >
           <Send className="h-4 w-4 mr-2" />
           {isSubmitting ? 'Submitting...' : 'Submit Activity'}
@@ -317,16 +317,16 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
 
   const renderCodeActivity = () => (
     <div className="space-y-6">
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm border-slate-700/50 shadow-lg">
         <CardHeader>
-          <CardTitle>Coding Challenge</CardTitle>
+          <CardTitle className="text-white">Coding Challenge</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-300 mb-4">Create a simple player movement script based on the lesson content.</p>
+          <p className="text-slate-400 mb-4">Create a simple player movement script based on the lesson content.</p>
 
-          <div className="bg-gray-800 p-4 rounded border border-gray-600 mb-4">
-            <h4 className="font-semibold mb-2">Requirements:</h4>
-            <ul className="list-disc list-inside space-y-1 text-gray-300">
+          <div className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 p-4 rounded border border-slate-600 mb-4 backdrop-blur-sm">
+            <h4 className="font-semibold mb-2 text-white">Requirements:</h4>
+            <ul className="list-disc list-inside space-y-1 text-slate-400">
               <li>Create a script that handles player input (WASD or arrow keys)</li>
               <li>Implement basic movement in 2D or 3D space</li>
               <li>Include comments explaining your code</li>
@@ -336,9 +336,9 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
         </CardContent>
       </Card>
 
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm border-slate-700/50 shadow-lg">
         <CardHeader>
-          <CardTitle>Code Submission</CardTitle>
+          <CardTitle className="text-white">Code Submission</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -394,19 +394,22 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
   if (!hasStarted) {
     return (
       <div className="text-center py-12">
-        {getActivityIcon()}
-        <h3 className="text-xl font-semibold mb-2 mt-4">{item.title}</h3>
-        <p className="text-gray-400 mb-6 max-w-md mx-auto">{item.description || 'Ready to start this activity?'}</p>
+        <div className="mb-6">{getActivityIcon()}</div>
+        <h3 className="text-xl font-semibold mb-2 mt-4 text-white">{item.title}</h3>
+        <p className="text-slate-400 mb-6 max-w-md mx-auto">{item.description || 'Ready to start this activity?'}</p>
         <div className="flex items-center justify-center gap-4 mb-6">
           {item.duration && (
-            <div className="flex items-center gap-1 text-sm text-gray-400">
+            <div className="flex items-center gap-1 text-sm text-slate-400">
               <Clock className="h-4 w-4" />
               {item.duration} minutes
             </div>
           )}
-          {item.isRequired && <Badge variant="secondary">Required</Badge>}
+          {item.isRequired && <Badge variant="secondary" className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-purple-500/30 text-purple-300">Required</Badge>}
         </div>
-        <Button onClick={handleStart} className="bg-blue-600 hover:bg-blue-700">
+        <Button 
+          onClick={handleStart} 
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all"
+        >
           Start Activity
         </Button>
       </div>
