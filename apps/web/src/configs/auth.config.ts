@@ -2,10 +2,10 @@ import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import { environment } from '@/configs/environment';
 import { NextAuthConfig } from 'next-auth';
-import { apiClient } from '@/lib/api/api-client';
 import { SignInResponse } from '@/components/legacy/types/auth';
 import { getJwtExpiryDate } from '@/lib/utils/jwt-utils';
-import { shouldRefreshToken, refreshAccessToken } from '@/lib/auth/token-refresh';
+import { refreshAccessToken } from '@/lib/auth/token-refresh';
+import { serverAdminLogin, serverGoogleIdTokenSignIn } from '@/lib/auth/server-actions';
 
 export const authConfig: NextAuthConfig = {
   pages: {
@@ -51,12 +51,12 @@ export const authConfig: NextAuthConfig = {
         }
 
         try {
-          // Call the backend API for admin authentication
+          // Call the backend API for admin authentication using server action
           console.log('[NextAuth][admin-bypass] Attempting admin login via backend API');
-          const response = await apiClient.adminLogin({
-            email: credentials.email as string,
-            password: credentials.password as string,
-          });
+          const response = await serverAdminLogin(
+            credentials.email as string,
+            credentials.password as string
+          );
 
           console.log('[NextAuth][admin-bypass] Raw backend response:', response);
 
@@ -132,11 +132,11 @@ export const authConfig: NextAuthConfig = {
           console.log('🚀 [AUTH DEBUG] Attempting Google ID token validation with CMS backend:', environment.apiBaseUrl);
           console.log('🔑 [AUTH DEBUG] Making request to: POST /api/auth/google/id-token');
 
-          // Try the new Google ID token endpoint
-          const response = await apiClient.googleIdTokenSignIn({
-            idToken: account.id_token,
-            tenantId: undefined, // Can be set later via tenant switching
-          });
+          // Try the new Google ID token endpoint using server action
+          const response = await serverGoogleIdTokenSignIn(
+            account.id_token,
+            undefined // Can be set later via tenant switching
+          );
 
           console.log('✅ [AUTH DEBUG] CMS backend authentication successful:', {
             userId: response.user?.id,
@@ -168,7 +168,7 @@ export const authConfig: NextAuthConfig = {
           // Check if it's a connection error
           if ((error as any)?.cause?.code === 'ECONNREFUSED') {
             console.error('🚨 [AUTH DEBUG] CMS Backend is not running on:', environment.apiBaseUrl);
-            console.error('💡 [AUTH DEBUG] Please start the CMS backend with: cd apps/cms && dotnet run');
+            console.error('💡 [AUTH DEBUG] Please start the CMS backend with: cd apps/api && dotnet run');
           } else {
             console.error('🔍 [AUTH DEBUG] CMS Backend is running but authentication failed. Check CMS logs for details.');
             console.error('🐛 [AUTH DEBUG] This might be a Google ID token validation issue in the CMS backend.');
