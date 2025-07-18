@@ -5,6 +5,7 @@ import { NextAuthConfig } from 'next-auth';
 import { apiClient } from '@/lib/api/api-client';
 import { SignInResponse } from '@/components/legacy/types/auth';
 import { getJwtExpiryDate } from '@/lib/utils/jwt-utils';
+import { shouldRefreshToken, refreshAccessToken } from '@/lib/auth/token-refresh';
 
 export const authConfig: NextAuthConfig = {
   pages: {
@@ -219,39 +220,54 @@ export const authConfig: NextAuthConfig = {
         expiresAt = new Date(token.expires as unknown as string);
       }
 
+      // Add 30-second buffer to avoid race conditions
+      const refreshBuffer = 30 * 1000; // 30 seconds
+      const shouldRefresh = expiresAt && now.getTime() + refreshBuffer >= expiresAt.getTime();
+
       console.log('⏰ [AUTH DEBUG] Token expiry check:', {
         now: now.toISOString(),
         expiresAt: expiresAt?.toISOString(),
         isExpired: expiresAt ? now > expiresAt : false,
+        shouldRefresh,
         hasRefreshToken: !!token.refreshToken,
+        hasError: !!token.error,
         tokenSource: expiresAt ? (token.accessToken ? 'JWT_DECODE' : 'STORED_VALUE') : 'NONE',
-        willAttemptRefresh: expiresAt && now > expiresAt && !!token.refreshToken,
+        willAttemptRefresh: shouldRefresh && !!token.refreshToken && !token.error,
+        refreshBuffer: `${refreshBuffer / 1000}s`,
       });
 
-      if (expiresAt && now > expiresAt && token.refreshToken) {
-        console.log('🔄 [AUTH DEBUG] Token expired, attempting refresh...');
-        try {
-          const refreshResponse = await apiClient.refreshToken({
-            refreshToken: token.refreshToken as string,
+      // Only attempt refresh if:
+      // 1. Token is about to expire or expired
+      // 2. We have a refresh token
+      // 3. We don't already have a refresh error
+      // 4. This is not a session update trigger (to avoid infinite loops)
+      if (shouldRefresh && token.refreshToken && !token.error && trigger !== 'update') {
+        console.log('🔄 [AUTH DEBUG] Token needs refresh, attempting...');
+        
+        const refreshResult = await refreshAccessToken(token.refreshToken as string);
+        
+        if (refreshResult.success && refreshResult.data) {
+          console.log('✅ [AUTH DEBUG] Token refresh successful:', {
+            newExpiresAt: refreshResult.data.expires,
+            hasNewAccessToken: !!refreshResult.data.accessToken,
+            hasNewRefreshToken: !!refreshResult.data.refreshToken,
           });
 
-          console.log('✅ [AUTH DEBUG] Token refresh successful');
-          token.accessToken = refreshResponse.accessToken;
-          token.refreshToken = refreshResponse.refreshToken;
-          token.expires = new Date(refreshResponse.expires);
+          token.accessToken = refreshResult.data.accessToken;
+          token.refreshToken = refreshResult.data.refreshToken;
+          token.expires = new Date(refreshResult.data.expires);
 
           // Clear any previous errors
           delete token.error;
-          delete token.error;
-        } catch (error) {
+        } else {
           console.error('❌ [AUTH DEBUG] Failed to refresh token:', {
-            error: error instanceof Error ? error.message : error,
-            stack: error instanceof Error ? error.stack : 'No stack trace',
+            error: refreshResult.error,
+            refreshToken: token.refreshToken ? 'present' : 'missing',
           });
           // Token refresh failed, user needs to sign in again
           token.error = 'RefreshTokenError';
-          token.accessToken = undefined;
-          token.refreshToken = undefined;
+          // Don't immediately clear tokens to allow graceful degradation
+          // They will be cleared in the session callback
         }
       }
 
@@ -268,8 +284,25 @@ export const authConfig: NextAuthConfig = {
         timestamp: new Date().toISOString(),
       });
 
-      // Pass token data to the session
-      session.accessToken = token.accessToken as string;
+      // If there's a refresh token error, clear the session data and return minimal session
+      if (token.error === 'RefreshTokenError') {
+        console.log('🚨 [AUTH DEBUG] RefreshTokenError detected, clearing session data');
+        return {
+          ...session,
+          accessToken: undefined,
+          error: token.error,
+          user: {
+            ...session.user,
+            id: token.id as string,
+          },
+        };
+      }
+
+      // Pass token data to the session only if we don't have errors
+      if (token.accessToken) {
+        session.accessToken = token.accessToken as string;
+      }
+      
       session.user.id = token.id as string;
 
       if (token.user) {
@@ -289,11 +322,6 @@ export const authConfig: NextAuthConfig = {
 
       if (token.currentTenant) {
         (session as any).currentTenant = token.currentTenant;
-      }
-
-      // If there's a token error, include it in the session
-      if (token.error) {
-        (session as any).error = token.error;
       }
 
       return session;
