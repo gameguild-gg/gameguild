@@ -12,6 +12,7 @@ export function TestingLabLanding({ testSessions }: TestingLabLandingProps) {
 
   return (
     <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1">{/* TODO: Add floating icons here*/}</div>
       <div className="flex flex-col flex-1 items-center justify-center">
         <div className="container ">
           {/* Hero Section */}

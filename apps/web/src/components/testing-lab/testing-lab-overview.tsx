@@ -255,7 +255,7 @@ export function TestingLabOverview() {
             <CardDescription className="text-slate-400">Common tasks for students</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Link href="/testing-lab/submit">
+            <Link href="/dashboard/testing-lab/submit">
               <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0">
                 <Upload className="mr-2 h-4 w-4" />
                 Submit New Version
@@ -264,7 +264,7 @@ export function TestingLabOverview() {
             <Button
               variant="outline"
               className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-              onClick={() => window.open('/testing-lab/requests', '_self')}
+              onClick={() => window.open('/dashboard/testing-lab/requests', '_self')}
             >
               <Download className="mr-2 h-4 w-4" />
               View Testing Assignments
@@ -272,7 +272,7 @@ export function TestingLabOverview() {
             <Button
               variant="outline"
               className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-              onClick={() => window.open('/testing-lab/feedback', '_self')}
+              onClick={() => window.open('/dashboard/testing-lab/feedback', '_self')}
             >
               <MessageSquare className="mr-2 h-4 w-4" />
               Complete Feedback
@@ -288,7 +288,7 @@ export function TestingLabOverview() {
             <CardDescription className="text-slate-400">Manage testing lab operations</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Link href="/testing-lab/sessions">
+            <Link href="/dashboard/testing-lab/sessions">
               <Button className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Testing Session
@@ -297,7 +297,7 @@ export function TestingLabOverview() {
             <Button
               variant="outline"
               className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-              onClick={() => window.open('/testing-lab/attendance', '_self')}
+              onClick={() => window.open('/dashboard/testing-lab/attendance', '_self')}
             >
               <Users className="mr-2 h-4 w-4" />
               View Attendance Reports
@@ -305,7 +305,7 @@ export function TestingLabOverview() {
             <Button
               variant="outline"
               className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-              onClick={() => window.open('/testing-lab/feedback', '_self')}
+              onClick={() => window.open('/dashboard/testing-lab/feedback', '_self')}
             >
               <BarChart3 className="mr-2 h-4 w-4" />
               Review Feedback
@@ -391,7 +391,7 @@ export function TestingLabOverview() {
                       <span className="text-sm text-white">{stats.totalRequests}</span>
                     </div>
                     <Button asChild variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
-                      <Link href="/testing-lab/requests">View All Requests</Link>
+                      <Link href="/dashboard/testing-lab/requests">View All Requests</Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -422,7 +422,7 @@ export function TestingLabOverview() {
                       <span className="text-sm text-white">{stats.totalSessions}</span>
                     </div>
                     <Button asChild variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
-                      <Link href="/testing-lab/sessions">Manage Sessions</Link>
+                      <Link href="/dashboard/testing-lab/sessions">Manage Sessions</Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -451,7 +451,7 @@ export function TestingLabOverview() {
                       <span className="text-sm text-white">{stats.totalFeedback}</span>
                     </div>
                     <Button asChild variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
-                      <Link href="/testing-lab/feedback">Manage Feedback</Link>
+                      <Link href="/dashboard/testing-lab/feedback">Manage Feedback</Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -516,7 +516,7 @@ export function TestingLabOverview() {
               <CardContent>
                 <p className="text-slate-400">Sessions functionality will be implemented here.</p>
                 <Button asChild className="mt-4">
-                  <Link href="/testing-lab/sessions">Go to Sessions Page</Link>
+                  <Link href="/dashboard/testing-lab/sessions">Go to Sessions Page</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -531,7 +531,7 @@ export function TestingLabOverview() {
               <CardContent>
                 <p className="text-slate-400">Feedback functionality will be implemented here.</p>
                 <Button asChild className="mt-4">
-                  <Link href="/testing-lab/feedback">Go to Feedback Page</Link>
+                  <Link href="/dashboard/testing-lab/feedback">Go to Feedback Page</Link>
                 </Button>
               </CardContent>
             </Card>
