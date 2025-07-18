@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
-import { clearProjectCache, getProjects, Project, ProjectListItem, revalidateProjects } from '@/components/legacy/projects/actions';
-import { ProjectsOverview } from '@/components/projects/projects-overview';
+import { clearProjectCache, getProjects, ProjectListItem, revalidateProjects } from '@/components/legacy/projects/actions';
+import { ProjectList } from '@/components/legacy/projects/project-list';
 import { useRouter } from 'next/navigation';
 
 // Utility function to force fresh authentication
@@ -92,12 +92,6 @@ export default function ProjectsPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleProjectCreated = async (project: Project) => {
-    console.log('New project created:', project);
-    // Add the new project to the list and refresh
-    await handleRefreshProjects();
   };
   useEffect(() => {
     const fetchProjects = async () => {
@@ -210,14 +204,7 @@ export default function ProjectsPage() {
             </div>
           </div>
         </div>
-        <ProjectsOverview
-          projects={projects}
-          loading={loading}
-          error={error}
-          onCreateProject={createTestProject}
-          onRefresh={handleRefreshProjects}
-          onProjectCreated={handleProjectCreated}
-        />
+        <ProjectList initialProjects={projects} />
       </div>
     </div>
   );
