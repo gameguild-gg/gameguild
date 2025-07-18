@@ -225,7 +225,7 @@ export function AttendanceTracker() {
         setLoading(false);
       }
     }
-    ;
+
 
     const getAttendanceStatusColor = (status: string) => {
       switch (status) {
