@@ -1,16 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, Users, Clock, MapPin, Plus, Edit, Trash2, UserCheck, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Edit, MapPin, Plus, UserCheck, Users, XCircle } from 'lucide-react';
 import { testingLabApi } from '@/lib/api/testing-lab/testing-lab-api';
 
 interface TestingSession {
@@ -74,25 +73,27 @@ export function TestingSessionsManager() {
       setLoading(true);
       // Load sessions from API
       const data = await testingLabApi.getTestingSessions();
-      setSessions(data.map(session => ({
-        id: session.id,
-        sessionName: session.sessionName,
-        sessionDate: session.sessionDate,
-        startTime: session.startTime,
-        endTime: session.endTime,
-        location: session.location,
-        maxTesters: session.maxTesters,
-        registeredTesterCount: session.registeredTesterCount,
-        registeredProjectMemberCount: 0, // Default value
-        registeredProjectCount: 0, // Default value
-        status: session.status,
-        manager: {
-          id: 'manager-id',
-          name: 'Session Manager',
-          email: 'manager@champlain.edu'
-        },
-        testingRequests: []
-      })));
+      setSessions(
+        data.map((session) => ({
+          id: session.id,
+          sessionName: session.sessionName,
+          sessionDate: session.sessionDate,
+          startTime: session.startTime,
+          endTime: session.endTime,
+          location: session.location,
+          maxTesters: session.maxTesters,
+          registeredTesterCount: session.registeredTesterCount,
+          registeredProjectMemberCount: 0, // Default value
+          registeredProjectCount: 0, // Default value
+          status: session.status,
+          manager: {
+            id: 'manager-id',
+            name: 'Session Manager',
+            email: 'manager@champlain.edu',
+          },
+          testingRequests: [],
+        })),
+      );
     } catch (error) {
       console.error('Error fetching sessions:', error);
       // Fallback to mock data
@@ -198,9 +199,7 @@ export function TestingSessionsManager() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-white">Testing Sessions</h1>
-          <p className="text-slate-400 mt-1">
-            Manage testing sessions and track attendance
-          </p>
+          <p className="text-slate-400 mt-1">Manage testing sessions and track attendance</p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
@@ -212,19 +211,13 @@ export function TestingSessionsManager() {
           <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-2xl">
             <DialogHeader>
               <DialogTitle>Schedule New Testing Session</DialogTitle>
-              <DialogDescription className="text-slate-400">
-                Create a new testing session for students to participate in
-              </DialogDescription>
+              <DialogDescription className="text-slate-400">Create a new testing session for students to participate in</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="sessionName">Session Name</Label>
-                  <Input
-                    id="sessionName"
-                    placeholder="e.g., Block 3 Testing Session"
-                    className="bg-slate-700 border-slate-600"
-                  />
+                  <Input id="sessionName" placeholder="e.g., Block 3 Testing Session" className="bg-slate-700 border-slate-600" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="location">Location</Label>
@@ -243,27 +236,15 @@ export function TestingSessionsManager() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="sessionDate">Date</Label>
-                  <Input
-                    id="sessionDate"
-                    type="date"
-                    className="bg-slate-700 border-slate-600"
-                  />
+                  <Input id="sessionDate" type="date" className="bg-slate-700 border-slate-600" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="startTime">Start Time</Label>
-                  <Input
-                    id="startTime"
-                    type="time"
-                    className="bg-slate-700 border-slate-600"
-                  />
+                  <Input id="startTime" type="time" className="bg-slate-700 border-slate-600" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="endTime">End Time</Label>
-                  <Input
-                    id="endTime"
-                    type="time"
-                    className="bg-slate-700 border-slate-600"
-                  />
+                  <Input id="endTime" type="time" className="bg-slate-700 border-slate-600" />
                 </div>
               </div>
               <div className="space-y-2">
@@ -284,9 +265,7 @@ export function TestingSessionsManager() {
               <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
                 Cancel
               </Button>
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                Schedule Session
-              </Button>
+              <Button className="bg-blue-600 hover:bg-blue-700">Schedule Session</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -346,7 +325,7 @@ export function TestingSessionsManager() {
                   <span className="text-slate-300">Manager: {session.manager.name}</span>
                   <span className="text-slate-400">{session.registeredProjectCount} projects scheduled</span>
                 </div>
-                
+
                 {session.testingRequests.length > 0 && (
                   <div>
                     <p className="text-sm text-slate-300 mb-2">Testing Requests:</p>
@@ -374,9 +353,7 @@ export function TestingSessionsManager() {
                 <Calendar className="h-5 w-5" />
                 {selectedSession.sessionName} - Registrations
               </DialogTitle>
-              <DialogDescription className="text-slate-400">
-                Manage participant registrations and attendance
-              </DialogDescription>
+              <DialogDescription className="text-slate-400">Manage participant registrations and attendance</DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4">
@@ -427,18 +404,14 @@ export function TestingSessionsManager() {
                         <TableCell className="text-white">{registration.user.name}</TableCell>
                         <TableCell className="text-slate-300">{registration.user.email}</TableCell>
                         <TableCell>
-                          <Badge className={getRegistrationTypeColor(registration.registrationType)}>
-                            {registration.registrationType}
-                          </Badge>
+                          <Badge className={getRegistrationTypeColor(registration.registrationType)}>{registration.registrationType}</Badge>
                         </TableCell>
                         <TableCell>
                           <Badge className={registration.status === 'confirmed' ? 'bg-green-600/20 text-green-400' : 'bg-yellow-600/20 text-yellow-400'}>
                             {registration.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-slate-400">
-                          {new Date(registration.registeredAt).toLocaleDateString()}
-                        </TableCell>
+                        <TableCell className="text-slate-400">{new Date(registration.registeredAt).toLocaleDateString()}</TableCell>
                         <TableCell>
                           <div className="flex gap-1">
                             {registration.status === 'pending' && (
@@ -464,9 +437,7 @@ export function TestingSessionsManager() {
               <Button variant="outline" onClick={() => setSelectedSession(null)}>
                 Close
               </Button>
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                Export Attendance
-              </Button>
+              <Button className="bg-blue-600 hover:bg-blue-700">Export Attendance</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
