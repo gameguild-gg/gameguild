@@ -3,13 +3,7 @@ import Image from 'next/image';
 
 import { cn } from '@/lib/utils';
 
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu';
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import { NavigationMenuLink } from '@radix-ui/react-navigation-menu';
 import { NotificationDropdown } from '@/components/legacy/notifications';
 import { UserProfileDropdown } from '@/components/legacy/profile';
@@ -27,7 +21,7 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
     >
       {/* Top Subtle Border */}
       <div className="h-px bg-gradient-to-r from-transparent via-white/20 dark:via-slate-400/30 to-transparent"></div>
-      
+
       <div className="container mx-auto px-4 flex justify-between items-center py-4">
         <div className="flex space-x-8 items-center">
           <Image src="/assets/images/logo-text-2.png" width={135} height={46} className="my-auto mx-[10px]" alt="Logo" />
@@ -102,7 +96,7 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
         </div>
         {children}
       </div>
-      
+
       {/* Bottom Beautiful Border */}
       <div className="h-px bg-gradient-to-r from-transparent via-white/20 dark:via-slate-400/30 to-transparent"></div>
     </header>

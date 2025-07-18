@@ -87,7 +87,7 @@ export function VersionSubmissionForm() {
 
       // Submit to API
       const response = await testingLabApi.createSimpleTestingRequest(submissionData);
-      
+
       console.log('Submission successful:', response);
 
       // Redirect to testing lab dashboard
@@ -106,9 +106,7 @@ export function VersionSubmissionForm() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white">Submit New Version</h1>
-        <p className="text-slate-400 mt-1">
-          Submit your game version for testing by your peers
-        </p>
+        <p className="text-slate-400 mt-1">Submit your game version for testing by your peers</p>
       </div>
 
       <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
@@ -119,9 +117,7 @@ export function VersionSubmissionForm() {
               <FileText className="h-5 w-5" />
               Basic Information
             </CardTitle>
-            <CardDescription className="text-slate-400">
-              Provide basic details about your game version
-            </CardDescription>
+            <CardDescription className="text-slate-400">Provide basic details about your game version</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -180,25 +176,15 @@ export function VersionSubmissionForm() {
                     <SelectItem value="sp">Spring</SelectItem>
                   </SelectContent>
                 </Select>
-                <Input
-                  placeholder="Year (2024)"
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                  defaultValue="2024"
-                />
-                <Input
-                  placeholder="Team # (01-15)"
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                  defaultValue="03"
-                />
+                <Input placeholder="Year (2024)" className="bg-slate-700/50 border-slate-600 text-white" defaultValue="2024" />
+                <Input placeholder="Team # (01-15)" className="bg-slate-700/50 border-slate-600 text-white" defaultValue="03" />
                 <Input
                   value={form.teamIdentifier || 'fa24-capstone-2024-03'}
                   onChange={(e) => handleInputChange('teamIdentifier', e.target.value)}
                   className="bg-slate-700/50 border-slate-600 text-white"
                 />
               </div>
-              <p className="text-xs text-slate-500">
-                Auto-generated team identifier following the required pattern
-              </p>
+              <p className="text-xs text-slate-500">Auto-generated team identifier following the required pattern</p>
             </div>
           </CardContent>
         </Card>
@@ -210,9 +196,7 @@ export function VersionSubmissionForm() {
               <Upload className="h-5 w-5" />
               Game Download
             </CardTitle>
-            <CardDescription className="text-slate-400">
-              Provide a link to download your game build
-            </CardDescription>
+            <CardDescription className="text-slate-400">Provide a link to download your game build</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -230,8 +214,7 @@ export function VersionSubmissionForm() {
               <Alert className="bg-blue-900/20 border-blue-600/30">
                 <AlertCircle className="h-4 w-4 text-blue-400" />
                 <AlertDescription className="text-blue-300">
-                  Make sure your download link is accessible to anyone with the link. 
-                  Google Drive, Dropbox, or OneDrive shared links work well.
+                  Make sure your download link is accessible to anyone with the link. Google Drive, Dropbox, or OneDrive shared links work well.
                 </AlertDescription>
               </Alert>
             </div>
@@ -240,10 +223,7 @@ export function VersionSubmissionForm() {
               <Label htmlFor="maxTesters" className="text-slate-300">
                 Maximum Testers
               </Label>
-              <Select
-                value={form.maxTesters.toString()}
-                onValueChange={(value) => handleInputChange('maxTesters', parseInt(value))}
-              >
+              <Select value={form.maxTesters.toString()} onValueChange={(value) => handleInputChange('maxTesters', parseInt(value))}>
                 <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
                   <SelectValue />
                 </SelectTrigger>
@@ -265,9 +245,7 @@ export function VersionSubmissionForm() {
               <FileText className="h-5 w-5" />
               Testing Instructions
             </CardTitle>
-            <CardDescription className="text-slate-400">
-              Guide testers on how to play and what to focus on
-            </CardDescription>
+            <CardDescription className="text-slate-400">Guide testers on how to play and what to focus on</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
@@ -279,11 +257,15 @@ export function VersionSubmissionForm() {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="inline" id="inline" />
-                  <Label htmlFor="inline" className="text-slate-300">Text Instructions</Label>
+                  <Label htmlFor="inline" className="text-slate-300">
+                    Text Instructions
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="url" id="url" />
-                  <Label htmlFor="url" className="text-slate-300">URL Link</Label>
+                  <Label htmlFor="url" className="text-slate-300">
+                    URL Link
+                  </Label>
                 </div>
               </RadioGroup>
             </div>
@@ -328,9 +310,7 @@ export function VersionSubmissionForm() {
               <FileText className="h-5 w-5" />
               Feedback Form
             </CardTitle>
-            <CardDescription className="text-slate-400">
-              Create questions for testers to answer
-            </CardDescription>
+            <CardDescription className="text-slate-400">Create questions for testers to answer</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -348,9 +328,7 @@ export function VersionSubmissionForm() {
             </div>
             <Alert className="bg-green-900/20 border-green-600/30">
               <AlertCircle className="h-4 w-4 text-green-400" />
-              <AlertDescription className="text-green-300">
-                Leave this blank to use the default feedback form with standard gaming questions.
-              </AlertDescription>
+              <AlertDescription className="text-green-300">Leave this blank to use the default feedback form with standard gaming questions.</AlertDescription>
             </Alert>
           </CardContent>
         </Card>
@@ -362,9 +340,7 @@ export function VersionSubmissionForm() {
               <FileText className="h-5 w-5" />
               Testing Schedule (Optional)
             </CardTitle>
-            <CardDescription className="text-slate-400">
-              Set when testing should be available
-            </CardDescription>
+            <CardDescription className="text-slate-400">Set when testing should be available</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -393,9 +369,7 @@ export function VersionSubmissionForm() {
                 />
               </div>
             </div>
-            <p className="text-xs text-slate-500">
-              Leave dates blank to make testing available immediately with no end date
-            </p>
+            <p className="text-xs text-slate-500">Leave dates blank to make testing available immediately with no end date</p>
           </CardContent>
         </Card>
 

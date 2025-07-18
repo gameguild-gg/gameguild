@@ -1,10 +1,12 @@
 # Community Feed System
 
-A comprehensive, reusable community feed system built with Next.js, TypeScript, and Tailwind CSS, following composition patterns and best practices for server-side rendering.
+A comprehensive, reusable community feed system built with Next.js, TypeScript, and Tailwind CSS, following composition
+patterns and best practices for server-side rendering.
 
 ## Architecture
 
-The feed system is built using a composition pattern with reusable components that can be combined to create different feed experiences:
+The feed system is built using a composition pattern with reusable components that can be combined to create different
+feed experiences:
 
 ### Core Components
 
@@ -41,6 +43,7 @@ The feed system is built using a composition pattern with reusable components th
 ### 🎨 Design System
 
 Following the contributors page design patterns:
+
 - Gradient backgrounds (slate-900 to slate-800)
 - Glassmorphism effects with backdrop blur
 - Responsive grid layouts

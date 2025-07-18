@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Filter, ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, Filter, Search } from 'lucide-react';
 import type { FeedFilters } from '@/lib/feed';
 
 interface PostFiltersStaticProps {
