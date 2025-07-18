@@ -111,7 +111,15 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
 
       setCourse((prev) => ({
         ...prev,
-        contents: prev.contents.map((content) => (content.id === contentId ? { ...content, isCompleted: true, progress: 100 } : content)),
+        contents: prev.contents.map((content) =>
+          content.id === contentId
+            ? {
+                ...content,
+                isCompleted: true,
+                progress: 100,
+              }
+            : content,
+        ),
       }));
 
       // Update overall course progress

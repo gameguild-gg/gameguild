@@ -11,23 +11,33 @@ export default function CoursesLandingPage() {
       <section className="relative py-20 lg:py-32">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <Badge variant="outline" className="mb-6 text-sm font-medium bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-purple-500/30 text-purple-300">
+            <Badge
+              variant="outline"
+              className="mb-6 text-sm font-medium bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-purple-500/30 text-purple-300"
+            >
               🎮 Master Game Development
             </Badge>
             <h1 className="text-4xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               Learn from the Industry&apos;s Best
             </h1>
-            <p className="text-xl lg:text-2xl text-slate-300 mb-8 max-w-3xl mx-auto">
-              Game Development Shapes the World Around Us. Now, You Can Take Part.
-            </p>
+            <p className="text-xl lg:text-2xl text-slate-300 mb-8 max-w-3xl mx-auto">Game Development Shapes the World Around Us. Now, You Can Take Part.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Button asChild size="lg" className="text-lg px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all text-white">
+              <Button
+                asChild
+                size="lg"
+                className="text-lg px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all text-white"
+              >
                 <Link href="/courses/catalog">
                   <BookOpen className="mr-2 h-5 w-5" />
                   Explore Courses
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 bg-slate-800/50 border-slate-600 text-slate-200 hover:bg-slate-700/50 hover:border-slate-500 backdrop-blur-sm hover:text-white">
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="text-lg px-8 bg-slate-800/50 border-slate-600 text-slate-200 hover:bg-slate-700/50 hover:border-slate-500 backdrop-blur-sm hover:text-white"
+              >
                 <Link href="#pathways">
                   <PlayCircle className="mr-2 h-5 w-5" />
                   Find Your Path
@@ -104,12 +114,19 @@ export default function CoursesLandingPage() {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all text-white">
+                  <Button
+                    asChild
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all text-white"
+                  >
                     <Link href="/courses/catalog?category=programming">
                       Browse Courses <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" className="w-full bg-slate-800/50 border-slate-600 text-slate-200 hover:bg-slate-700/50 hover:border-slate-500 hover:text-white">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full bg-slate-800/50 border-slate-600 text-slate-200 hover:bg-slate-700/50 hover:border-slate-500 hover:text-white"
+                  >
                     <Link href="/tracks/beginner-track-game-dev-fundamentals">
                       View Learning Track <BookOpen className="ml-2 h-4 w-4" />
                     </Link>
@@ -143,12 +160,19 @@ export default function CoursesLandingPage() {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <Button asChild className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 shadow-lg hover:shadow-xl hover:shadow-purple-500/25 transition-all text-white">
+                  <Button
+                    asChild
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 shadow-lg hover:shadow-xl hover:shadow-purple-500/25 transition-all text-white"
+                  >
                     <Link href="/courses/catalog?category=art">
                       Browse Courses <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" className="w-full bg-slate-800/50 border-slate-600 text-slate-200 hover:bg-slate-700/50 hover:border-slate-500 hover:text-white">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full bg-slate-800/50 border-slate-600 text-slate-200 hover:bg-slate-700/50 hover:border-slate-500 hover:text-white"
+                  >
                     <Link href="/tracks/creative-track-game-art-animation">
                       View Learning Track <BookOpen className="ml-2 h-4 w-4" />
                     </Link>
@@ -182,12 +206,19 @@ export default function CoursesLandingPage() {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <Button asChild className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 border-0 shadow-lg hover:shadow-xl hover:shadow-green-500/25 transition-all text-white">
+                  <Button
+                    asChild
+                    className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 border-0 shadow-lg hover:shadow-xl hover:shadow-green-500/25 transition-all text-white"
+                  >
                     <Link href="/courses/catalog?category=design">
                       Browse Courses <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" className="w-full bg-slate-800/50 border-slate-600 text-slate-200 hover:bg-slate-700/50 hover:border-slate-500 hover:text-white">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full bg-slate-800/50 border-slate-600 text-slate-200 hover:bg-slate-700/50 hover:border-slate-500 hover:text-white"
+                  >
                     <Link href="/tracks/beginner-track-game-dev-fundamentals">
                       View Learning Track <BookOpen className="ml-2 h-4 w-4" />
                     </Link>
@@ -203,7 +234,9 @@ export default function CoursesLandingPage() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Structured Learning Tracks</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Structured Learning Tracks
+            </h2>
             <p className="text-xl text-slate-400 max-w-3xl mx-auto">
               Follow our comprehensive learning tracks that guide you from beginner to expert in your chosen field.
             </p>
@@ -248,7 +281,11 @@ export default function CoursesLandingPage() {
                 </div>
 
                 <div className="text-center">
-                  <Button asChild size="lg" className="text-lg px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all">
+                  <Button
+                    asChild
+                    size="lg"
+                    className="text-lg px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all"
+                  >
                     <Link href="/tracks">
                       <BookOpen className="mr-2 h-5 w-5" />
                       Explore All Learning Tracks
@@ -266,19 +303,27 @@ export default function CoursesLandingPage() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             <div className="group">
-              <div className="text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform">30+</div>
+              <div className="text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform">
+                30+
+              </div>
               <div className="text-slate-400">Courses Available</div>
             </div>
             <div className="group">
-              <div className="text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform">50+</div>
+              <div className="text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform">
+                50+
+              </div>
               <div className="text-slate-400">Expert Instructors</div>
             </div>
             <div className="group">
-              <div className="text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform">1K+</div>
+              <div className="text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform">
+                1K+
+              </div>
               <div className="text-slate-400">Active Students</div>
             </div>
             <div className="group">
-              <div className="text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform">95%</div>
+              <div className="text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform">
+                95%
+              </div>
               <div className="text-slate-400">Success Rate</div>
             </div>
           </div>
@@ -289,7 +334,9 @@ export default function CoursesLandingPage() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Why Choose Game Guild Academy</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Why Choose Game Guild Academy
+            </h2>
             <p className="text-xl text-slate-400 max-w-3xl mx-auto">
               We provide the tools, knowledge, and community you need to succeed in the game development industry.
             </p>
@@ -327,7 +374,9 @@ export default function CoursesLandingPage() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">What Our Students Are Saying</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              What Our Students Are Saying
+            </h2>
             <p className="text-xl text-slate-400">Join thousands of successful graduates working in the game industry.</p>
           </div>
 
@@ -407,12 +456,18 @@ export default function CoursesLandingPage() {
       {/* CTA Section */}
       <section className="py-20">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Ready to Start Your Game Development Journey?</h2>
+          <h2 className="text-3xl lg:text-4xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            Ready to Start Your Game Development Journey?
+          </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-slate-300">
             Join thousands of students who have transformed their passion for games into successful careers.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="text-lg px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all text-white">
+            <Button
+              asChild
+              size="lg"
+              className="text-lg px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all text-white"
+            >
               <Link href="/courses/catalog">
                 <BookOpen className="mr-2 h-5 w-5" />
                 Browse All Courses

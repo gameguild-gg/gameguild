@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Heart, MessageCircle, Share2, Pin, User, Calendar } from 'lucide-react';
+import { Calendar, Heart, MessageCircle, Pin, Share2, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PostDto } from '@/lib/feed';
 
@@ -15,14 +15,7 @@ interface PostCardProps {
   onShare?: (postId: string) => void;
 }
 
-export function PostCard({
-  post,
-  showActions = true,
-  className,
-  onLike,
-  onComment,
-  onShare,
-}: PostCardProps) {
+export function PostCard({ post, showActions = true, className, onLike, onComment, onShare }: PostCardProps) {
   const getPostTypeColor = (postType: string) => {
     switch (postType) {
       case 'announcement':
@@ -89,9 +82,7 @@ export function PostCard({
               </div>
               <div className="flex items-center gap-2 text-sm text-slate-400">
                 <Calendar className="w-3 h-3" />
-                <time dateTime={safePost.createdAt}>
-                  {formatDistanceToNow(new Date(safePost.createdAt), { addSuffix: true })}
-                </time>
+                <time dateTime={safePost.createdAt}>{formatDistanceToNow(new Date(safePost.createdAt), { addSuffix: true })}</time>
               </div>
             </div>
           </div>
@@ -104,9 +95,7 @@ export function PostCard({
         <h2 className="text-xl font-bold text-white mb-3 leading-tight">{safePost.title}</h2>
 
         {/* Description */}
-        {post.description && (
-          <p className="text-slate-300 leading-relaxed mb-4 line-clamp-3">{post.description}</p>
-        )}
+        {post.description && <p className="text-slate-300 leading-relaxed mb-4 line-clamp-3">{post.description}</p>}
 
         {/* Rich Content Preview */}
         {post.richContent && (
@@ -120,10 +109,7 @@ export function PostCard({
           <div className="mb-4">
             <div className="flex flex-wrap gap-2">
               {safePost.contentReferences.slice(0, 3).map((ref, index) => (
-                <div
-                  key={index}
-                  className="bg-slate-800/30 border border-slate-600/30 rounded-lg px-3 py-2 text-sm"
-                >
+                <div key={index} className="bg-slate-800/30 border border-slate-600/30 rounded-lg px-3 py-2 text-sm">
                   <span className="text-slate-400">{ref.referenceType}:</span>
                   <span className="text-white ml-1">{ref.resourceTitle}</span>
                 </div>
@@ -143,32 +129,21 @@ export function PostCard({
         <div className="border-t border-slate-700/30 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <button
-                onClick={() => onLike?.(safePost.id)}
-                className="flex items-center gap-2 text-slate-400 hover:text-red-400 transition-colors group"
-              >
+              <button onClick={() => onLike?.(safePost.id)} className="flex items-center gap-2 text-slate-400 hover:text-red-400 transition-colors group">
                 <Heart className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 <span className="text-sm">{safePost.likesCount}</span>
               </button>
-              <button
-                onClick={() => onComment?.(safePost.id)}
-                className="flex items-center gap-2 text-slate-400 hover:text-blue-400 transition-colors group"
-              >
+              <button onClick={() => onComment?.(safePost.id)} className="flex items-center gap-2 text-slate-400 hover:text-blue-400 transition-colors group">
                 <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 <span className="text-sm">{safePost.commentsCount}</span>
               </button>
-              <button
-                onClick={() => onShare?.(safePost.id)}
-                className="flex items-center gap-2 text-slate-400 hover:text-green-400 transition-colors group"
-              >
+              <button onClick={() => onShare?.(safePost.id)} className="flex items-center gap-2 text-slate-400 hover:text-green-400 transition-colors group">
                 <Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 <span className="text-sm">{safePost.sharesCount}</span>
               </button>
             </div>
             <div className="text-xs text-slate-500">
-              {typeof post.status === 'string' && post.status === 'Published'
-                ? '📅 Published'
-                : `📝 ${post.status || 'Draft'}`}
+              {typeof post.status === 'string' && post.status === 'Published' ? '📅 Published' : `📝 ${post.status || 'Draft'}`}
             </div>
           </div>
         </div>

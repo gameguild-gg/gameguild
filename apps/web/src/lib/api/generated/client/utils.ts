@@ -295,6 +295,7 @@ class Interceptors<Interceptor> {
       return this._fns.indexOf(id);
     }
   }
+
   exists(id: number | Interceptor) {
     const index = this.getInterceptorIndex(id);
     return !!this._fns[index];

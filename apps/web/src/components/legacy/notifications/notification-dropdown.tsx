@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { NotificationFilters, Notification as AppNotification } from '@/components/legacy/types/notification';
+import { Notification as AppNotification, NotificationFilters } from '@/components/legacy/types/notification';
 import {
   acceptProjectInvite,
   archiveNotification,

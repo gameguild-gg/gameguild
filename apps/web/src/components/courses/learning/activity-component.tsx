@@ -299,7 +299,11 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
       </Card>
 
       <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={() => setSubmission((prev) => ({ ...prev, saved: true }))} className="bg-slate-800/50 border-slate-600 text-slate-200 hover:bg-slate-700/50 hover:border-slate-500">
+        <Button
+          variant="outline"
+          onClick={() => setSubmission((prev) => ({ ...prev, saved: true }))}
+          className="bg-slate-800/50 border-slate-600 text-slate-200 hover:bg-slate-700/50 hover:border-slate-500"
+        >
           <Save className="h-4 w-4 mr-2" />
           Save Draft
         </Button>
@@ -404,10 +408,14 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
               {item.duration} minutes
             </div>
           )}
-          {item.isRequired && <Badge variant="secondary" className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-purple-500/30 text-purple-300">Required</Badge>}
+          {item.isRequired && (
+            <Badge variant="secondary" className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-purple-500/30 text-purple-300">
+              Required
+            </Badge>
+          )}
         </div>
-        <Button 
-          onClick={handleStart} 
+        <Button
+          onClick={handleStart}
           className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all"
         >
           Start Activity

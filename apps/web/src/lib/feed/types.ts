@@ -1,10 +1,5 @@
 // Re-export the generated API types for better organization
-export type {
-  PostDto,
-  PostsPageDto,
-  CreatePostDto,
-  ContentReferenceDto,
-} from '@/lib/api/generated/types.gen';
+export type { PostDto, PostsPageDto, CreatePostDto, ContentReferenceDto } from '@/lib/api/generated/types.gen';
 
 export interface FeedFilters {
   postType?: string;

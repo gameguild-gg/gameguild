@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Calendar, Clock, GitBranch, Rocket, PauseCircle } from 'lucide-react';
+import { Calendar, Clock, GitBranch, PauseCircle, Rocket } from 'lucide-react';
 import { ProjectListItem } from './actions';
 
 interface ProjectCardProps {
@@ -12,37 +12,37 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const getStatusConfig = (status: ProjectListItem['status']) => {
     switch (status) {
       case 'active':
-        return { 
-          color: 'from-green-500 to-emerald-500', 
-          icon: Rocket, 
+        return {
+          color: 'from-green-500 to-emerald-500',
+          icon: Rocket,
           text: 'Active',
           bg: 'bg-green-500/10',
-          textColor: 'text-green-400'
+          textColor: 'text-green-400',
         };
       case 'in-progress':
-        return { 
-          color: 'from-yellow-500 to-orange-500', 
-          icon: Clock, 
+        return {
+          color: 'from-yellow-500 to-orange-500',
+          icon: Clock,
           text: 'In Progress',
           bg: 'bg-yellow-500/10',
-          textColor: 'text-yellow-400'
+          textColor: 'text-yellow-400',
         };
       case 'on-hold':
-        return { 
-          color: 'from-red-500 to-pink-500', 
-          icon: PauseCircle, 
+        return {
+          color: 'from-red-500 to-pink-500',
+          icon: PauseCircle,
           text: 'On Hold',
           bg: 'bg-red-500/10',
-          textColor: 'text-red-400'
+          textColor: 'text-red-400',
         };
       case 'not-started':
       default:
-        return { 
-          color: 'from-slate-500 to-slate-400', 
-          icon: Clock, 
+        return {
+          color: 'from-slate-500 to-slate-400',
+          icon: Clock,
           text: 'Not Started',
           bg: 'bg-slate-500/10',
-          textColor: 'text-slate-400'
+          textColor: 'text-slate-400',
         };
     }
   };
@@ -63,9 +63,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         </div>
 
         {/* Project Title */}
-        <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 min-h-[3rem]">
-          {project.name}
-        </h3>
+        <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 min-h-[3rem]">{project.name}</h3>
 
         {/* Project Meta */}
         <div className="space-y-2 text-sm text-slate-400 mb-4">

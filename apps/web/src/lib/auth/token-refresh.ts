@@ -47,7 +47,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRef
     }
 
     console.log('🔄 [TOKEN REFRESH] Attempting token refresh...');
-    
+
     const response = await serverRefreshToken(refreshToken);
 
     console.log('✅ [TOKEN REFRESH] Token refresh successful:', {
@@ -77,10 +77,5 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRef
  * Validate that a token response has all required fields
  */
 export function validateTokenResponse(response: any): response is RefreshTokenResponse {
-  return (
-    response &&
-    typeof response.accessToken === 'string' &&
-    typeof response.refreshToken === 'string' &&
-    typeof response.expires === 'string'
-  );
+  return response && typeof response.accessToken === 'string' && typeof response.refreshToken === 'string' && typeof response.expires === 'string';
 }

@@ -41,13 +41,7 @@ export function PostsList({
       {/* Posts Grid */}
       <div className="space-y-6">
         {posts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            onLike={onLike}
-            onComment={onComment}
-            onShare={onShare}
-          />
+          <PostCard key={post.id} post={post} onLike={onLike} onComment={onComment} onShare={onShare} />
         ))}
       </div>
 
@@ -59,9 +53,7 @@ export function PostsList({
       )}
 
       {/* Load More */}
-      {!loading && hasMore && onLoadMore && (
-        <LoadMore onLoadMore={onLoadMore} />
-      )}
+      {!loading && hasMore && onLoadMore && <LoadMore onLoadMore={onLoadMore} />}
     </div>
   );
 }
