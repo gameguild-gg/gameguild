@@ -16,7 +16,7 @@ export function TestingLabCallToAction() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0 px-8 py-4 text-lg">
-            <Link href="/testing-lab/join">Join as Tester</Link>
+            <Link href="/testing-lab/sessions">Browse Sessions</Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="border-purple-600 bg-purple-800/20 text-purple-300 hover:bg-purple-700/30 px-8 py-4 text-lg">
             <Link href="/testing-lab/submit">Submit Your Game</Link>
