@@ -9,10 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { testingLabApi } from '@/lib/api/testing-lab/testing-lab-api';
-import { Upload, FileText, Link as LinkIcon, Save, Send, AlertCircle } from 'lucide-react';
+import { AlertCircle, FileText, Save, Send, Upload } from 'lucide-react';
 
 interface SubmissionForm {
   title: string;
