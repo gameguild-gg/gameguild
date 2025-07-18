@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getTestSession } from '@/lib/api/testing-lab/test-sessions';
+import { getTestSessionBySlug } from '@/lib/api/testing-lab/test-sessions';
 import { SessionDetail } from '@/components/testing-lab/session-detail';
 
 interface SessionPageProps {
@@ -9,7 +9,7 @@ interface SessionPageProps {
 }
 
 export default async function SessionPage({ params }: SessionPageProps) {
-  const session = await getTestSession(params.slug);
+  const session = await getTestSessionBySlug(params.slug);
 
   if (!session) {
     notFound();
