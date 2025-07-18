@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { clearProjectCache, getProjects, ProjectListItem, revalidateProjects } from '@/components/legacy/projects/actions';
-import { ProjectList } from '@/components/legacy/projects/project-list';
+import { ProjectsOverview } from '@/components/projects/projects-overview';
 import { useRouter } from 'next/navigation';
 
 // Utility function to force fresh authentication
@@ -204,7 +204,13 @@ export default function ProjectsPage() {
             </div>
           </div>
         </div>
-        <ProjectList initialProjects={projects} />
+        <ProjectsOverview 
+          projects={projects}
+          loading={loading}
+          error={error}
+          onCreateProject={createTestProject}
+          onRefresh={handleRefreshProjects}
+        />
       </div>
     </div>
   );
