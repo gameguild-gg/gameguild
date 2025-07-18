@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { getUsersData } from '@/lib/users/users.actions';
 import { UserProvider } from '@/lib/users/users.context';
-import { UserManagementContent } from '@/components/dashboard/users/user-management-content';
+import { UserManagementContent } from '@/components/users/user-management-content';
 import { Loader2 } from 'lucide-react';
 import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
 
