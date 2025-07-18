@@ -39,10 +39,10 @@ export const authConfig: NextAuthConfig = {
 
         try {
           // Call the backend API for admin authentication
-          console.log('[NextAuth][admin-bypass] Attempting admin login via backend API', credentials);
+          console.log('[NextAuth][admin-bypass] Attempting admin login via backend API');
           const response = await apiClient.adminLogin({
-            email: credentials.email,
-            password: credentials.password,
+            email: credentials.email as string,
+            password: credentials.password as string,
           });
 
           console.log('[NextAuth][admin-bypass] Raw backend response:', response);
@@ -56,7 +56,7 @@ export const authConfig: NextAuthConfig = {
           return {
             id: response.user.id,
             email: response.user.email,
-            name: response.user.name || 'Admin User',
+            name: response.user.email, // Use email as name since User type doesn't have name
             image: null,
             // Store the backend response for later use in callbacks
             cmsData: response,
@@ -65,8 +65,8 @@ export const authConfig: NextAuthConfig = {
           console.error('[NextAuth][admin-bypass] Admin login failed:', error);
           if (error instanceof Error) {
             console.error('[NextAuth][admin-bypass] Error message:', error.message);
-            if ((error as any).response) {
-              console.error('[NextAuth][admin-bypass] Error response:', (error as any).response);
+            if ('response' in error && error.response) {
+              console.error('[NextAuth][admin-bypass] Error response:', error.response);
             }
           }
           return null;
@@ -90,7 +90,8 @@ export const authConfig: NextAuthConfig = {
       if (account?.provider === 'admin-bypass') {
         console.log('🔧 [AUTH DEBUG] Admin credentials sign in successful');
         // For admin login, the user object already contains the backend response
-        if ((user as any).cmsData) {
+        const extendedUser = user as any;
+        if (extendedUser.cmsData) {
           console.log('✅ [AUTH DEBUG] Admin login backend response found');
           return true;
         } else {
