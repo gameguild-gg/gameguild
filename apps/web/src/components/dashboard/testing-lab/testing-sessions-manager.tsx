@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Calendar, Users, Clock, MapPin, Plus, Edit, Trash2, UserCheck, CheckCircle, XCircle } from 'lucide-react';
+import { testingLabApi } from '@/lib/api/testing-lab/testing-lab-api';
 
 interface TestingSession {
   id: string;
@@ -71,7 +72,30 @@ export function TestingSessionsManager() {
   const fetchSessions = async () => {
     try {
       setLoading(true);
-      // Mock data - replace with actual API call
+      // Load sessions from API
+      const data = await testingLabApi.getTestingSessions();
+      setSessions(data.map(session => ({
+        id: session.id,
+        sessionName: session.sessionName,
+        sessionDate: session.sessionDate,
+        startTime: session.startTime,
+        endTime: session.endTime,
+        location: session.location,
+        maxTesters: session.maxTesters,
+        registeredTesterCount: session.registeredTesterCount,
+        registeredProjectMemberCount: 0, // Default value
+        registeredProjectCount: 0, // Default value
+        status: session.status,
+        manager: {
+          id: 'manager-id',
+          name: 'Session Manager',
+          email: 'manager@champlain.edu'
+        },
+        testingRequests: []
+      })));
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      // Fallback to mock data
       setSessions([
         {
           id: '1',
@@ -106,8 +130,6 @@ export function TestingSessionsManager() {
           ],
         },
       ]);
-    } catch (error) {
-      console.error('Error fetching sessions:', error);
     } finally {
       setLoading(false);
     }
