@@ -64,24 +64,26 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button className="gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200">
           <PlusIcon className="size-4" />
           Add Project
         </Button>
       </SheetTrigger>
-      <SheetContent className="min-w-full">
+      <SheetContent className="min-w-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-slate-800">
         <TooltipProvider>
           <div className="flex flex-col flex-1 max-w-4xl md:p-20">
             <SheetHeader className="flex flex-row items-center gap-6">
               <button className="flex items-center justify-center">
-                <X className="size-6 text-muted-foreground" />
+                <X className="size-6 text-slate-400 hover:text-white transition-colors" />
               </button>
-              <SheetTitle className="flex items-center justify-center text-3xl font-normal align-middle">Create a project</SheetTitle>
+              <SheetTitle className="flex items-center justify-center text-3xl font-normal align-middle bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Create a project
+              </SheetTitle>
             </SheetHeader>
             <div className="md:p-16">
               <form onSubmit={handleSubmit} className="flex flex-col flex-1">
                 <Tabs defaultValue="basic" className="flex flex-col flex-1">
-                  <TabsContent value="basic" className="py-6 space-y-6">
+                  <TabsContent value="basic" className="py-6 space-y-6 bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-lg p-6 shadow-lg border border-slate-700/50">
                     <div className="flex flex-col gap-12">
                       <Label htmlFor="title" className="flex flex-col items-start justify-center text-4xl align-middle font-bold leading-tight">
                         <span>Let’s start with a name for</span>

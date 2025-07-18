@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FolderOpen, Plus, Search, Clock, PauseCircle, Rocket, Calendar, GitBranch, Zap, Grid, List } from 'lucide-react';
 import Link from 'next/link';
-import { ProjectListItem } from '@/components/legacy/projects/actions';
+import { ProjectListItem, Project } from '@/components/legacy/projects/actions';
+import { CreateProjectForm } from '@/components/legacy/projects/create-project-form';
 import { numberToAbbreviation } from '@/lib/utils';
 
 interface ProjectsStats {
@@ -24,6 +25,7 @@ interface ProjectsOverviewProps {
   error: string | null;
   onCreateProject: () => void;
   onRefresh: () => void;
+  onProjectCreated: (project: Project) => void;
 }
 
 export function ProjectsOverview({ 
@@ -31,12 +33,42 @@ export function ProjectsOverview({
   loading, 
   error, 
   onCreateProject, 
-  onRefresh 
+  onRefresh,
+  onProjectCreated
 }: ProjectsOverviewProps) {
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'in-progress' | 'not-started' | 'on-hold'>('all');
+
+  // Handle project creation from the form
+  const handleProjectCreated = (newProject: Project) => {
+    const projectListItem: ProjectListItem = {
+      id: newProject.id,
+      name: newProject.title,
+      slug: newProject.slug || newProject.id,
+      status: mapStatusToDisplay(newProject.status),
+      createdAt: newProject.createdAt,
+      updatedAt: newProject.updatedAt,
+    };
+    onProjectCreated(newProject);
+  };
+
+  // Map CMS status to display status for UI
+  function mapStatusToDisplay(cmsStatus: string): 'not-started' | 'in-progress' | 'active' | 'on-hold' {
+    switch (cmsStatus) {
+      case 'Draft':
+        return 'not-started';
+      case 'UnderReview':
+        return 'in-progress';
+      case 'Published':
+        return 'active';
+      case 'Archived':
+        return 'on-hold';
+      default:
+        return 'not-started';
+    }
+  }
 
   const stats: ProjectsStats = {
     totalProjects: projects.length,
@@ -103,18 +135,15 @@ export function ProjectsOverview({
           </div>
 
           {/* Create New Project CTA */}
-          <button
-            onClick={onCreateProject}
-            className="bg-gradient-to-r from-purple-500/10 via-blue-500/5 to-green-500/10 rounded-lg p-6 relative overflow-hidden hover:bg-purple-500/20 transition-all hover:scale-[1.02] cursor-pointer shadow-lg"
-          >
+          <div className="bg-gradient-to-r from-purple-500/10 via-blue-500/5 to-green-500/10 rounded-lg p-6 relative overflow-hidden shadow-lg">
             <div className="relative z-10">
               <div className="flex items-center justify-center mb-2">
                 <Plus className="w-8 h-8 text-purple-400" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-1">Create Project</h3>
-              <p className="text-sm text-slate-400">Start your next big idea</p>
+              <h3 className="text-lg font-bold text-white mb-3">Create Project</h3>
+              <CreateProjectForm onProjectCreated={handleProjectCreated} />
             </div>
-          </button>
+          </div>
         </div>
       </div>
 
