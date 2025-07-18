@@ -6,61 +6,9 @@ import { ArrowRight, BookOpen, CheckCircle, Code, Gamepad2, Headphones, Palette,
 
 export default function CoursesLandingPage() {
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
-      {/* Enhanced Background Layers */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/10 via-transparent to-purple-900/10"></div>
-      <div className="absolute inset-0 bg-gradient-to-bl from-transparent via-slate-900/50 to-green-900/10"></div>
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-slate-900/20"></div>
-      
-      {/* Complex Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Large floating orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-green-500/5 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
-        
-        {/* Medium floating elements */}
-        <div className="absolute top-1/2 right-1/3 w-48 h-48 bg-yellow-500/3 rounded-full blur-2xl animate-pulse" style={{animationDelay: '1s'}}></div>
-        <div className="absolute top-1/6 right-1/6 w-32 h-32 bg-pink-500/4 rounded-full blur-xl animate-pulse" style={{animationDelay: '3s'}}></div>
-        <div className="absolute bottom-1/3 right-2/3 w-40 h-40 bg-cyan-500/3 rounded-full blur-2xl animate-pulse" style={{animationDelay: '5s'}}></div>
-        
-        {/* Small accent elements */}
-        <div className="absolute top-3/4 left-1/6 w-24 h-24 bg-orange-500/4 rounded-full blur-xl animate-pulse" style={{animationDelay: '2.5s'}}></div>
-        <div className="absolute top-1/3 left-2/3 w-20 h-20 bg-indigo-500/4 rounded-full blur-lg animate-pulse" style={{animationDelay: '4.5s'}}></div>
-      </div>
-      
-      {/* Geometric Background Patterns */}
-      <div className="absolute inset-0">
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-[0.02]" style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-          backgroundSize: '60px 60px'
-        }}></div>
-        
-        {/* Diagonal lines pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255,255,255,0.05) 20px, rgba(255,255,255,0.05) 21px)',
-        }}></div>
-      </div>
-      
-      {/* Dot Pattern Overlay */}
-      <div className="absolute inset-0 opacity-20" style={{
-        backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)',
-        backgroundSize: '40px 40px'
-      }}></div>
-      
-      {/* Noise Texture Overlay */}
-      <div className="absolute inset-0 opacity-[0.015]" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-      }}></div>
-      
-      {/* Radial gradient overlays for depth */}
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-radial from-transparent via-transparent to-slate-900/20"></div>
-      <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-gradient-radial from-blue-500/2 to-transparent rounded-full blur-3xl"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-1/3 h-1/3 bg-gradient-radial from-purple-500/2 to-transparent rounded-full blur-3xl"></div>
-      
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32 z-10">
+      <section className="relative py-20 lg:py-32">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <Badge variant="outline" className="mb-6 text-sm font-medium bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-purple-500/30 text-purple-300">
@@ -123,19 +71,8 @@ export default function CoursesLandingPage() {
       </section>
 
       {/* Learning Pathways Section */}
-      <section id="pathways" className="py-20 relative">
-        {/* Section Background Enhancement */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/5 via-transparent to-purple-900/5"></div>
-        
-        {/* Additional visual elements for this section */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-blue-400/3 rounded-full blur-2xl animate-pulse" style={{animationDelay: '1.5s'}}></div>
-          <div className="absolute bottom-20 right-20 w-40 h-40 bg-purple-400/2 rounded-full blur-3xl animate-pulse" style={{animationDelay: '3.5s'}}></div>
-          <div className="absolute top-1/2 left-1/5 w-20 h-20 bg-indigo-400/4 rounded-full blur-xl animate-pulse" style={{animationDelay: '0.5s'}}></div>
-        </div>
-        
-        <div className="relative z-10">
-          <div className="container mx-auto px-4">
+      <section id="pathways" className="py-20">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Find Your Path</h2>
             <p className="text-xl text-slate-400 max-w-3xl mx-auto">One Campus. Multiple Disciplines. Endless Possibilities.</p>
@@ -260,23 +197,11 @@ export default function CoursesLandingPage() {
             </Card>
           </div>
         </div>
-        </div>
       </section>
 
       {/* Learning Tracks Section */}
-      <section className="py-16 relative">
-        {/* Section Background Enhancement */}
-        <div className="absolute inset-0 bg-gradient-to-l from-green-900/5 via-transparent to-purple-900/5"></div>
-        
-        {/* Additional floating elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-16 right-16 w-28 h-28 bg-green-400/3 rounded-full blur-2xl animate-pulse" style={{animationDelay: '2.2s'}}></div>
-          <div className="absolute bottom-32 left-32 w-36 h-36 bg-teal-400/2 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4.8s'}}></div>
-          <div className="absolute top-3/4 right-1/3 w-24 h-24 bg-emerald-400/3 rounded-full blur-xl animate-pulse" style={{animationDelay: '1.8s'}}></div>
-        </div>
-        
-        <div className="relative z-10">
-          <div className="container mx-auto px-4">
+      <section className="py-16">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Structured Learning Tracks</h2>
             <p className="text-xl text-slate-400 max-w-3xl mx-auto">
@@ -334,15 +259,11 @@ export default function CoursesLandingPage() {
             </Card>
           </div>
         </div>
-        </div>
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 relative">
-        {/* Section Background Enhancement */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-yellow-900/5 via-transparent to-orange-900/5"></div>
-        <div className="relative z-10">
-          <div className="container mx-auto px-4">
+      <section className="py-16">
+        <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             <div className="group">
               <div className="text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform">30+</div>
@@ -362,15 +283,11 @@ export default function CoursesLandingPage() {
             </div>
           </div>
         </div>
-        </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 relative">
-        {/* Section Background Enhancement */}
-        <div className="absolute inset-0 bg-gradient-to-bl from-purple-900/5 via-transparent to-blue-900/5"></div>
-        <div className="relative z-10">
-          <div className="container mx-auto px-4">
+      <section className="py-20">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Why Choose Game Guild Academy</h2>
             <p className="text-xl text-slate-400 max-w-3xl mx-auto">
@@ -404,15 +321,11 @@ export default function CoursesLandingPage() {
             </div>
           </div>
         </div>
-        </div>
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 relative">
-        {/* Section Background Enhancement */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-green-900/5 via-transparent to-blue-900/5"></div>
-        <div className="relative z-10">
-          <div className="container mx-auto px-4">
+      <section className="py-20">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">What Our Students Are Saying</h2>
             <p className="text-xl text-slate-400">Join thousands of successful graduates working in the game industry.</p>
@@ -489,20 +402,16 @@ export default function CoursesLandingPage() {
             </Card>
           </div>
         </div>
-        </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 relative">
-        {/* Section Background Enhancement */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-purple-900/10"></div>
-        <div className="relative z-10">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Ready to Start Your Game Development Journey?</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto text-slate-300">
-              Join thousands of students who have transformed their passion for games into successful careers.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <section className="py-20">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl lg:text-4xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Ready to Start Your Game Development Journey?</h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto text-slate-300">
+            Join thousands of students who have transformed their passion for games into successful careers.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="text-lg px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all text-white">
               <Link href="/courses/catalog">
                 <BookOpen className="mr-2 h-5 w-5" />
@@ -521,7 +430,6 @@ export default function CoursesLandingPage() {
               </Link>
             </Button>
           </div>
-        </div>
         </div>
       </section>
     </div>
