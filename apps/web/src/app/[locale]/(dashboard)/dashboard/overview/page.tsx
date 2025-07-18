@@ -13,7 +13,7 @@ export default async function Page() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-purple-500/10 to-transparent">
           <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-gradient-to-t from-blue-600/30 via-purple-500/20 to-transparent blur-3xl"></div>
         </div>
-        
+
         <div className="relative p-8 md:p-12">
           {/* Header */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">

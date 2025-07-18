@@ -1,24 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Search,
-  Download,
-  Calendar,
-  Users,
-  Clock,
-  FileText,
-  Filter,
-  Play,
-  MessageSquare,
-} from 'lucide-react';
+import { Calendar, Download, FileText, MessageSquare, Play, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { testingLabApi, TestingRequest } from '@/lib/api/testing-lab/testing-lab-api';
 
@@ -155,7 +143,7 @@ export function TestingRequestsList() {
         (request) =>
           request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           request.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.createdBy.name.toLowerCase().includes(searchTerm.toLowerCase())
+          request.createdBy.name.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -210,9 +198,7 @@ export function TestingRequestsList() {
               {userRole.isStudent ? 'Available Testing Requests' : 'My Testing Requests'}
             </h1>
             <p className="text-slate-400 mt-2">
-              {userRole.isStudent
-                ? 'Find games to test and provide valuable feedback'
-                : 'Manage your submitted testing requests'}
+              {userRole.isStudent ? 'Find games to test and provide valuable feedback' : 'Manage your submitted testing requests'}
             </p>
           </div>
           {!userRole.isStudent && (
@@ -244,11 +230,7 @@ export function TestingRequestsList() {
                 <Button
                   variant={statusFilter === 'all' ? 'default' : 'outline'}
                   onClick={() => setStatusFilter('all')}
-                  className={
-                    statusFilter === 'all'
-                      ? 'bg-blue-600 hover:bg-blue-700'
-                      : 'border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50'
-                  }
+                  className={statusFilter === 'all' ? 'bg-blue-600 hover:bg-blue-700' : 'border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50'}
                 >
                   All
                 </Button>
@@ -256,9 +238,7 @@ export function TestingRequestsList() {
                   variant={statusFilter === 'open' ? 'default' : 'outline'}
                   onClick={() => setStatusFilter('open')}
                   className={
-                    statusFilter === 'open'
-                      ? 'bg-green-600 hover:bg-green-700'
-                      : 'border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50'
+                    statusFilter === 'open' ? 'bg-green-600 hover:bg-green-700' : 'border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50'
                   }
                 >
                   Open
@@ -267,9 +247,7 @@ export function TestingRequestsList() {
                   variant={statusFilter === 'inProgress' ? 'default' : 'outline'}
                   onClick={() => setStatusFilter('inProgress')}
                   className={
-                    statusFilter === 'inProgress'
-                      ? 'bg-blue-600 hover:bg-blue-700'
-                      : 'border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50'
+                    statusFilter === 'inProgress' ? 'bg-blue-600 hover:bg-blue-700' : 'border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50'
                   }
                 >
                   In Progress
@@ -278,9 +256,7 @@ export function TestingRequestsList() {
                   variant={statusFilter === 'completed' ? 'default' : 'outline'}
                   onClick={() => setStatusFilter('completed')}
                   className={
-                    statusFilter === 'completed'
-                      ? 'bg-gray-600 hover:bg-gray-700'
-                      : 'border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50'
+                    statusFilter === 'completed' ? 'bg-gray-600 hover:bg-gray-700' : 'border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50'
                   }
                 >
                   Completed
@@ -301,9 +277,7 @@ export function TestingRequestsList() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="text-lg text-white line-clamp-2">{request.title}</CardTitle>
-                    <CardDescription className="text-slate-400 mt-1">
-                      by {request.createdBy.name}
-                    </CardDescription>
+                    <CardDescription className="text-slate-400 mt-1">by {request.createdBy.name}</CardDescription>
                   </div>
                   <Badge variant="outline" className={getStatusColor(request.status)}>
                     {request.status}
@@ -311,9 +285,7 @@ export function TestingRequestsList() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {request.description && (
-                  <p className="text-sm text-slate-300 line-clamp-3">{request.description}</p>
-                )}
+                {request.description && <p className="text-sm text-slate-300 line-clamp-3">{request.description}</p>}
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-slate-400">
@@ -340,21 +312,12 @@ export function TestingRequestsList() {
                   {userRole.isStudent && request.status === 'open' && (
                     <>
                       {request.downloadUrl && (
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                          onClick={() => window.open(request.downloadUrl, '_blank')}
-                        >
+                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => window.open(request.downloadUrl, '_blank')}>
                           <Download className="h-4 w-4 mr-1" />
                           Download
                         </Button>
                       )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
-                        asChild
-                      >
+                      <Button size="sm" variant="outline" className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white" asChild>
                         <Link href={`/dashboard/testing-lab/requests/${request.id}`}>
                           <Play className="h-4 w-4 mr-1" />
                           Start Testing
@@ -363,12 +326,7 @@ export function TestingRequestsList() {
                     </>
                   )}
                   {!userRole.isStudent && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                      asChild
-                    >
+                    <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700" asChild>
                       <Link href={`/dashboard/testing-lab/requests/${request.id}/feedback`}>
                         <MessageSquare className="h-4 w-4 mr-1" />
                         View Feedback

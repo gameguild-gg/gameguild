@@ -1,20 +1,15 @@
 'use client';
 
 import { useEffect } from 'react';
-import { 
-  CommunityFeed, 
-  PostCard, 
-  FeedHeader, 
-  PostFilters, 
-  PinnedPosts 
-} from '@/components/feed';
-import type { PostDto, FeedFilters } from '@/lib/feed';
+import { CommunityFeed, FeedHeader, PinnedPosts, PostCard, PostFilters } from '@/components/feed';
+import type { FeedFilters, PostDto } from '@/lib/feed';
 
 // Mock data for demonstration
 const mockPost: PostDto = {
   id: 'demo-post-1',
   title: 'Welcome to Game Guild Community!',
-  description: 'This is a demonstration of our new community feed system. You can see different types of posts, interact with them, and filter content based on your preferences.',
+  description:
+    'This is a demonstration of our new community feed system. You can see different types of posts, interact with them, and filter content based on your preferences.',
   postType: 'announcement',
   authorId: 'user-1',
   authorName: 'gamemaster',
@@ -30,7 +25,7 @@ const mockPost: PostDto = {
       resourceType: 'image',
       resourceTitle: 'Community Feed Preview',
       referenceType: 'attachment',
-    }
+    },
   ],
 };
 
@@ -50,15 +45,7 @@ const mockFilters: FeedFilters = {
   descending: true,
 };
 
-const POST_TYPES = [
-  'general',
-  'announcement',
-  'discussion',
-  'question',
-  'showcase',
-  'tutorial',
-  'event',
-];
+const POST_TYPES = ['general', 'announcement', 'discussion', 'question', 'showcase', 'tutorial', 'event'];
 
 export default function FeedDemoPage() {
   const mockStats = {
@@ -76,12 +63,9 @@ export default function FeedDemoPage() {
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Page Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">
-            Community Feed Components
-          </h1>
+          <h1 className="text-4xl font-bold text-white mb-4">Community Feed Components</h1>
           <p className="text-slate-300 text-lg max-w-2xl mx-auto">
-            A comprehensive demonstration of all feed components, showcasing the 
-            composition patterns and design system used throughout Game Guild.
+            A comprehensive demonstration of all feed components, showcasing the composition patterns and design system used throughout Game Guild.
           </p>
         </div>
 
@@ -90,22 +74,14 @@ export default function FeedDemoPage() {
           {/* Feed Header Demo */}
           <section>
             <h2 className="text-2xl font-semibold text-white mb-4">Feed Header</h2>
-            <p className="text-slate-400 mb-6">
-              Displays key community statistics and metrics.
-            </p>
-            <FeedHeader
-              totalPosts={mockStats.totalPosts}
-              activeUsers={mockStats.activeUsers}
-              engagementRate={mockStats.engagementRate}
-            />
+            <p className="text-slate-400 mb-6">Displays key community statistics and metrics.</p>
+            <FeedHeader totalPosts={mockStats.totalPosts} activeUsers={mockStats.activeUsers} engagementRate={mockStats.engagementRate} />
           </section>
 
           {/* Post Filters Demo */}
           <section>
             <h2 className="text-2xl font-semibold text-white mb-4">Post Filters</h2>
-            <p className="text-slate-400 mb-6">
-              Interactive filters for searching and sorting posts. (Demo version - non-functional)
-            </p>
+            <p className="text-slate-400 mb-6">Interactive filters for searching and sorting posts. (Demo version - non-functional)</p>
             <PostFilters
               filters={mockFilters}
               postTypes={POST_TYPES}
@@ -116,9 +92,7 @@ export default function FeedDemoPage() {
           {/* Pinned Posts Demo */}
           <section>
             <h2 className="text-2xl font-semibold text-white mb-4">Pinned Posts</h2>
-            <p className="text-slate-400 mb-6">
-              Special display for important or highlighted posts.
-            </p>
+            <p className="text-slate-400 mb-6">Special display for important or highlighted posts.</p>
             <PinnedPosts
               posts={[mockPinnedPost]}
               onLike={() => {}} // Demo only
@@ -130,9 +104,7 @@ export default function FeedDemoPage() {
           {/* Post Card Demo */}
           <section>
             <h2 className="text-2xl font-semibold text-white mb-4">Post Card</h2>
-            <p className="text-slate-400 mb-6">
-              Individual post display with full interaction capabilities.
-            </p>
+            <p className="text-slate-400 mb-6">Individual post display with full interaction capabilities.</p>
             <div className="grid gap-6">
               <PostCard
                 post={mockPost}
@@ -140,14 +112,15 @@ export default function FeedDemoPage() {
                 onComment={() => {}} // Demo only
                 onShare={() => {}} // Demo only
               />
-              
+
               {/* Showcase different post types */}
               <PostCard
                 post={{
                   ...mockPost,
                   id: 'demo-discussion',
-                  title: 'What\'s your favorite game mechanic?',
-                  description: 'I\'ve been thinking about different game mechanics and how they create engaging experiences. What are some of your favorites and why?',
+                  title: "What's your favorite game mechanic?",
+                  description:
+                    "I've been thinking about different game mechanics and how they create engaging experiences. What are some of your favorites and why?",
                   postType: 'discussion',
                   likesCount: 23,
                   commentsCount: 31,
@@ -163,7 +136,8 @@ export default function FeedDemoPage() {
                   ...mockPost,
                   id: 'demo-showcase',
                   title: 'My latest game project: Pixel Adventure',
-                  description: 'Just finished working on this retro-style platformer! It features hand-crafted pixel art, chiptune music, and classic gameplay mechanics.',
+                  description:
+                    'Just finished working on this retro-style platformer! It features hand-crafted pixel art, chiptune music, and classic gameplay mechanics.',
                   postType: 'showcase',
                   likesCount: 89,
                   commentsCount: 12,
@@ -179,9 +153,7 @@ export default function FeedDemoPage() {
           {/* Full Community Feed Demo */}
           <section>
             <h2 className="text-2xl font-semibold text-white mb-4">Complete Community Feed</h2>
-            <p className="text-slate-400 mb-6">
-              The full interactive community feed with all components working together.
-            </p>
+            <p className="text-slate-400 mb-6">The full interactive community feed with all components working together.</p>
             <div className="border-2 border-slate-700 rounded-xl overflow-hidden">
               <CommunityFeed />
             </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
-import { clearProjectCache, getProjects, ProjectListItem, revalidateProjects, Project } from '@/components/legacy/projects/actions';
+import { clearProjectCache, getProjects, Project, ProjectListItem, revalidateProjects } from '@/components/legacy/projects/actions';
 import { ProjectsOverview } from '@/components/projects/projects-overview';
 import { useRouter } from 'next/navigation';
 
@@ -210,7 +210,7 @@ export default function ProjectsPage() {
             </div>
           </div>
         </div>
-        <ProjectsOverview 
+        <ProjectsOverview
           projects={projects}
           loading={loading}
           error={error}

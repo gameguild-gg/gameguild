@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FolderOpen, Plus, Search, Clock, PauseCircle, Rocket, Calendar, GitBranch, Zap, Grid, List } from 'lucide-react';
+import { Calendar, Clock, FolderOpen, GitBranch, Grid, List, PauseCircle, Plus, Rocket, Search, Zap } from 'lucide-react';
 import Link from 'next/link';
-import { ProjectListItem, Project } from '@/components/legacy/projects/actions';
+import { Project, ProjectListItem } from '@/components/legacy/projects/actions';
 import { CreateProjectForm } from '@/components/legacy/projects/create-project-form';
 import { numberToAbbreviation } from '@/lib/utils';
 
@@ -28,14 +28,7 @@ interface ProjectsOverviewProps {
   onProjectCreated: (project: Project) => void;
 }
 
-export function ProjectsOverview({ 
-  projects, 
-  loading, 
-  error, 
-  onCreateProject, 
-  onRefresh,
-  onProjectCreated
-}: ProjectsOverviewProps) {
+export function ProjectsOverview({ projects, loading, error, onCreateProject, onRefresh, onProjectCreated }: ProjectsOverviewProps) {
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -72,11 +65,11 @@ export function ProjectsOverview({
 
   const stats: ProjectsStats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter(p => p.status === 'active').length,
-    completedProjects: projects.filter(p => p.status === 'active').length, // Assuming active means completed for now
-    onHoldProjects: projects.filter(p => p.status === 'on-hold').length,
+    activeProjects: projects.filter((p) => p.status === 'active').length,
+    completedProjects: projects.filter((p) => p.status === 'active').length, // Assuming active means completed for now
+    onHoldProjects: projects.filter((p) => p.status === 'on-hold').length,
     myProjects: projects.length, // Would filter by user in real implementation
-    recentActivity: projects.filter(p => {
+    recentActivity: projects.filter((p) => {
       if (!p.updatedAt) return false;
       const updatedAt = new Date(p.updatedAt);
       const weekAgo = new Date();
@@ -85,7 +78,7 @@ export function ProjectsOverview({
     }).length,
   };
 
-  const filteredProjects = projects.filter(project => {
+  const filteredProjects = projects.filter((project) => {
     const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter = filterStatus === 'all' || project.status === filterStatus;
     return matchesSearch && matchesFilter;
@@ -95,10 +88,8 @@ export function ProjectsOverview({
     <div className="space-y-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-6">
-          Projects Dashboard
-        </h1>
-        
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-6">Projects Dashboard</h1>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* Total Projects */}
@@ -193,7 +184,7 @@ export function ProjectsOverview({
             </div>
 
             {/* Refresh Button */}
-            <Button 
+            <Button
               onClick={onRefresh}
               variant="outline"
               size="sm"
@@ -224,10 +215,7 @@ export function ProjectsOverview({
             <FolderOpen className="w-16 h-16 text-slate-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">No projects found</h3>
             <p className="text-slate-400 mb-6">
-              {searchQuery || filterStatus !== 'all' 
-                ? 'Try adjusting your search or filters' 
-                : 'Create your first project to get started'
-              }
+              {searchQuery || filterStatus !== 'all' ? 'Try adjusting your search or filters' : 'Create your first project to get started'}
             </p>
             {!searchQuery && filterStatus === 'all' && (
               <Button onClick={onCreateProject} className="bg-purple-500 hover:bg-purple-600">
@@ -268,33 +256,33 @@ function EnhancedProjectCard({ project }: { project: ProjectListItem }) {
   const getStatusConfig = (status: ProjectListItem['status']) => {
     switch (status) {
       case 'active':
-        return { 
-          color: 'from-green-500 to-emerald-500', 
-          icon: Rocket, 
+        return {
+          color: 'from-green-500 to-emerald-500',
+          icon: Rocket,
           text: 'Active',
-          bg: 'bg-green-500/10'
+          bg: 'bg-green-500/10',
         };
       case 'in-progress':
-        return { 
-          color: 'from-yellow-500 to-orange-500', 
-          icon: Clock, 
+        return {
+          color: 'from-yellow-500 to-orange-500',
+          icon: Clock,
           text: 'In Progress',
-          bg: 'bg-yellow-500/10'
+          bg: 'bg-yellow-500/10',
         };
       case 'on-hold':
-        return { 
-          color: 'from-red-500 to-pink-500', 
-          icon: PauseCircle, 
+        return {
+          color: 'from-red-500 to-pink-500',
+          icon: PauseCircle,
           text: 'On Hold',
-          bg: 'bg-red-500/10'
+          bg: 'bg-red-500/10',
         };
       case 'not-started':
       default:
-        return { 
-          color: 'from-slate-500 to-slate-400', 
-          icon: Clock, 
+        return {
+          color: 'from-slate-500 to-slate-400',
+          icon: Clock,
           text: 'Not Started',
-          bg: 'bg-slate-500/10'
+          bg: 'bg-slate-500/10',
         };
     }
   };
@@ -315,9 +303,7 @@ function EnhancedProjectCard({ project }: { project: ProjectListItem }) {
         </div>
 
         {/* Project Title */}
-        <h3 className="text-xl font-bold text-white mb-2 line-clamp-2">
-          {project.name}
-        </h3>
+        <h3 className="text-xl font-bold text-white mb-2 line-clamp-2">{project.name}</h3>
 
         {/* Project Meta */}
         <div className="space-y-2 text-sm text-slate-400">
@@ -350,33 +336,33 @@ function EnhancedProjectListItem({ project }: { project: ProjectListItem }) {
   const getStatusConfig = (status: ProjectListItem['status']) => {
     switch (status) {
       case 'active':
-        return { 
-          color: 'text-green-400', 
-          icon: Rocket, 
+        return {
+          color: 'text-green-400',
+          icon: Rocket,
           text: 'Active',
-          bg: 'bg-green-500/10'
+          bg: 'bg-green-500/10',
         };
       case 'in-progress':
-        return { 
-          color: 'text-yellow-400', 
-          icon: Clock, 
+        return {
+          color: 'text-yellow-400',
+          icon: Clock,
           text: 'In Progress',
-          bg: 'bg-yellow-500/10'
+          bg: 'bg-yellow-500/10',
         };
       case 'on-hold':
-        return { 
-          color: 'text-red-400', 
-          icon: PauseCircle, 
+        return {
+          color: 'text-red-400',
+          icon: PauseCircle,
           text: 'On Hold',
-          bg: 'bg-red-500/10'
+          bg: 'bg-red-500/10',
         };
       case 'not-started':
       default:
-        return { 
-          color: 'text-slate-400', 
-          icon: Clock, 
+        return {
+          color: 'text-slate-400',
+          icon: Clock,
           text: 'Not Started',
-          bg: 'bg-slate-500/10'
+          bg: 'bg-slate-500/10',
         };
     }
   };

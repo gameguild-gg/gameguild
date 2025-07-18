@@ -1,23 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  TestTube,
-  Upload,
-  Calendar,
-  Users,
-  BarChart3,
-  Clock,
-  CheckCircle,
-  Plus,
-  Download,
-  MessageSquare,
-} from 'lucide-react';
+import { BarChart3, Calendar, CheckCircle, Clock, Download, MessageSquare, Plus, TestTube, Upload, Users } from 'lucide-react';
 import Link from 'next/link';
 import { testingLabApi } from '@/lib/api/testing-lab/testing-lab-api';
 
@@ -262,12 +251,8 @@ export function TestingLabOverview() {
       return (
         <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Quick Actions
-            </CardTitle>
-            <CardDescription className="text-slate-400">
-              Common tasks for students
-            </CardDescription>
+            <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Quick Actions</CardTitle>
+            <CardDescription className="text-slate-400">Common tasks for students</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Link href="/dashboard/testing-lab/submit">
@@ -276,16 +261,16 @@ export function TestingLabOverview() {
                 Submit New Version
               </Button>
             </Link>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
               onClick={() => window.open('/dashboard/testing-lab/requests', '_self')}
             >
               <Download className="mr-2 h-4 w-4" />
               View Testing Assignments
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
               onClick={() => window.open('/dashboard/testing-lab/feedback', '_self')}
             >
@@ -299,12 +284,8 @@ export function TestingLabOverview() {
       return (
         <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Professor Tools
-            </CardTitle>
-            <CardDescription className="text-slate-400">
-              Manage testing lab operations
-            </CardDescription>
+            <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Professor Tools</CardTitle>
+            <CardDescription className="text-slate-400">Manage testing lab operations</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Link href="/dashboard/testing-lab/sessions">
@@ -313,16 +294,16 @@ export function TestingLabOverview() {
                 Create Testing Session
               </Button>
             </Link>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
               onClick={() => window.open('/dashboard/testing-lab/attendance', '_self')}
             >
               <Users className="mr-2 h-4 w-4" />
               View Attendance Reports
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
               onClick={() => window.open('/dashboard/testing-lab/feedback', '_self')}
             >
@@ -352,19 +333,12 @@ export function TestingLabOverview() {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Testing Lab
-            </h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Testing Lab</h1>
             <p className="text-slate-400 mt-2">
-              {userRole.isStudent
-                ? 'Submit your games and participate in testing sessions'
-                : 'Manage testing sessions and review feedback'}
+              {userRole.isStudent ? 'Submit your games and participate in testing sessions' : 'Manage testing sessions and review feedback'}
             </p>
           </div>
-          <Badge 
-            variant="outline" 
-            className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20 text-blue-300"
-          >
+          <Badge variant="outline" className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20 text-blue-300">
             {userRole.type.charAt(0).toUpperCase() + userRole.type.slice(1)} Dashboard
           </Badge>
         </div>
@@ -375,12 +349,18 @@ export function TestingLabOverview() {
         {/* Main Content */}
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full grid-cols-4 bg-slate-800/50 border-slate-700">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-slate-700">Overview</TabsTrigger>
+            <TabsTrigger value="overview" className="data-[state=active]:bg-slate-700">
+              Overview
+            </TabsTrigger>
             <TabsTrigger value="requests" className="data-[state=active]:bg-slate-700">
               {userRole.isStudent ? 'My Requests' : 'All Requests'}
             </TabsTrigger>
-            <TabsTrigger value="sessions" className="data-[state=active]:bg-slate-700">Sessions</TabsTrigger>
-            <TabsTrigger value="feedback" className="data-[state=active]:bg-slate-700">Feedback</TabsTrigger>
+            <TabsTrigger value="sessions" className="data-[state=active]:bg-slate-700">
+              Sessions
+            </TabsTrigger>
+            <TabsTrigger value="feedback" className="data-[state=active]:bg-slate-700">
+              Feedback
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -395,9 +375,7 @@ export function TestingLabOverview() {
                     Testing Requests
                   </CardTitle>
                   <CardDescription className="text-slate-400">
-                    {userRole.isStudent
-                      ? 'Track your game submissions and their status'
-                      : 'Manage all student testing requests'}
+                    {userRole.isStudent ? 'Track your game submissions and their status' : 'Manage all student testing requests'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -428,9 +406,7 @@ export function TestingLabOverview() {
                     Testing Sessions
                   </CardTitle>
                   <CardDescription className="text-slate-400">
-                    {userRole.isStudent
-                      ? 'View your scheduled testing sessions'
-                      : 'Manage and create testing sessions'}
+                    {userRole.isStudent ? 'View your scheduled testing sessions' : 'Manage and create testing sessions'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -459,9 +435,7 @@ export function TestingLabOverview() {
                     Feedback System
                   </CardTitle>
                   <CardDescription className="text-slate-400">
-                    {userRole.isStudent
-                      ? 'Complete feedback for games you tested'
-                      : 'Review and approve feedback responses'}
+                    {userRole.isStudent ? 'Complete feedback for games you tested' : 'Review and approve feedback responses'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -488,12 +462,8 @@ export function TestingLabOverview() {
           <TabsContent value="requests">
             <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  Recent Activity
-                </CardTitle>
-                <CardDescription className="text-slate-400">
-                  Latest updates and notifications
-                </CardDescription>
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Recent Activity</CardTitle>
+                <CardDescription className="text-slate-400">Latest updates and notifications</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -541,9 +511,7 @@ export function TestingLabOverview() {
             <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle>Testing Sessions</CardTitle>
-                <CardDescription>
-                  View and manage testing sessions
-                </CardDescription>
+                <CardDescription>View and manage testing sessions</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-slate-400">Sessions functionality will be implemented here.</p>
@@ -558,9 +526,7 @@ export function TestingLabOverview() {
             <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle>Feedback Management</CardTitle>
-                <CardDescription>
-                  Submit and review feedback
-                </CardDescription>
+                <CardDescription>Submit and review feedback</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-slate-400">Feedback functionality will be implemented here.</p>

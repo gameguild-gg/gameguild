@@ -1,7 +1,7 @@
 'use client';
 
 import { signOut, useSession } from 'next-auth/react';
-import { useEffect, useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function useAuthError() {
@@ -12,7 +12,7 @@ export function useAuthError() {
     async (forceSignOut = false) => {
       if (session?.error === 'RefreshTokenError' || forceSignOut) {
         console.log('🚨 [AUTH ERROR] Token refresh failed, signing out user');
-        
+
         try {
           // Sign out the user and redirect to sign-in page
           await signOut({
@@ -26,7 +26,7 @@ export function useAuthError() {
         }
       }
     },
-    [session?.error, router]
+    [session?.error, router],
   );
 
   useEffect(() => {

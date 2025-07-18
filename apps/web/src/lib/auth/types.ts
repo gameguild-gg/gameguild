@@ -2,7 +2,7 @@
  * NextAuth.js type extensions and utilities
  */
 
-import { User, DefaultSession, DefaultJWT } from 'next-auth';
+import { DefaultJWT, DefaultSession, User } from 'next-auth';
 import { SignInResponse, TenantInfo } from '@/components/legacy/types/auth';
 
 // Extended user type for NextAuth.js

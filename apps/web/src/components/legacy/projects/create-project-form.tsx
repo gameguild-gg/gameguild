@@ -83,9 +83,15 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
             <div className="md:p-16">
               <form onSubmit={handleSubmit} className="flex flex-col flex-1">
                 <Tabs defaultValue="basic" className="flex flex-col flex-1">
-                  <TabsContent value="basic" className="py-6 space-y-6 bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-lg p-6 shadow-lg border border-slate-700/50">
+                  <TabsContent
+                    value="basic"
+                    className="py-6 space-y-6 bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-lg p-6 shadow-lg border border-slate-700/50"
+                  >
                     <div className="flex flex-col gap-12">
-                      <Label htmlFor="title" className="flex flex-col items-start justify-center text-4xl align-middle font-bold leading-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                      <Label
+                        htmlFor="title"
+                        className="flex flex-col items-start justify-center text-4xl align-middle font-bold leading-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                      >
                         <span>Let’s start with a name for</span>
                         <div className="flex flex-row items-center justify-center gap-2">
                           <span>your project</span>
@@ -497,7 +503,10 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                   <Button type="button" variant="outline" onClick={() => setIsOpen(false)} className="border-slate-600 text-slate-300 hover:bg-slate-800">
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg">
+                  <Button
+                    type="submit"
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg"
+                  >
                     Create Project
                   </Button>
                 </div>

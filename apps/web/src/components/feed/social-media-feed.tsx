@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, User, Verified, Play, Pause } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
+import { Bookmark, Heart, MessageCircle, MoreHorizontal, Share2, User, Verified } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -64,8 +64,8 @@ const mockPosts: SocialPost[] = [
           type: 'video',
           url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
           thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&h=600&fit=crop',
-          aspectRatio: 16/9,
-        }
+          aspectRatio: 16 / 9,
+        },
       ],
       hashtags: ['gamedev', 'indiegame', 'particles'],
       mentions: ['@unity', '@unrealengine'],
@@ -92,13 +92,13 @@ const mockPosts: SocialPost[] = [
       followerCount: 8900,
     },
     content: {
-      text: 'Working on character designs for our upcoming RPG! Here\'s the main protagonist. Feedback welcome! 🎨',
+      text: "Working on character designs for our upcoming RPG! Here's the main protagonist. Feedback welcome! 🎨",
       media: [
         {
           type: 'image',
           url: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=800&fit=crop',
           aspectRatio: 1,
-        }
+        },
       ],
       hashtags: ['pixelart', 'gamedev', 'rpg', 'characterdesign'],
     },
@@ -149,13 +149,13 @@ const mockPosts: SocialPost[] = [
       followerCount: 45600,
     },
     content: {
-      text: '🚀 Performance Tip: Use object pooling for frequently spawned objects like bullets or enemies. Here\'s a quick implementation:',
+      text: "🚀 Performance Tip: Use object pooling for frequently spawned objects like bullets or enemies. Here's a quick implementation:",
       media: [
         {
           type: 'image',
           url: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=600&fit=crop',
-          aspectRatio: 4/3,
-        }
+          aspectRatio: 4 / 3,
+        },
       ],
       hashtags: ['unity', 'gamedev', 'performance', 'tips'],
     },
@@ -177,39 +177,39 @@ export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
   const [loading, setLoading] = useState(false);
 
   const handleLike = useCallback((postId: string) => {
-    setPosts(prev => prev.map(post => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          interactions: {
-            ...post.interactions,
-            isLiked: !post.interactions.isLiked,
-            likes: post.interactions.isLiked 
-              ? post.interactions.likes - 1 
-              : post.interactions.likes + 1,
-          }
-        };
-      }
-      return post;
-    }));
+    setPosts((prev) =>
+      prev.map((post) => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            interactions: {
+              ...post.interactions,
+              isLiked: !post.interactions.isLiked,
+              likes: post.interactions.isLiked ? post.interactions.likes - 1 : post.interactions.likes + 1,
+            },
+          };
+        }
+        return post;
+      }),
+    );
   }, []);
 
   const handleSave = useCallback((postId: string) => {
-    setPosts(prev => prev.map(post => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          interactions: {
-            ...post.interactions,
-            isSaved: !post.interactions.isSaved,
-            saves: post.interactions.isSaved 
-              ? post.interactions.saves - 1 
-              : post.interactions.saves + 1,
-          }
-        };
-      }
-      return post;
-    }));
+    setPosts((prev) =>
+      prev.map((post) => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            interactions: {
+              ...post.interactions,
+              isSaved: !post.interactions.isSaved,
+              saves: post.interactions.isSaved ? post.interactions.saves - 1 : post.interactions.saves + 1,
+            },
+          };
+        }
+        return post;
+      }),
+    );
   }, []);
 
   const formatNumber = (num: number) => {
@@ -219,7 +219,7 @@ export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
   };
 
   return (
-    <div className={cn("min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900", className)}>
+    <div className={cn('min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900', className)}>
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Stories Section */}
         <div className="mb-8">
@@ -238,22 +238,14 @@ export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
               </div>
               <span className="text-xs text-slate-400 text-center">Your Story</span>
             </div>
-            
+
             {/* Other Stories */}
             {mockPosts.slice(0, 6).map((post) => (
               <div key={`story-${post.id}`} className="flex-shrink-0 flex flex-col items-center gap-2">
                 <div className="story-ring w-16 h-16 rounded-full p-0.5">
-                  <Image
-                    src={post.user.avatar}
-                    alt={post.user.displayName}
-                    width={64}
-                    height={64}
-                    className="w-full h-full rounded-full object-cover"
-                  />
+                  <Image src={post.user.avatar} alt={post.user.displayName} width={64} height={64} className="w-full h-full rounded-full object-cover" />
                 </div>
-                <span className="text-xs text-slate-400 text-center max-w-[60px] truncate">
-                  {post.user.username}
-                </span>
+                <span className="text-xs text-slate-400 text-center max-w-[60px] truncate">{post.user.username}</span>
               </div>
             ))}
           </div>
@@ -270,21 +262,11 @@ export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
               <div className="p-4 pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Image
-                      src={post.user.avatar}
-                      alt={post.user.displayName}
-                      width={40}
-                      height={40}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
+                    <Image src={post.user.avatar} alt={post.user.displayName} width={40} height={40} className="w-10 h-10 rounded-full object-cover" />
                     <div>
                       <div className="flex items-center gap-1">
-                        <span className="font-semibold text-white text-sm">
-                          {post.user.displayName}
-                        </span>
-                        {post.user.isVerified && (
-                          <Verified className="w-4 h-4 text-blue-400 fill-current" />
-                        )}
+                        <span className="font-semibold text-white text-sm">{post.user.displayName}</span>
+                        {post.user.isVerified && <Verified className="w-4 h-4 text-blue-400 fill-current" />}
                       </div>
                       <div className="flex items-center gap-1 text-xs text-slate-400">
                         <span>@{post.user.username}</span>
@@ -329,24 +311,13 @@ export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
                 <div className="relative">
                   {post.content.media[0].type === 'video' ? (
                     <div className="relative group">
-                      <video
-                        className="w-full h-auto max-h-[600px] object-cover"
-                        poster={post.content.media[0].thumbnail}
-                        controls
-                        preload="metadata"
-                      >
+                      <video className="w-full h-auto max-h-[600px] object-cover" poster={post.content.media[0].thumbnail} controls preload="metadata">
                         <source src={post.content.media[0].url} type="video/mp4" />
                       </video>
                       <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors pointer-events-none" />
                     </div>
                   ) : (
-                    <Image
-                      src={post.content.media[0].url}
-                      alt="Post content"
-                      width={800}
-                      height={600}
-                      className="w-full h-auto max-h-[600px] object-cover"
-                    />
+                    <Image src={post.content.media[0].url} alt="Post content" width={800} height={600} className="w-full h-auto max-h-[600px] object-cover" />
                   )}
                 </div>
               )}
@@ -358,16 +329,11 @@ export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
                     <button
                       onClick={() => handleLike(post.id)}
                       className={cn(
-                        "flex items-center gap-2 transition-colors",
-                        post.interactions.isLiked 
-                          ? "text-red-500" 
-                          : "text-slate-400 hover:text-red-400"
+                        'flex items-center gap-2 transition-colors',
+                        post.interactions.isLiked ? 'text-red-500' : 'text-slate-400 hover:text-red-400',
                       )}
                     >
-                      <Heart className={cn(
-                        "w-6 h-6 transition-transform", 
-                        post.interactions.isLiked && "fill-current like-animation"
-                      )} />
+                      <Heart className={cn('w-6 h-6 transition-transform', post.interactions.isLiked && 'fill-current like-animation')} />
                       <span className="text-sm font-medium">{formatNumber(post.interactions.likes)}</span>
                     </button>
                     <button className="flex items-center gap-2 text-slate-400 hover:text-blue-400 transition-colors">
@@ -381,14 +347,9 @@ export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
                   </div>
                   <button
                     onClick={() => handleSave(post.id)}
-                    className={cn(
-                      "transition-colors",
-                      post.interactions.isSaved 
-                        ? "text-yellow-500" 
-                        : "text-slate-400 hover:text-yellow-400"
-                    )}
+                    className={cn('transition-colors', post.interactions.isSaved ? 'text-yellow-500' : 'text-slate-400 hover:text-yellow-400')}
                   >
-                    <Bookmark className={cn("w-6 h-6", post.interactions.isSaved && "fill-current")} />
+                    <Bookmark className={cn('w-6 h-6', post.interactions.isSaved && 'fill-current')} />
                   </button>
                 </div>
 
@@ -409,7 +370,7 @@ export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
 
         {/* Load More */}
         <div className="flex justify-center py-8">
-          <button 
+          <button
             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 rounded-full font-medium transition-all transform hover:scale-105"
             onClick={() => {
               // In real app, load more posts from API

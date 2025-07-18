@@ -325,7 +325,16 @@ export function ReceivedPeerReviews({ submissionId }: { submissionId: string }) 
       });
 
       if (response.ok) {
-        setReviews((prev) => prev.map((review) => (review.id === reviewId ? { ...review, isAccepted: false } : review)));
+        setReviews((prev) =>
+          prev.map((review) =>
+            review.id === reviewId
+              ? {
+                  ...review,
+                  isAccepted: false,
+                }
+              : review,
+          ),
+        );
         toast({
           title: 'Review rejected',
           description: 'You have rejected this review. A new reviewer will be assigned.',

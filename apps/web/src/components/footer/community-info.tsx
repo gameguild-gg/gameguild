@@ -1,5 +1,5 @@
 import React from 'react';
-import { Gamepad2, Users, Heart } from 'lucide-react';
+import { Gamepad2, Heart, Users } from 'lucide-react';
 
 export function CommunityInfo() {
   return (

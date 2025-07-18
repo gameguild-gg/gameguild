@@ -3,8 +3,8 @@ import { FeedHeader } from './feed-header';
 import { PostFiltersStatic } from './post-filters-static';
 import { PinnedPosts } from './pinned-posts';
 import { PostsList } from './posts-list';
-import { fetchPosts, fetchPinnedPosts } from '@/lib/feed/api';
-import type { PostDto, FeedFilters } from '@/lib/feed';
+import { fetchPinnedPosts, fetchPosts } from '@/lib/feed/api';
+import type { FeedFilters, PostDto } from '@/lib/feed';
 
 interface CommunityFeedServerProps {
   initialPosts?: PostDto[];
@@ -29,9 +29,7 @@ const POST_TYPES = [
   'event',
 ];
 
-export async function CommunityFeedServer({
-  searchParams = {},
-}: CommunityFeedServerProps) {
+export async function CommunityFeedServer({ searchParams = {} }: CommunityFeedServerProps) {
   // Parse search params to filters
   const filters: FeedFilters = {
     searchTerm: typeof searchParams.search === 'string' ? searchParams.search : undefined,
@@ -48,10 +46,7 @@ export async function CommunityFeedServer({
   let engagementRate = 75.5;
 
   try {
-    const [postsData, pinnedData] = await Promise.all([
-      fetchPosts({ ...filters, pageNumber: 1, pageSize: 20 }),
-      fetchPinnedPosts(),
-    ]);
+    const [postsData, pinnedData] = await Promise.all([fetchPosts({ ...filters, pageNumber: 1, pageSize: 20 }), fetchPinnedPosts()]);
 
     posts = postsData.posts || [];
     pinnedPosts = pinnedData.posts || [];
@@ -65,17 +60,10 @@ export async function CommunityFeedServer({
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
-        <FeedHeader
-          totalPosts={totalPosts}
-          activeUsers={activeUsers}
-          engagementRate={engagementRate}
-        />
+        <FeedHeader totalPosts={totalPosts} activeUsers={activeUsers} engagementRate={engagementRate} />
 
         {/* Filters */}
-        <PostFiltersStatic
-          filters={filters}
-          postTypes={POST_TYPES}
-        />
+        <PostFiltersStatic filters={filters} postTypes={POST_TYPES} />
 
         {/* Pinned Posts */}
         {pinnedPosts.length > 0 && (
@@ -101,12 +89,10 @@ export async function CommunityFeedServer({
 
         {/* Server-side note */}
         <div className="mt-8 text-center text-slate-400 text-sm">
-          <p>Showing {posts.length} of {totalPosts} posts</p>
-          {posts.length < totalPosts && (
-            <p className="mt-2">
-              Load more posts by adjusting your filters or use the interactive version.
-            </p>
-          )}
+          <p>
+            Showing {posts.length} of {totalPosts} posts
+          </p>
+          {posts.length < totalPosts && <p className="mt-2">Load more posts by adjusting your filters or use the interactive version.</p>}
         </div>
       </div>
     </div>

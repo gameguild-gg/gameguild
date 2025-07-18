@@ -13,7 +13,7 @@ const Footer: React.FunctionComponent<Readonly<Props>> = ({ className, children,
     <footer className={cn('w-full bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white', className)} {...props}>
       {/* Top Subtle Border */}
       <div className="h-0.5 bg-gradient-to-r from-transparent via-slate-600/50 to-transparent"></div>
-      
+
       {/* Newsletter Section */}
       <NewsletterSection />
 
@@ -50,10 +50,10 @@ const Footer: React.FunctionComponent<Readonly<Props>> = ({ className, children,
           </div>
         </div>
       </div>
-      
+
       {/* Bottom Beautiful Border */}
       <div className="h-1 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500"></div>
-      
+
       {children}
     </footer>
   );

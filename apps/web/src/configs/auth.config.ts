@@ -51,7 +51,7 @@ export const authConfig: NextAuthConfig = {
         try {
           // Call the backend API for admin authentication using direct fetch
           console.log('[NextAuth][admin-bypass] Attempting admin login via backend API');
-          
+
           const fetchResponse = await fetch(`${environment.apiBaseUrl}/api/auth/admin-login`, {
             method: 'POST',
             headers: {
@@ -98,9 +98,9 @@ export const authConfig: NextAuthConfig = {
       },
     }),
   ],
-  session: { 
+  session: {
     strategy: 'jwt',
-    // Extend session duration to 7 days 
+    // Extend session duration to 7 days
     maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
     // Update session every hour to keep it fresh
     updateAge: 60 * 60, // 1 hour in seconds
@@ -110,7 +110,7 @@ export const authConfig: NextAuthConfig = {
       // If there's a specific callback URL in the query params, use it
       const urlObj = new URL(url, baseUrl);
       const callbackUrl = urlObj.searchParams.get('callbackUrl');
-      
+
       if (callbackUrl) {
         // Ensure the callback URL is safe (same origin)
         try {
@@ -290,7 +290,7 @@ export const authConfig: NextAuthConfig = {
           hasAccessToken: !!token.accessToken,
           hasRefreshToken: !!token.refreshToken,
         });
-        
+
         // Mark session as corrupted to force re-authentication
         token.error = 'SessionCorrupted';
         return token;
@@ -340,7 +340,7 @@ export const authConfig: NextAuthConfig = {
       // 4. This is not a session update trigger (to avoid infinite loops)
       if (shouldRefresh && token.refreshToken && !token.error && trigger !== 'update') {
         console.log('🔄 [AUTH DEBUG] Token needs refresh, attempting...');
-        
+
         try {
           const refreshResponse = await fetch(`${environment.apiBaseUrl}/api/auth/refresh-token`, {
             method: 'POST',
@@ -358,7 +358,7 @@ export const authConfig: NextAuthConfig = {
           }
 
           const refreshResult = await refreshResponse.json();
-          
+
           if (refreshResult && refreshResult.accessToken) {
             console.log('✅ [AUTH DEBUG] Token refresh successful:', {
               newExpiresAt: refreshResult.expires,
@@ -432,7 +432,7 @@ export const authConfig: NextAuthConfig = {
       if (token.accessToken) {
         session.accessToken = token.accessToken as string;
       }
-      
+
       session.user.id = token.id as string;
 
       if (token.user) {

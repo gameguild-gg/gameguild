@@ -1,15 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MessageSquare, ThumbsUp, ThumbsDown, Star, Flag, CheckCircle, XCircle, Eye, Filter } from 'lucide-react';
+import { CheckCircle, Eye, Filter, Flag, MessageSquare, Star, ThumbsDown, ThumbsUp, XCircle } from 'lucide-react';
 
 interface TestingFeedback {
   id: string;
@@ -101,7 +99,8 @@ export function FeedbackManager() {
               'What did you like most about the game?': 'The art style and the puzzle mechanics are really engaging.',
               'What could be improved?': 'Some sound effects are missing and the tutorial could be clearer.',
             },
-            generalComments: 'Overall, this is a solid game with great potential. The core mechanics work well and it\'s fun to play. Looking forward to the next version!',
+            generalComments:
+              "Overall, this is a solid game with great potential. The core mechanics work well and it's fun to play. Looking forward to the next version!",
           },
           testingContext: 'session',
           submittedAt: '2024-12-15T14:30:00Z',
@@ -143,13 +142,13 @@ export function FeedbackManager() {
       ];
 
       setFeedback(mockFeedback);
-      
+
       // Calculate stats
       const total = mockFeedback.length;
-      const pending = mockFeedback.filter(f => f.reviewStatus === 'pending').length;
-      const approved = mockFeedback.filter(f => f.reviewStatus === 'approved').length;
-      const flagged = mockFeedback.filter(f => f.reviewStatus === 'flagged').length;
-      const rejected = mockFeedback.filter(f => f.reviewStatus === 'rejected').length;
+      const pending = mockFeedback.filter((f) => f.reviewStatus === 'pending').length;
+      const approved = mockFeedback.filter((f) => f.reviewStatus === 'approved').length;
+      const flagged = mockFeedback.filter((f) => f.reviewStatus === 'flagged').length;
+      const rejected = mockFeedback.filter((f) => f.reviewStatus === 'rejected').length;
       const averageRating = mockFeedback.reduce((sum, f) => sum + f.feedbackData.rating, 0) / total;
 
       setStats({ total, pending, approved, flagged, rejected, averageRating });
@@ -163,11 +162,7 @@ export function FeedbackManager() {
   const updateFeedbackStatus = async (feedbackId: string, status: 'approved' | 'flagged' | 'rejected', qualityRating?: 'positive' | 'negative') => {
     try {
       // API call would go here
-      setFeedback(prev => prev.map(f => 
-        f.id === feedbackId 
-          ? { ...f, reviewStatus: status, qualityRating }
-          : f
-      ));
+      setFeedback((prev) => prev.map((f) => (f.id === feedbackId ? { ...f, reviewStatus: status, qualityRating } : f)));
     } catch (error) {
       console.error('Error updating feedback status:', error);
     }
@@ -202,17 +197,10 @@ export function FeedbackManager() {
   };
 
   const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }).map((_, i) => (
-      <Star
-        key={i}
-        className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`}
-      />
-    ));
+    return Array.from({ length: 5 }).map((_, i) => <Star key={i} className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`} />);
   };
 
-  const filteredFeedback = feedback.filter(f => 
-    filter === 'all' || f.reviewStatus === filter
-  );
+  const filteredFeedback = feedback.filter((f) => filter === 'all' || f.reviewStatus === filter);
 
   if (loading) {
     return (
@@ -228,9 +216,7 @@ export function FeedbackManager() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-white">Feedback Management</h1>
-          <p className="text-slate-400 mt-1">
-            Review and manage testing feedback from students
-          </p>
+          <p className="text-slate-400 mt-1">Review and manage testing feedback from students</p>
         </div>
         <div className="flex gap-3">
           <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
@@ -360,9 +346,7 @@ export function FeedbackManager() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(item.reviewStatus)}>
-                      {item.reviewStatus}
-                    </Badge>
+                    <Badge className={getStatusColor(item.reviewStatus)}>{item.reviewStatus}</Badge>
                   </TableCell>
                   <TableCell>
                     {item.qualityRating ? (
@@ -374,43 +358,21 @@ export function FeedbackManager() {
                       <span className="text-slate-500">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-slate-400">
-                    {new Date(item.submittedAt).toLocaleDateString()}
-                  </TableCell>
+                  <TableCell className="text-slate-400">{new Date(item.submittedAt).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedFeedback(item)}
-                        className="h-8 w-8 p-0"
-                      >
+                      <Button size="sm" variant="outline" onClick={() => setSelectedFeedback(item)} className="h-8 w-8 p-0">
                         <Eye className="h-4 w-4" />
                       </Button>
                       {item.reviewStatus === 'pending' && (
                         <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateFeedbackStatus(item.id, 'approved', 'positive')}
-                            className="h-8 w-8 p-0"
-                          >
+                          <Button size="sm" variant="outline" onClick={() => updateFeedbackStatus(item.id, 'approved', 'positive')} className="h-8 w-8 p-0">
                             <CheckCircle className="h-4 w-4 text-green-500" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateFeedbackStatus(item.id, 'flagged')}
-                            className="h-8 w-8 p-0"
-                          >
+                          <Button size="sm" variant="outline" onClick={() => updateFeedbackStatus(item.id, 'flagged')} className="h-8 w-8 p-0">
                             <Flag className="h-4 w-4 text-orange-500" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateFeedbackStatus(item.id, 'rejected', 'negative')}
-                            className="h-8 w-8 p-0"
-                          >
+                          <Button size="sm" variant="outline" onClick={() => updateFeedbackStatus(item.id, 'rejected', 'negative')} className="h-8 w-8 p-0">
                             <XCircle className="h-4 w-4 text-red-500" />
                           </Button>
                         </>
@@ -434,8 +396,8 @@ export function FeedbackManager() {
                 Feedback Details
               </DialogTitle>
               <DialogDescription className="text-slate-400">
-                {selectedFeedback.testingRequest.projectVersion.project.title} v{selectedFeedback.testingRequest.projectVersion.versionNumber} - 
-                by {selectedFeedback.user.name}
+                {selectedFeedback.testingRequest.projectVersion.project.title} v{selectedFeedback.testingRequest.projectVersion.versionNumber} - by{' '}
+                {selectedFeedback.user.name}
               </DialogDescription>
             </DialogHeader>
 
@@ -496,31 +458,19 @@ export function FeedbackManager() {
                 <div className="space-y-3">
                   <h3 className="text-lg font-semibold text-white">Review Actions</h3>
                   <div className="flex gap-3">
-                    <Button
-                      onClick={() => updateFeedbackStatus(selectedFeedback.id, 'approved', 'positive')}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
+                    <Button onClick={() => updateFeedbackStatus(selectedFeedback.id, 'approved', 'positive')} className="bg-green-600 hover:bg-green-700">
                       <ThumbsUp className="h-4 w-4 mr-2" />
                       Approve (Positive)
                     </Button>
-                    <Button
-                      onClick={() => updateFeedbackStatus(selectedFeedback.id, 'approved', 'neutral')}
-                      variant="outline"
-                    >
+                    <Button onClick={() => updateFeedbackStatus(selectedFeedback.id, 'approved', 'neutral')} variant="outline">
                       <CheckCircle className="h-4 w-4 mr-2" />
                       Approve (Neutral)
                     </Button>
-                    <Button
-                      onClick={() => updateFeedbackStatus(selectedFeedback.id, 'flagged')}
-                      className="bg-orange-600 hover:bg-orange-700"
-                    >
+                    <Button onClick={() => updateFeedbackStatus(selectedFeedback.id, 'flagged')} className="bg-orange-600 hover:bg-orange-700">
                       <Flag className="h-4 w-4 mr-2" />
                       Flag for Review
                     </Button>
-                    <Button
-                      onClick={() => updateFeedbackStatus(selectedFeedback.id, 'rejected', 'negative')}
-                      variant="destructive"
-                    >
+                    <Button onClick={() => updateFeedbackStatus(selectedFeedback.id, 'rejected', 'negative')} variant="destructive">
                       <XCircle className="h-4 w-4 mr-2" />
                       Reject
                     </Button>
