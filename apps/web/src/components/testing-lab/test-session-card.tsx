@@ -142,10 +142,10 @@ export function TestSessionCard({ session }: TestSessionCardProps) {
           {session.status === 'open' ? (
             <>
               <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0">
-                <Link href={`/testing-lab/sessions/${session.id}/join`}>Join Session</Link>
+                <Link href={`/testing-lab/sessions/${session.slug}/join`}>Join Session</Link>
               </Button>
               <Button asChild variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
-                <Link href={`/testing-lab/sessions/${session.id}`}>View Details</Link>
+                <Link href={`/testing-lab/sessions/${session.slug}`}>View Details</Link>
               </Button>
             </>
           ) : session.status === 'full' ? (
@@ -154,7 +154,7 @@ export function TestSessionCard({ session }: TestSessionCardProps) {
                 Session Full
               </Button>
               <Button asChild variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
-                <Link href={`/testing-lab/sessions/${session.id}`}>View Details</Link>
+                <Link href={`/testing-lab/sessions/${session.slug}`}>View Details</Link>
               </Button>
             </>
           ) : (
@@ -163,7 +163,7 @@ export function TestSessionCard({ session }: TestSessionCardProps) {
                 Not Available
               </Button>
               <Button asChild variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
-                <Link href={`/testing-lab/sessions/${session.id}`}>View Details</Link>
+                <Link href={`/testing-lab/sessions/${session.slug}`}>View Details</Link>
               </Button>
             </>
           )}
