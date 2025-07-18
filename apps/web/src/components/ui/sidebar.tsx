@@ -321,7 +321,13 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<'div'>) {
   return <div data-slot="sidebar-group" data-sidebar="group" className={cn('relative flex w-full min-w-0 flex-col p-2', className)} {...props} />;
 }
 
-function SidebarGroupLabel({ className, asChild = false, ...props }: React.ComponentProps<'div'> & { asChild?: boolean }) {
+function SidebarGroupLabel({
+  className,
+  asChild = false,
+  ...props
+}: React.ComponentProps<'div'> & {
+  asChild?: boolean;
+}) {
   const Comp = asChild ? Slot : 'div';
 
   return (
@@ -338,7 +344,13 @@ function SidebarGroupLabel({ className, asChild = false, ...props }: React.Compo
   );
 }
 
-function SidebarGroupAction({ className, asChild = false, ...props }: React.ComponentProps<'button'> & { asChild?: boolean }) {
+function SidebarGroupAction({
+  className,
+  asChild = false,
+  ...props
+}: React.ComponentProps<'button'> & {
+  asChild?: boolean;
+}) {
   const Comp = asChild ? Slot : 'button';
 
   return (
