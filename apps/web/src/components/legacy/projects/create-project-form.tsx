@@ -85,19 +85,19 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                 <Tabs defaultValue="basic" className="flex flex-col flex-1">
                   <TabsContent value="basic" className="py-6 space-y-6 bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-lg p-6 shadow-lg border border-slate-700/50">
                     <div className="flex flex-col gap-12">
-                      <Label htmlFor="title" className="flex flex-col items-start justify-center text-4xl align-middle font-bold leading-tight">
+                      <Label htmlFor="title" className="flex flex-col items-start justify-center text-4xl align-middle font-bold leading-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                         <span>Let’s start with a name for</span>
                         <div className="flex flex-row items-center justify-center gap-2">
                           <span>your project</span>
                           <HoverCard>
                             <HoverCardTrigger asChild>
-                              <CircleHelp className="size-4 text-muted-foreground" />
+                              <CircleHelp className="size-4 text-slate-400 hover:text-blue-400 transition-colors" />
                             </HoverCardTrigger>
-                            <HoverCardContent side="right">
+                            <HoverCardContent side="right" className="bg-slate-800/95 backdrop-blur border-slate-700">
                               <div className="flex flex-col gap-2">
-                                <p className="text-sm text-zinc-500">This is the name of your project.</p>
-                                <p className="text-sm text-zinc-500">It will be visible to anyone who can see your project.</p>
-                                <p className="text-sm text-zinc-500">You can change it later.</p>
+                                <p className="text-sm text-slate-300">This is the name of your project.</p>
+                                <p className="text-sm text-slate-300">It will be visible to anyone who can see your project.</p>
+                                <p className="text-sm text-slate-300">You can change it later.</p>
                               </div>
                             </HoverCardContent>
                           </HoverCard>
@@ -109,46 +109,46 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                         onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                         required
                         placeholder="Enter your project name"
-                        className="font-semibold min-h-max bg-transparent dark:bg-transparent border-0 border-b-2 rounded-none text-4xl md:text-4xl placeholder:text-4xl p-0 m-0"
+                        className="font-semibold min-h-max bg-transparent border-0 border-b-2 border-slate-700 rounded-none text-4xl md:text-4xl placeholder:text-4xl placeholder:text-slate-500 p-0 m-0 text-white focus:border-blue-500 transition-colors"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="projectUrl" className="text-zinc-400">
+                      <Label htmlFor="projectUrl" className="text-slate-300 font-medium">
                         Project URL
                       </Label>
                       <Input
                         id="projectUrl"
                         value={formData.projectUrl}
                         onChange={(e) => setFormData((prev) => ({ ...prev, projectUrl: e.target.value }))}
-                        className="mt-1.5 bg-zinc-900 border-zinc-800"
+                        className="mt-1.5 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-400 focus:border-blue-500 transition-colors"
                         placeholder="https://"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="tagline" className="text-zinc-400">
+                      <Label htmlFor="tagline" className="text-slate-300 font-medium">
                         Short description or tagline
-                        <span className="block text-sm text-zinc-500">Shown when we link to your project. Avoid duplicating your project&apos;s title</span>
+                        <span className="block text-sm text-slate-400">Shown when we link to your project. Avoid duplicating your project&apos;s title</span>
                       </Label>
                       <Input
                         id="tagline"
                         value={formData.tagline}
                         onChange={(e) => setFormData((prev) => ({ ...prev, tagline: e.target.value }))}
-                        className="mt-1.5 bg-zinc-900 border-zinc-800"
+                        className="mt-1.5 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-400 focus:border-blue-500 transition-colors"
                         placeholder="Optional"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="classification" className="text-zinc-400">
+                      <Label htmlFor="classification" className="text-slate-300 font-medium">
                         Classification
-                        <span className="block text-sm text-zinc-500">What are you uploading?</span>
+                        <span className="block text-sm text-slate-400">What are you uploading?</span>
                       </Label>
                       <Select value={formData.classification} onValueChange={(value) => setFormData((prev) => ({ ...prev, classification: value }))}>
-                        <SelectTrigger className="mt-1.5 bg-zinc-900 border-zinc-800">
+                        <SelectTrigger className="mt-1.5 bg-slate-800/50 border-slate-700 text-white">
                           <SelectValue placeholder="Select classification" />
                         </SelectTrigger>
-                        <SelectContent className="bg-zinc-900 border-zinc-800">
+                        <SelectContent className="bg-slate-800 border-slate-700">
                           <SelectItem value="game">Games — A piece of software you can play</SelectItem>
                           <SelectItem value="tool">Tools — Software for creating</SelectItem>
                           <SelectItem value="assets">Assets — Resources for creators</SelectItem>
@@ -493,11 +493,13 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                   </TabsContent>
                 </Tabs>
 
-                <div className="flex justify-end gap-4 pt-4 border-t border-zinc-800">
-                  <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                <div className="flex justify-end gap-4 pt-4 border-t border-slate-700">
+                  <Button type="button" variant="outline" onClick={() => setIsOpen(false)} className="border-slate-600 text-slate-300 hover:bg-slate-800">
                     Cancel
                   </Button>
-                  <Button type="submit">Continue</Button>
+                  <Button type="submit" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg">
+                    Create Project
+                  </Button>
                 </div>
               </form>
             </div>
