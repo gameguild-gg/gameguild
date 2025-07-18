@@ -12,6 +12,19 @@ export const authConfig: NextAuthConfig = {
     signIn: '/sign-in',
     error: '/auth/error', // Error code passed in query string as ?error=
   },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        // Extend session duration to 7 days
+        maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+      },
+    },
+  },
   providers: [
     Google({
       clientId: environment.googleClientId,
@@ -74,7 +87,13 @@ export const authConfig: NextAuthConfig = {
       },
     }),
   ],
-  session: { strategy: 'jwt' },
+  session: { 
+    strategy: 'jwt',
+    // Extend session duration to 7 days 
+    maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+    // Update session every hour to keep it fresh
+    updateAge: 60 * 60, // 1 hour in seconds
+  },
   callbacks: {
     async signIn({ user, account, profile }) {
       console.log('🔑 [AUTH DEBUG] SignIn callback triggered:', {
@@ -171,6 +190,7 @@ export const authConfig: NextAuthConfig = {
         hasSession: !!session,
         userId: user?.id,
         provider: account?.provider,
+        hasStoredRefreshToken: !!token.refreshToken,
         timestamp: new Date().toISOString(),
       });
 
@@ -205,6 +225,27 @@ export const authConfig: NextAuthConfig = {
         if (session.currentTenant) {
           token.currentTenant = session.currentTenant;
         }
+      }
+
+      // Check if we have essential data - if not, the session is corrupted
+      if (!token.id || !token.user) {
+        console.error('❌ [AUTH DEBUG] Session corrupted - missing essential data:', {
+          hasId: !!token.id,
+          hasUser: !!token.user,
+          hasAccessToken: !!token.accessToken,
+          hasRefreshToken: !!token.refreshToken,
+        });
+        
+        // Mark session as corrupted to force re-authentication
+        token.error = 'SessionCorrupted';
+        return token;
+      }
+
+      // If we don't have a refresh token, we can't refresh - mark for re-auth
+      if (!token.refreshToken) {
+        console.warn('⚠️ [AUTH DEBUG] No refresh token available - session will need re-authentication');
+        token.error = 'RefreshTokenError';
+        return token;
       }
 
       // Check if token is expired and refresh if needed
@@ -285,9 +326,9 @@ export const authConfig: NextAuthConfig = {
         timestamp: new Date().toISOString(),
       });
 
-      // If there's a refresh token error, clear the session data and return minimal session
-      if (token.error === 'RefreshTokenError') {
-        console.log('🚨 [AUTH DEBUG] RefreshTokenError detected, clearing session data');
+      // If there's any token error, clear the session data and return minimal session
+      if (token.error === 'RefreshTokenError' || token.error === 'SessionCorrupted') {
+        console.log('🚨 [AUTH DEBUG] Token error detected, clearing session data:', token.error);
         return {
           ...session,
           accessToken: undefined,
@@ -295,6 +336,20 @@ export const authConfig: NextAuthConfig = {
           user: {
             ...session.user,
             id: token.id as string,
+          },
+        };
+      }
+
+      // Ensure we have essential data
+      if (!token.id || !token.user) {
+        console.error('❌ [AUTH DEBUG] Session missing essential data');
+        return {
+          ...session,
+          accessToken: undefined,
+          error: 'SessionCorrupted',
+          user: {
+            ...session.user,
+            id: (token.id as string) || 'unknown',
           },
         };
       }
@@ -344,7 +399,7 @@ declare module 'next-auth' {
       name: string;
       isActive: boolean;
     };
-    error?: string;
+    error?: 'RefreshTokenError' | 'SessionCorrupted';
   }
 
   interface User {
@@ -373,6 +428,6 @@ declare module 'next-auth' {
       name: string;
       isActive: boolean;
     };
-    error?: string;
+    error?: 'RefreshTokenError' | 'SessionCorrupted';
   }
 }
