@@ -1,5 +1,5 @@
-import { TestingSessionsManager } from '@/components/dashboard/testing-lab/testing-sessions-manager';
+import { EnhancedTestingSessionsList } from '@/components/dashboard/testing-lab/enhanced-testing-sessions-list';
 
 export default function TestingSessionsPage() {
-  return <TestingSessionsManager />;
+  return <EnhancedTestingSessionsList />;
 }
