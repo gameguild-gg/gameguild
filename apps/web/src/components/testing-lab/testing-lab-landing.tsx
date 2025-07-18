@@ -1,6 +1,7 @@
 import { TestSession } from '@/lib/api/testing-lab/test-sessions';
 import { TestingLabHero } from './testing-lab-hero';
 import { TestingLabStats } from './testing-lab-stats';
+import { FloatingIcons } from './floating-icons';
 
 interface TestingLabLandingProps {
   testSessions: TestSession[];
@@ -11,9 +12,9 @@ export function TestingLabLanding({ testSessions }: TestingLabLandingProps) {
   const upcomingSessions = testSessions.filter((session) => new Date(session.sessionDate) > new Date());
 
   return (
-    <div className="flex flex-col flex-1">
-      <div className="flex flex-col flex-1">{/* TODO: Add floating icons here*/}</div>
-      <div className="flex flex-col flex-1 items-center justify-center">
+    <div className="flex flex-col flex-1 relative">
+      <FloatingIcons />
+      <main className="flex flex-col flex-1 items-center justify-center relative z-10">
         <div className="container ">
           {/* Hero Section */}
           <TestingLabHero />
@@ -24,7 +25,7 @@ export function TestingLabLanding({ testSessions }: TestingLabLandingProps) {
           {/* Call to Action */}
           {/*<TestingLabCallToAction />*/}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
