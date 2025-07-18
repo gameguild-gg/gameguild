@@ -12,28 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarSeparator,
-} from '@/components/ui/sidebar';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   BarChart3,
   Calendar,
   CalendarDays,
-  Check,
   CheckCircle,
-  ChevronRight,
   Clock,
   Download,
   Edit,
@@ -458,408 +441,311 @@ export function EnhancedTestingSessionsList() {
   }
 
   return (
-    <div className=" relative flex flex-col flex-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className="flex flex-col flex-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       {/* Left Sidebar with Calendar */}
-      <SidebarProvider>
-        <Sidebar variant={"sidebar"} side="right" className="bg-slate-800/30 border-r border-slate-700/50">
-          <SidebarContent>
-            {/* Calendar Section */}
-            <SidebarGroup className="px-0">
-              <SidebarGroupContent>
-                <CalendarComponent className="[&_[role=gridcell].bg-accent]:bg-sidebar-primary [&_[role=gridcell].bg-accent]:text-sidebar-primary-foreground [&_[role=gridcell]]:w-[33px]" />
-              </SidebarGroupContent>
-            </SidebarGroup>
+      {/* Main Content */}
+      <div className="flex flex-col flex-1 overflow-auto">
+        <div className="container mx-auto px-6 py-8 space-y-8">
+          {/* Enhanced Header */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Testing Sessions</h1>
+              <p className="text-slate-400 mt-2 text-lg">
+                {userRole.isStudent ? 'Find and join testing sessions for peer game projects' : 'Manage testing sessions and track participation'}
+              </p>
+            </div>
 
-            <SidebarSeparator className="mx-0" />
+            <div className="flex flex-col sm:flex-row gap-4">
+              {userRole.isProfessor && (
+                <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0 shadow-lg">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Schedule Session
+                    </Button>
+                  </DialogTrigger>
+                  <CreateSessionDialog onClose={() => setShowCreateDialog(false)} onSave={fetchSessions} />
+                </Dialog>
+              )}
 
-            {/* Quick Stats */}
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-sidebar-foreground">Quick Stats</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton className="justify-between">
-                      <span className="text-sidebar-muted-foreground text-sm">This Week</span>
-                      <span className="text-sidebar-foreground font-medium">{sessions.filter((s) => s.status === 'scheduled').length}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton className="justify-between">
-                      <span className="text-sidebar-muted-foreground text-sm">Your Sessions</span>
-                      <span className="text-sidebar-foreground font-medium">{sessions.length}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton className="justify-between">
-                      <span className="text-sidebar-muted-foreground text-sm">Upcoming</span>
-                      <span className="text-sidebar-foreground font-medium">{sessions.filter((s) => isUpcoming(s)).length}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+              <Button variant="outline" onClick={() => fetchSessions()} className="border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+          </div>
 
-            <SidebarSeparator className="mx-0" />
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="bg-gradient-to-br from-blue-900/20 to-blue-800/10 border-blue-500/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-300 text-sm font-medium">Total Sessions</p>
+                    <p className="text-3xl font-bold text-white">{sessions.length}</p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-blue-400" />
+                </div>
+                <p className="text-blue-300/60 text-xs mt-2">{sessions.filter((s) => s.status === 'scheduled').length} scheduled</p>
+              </CardContent>
+            </Card>
 
-            {/* Upcoming Sessions */}
-            <SidebarGroup>
-              <Collapsible defaultOpen className="group/collapsible">
-                <SidebarGroupLabel
-                  asChild
-                  className="group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full text-sm"
-                >
-                  <CollapsibleTrigger>
-                    Upcoming Sessions
-                    <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                  </CollapsibleTrigger>
-                </SidebarGroupLabel>
-                <CollapsibleContent>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {sessions
-                        .filter((s) => isUpcoming(s))
-                        .slice(0, 3)
-                        .map((session) => (
-                          <SidebarMenuItem key={session.id}>
-                            <SidebarMenuButton className="flex-col items-start h-auto py-2">
-                              <div className="flex items-center gap-2 w-full">
-                                <div className="flex aspect-square size-4 shrink-0 items-center justify-center rounded-sm border border-sidebar-border bg-sidebar-primary text-sidebar-primary-foreground">
-                                  <Check className="size-3" />
-                                </div>
-                                <h4 className="text-sidebar-foreground text-sm font-medium truncate flex-1">{session.sessionName}</h4>
-                              </div>
-                              <div className="text-sidebar-muted-foreground text-xs mt-1 ml-6">
-                                <p>{formatDate(session.sessionDate)}</p>
-                                <p>{formatTime(session.startTime)}</p>
-                              </div>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))}
-                      {sessions.filter((s) => isUpcoming(s)).length === 0 && (
-                        <SidebarMenuItem>
-                          <SidebarMenuButton>
-                            <span className="text-sidebar-muted-foreground text-sm">No upcoming sessions</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      )}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </Collapsible>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
-        <SidebarInset className="flex flex-col flex-1">
-          {/* Main Content */}
-          <div className="flex flex-col flex-1 overflow-auto">
-            <div className="container mx-auto px-6 py-8 space-y-8">
-              {/* Enhanced Header */}
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Testing Sessions</h1>
-                  <p className="text-slate-400 mt-2 text-lg">
-                    {userRole.isStudent ? 'Find and join testing sessions for peer game projects' : 'Manage testing sessions and track participation'}
-                  </p>
+            <Card className="bg-gradient-to-br from-green-900/20 to-green-800/10 border-green-500/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-300 text-sm font-medium">Active Participants</p>
+                    <p className="text-3xl font-bold text-white">{sessions.reduce((acc, s) => acc + s.registeredTesterCount, 0)}</p>
+                  </div>
+                  <Users className="h-8 w-8 text-green-400" />
+                </div>
+                <p className="text-green-300/60 text-xs mt-2">Across all sessions</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-purple-900/20 to-purple-800/10 border-purple-500/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-300 text-sm font-medium">Projects Testing</p>
+                    <p className="text-3xl font-bold text-white">{sessions.reduce((acc, s) => acc + s.testingRequests.length, 0)}</p>
+                  </div>
+                  <Gamepad2 className="h-8 w-8 text-purple-400" />
+                </div>
+                <p className="text-purple-300/60 text-xs mt-2">Games being tested</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-orange-900/20 to-orange-800/10 border-orange-500/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-orange-300 text-sm font-medium">Avg Attendance</p>
+                    <p className="text-3xl font-bold text-white">
+                      {Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length)}%
+                    </p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-orange-400" />
+                </div>
+                <p className="text-orange-300/60 text-xs mt-2">Session participation</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Enhanced Filters and Search */}
+          <Card className="bg-slate-800/50 border-slate-600/70 backdrop-blur-sm shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+                <div className="flex flex-col sm:flex-row gap-4 flex-1">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                    <Input
+                      placeholder="Search sessions, locations, or managers..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+                    />
+                  </div>
+
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full sm:w-48 bg-slate-700/50 border-slate-600 text-white">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700">
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="scheduled">Scheduled</SelectItem>
+                      <SelectItem value="inProgress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {userRole.isProfessor && (
-                    <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-                      <DialogTrigger asChild>
-                        <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0 shadow-lg">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Schedule Session
-                        </Button>
-                      </DialogTrigger>
-                      <CreateSessionDialog onClose={() => setShowCreateDialog(false)} onSave={fetchSessions} />
-                    </Dialog>
-                  )}
-
-                  <Button variant="outline" onClick={() => fetchSessions()} className="border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Refresh
+                <div className="flex gap-2">
+                  <Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('grid')} className="border-slate-600">
+                    Grid
+                  </Button>
+                  <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('list')} className="border-slate-600">
+                    List
+                  </Button>
+                  <Button variant={viewMode === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('table')} className="border-slate-600">
+                    Table
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Stats Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="bg-gradient-to-br from-blue-900/20 to-blue-800/10 border-blue-500/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-blue-300 text-sm font-medium">Total Sessions</p>
-                        <p className="text-3xl font-bold text-white">{sessions.length}</p>
-                      </div>
-                      <Calendar className="h-8 w-8 text-blue-400" />
-                    </div>
-                    <p className="text-blue-300/60 text-xs mt-2">{sessions.filter((s) => s.status === 'scheduled').length} scheduled</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-green-900/20 to-green-800/10 border-green-500/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-green-300 text-sm font-medium">Active Participants</p>
-                        <p className="text-3xl font-bold text-white">{sessions.reduce((acc, s) => acc + s.registeredTesterCount, 0)}</p>
-                      </div>
-                      <Users className="h-8 w-8 text-green-400" />
-                    </div>
-                    <p className="text-green-300/60 text-xs mt-2">Across all sessions</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-purple-900/20 to-purple-800/10 border-purple-500/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-purple-300 text-sm font-medium">Projects Testing</p>
-                        <p className="text-3xl font-bold text-white">{sessions.reduce((acc, s) => acc + s.testingRequests.length, 0)}</p>
-                      </div>
-                      <Gamepad2 className="h-8 w-8 text-purple-400" />
-                    </div>
-                    <p className="text-purple-300/60 text-xs mt-2">Games being tested</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-orange-900/20 to-orange-800/10 border-orange-500/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-orange-300 text-sm font-medium">Avg Attendance</p>
-                        <p className="text-3xl font-bold text-white">
-                          {Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length)}%
-                        </p>
-                      </div>
-                      <TrendingUp className="h-8 w-8 text-orange-400" />
-                    </div>
-                    <p className="text-orange-300/60 text-xs mt-2">Session participation</p>
-                  </CardContent>
-                </Card>
+          {/* Sessions Display */}
+          {filteredSessions.length === 0 ? (
+            <Card className="bg-slate-800/50 border-slate-600/70 backdrop-blur-sm shadow-lg">
+              <CardContent className="p-12 text-center">
+                <Calendar className="h-12 w-12 text-slate-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-slate-300 mb-2">No sessions found</h3>
+                <p className="text-slate-500">
+                  {searchTerm || statusFilter !== 'all' ? 'Try adjusting your search or filters' : 'No testing sessions have been scheduled yet'}
+                </p>
+              </CardContent>
+            </Card>
+          ) : viewMode === 'table' ? (
+            <Card className="bg-slate-800/50 border-slate-600/70 backdrop-blur-sm shadow-lg">
+              <div className="overflow-hidden rounded-lg border border-slate-600/50">
+                <Table>
+                  <TableHeader className="bg-slate-800/50">
+                    <TableRow className="border-slate-700">
+                      <TableHead className="text-slate-300">Session</TableHead>
+                      <TableHead className="text-slate-300">Date</TableHead>
+                      <TableHead className="text-slate-300">Time</TableHead>
+                      <TableHead className="text-slate-300">Location</TableHead>
+                      <TableHead className="text-slate-300">Status</TableHead>
+                      <TableHead className="text-slate-300">Participants</TableHead>
+                      <TableHead className="text-slate-300">Manager</TableHead>
+                      <TableHead className="text-slate-300">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredSessions.map((session) => (
+                      <TableRow key={session.id} className="border-slate-700 hover:bg-slate-800/30">
+                        <TableCell className="font-medium text-white">
+                          <div>
+                            <div className="font-semibold">{session.sessionName}</div>
+                            <div className="text-sm text-slate-400">
+                              {session.testingRequests.length} project{session.testingRequests.length !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-white">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-blue-400" />
+                            <span>{formatDate(session.sessionDate)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-white">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-purple-400" />
+                            <span>
+                              {formatTime(session.startTime)} - {formatTime(session.endTime)}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-white">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-green-400" />
+                            <div>
+                              <div className="font-medium">{session.location.name}</div>
+                              <div className="text-xs text-slate-400">Capacity: {session.location.capacity}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-white">
+                          <Badge variant="outline" className={getStatusColor(session.status)}>
+                            {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-white">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-orange-400" />
+                              <span className="font-medium">
+                                {session.registeredTesterCount}/{session.maxTesters}
+                              </span>
+                            </div>
+                            <div className="w-16 bg-slate-700 rounded-full h-1">
+                              <div
+                                className={`h-1 rounded-full ${isSessionFull(session) ? 'bg-red-500' : 'bg-gradient-to-r from-blue-500 to-purple-500'}`}
+                                style={{
+                                  width: `${Math.min(getSessionProgress(session), 100)}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-white">
+                          <div>
+                            <div className="font-medium">{session.manager.name}</div>
+                            <div className="text-xs text-slate-400">{session.manager.email}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-white">
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedSession(session);
+                                setShowDetailDialog(true);
+                                fetchSessionRegistrations();
+                              }}
+                              className="border-slate-600 bg-slate-700/50 text-slate-200 hover:bg-slate-600/50"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            {userRole.isProfessor && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  console.log('Edit session:', session.id);
+                                }}
+                                className="border-slate-600 bg-slate-700/50 text-slate-200 hover:bg-slate-600/50"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-
-              {/* Enhanced Filters and Search */}
-              <Card className="bg-slate-800/50 border-slate-600/70 backdrop-blur-sm shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-                    <div className="flex flex-col sm:flex-row gap-4 flex-1">
-                      <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-                        <Input
-                          placeholder="Search sessions, locations, or managers..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
-                        />
-                      </div>
-
-                      <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-full sm:w-48 bg-slate-700/50 border-slate-600 text-white">
-                          <Filter className="h-4 w-4 mr-2" />
-                          <SelectValue placeholder="Filter by status" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-700">
-                          <SelectItem value="all">All Statuses</SelectItem>
-                          <SelectItem value="scheduled">Scheduled</SelectItem>
-                          <SelectItem value="inProgress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('grid')} className="border-slate-600">
-                        Grid
-                      </Button>
-                      <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('list')} className="border-slate-600">
-                        List
-                      </Button>
-                      <Button
-                        variant={viewMode === 'table' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setViewMode('table')}
-                        className="border-slate-600"
-                      >
-                        Table
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Sessions Display */}
-              {filteredSessions.length === 0 ? (
-                <Card className="bg-slate-800/50 border-slate-600/70 backdrop-blur-sm shadow-lg">
-                  <CardContent className="p-12 text-center">
-                    <Calendar className="h-12 w-12 text-slate-500 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-slate-300 mb-2">No sessions found</h3>
-                    <p className="text-slate-500">
-                      {searchTerm || statusFilter !== 'all' ? 'Try adjusting your search or filters' : 'No testing sessions have been scheduled yet'}
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : viewMode === 'table' ? (
-                <Card className="bg-slate-800/50 border-slate-600/70 backdrop-blur-sm shadow-lg">
-                  <div className="overflow-hidden rounded-lg border border-slate-600/50">
-                    <Table>
-                      <TableHeader className="bg-slate-800/50">
-                        <TableRow className="border-slate-700">
-                          <TableHead className="text-slate-300">Session</TableHead>
-                          <TableHead className="text-slate-300">Date</TableHead>
-                          <TableHead className="text-slate-300">Time</TableHead>
-                          <TableHead className="text-slate-300">Location</TableHead>
-                          <TableHead className="text-slate-300">Status</TableHead>
-                          <TableHead className="text-slate-300">Participants</TableHead>
-                          <TableHead className="text-slate-300">Manager</TableHead>
-                          <TableHead className="text-slate-300">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredSessions.map((session) => (
-                          <TableRow key={session.id} className="border-slate-700 hover:bg-slate-800/30">
-                            <TableCell className="font-medium text-white">
-                              <div>
-                                <div className="font-semibold">{session.sessionName}</div>
-                                <div className="text-sm text-slate-400">
-                                  {session.testingRequests.length} project{session.testingRequests.length !== 1 ? 's' : ''}
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-white">
-                              <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-blue-400" />
-                                <span>{formatDate(session.sessionDate)}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-white">
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-purple-400" />
-                                <span>
-                                  {formatTime(session.startTime)} - {formatTime(session.endTime)}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-white">
-                              <div className="flex items-center gap-2">
-                                <MapPin className="h-4 w-4 text-green-400" />
-                                <div>
-                                  <div className="font-medium">{session.location.name}</div>
-                                  <div className="text-xs text-slate-400">Capacity: {session.location.capacity}</div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-white">
-                              <Badge variant="outline" className={getStatusColor(session.status)}>
-                                {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-white">
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <Users className="h-4 w-4 text-orange-400" />
-                                  <span className="font-medium">
-                                    {session.registeredTesterCount}/{session.maxTesters}
-                                  </span>
-                                </div>
-                                <div className="w-16 bg-slate-700 rounded-full h-1">
-                                  <div
-                                    className={`h-1 rounded-full ${isSessionFull(session) ? 'bg-red-500' : 'bg-gradient-to-r from-blue-500 to-purple-500'}`}
-                                    style={{
-                                      width: `${Math.min(getSessionProgress(session), 100)}%`,
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-white">
-                              <div>
-                                <div className="font-medium">{session.manager.name}</div>
-                                <div className="text-xs text-slate-400">{session.manager.email}</div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-white">
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedSession(session);
-                                    setShowDetailDialog(true);
-                                    fetchSessionRegistrations();
-                                  }}
-                                  className="border-slate-600 bg-slate-700/50 text-slate-200 hover:bg-slate-600/50"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                {userRole.isProfessor && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      console.log('Edit session:', session.id);
-                                    }}
-                                    className="border-slate-600 bg-slate-700/50 text-slate-200 hover:bg-slate-600/50"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </Card>
-              ) : (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
-                  {filteredSessions.map((session) => (
-                    <SessionCard
-                      key={session.id}
-                      session={session}
-                      viewMode={viewMode}
-                      userRole={userRole}
-                      onViewDetails={(session) => {
-                        setSelectedSession(session);
-                        setShowDetailDialog(true);
-                        fetchSessionRegistrations();
-                      }}
-                      onEdit={(session) => {
-                        // Edit functionality
-                        console.log('Edit session:', session.id);
-                      }}
-                      getStatusColor={getStatusColor}
-                      formatDate={formatDate}
-                      formatTime={formatTime}
-                      getSessionProgress={getSessionProgress}
-                      isSessionFull={isSessionFull}
-                      isUpcoming={isUpcoming}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Enhanced Session Detail Dialog */}
-              {selectedSession && (
-                <SessionDetailDialog
-                  session={selectedSession}
-                  registrations={registrations}
-                  open={showDetailDialog}
-                  onClose={() => {
-                    setShowDetailDialog(false);
-                    setSelectedSession(null);
-                  }}
+            </Card>
+          ) : (
+            <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
+              {filteredSessions.map((session) => (
+                <SessionCard
+                  key={session.id}
+                  session={session}
+                  viewMode={viewMode}
                   userRole={userRole}
-                  getRegistrationTypeColor={getRegistrationTypeColor}
-                  getRegistrationStatusColor={getRegistrationStatusColor}
+                  onViewDetails={(session) => {
+                    setSelectedSession(session);
+                    setShowDetailDialog(true);
+                    fetchSessionRegistrations();
+                  }}
+                  onEdit={(session) => {
+                    // Edit functionality
+                    console.log('Edit session:', session.id);
+                  }}
+                  getStatusColor={getStatusColor}
+                  formatDate={formatDate}
+                  formatTime={formatTime}
+                  getSessionProgress={getSessionProgress}
+                  isSessionFull={isSessionFull}
+                  isUpcoming={isUpcoming}
                 />
-              )}
+              ))}
             </div>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+          )}
+
+          {/* Enhanced Session Detail Dialog */}
+          {selectedSession && (
+            <SessionDetailDialog
+              session={selectedSession}
+              registrations={registrations}
+              open={showDetailDialog}
+              onClose={() => {
+                setShowDetailDialog(false);
+                setSelectedSession(null);
+              }}
+              userRole={userRole}
+              getRegistrationTypeColor={getRegistrationTypeColor}
+              getRegistrationStatusColor={getRegistrationStatusColor}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

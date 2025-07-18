@@ -1,10 +1,10 @@
 import React from 'react';
-import DashboardHeader from '@/components/dashboard/old/dashboard-header';
-import DashboardFooter from '@/components/dashboard/old/dashboard-footer';
-import DashboardRoot from '@/components/dashboard/old/dashboard-root';
-import DashboardSidebar from '@/components/dashboard/old/dashboard-sidebar';
-import DashboardContent from '@/components/dashboard/old/dashboard-content';
-import DashboardViewport from '@/components/dashboard/old/dashboard-viewport';
+import DashboardHeader from '@/components/old/dashboard-header';
+import DashboardFooter from '@/components/old/dashboard-footer';
+import DashboardRoot from '@/components/old/dashboard-root';
+import DashboardSidebar from '@/components/old/dashboard-sidebar';
+import DashboardContent from '@/components/old/dashboard-content';
+import DashboardViewport from '@/components/old/dashboard-viewport';
 
 type Props = {
   children?: React.ReactNode;

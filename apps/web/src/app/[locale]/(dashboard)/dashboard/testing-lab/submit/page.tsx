@@ -1,4 +1,4 @@
-import { VersionSubmissionForm } from '@/components/dashboard/testing-lab/version-submission-form';
+import { VersionSubmissionForm } from '@/components/testing-lab/version-submission-form';
 
 export default function SubmitVersionPage() {
   return <VersionSubmissionForm />;

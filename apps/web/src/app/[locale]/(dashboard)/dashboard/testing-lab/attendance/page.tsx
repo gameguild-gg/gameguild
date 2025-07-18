@@ -1,4 +1,4 @@
-import { AttendanceTracker } from '@/components/dashboard/testing-lab/attendance-tracker';
+import { AttendanceTracker } from '@/components/testing-lab/attendance-tracker';
 
 export default function AttendancePage() {
   return <AttendanceTracker />;
