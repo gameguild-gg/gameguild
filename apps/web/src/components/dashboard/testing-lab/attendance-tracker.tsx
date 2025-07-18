@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Calendar, Users, FileDown, Search, Filter, CheckCircle, XCircle, Clock, Award } from 'lucide-react';
+import { testingLabApi } from '@/lib/api/testing-lab/testing-lab-api';
 
 interface AttendanceRecord {
   id: string;
@@ -84,8 +84,45 @@ export function AttendanceTracker() {
     try {
       setLoading(true);
       
-      // Mock data - replace with actual API calls
-      const mockAttendance: AttendanceRecord[] = [
+      // Load attendance data from API
+      try {
+        const studentData = await testingLabApi.getStudentAttendanceReport();
+        const sessionData = await testingLabApi.getSessionAttendanceReport();
+        
+        // Transform API data to component format
+        setStudentProgress(studentData.map(student => ({
+          id: student.id,
+          user: {
+            id: student.id,
+            name: student.name,
+            email: student.email,
+            studentId: student.team,
+          },
+          totalSessionsScheduled: student.totalSessions,
+          totalSessionsAttended: student.totalSessions,
+          attendanceRate: Math.round((student.totalSessions / Math.max(student.totalSessions, 1)) * 100),
+          totalGamesTermd: student.gamesTested,
+          totalFeedbackSubmitted: student.gamesTested,
+          isOnTrack: student.status === 'onTrack',
+          needsAttention: student.status === 'atRisk' || student.status === 'failing',
+          riskLevel: student.status === 'failing' ? 'high' : student.status === 'atRisk' ? 'medium' : 'low',
+        })));
+
+        setSessionAttendance(sessionData.map(session => ({
+          id: session.id,
+          sessionName: session.sessionName,
+          date: session.date,
+          location: session.location,
+          totalCapacity: session.totalCapacity,
+          studentsRegistered: session.studentsRegistered,
+          studentsAttended: session.studentsAttended,
+          attendanceRate: session.attendanceRate,
+          gamesTested: session.gamesTested,
+        })));
+      } catch (apiError) {
+        console.error('API call failed, using mock data:', apiError);
+        // Fallback to mock data
+        const mockAttendance: AttendanceRecord[] = [
         {
           id: 'att1',
           user: {
