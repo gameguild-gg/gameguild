@@ -32,7 +32,7 @@ export function useAuthenticatedRequest() {
       }
 
       // Check for refresh token errors
-      if ((session as any)?.error === 'RefreshTokenError') {
+      if ((session as any)?.error === 'RefreshTokenError' || (session as any)?.error === 'SessionCorrupted') {
         throw new Error('Authentication session expired. Please sign in again.');
       }
 
@@ -103,7 +103,7 @@ export function useAccessToken() {
     }
 
     // Check for errors
-    if ((session as any)?.error === 'RefreshTokenError') {
+    if ((session as any)?.error === 'RefreshTokenError' || (session as any)?.error === 'SessionCorrupted') {
       return null;
     }
 
