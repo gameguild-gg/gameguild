@@ -22,7 +22,8 @@ import {
   SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem, SidebarProvider,
+  SidebarMenuItem,
+  SidebarProvider,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -457,10 +458,10 @@ export function EnhancedTestingSessionsList() {
   }
 
   return (
-    <div className="flex flex-col flex-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className=" relative flex flex-col flex-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       {/* Left Sidebar with Calendar */}
       <SidebarProvider>
-        <Sidebar side="right" className="w-80 bg-slate-800/30 border-r border-slate-700/50">
+        <Sidebar variant={"sidebar"} side="right" className="bg-slate-800/30 border-r border-slate-700/50">
           <SidebarContent>
             {/* Calendar Section */}
             <SidebarGroup className="px-0">
@@ -550,7 +551,7 @@ export function EnhancedTestingSessionsList() {
         </Sidebar>
         <SidebarInset className="flex flex-col flex-1">
           {/* Main Content */}
-          <div className="flex-1 overflow-auto">
+          <div className="flex flex-col flex-1 overflow-auto">
             <div className="container mx-auto px-6 py-8 space-y-8">
               {/* Enhanced Header */}
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
