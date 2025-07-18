@@ -19,7 +19,13 @@ interface ActivityItem {
     avatar?: string;
   };
   timestamp: string;
-  metadata?: Record<string, any>;
+  metadata?: {
+    course?: string;
+    amount?: number;
+    currency?: string;
+    email?: string;
+    completionRate?: number;
+  };
 }
 
 const activityIcons = {
@@ -33,13 +39,13 @@ const activityIcons = {
 };
 
 const activityColors = {
-  user_created: 'text-green-600',
-  user_updated: 'text-blue-600',
-  user_deleted: 'text-red-600',
-  course_enrolled: 'text-purple-600',
-  payment_received: 'text-green-600',
-  course_completed: 'text-blue-600',
-  settings_changed: 'text-gray-600',
+  user_created: 'text-green-400',
+  user_updated: 'text-blue-400',
+  user_deleted: 'text-red-400',
+  course_enrolled: 'text-purple-400',
+  payment_received: 'text-green-400',
+  course_completed: 'text-blue-400',
+  settings_changed: 'text-slate-400',
 };
 
 const mockActivities: ActivityItem[] = [
@@ -67,7 +73,7 @@ const mockActivities: ActivityItem[] = [
       avatar: '/avatars/sarah.jpg',
     },
     timestamp: '15 minutes ago',
-    metadata: { course: 'Advanced React Patterns', price: 99.99 },
+    metadata: { course: 'Advanced React Patterns', amount: 99.99 },
   },
   {
     id: '3',
@@ -116,7 +122,7 @@ const mockActivities: ActivityItem[] = [
       avatar: '/avatars/lisa.jpg',
     },
     timestamp: '4 hours ago',
-    metadata: { course: 'Node.js Masterclass', price: 199.99 },
+    metadata: { course: 'Node.js Masterclass', amount: 199.99 },
   },
   {
     id: '7',
@@ -182,10 +188,10 @@ export function RecentActivity() {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-          <CardTitle className="text-base font-medium">Recent Activity</CardTitle>
-          <Button variant="ghost" size="sm" disabled>
+          <CardTitle className="text-base font-medium text-white">Recent Activity</CardTitle>
+          <Button variant="ghost" size="sm" disabled className="text-slate-400">
             <RefreshCw className="h-4 w-4 animate-spin" />
           </Button>
         </CardHeader>
@@ -193,10 +199,10 @@ export function RecentActivity() {
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex items-center space-x-4">
-                <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+                <div className="h-8 w-8 rounded-full bg-slate-700/50 animate-pulse" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-muted rounded animate-pulse" />
-                  <div className="h-3 bg-muted rounded w-2/3 animate-pulse" />
+                  <div className="h-4 bg-slate-700/50 rounded animate-pulse" />
+                  <div className="h-3 bg-slate-700/50 rounded w-2/3 animate-pulse" />
                 </div>
               </div>
             ))}
@@ -207,13 +213,13 @@ export function RecentActivity() {
   }
 
   return (
-    <Card>
+    <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-base font-medium flex items-center gap-2">
+        <CardTitle className="text-base font-medium flex items-center gap-2 text-white">
           <Activity className="h-4 w-4" />
           Recent Activity
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={refreshActivities}>
+        <Button variant="ghost" size="sm" onClick={refreshActivities} className="text-slate-400 hover:text-white hover:bg-slate-700/50">
           <RefreshCw className="h-4 w-4" />
         </Button>
       </CardHeader>
@@ -227,45 +233,45 @@ export function RecentActivity() {
                 const badge = getActivityBadge(activity.type);
 
                 return (
-                  <div key={activity.id} className="flex items-start space-x-4 pb-4 border-b border-border last:border-0 last:pb-0">
-                    <div className={`mt-1 p-2 rounded-full bg-muted ${iconColor}`}>
+                  <div key={activity.id} className="flex items-start space-x-4 pb-4 border-b border-slate-700/50 last:border-0 last:pb-0">
+                    <div className={`mt-1 p-2 rounded-full bg-slate-700/50 ${iconColor}`}>
                       <Icon className="h-3 w-3" />
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm font-medium text-foreground truncate">{activity.title}</p>
+                        <p className="text-sm font-medium text-white truncate">{activity.title}</p>
                         <Badge variant={badge.variant} className="text-xs">
                           {badge.label}
                         </Badge>
                       </div>
 
-                      <p className="text-sm text-muted-foreground mb-2">{activity.description}</p>
+                      <p className="text-sm text-slate-400 mb-2">{activity.description}</p>
 
                       {activity.user && (
                         <div className="flex items-center space-x-2 mb-2">
                           <Avatar className="h-6 w-6">
                             <AvatarImage src={activity.user.avatar} alt={activity.user.name} />
-                            <AvatarFallback className="text-xs">
+                            <AvatarFallback className="text-xs bg-slate-700 text-white">
                               {activity.user.name
                                 .split(' ')
                                 .map((n) => n[0])
                                 .join('')}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-xs text-muted-foreground">{activity.user.name}</span>
+                          <span className="text-xs text-slate-400">{activity.user.name}</span>
                         </div>
                       )}
 
                       {activity.metadata && (
-                        <div className="text-xs text-muted-foreground mb-2">
+                        <div className="text-xs text-slate-400 mb-2">
                           {activity.metadata.course && <span className="inline-block mr-3">Course: {activity.metadata.course}</span>}
                           {activity.metadata.amount && <span className="inline-block mr-3">Amount: ${activity.metadata.amount}</span>}
                           {activity.metadata.email && <span className="inline-block mr-3">Email: {activity.metadata.email}</span>}
                         </div>
                       )}
 
-                      <p className="text-xs text-muted-foreground">{formatTimestamp(activity.timestamp)}</p>
+                      <p className="text-xs text-slate-500">{formatTimestamp(activity.timestamp)}</p>
                     </div>
                   </div>
                 );

@@ -1,53 +1,8 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart3, Calendar, FileText, TestTube, Upload, Users } from 'lucide-react';
-import { testingLabApi, TestingRequest, TestingSession } from '@/lib/api/testing-lab/testing-lab-api';
-import Link from 'next/link';
+import { TestingLabOverview } from '@/components/dashboard/testing-lab/testing-lab-overview';
 
 export default function TestingLabPage() {
-  const { data: session } = useSession();
-  const [testingRequests, setTestingRequests] = useState<TestingRequest[]>([]);
-  const [testingSessions, setTestingSessions] = useState<TestingSession[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<'student' | 'professor' | 'admin'>('student');
-
-  useEffect(() => {
-    // Determine user role based on email domain
-    if (session?.user?.email) {
-      const email = session.user.email;
-      if (email.endsWith('@champlain.edu')) {
-        setUserRole('professor');
-      } else if (email.endsWith('@mymail.champlain.edu')) {
-        setUserRole('student');
-      } else {
-        setUserRole('admin'); // or default role
-      }
-    }
-
-    fetchTestingData();
-  }, [session]);
-
-  const fetchTestingData = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch data from API
-      const [requestsData, sessionsData] = await Promise.all([testingLabApi.getAvailableTestingRequests(), testingLabApi.getTestingSessions()]);
-
-      setTestingRequests(requestsData);
-      setTestingSessions(sessionsData);
-    } catch (error) {
-      console.error('Error fetching testing data:', error);
-
-      // Fallback to mock data for now
-      setTestingRequests([
-        {
+  return <TestingLabOverview />;
+}
           id: '1',
           title: 'Alpha Build Testing - Team 01',
           description: 'Testing the core gameplay mechanics for our RPG game',

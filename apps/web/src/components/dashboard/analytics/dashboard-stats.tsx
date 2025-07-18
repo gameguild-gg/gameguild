@@ -110,101 +110,101 @@ export function DashboardStats({ className }: DashboardStatsProps) {
   return (
     <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 ${className}`}>
       {/* Total Users */}
-      <Card>
+      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium text-white">Total Users</CardTitle>
+          <Users className="h-4 w-4 text-slate-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{userStats?.totalUsers.toLocaleString() || '0'}</div>
-          <p className="text-xs text-muted-foreground">+{userStats?.newUsersThisMonth || 0} this month</p>
+          <div className="text-2xl font-bold text-white">{userStats?.totalUsers.toLocaleString() || '0'}</div>
+          <p className="text-xs text-slate-400">+{userStats?.newUsersThisMonth || 0} this month</p>
           <Progress value={userActivityRate} className="mt-2" />
-          <p className="text-xs text-muted-foreground mt-1">{userActivityRate.toFixed(1)}% active</p>
+          <p className="text-xs text-slate-400 mt-1">{userActivityRate.toFixed(1)}% active</p>
         </CardContent>
       </Card>
 
       {/* Active Users */}
-      <Card>
+      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-          <UserCheck className="h-4 w-4 text-green-600" />
+          <CardTitle className="text-sm font-medium text-white">Active Users</CardTitle>
+          <UserCheck className="h-4 w-4 text-green-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-green-600">{userStats?.activeUsers.toLocaleString() || '0'}</div>
-          <p className="text-xs text-muted-foreground">{userStats?.inactiveUsers || 0} inactive</p>
+          <div className="text-2xl font-bold text-green-400">{userStats?.activeUsers.toLocaleString() || '0'}</div>
+          <p className="text-xs text-slate-400">{userStats?.inactiveUsers || 0} inactive</p>
           <div className="flex items-center mt-2">
-            <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
-            <span className="text-xs text-green-600">+12% from last month</span>
+            <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
+            <span className="text-xs text-green-400">+12% from last month</span>
           </div>
         </CardContent>
       </Card>
 
       {/* Total Programs */}
-      <Card>
+      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Programs</CardTitle>
-          <BookOpen className="h-4 w-4 text-blue-600" />
+          <CardTitle className="text-sm font-medium text-white">Programs</CardTitle>
+          <BookOpen className="h-4 w-4 text-blue-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{programStats?.totalPrograms || '0'}</div>
-          <p className="text-xs text-muted-foreground">
+          <div className="text-2xl font-bold text-white">{programStats?.totalPrograms || '0'}</div>
+          <p className="text-xs text-slate-400">
             {programStats?.publishedPrograms || 0} published, {programStats?.draftPrograms || 0} drafts
           </p>
           <Progress value={programPublishRate} className="mt-2" />
-          <p className="text-xs text-muted-foreground mt-1">{programPublishRate.toFixed(1)}% published</p>
+          <p className="text-xs text-slate-400 mt-1">{programPublishRate.toFixed(1)}% published</p>
         </CardContent>
       </Card>
 
       {/* Total Revenue */}
-      <Card>
+      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-          <DollarSign className="h-4 w-4 text-green-600" />
+          <CardTitle className="text-sm font-medium text-white">Revenue</CardTitle>
+          <DollarSign className="h-4 w-4 text-green-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">${(programStats?.totalRevenue || 0).toLocaleString()}</div>
-          <p className="text-xs text-muted-foreground">${((userStats?.totalBalance || 0) / 100).toLocaleString()} in user balances</p>
+          <div className="text-2xl font-bold text-white">${(programStats?.totalRevenue || 0).toLocaleString()}</div>
+          <p className="text-xs text-slate-400">${((userStats?.totalBalance || 0) / 100).toLocaleString()} in user balances</p>
           <div className="flex items-center mt-2">
-            <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
-            <span className="text-xs text-green-600">+8.2% from last month</span>
+            <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
+            <span className="text-xs text-green-400">+8.2% from last month</span>
           </div>
         </CardContent>
       </Card>
 
       {/* Enrollments */}
-      <Card>
+      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Enrollments</CardTitle>
-          <GraduationCap className="h-4 w-4 text-purple-600" />
+          <CardTitle className="text-sm font-medium text-white">Enrollments</CardTitle>
+          <GraduationCap className="h-4 w-4 text-purple-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{programStats?.totalEnrollments.toLocaleString() || '0'}</div>
-          <p className="text-xs text-muted-foreground">{programStats?.completionRate || 0}% completion rate</p>
-          <Badge variant="secondary" className="mt-2">
+          <div className="text-2xl font-bold text-white">{programStats?.totalEnrollments.toLocaleString() || '0'}</div>
+          <p className="text-xs text-slate-400">{programStats?.completionRate || 0}% completion rate</p>
+          <Badge variant="secondary" className="mt-2 bg-slate-700/50 text-slate-300">
             {programStats?.averageRating || 0}★ avg rating
           </Badge>
         </CardContent>
       </Card>
 
       {/* New Users Today */}
-      <Card>
+      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">New Today</CardTitle>
-          <Calendar className="h-4 w-4 text-orange-600" />
+          <CardTitle className="text-sm font-medium text-white">New Today</CardTitle>
+          <Calendar className="h-4 w-4 text-orange-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-orange-600">{userStats?.newUsersToday || 0}</div>
-          <p className="text-xs text-muted-foreground">{userStats?.newUsersThisWeek || 0} this week</p>
+          <div className="text-2xl font-bold text-orange-400">{userStats?.newUsersToday || 0}</div>
+          <p className="text-xs text-slate-400">{userStats?.newUsersThisWeek || 0} this week</p>
           <div className="flex items-center mt-2">
             {(userStats?.newUsersToday || 0) > 5 ? (
               <>
-                <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
-                <span className="text-xs text-green-600">Above average</span>
+                <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
+                <span className="text-xs text-green-400">Above average</span>
               </>
             ) : (
               <>
-                <TrendingDown className="h-3 w-3 text-gray-400 mr-1" />
-                <span className="text-xs text-gray-400">Below average</span>
+                <TrendingDown className="h-3 w-3 text-slate-400 mr-1" />
+                <span className="text-xs text-slate-400">Below average</span>
               </>
             )}
           </div>
@@ -212,30 +212,38 @@ export function DashboardStats({ className }: DashboardStatsProps) {
       </Card>
 
       {/* Avg Balance */}
-      <Card>
+      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Avg Balance</CardTitle>
-          <DollarSign className="h-4 w-4 text-blue-600" />
+          <CardTitle className="text-sm font-medium text-white">Avg Balance</CardTitle>
+          <DollarSign className="h-4 w-4 text-blue-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">${((userStats?.averageBalance || 0) / 100).toFixed(2)}</div>
-          <p className="text-xs text-muted-foreground">Per user average</p>
+          <div className="text-2xl font-bold text-white">${((userStats?.averageBalance || 0) / 100).toFixed(2)}</div>
+          <p className="text-xs text-slate-400">Per user average</p>
           <div className="mt-2">
-            <Badge variant="outline">${((userStats?.totalBalance || 0) / 100).toLocaleString()} total</Badge>
+            <Badge variant="outline" className="border-slate-600 text-slate-300">
+              ${((userStats?.totalBalance || 0) / 100).toLocaleString()} total
+            </Badge>
           </div>
         </CardContent>
       </Card>
 
       {/* Quick Actions */}
-      <Card>
+      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
-          <Eye className="h-4 w-4 text-indigo-600" />
+          <CardTitle className="text-sm font-medium text-white">Quick Actions</CardTitle>
+          <Eye className="h-4 w-4 text-indigo-400" />
         </CardHeader>
         <CardContent className="space-y-2">
-          <button className="w-full text-left text-sm hover:bg-gray-50 p-2 rounded transition-colors">View All Users</button>
-          <button className="w-full text-left text-sm hover:bg-gray-50 p-2 rounded transition-colors">Manage Programs</button>
-          <button className="w-full text-left text-sm hover:bg-gray-50 p-2 rounded transition-colors">Export Reports</button>
+          <button className="w-full text-left text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white p-2 rounded transition-colors">
+            View All Users
+          </button>
+          <button className="w-full text-left text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white p-2 rounded transition-colors">
+            Manage Programs
+          </button>
+          <button className="w-full text-left text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white p-2 rounded transition-colors">
+            Export Reports
+          </button>
         </CardContent>
       </Card>
     </div>
