@@ -6,16 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  TestTube, 
-  Upload, 
-  Calendar, 
-  Users, 
-  FileText, 
+import {
+  TestTube,
+  Upload,
+  Calendar,
+  Users,
   BarChart3,
   Clock,
   CheckCircle,
-  AlertTriangle,
   Plus,
   Download,
   MessageSquare
@@ -60,101 +58,338 @@ export function TestingLabOverview() {
   });
   const [loading, setLoading] = useState(true);
 
+  // Determine user role based on email domain
   useEffect(() => {
-    // Determine user role based on email domain
     if (session?.user?.email) {
-      const email = session.user.email;
-      let roleType: 'student' | 'professor' | 'admin' = 'student';
-      
-      if (email.endsWith('@champlain.edu')) {
-        roleType = 'professor';
-      } else if (email.endsWith('@mymail.champlain.edu')) {
-        roleType = 'student';
-      } else {
-        roleType = 'admin';
-      }
+      const email = session.user.email.toLowerCase();
+      const isStudent = email.endsWith('@mymail.champlain.edu');
+      const isProfessor = email.endsWith('@champlain.edu') && !email.endsWith('@mymail.champlain.edu');
+      const isAdmin = isProfessor; // For now, professors are also admins
 
       setUserRole({
-        type: roleType,
-        isStudent: roleType === 'student',
-        isProfessor: roleType === 'professor',
-        isAdmin: roleType === 'admin',
+        type: isAdmin ? 'admin' : isProfessor ? 'professor' : 'student',
+        isStudent,
+        isProfessor,
+        isAdmin,
       });
     }
+  }, [session]);
 
-    // Mock data for now - replace with actual API calls
-    setStats({
-      totalRequests: 24,
-      activeRequests: 8,
-      totalSessions: 12,
-      upcomingSessions: 3,
-      totalFeedback: 156,
-      pendingFeedback: 12,
-      mySubmissions: userRole.isStudent ? 3 : 0,
-      myTestingAssignments: 8,
-    });
-    setLoading(false);
-  }, [session, userRole.isStudent]);
+  // Load stats based on user role
+  useEffect(() => {
+    const loadStats = async () => {
+      setLoading(true);
+      try {
+        // Mock data for now - replace with actual API calls
+        if (userRole.isStudent) {
+          setStats({
+            totalRequests: 8,
+            activeRequests: 3,
+            totalSessions: 12,
+            upcomingSessions: 2,
+            totalFeedback: 6,
+            pendingFeedback: 1,
+            mySubmissions: 4,
+            myTestingAssignments: 8,
+          });
+        } else if (userRole.isProfessor) {
+          setStats({
+            totalRequests: 120,
+            activeRequests: 45,
+            totalSessions: 24,
+            upcomingSessions: 6,
+            totalFeedback: 89,
+            pendingFeedback: 12,
+            mySubmissions: 0,
+            myTestingAssignments: 0,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load testing lab stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const getStatsCards = () => {
-    const baseCards = [
+    loadStats();
+  }, [userRole]);
+
+  const renderStatsCards = () => {
+    if (userRole.isStudent) {
+      return (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-200">My Submissions</CardTitle>
+              <Upload className="h-4 w-4 text-blue-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.mySubmissions}</div>
+              <p className="text-xs text-slate-400">Total versions submitted</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-200">Testing Assignments</CardTitle>
+              <TestTube className="h-4 w-4 text-purple-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.myTestingAssignments}</div>
+              <p className="text-xs text-slate-400">Games to test this semester</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-200">Upcoming Sessions</CardTitle>
+              <Calendar className="h-4 w-4 text-green-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.upcomingSessions}</div>
+              <p className="text-xs text-slate-400">Sessions this week</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-200">Pending Feedback</CardTitle>
+              <MessageSquare className="h-4 w-4 text-orange-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.pendingFeedback}</div>
+              <p className="text-xs text-slate-400">Awaiting completion</p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    } else {
+      return (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-200">Total Requests</CardTitle>
+              <TestTube className="h-4 w-4 text-blue-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.totalRequests}</div>
+              <p className="text-xs text-slate-400">
+                <span className="text-green-400">{stats.activeRequests}</span> active
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-200">Testing Sessions</CardTitle>
+              <Calendar className="h-4 w-4 text-purple-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.totalSessions}</div>
+              <p className="text-xs text-slate-400">
+                <span className="text-blue-400">{stats.upcomingSessions}</span> upcoming
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-200">Feedback Responses</CardTitle>
+              <MessageSquare className="h-4 w-4 text-green-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.totalFeedback}</div>
+              <p className="text-xs text-slate-400">
+                <span className="text-orange-400">{stats.pendingFeedback}</span> pending review
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-200">System Health</CardTitle>
+              <BarChart3 className="h-4 w-4 text-emerald-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">98%</div>
+              <p className="text-xs text-slate-400">Uptime this month</p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+  };
+
+  const renderQuickActions = () => {
+    if (userRole.isStudent) {
+      return (
+        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Quick Actions
+            </CardTitle>
+            <CardDescription className="text-slate-400">
+              Common tasks for students
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Link href="/dashboard/testing-lab/submit">
+              <Button className="w-full justify-start bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0">
+                <Upload className="mr-2 h-4 w-4" />
+                Submit New Version
+              </Button>
+            </Link>
+            <Link href="/dashboard/testing-lab/sessions">
+              <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-800">
+                <Calendar className="mr-2 h-4 w-4" />
+                View Testing Sessions
+              </Button>
+            </Link>
+            <Link href="/dashboard/testing-lab/feedback">
+              <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-800">
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Complete Feedback
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      );
+    } else {
+      return (
+        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Professor Tools
+            </CardTitle>
+            <CardDescription className="text-slate-400">
+              Manage testing lab operations
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Link href="/dashboard/testing-lab/sessions">
+              <Button className="w-full justify-start bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Testing Session
+              </Button>
+            </Link>
+            <Link href="/dashboard/testing-lab/feedback">
+              <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-800">
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Review Feedback
+              </Button>
+            </Link>
+            <Link href="/dashboard/testing-lab/attendance">
+              <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-800">
+                <Users className="mr-2 h-4 w-4" />
+                Track Attendance
+              </Button>
+            </Link>
+            <Button variant="outline" className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-800">
+              <Download className="mr-2 h-4 w-4" />
+              Export Reports
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
+  };
+
+  const renderRecentActivity = () => {
+    const studentActivity = [
       {
-        title: 'Total Requests',
-        value: stats.totalRequests,
-        icon: TestTube,
-        description: 'Testing requests in system',
-        color: 'text-blue-600',
+        type: 'submission',
+        title: 'Game Version 2.1 Submitted',
+        description: 'Successfully uploaded to fa23-capstone-2023-24-t07',
+        time: '2 hours ago',
+        status: 'completed',
       },
       {
-        title: 'Active Testing',
-        value: stats.activeRequests,
-        icon: Clock,
-        description: 'Currently open for testing',
-        color: 'text-green-600',
+        type: 'session',
+        title: 'Testing Session Scheduled',
+        description: 'Tuesday 2:00 PM - Room TEC 125',
+        time: '1 day ago',
+        status: 'upcoming',
       },
       {
-        title: 'Testing Sessions',
-        value: stats.totalSessions,
-        icon: Calendar,
-        description: 'Scheduled sessions',
-        color: 'text-purple-600',
-      },
-      {
-        title: 'Feedback Received',
-        value: stats.totalFeedback,
-        icon: MessageSquare,
-        description: 'Total feedback submissions',
-        color: 'text-orange-600',
+        type: 'feedback',
+        title: 'Feedback Required',
+        description: 'Team 03 - Action RPG Game',
+        time: '2 days ago',
+        status: 'pending',
       },
     ];
 
-    if (userRole.isStudent) {
-      return [
-        {
-          title: 'My Submissions',
-          value: stats.mySubmissions,
-          icon: Upload,
-          description: 'Games I\'ve submitted',
-          color: 'text-blue-600',
-        },
-        {
-          title: 'Testing Assignments',
-          value: stats.myTestingAssignments,
-          icon: TestTube,
-          description: 'Games to test',
-          color: 'text-green-600',
-        },
-        ...baseCards.slice(2),
-      ];
-    }
+    const professorActivity = [
+      {
+        type: 'session',
+        title: 'Testing Session Created',
+        description: 'Block 3 - 15 teams scheduled',
+        time: '30 minutes ago',
+        status: 'completed',
+      },
+      {
+        type: 'feedback',
+        title: 'Feedback Reviews Completed',
+        description: '8 responses approved, 3 pending',
+        time: '2 hours ago',
+        status: 'completed',
+      },
+      {
+        type: 'submission',
+        title: 'New Submissions Received',
+        description: '5 teams submitted updated versions',
+        time: '4 hours ago',
+        status: 'new',
+      },
+    ];
 
-    return baseCards;
+    const activities = userRole.isStudent ? studentActivity : professorActivity;
+
+    return (
+      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            Recent Activity
+          </CardTitle>
+          <CardDescription className="text-slate-400">
+            Latest updates and notifications
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {activities.map((activity, index) => (
+            <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-slate-800/30 border border-slate-700/50">
+              <div className="flex-shrink-0">
+                {activity.type === 'submission' && <Upload className="h-5 w-5 text-blue-400" />}
+                {activity.type === 'session' && <Calendar className="h-5 w-5 text-purple-400" />}
+                {activity.type === 'feedback' && <MessageSquare className="h-5 w-5 text-green-400" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white">{activity.title}</p>
+                <p className="text-xs text-slate-400">{activity.description}</p>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs text-slate-500">{activity.time}</span>
+                  <Badge
+                    variant={activity.status === 'completed' ? 'default' : activity.status === 'pending' ? 'destructive' : 'secondary'}
+                    className="text-xs"
+                  >
+                    {activity.status}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    );
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+          <p className="text-slate-400">Loading testing lab overview...</p>
+        </div>
       </div>
     );
   }
@@ -162,308 +397,118 @@ export function TestingLabOverview() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Testing Lab</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            Testing Lab
+          </h1>
           <p className="text-slate-400 mt-1">
-            {userRole.isStudent && "Submit your projects and test others' games"}
-            {userRole.isProfessor && "Manage testing sessions and track student progress"}
-            {userRole.isAdmin && "Oversee the entire testing lab ecosystem"}
+            {userRole.isStudent
+              ? 'Submit your games and participate in testing sessions'
+              : 'Manage testing sessions and review feedback'
+            }
           </p>
         </div>
-        <div className="flex gap-3">
-          {userRole.isStudent && (
-            <Button asChild className="bg-blue-600 hover:bg-blue-700">
-              <Link href="/dashboard/testing-lab/submit">
-                <Upload className="h-4 w-4 mr-2" />
-                Submit Version
-              </Link>
-            </Button>
-          )}
-          {(userRole.isProfessor || userRole.isAdmin) && (
-            <Button asChild className="bg-purple-600 hover:bg-purple-700">
-              <Link href="/dashboard/testing-lab/sessions/create">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Session
-              </Link>
-            </Button>
-          )}
-        </div>
+        <Badge
+          variant="outline"
+          className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20 text-blue-300"
+        >
+          <TestTube className="w-4 h-4 mr-1" />
+          {userRole.type.charAt(0).toUpperCase() + userRole.type.slice(1)}
+        </Badge>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {getStatsCards().map((stat, index) => {
-          const IconComponent = stat.icon;
-          return (
-            <Card key={index} className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-300">
-                  {stat.title}
-                </CardTitle>
-                <IconComponent className={`h-4 w-4 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">{stat.value}</div>
-                <p className="text-xs text-slate-400 mt-1">{stat.description}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {renderStatsCards()}
 
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-slate-800/50">
-          <TabsTrigger value="overview" className="text-slate-300 data-[state=active]:text-white">
+      {/* Tabs for different views */}
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 bg-slate-800/50 border-slate-700">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-slate-700">
             Overview
           </TabsTrigger>
-          <TabsTrigger value="requests" className="text-slate-300 data-[state=active]:text-white">
-            {userRole.isStudent ? 'Available Tests' : 'Testing Requests'}
+          <TabsTrigger value="requests" className="data-[state=active]:bg-slate-700">
+            {userRole.isStudent ? 'My Submissions' : 'All Requests'}
           </TabsTrigger>
-          <TabsTrigger value="sessions" className="text-slate-300 data-[state=active]:text-white">
+          <TabsTrigger value="sessions" className="data-[state=active]:bg-slate-700">
             Sessions
           </TabsTrigger>
-          <TabsTrigger value="feedback" className="text-slate-300 data-[state=active]:text-white">
+          <TabsTrigger value="feedback" className="data-[state=active]:bg-slate-700">
             Feedback
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Quick Actions */}
-            <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <TestTube className="h-5 w-5" />
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {userRole.isStudent && (
-                  <>
-                    <Button asChild variant="outline" className="w-full justify-start">
-                      <Link href="/dashboard/testing-lab/submit">
-                        <Upload className="h-4 w-4 mr-2" />
-                        Submit New Version
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full justify-start">
-                      <Link href="/dashboard/testing-lab/assignments">
-                        <TestTube className="h-4 w-4 mr-2" />
-                        View Testing Assignments
-                      </Link>
-                    </Button>
-                  </>
-                )}
-                {(userRole.isProfessor || userRole.isAdmin) && (
-                  <>
-                    <Button asChild variant="outline" className="w-full justify-start">
-                      <Link href="/dashboard/testing-lab/sessions">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Manage Sessions
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full justify-start">
-                      <Link href="/dashboard/testing-lab/attendance">
-                        <Users className="h-4 w-4 mr-2" />
-                        Attendance Reports
-                      </Link>
-                    </Button>
-                  </>
-                )}
-                <Button asChild variant="outline" className="w-full justify-start">
-                  <Link href="/dashboard/testing-lab/feedback">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    View Feedback
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-700/30">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <div className="flex-1">
-                      <p className="text-sm text-white">New testing session scheduled</p>
-                      <p className="text-xs text-slate-400">2 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-700/30">
-                    <Upload className="h-4 w-4 text-blue-500" />
-                    <div className="flex-1">
-                      <p className="text-sm text-white">Version 1.2.0 submitted for testing</p>
-                      <p className="text-xs text-slate-400">4 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-700/30">
-                    <MessageSquare className="h-4 w-4 text-orange-500" />
-                    <div className="flex-1">
-                      <p className="text-sm text-white">12 new feedback submissions</p>
-                      <p className="text-xs text-slate-400">6 hours ago</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid gap-6 md:grid-cols-2">
+            {renderQuickActions()}
+            {renderRecentActivity()}
           </div>
         </TabsContent>
 
-        <TabsContent value="requests" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold text-white">
-              {userRole.isStudent ? 'Available Testing Assignments' : 'Testing Requests'}
-            </h3>
-            {!userRole.isStudent && (
-              <Button asChild size="sm">
-                <Link href="/dashboard/testing-lab/requests/create">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Request
-                </Link>
-              </Button>
-            )}
-          </div>
-          
-          <div className="grid gap-4">
-            {/* Mock testing requests */}
-            <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-white">Space Adventure v1.2</CardTitle>
-                    <CardDescription className="text-slate-400">
-                      Team: fa24-capstone-2024-25-t03
-                    </CardDescription>
-                  </div>
-                  <Badge variant="secondary" className="bg-green-600/20 text-green-400">
-                    Open
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-300 text-sm mb-4">
-                  2D space exploration game with puzzle elements. Test for gameplay balance and UI responsiveness.
-                </p>
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-4 text-sm text-slate-400">
-                    <span>Due: Dec 15, 2024</span>
-                    <span>Testers: 5/8</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </Button>
-                    <Button size="sm">
-                      <TestTube className="h-4 w-4 mr-2" />
-                      Start Testing
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="requests" className="space-y-6">
+          <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                {userRole.isStudent ? 'My Submissions' : 'Testing Requests'}
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                {userRole.isStudent
+                  ? 'Track your game submissions and their status'
+                  : 'Manage all student testing requests'
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-slate-400">
+                <TestTube className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No requests found. Check back later or submit a new version.</p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="sessions" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold text-white">Testing Sessions</h3>
-            {(userRole.isProfessor || userRole.isAdmin) && (
-              <Button asChild size="sm">
-                <Link href="/dashboard/testing-lab/sessions/create">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Schedule Session
-                </Link>
-              </Button>
-            )}
-          </div>
-
-          <div className="grid gap-4">
-            {/* Mock sessions */}
-            <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-white">Block 3 Testing Session</CardTitle>
-                    <CardDescription className="text-slate-400">
-                      Room A-204 • December 18, 2024 • 2:00 PM - 4:00 PM
-                    </CardDescription>
-                  </div>
-                  <Badge variant="secondary" className="bg-blue-600/20 text-blue-400">
-                    Upcoming
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-4 text-sm text-slate-400">
-                    <span>Registered: 12/40</span>
-                    <span>Projects: 6</span>
-                  </div>
-                  <Button size="sm">
-                    View Details
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="sessions" className="space-y-6">
+          <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Testing Sessions
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                {userRole.isStudent
+                  ? 'View your scheduled testing sessions'
+                  : 'Manage and create testing sessions'
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-slate-400">
+                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No sessions scheduled. Check back later.</p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="feedback" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold text-white">Feedback Management</h3>
-            <div className="flex gap-2">
-              <Badge variant="outline" className="text-slate-300">
-                {stats.pendingFeedback} Pending Review
-              </Badge>
-            </div>
-          </div>
-
-          <div className="grid gap-4">
-            {/* Mock feedback items */}
-            <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-white">Feedback for Space Adventure v1.2</CardTitle>
-                    <CardDescription className="text-slate-400">
-                      From: john.doe@mymail.champlain.edu • 2 hours ago
-                    </CardDescription>
-                  </div>
-                  <Badge variant="secondary" className="bg-orange-600/20 text-orange-400">
-                    Pending Review
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-300 text-sm mb-4">
-                  Great game overall! The controls feel responsive and the art style is consistent...
-                </p>
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-slate-400">
-                    Rating: 4/5 stars
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
-                      Review
-                    </Button>
-                    <Button size="sm">
-                      Approve
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="feedback" className="space-y-6">
+          <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Feedback Management
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                {userRole.isStudent
+                  ? 'Complete feedback for games you tested'
+                  : 'Review and approve feedback responses'
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-slate-400">
+                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No feedback items found.</p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
