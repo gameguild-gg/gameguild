@@ -64,46 +64,38 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button className="gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200">
+        <Button variant="outline" className="gap-2">
           <PlusIcon className="size-4" />
           Add Project
         </Button>
       </SheetTrigger>
-      <SheetContent className="min-w-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-slate-800">
+      <SheetContent className="min-w-full">
         <TooltipProvider>
           <div className="flex flex-col flex-1 max-w-4xl md:p-20">
             <SheetHeader className="flex flex-row items-center gap-6">
               <button className="flex items-center justify-center">
-                <X className="size-6 text-slate-400 hover:text-white transition-colors" />
+                <X className="size-6 text-muted-foreground" />
               </button>
-              <SheetTitle className="flex items-center justify-center text-3xl font-normal align-middle bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Create a project
-              </SheetTitle>
+              <SheetTitle className="flex items-center justify-center text-3xl font-normal align-middle">Create a project</SheetTitle>
             </SheetHeader>
             <div className="md:p-16">
               <form onSubmit={handleSubmit} className="flex flex-col flex-1">
                 <Tabs defaultValue="basic" className="flex flex-col flex-1">
-                  <TabsContent
-                    value="basic"
-                    className="py-6 space-y-6 bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-lg p-6 shadow-lg border border-slate-700/50"
-                  >
+                  <TabsContent value="basic" className="py-6 space-y-6">
                     <div className="flex flex-col gap-12">
-                      <Label
-                        htmlFor="title"
-                        className="flex flex-col items-start justify-center text-4xl align-middle font-bold leading-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
-                      >
+                      <Label htmlFor="title" className="flex flex-col items-start justify-center text-4xl align-middle font-bold leading-tight">
                         <span>Let’s start with a name for</span>
                         <div className="flex flex-row items-center justify-center gap-2">
                           <span>your project</span>
                           <HoverCard>
                             <HoverCardTrigger asChild>
-                              <CircleHelp className="size-4 text-slate-400 hover:text-blue-400 transition-colors" />
+                              <CircleHelp className="size-4 text-muted-foreground" />
                             </HoverCardTrigger>
-                            <HoverCardContent side="right" className="bg-slate-800/95 backdrop-blur border-slate-700">
+                            <HoverCardContent side="right">
                               <div className="flex flex-col gap-2">
-                                <p className="text-sm text-slate-300">This is the name of your project.</p>
-                                <p className="text-sm text-slate-300">It will be visible to anyone who can see your project.</p>
-                                <p className="text-sm text-slate-300">You can change it later.</p>
+                                <p className="text-sm text-zinc-500">This is the name of your project.</p>
+                                <p className="text-sm text-zinc-500">It will be visible to anyone who can see your project.</p>
+                                <p className="text-sm text-zinc-500">You can change it later.</p>
                               </div>
                             </HoverCardContent>
                           </HoverCard>
@@ -115,46 +107,46 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                         onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                         required
                         placeholder="Enter your project name"
-                        className="font-semibold min-h-max bg-transparent border-0 border-b-2 border-slate-700 rounded-none text-4xl md:text-4xl placeholder:text-4xl placeholder:text-slate-500 p-0 m-0 text-white focus:border-blue-500 transition-colors"
+                        className="font-semibold min-h-max bg-transparent dark:bg-transparent border-0 border-b-2 rounded-none text-4xl md:text-4xl placeholder:text-4xl p-0 m-0"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="projectUrl" className="text-slate-300 font-medium">
+                      <Label htmlFor="projectUrl" className="text-zinc-400">
                         Project URL
                       </Label>
                       <Input
                         id="projectUrl"
                         value={formData.projectUrl}
                         onChange={(e) => setFormData((prev) => ({ ...prev, projectUrl: e.target.value }))}
-                        className="mt-1.5 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-400 focus:border-blue-500 transition-colors"
+                        className="mt-1.5 bg-zinc-900 border-zinc-800"
                         placeholder="https://"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="tagline" className="text-slate-300 font-medium">
+                      <Label htmlFor="tagline" className="text-zinc-400">
                         Short description or tagline
-                        <span className="block text-sm text-slate-400">Shown when we link to your project. Avoid duplicating your project&apos;s title</span>
+                        <span className="block text-sm text-zinc-500">Shown when we link to your project. Avoid duplicating your project&apos;s title</span>
                       </Label>
                       <Input
                         id="tagline"
                         value={formData.tagline}
                         onChange={(e) => setFormData((prev) => ({ ...prev, tagline: e.target.value }))}
-                        className="mt-1.5 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-400 focus:border-blue-500 transition-colors"
+                        className="mt-1.5 bg-zinc-900 border-zinc-800"
                         placeholder="Optional"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="classification" className="text-slate-300 font-medium">
+                      <Label htmlFor="classification" className="text-zinc-400">
                         Classification
-                        <span className="block text-sm text-slate-400">What are you uploading?</span>
+                        <span className="block text-sm text-zinc-500">What are you uploading?</span>
                       </Label>
                       <Select value={formData.classification} onValueChange={(value) => setFormData((prev) => ({ ...prev, classification: value }))}>
-                        <SelectTrigger className="mt-1.5 bg-slate-800/50 border-slate-700 text-white">
+                        <SelectTrigger className="mt-1.5 bg-zinc-900 border-zinc-800">
                           <SelectValue placeholder="Select classification" />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-700">
+                        <SelectContent className="bg-zinc-900 border-zinc-800">
                           <SelectItem value="game">Games — A piece of software you can play</SelectItem>
                           <SelectItem value="tool">Tools — Software for creating</SelectItem>
                           <SelectItem value="assets">Assets — Resources for creators</SelectItem>
@@ -396,34 +388,34 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                   <TabsContent value="details" className="space-y-6">
                     {/* Details Fields */}
                     <div>
-                      <Label className="text-slate-300 font-medium">Details</Label>
-                      <div className="mt-2 border border-slate-700 rounded-lg bg-slate-800/30">
-                        <div className="flex items-center gap-1 p-2 border-b border-slate-700">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
+                      <Label className="text-zinc-400">Details</Label>
+                      <div className="mt-2 border border-zinc-800 rounded-lg">
+                        <div className="flex items-center gap-1 p-2 border-b border-zinc-800">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
                             <Code className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
                             <Bold className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
                             <Italic className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
                             <List className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
                             <ListOrdered className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
                             <Link2 className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
                             <ImageIcon className="h-4 w-4" />
                           </Button>
                         </div>
                         <Textarea
                           placeholder="This will make up the content of your game page."
-                          className="border-0 rounded-none bg-transparent min-h-[200px] text-white placeholder:text-slate-400 focus:ring-0"
+                          className="border-0 rounded-none bg-transparent min-h-[200px]"
                           value={formData.description}
                           onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                         />
@@ -499,16 +491,11 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                   </TabsContent>
                 </Tabs>
 
-                <div className="flex justify-end gap-4 pt-4 border-t border-slate-700">
-                  <Button type="button" variant="outline" onClick={() => setIsOpen(false)} className="border-slate-600 text-slate-300 hover:bg-slate-800">
+                <div className="flex justify-end gap-4 pt-4 border-t border-zinc-800">
+                  <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    type="submit"
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg"
-                  >
-                    Create Project
-                  </Button>
+                  <Button type="submit">Continue</Button>
                 </div>
               </form>
             </div>

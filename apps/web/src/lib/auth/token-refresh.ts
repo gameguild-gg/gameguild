@@ -2,9 +2,9 @@
  * Token refresh utilities for NextAuth.js
  */
 
+import { apiClient } from '@/lib/api/api-client';
 import { getJwtExpiryDate } from '@/lib/utils/jwt-utils';
 import { RefreshTokenResponse } from '@/components/legacy/types/auth';
-import { serverRefreshToken } from './server-actions';
 
 export interface TokenRefreshResult {
   success: boolean;
@@ -47,8 +47,10 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRef
     }
 
     console.log('🔄 [TOKEN REFRESH] Attempting token refresh...');
-
-    const response = await serverRefreshToken(refreshToken);
+    
+    const response = await apiClient.refreshToken({
+      refreshToken,
+    });
 
     console.log('✅ [TOKEN REFRESH] Token refresh successful:', {
       hasAccessToken: !!response.accessToken,
@@ -77,5 +79,10 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRef
  * Validate that a token response has all required fields
  */
 export function validateTokenResponse(response: any): response is RefreshTokenResponse {
-  return response && typeof response.accessToken === 'string' && typeof response.refreshToken === 'string' && typeof response.expires === 'string';
+  return (
+    response &&
+    typeof response.accessToken === 'string' &&
+    typeof response.refreshToken === 'string' &&
+    typeof response.expires === 'string'
+  );
 }

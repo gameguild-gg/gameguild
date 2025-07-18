@@ -1,99 +1,71 @@
-'use client';
-
+import { Clock, PauseCircle, Rocket } from 'lucide-react';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import Link from 'next/link';
-import { Calendar, Clock, GitBranch, PauseCircle, Rocket } from 'lucide-react';
-import { ProjectListItem } from './actions';
+import { ProjectListItem } from '@/components/legacy/projects/actions';
 
-interface ProjectCardProps {
-  project: ProjectListItem;
+function getStatusColor(status: ProjectListItem['status']): string {
+  switch (status) {
+    case 'active':
+      return 'bg-green-500';
+    case 'in-progress':
+      return 'bg-yellow-500';
+    case 'not-started':
+      return 'bg-gray-500';
+    case 'on-hold':
+      return 'bg-red-500';
+    default:
+      return 'bg-gray-500';
+  }
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
-  const getStatusConfig = (status: ProjectListItem['status']) => {
-    switch (status) {
-      case 'active':
-        return {
-          color: 'from-green-500 to-emerald-500',
-          icon: Rocket,
-          text: 'Active',
-          bg: 'bg-green-500/10',
-          textColor: 'text-green-400',
-        };
-      case 'in-progress':
-        return {
-          color: 'from-yellow-500 to-orange-500',
-          icon: Clock,
-          text: 'In Progress',
-          bg: 'bg-yellow-500/10',
-          textColor: 'text-yellow-400',
-        };
-      case 'on-hold':
-        return {
-          color: 'from-red-500 to-pink-500',
-          icon: PauseCircle,
-          text: 'On Hold',
-          bg: 'bg-red-500/10',
-          textColor: 'text-red-400',
-        };
-      case 'not-started':
-      default:
-        return {
-          color: 'from-slate-500 to-slate-400',
-          icon: Clock,
-          text: 'Not Started',
-          bg: 'bg-slate-500/10',
-          textColor: 'text-slate-400',
-        };
+type ProjectCardProps = ProjectListItem;
+
+function getStatusIcon(status: 'not-started' | 'in-progress' | 'active' | 'on-hold') {
+  switch (status) {
+    case 'active':
+      return <Rocket className="w-4 h-4 text-green-500" />;
+    case 'in-progress':
+      return <Rocket className="w-4 h-4 text-yellow-500" />;
+    case 'on-hold':
+      return <PauseCircle className="w-4 h-4 text-red-500" />;
+    case 'not-started':
+    default:
+      return <Clock className="w-4 h-4 text-gray-500" />;
+  }
+}
+
+export function ProjectCard({ id, name, status, createdAt, updatedAt, slug }: ProjectCardProps) {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+    if (e.target instanceof Element && e.target.closest('.hover-card-content')) {
+      e.preventDefault();
     }
   };
-
-  const statusConfig = getStatusConfig(project.status);
-  const StatusIcon = statusConfig.icon;
-
   return (
-    <Link href={`/dashboard/projects/${project.slug || project.id}`}>
-      <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-lg p-6 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] cursor-pointer border border-slate-700/50 hover:border-slate-600/50 h-full">
-        {/* Status Indicator */}
-        <div className="flex items-center justify-between mb-4">
-          <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${statusConfig.bg} ${statusConfig.textColor}`}>
-            <StatusIcon className="w-3 h-3" />
-            {statusConfig.text}
-          </div>
-          <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${statusConfig.color}`}></div>
-        </div>
-
-        {/* Project Title */}
-        <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 min-h-[3rem]">{project.name}</h3>
-
-        {/* Project Meta */}
-        <div className="space-y-2 text-sm text-slate-400 mb-4">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            <span>Created {project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'Unknown'}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            <span>Updated {project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : 'Unknown'}</span>
-          </div>
-        </div>
-
-        {/* Project Actions/Links */}
-        <div className="mt-auto pt-4 border-t border-slate-700/50">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">View details</span>
-            <div className="flex items-center gap-1 text-purple-400">
-              <span>Open</span>
-              <GitBranch className="w-3 h-3" />
+    <Link href={`/dashboard/projects/${slug || id}`} className="block h-full" onClick={handleClick}>
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <div className="h-full p-4 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer flex flex-col min-h-[120px]">
+            <div className="mb-3">
+              <div className={`h-1 w-6 rounded ${getStatusColor(status)}`} />
+            </div>
+            <div className="flex flex-col justify-between flex-grow space-y-2">
+              <div className="flex justify-between items-start">
+                <p className="text-zinc-400 text-xs uppercase tracking-wider font-medium">{status.replace('-', ' ')}</p>
+                {getStatusIcon(status)}
+              </div>
+              <h3 className="text-zinc-100 font-medium text-sm leading-tight line-clamp-2 mt-auto">{name}</h3>
             </div>
           </div>
-        </div>
-      </div>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80 bg-zinc-800 border-zinc-700 text-white hover-card-content">
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold">{name}</h4>
+            <p className="text-sm text-zinc-400">Status: {status.replace('-', ' ')}</p>
+            <p className="text-sm text-zinc-400">Created: {createdAt || 'N/A'}</p>
+            <p className="text-sm text-zinc-400">Last updated: {updatedAt || 'N/A'}</p>
+          </div>
+        </HoverCardContent>
+      </HoverCard>
     </Link>
   );
-}
-
-// For backward compatibility with existing usage
-export function ProjectCardLegacy({ id, name, status, createdAt, updatedAt, slug }: ProjectListItem) {
-  const project: ProjectListItem = { id, name, status, createdAt, updatedAt, slug };
-  return <ProjectCard project={project} />;
 }

@@ -22,7 +22,7 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await signIn('google', { redirectTo: '/feed' });
+      await signIn('google');
     } catch (error) {
       console.error('Sign-in error:', error);
     } finally {
