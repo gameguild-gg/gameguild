@@ -16,7 +16,7 @@ export function DashboardProvider({ children, defaultOpen = true }: DashboardPro
         <DashboardSidebar />
         <SidebarInset className="flex flex-col flex-1">
           <DashboardHeader />
-          <div className="flex flex-col flex-1 overflow-auto px-6 py-8">{children}</div>
+          <div className="flex flex-col flex-1 overflow-auto">{children}</div>
         </SidebarInset>
       </SidebarProvider>
     </div>
