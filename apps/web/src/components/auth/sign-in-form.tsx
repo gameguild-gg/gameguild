@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { signIn } from '@/auth';
+import { signIn } from 'next-auth/react';
 import { useAuthError } from '@/lib/hooks/useAuthError';
 import { Link } from '@/i18n/navigation';
 
@@ -22,7 +22,7 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await signIn('google');
+      await signIn('google', { redirectTo: '/feed' });
     } catch (error) {
       console.error('Sign-in error:', error);
     } finally {
