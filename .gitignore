@@ -17,9 +17,10 @@
 /.next/
 /out/
 
-# production
+# build
 /build
 dist/
+tests/api/bin/
 
 # misc
 .DS_Store
@@ -49,6 +50,7 @@ old/services/web/.env
 /old/contributors/gource.mp4
 /old/contributors/gource.txt
 
+# lock files
 **/package-lock.json
 
 apps/abc/
