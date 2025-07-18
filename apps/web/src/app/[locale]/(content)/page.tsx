@@ -229,7 +229,7 @@ export default function Page(): React.JSX.Element {
             </Alert>
 
             <div className="space-y-2">
-              <Button onClick={() => signIn('google')} className="w-full">
+              <Button onClick={() => signIn('google', { redirectTo: '/feed' })} className="w-full">
                 Fazer Login com Google
               </Button>
               <p className="text-sm text-muted-foreground text-center">Isso testará a integração NextAuth + CMS Backend</p>

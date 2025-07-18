@@ -4,8 +4,6 @@ import { environment } from '@/configs/environment';
 import { NextAuthConfig } from 'next-auth';
 import { SignInResponse } from '@/components/legacy/types/auth';
 import { getJwtExpiryDate } from '@/lib/utils/jwt-utils';
-import { refreshAccessToken } from '@/lib/auth/token-refresh';
-import { serverAdminLogin, serverGoogleIdTokenSignIn } from '@/lib/auth/server-actions';
 
 export const authConfig: NextAuthConfig = {
   pages: {
@@ -51,13 +49,26 @@ export const authConfig: NextAuthConfig = {
         }
 
         try {
-          // Call the backend API for admin authentication using server action
+          // Call the backend API for admin authentication using direct fetch
           console.log('[NextAuth][admin-bypass] Attempting admin login via backend API');
-          const response = await serverAdminLogin(
-            credentials.email as string,
-            credentials.password as string
-          );
+          
+          const fetchResponse = await fetch(`${environment.apiBaseUrl}/api/auth/admin-login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          });
 
+          if (!fetchResponse.ok) {
+            console.error('[NextAuth][admin-bypass] Backend request failed:', fetchResponse.status, fetchResponse.statusText);
+            return null;
+          }
+
+          const response = await fetchResponse.json();
           console.log('[NextAuth][admin-bypass] Raw backend response:', response);
 
           if (!response || !response.user || !response.user.id || !response.accessToken) {
@@ -95,6 +106,35 @@ export const authConfig: NextAuthConfig = {
     updateAge: 60 * 60, // 1 hour in seconds
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // If there's a specific callback URL in the query params, use it
+      const urlObj = new URL(url, baseUrl);
+      const callbackUrl = urlObj.searchParams.get('callbackUrl');
+      
+      if (callbackUrl) {
+        // Ensure the callback URL is safe (same origin)
+        try {
+          const callbackUrlObj = new URL(callbackUrl, baseUrl);
+          if (callbackUrlObj.origin === baseUrl) {
+            return callbackUrl;
+          }
+        } catch {
+          // Invalid URL, fall back to default
+        }
+      }
+
+      // Default redirect to /feed after successful login
+      // If url is relative, combine with baseUrl
+      if (url.startsWith('/')) {
+        return `${baseUrl}/feed`;
+      }
+      // If url is from the same origin, redirect to /feed
+      if (new URL(url).origin === baseUrl) {
+        return `${baseUrl}/feed`;
+      }
+      // Otherwise redirect to /feed
+      return `${baseUrl}/feed`;
+    },
     async signIn({ user, account, profile }) {
       console.log('🔑 [AUTH DEBUG] SignIn callback triggered:', {
         provider: account?.provider,
@@ -132,11 +172,26 @@ export const authConfig: NextAuthConfig = {
           console.log('🚀 [AUTH DEBUG] Attempting Google ID token validation with CMS backend:', environment.apiBaseUrl);
           console.log('🔑 [AUTH DEBUG] Making request to: POST /api/auth/google/id-token');
 
-          // Try the new Google ID token endpoint using server action
-          const response = await serverGoogleIdTokenSignIn(
-            account.id_token,
-            undefined // Can be set later via tenant switching
-          );
+          // Try the new Google ID token endpoint using direct fetch
+          const fetchResponse = await fetch(`${environment.apiBaseUrl}/api/auth/google/id-token`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              idToken: account.id_token,
+              tenantId: undefined, // Can be set later via tenant switching
+            }),
+          });
+
+          if (!fetchResponse.ok) {
+            console.error('[NextAuth][google] Backend request failed:', fetchResponse.status, fetchResponse.statusText);
+            const errorText = await fetchResponse.text();
+            console.error('[NextAuth][google] Error response:', errorText);
+            return false;
+          }
+
+          const response = await fetchResponse.json();
 
           console.log('✅ [AUTH DEBUG] CMS backend authentication successful:', {
             userId: response.user?.id,
@@ -286,24 +341,43 @@ export const authConfig: NextAuthConfig = {
       if (shouldRefresh && token.refreshToken && !token.error && trigger !== 'update') {
         console.log('🔄 [AUTH DEBUG] Token needs refresh, attempting...');
         
-        const refreshResult = await refreshAccessToken(token.refreshToken as string);
-        
-        if (refreshResult.success && refreshResult.data) {
-          console.log('✅ [AUTH DEBUG] Token refresh successful:', {
-            newExpiresAt: refreshResult.data.expires,
-            hasNewAccessToken: !!refreshResult.data.accessToken,
-            hasNewRefreshToken: !!refreshResult.data.refreshToken,
+        try {
+          const refreshResponse = await fetch(`${environment.apiBaseUrl}/api/auth/refresh-token`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              refreshToken: token.refreshToken,
+            }),
           });
 
-          token.accessToken = refreshResult.data.accessToken;
-          token.refreshToken = refreshResult.data.refreshToken;
-          token.expires = new Date(refreshResult.data.expires);
+          if (!refreshResponse.ok) {
+            console.error('[NextAuth][refresh] Backend request failed:', refreshResponse.status, refreshResponse.statusText);
+            throw new Error(`Refresh failed: ${refreshResponse.status}`);
+          }
 
-          // Clear any previous errors
-          delete token.error;
-        } else {
+          const refreshResult = await refreshResponse.json();
+          
+          if (refreshResult && refreshResult.accessToken) {
+            console.log('✅ [AUTH DEBUG] Token refresh successful:', {
+              newExpiresAt: refreshResult.expires,
+              hasNewAccessToken: !!refreshResult.accessToken,
+              hasNewRefreshToken: !!refreshResult.refreshToken,
+            });
+
+            token.accessToken = refreshResult.accessToken;
+            token.refreshToken = refreshResult.refreshToken;
+            token.expires = new Date(refreshResult.expires);
+
+            // Clear any previous errors
+            delete token.error;
+          } else {
+            throw new Error('Invalid refresh response');
+          }
+        } catch (error) {
           console.error('❌ [AUTH DEBUG] Failed to refresh token:', {
-            error: refreshResult.error,
+            error: error instanceof Error ? error.message : error,
             refreshToken: token.refreshToken ? 'present' : 'missing',
           });
           // Token refresh failed, user needs to sign in again
