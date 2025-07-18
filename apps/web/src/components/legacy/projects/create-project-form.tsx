@@ -390,34 +390,34 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                   <TabsContent value="details" className="space-y-6">
                     {/* Details Fields */}
                     <div>
-                      <Label className="text-zinc-400">Details</Label>
-                      <div className="mt-2 border border-zinc-800 rounded-lg">
-                        <div className="flex items-center gap-1 p-2 border-b border-zinc-800">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
+                      <Label className="text-slate-300 font-medium">Details</Label>
+                      <div className="mt-2 border border-slate-700 rounded-lg bg-slate-800/30">
+                        <div className="flex items-center gap-1 p-2 border-b border-slate-700">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
                             <Code className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
                             <Bold className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
                             <Italic className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
                             <List className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
                             <ListOrdered className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
                             <Link2 className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700">
                             <ImageIcon className="h-4 w-4" />
                           </Button>
                         </div>
                         <Textarea
                           placeholder="This will make up the content of your game page."
-                          className="border-0 rounded-none bg-transparent min-h-[200px]"
+                          className="border-0 rounded-none bg-transparent min-h-[200px] text-white placeholder:text-slate-400 focus:ring-0"
                           value={formData.description}
                           onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                         />
