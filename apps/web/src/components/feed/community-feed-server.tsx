@@ -46,7 +46,14 @@ export async function CommunityFeedServer({ searchParams = {} }: CommunityFeedSe
   let engagementRate = 75.5;
 
   try {
-    const [postsData, pinnedData] = await Promise.all([fetchPosts({ ...filters, pageNumber: 1, pageSize: 20 }), fetchPinnedPosts()]);
+    const [postsData, pinnedData] = await Promise.all([
+      fetchPosts({
+        ...filters,
+        pageNumber: 1,
+        pageSize: 20,
+      }),
+      fetchPinnedPosts(),
+    ]);
 
     posts = postsData.posts || [];
     pinnedPosts = pinnedData.posts || [];
