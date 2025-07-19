@@ -6,16 +6,11 @@ import { TestSessionGrid } from './test-session-grid';
 import { TestSessionRow } from './test-session-row';
 import { TestSessionTable } from './test-session-table';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ArrowLeft, LayoutGrid, List, Rows, Search, X, ChevronDown, Shield, Clock, Users, Monitor, Star, Trophy } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ArrowLeft, ChevronDown, Clock, LayoutGrid, List, Monitor, Rows, Search, Shield, Star, Trophy, Users, X } from 'lucide-react';
 import Link from 'next/link';
+import { PeriodSelector } from '@/components/filters/period-selector';
 
 interface TestingLabSessionsProps {
   testSessions: TestSession[];
@@ -26,17 +21,14 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedSessionTypes, setSelectedSessionTypes] = useState<string[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState('week');
 
   // Helper functions for multi-select
   const toggleStatus = (status: string) => {
     if (status === 'all') {
       setSelectedStatuses([]);
     } else {
-      setSelectedStatuses(prev => 
-        prev.includes(status) 
-          ? prev.filter(s => s !== status)
-          : [...prev, status]
-      );
+      setSelectedStatuses((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]));
     }
   };
 
@@ -44,18 +36,14 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
     if (type === 'all') {
       setSelectedSessionTypes([]);
     } else {
-      setSelectedSessionTypes(prev => 
-        prev.includes(type) 
-          ? prev.filter(t => t !== type)
-          : [...prev, type]
-      );
+      setSelectedSessionTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
     }
   };
 
   const getDisplayText = (selected: string[], allText: string, items: { value: string; label: string }[]) => {
     if (selected.length === 0) return allText;
     if (selected.length === 1) {
-      const item = items.find(i => i.value === selected[0]);
+      const item = items.find((i) => i.value === selected[0]);
       return item?.label || selected[0];
     }
     return `${selected.length} selected`;
@@ -90,11 +78,11 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
 
   // Filter sessions based on search and filters
   const filteredSessions = testSessions.filter((session) => {
-    const matchesSearch = session.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         session.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      session.title.toLowerCase().includes(searchTerm.toLowerCase()) || session.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(session.status);
     const matchesType = selectedSessionTypes.length === 0 || selectedSessionTypes.includes(session.sessionType);
-    
+
     return matchesSearch && matchesStatus && matchesType;
   });
 
@@ -178,38 +166,52 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                       ) : (
                         <Shield className="h-4 w-4 text-slate-400" />
                       )}
-                      <span>{getDisplayText(selectedStatuses, 'All Status', [
-                        { value: 'open', label: 'Open' },
-                        { value: 'full', label: 'Full' },
-                        { value: 'in-progress', label: 'In Progress' }
-                      ])}</span>
+                      <span>
+                        {getDisplayText(selectedStatuses, 'All Status', [
+                          { value: 'open', label: 'Open' },
+                          { value: 'full', label: 'Full' },
+                          { value: 'in-progress', label: 'In Progress' },
+                        ])}
+                      </span>
                     </div>
                     <ChevronDown className="h-4 w-4 ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-slate-900/80 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl shadow-black/50">
-                  <DropdownMenuItem onClick={() => toggleStatus('all')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
+                  <DropdownMenuItem
+                    onClick={() => toggleStatus('all')}
+                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
+                  >
                     <div className="flex items-center gap-2">
                       <Shield className="h-4 w-4 text-slate-400" />
                       <span>All Status</span>
                       {selectedStatuses.length === 0 && <span className="ml-auto text-blue-400">✓</span>}
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleStatus('open')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
+                  <DropdownMenuItem
+                    onClick={() => toggleStatus('open')}
+                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
+                  >
                     <div className="flex items-center gap-2">
                       <Shield className="h-4 w-4 text-green-400" />
                       <span>Open</span>
                       {selectedStatuses.includes('open') && <span className="ml-auto text-blue-400">✓</span>}
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleStatus('full')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
+                  <DropdownMenuItem
+                    onClick={() => toggleStatus('full')}
+                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
+                  >
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-red-400" />
                       <span>Full</span>
                       {selectedStatuses.includes('full') && <span className="ml-auto text-blue-400">✓</span>}
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleStatus('in-progress')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
+                  <DropdownMenuItem
+                    onClick={() => toggleStatus('in-progress')}
+                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
+                  >
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-blue-400" />
                       <span>In Progress</span>
@@ -234,38 +236,52 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                       ) : (
                         <Trophy className="h-4 w-4 text-slate-400" />
                       )}
-                      <span>{getDisplayText(selectedSessionTypes, 'All Types', [
-                        { value: 'gameplay', label: 'Gameplay' },
-                        { value: 'usability', label: 'Usability' },
-                        { value: 'bug-testing', label: 'Bug Testing' }
-                      ])}</span>
+                      <span>
+                        {getDisplayText(selectedSessionTypes, 'All Types', [
+                          { value: 'gameplay', label: 'Gameplay' },
+                          { value: 'usability', label: 'Usability' },
+                          { value: 'bug-testing', label: 'Bug Testing' },
+                        ])}
+                      </span>
                     </div>
                     <ChevronDown className="h-4 w-4 ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-slate-900/80 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl shadow-black/50">
-                  <DropdownMenuItem onClick={() => toggleSessionType('all')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
+                  <DropdownMenuItem
+                    onClick={() => toggleSessionType('all')}
+                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
+                  >
                     <div className="flex items-center gap-2">
                       <Trophy className="h-4 w-4 text-slate-400" />
                       <span>All Types</span>
                       {selectedSessionTypes.length === 0 && <span className="ml-auto text-blue-400">✓</span>}
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleSessionType('gameplay')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
+                  <DropdownMenuItem
+                    onClick={() => toggleSessionType('gameplay')}
+                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
+                  >
                     <div className="flex items-center gap-2">
                       <Monitor className="h-4 w-4 text-blue-400" />
                       <span>Gameplay</span>
                       {selectedSessionTypes.includes('gameplay') && <span className="ml-auto text-blue-400">✓</span>}
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleSessionType('usability')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
+                  <DropdownMenuItem
+                    onClick={() => toggleSessionType('usability')}
+                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
+                  >
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-purple-400" />
                       <span>Usability</span>
                       {selectedSessionTypes.includes('usability') && <span className="ml-auto text-blue-400">✓</span>}
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleSessionType('bug-testing')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
+                  <DropdownMenuItem
+                    onClick={() => toggleSessionType('bug-testing')}
+                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
+                  >
                     <div className="flex items-center gap-2">
                       <Star className="h-4 w-4 text-orange-400" />
                       <span>Bug Testing</span>
@@ -276,44 +292,52 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
               </DropdownMenu>
             </div>
 
-            {/* Right Side - View Mode Toggle */}
-            <div className="flex">
-              <Button
-                variant="ghost"
-                size="default"
-                onClick={() => setViewMode('cards')}
-                className={`${
-                  viewMode === 'cards'
-                    ? 'bg-gradient-to-r from-blue-500/30 to-blue-600/30 backdrop-blur-md border border-blue-400/40 text-blue-200 shadow-lg shadow-blue-500/20'
-                    : 'bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
-                } transition-all duration-200 rounded-l-xl rounded-r-none border-r-0 h-10 px-3`}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="default"
-                onClick={() => setViewMode('row')}
-                className={`${
-                  viewMode === 'row'
-                    ? 'bg-gradient-to-r from-purple-500/30 to-purple-600/30 backdrop-blur-md border border-purple-400/40 text-purple-200 shadow-lg shadow-purple-500/20'
-                    : 'bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
-                } transition-all duration-200 rounded-none border-x-0 h-10 px-3`}
-              >
-                <Rows className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="default"
-                onClick={() => setViewMode('table')}
-                className={`${
-                  viewMode === 'table'
-                    ? 'bg-gradient-to-r from-green-500/30 to-green-600/30 backdrop-blur-md border border-green-400/40 text-green-200 shadow-lg shadow-green-500/20'
-                    : 'bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
-                } transition-all duration-200 rounded-r-xl rounded-l-none border-l-0 h-10 px-3`}
-              >
-                <List className="h-4 w-4" />
-              </Button>
+            {/* Right Side - Period Selector and View Mode Toggle */}
+            <div className="flex items-center gap-4">
+              {/* Period Selector */}
+              <div className="">
+                <PeriodSelector selectedPeriod={selectedPeriod} onPeriodChange={setSelectedPeriod} className="scale-90 origin-right" />
+              </div>
+
+              {/* View Mode Toggle */}
+              <div className="flex">
+                <Button
+                  variant="ghost"
+                  size="default"
+                  onClick={() => setViewMode('cards')}
+                  className={`${
+                    viewMode === 'cards'
+                      ? 'bg-gradient-to-r from-blue-500/30 to-blue-600/30 backdrop-blur-md border border-blue-400/40 text-blue-200 shadow-lg shadow-blue-500/20'
+                      : 'bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
+                  } transition-all duration-200 rounded-l-xl rounded-r-none border-r-0 h-10 px-3`}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="default"
+                  onClick={() => setViewMode('row')}
+                  className={`${
+                    viewMode === 'row'
+                      ? 'bg-gradient-to-r from-purple-500/30 to-purple-600/30 backdrop-blur-md border border-purple-400/40 text-purple-200 shadow-lg shadow-purple-500/20'
+                      : 'bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
+                  } transition-all duration-200 rounded-none border-x-0 h-10 px-3`}
+                >
+                  <Rows className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="default"
+                  onClick={() => setViewMode('table')}
+                  className={`${
+                    viewMode === 'table'
+                      ? 'bg-gradient-to-r from-green-500/30 to-green-600/30 backdrop-blur-md border border-green-400/40 text-green-200 shadow-lg shadow-green-500/20'
+                      : 'bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
+                  } transition-all duration-200 rounded-r-xl rounded-l-none border-l-0 h-10 px-3`}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -344,7 +368,7 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                   </button>
                 </div>
               )}
-              {selectedStatuses.map(status => (
+              {selectedStatuses.map((status) => (
                 <div key={status} className="bg-green-500/20 border border-green-400/30 rounded-full px-3 py-1 text-green-300 text-xs flex items-center gap-2">
                   Status: {status.charAt(0).toUpperCase() + status.slice(1)}
                   <button onClick={() => toggleStatus(status)} className="hover:text-green-200">
@@ -352,7 +376,7 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                   </button>
                 </div>
               ))}
-              {selectedSessionTypes.map(type => (
+              {selectedSessionTypes.map((type) => (
                 <div key={type} className="bg-purple-500/20 border border-purple-400/30 rounded-full px-3 py-1 text-purple-300 text-xs flex items-center gap-2">
                   Type: {type.replace('-', ' ').charAt(0).toUpperCase() + type.replace('-', ' ').slice(1)}
                   <button onClick={() => toggleSessionType(type)} className="hover:text-purple-200">
@@ -384,10 +408,7 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
             <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border border-slate-700 rounded-lg p-12 backdrop-blur-sm max-w-2xl mx-auto">
               <h3 className="text-2xl font-semibold text-white mb-4">No Sessions Match Your Filters</h3>
               <p className="text-slate-400 mb-6">Try adjusting your search terms or filters to find more sessions.</p>
-              <Button 
-                onClick={clearFilters}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0"
-              >
+              <Button onClick={clearFilters} className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0">
                 Clear All Filters
               </Button>
             </div>
@@ -412,4 +433,3 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
     </div>
   );
 }
-  
