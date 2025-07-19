@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { environment } from '@/configs/environment';
 
 export default function Page(): React.JSX.Element {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const { currentTenant, availableTenants } = useTenant();
 
   const [testResults, setTestResults] = useState<Record<string, any>>({});
@@ -161,6 +161,52 @@ export default function Page(): React.JSX.Element {
           url: environment.apiBaseUrl,
         },
       });
+    }
+  };
+
+  // Test token refresh
+  const testTokenRefresh = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      console.log('🧪 [TEST] Testing token refresh manually...');
+      console.log('🧪 [TEST] Current session before refresh:', session);
+      console.log('🧪 [TEST] Session details:', {
+        hasUser: !!session?.user,
+        hasAccessToken: !!session?.accessToken,
+        hasRefreshToken: !!(session as any)?.refreshToken,
+        refreshTokenPrefix: (session as any)?.refreshToken ? 
+          (session as any).refreshToken.substring(0, 20) + '...' : 'none',
+        error: (session as any)?.error,
+        expires: session?.expires,
+      });
+
+      // Force a session update which will trigger the refresh if needed
+      const updatedSession = await update();
+      console.log('🧪 [TEST] Updated session after refresh:', updatedSession);
+
+      setTestResults((prev) => ({
+        ...prev,
+        tokenRefresh: {
+          success: true,
+          beforeSession: session,
+          afterSession: updatedSession,
+          message: 'Token refresh test completed. Check browser console and API logs for details.',
+          timestamp: new Date().toISOString(),
+        },
+      }));
+    } catch (error) {
+      console.error('Token refresh test failed:', error);
+      setTestResults((prev) => ({
+        ...prev,
+        tokenRefresh: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          currentSession: session,
+          timestamp: new Date().toISOString(),
+        },
+      }));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -401,9 +447,12 @@ export default function Page(): React.JSX.Element {
           {/* CMS Connectivity Test */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">CMS Connectivity Test</h3>
-            <div>
+            <div className="flex gap-2">
               <Button onClick={testCmsConnectivity} disabled={cmsConnectivity.status === 'testing'} variant="outline">
                 {cmsConnectivity.status === 'testing' ? 'Testing...' : 'Test CMS Connectivity'}
+              </Button>
+              <Button onClick={testTokenRefresh} disabled={loading || !session} variant="outline">
+                {loading ? 'Testing...' : 'Test Token Refresh'}
               </Button>
             </div>
 
@@ -422,6 +471,23 @@ export default function Page(): React.JSX.Element {
                   <pre className="text-xs bg-muted p-3 rounded-md overflow-auto">{JSON.stringify(cmsConnectivity.details, null, 2)}</pre>
                 </CardContent>
               </Card>
+            )}
+
+            {/* Test Results */}
+            {Object.keys(testResults).length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-semibold">Test Results:</h4>
+                {Object.entries(testResults).map(([key, result]) => (
+                  <Card key={key}>
+                    <CardHeader>
+                      <CardTitle className="text-sm">{key}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <pre className="text-xs bg-muted p-3 rounded-md overflow-auto">{JSON.stringify(result, null, 2)}</pre>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )}
           </div>
 
