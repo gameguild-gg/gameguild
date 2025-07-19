@@ -55,11 +55,13 @@ export function TestSessionRow({ sessions }: TestSessionRowProps) {
                   <div className="flex-1">
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <h3 className="text-lg font-bold text-white flex-1">{session.title}</h3>
-                      <StatusChip status={session.status as 'open' | 'full' | 'in-progress' | 'closed'} variant="compact" />
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-slate-400">Testing Session</div>
-                      <LocationChip isOnline={session.isOnline} variant="compact" />
+                      <div className="flex items-center gap-2">
+                        <LocationChip isOnline={session.isOnline} variant="compact" />
+                        <StatusChip status={session.status as 'open' | 'full' | 'in-progress' | 'closed'} variant="compact" />
+                      </div>
                     </div>
                   </div>
                 </div>
