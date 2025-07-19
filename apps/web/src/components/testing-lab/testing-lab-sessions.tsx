@@ -148,8 +148,8 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
         {/* Filters, Search & View Toggle */}
         <div className="space-y-6 mb-8">
           {/* Search and Filter Controls */}
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search Bar */}
+          <div className="flex items-center justify-between gap-6">
+            {/* Left Side - Search Bar */}
             <div className="flex-1 max-w-md relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
@@ -160,8 +160,8 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                 className="w-full pl-12 pr-4 h-10 bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-blue-400/60 focus:ring-2 focus:ring-blue-400/20 transition-all duration-200"
               />
             </div>
-            
-            {/* Inline Filter Options */}
+
+            {/* Center - Filter Dropdowns */}
             <div className="flex flex-wrap gap-3 items-center">
               {/* Status Filter */}
               <DropdownMenu>
@@ -274,30 +274,17 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Clear Filters Button */}
-              {hasActiveFilters && (
-                <Button
-                  variant="ghost"
-                  size="default"
-                  onClick={clearFilters}
-                  className="text-slate-400 hover:text-slate-200 text-sm bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/50 rounded-xl hover:border-blue-400/60 transition-all duration-200 h-10 px-3"
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Clear
-                </Button>
-              )}
             </div>
 
-            {/* View Mode Toggle */}
+            {/* Right Side - View Mode Toggle */}
             <div className="flex">
               <Button
                 variant="ghost"
                 size="default"
                 onClick={() => setViewMode('cards')}
                 className={`${
-                  viewMode === 'cards' 
-                    ? 'bg-gradient-to-r from-blue-500/30 to-blue-600/30 backdrop-blur-md border border-blue-400/40 text-blue-200 shadow-lg shadow-blue-500/20' 
+                  viewMode === 'cards'
+                    ? 'bg-gradient-to-r from-blue-500/30 to-blue-600/30 backdrop-blur-md border border-blue-400/40 text-blue-200 shadow-lg shadow-blue-500/20'
                     : 'bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
                 } transition-all duration-200 rounded-l-xl rounded-r-none border-r-0 h-10 px-3`}
               >
@@ -330,6 +317,21 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
             </div>
           </div>
 
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <div className="flex justify-center">
+              <Button
+                variant="ghost"
+                size="default"
+                onClick={clearFilters}
+                className="text-slate-400 hover:text-slate-200 text-sm bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/50 rounded-xl hover:border-blue-400/60 transition-all duration-200 h-10 px-3"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear Filters
+              </Button>
+            </div>
+          )}
+
           {/* Active Filters Display */}
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-2 pt-2">
@@ -361,12 +363,14 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
             </div>
           )}
 
-          {/* Results Count */}
-          <div className="text-center">
-            <p className="text-slate-400 text-sm">
-              Showing {filteredSessions.length} of {testSessions.length} sessions
-            </p>
-          </div>
+          {/* Results Count - Only show when filters are applied */}
+          {hasActiveFilters && (
+            <div className="text-center">
+              <p className="text-slate-400 text-sm">
+                Showing {filteredSessions.length} of {testSessions.length} sessions
+              </p>
+            </div>
+          )}
         </div>
         {/* Sessions Display */}
         {filteredSessions.length > 0 ? (
