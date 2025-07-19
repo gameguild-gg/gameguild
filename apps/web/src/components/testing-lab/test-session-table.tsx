@@ -52,11 +52,12 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
           <thead className="bg-slate-800/50 border-b border-slate-700">
             <tr>
               <th className="text-left p-4 text-sm font-medium text-slate-300">Session</th>
-              <th className="text-left p-4 text-sm font-medium text-slate-300">Date & Time</th>
-              <th className="text-left p-4 text-sm font-medium text-slate-300">Duration</th>
-              <th className="text-left p-4 text-sm font-medium text-slate-300">Capacity</th>
+              <th className="text-right p-4 text-sm font-medium text-slate-300">Date & Time</th>
+              <th className="text-right p-4 text-sm font-medium text-slate-300">Duration</th>
+              <th className="text-right p-4 text-sm font-medium text-slate-300">Capacity</th>
               <th className="text-left p-4 text-sm font-medium text-slate-300">Type</th>
-              <th className="text-left p-4 text-sm font-medium text-slate-300">Status</th>
+              <th className="text-left p-4 text-sm font-medium text-slate-300">Platform</th>
+              <th className="text-center p-4 text-sm font-medium text-slate-300">Status</th>
               <th className="text-left p-4 text-sm font-medium text-slate-300">Action</th>
             </tr>
           </thead>
@@ -79,21 +80,23 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
                       </div>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2 text-slate-300 text-sm">
-                      <Calendar className="h-3 w-3" />
-                      <span>{format(sessionDate, 'MMM dd, yyyy')}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-300 text-sm mt-1">
-                      <Clock className="h-3 w-3" />
-                      <span>{format(sessionDate, 'h:mm a')}</span>
+                  <td className="p-4 text-right">
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-2 text-slate-300 text-sm">
+                        <Calendar className="h-3 w-3" />
+                        <span>{format(sessionDate, 'MMM dd, yyyy')}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-300 text-sm">
+                        <Clock className="h-3 w-3" />
+                        <span>{format(sessionDate, 'h:mm a')}</span>
+                      </div>
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 text-right">
                     <span className="text-slate-300 text-sm">{session.duration} min</span>
                   </td>
-                  <td className="p-4">
-                    <div className="space-y-1">
+                  <td className="p-4 text-right">
+                    <div className="flex flex-col items-end gap-1">
                       <div className="flex items-center gap-2 text-slate-300 text-sm">
                         <Users className="h-3 w-3" />
                         <span>{session.currentTesters}/{session.maxTesters}</span>
@@ -111,9 +114,32 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
                     </div>
                   </td>
                   <td className="p-4">
-                    <Badge variant="outline" className={getStatusColor(session.status) + ' text-xs'}>
-                      {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-                    </Badge>
+                    <div className="flex flex-wrap gap-1">
+                      {session.platform.slice(0, 2).map((platform) => (
+                        <Badge 
+                          key={platform} 
+                          variant="secondary" 
+                          className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs px-1.5 py-0.5"
+                        >
+                          {platform}
+                        </Badge>
+                      ))}
+                      {session.platform.length > 2 && (
+                        <Badge 
+                          variant="secondary" 
+                          className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs px-1.5 py-0.5"
+                        >
+                          +{session.platform.length - 2}
+                        </Badge>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-4 text-center">
+                    <div className="flex justify-center">
+                      <Badge variant="outline" className={`${getStatusColor(session.status)} text-xs w-20 justify-center`}>
+                        {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+                      </Badge>
+                    </div>
                   </td>
                   <td className="p-4">
                     <div onClick={(e) => e.stopPropagation()}>
@@ -123,11 +149,11 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
                           size="sm"
                           className="bg-gradient-to-r from-blue-600/30 to-blue-500/30 backdrop-blur-md border border-blue-400/40 text-white hover:from-blue-600/90 hover:to-blue-500/90 hover:border-blue-300/90 font-semibold transition-all duration-200 text-xs"
                         >
-                          <Link href={`/testing-lab/sessions/${session.slug}/join`}>Join</Link>
+                          <Link href={`/testing-lab/sessions/${session.slug}/join`}>Join Session</Link>
                         </Button>
                       ) : session.status === 'full' ? (
                         <Button disabled size="sm" variant="outline" className="text-xs">
-                          Full
+                          Full Session
                         </Button>
                       ) : (
                         <Button disabled size="sm" variant="outline" className="text-xs">
