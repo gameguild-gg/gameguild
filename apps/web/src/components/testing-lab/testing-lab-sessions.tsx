@@ -296,7 +296,7 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
             <div className="flex items-center gap-4">
               {/* Period Selector */}
               <div className="">
-                <PeriodSelector selectedPeriod={selectedPeriod} onPeriodChange={setSelectedPeriod} className="scale-90 origin-right" />
+                <PeriodSelector selectedPeriod={selectedPeriod} onPeriodChange={setSelectedPeriod} />
               </div>
 
               {/* View Mode Toggle */}
