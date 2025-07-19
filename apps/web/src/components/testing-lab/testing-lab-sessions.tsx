@@ -1,7 +1,12 @@
+'use client';
+
+import { useState } from 'react';
 import { TestSession } from '@/lib/api/testing-lab/test-sessions';
-import { TestSessionCard } from './test-session-card';
+import { TestSessionGrid } from './test-session-grid';
+import { TestSessionRow } from './test-session-row';
+import { TestSessionTable } from './test-session-table';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Filter, Search } from 'lucide-react';
+import { ArrowLeft, Filter, Search, Rows, List, LayoutGrid } from 'lucide-react';
 import Link from 'next/link';
 
 interface TestingLabSessionsProps {
@@ -9,8 +14,7 @@ interface TestingLabSessionsProps {
 }
 
 export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
-  const openSessions = testSessions.filter((session) => session.status === 'open');
-  const fullSessions = testSessions.filter((session) => session.status === 'full');
+  const [viewMode, setViewMode] = useState<'cards' | 'row' | 'table'>('cards');
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
@@ -27,15 +31,27 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
 
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-6">
-            Available Sessions
-          </h1>
+          <div className="mb-6">
+            {testSessions.length > 0 && (
+              <div className="flex justify-center mb-6">
+                <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-blue-400/30 rounded-full px-4 py-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                  <span className="text-blue-300 font-semibold text-sm">
+                    {testSessions.length} Open {testSessions.length === 1 ? 'Session' : 'Sessions'} • Join Now!
+                  </span>
+                </div>
+              </div>
+            )}
+            <h1 className="text-5xl md:text-6xl font-bold text-white my-8" style={{ textShadow: '0 0 8px rgba(59, 130, 246, 0.25), 0 0 16px rgba(147, 51, 234, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15)' }}>
+              Test. Play. Earn.
+            </h1>
+          </div>
           <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-            Browse and join exciting game testing sessions. Help developers create better gaming experiences while earning rewards.
+            Join exclusive game testing sessions and shape the future of gaming. Get early access, provide valuable feedback, and earn amazing rewards while playing the latest titles before anyone else.
           </p>
         </div>
 
-        {/* Filters & Search (placeholder for future implementation) */}
+        {/* Filters, Search & View Toggle */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
@@ -50,60 +66,43 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
             <Filter className="h-4 w-4 mr-2" />
             Filter
           </Button>
+          
+          {/* View Mode Toggle */}
+          <div className="flex gap-1 bg-slate-800/50 border border-slate-600 rounded-lg p-1">
+            <Button
+              variant={viewMode === 'cards' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('cards')}
+              className={viewMode === 'cards' ? 'bg-blue-600 hover:bg-blue-700' : 'hover:bg-slate-700/50'}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'row' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('row')}
+              className={viewMode === 'row' ? 'bg-blue-600 hover:bg-blue-700' : 'hover:bg-slate-700/50'}
+            >
+              <Rows className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'table' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+              className={viewMode === 'table' ? 'bg-blue-600 hover:bg-blue-700' : 'hover:bg-slate-700/50'}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-
-        {/* Open Sessions */}
-        {openSessions.length > 0 && (
+        {/* Sessions Display */}
+        {testSessions.length > 0 ? (
           <section className="mb-12">
-            <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-2xl font-bold text-white">Open Sessions</h2>
-              <div className="bg-green-600 text-white text-sm px-3 py-1 rounded-full font-medium">
-                {openSessions.length} available
-              </div>
-            </div>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {openSessions.map((session) => (
-                <TestSessionCard key={session.id} session={session} />
-              ))}
-            </div>
+            {viewMode === 'cards' && <TestSessionGrid sessions={testSessions} />}
+            {viewMode === 'row' && <TestSessionRow sessions={testSessions} />}
+            {viewMode === 'table' && <TestSessionTable sessions={testSessions} />}
           </section>
-        )}
-
-        {/* Full Sessions */}
-        {fullSessions.length > 0 && (
-          <section className="mb-12">
-            <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-2xl font-bold text-white">Full Sessions</h2>
-              <div className="bg-red-600 text-white text-sm px-3 py-1 rounded-full font-medium">
-                {fullSessions.length} full
-              </div>
-            </div>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {fullSessions.map((session) => (
-                <TestSessionCard key={session.id} session={session} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* All Other Sessions */}
-        {testSessions.filter((session) => session.status !== 'open' && session.status !== 'full').length > 0 && (
-          <section className="mb-12">
-            <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-2xl font-bold text-white">Other Sessions</h2>
-            </div>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {testSessions
-                .filter((session) => session.status !== 'open' && session.status !== 'full')
-                .map((session) => (
-                  <TestSessionCard key={session.id} session={session} />
-                ))}
-            </div>
-          </section>
-        )}
-
-        {/* Empty State */}
-        {testSessions.length === 0 && (
+        ) : (
           <div className="text-center py-16">
             <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border border-slate-700 rounded-lg p-12 backdrop-blur-sm max-w-2xl mx-auto">
               <h3 className="text-2xl font-semibold text-white mb-4">No Sessions Available</h3>
