@@ -202,11 +202,11 @@ export function PeriodSelector({
                   style={
                     selectedPeriod === period.value
                       ? {
-                          background: 'radial-gradient(ellipse 120% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                          background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                           boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                         }
                       : {
-                          background: 'radial-gradient(ellipse 120% 60% at center, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.6) 100%)',
+                          background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                           boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                         }
                   }
@@ -303,11 +303,11 @@ function PeriodRow({ options, onNext, onPrev }: { options: PeriodOption[]; onNex
               style={
                 optionIndex === activeIndex
                   ? {
-                      background: 'radial-gradient(ellipse 120% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                      background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                       boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                     }
                   : {
-                      background: 'radial-gradient(ellipse 120% 60% at center, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.6) 100%)',
+                      background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                       boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                     }
               }
