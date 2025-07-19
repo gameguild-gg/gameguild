@@ -43,7 +43,7 @@ export function PeriodSelector({
   ];
 
   const generateWeeks = (start: number): PeriodOption[] => {
-    return Array.from({ length: 5 }, (_, index) => {
+    return Array.from({ length: 3 }, (_, index) => {
       const weekNumber = start + index;
       return {
         label: `Week ${weekNumber}`,
@@ -57,7 +57,7 @@ export function PeriodSelector({
   const allMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   const generateMonths = (start: number): PeriodOption[] => {
-    return Array.from({ length: 5 }, (_, index) => {
+    return Array.from({ length: 3 }, (_, index) => {
       const monthIndex = (start + index) % 12;
       const year = 2023 + Math.floor((start + index) / 12);
       return {
@@ -70,7 +70,7 @@ export function PeriodSelector({
   };
 
   const generateYears = (start: number): PeriodOption[] => {
-    return Array.from({ length: 5 }, (_, index) => {
+    return Array.from({ length: 3 }, (_, index) => {
       const year = start + index;
       return {
         label: year.toString(),
@@ -81,7 +81,7 @@ export function PeriodSelector({
   };
 
   const generateDays = (start: Date): PeriodOption[] => {
-    return Array.from({ length: 5 }, (_, index) => {
+    return Array.from({ length: 3 }, (_, index) => {
       const day = new Date(start);
       day.setDate(day.getDate() + index);
       return {
@@ -106,7 +106,7 @@ export function PeriodSelector({
         });
       }
     }
-    return quarters.slice(0, 8); // Show 8 quarters (2 years worth)
+    return quarters.slice(0, 6); // Show 6 quarters (1.5 years worth)
   };
 
   const weeks = React.useMemo(() => generateWeeks(currentWeekStart), [currentWeekStart]);
@@ -238,14 +238,14 @@ function PeriodRow({ options, onNext, onPrev }: { options: PeriodOption[]; onNex
     }
   };
 
-  // Calculate visible options (show 5 at a time)
+  // Calculate visible options (show 3 at a time)
   const visibleOptions = React.useMemo(() => {
-    // If active index is at the beginning, show first 5
-    if (activeIndex <= 1) return options.slice(0, 5);
-    // If active index is near the end, show last 5
-    if (activeIndex >= options.length - 2) return options.slice(-5);
-    // Otherwise show the active one with 2 on each side
-    return options.slice(Math.max(0, activeIndex - 2), Math.min(options.length, activeIndex + 3));
+    // If active index is at the beginning, show first 3
+    if (activeIndex <= 0) return options.slice(0, 3);
+    // If active index is near the end, show last 3
+    if (activeIndex >= options.length - 1) return options.slice(-3);
+    // Otherwise show the active one with 1 on each side
+    return options.slice(Math.max(0, activeIndex - 1), Math.min(options.length, activeIndex + 2));
   }, [activeIndex, options]);
 
   return (
