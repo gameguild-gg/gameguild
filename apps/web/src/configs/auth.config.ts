@@ -375,6 +375,11 @@ export const authConfig: NextAuthConfig = {
         session.accessToken = token.accessToken as string;
       }
       
+      // DEBUG ONLY: Expose refresh token for debugging (remove in production)
+      if (token.refreshToken) {
+        (session as any).refreshToken = token.refreshToken as string;
+      }
+      
       session.user.id = token.id as string;
 
       if (token.user) {
