@@ -5,7 +5,6 @@ import { FloatingIcons } from './floating-icons';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { TestingLabCallToAction } from './testing-lab-call-to-action';
 
 interface TestingLabLandingProps {
   testSessions: TestSession[];
@@ -56,9 +55,6 @@ export function TestingLabLanding({ testSessions }: TestingLabLandingProps) {
               Learn More
             </Button>
           </div>
-
-          {/* Call to Action */}
-          {/* <TestingLabCallToAction /> */}
         </div>
       </main>
     </div>
