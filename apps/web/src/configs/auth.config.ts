@@ -244,6 +244,14 @@ export const authConfig: NextAuthConfig = {
       // If we don't have a refresh token, we can't refresh - mark for re-auth
       if (!token.refreshToken) {
         console.warn('⚠️ [AUTH DEBUG] No refresh token available - session will need re-authentication');
+        console.warn('⚠️ [AUTH DEBUG] Current token state:', {
+          hasId: !!token.id,
+          hasUser: !!token.user,
+          hasAccessToken: !!token.accessToken,
+          hasRefreshToken: !!token.refreshToken,
+          expires: token.expires,
+          error: token.error,
+        });
         token.error = 'RefreshTokenError';
         return token;
       }
@@ -305,6 +313,9 @@ export const authConfig: NextAuthConfig = {
           console.error('❌ [AUTH DEBUG] Failed to refresh token:', {
             error: refreshResult.error,
             refreshToken: token.refreshToken ? 'present' : 'missing',
+            refreshTokenPrefix: token.refreshToken ? 
+              (token.refreshToken as string).substring(0, 20) + '...' : 'none',
+            tokenLength: token.refreshToken ? (token.refreshToken as string).length : 0,
           });
           // Token refresh failed, user needs to sign in again
           token.error = 'RefreshTokenError';
@@ -329,6 +340,9 @@ export const authConfig: NextAuthConfig = {
       // If there's any token error, clear the session data and return minimal session
       if (token.error === 'RefreshTokenError' || token.error === 'SessionCorrupted') {
         console.log('🚨 [AUTH DEBUG] Token error detected, clearing session data:', token.error);
+        
+        // Return null to force NextAuth to clear the session completely
+        // This will automatically redirect to sign-in page
         return {
           ...session,
           accessToken: undefined,
@@ -337,6 +351,8 @@ export const authConfig: NextAuthConfig = {
             ...session.user,
             id: token.id as string,
           },
+          // Add expires in the past to force session expiry
+          expires: new Date(0).toISOString(),
         };
       }
 

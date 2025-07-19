@@ -46,7 +46,9 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRef
       };
     }
 
-    console.log('🔄 [TOKEN REFRESH] Attempting token refresh...');
+    const tokenPrefix = refreshToken?.length > 20 ? refreshToken.substring(0, 20) : (refreshToken ?? 'null');
+    console.log('🔄 [TOKEN REFRESH] Attempting token refresh with token:', `${tokenPrefix}...`);
+    console.log('🔄 [TOKEN REFRESH] Full token length:', refreshToken.length);
     
     const response = await apiClient.refreshToken({
       refreshToken,
@@ -63,10 +65,19 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRef
       data: response,
     };
   } catch (error) {
+    // Check if it's a 401 error (invalid refresh token)
+    const isUnauthorized = error instanceof Error && error.message.includes('401');
+    
     console.error('❌ [TOKEN REFRESH] Failed to refresh token:', {
       error: error instanceof Error ? error.message : 'Unknown error',
+      isUnauthorized,
       stack: error instanceof Error ? error.stack : undefined,
     });
+
+    // If unauthorized, the refresh token is invalid/expired
+    if (isUnauthorized) {
+      console.warn('🔒 [TOKEN REFRESH] Refresh token is invalid or expired. User needs to sign in again.');
+    }
 
     return {
       success: false,

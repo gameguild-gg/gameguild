@@ -9,6 +9,8 @@ export interface TestSession {
   duration: number; // in minutes
   maxTesters: number;
   currentTesters: number;
+  maxGames: number; // Maximum number of games that can be tested in this session
+  currentGames: number; // Current number of games registered for testing
   requirements: string[];
   status: 'open' | 'full' | 'in-progress' | 'completed';
   sessionType: 'gameplay' | 'usability' | 'feedback' | 'bug-testing';
@@ -37,6 +39,8 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       duration: 90,
       maxTesters: 8,
       currentTesters: 3,
+      maxGames: 3,
+      currentGames: 1,
       requirements: ['PC with Windows 10+', 'Reliable internet connection', 'Gaming experience'],
       status: 'open',
       sessionType: 'gameplay',
@@ -58,6 +62,8 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       duration: 60,
       maxTesters: 6,
       currentTesters: 6,
+      maxGames: 1,
+      currentGames: 1,
       requirements: ['Mobile device (iOS or Android)', 'Quiet testing environment'],
       status: 'full',
       sessionType: 'usability',
@@ -79,6 +85,8 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       duration: 120,
       maxTesters: 12,
       currentTesters: 8,
+      maxGames: 5,
+      currentGames: 2,
       requirements: ['High-speed internet', 'Discord for communication', 'Competitive gaming experience'],
       status: 'open',
       sessionType: 'gameplay',
@@ -100,6 +108,8 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       duration: 75,
       maxTesters: 5,
       currentTesters: 2,
+      maxGames: 2,
+      currentGames: 1,
       requirements: ['Experience with accessibility tools', 'PC or console'],
       status: 'open',
       sessionType: 'usability',
@@ -121,6 +131,8 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       duration: 180,
       maxTesters: 10,
       currentTesters: 7,
+      maxGames: 10,
+      currentGames: 4,
       requirements: ['Attention to detail', 'Bug reporting experience', 'PC gaming setup'],
       status: 'open',
       sessionType: 'bug-testing',

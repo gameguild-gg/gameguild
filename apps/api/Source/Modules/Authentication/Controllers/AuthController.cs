@@ -150,7 +150,14 @@ public class AuthController : ControllerBase {
   [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
   public async Task<ActionResult<SignInResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto request) {
     try {
-      _logger.LogInformation("Token refresh attempt");
+      _logger.LogInformation("🔥 [CONTROLLER] Token refresh attempt started. RefreshToken: {RefreshToken}, TenantId: {TenantId}", 
+        request?.RefreshToken?.Substring(0, Math.Min(request?.RefreshToken?.Length ?? 0, 10)) + "...", 
+        request?.TenantId);
+
+      if (request?.RefreshToken == null) {
+        _logger.LogWarning("🔥 [CONTROLLER] Refresh token is null or empty");
+        return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = "Refresh token is required", Status = StatusCodes.Status400BadRequest });
+      }
 
       var command = new RefreshTokenCommand { RefreshToken = request.RefreshToken, TenantId = request.TenantId };
 

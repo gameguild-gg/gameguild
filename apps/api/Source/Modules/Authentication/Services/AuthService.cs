@@ -6,6 +6,7 @@ using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 
 namespace GameGuild.Modules.Authentication {
@@ -17,7 +18,8 @@ namespace GameGuild.Modules.Authentication {
     IWeb3Service web3Service,
     IEmailVerificationService emailVerificationService,
     ITenantAuthService tenantAuthService,
-    ITenantService tenantService
+    ITenantService tenantService,
+    ILogger<AuthService> logger
   ) : IAuthService {
     public async Task<SignInResponseDto> LocalSignInAsync(LocalSignInRequestDto request) {
       var user = await context.Users.Include(u => u.Credentials)
@@ -109,12 +111,32 @@ namespace GameGuild.Modules.Authentication {
     private static bool VerifyPassword(string password, string hash) { return HashPassword(password) == hash; }
 
     public async Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request) {
+      Console.WriteLine($"🔥🔥🔥 [AUTHSERVICE] RefreshTokenAsync called with token: {request.RefreshToken?.Substring(0, Math.Min(request.RefreshToken?.Length ?? 0, 20))}...");
+      logger.LogInformation("Refresh token request received. Token length: {TokenLength}", request.RefreshToken?.Length ?? 0);
+      
+      // Check all refresh tokens for debugging
+      var allTokens = await context.RefreshTokens.ToListAsync();
+      logger.LogInformation("Total refresh tokens in database: {Count}", allTokens.Count);
+      
+      foreach (var token in allTokens) {
+        var tokenPrefix = token.Token?.Length > 10 ? token.Token.Substring(0, 10) : token.Token ?? "null";
+        logger.LogInformation("Token: {TokenPrefix}... | User: {UserId} | Expires: {ExpiresAt} | Revoked: {IsRevoked}", 
+          tokenPrefix,
+          token.UserId, 
+          token.ExpiresAt, 
+          token.IsRevoked);
+      }
+      
       var refreshToken = await context.RefreshTokens.Where(rt => rt.Token == request.RefreshToken)
                                       .Where(rt => !rt.IsRevoked)
                                       .Where(rt => rt.ExpiresAt > DateTime.UtcNow)
                                       .FirstOrDefaultAsync();
 
-      if (refreshToken == null) throw new UnauthorizedAccessException("Invalid refresh token");
+      if (refreshToken == null) {
+        var tokenPrefix = request.RefreshToken?.Length > 10 ? request.RefreshToken.Substring(0, 10) : request.RefreshToken ?? "null";
+        logger.LogWarning("Refresh token validation failed. Token: {TokenPrefix}...", tokenPrefix);
+        throw new UnauthorizedAccessException("Invalid refresh token");
+      }
 
       var user = await context.Users.FindAsync(refreshToken.UserId);
 

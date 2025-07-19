@@ -5,6 +5,7 @@ using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 using UserModel = GameGuild.Modules.Users.User;
 
@@ -29,6 +30,8 @@ public class AuthServiceTests : IDisposable
 
     private readonly Mock<ITenantService> _mockTenantService;
 
+    private readonly Mock<ILogger<AuthService>> _mockLogger;
+
     private readonly AuthService _authService;
 
     public AuthServiceTests()
@@ -45,6 +48,7 @@ public class AuthServiceTests : IDisposable
         _mockConfiguration = new Mock<IConfiguration>();
         _mockTenantAuthService = new Mock<ITenantAuthService>();
         _mockTenantService = new Mock<ITenantService>();
+        _mockLogger = new Mock<ILogger<AuthService>>();
 
         // Setup default JWT service behavior
         _mockJwtService.Setup(x => x.GenerateRefreshToken()).Returns("mock-refresh-token");
@@ -61,7 +65,8 @@ public class AuthServiceTests : IDisposable
             _mockWeb3Service.Object,
             _mockEmailService.Object,
             _mockTenantAuthService.Object,
-            _mockTenantService.Object
+            _mockTenantService.Object,
+            _mockLogger.Object
         );
     }
 
