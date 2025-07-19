@@ -148,14 +148,25 @@ export function PeriodSelector({
   };
 
   return (
-    <div className={cn('space-y-1', className)}>
-      {/* Period Type Selector */}
-      <div className="flex rounded-md border border-gray-200 bg-white">
-        {periods.map((period) => (
+    <div className={cn('flex items-center gap-2 min-w-0', className)}>
+      {/* Period Type Selector - Match toggle button style */}
+      <div className="flex flex-wrap flex-shrink-0">
+        {periods.map((period, index) => (
           <Button
             key={period.value}
             variant="ghost"
-            className={cn('flex-1 rounded-none h-8 text-xs', selectedPeriod === period.value && 'bg-blue-50 text-blue-600 hover:bg-blue-100')}
+            size="default"
+            className={`${
+              selectedPeriod === period.value
+                ? 'bg-gradient-to-r from-blue-500/30 to-blue-600/30 backdrop-blur-md border border-blue-400/40 text-blue-200 shadow-lg shadow-blue-500/20'
+                : 'bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
+            } transition-all duration-200 h-10 px-3 text-xs ${
+              index === 0
+                ? 'rounded-l-xl rounded-r-none border-r-0'
+                : index === periods.length - 1
+                  ? 'rounded-r-xl rounded-l-none border-l-0'
+                  : 'rounded-none border-x-0'
+            }`}
             onClick={() => {
               onPeriodChange?.(period.value);
             }}
@@ -165,8 +176,9 @@ export function PeriodSelector({
         ))}
       </div>
 
-      {/* Period Options */}
-      <div className="space-y-1">
+      {/* Period Range Selector - Horizontal Layout with overflow control */}
+      <div className="flex items-center gap-2 flex-1 flex-wrap">
+        {/* Navigation and Range Options in Single Row */}
         {selectedPeriod === 'week' && <PeriodRow options={weeks} onNext={() => handleWeekChange('next')} onPrev={() => handleWeekChange('prev')} />}
         {selectedPeriod === 'month' && <PeriodRow options={months} onNext={() => handleMonthChange('next')} onPrev={() => handleMonthChange('prev')} />}
         {selectedPeriod === 'quarter' && <PeriodRow options={quarters} />}
@@ -209,27 +221,53 @@ function PeriodRow({ options, onNext, onPrev }: { options: PeriodOption[]; onNex
   }, [activeIndex, options]);
 
   return (
-    <div className="flex items-center gap-1 rounded-md border border-gray-200 bg-white p-0.5">
-      <Button variant="ghost" className="h-7 w-7 p-0 rounded-md hover:bg-gray-100" onClick={handlePrev}>
-        <ChevronLeft className="h-3 w-3" />
-      </Button>
-      {visibleOptions.map((option, index) => {
-        const optionIndex = options.indexOf(option);
-        return (
-          <Button
-            key={optionIndex}
-            variant="ghost"
-            className={cn('flex h-7 flex-1 flex-col rounded-md py-1 text-xs', optionIndex === activeIndex && 'bg-blue-50 text-blue-600')}
-            onClick={() => setActiveIndex(optionIndex)}
-          >
-            <span className="text-xs">{option.label}</span>
-            {option.year && <span className="text-[10px] text-gray-500">{option.year}</span>}
-          </Button>
-        );
-      })}
-      <Button variant="ghost" className="h-7 w-7 p-0 rounded-md hover:bg-gray-100" onClick={handleNext}>
-        <ChevronRight className="h-3 w-3" />
-      </Button>
+    <div className="flex items-center gap-1 flex-1">
+      {/* Previous Navigation Button - Left Side */}
+      {onPrev && (
+        <Button
+          variant="ghost"
+          size="default"
+          className="bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50 transition-all duration-200 h-10 w-10 p-0 rounded-xl flex-shrink-0"
+          onClick={handlePrev}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+      )}
+
+      {/* Range Options - Center */}
+      <div className="flex items-center gap-1 flex-1">
+        {visibleOptions.map((option) => {
+          const optionIndex = options.indexOf(option);
+          return (
+            <Button
+              key={optionIndex}
+              variant="ghost"
+              size="default"
+              className={`${
+                optionIndex === activeIndex
+                  ? 'bg-gradient-to-r from-blue-500/30 to-blue-600/30 backdrop-blur-md border border-blue-400/40 text-blue-200 shadow-lg shadow-blue-500/20'
+                  : 'bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
+              } transition-all duration-200 flex h-10 min-w-0 flex-1 flex-col rounded-xl py-1 text-xs`}
+              onClick={() => setActiveIndex(optionIndex)}
+            >
+              <span className="text-xs font-medium truncate">{option.label}</span>
+              {option.year && <span className="text-[10px] text-slate-500 truncate">{option.year}</span>}
+            </Button>
+          );
+        })}
+      </div>
+
+      {/* Next Navigation Button - Right Side */}
+      {onNext && (
+        <Button
+          variant="ghost"
+          size="default"
+          className="bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50 transition-all duration-200 h-10 w-10 p-0 rounded-xl flex-shrink-0"
+          onClick={handleNext}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }
