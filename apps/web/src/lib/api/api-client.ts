@@ -45,7 +45,15 @@ class ApiClient {
   }
 
   async refreshToken(data: RefreshTokenRequest): Promise<RefreshTokenResponse> {
-    return this.request<RefreshTokenResponse>('/api/auth/refresh-token', {
+    const tokenPrefix = data.refreshToken?.length > 20 ? data.refreshToken.substring(0, 20) : (data.refreshToken ?? 'null');
+    console.log('🔥 [API CLIENT] refreshToken called with:', {
+      tokenPrefix: `${tokenPrefix}...`,
+      tokenLength: data.refreshToken?.length ?? 0,
+      hasToken: !!data.refreshToken,
+      endpoint: '/api/auth/refresh',
+    });
+    
+    return this.request<RefreshTokenResponse>('/api/auth/refresh', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -53,7 +61,7 @@ class ApiClient {
 
   // Admin login for development/testing (uses regular sign-in endpoint)
   async adminLogin(credentials: { email: string; password: string }): Promise<SignInResponse> {
-    return this.request<SignInResponse>('/api/auth/sign-in', {
+    return this.request<SignInResponse>('/api/auth/signin', {
       method: 'POST',
       body: JSON.stringify({
         email: credentials.email,
@@ -64,7 +72,7 @@ class ApiClient {
   }
 
   async revokeToken(refreshToken: string): Promise<void> {
-    await this.request('/api/auth/revoke-token', {
+    await this.request('/api/auth/revoke', {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
     });

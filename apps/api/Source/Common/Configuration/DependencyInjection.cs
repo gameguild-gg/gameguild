@@ -68,6 +68,12 @@ public static class DependencyInjection {
               }
             );
 
+    // Configure routing to use lowercase URLs
+    services.Configure<RouteOptions>(options => {
+      options.LowercaseUrls = true;
+      options.LowercaseQueryStrings = true;
+    });
+
     // Exception Handling
     services.AddExceptionHandler<GlobalExceptionHandler>();
     services.AddProblemDetails(options => {
