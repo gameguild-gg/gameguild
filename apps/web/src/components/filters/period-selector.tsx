@@ -268,7 +268,11 @@ function PeriodRow({ options, onNext, onPrev }: { options: PeriodOption[]; onNex
           <Button
             variant="ghost"
             size="default"
-            className="bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50 transition-all duration-200 h-10 w-10 p-0 rounded-l-xl rounded-r-none border-r-0"
+            className="backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50 transition-all duration-200 h-10 w-10 p-0 rounded-l-xl rounded-r-none border-r-0"
+            style={{
+              background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+              boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
+            }}
             onClick={handlePrev}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -326,7 +330,11 @@ function PeriodRow({ options, onNext, onPrev }: { options: PeriodOption[]; onNex
           <Button
             variant="ghost"
             size="default"
-            className="bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50 transition-all duration-200 h-10 w-10 p-0 rounded-r-xl rounded-l-none border-l-0"
+            className="backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50 transition-all duration-200 h-10 w-10 p-0 rounded-r-xl rounded-l-none border-l-0"
+            style={{
+              background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+              boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
+            }}
             onClick={handleNext}
           >
             <ChevronRight className="h-4 w-4" />

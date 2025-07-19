@@ -140,14 +140,47 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
           <div className="flex items-center justify-between gap-6">
             {/* Left Side - Search Bar */}
             <div className="flex-1 max-w-md relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4 z-10" />
               <Input
-                type="text"
+                type="search"
                 placeholder="Search sessions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 h-10 bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-blue-400/60 focus:ring-2 focus:ring-blue-400/20 transition-all duration-200"
+                className={`w-full pl-12 pr-12 h-10 backdrop-blur-md border rounded-xl transition-all duration-200 ${
+                  searchTerm
+                    ? 'border-blue-400/40 text-white placeholder:text-white/70 shadow-lg shadow-blue-500/20'
+                    : 'border-slate-600/30 text-slate-400 placeholder:text-slate-400 hover:text-slate-200'
+                } focus:text-white focus:placeholder:text-white focus:outline-none focus:border-blue-400/40 focus-visible:border-blue-400/40 focus:ring-2 focus:ring-blue-500/20 focus-visible:ring-blue-500/20 selection:bg-blue-500/30 selection:text-white`}
+                style={
+                  searchTerm
+                    ? {
+                        background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                        boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
+                      }
+                    : {
+                        background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                        boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
+                      }
+                }
+                onFocus={(e) => {
+                  e.target.style.background = 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)';
+                  e.target.style.boxShadow = 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)';
+                }}
+                onBlur={(e) => {
+                  if (!searchTerm) {
+                    e.target.style.background = 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)';
+                    e.target.style.boxShadow = 'inset 0 1px 2px rgba(0, 0, 0, 0.05)';
+                  }
+                }}
               />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors duration-200 z-10"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
 
             {/* Center - Filter Dropdowns */}
@@ -470,12 +503,42 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
           </section>
         ) : testSessions.length > 0 ? (
           <div className="text-center py-16">
-            <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border border-slate-700 rounded-lg p-12 backdrop-blur-sm max-w-2xl mx-auto">
-              <h3 className="text-2xl font-semibold text-white mb-4">No Sessions Match Your Filters</h3>
-              <p className="text-slate-400 mb-6">Try adjusting your search terms or filters to find more sessions.</p>
-              <Button onClick={clearFilters} className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0">
-                Clear All Filters
-              </Button>
+            <div className="backdrop-blur-md border border-slate-600/30 rounded-2xl p-12 max-w-2xl mx-auto relative overflow-hidden"
+                 style={{
+                   background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                   boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 32px rgba(0, 0, 0, 0.3)',
+                 }}>
+              {/* Decorative background elements */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute -top-4 -right-4 w-32 h-32 bg-blue-500/10 rounded-full blur-xl"></div>
+                <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl"></div>
+              </div>
+              
+              {/* Content */}
+              <div className="relative z-10">
+                <div className="mb-6">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
+                       style={{
+                         background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.2) 50%, rgba(29, 78, 216, 0.1) 100%)',
+                         boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
+                       }}>
+                    <Search className="h-8 w-8 text-blue-400" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-white mb-4">No Sessions Match Your Filters</h3>
+                  <p className="text-slate-400 mb-8 leading-relaxed">Try adjusting your search terms or filters to find more sessions.</p>
+                </div>
+                
+                <Button 
+                  onClick={clearFilters} 
+                  className="backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20 hover:border-blue-400/60 transition-all duration-200 rounded-xl px-6 py-3"
+                  style={{
+                    background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                    boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
+                  }}
+                >
+                  Clear All Filters
+                </Button>
+              </div>
             </div>
           </div>
         ) : (
