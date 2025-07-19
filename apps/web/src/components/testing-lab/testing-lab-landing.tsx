@@ -1,7 +1,7 @@
 import { TestSession } from '@/lib/api/testing-lab/test-sessions';
 import { TestingLabHero } from './testing-lab-hero';
 import { TestingLabStats } from './testing-lab-stats';
-import { TestingLabCallToAction } from './testing-lab-call-to-action';
+import { TestingLabHowItWorks } from './testing-lab-how-it-works';
 import { FloatingIcons } from './floating-icons';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -18,7 +18,7 @@ export function TestingLabLanding({ testSessions }: TestingLabLandingProps) {
   return (
     <div className="flex flex-col flex-1 relative">
       <FloatingIcons />
-      <div className="container mx-auto px-4 py-8 relative z-10">
+      <div className="container mx-auto px-4 py-8 relative">
         {/* Navigation */}
         <div className="flex items-center gap-4 mb-8">
           <Button
@@ -54,14 +54,14 @@ export function TestingLabLanding({ testSessions }: TestingLabLandingProps) {
               variant="outline"
               className="bg-slate-900/20 backdrop-blur-md border border-slate-700/50 text-slate-200 hover:text-white hover:bg-slate-800/30 hover:border-slate-600/50 px-8 py-4 text-lg transition-all duration-200"
             >
-              <a href="#learn-more">Learn More</a>
+              <a href="#le¶rn-more">Learn More</a>
             </Button>
           </div>
 
-          {/* Call to Action Section */}
+          {/* How It Works Section */}
         </div>
         <div id="learn-more">
-          <TestingLabCallToAction />
+          <TestingLabHowItWorks />
         </div>
       </main>
     </div>

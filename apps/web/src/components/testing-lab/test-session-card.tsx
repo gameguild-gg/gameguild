@@ -43,13 +43,13 @@ export function TestSessionCard({ session }: TestSessionCardProps) {
     <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm hover:border-slate-600 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/10 group cursor-pointer">
       <div onClick={handleCardClick}>
         <CardHeader className="pb-2">
-          <div className="flex items-start justify-end mb-1">
+          <div className="flex items-start justify-between gap-2 mb-1">
             <LocationChip isOnline={session.isOnline} variant="compact" />
+            <StatusChip status={session.status as 'open' | 'full' | 'in-progress' | 'closed'} variant="compact" />
           </div>
 
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <CardTitle className="text-sm font-bold text-white flex-1">{session.title}</CardTitle>
-            <StatusChip status={session.status as 'open' | 'full' | 'in-progress' | 'closed'} variant="compact" />
+          <div className="mb-1">
+            <CardTitle className="text-sm font-bold text-white">{session.title}</CardTitle>
           </div>
 
           <CardDescription className="text-slate-400 text-xs">Testing Session</CardDescription>
