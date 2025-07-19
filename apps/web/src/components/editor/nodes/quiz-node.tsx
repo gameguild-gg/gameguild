@@ -1,342 +1,322 @@
-"use client"
+'use client';
 
-import { useState, useEffect, createContext, useContext } from "react"
-import { DecoratorNode, type SerializedLexicalNode } from "lexical"
-import { Pencil, Plus, Trash2, RotateCcw, X } from "lucide-react"
-import { $getNodeByKey } from "lexical"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import type { JSX } from "react/jsx-runtime"
+import { useState, useEffect, createContext, useContext } from 'react';
+import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
+import { Pencil, Plus, Trash2, RotateCcw, X } from 'lucide-react';
+import { $getNodeByKey } from 'lexical';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import type { JSX } from 'react/jsx-runtime';
 
-import { Button } from "@/components/editor/ui/button"
-import { Input } from "@/components/editor/ui/input"
-import { Switch } from "@/components/editor/ui/switch"
-import { Label } from "@/components/editor/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/editor/ui/select"
-import { QuizDisplay } from "@/components/editor/ui/quiz/quiz-display"
-import { QuizWrapper } from "@/components/editor/ui/quiz/quiz-wrapper"
-import { QuizAnswerItem } from "@/components/editor/ui/quiz/quiz-answer-item"
-import { useQuizLogic } from "@/hooks/editor/use-quiz-logic"
-import { ContentEditMenu } from "@/components/editor/ui/content-edit-menu"
+import { Button } from '@/components/editor/ui/button';
+import { Input } from '@/components/editor/ui/input';
+import { Switch } from '@/components/editor/ui/switch';
+import { Label } from '@/components/editor/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/editor/ui/select';
+import { QuizDisplay } from '@/components/editor/ui/quiz/quiz-display';
+import { QuizWrapper } from '@/components/editor/ui/quiz/quiz-wrapper';
+import { QuizAnswerItem } from '@/components/editor/ui/quiz/quiz-answer-item';
+import { useQuizLogic } from '@/hooks/editor/use-quiz-logic';
+import { ContentEditMenu } from '@/components/editor/ui/content-edit-menu';
 
 // Adicionar no topo do arquivo, após os imports
-const EditorLoadingContext = createContext<boolean>(false)
+const EditorLoadingContext = createContext<boolean>(false);
 
-export const EditorLoadingProvider = EditorLoadingContext.Provider
-export const useEditorLoading = () => useContext(EditorLoadingContext)
+export const EditorLoadingProvider = EditorLoadingContext.Provider;
+export const useEditorLoading = () => useContext(EditorLoadingContext);
 
-export type QuestionType =
-  | "multiple-choice"
-  | "true-false"
-  | "fill-blank"
-  | "short-answer"
-  | "essay"
-  | "matching"
-  | "ordering"
-  | "rating"
+export type QuestionType = 'multiple-choice' | 'true-false' | 'fill-blank' | 'short-answer' | 'essay' | 'matching' | 'ordering' | 'rating';
 
 export interface QuizAnswer {
-  id: string
-  text: string
-  isCorrect: boolean
+  id: string;
+  text: string;
+  isCorrect: boolean;
 }
 
 export interface MatchingPair {
-  id: string
-  left: string
-  right: string
+  id: string;
+  left: string;
+  right: string;
 }
 
 export interface OrderingItem {
-  id: string
-  text: string
-  order: number
+  id: string;
+  text: string;
+  order: number;
 }
 
 export interface FillBlankAlternative {
-  id: string
-  words: string[] // Array of words for each blank position
-  isCorrect: boolean
+  id: string;
+  words: string[]; // Array of words for each blank position
+  isCorrect: boolean;
 }
 
 export interface QuizData {
-  question: string
-  questionType: QuestionType
-  answers: QuizAnswer[]
-  correctFeedback?: string
-  incorrectFeedback?: string
-  allowRetry: boolean
-  backgroundColor?: string
+  question: string;
+  questionType: QuestionType;
+  answers: QuizAnswer[];
+  correctFeedback?: string;
+  incorrectFeedback?: string;
+  allowRetry: boolean;
+  backgroundColor?: string;
   // For fill-in-the-blank
-  blanks?: string[]
-  fillBlankMode?: "text" | "multiple-choice"
-  fillBlankAlternatives?: FillBlankAlternative[] // New structure for alternatives
+  blanks?: string[];
+  fillBlankMode?: 'text' | 'multiple-choice';
+  fillBlankAlternatives?: FillBlankAlternative[]; // New structure for alternatives
   // For matching questions
-  matchingPairs?: MatchingPair[]
+  matchingPairs?: MatchingPair[];
   // For ordering questions
-  orderingItems?: OrderingItem[]
+  orderingItems?: OrderingItem[];
   // For rating questions
-  ratingScale?: { min: number; max: number; step: number }
-  correctRating?: number
+  ratingScale?: { min: number; max: number; step: number };
+  correctRating?: number;
 }
 
 export interface SerializedQuizNode extends SerializedLexicalNode {
-  type: "quiz"
-  data: QuizData
-  version: 1
+  type: 'quiz';
+  data: QuizData;
+  version: 1;
 }
 
 export class QuizNode extends DecoratorNode<JSX.Element> {
-  __data: QuizData
+  __data: QuizData;
 
   static getType(): string {
-    return "quiz"
+    return 'quiz';
   }
 
   static clone(node: QuizNode): QuizNode {
-    return new QuizNode(node.__data, node.__key)
+    return new QuizNode(node.__data, node.__key);
   }
 
   constructor(data: QuizData, key?: string) {
-    super(key)
+    super(key);
     this.__data = {
       ...data,
-      correctFeedback: data.correctFeedback || "",
-      incorrectFeedback: data.incorrectFeedback || "",
+      correctFeedback: data.correctFeedback || '',
+      incorrectFeedback: data.incorrectFeedback || '',
       allowRetry: data.allowRetry !== undefined ? data.allowRetry : true,
-    }
+    };
   }
 
   createDOM(): HTMLElement {
-    return document.createElement("div")
+    return document.createElement('div');
   }
 
   updateDOM(): false {
-    return false
+    return false;
   }
 
   setData(data: QuizData): void {
-    const writable = this.getWritable()
-    writable.__data = data
+    const writable = this.getWritable();
+    writable.__data = data;
   }
 
   exportJSON(): SerializedQuizNode {
     return {
-      type: "quiz",
+      type: 'quiz',
       data: this.__data,
       version: 1,
-    }
+    };
   }
 
   static importJSON(serializedNode: SerializedQuizNode): QuizNode {
-    return new QuizNode(serializedNode.data)
+    return new QuizNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {
-    return <QuizComponent data={this.__data} nodeKey={this.__key} />
+    return <QuizComponent data={this.__data} nodeKey={this.__key} />;
   }
 }
 
 interface QuizComponentProps {
-  data: QuizData
-  nodeKey: string
+  data: QuizData;
+  nodeKey: string;
 }
 
 function QuizComponent({ data, nodeKey }: QuizComponentProps) {
-  const [editor] = useLexicalComposerContext()
-  const isLoading = useEditorLoading()
+  const [editor] = useLexicalComposerContext();
+  const isLoading = useEditorLoading();
 
   // Modificar esta linha para considerar o contexto de carregamento
-  const [isEditing, setIsEditing] = useState(!data.question && !isLoading)
-  const [question, setQuestion] = useState(data.question)
-  const [questionType, setQuestionType] = useState<QuestionType>(data.questionType || "multiple-choice")
-  const [answers, setAnswers] = useState<QuizAnswer[]>(data.answers)
-  const [correctFeedback, setCorrectFeedback] = useState(data.correctFeedback || "")
-  const [incorrectFeedback, setIncorrectFeedback] = useState(data.incorrectFeedback || "")
-  const [allowRetry, setAllowRetry] = useState(data.allowRetry !== undefined ? data.allowRetry : true)
-  const [blanks, setBlanks] = useState<string[]>(data.blanks || [])
-  const [matchingPairs, setMatchingPairs] = useState<MatchingPair[]>(data.matchingPairs || [])
-  const [orderingItems, setOrderingItems] = useState<OrderingItem[]>(data.orderingItems || [])
-  const [ratingScale, setRatingScale] = useState(data.ratingScale || { min: 1, max: 5, step: 1 })
-  const [correctRating, setCorrectRating] = useState(data.correctRating || 3)
-  const [fillBlankMode, setFillBlankMode] = useState<"text" | "multiple-choice">(data.fillBlankMode || "text")
-  const [fillBlankAlternatives, setFillBlankAlternatives] = useState<FillBlankAlternative[]>(
-    data.fillBlankAlternatives || [],
-  )
-  const [backgroundColor, setBackgroundColor] = useState(data.backgroundColor || "white")
+  const [isEditing, setIsEditing] = useState(!data.question && !isLoading);
+  const [question, setQuestion] = useState(data.question);
+  const [questionType, setQuestionType] = useState<QuestionType>(data.questionType || 'multiple-choice');
+  const [answers, setAnswers] = useState<QuizAnswer[]>(data.answers);
+  const [correctFeedback, setCorrectFeedback] = useState(data.correctFeedback || '');
+  const [incorrectFeedback, setIncorrectFeedback] = useState(data.incorrectFeedback || '');
+  const [allowRetry, setAllowRetry] = useState(data.allowRetry !== undefined ? data.allowRetry : true);
+  const [blanks, setBlanks] = useState<string[]>(data.blanks || []);
+  const [matchingPairs, setMatchingPairs] = useState<MatchingPair[]>(data.matchingPairs || []);
+  const [orderingItems, setOrderingItems] = useState<OrderingItem[]>(data.orderingItems || []);
+  const [ratingScale, setRatingScale] = useState(data.ratingScale || { min: 1, max: 5, step: 1 });
+  const [correctRating, setCorrectRating] = useState(data.correctRating || 3);
+  const [fillBlankMode, setFillBlankMode] = useState<'text' | 'multiple-choice'>(data.fillBlankMode || 'text');
+  const [fillBlankAlternatives, setFillBlankAlternatives] = useState<FillBlankAlternative[]>(data.fillBlankAlternatives || []);
+  const [backgroundColor, setBackgroundColor] = useState(data.backgroundColor || 'white');
 
-  const {
-    selectedAnswers,
-    setSelectedAnswers,
-    showFeedback,
-    setShowFeedback,
-    isCorrect,
-    setIsCorrect,
-    resetQuiz,
-    checkAnswers,
-    toggleAnswer,
-  } = useQuizLogic({
+  const { selectedAnswers, setSelectedAnswers, showFeedback, setShowFeedback, isCorrect, setIsCorrect, resetQuiz, checkAnswers, toggleAnswer } = useQuizLogic({
     answers: answers,
     allowRetry: allowRetry,
     correctFeedback: correctFeedback,
     incorrectFeedback: incorrectFeedback,
-  })
+  });
 
   useEffect(() => {
     if (!isEditing) {
-      resetQuiz()
+      resetQuiz();
     }
-  }, [isEditing, resetQuiz])
+  }, [isEditing, resetQuiz]);
 
   // Adicionar após os outros useEffects
   useEffect(() => {
     if (isLoading && isEditing) {
-      setIsEditing(false)
+      setIsEditing(false);
     }
-  }, [isLoading, isEditing])
+  }, [isLoading, isEditing]);
 
   const updateQuiz = (newData: Partial<QuizData>) => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
+      const node = $getNodeByKey(nodeKey);
       if (node instanceof QuizNode) {
-        node.setData({ ...data, ...newData })
+        node.setData({ ...data, ...newData });
       }
-    })
-  }
+    });
+  };
 
   const handleQuestionTypeChange = (newType: QuestionType) => {
-    setQuestionType(newType)
+    setQuestionType(newType);
 
     // Reset type-specific data when changing question type
-    const newData: Partial<QuizData> = { questionType: newType }
+    const newData: Partial<QuizData> = { questionType: newType };
 
     switch (newType) {
-      case "true-false":
+      case 'true-false':
         newData.answers = [
-          { id: "true", text: "True", isCorrect: false },
-          { id: "false", text: "False", isCorrect: false },
-        ]
-        setAnswers(newData.answers)
-        break
-      case "fill-blank":
-        newData.blanks = [""]
-        setBlanks([""])
-        newData.fillBlankAlternatives = []
-        setFillBlankAlternatives([])
-        break
-      case "matching":
-        newData.matchingPairs = [{ id: "1", left: "", right: "" }]
-        setMatchingPairs(newData.matchingPairs)
-        break
-      case "ordering":
-        newData.orderingItems = [{ id: "1", text: "", order: 1 }]
-        setOrderingItems(newData.orderingItems)
-        break
-      case "rating":
-        newData.ratingScale = { min: 1, max: 5, step: 1 }
-        newData.correctRating = 3
-        setRatingScale(newData.ratingScale)
-        setCorrectRating(3)
-        break
+          { id: 'true', text: 'True', isCorrect: false },
+          { id: 'false', text: 'False', isCorrect: false },
+        ];
+        setAnswers(newData.answers);
+        break;
+      case 'fill-blank':
+        newData.blanks = [''];
+        setBlanks(['']);
+        newData.fillBlankAlternatives = [];
+        setFillBlankAlternatives([]);
+        break;
+      case 'matching':
+        newData.matchingPairs = [{ id: '1', left: '', right: '' }];
+        setMatchingPairs(newData.matchingPairs);
+        break;
+      case 'ordering':
+        newData.orderingItems = [{ id: '1', text: '', order: 1 }];
+        setOrderingItems(newData.orderingItems);
+        break;
+      case 'rating':
+        newData.ratingScale = { min: 1, max: 5, step: 1 };
+        newData.correctRating = 3;
+        setRatingScale(newData.ratingScale);
+        setCorrectRating(3);
+        break;
       default:
         // Multiple choice and others
         if (answers.length === 0) {
           newData.answers = [
-            { id: "1", text: "", isCorrect: false },
-            { id: "2", text: "", isCorrect: false },
-          ]
-          setAnswers(newData.answers)
+            { id: '1', text: '', isCorrect: false },
+            { id: '2', text: '', isCorrect: false },
+          ];
+          setAnswers(newData.answers);
         }
     }
 
-    updateQuiz(newData)
-  }
+    updateQuiz(newData);
+  };
 
   const addAnswer = () => {
     const newAnswer: QuizAnswer = {
       id: Math.random().toString(36).substring(7),
-      text: "",
+      text: '',
       isCorrect: false,
-    }
-    const newAnswers = [...answers, newAnswer]
-    setAnswers(newAnswers)
-    updateQuiz({ answers: newAnswers })
-  }
+    };
+    const newAnswers = [...answers, newAnswer];
+    setAnswers(newAnswers);
+    updateQuiz({ answers: newAnswers });
+  };
 
   const updateAnswer = (id: string, text: string) => {
-    const newAnswers = answers.map((a) => (a.id === id ? { ...a, text } : a))
-    setAnswers(newAnswers)
-    updateQuiz({ answers: newAnswers })
-  }
+    const newAnswers = answers.map((a) => (a.id === id ? { ...a, text } : a));
+    setAnswers(newAnswers);
+    updateQuiz({ answers: newAnswers });
+  };
 
   const toggleCorrect = (id: string) => {
-    const newAnswers = answers.map((a) => (a.id === id ? { ...a, isCorrect: !a.isCorrect } : a))
-    setAnswers(newAnswers)
-    updateQuiz({ answers: newAnswers })
-  }
+    const newAnswers = answers.map((a) => (a.id === id ? { ...a, isCorrect: !a.isCorrect } : a));
+    setAnswers(newAnswers);
+    updateQuiz({ answers: newAnswers });
+  };
 
   const removeAnswer = (id: string) => {
-    const newAnswers = answers.filter((a) => a.id !== id)
-    setAnswers(newAnswers)
-    updateQuiz({ answers: newAnswers })
-  }
+    const newAnswers = answers.filter((a) => a.id !== id);
+    setAnswers(newAnswers);
+    updateQuiz({ answers: newAnswers });
+  };
 
   // Get number of blanks from question
   const getBlankCount = () => {
-    return (question.match(/___/g) || []).length
-  }
+    return (question.match(/___/g) || []).length;
+  };
 
   const addFillBlankAlternative = () => {
-    const blankCount = getBlankCount()
+    const blankCount = getBlankCount();
     const newAlternative: FillBlankAlternative = {
       id: Math.random().toString(36).substring(7),
-      words: new Array(blankCount).fill(""),
+      words: new Array(blankCount).fill(''),
       isCorrect: false,
-    }
-    const newAlternatives = [...fillBlankAlternatives, newAlternative]
-    setFillBlankAlternatives(newAlternatives)
-    updateQuiz({ fillBlankAlternatives: newAlternatives })
-  }
+    };
+    const newAlternatives = [...fillBlankAlternatives, newAlternative];
+    setFillBlankAlternatives(newAlternatives);
+    updateQuiz({ fillBlankAlternatives: newAlternatives });
+  };
 
   const updateFillBlankAlternative = (id: string, wordIndex: number, word: string) => {
     const newAlternatives = fillBlankAlternatives.map((alt) => {
       if (alt.id === id) {
-        const newWords = [...alt.words]
-        newWords[wordIndex] = word
-        return { ...alt, words: newWords }
+        const newWords = [...alt.words];
+        newWords[wordIndex] = word;
+        return { ...alt, words: newWords };
       }
-      return alt
-    })
-    setFillBlankAlternatives(newAlternatives)
-    updateQuiz({ fillBlankAlternatives: newAlternatives })
-  }
+      return alt;
+    });
+    setFillBlankAlternatives(newAlternatives);
+    updateQuiz({ fillBlankAlternatives: newAlternatives });
+  };
 
   const toggleFillBlankCorrect = (id: string) => {
     const newAlternatives = fillBlankAlternatives.map((alt) => ({
       ...alt,
       isCorrect: alt.id === id ? !alt.isCorrect : alt.isCorrect,
-    }))
-    setFillBlankAlternatives(newAlternatives)
-    updateQuiz({ fillBlankAlternatives: newAlternatives })
-  }
+    }));
+    setFillBlankAlternatives(newAlternatives);
+    updateQuiz({ fillBlankAlternatives: newAlternatives });
+  };
 
   const removeFillBlankAlternative = (id: string) => {
-    const newAlternatives = fillBlankAlternatives.filter((alt) => alt.id !== id)
-    setFillBlankAlternatives(newAlternatives)
-    updateQuiz({ fillBlankAlternatives: newAlternatives })
-  }
+    const newAlternatives = fillBlankAlternatives.filter((alt) => alt.id !== id);
+    setFillBlankAlternatives(newAlternatives);
+    updateQuiz({ fillBlankAlternatives: newAlternatives });
+  };
 
   const renderQuestionTypeEditor = () => {
     switch (questionType) {
-      case "true-false":
+      case 'true-false':
         return (
           <div className="space-y-2">
             <div className="font-semibold">Correct Answer:</div>
             <Select
-              value={answers.find((a) => a.isCorrect)?.id || ""}
+              value={answers.find((a) => a.isCorrect)?.id || ''}
               onValueChange={(value) => {
-                const newAnswers = answers.map((a) => ({ ...a, isCorrect: a.id === value }))
-                setAnswers(newAnswers)
-                updateQuiz({ answers: newAnswers })
+                const newAnswers = answers.map((a) => ({ ...a, isCorrect: a.id === value }));
+                setAnswers(newAnswers);
+                updateQuiz({ answers: newAnswers });
               }}
             >
               <SelectTrigger>
@@ -348,18 +328,18 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
               </SelectContent>
             </Select>
           </div>
-        )
+        );
 
-      case "fill-blank":
-        const blankCount = getBlankCount()
+      case 'fill-blank':
+        const blankCount = getBlankCount();
         return (
           <div className="space-y-4">
             <div className="font-semibold">Fill Mode:</div>
             <Select
               value={fillBlankMode}
-              onValueChange={(value: "text" | "multiple-choice") => {
-                setFillBlankMode(value)
-                updateQuiz({ fillBlankMode: value })
+              onValueChange={(value: 'text' | 'multiple-choice') => {
+                setFillBlankMode(value);
+                updateQuiz({ fillBlankMode: value });
               }}
             >
               <SelectTrigger>
@@ -371,7 +351,7 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
               </SelectContent>
             </Select>
 
-            {fillBlankMode === "text" && (
+            {fillBlankMode === 'text' && (
               <div className="space-y-2">
                 <div className="font-semibold">Correct Answers (use ___ in question for blanks):</div>
                 {blanks.map((blank, index) => (
@@ -380,19 +360,19 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                       placeholder={`Answer for blank ${index + 1}`}
                       value={blank}
                       onChange={(e) => {
-                        const newBlanks = [...blanks]
-                        newBlanks[index] = e.target.value
-                        setBlanks(newBlanks)
-                        updateQuiz({ blanks: newBlanks })
+                        const newBlanks = [...blanks];
+                        newBlanks[index] = e.target.value;
+                        setBlanks(newBlanks);
+                        updateQuiz({ blanks: newBlanks });
                       }}
                     />
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => {
-                        const newBlanks = blanks.filter((_, i) => i !== index)
-                        setBlanks(newBlanks)
-                        updateQuiz({ blanks: newBlanks })
+                        const newBlanks = blanks.filter((_, i) => i !== index);
+                        setBlanks(newBlanks);
+                        updateQuiz({ blanks: newBlanks });
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -403,9 +383,9 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const newBlanks = [...blanks, ""]
-                    setBlanks(newBlanks)
-                    updateQuiz({ blanks: newBlanks })
+                    const newBlanks = [...blanks, ''];
+                    setBlanks(newBlanks);
+                    updateQuiz({ blanks: newBlanks });
                   }}
                 >
                   <Plus className="mr-1 h-4 w-4" />
@@ -414,19 +394,14 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
               </div>
             )}
 
-            {fillBlankMode === "multiple-choice" && (
+            {fillBlankMode === 'multiple-choice' && (
               <div className="space-y-4">
                 <div className="font-semibold">Answer Alternatives ({blankCount} blanks detected):</div>
                 {fillBlankAlternatives.map((alternative) => (
                   <div key={alternative.id} className="border rounded-lg p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={alternative.isCorrect}
-                          onChange={() => toggleFillBlankCorrect(alternative.id)}
-                          className="rounded"
-                        />
+                        <input type="checkbox" checked={alternative.isCorrect} onChange={() => toggleFillBlankCorrect(alternative.id)} className="rounded" />
                         <Label>Correct Alternative</Label>
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => removeFillBlankAlternative(alternative.id)}>
@@ -452,15 +427,13 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                   <Plus className="mr-1 h-4 w-4" />
                   Add Alternative
                 </Button>
-                {blankCount === 0 && (
-                  <p className="text-sm text-muted-foreground">Add "___" to your question to create blanks first.</p>
-                )}
+                {blankCount === 0 && <p className="text-sm text-muted-foreground">Add "___" to your question to create blanks first.</p>}
               </div>
             )}
           </div>
-        )
+        );
 
-      case "rating":
+      case 'rating':
         return (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
@@ -470,9 +443,9 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                   type="number"
                   value={ratingScale.min}
                   onChange={(e) => {
-                    const newScale = { ...ratingScale, min: Number.parseInt(e.target.value) || 1 }
-                    setRatingScale(newScale)
-                    updateQuiz({ ratingScale: newScale })
+                    const newScale = { ...ratingScale, min: Number.parseInt(e.target.value) || 1 };
+                    setRatingScale(newScale);
+                    updateQuiz({ ratingScale: newScale });
                   }}
                 />
               </div>
@@ -482,9 +455,9 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                   type="number"
                   value={ratingScale.max}
                   onChange={(e) => {
-                    const newScale = { ...ratingScale, max: Number.parseInt(e.target.value) || 5 }
-                    setRatingScale(newScale)
-                    updateQuiz({ ratingScale: newScale })
+                    const newScale = { ...ratingScale, max: Number.parseInt(e.target.value) || 5 };
+                    setRatingScale(newScale);
+                    updateQuiz({ ratingScale: newScale });
                   }}
                 />
               </div>
@@ -496,21 +469,21 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                   min={ratingScale.min}
                   max={ratingScale.max}
                   onChange={(e) => {
-                    const rating = Number.parseInt(e.target.value) || 3
-                    setCorrectRating(rating)
-                    updateQuiz({ correctRating: rating })
+                    const rating = Number.parseInt(e.target.value) || 3;
+                    setCorrectRating(rating);
+                    updateQuiz({ correctRating: rating });
                   }}
                 />
               </div>
             </div>
           </div>
-        )
+        );
 
       default:
         // Multiple choice, short answer, essay
         return (
           <div className="space-y-2">
-            {questionType === "multiple-choice" && (
+            {questionType === 'multiple-choice' && (
               <>
                 {answers.map((answer) => (
                   <QuizAnswerItem key={answer.id}>
@@ -521,12 +494,7 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                       onChange={() => toggleCorrect(answer.id)}
                       className="h-5 w-5 rounded-full"
                     />
-                    <Input
-                      placeholder="Enter answer"
-                      value={answer.text}
-                      onChange={(e) => updateAnswer(answer.id, e.target.value)}
-                      className="flex-1"
-                    />
+                    <Input placeholder="Enter answer" value={answer.text} onChange={(e) => updateAnswer(answer.id, e.target.value)} className="flex-1" />
                     <Button variant="ghost" size="icon" onClick={() => removeAnswer(answer.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -538,24 +506,24 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                 </Button>
               </>
             )}
-            {(questionType === "short-answer" || questionType === "essay") && (
+            {(questionType === 'short-answer' || questionType === 'essay') && (
               <div>
                 <Label>Sample Answer (optional):</Label>
                 <Input
                   placeholder="Enter a sample correct answer"
-                  value={answers[0]?.text || ""}
+                  value={answers[0]?.text || ''}
                   onChange={(e) => {
-                    const newAnswers = [{ id: "1", text: e.target.value, isCorrect: true }]
-                    setAnswers(newAnswers)
-                    updateQuiz({ answers: newAnswers })
+                    const newAnswers = [{ id: '1', text: e.target.value, isCorrect: true }];
+                    setAnswers(newAnswers);
+                    updateQuiz({ answers: newAnswers });
                   }}
                 />
               </div>
             )}
           </div>
-        )
+        );
     }
-  }
+  };
 
   return (
     <>
@@ -575,9 +543,9 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
             <ContentEditMenu
               options={[
                 {
-                  id: "edit",
+                  id: 'edit',
                   icon: <Pencil className="h-4 w-4" />,
-                  label: "Edit Quiz",
+                  label: 'Edit Quiz',
                   action: () => setIsEditing(true),
                 },
               ]}
@@ -620,14 +588,8 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
 
       {/* Modal Editor - Rendered separately */}
       {isEditing && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={() => setIsEditing(false)}
-        >
-          <div
-            className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setIsEditing(false)}>
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="sticky top-0 z-10 bg-white border-b px-6 py-4 rounded-t-xl">
               <div className="flex items-center justify-between">
@@ -663,8 +625,8 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                   <Select
                     value={backgroundColor}
                     onValueChange={(value) => {
-                      setBackgroundColor(value)
-                      updateQuiz({ backgroundColor: value })
+                      setBackgroundColor(value);
+                      updateQuiz({ backgroundColor: value });
                     }}
                   >
                     <SelectTrigger>
@@ -689,8 +651,8 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                   placeholder="Enter your question"
                   value={question}
                   onChange={(e) => {
-                    setQuestion(e.target.value)
-                    updateQuiz({ question: e.target.value })
+                    setQuestion(e.target.value);
+                    updateQuiz({ question: e.target.value });
                   }}
                   className="mt-1"
                 />
@@ -710,8 +672,8 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                     placeholder="Great job!"
                     value={correctFeedback}
                     onChange={(e) => {
-                      setCorrectFeedback(e.target.value)
-                      updateQuiz({ correctFeedback: e.target.value })
+                      setCorrectFeedback(e.target.value);
+                      updateQuiz({ correctFeedback: e.target.value });
                     }}
                     className="mt-1"
                   />
@@ -722,8 +684,8 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                     placeholder="Try again!"
                     value={incorrectFeedback}
                     onChange={(e) => {
-                      setIncorrectFeedback(e.target.value)
-                      updateQuiz({ incorrectFeedback: e.target.value })
+                      setIncorrectFeedback(e.target.value);
+                      updateQuiz({ incorrectFeedback: e.target.value });
                     }}
                     className="mt-1"
                   />
@@ -737,8 +699,8 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                     id="allow-retry"
                     checked={allowRetry}
                     onCheckedChange={(checked) => {
-                      setAllowRetry(checked)
-                      updateQuiz({ allowRetry: checked })
+                      setAllowRetry(checked);
+                      updateQuiz({ allowRetry: checked });
                     }}
                   />
                   <Label htmlFor="allow-retry" className="text-sm">
@@ -754,20 +716,20 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
         </div>
       )}
     </>
-  )
+  );
 }
 
 export function $createQuizNode(): QuizNode {
   return new QuizNode({
-    question: "",
-    questionType: "multiple-choice",
+    question: '',
+    questionType: 'multiple-choice',
     answers: [
-      { id: "1", text: "", isCorrect: false },
-      { id: "2", text: "", isCorrect: false },
+      { id: '1', text: '', isCorrect: false },
+      { id: '2', text: '', isCorrect: false },
     ],
     allowRetry: true,
-    fillBlankMode: "text",
+    fillBlankMode: 'text',
     fillBlankAlternatives: [],
-    backgroundColor: "white",
-  })
+    backgroundColor: 'white',
+  });
 }

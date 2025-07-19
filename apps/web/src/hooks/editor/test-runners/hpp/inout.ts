@@ -1,17 +1,13 @@
-import type { TestCase, TestResult } from "../types"
-import { formatTestOutput } from "../utils"
+import type { TestCase, TestResult } from '../types';
+import { formatTestOutput } from '../utils';
 
 /**
  * Run input/output tests for C++ header files
  */
-export async function runHppInoutTests(
-  code: string,
-  tests: TestCase[],
-  executeCpp: (code: string) => Promise<string>,
-): Promise<TestResult[]> {
+export async function runHppInoutTests(code: string, tests: TestCase[], executeCpp: (code: string) => Promise<string>): Promise<TestResult[]> {
   // Extract function name from the header
-  const functionMatch = code.match(/\b(\w+)\s*$$[^)]*$$\s*;/)
-  const functionName = functionMatch ? functionMatch[1] : "solution"
+  const functionMatch = code.match(/\b(\w+)\s*$$[^)]*$$\s*;/);
+  const functionName = functionMatch ? functionMatch[1] : 'solution';
 
   // Create a test harness that includes the header and tests the function
   const testHarness = `
@@ -56,43 +52,43 @@ int main() {
     
     ${tests
       .map((test, index) => {
-        const { args, expected } = test
+        const { args, expected } = test;
 
         // Handle different argument types
         const argsStr = args
           .map((arg) => {
             if (Array.isArray(arg)) {
-              return `std::vector<int>{${arg.join(", ")}}`
-            } else if (typeof arg === "string") {
-              return `"${arg}"`
+              return `std::vector<int>{${arg.join(', ')}}`;
+            } else if (typeof arg === 'string') {
+              return `"${arg}"`;
             } else {
-              return arg
+              return arg;
             }
           })
-          .join(", ")
+          .join(', ');
 
         // Handle different expected return types
-        let expectedStr
-        let comparisonCode
+        let expectedStr;
+        let comparisonCode;
 
         if (Array.isArray(expected)) {
-          expectedStr = `std::vector<int>{${expected.join(", ")}}`
+          expectedStr = `std::vector<int>{${expected.join(', ')}}`;
           comparisonCode = `
         bool passed = compareVectors(result, ${expectedStr});
         std::string resultStr = vectorToString(result);
-        std::string expectedStr = vectorToString(${expectedStr});`
-        } else if (typeof expected === "string") {
-          expectedStr = `"${expected}"`
+        std::string expectedStr = vectorToString(${expectedStr});`;
+        } else if (typeof expected === 'string') {
+          expectedStr = `"${expected}"`;
           comparisonCode = `
         bool passed = (result == ${expectedStr});
         std::string resultStr = result;
-        std::string expectedStr = ${expectedStr};`
+        std::string expectedStr = ${expectedStr};`;
         } else {
-          expectedStr = expected
+          expectedStr = expected;
           comparisonCode = `
         bool passed = (result == ${expectedStr});
         std::string resultStr = std::to_string(result);
-        std::string expectedStr = std::to_string(${expectedStr});`
+        std::string expectedStr = std::to_string(${expectedStr});`;
         }
 
         return `
@@ -114,31 +110,31 @@ int main() {
         testResult["actual"] = "Error";
         testResult["error"] = e.what();
         results.push_back(testResult);
-    }`
+    }`;
       })
-      .join("\n")}
+      .join('\n')}
     
     std::cout << results.dump(2) << std::endl;
     std::cout << "TEST_RESULTS_END" << std::endl;
     return 0;
 }
-`
+`;
 
   try {
     // Execute the test harness
-    const output = await executeCpp(testHarness)
+    const output = await executeCpp(testHarness);
 
     // Parse the test results
-    const resultsMatch = output.match(/TEST_RESULTS_START\s*([\s\S]*?)\s*TEST_RESULTS_END/)
+    const resultsMatch = output.match(/TEST_RESULTS_START\s*([\s\S]*?)\s*TEST_RESULTS_END/);
     if (!resultsMatch) {
       return tests.map(() => ({
         passed: false,
-        error: "Failed to parse test results",
-      }))
+        error: 'Failed to parse test results',
+      }));
     }
 
-    const resultsJson = resultsMatch[1].trim()
-    const results = JSON.parse(resultsJson)
+    const resultsJson = resultsMatch[1].trim();
+    const results = JSON.parse(resultsJson);
 
     return results.map((result: any, index: number) => ({
       passed: result.passed,
@@ -146,11 +142,11 @@ int main() {
       actual: result.actual,
       error: result.error,
       output: formatTestOutput(tests[index], result),
-    }))
+    }));
   } catch (error) {
     return tests.map(() => ({
       passed: false,
       error: error instanceof Error ? error.message : String(error),
-    }))
+    }));
   }
 }

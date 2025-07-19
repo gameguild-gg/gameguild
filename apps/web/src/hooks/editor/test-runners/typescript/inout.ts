@@ -1,13 +1,12 @@
-import type { TestRunner, TestRunnerOptions } from "../types"
-import { getExecutor } from "../../executors/executor-factory"
-import type { ExecutionContext } from "../../executors/types"
+import type { TestRunner, TestRunnerOptions } from '../types';
+import { getExecutor } from '../../executors/executor-factory';
+import type { ExecutionContext } from '../../executors/types';
 
 /**
  * Run In/Out tests for TypeScript
  */
 export const runInOutTestsTypeScript: TestRunner = async (options: TestRunnerOptions) => {
-  const { fileId, file, fileCases, files, selectedLanguage, addOutput, clearTerminal, setIsExecuting, setTestResults } =
-    options
+  const { fileId, file, fileCases, files, selectedLanguage, addOutput, clearTerminal, setIsExecuting, setTestResults } = options;
 
   // Create a modified file with the TypeScript test harness prepended
   const testHarnessCode = `
@@ -22,17 +21,17 @@ interface TestCase {
 // Tests based on user-defined test cases
 const functionCodingTests = {
   publicTests: [
-`
+`;
 
   // Build the test cases array manually to avoid JSON serialization issues
-  let testCasesCode = ""
+  let testCasesCode = '';
   fileCases.forEach((test, index) => {
-    const isLast = index === fileCases.length - 1
+    const isLast = index === fileCases.length - 1;
     testCasesCode += `    {
       args: ${JSON.stringify(test.args || [])},
       expectedReturn: ${JSON.stringify(test.expectedReturn || [])}
-    }${isLast ? "" : ","}\n`
-  })
+    }${isLast ? '' : ','}\n`;
+  });
 
   const testHarnessCode2 = `
   ]
@@ -77,13 +76,13 @@ setTimeout(() => {
 }, 0);
 
 // User code:
-`
+`;
 
   // Get the file content
-  let userCode = file.languageContent?.[selectedLanguage] || file.content || ""
+  let userCode = file.languageContent?.[selectedLanguage] || file.content || '';
 
   // Ensure it has a solution function template if not already present
-  if (!userCode.includes("function solution")) {
+  if (!userCode.includes('function solution')) {
     userCode += `
 // Define your solution function here
 function solution(array: any[]): any {
@@ -91,11 +90,11 @@ function solution(array: any[]): any {
   // array is the entire input array
   return [];
 }
-`
+`;
   }
 
   // Create modified file with test harness
-  const fullTestHarness = testHarnessCode + testCasesCode + testHarnessCode2
+  const fullTestHarness = testHarnessCode + testCasesCode + testHarnessCode2;
   const modifiedFile = {
     ...file,
     content: fullTestHarness + userCode,
@@ -103,16 +102,16 @@ function solution(array: any[]): any {
       ...file.languageContent,
       [selectedLanguage]: fullTestHarness + userCode,
     },
-  }
+  };
 
   // Create a file collection with the modified file
-  const modifiedFiles = files.map((f) => (f.id === fileId ? modifiedFile : f))
+  const modifiedFiles = files.map((f) => (f.id === fileId ? modifiedFile : f));
 
   // Get the appropriate executor
-  const executor = getExecutor(selectedLanguage)
+  const executor = getExecutor(selectedLanguage);
 
   // Capture test output
-  let testOutput: string[] = []
+  let testOutput: string[] = [];
 
   // Create execution context
   const context: ExecutionContext = {
@@ -120,68 +119,65 @@ function solution(array: any[]): any {
     selectedLanguage,
     addOutput: (output) => {
       if (Array.isArray(output)) {
-        testOutput = [...testOutput, ...output]
+        testOutput = [...testOutput, ...output];
       } else {
-        testOutput = [...testOutput, output]
+        testOutput = [...testOutput, output];
       }
-      addOutput(output)
+      addOutput(output);
     },
     clearTerminal,
     setIsExecuting,
-  }
+  };
 
   try {
     // Execute the code with the test harness
-    await executor.execute(fileId, context)
+    await executor.execute(fileId, context);
 
     // Parse the output to extract test results
-    const outputText = testOutput.join("\n")
+    const outputText = testOutput.join('\n');
 
     // Process each test case
     fileCases.forEach((testCase, index) => {
       // Look for test result in the output
-      const testPattern = new RegExp(
-        `Test #${index + 1}: (✓ PASS|✗ (FAIL|ERROR))([\\s\\S]*?)(?=Test #${index + 2}:|$)`,
-        "g",
-      )
-      const match = testPattern.exec(outputText)
+      const testPattern = new RegExp(`Test #${index + 1}: (✓ PASS|✗ (FAIL|ERROR))([\\s\\S]*?)(?=Test #${index + 2}:|$)`, 'g');
+      const match = testPattern.exec(outputText);
 
       if (match) {
-        const passed = match[1].includes("PASS")
-        const resultText = match[0]
+        const passed = match[1].includes('PASS');
+        const resultText = match[0];
 
         // Update test results
         setTestResults((prev) => {
-          const fileResults = [...(prev[fileId] || [])]
+          const fileResults = [...(prev[fileId] || [])];
           fileResults[index] = {
             passed,
             actual: resultText,
             expected: JSON.stringify(testCase.expectedReturn || []),
-          }
+          };
           return {
             ...prev,
             [fileId]: fileResults,
-          }
-        })
+          };
+        });
       } else {
         // No match found, mark as failed
         setTestResults((prev) => {
-          const fileResults = [...(prev[fileId] || [])]
+          const fileResults = [...(prev[fileId] || [])];
           fileResults[index] = {
             passed: false,
-            actual: "Test execution failed or output format invalid",
+            actual: 'Test execution failed or output format invalid',
             expected: JSON.stringify(testCase.expectedReturn || []),
-          }
+          };
           return {
             ...prev,
             [fileId]: fileResults,
-          }
-        })
+          };
+        });
       }
-    })
+    });
   } catch (error) {
-    console.error(`Function test execution error:`, error)
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    addOutput(`Error: ${errorMessage}`)
+    console.error(`Function test execution error:`, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    addOutput(`Error: ${errorMessage}`);
   }
-}
+};

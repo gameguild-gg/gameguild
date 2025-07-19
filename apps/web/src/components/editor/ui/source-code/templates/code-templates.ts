@@ -1,4 +1,4 @@
-import type { ProgrammingLanguage } from "../types"
+import type { ProgrammingLanguage } from '../types';
 
 // Export all template constants
 export const DEFAULT_FIRST_CODE_TEMPLATES: Record<ProgrammingLanguage, string> = {
@@ -145,7 +145,7 @@ void assertEquals(const T& actual, const T& expected, const std::string& message
 template<typename T>
 void assertArrayEquals(const std::vector<T>& actual, const std::vector<T>& expected, const std::string& message = "");
 `,
-}
+};
 
 export const DEFAULT_SECOND_CODE_TEMPLATES: Record<ProgrammingLanguage, string> = {
   javascript: `// Function test validation code
@@ -251,7 +251,7 @@ int main() {
     return 0;
 }
 `,
-}
+};
 
 // Add the new function test templates as exports
 export const FUNCTION_FIRST_CODE_TEMPLATES: Record<ProgrammingLanguage, string> = {
@@ -398,7 +398,7 @@ void assertEquals(const T& actual, const T& expected, const std::string& message
 template<typename T>
 void assertArrayEquals(const std::vector<T>& actual, const std::vector<T>& expected, const std::string& message = "");
 `,
-}
+};
 
 export const FUNCTION_SECOND_CODE_TEMPLATES: Record<ProgrammingLanguage, string> = {
   javascript: `// Function test validation code
@@ -504,28 +504,28 @@ int main() {
     return 0;
 }
 `,
-}
+};
 
 // Keep the existing getExtensionForSelectedLanguage function as export
 export const getExtensionForSelectedLanguage = (language: ProgrammingLanguage): string => {
   switch (language) {
-    case "javascript":
-      return ".js"
-    case "typescript":
-      return ".ts"
-    case "python":
-      return ".py"
-    case "lua":
-      return ".lua"
-    case "c":
-      return ".c"
-    case "cpp":
-      return ".cpp"
-    case "h":
-      return ".h"
-    case "hpp":
-      return ".hpp"
+    case 'javascript':
+      return '.js';
+    case 'typescript':
+      return '.ts';
+    case 'python':
+      return '.py';
+    case 'lua':
+      return '.lua';
+    case 'c':
+      return '.c';
+    case 'cpp':
+      return '.cpp';
+    case 'h':
+      return '.h';
+    case 'hpp':
+      return '.hpp';
     default:
-      return ".txt"
+      return '.txt';
   }
-}
+};

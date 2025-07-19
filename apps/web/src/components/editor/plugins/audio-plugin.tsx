@@ -1,17 +1,17 @@
-"use client"
+'use client';
 
-import { useEffect } from "react"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { $insertNodes } from "lexical"
-import { INSERT_AUDIO_COMMAND } from "./floating-content-insert-plugin"
-import { $createAudioNode } from "../nodes/audio-node"
-import type { AudioData } from "../nodes/audio-node"
+import { useEffect } from 'react';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { $insertNodes } from 'lexical';
+import { INSERT_AUDIO_COMMAND } from './floating-content-insert-plugin';
+import { $createAudioNode } from '../nodes/audio-node';
+import type { AudioData } from '../nodes/audio-node';
 
 export function AudioPlugin() {
-  const [editor] = useLexicalComposerContext()
+  const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
-    if (!editor) return
+    if (!editor) return;
 
     return editor.registerCommand(
       INSERT_AUDIO_COMMAND,
@@ -21,14 +21,14 @@ export function AudioPlugin() {
           const audioNode = $createAudioNode({
             ...payload,
             isNew: true, // Este flag será usado para mostrar o controle de tamanho automaticamente
-          })
-          $insertNodes([audioNode])
-        })
-        return true
+          });
+          $insertNodes([audioNode]);
+        });
+        return true;
       },
       1,
-    )
-  }, [editor])
+    );
+  }, [editor]);
 
-  return null
+  return null;
 }
