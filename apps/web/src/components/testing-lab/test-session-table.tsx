@@ -7,6 +7,8 @@ import { Calendar, Clock, Users, Gamepad2, Monitor, Star, Trophy } from 'lucide-
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { RewardChip } from './reward-chip';
+import { LocationChip } from './location-chip';
 
 interface TestSessionTableProps {
   sessions: TestSession[];
@@ -52,11 +54,13 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
           <thead className="bg-slate-800/50 border-b border-slate-700">
             <tr>
               <th className="text-left p-4 text-sm font-medium text-slate-300">Session</th>
+              <th className="text-center p-4 text-sm font-medium text-slate-300">Location</th>
               <th className="text-right p-4 text-sm font-medium text-slate-300">Date & Time</th>
               <th className="text-right p-4 text-sm font-medium text-slate-300">Duration</th>
               <th className="text-right p-4 text-sm font-medium text-slate-300">Capacity</th>
               <th className="text-left p-4 text-sm font-medium text-slate-300">Type</th>
               <th className="text-left p-4 text-sm font-medium text-slate-300">Platform</th>
+              <th className="text-left p-4 text-sm font-medium text-slate-300">Reward</th>
               <th className="text-center p-4 text-sm font-medium text-slate-300">Status</th>
               <th className="text-left p-4 text-sm font-medium text-slate-300">Action</th>
             </tr>
@@ -64,10 +68,9 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
           <tbody>
             {sessions.map((session) => {
               const sessionDate = new Date(session.sessionDate);
-              const spotsLeft = session.maxTesters - session.currentTesters;
-              
+
               return (
-                <tr 
+                <tr
                   key={session.id}
                   className="border-b border-slate-700/50 hover:bg-slate-800/30 cursor-pointer transition-colors"
                   onClick={() => handleRowClick(session.slug)}
@@ -75,10 +78,11 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
                   <td className="p-4">
                     <div>
                       <div className="font-medium text-white text-sm">{session.title}</div>
-                      <div className="text-xs text-slate-400 mt-1 max-w-xs truncate">
-                        {session.description}
-                      </div>
+                      <div className="text-xs text-slate-400 mt-1 max-w-xs truncate">{session.description}</div>
                     </div>
+                  </td>
+                  <td className="p-4 text-center">
+                    <LocationChip isOnline={session.isOnline} variant="inline" />
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex flex-col items-end gap-1">
@@ -99,11 +103,15 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
                     <div className="flex flex-col items-end gap-1">
                       <div className="flex items-center gap-2 text-slate-300 text-sm">
                         <Users className="h-3 w-3" />
-                        <span>{session.currentTesters}/{session.maxTesters}</span>
+                        <span>
+                          {session.currentTesters}/{session.maxTesters}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 text-slate-300 text-sm">
                         <Gamepad2 className="h-3 w-3" />
-                        <span>{session.currentGames}/{session.maxGames}</span>
+                        <span>
+                          {session.currentGames}/{session.maxGames}
+                        </span>
                       </div>
                     </div>
                   </td>
@@ -116,23 +124,19 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
                   <td className="p-4">
                     <div className="flex flex-wrap gap-1">
                       {session.platform.slice(0, 2).map((platform) => (
-                        <Badge 
-                          key={platform} 
-                          variant="secondary" 
-                          className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs px-1.5 py-0.5"
-                        >
+                        <Badge key={platform} variant="secondary" className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs px-1.5 py-0.5">
                           {platform}
                         </Badge>
                       ))}
                       {session.platform.length > 2 && (
-                        <Badge 
-                          variant="secondary" 
-                          className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs px-1.5 py-0.5"
-                        >
+                        <Badge variant="secondary" className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs px-1.5 py-0.5">
                           +{session.platform.length - 2}
                         </Badge>
                       )}
                     </div>
+                  </td>
+                  <td className="p-4">
+                    {session.rewards ? <RewardChip value={session.rewards.value} variant="inline" /> : <span className="text-slate-500 text-xs">-</span>}
                   </td>
                   <td className="p-4 text-center">
                     <div className="flex justify-center">
@@ -144,8 +148,8 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
                   <td className="p-4">
                     <div onClick={(e) => e.stopPropagation()}>
                       {session.status === 'open' ? (
-                        <Button 
-                          asChild 
+                        <Button
+                          asChild
                           size="sm"
                           className="bg-gradient-to-r from-blue-600/30 to-blue-500/30 backdrop-blur-md border border-blue-400/40 text-white hover:from-blue-600/90 hover:to-blue-500/90 hover:border-blue-300/90 font-semibold transition-all duration-200 text-xs"
                         >

@@ -16,6 +16,7 @@ export interface TestSession {
   sessionType: 'gameplay' | 'usability' | 'feedback' | 'bug-testing';
   platform: string[];
   skillLevel: 'beginner' | 'intermediate' | 'advanced' | 'any';
+  isOnline: boolean; // true for online sessions, false for on-site sessions
   rewards?: {
     type: 'credits' | 'certificate' | 'game-key' | 'feedback';
     value: string;
@@ -25,7 +26,7 @@ export interface TestSession {
 // Mock data for now - in production this would fetch from your API
 export async function getAvailableTestSessions(): Promise<TestSession[]> {
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, 100));
 
   return [
     {
@@ -46,6 +47,7 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       sessionType: 'gameplay',
       platform: ['PC', 'Steam'],
       skillLevel: 'intermediate',
+      isOnline: true,
       rewards: {
         type: 'credits',
         value: '50 testing credits',
@@ -69,6 +71,7 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       sessionType: 'usability',
       platform: ['iOS', 'Android'],
       skillLevel: 'any',
+      isOnline: false,
       rewards: {
         type: 'certificate',
         value: 'UX Testing Certificate',
@@ -92,6 +95,7 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       sessionType: 'gameplay',
       platform: ['PC', 'PlayStation', 'Xbox'],
       skillLevel: 'advanced',
+      isOnline: true,
       rewards: {
         type: 'game-key',
         value: 'Free game copy on release',
@@ -115,6 +119,7 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       sessionType: 'usability',
       platform: ['PC', 'PlayStation', 'Xbox'],
       skillLevel: 'any',
+      isOnline: false,
       rewards: {
         type: 'feedback',
         value: 'Developer feedback session',
@@ -138,6 +143,7 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       sessionType: 'bug-testing',
       platform: ['PC'],
       skillLevel: 'intermediate',
+      isOnline: true,
       rewards: {
         type: 'credits',
         value: '75 testing credits + Bug bounty',
