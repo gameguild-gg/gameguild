@@ -135,7 +135,7 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
         </div>
 
         {/* Filters, Search & View Toggle */}
-        <div className="space-y-6 mb-8">
+        <div className="space-y-3 mb-8">
           {/* Search and Filter Controls */}
           <div className="flex items-center justify-between gap-6">
             {/* Left Side - Search Bar */}
@@ -165,11 +165,11 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                     style={
                       selectedStatuses.length === 0
                         ? {
-                            background: 'radial-gradient(ellipse 120% 60% at center, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.6) 100%)',
+                            background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                             boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                           }
                         : {
-                            background: 'radial-gradient(ellipse 120% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                            background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                             boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                           }
                     }
@@ -250,11 +250,11 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                     style={
                       selectedSessionTypes.length === 0
                         ? {
-                            background: 'radial-gradient(ellipse 120% 60% at center, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.6) 100%)',
+                            background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                             boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                           }
                         : {
-                            background: 'radial-gradient(ellipse 120% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                            background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                             boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                           }
                     }
@@ -347,11 +347,11 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                         style={
                           viewMode === 'cards'
                             ? {
-                                background: 'radial-gradient(ellipse 120% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                                background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                               }
                             : {
-                                background: 'radial-gradient(ellipse 120% 60% at center, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.6) 100%)',
+                                background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                               }
                         }
@@ -377,11 +377,11 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                         style={
                           viewMode === 'row'
                             ? {
-                                background: 'radial-gradient(ellipse 120% 60% at center, rgba(147, 51, 234, 0.4) 0%, rgba(126, 34, 206, 0.3) 50%, rgba(107, 33, 168, 0.2) 100%)',
+                                background: 'radial-gradient(ellipse 80% 60% at center, rgba(147, 51, 234, 0.4) 0%, rgba(126, 34, 206, 0.3) 50%, rgba(107, 33, 168, 0.2) 100%)',
                                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(147, 51, 234, 0.2)',
                               }
                             : {
-                                background: 'radial-gradient(ellipse 120% 60% at center, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.6) 100%)',
+                                background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                               }
                         }
@@ -407,11 +407,11 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                         style={
                           viewMode === 'table'
                             ? {
-                                background: 'radial-gradient(ellipse 120% 60% at center, rgba(34, 197, 94, 0.4) 0%, rgba(22, 163, 74, 0.3) 50%, rgba(21, 128, 61, 0.2) 100%)',
+                                background: 'radial-gradient(ellipse 80% 60% at center, rgba(34, 197, 94, 0.4) 0%, rgba(22, 163, 74, 0.3) 50%, rgba(21, 128, 61, 0.2) 100%)',
                                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(34, 197, 94, 0.2)',
                               }
                             : {
-                                background: 'radial-gradient(ellipse 120% 60% at center, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.6) 100%)',
+                                background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                               }
                         }
@@ -428,25 +428,12 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
             </div>
           </div>
 
-          {/* Clear Filters Button */}
+          {/* Active Filters with Results Count - Only show when filters are applied */}
           {hasActiveFilters && (
-            <div className="flex justify-center">
-              <Button
-                variant="ghost"
-                size="default"
-                onClick={clearFilters}
-                className="text-slate-400 hover:text-slate-200 text-sm bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/50 rounded-xl hover:border-blue-400/60 transition-all duration-200 h-10 px-3"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Clear Filters
-              </Button>
-            </div>
-          )}
-
-          {/* Active Filters Display */}
-          {hasActiveFilters && (
-            <div className="flex flex-wrap items-center gap-2 pt-2">
-              <span className="text-sm text-slate-400">Active filters:</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-slate-400">
+                Showing {filteredSessions.length} of {testSessions.length} sessions in total, filtered by:
+              </span>
               {searchTerm && (
                 <div className="bg-blue-500/20 border border-blue-400/30 rounded-full px-3 py-1 text-blue-300 text-xs flex items-center gap-2">
                   Search: &quot;{searchTerm}&quot;
@@ -471,15 +458,6 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                   </button>
                 </div>
               ))}
-            </div>
-          )}
-
-          {/* Results Count - Only show when filters are applied */}
-          {hasActiveFilters && (
-            <div className="text-center">
-              <p className="text-slate-400 text-sm">
-                Showing {filteredSessions.length} of {testSessions.length} sessions
-              </p>
             </div>
           )}
         </div>
