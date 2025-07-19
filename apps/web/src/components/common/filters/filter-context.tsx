@@ -212,7 +212,7 @@ const defaultState: BaseFilterState = {
   selectedStatuses: [],
   selectedTypes: [],
   selectedFilters: {},
-  selectedPeriod: 'week',
+  selectedPeriod: 'month',
   viewMode: 'cards',
 };
 

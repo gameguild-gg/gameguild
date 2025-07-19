@@ -14,26 +14,22 @@ interface PeriodOption {
 }
 
 interface PeriodSelectorProps {
-  startDate?: string;
-  endDate?: string;
   selectedPeriod: string;
   onPeriodChange?: (period: string) => void;
-  onDateRangeChange?: (startDate: string, endDate: string) => void;
   className?: string;
 }
 
-export function PeriodSelector({
-  startDate = '24-04-2023',
-  endDate = '01-01-2024',
-  selectedPeriod,
-  onPeriodChange,
-  onDateRangeChange,
-  className,
-}: PeriodSelectorProps) {
-  const [currentWeekStart, setCurrentWeekStart] = React.useState(32);
-  const [currentMonthStart, setCurrentMonthStart] = React.useState(0);
-  const [currentYearStart, setCurrentYearStart] = React.useState(2023);
-  const [currentDayStart, setCurrentDayStart] = React.useState(new Date(2023, 3, 24));
+export function PeriodSelector({ selectedPeriod, onPeriodChange, className }: PeriodSelectorProps) {
+  // Get current date and calculate proper defaults
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+  const currentWeek = Math.ceil(currentDate.getDate() / 7); // Simple week calculation
+  
+  const [currentWeekStart, setCurrentWeekStart] = React.useState(currentWeek);
+  const [currentMonthStart, setCurrentMonthStart] = React.useState(currentMonth);
+  const [currentYearStart, setCurrentYearStart] = React.useState(currentYear);
+  const [currentDayStart, setCurrentDayStart] = React.useState(currentDate);
 
   const periods = [
     { label: 'W', value: 'week', tooltip: 'Week' },
@@ -42,24 +38,24 @@ export function PeriodSelector({
     { label: 'Y', value: 'year', tooltip: 'Year' },
   ];
 
-  const generateWeeks = (start: number): PeriodOption[] => {
+  const generateWeeks = React.useCallback((start: number): PeriodOption[] => {
     return Array.from({ length: 3 }, (_, index) => {
       const weekNumber = start + index;
       return {
         label: `Week ${weekNumber}`,
         value: weekNumber.toString(),
-        year: '2023',
+        year: currentYear.toString(),
         selected: index === 0,
       };
     });
-  };
+  }, [currentYear]);
 
   const allMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-  const generateMonths = (start: number): PeriodOption[] => {
+  const generateMonths = React.useCallback((start: number): PeriodOption[] => {
     return Array.from({ length: 3 }, (_, index) => {
       const monthIndex = (start + index) % 12;
-      const year = 2023 + Math.floor((start + index) / 12);
+      const year = currentYear + Math.floor((start + index) / 12);
       return {
         label: allMonths[monthIndex],
         value: (monthIndex + 1).toString().padStart(2, '0'),
@@ -67,9 +63,9 @@ export function PeriodSelector({
         selected: index === 0,
       };
     });
-  };
+  }, [currentYear]);
 
-  const generateYears = (start: number): PeriodOption[] => {
+  const generateYears = React.useCallback((start: number): PeriodOption[] => {
     return Array.from({ length: 3 }, (_, index) => {
       const year = start + index;
       return {
@@ -78,9 +74,9 @@ export function PeriodSelector({
         selected: index === 0,
       };
     });
-  };
+  }, []);
 
-  const generateDays = (start: Date): PeriodOption[] => {
+  const generateDays = React.useCallback((start: Date): PeriodOption[] => {
     return Array.from({ length: 3 }, (_, index) => {
       const day = new Date(start);
       day.setDate(day.getDate() + index);
@@ -91,9 +87,9 @@ export function PeriodSelector({
         selected: index === 0,
       };
     });
-  };
+  }, []);
 
-  const generateQuarters = (startYear: number): PeriodOption[] => {
+  const generateQuarters = React.useCallback((startYear: number): PeriodOption[] => {
     const quarters = [];
     for (let yearOffset = 0; yearOffset < 2; yearOffset++) {
       const year = startYear + yearOffset;
@@ -107,7 +103,7 @@ export function PeriodSelector({
       }
     }
     return quarters.slice(0, 6); // Show 6 quarters (1.5 years worth)
-  };
+  }, []);
 
   const weeks = React.useMemo(() => generateWeeks(currentWeekStart), [currentWeekStart]);
   const months = React.useMemo(() => generateMonths(currentMonthStart), [currentMonthStart]);
@@ -229,14 +225,20 @@ export function PeriodSelector({
 }
 
 function PeriodRow({ options, onNext, onPrev }: { options: PeriodOption[]; onNext?: () => void; onPrev?: () => void }) {
+  // Always select the first option by default
   const [activeIndex, setActiveIndex] = React.useState(0);
+
+  // Reset active index when options change (important for navigation)
+  React.useEffect(() => {
+    setActiveIndex(0);
+  }, [options]);
 
   const handleNext = () => {
     if (activeIndex < options.length - 1) {
       setActiveIndex(activeIndex + 1);
     } else if (onNext) {
-      onNext();
-      setActiveIndex(0);
+      onNext(); // This will generate new options
+      // activeIndex will be reset to 0 by useEffect when options change
     }
   };
 
@@ -244,20 +246,19 @@ function PeriodRow({ options, onNext, onPrev }: { options: PeriodOption[]; onNex
     if (activeIndex > 0) {
       setActiveIndex(activeIndex - 1);
     } else if (onPrev) {
-      onPrev();
-      setActiveIndex(options.length - 1);
+      onPrev(); // This will generate new options
+      // We need to set activeIndex to the last option of the new set
+      // This will be handled by useEffect, but we need to set it after options update
+      React.startTransition(() => {
+        setActiveIndex(2); // Since we show 3 options, last one is index 2
+      });
     }
   };
 
-  // Calculate visible options (show 3 at a time)
+  // Calculate visible options (show all available options, up to 3)
   const visibleOptions = React.useMemo(() => {
-    // If active index is at the beginning, show first 3
-    if (activeIndex <= 0) return options.slice(0, 3);
-    // If active index is near the end, show last 3
-    if (activeIndex >= options.length - 1) return options.slice(-3);
-    // Otherwise show the active one with 1 on each side
-    return options.slice(Math.max(0, activeIndex - 1), Math.min(options.length, activeIndex + 2));
-  }, [activeIndex, options]);
+    return options.slice(0, Math.min(3, options.length));
+  }, [options]);
 
   return (
     <div className="flex items-center gap-2 flex-1">
@@ -270,7 +271,8 @@ function PeriodRow({ options, onNext, onPrev }: { options: PeriodOption[]; onNex
             size="default"
             className="backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50 transition-all duration-200 h-10 w-10 p-0 rounded-l-xl rounded-r-none border-r-0"
             style={{
-              background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+              background:
+                'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
               boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
             }}
             onClick={handlePrev}
@@ -281,18 +283,17 @@ function PeriodRow({ options, onNext, onPrev }: { options: PeriodOption[]; onNex
 
         {/* Range Options - Connected */}
         {visibleOptions.map((option, index) => {
-          const optionIndex = options.indexOf(option);
           const isFirst = index === 0 && !onPrev;
           const isLast = index === visibleOptions.length - 1 && !onNext;
           const isOnlyButton = visibleOptions.length === 1 && !onPrev && !onNext;
-          
+
           return (
             <Button
-              key={optionIndex}
+              key={`${option.value}-${option.year || ''}`}
               variant="ghost"
               size="default"
               className={`${
-                optionIndex === activeIndex
+                index === activeIndex
                   ? 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20'
                   : 'backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
               } transition-all duration-200 flex h-10 w-20 flex-col p-0 items-center justify-center gap-0.5 ${
@@ -305,20 +306,22 @@ function PeriodRow({ options, onNext, onPrev }: { options: PeriodOption[]; onNex
                       : 'rounded-none border-x-0'
               }`}
               style={
-                optionIndex === activeIndex
+                index === activeIndex
                   ? {
-                      background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                      background:
+                        'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                       boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                     }
                   : {
-                      background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                      background:
+                        'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                       boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                     }
               }
-              onClick={() => setActiveIndex(optionIndex)}
+              onClick={() => setActiveIndex(index)}
             >
               {option.year && (
-                <span className={`text-[9px] truncate leading-none ${optionIndex === activeIndex ? 'text-white' : 'text-slate-500'}`}>{option.year}</span>
+                <span className={`text-[9px] truncate leading-none ${index === activeIndex ? 'text-white' : 'text-slate-500'}`}>{option.year}</span>
               )}
               <span className="text-sm font-medium truncate leading-none">{option.label}</span>
             </Button>
@@ -332,7 +335,8 @@ function PeriodRow({ options, onNext, onPrev }: { options: PeriodOption[]; onNex
             size="default"
             className="backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50 transition-all duration-200 h-10 w-10 p-0 rounded-r-xl rounded-l-none border-l-0"
             style={{
-              background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+              background:
+                'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
               boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
             }}
             onClick={handleNext}
