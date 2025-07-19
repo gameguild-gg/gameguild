@@ -213,7 +213,7 @@ export function FloatingIcons() {
           direction: randomDirection,
           color: randomColorScheme.color,
           glowColor: randomColorScheme.glowColor,
-          size: 8 + Math.random() * 8, // Random size between 8 and 16 (size-8 to size-16)
+          size: 4 + Math.random() * 4, // Random size between 4 and 8 (16px to 32px actual size)
         });
       }
 
