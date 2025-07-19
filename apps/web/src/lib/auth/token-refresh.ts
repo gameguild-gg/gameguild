@@ -49,6 +49,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRef
     const tokenPrefix = refreshToken?.length > 20 ? refreshToken.substring(0, 20) : (refreshToken ?? 'null');
     console.log('🔄 [TOKEN REFRESH] Attempting token refresh with token:', `${tokenPrefix}...`);
     console.log('🔄 [TOKEN REFRESH] Full token length:', refreshToken.length);
+    console.log('🔄 [TOKEN REFRESH] API Base URL:', process.env.NEXT_PUBLIC_API_URL);
     
     const response = await apiClient.refreshToken({
       refreshToken,

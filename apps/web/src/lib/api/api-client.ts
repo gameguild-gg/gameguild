@@ -18,14 +18,46 @@ class ApiClient {
       ...options,
     };
 
-    const response = await fetch(url, config);
+    console.log('🌐 [API CLIENT] Making request:', {
+      url,
+      method: options.method || 'GET',
+      hasBody: !!options.body,
+      baseUrl: this.baseUrl,
+    });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    try {
+      const response = await fetch(url, config);
+
+      console.log('🌐 [API CLIENT] Response received:', {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
+        console.error('🌐 [API CLIENT] Request failed:', {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          errorData,
+          errorMessage,
+        });
+        throw new Error(errorMessage);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('🌐 [API CLIENT] Request error:', {
+        url,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        cause: (error as any)?.cause,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
     }
-
-    return response.json();
   }
 
   // Auth endpoints
