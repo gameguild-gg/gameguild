@@ -115,11 +115,7 @@ export function TestSessionCard({ session }: TestSessionCardProps) {
           {/* Platform Tags */}
           <div className="flex flex-wrap gap-2">
             {session.platform.map((platform) => (
-              <Badge
-                key={platform}
-                variant="secondary"
-                className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs"
-              >
+              <Badge key={platform} variant="secondary" className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs">
                 {platform}
               </Badge>
             ))}

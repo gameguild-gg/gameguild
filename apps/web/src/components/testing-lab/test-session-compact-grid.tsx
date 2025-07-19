@@ -50,7 +50,7 @@ export function TestSessionCompactGrid({ sessions }: TestSessionCompactGridProps
       {sessions.map((session) => {
         const sessionDate = new Date(session.sessionDate);
         const spotsLeft = session.maxTesters - session.currentTesters;
-        
+
         return (
           <div
             key={session.id}
@@ -65,9 +65,7 @@ export function TestSessionCompactGrid({ sessions }: TestSessionCompactGridProps
             </div>
 
             {/* Title */}
-            <h3 className="font-semibold text-white text-sm mb-2 line-clamp-2 leading-tight">
-              {session.title}
-            </h3>
+            <h3 className="font-semibold text-white text-sm mb-2 line-clamp-2 leading-tight">{session.title}</h3>
 
             {/* Game Info */}
             <div className="mb-3">
@@ -87,7 +85,9 @@ export function TestSessionCompactGrid({ sessions }: TestSessionCompactGridProps
               </div>
               <div className="flex items-center gap-2 text-slate-400">
                 <Users className="h-3 w-3" />
-                <span>{session.currentTesters}/{session.maxTesters}</span>
+                <span>
+                  {session.currentTesters}/{session.maxTesters}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-slate-400">
                 {getSessionTypeIcon(session.sessionType)}
@@ -98,19 +98,12 @@ export function TestSessionCompactGrid({ sessions }: TestSessionCompactGridProps
             {/* Platform Tags */}
             <div className="flex flex-wrap gap-1 mb-3">
               {session.platform.slice(0, 2).map((platform) => (
-                <Badge 
-                  key={platform} 
-                  variant="secondary" 
-                  className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs px-1 py-0 h-5"
-                >
+                <Badge key={platform} variant="secondary" className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs px-1 py-0 h-5">
                   {platform}
                 </Badge>
               ))}
               {session.platform.length > 2 && (
-                <Badge 
-                  variant="secondary" 
-                  className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs px-1 py-0 h-5"
-                >
+                <Badge variant="secondary" className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs px-1 py-0 h-5">
                   +{session.platform.length - 2}
                 </Badge>
               )}
@@ -119,8 +112,8 @@ export function TestSessionCompactGrid({ sessions }: TestSessionCompactGridProps
             {/* Action Button */}
             <div onClick={(e) => e.stopPropagation()}>
               {session.status === 'open' ? (
-                <Button 
-                  asChild 
+                <Button
+                  asChild
                   size="sm"
                   className="w-full h-7 bg-gradient-to-r from-blue-600/30 to-blue-500/30 backdrop-blur-md border border-blue-400/40 text-white hover:from-blue-600/90 hover:to-blue-500/90 hover:border-blue-300/90 font-semibold transition-all duration-200 text-xs"
                 >

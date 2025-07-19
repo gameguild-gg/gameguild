@@ -1,6 +1,7 @@
 import { TestSession } from '@/lib/api/testing-lab/test-sessions';
 import { TestingLabHero } from './testing-lab-hero';
 import { TestingLabStats } from './testing-lab-stats';
+import { TestingLabCallToAction } from './testing-lab-call-to-action';
 import { FloatingIcons } from './floating-icons';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -33,7 +34,7 @@ export function TestingLabLanding({ testSessions }: TestingLabLandingProps) {
         </div>
       </div>
       <main className="flex flex-col flex-1 items-center justify-center relative z-10">
-        <div className="container ">
+        <div className="container">
           {/* Hero Section */}
           <TestingLabHero />
 
@@ -41,20 +42,26 @@ export function TestingLabLanding({ testSessions }: TestingLabLandingProps) {
           <TestingLabStats totalSessions={testSessions.length} openSessions={openSessions.length} upcomingSessions={upcomingSessions.length} />
 
           {/* Learn More Section */}
-          <div className="flex flex-col items-center mt-16 mb-8">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent w-64"></div>
-              <span className="text-slate-400 text-sm">or</span>
-              <div className="h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent w-64"></div>
+          <div className="flex flex-col items-center mt-24 mb-12">
+            <div className="flex items-center gap-6 mb-8">
+              <div className="h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent w-32"></div>
+              <span className="text-slate-400 text-base font-medium">curious how it all works?</span>
+              <div className="h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent w-32"></div>
             </div>
             <Button
+              asChild
               size="lg"
               variant="outline"
               className="bg-slate-900/20 backdrop-blur-md border border-slate-700/50 text-slate-200 hover:text-white hover:bg-slate-800/30 hover:border-slate-600/50 px-8 py-4 text-lg transition-all duration-200"
             >
-              Learn More
+              <a href="#learn-more">Learn More</a>
             </Button>
           </div>
+
+          {/* Call to Action Section */}
+        </div>
+        <div id="learn-more">
+          <TestingLabCallToAction />
         </div>
       </main>
     </div>
