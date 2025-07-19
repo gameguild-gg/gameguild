@@ -8,6 +8,7 @@ import { TestSessionTable } from './test-session-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ArrowLeft, ChevronDown, Clock, LayoutGrid, List, Monitor, Rows, Search, Shield, Star, Trophy, Users, X } from 'lucide-react';
 import Link from 'next/link';
 import { PeriodSelector } from '@/components/filters/period-selector';
@@ -156,7 +157,22 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="bg-slate-900/20 backdrop-blur-md border border-slate-600/50 rounded-xl px-4 h-10 text-slate-200 text-sm focus:outline-none focus:border-blue-400/60 hover:border-blue-400/60 hover:bg-white/5 transition-all duration-200 justify-between min-w-[140px]"
+                    className={`${
+                      selectedStatuses.length === 0
+                        ? 'backdrop-blur-md border border-slate-600/30 text-slate-400'
+                        : 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20'
+                    } rounded-xl px-4 h-10 text-sm focus:outline-none focus:border-blue-400/60 hover:border-blue-400/60 hover:bg-white/5 transition-all duration-200 justify-between min-w-[140px]`}
+                    style={
+                      selectedStatuses.length === 0
+                        ? {
+                            background: 'radial-gradient(ellipse 120% 60% at center, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.6) 100%)',
+                            boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
+                          }
+                        : {
+                            background: 'radial-gradient(ellipse 120% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                            boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
+                          }
+                    }
                   >
                     <div className="flex items-center gap-2">
                       {selectedStatuses.length === 0 ? (
@@ -226,7 +242,22 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="bg-slate-900/20 backdrop-blur-md border border-slate-600/50 rounded-xl px-4 h-10 text-slate-200 text-sm focus:outline-none focus:border-blue-400/60 hover:border-blue-400/60 hover:bg-white/5 transition-all duration-200 justify-between min-w-[140px]"
+                    className={`${
+                      selectedSessionTypes.length === 0
+                        ? 'backdrop-blur-md border border-slate-600/30 text-slate-400'
+                        : 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20'
+                    } rounded-xl px-4 h-10 text-sm focus:outline-none focus:border-blue-400/60 hover:border-blue-400/60 hover:bg-white/5 transition-all duration-200 justify-between min-w-[140px]`}
+                    style={
+                      selectedSessionTypes.length === 0
+                        ? {
+                            background: 'radial-gradient(ellipse 120% 60% at center, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.6) 100%)',
+                            boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
+                          }
+                        : {
+                            background: 'radial-gradient(ellipse 120% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                            boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
+                          }
+                    }
                   >
                     <div className="flex items-center gap-2">
                       {selectedSessionTypes.length === 0 ? (
@@ -301,42 +332,98 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
 
               {/* View Mode Toggle */}
               <div className="flex">
-                <Button
-                  variant="ghost"
-                  size="default"
-                  onClick={() => setViewMode('cards')}
-                  className={`${
-                    viewMode === 'cards'
-                      ? 'bg-gradient-to-r from-blue-500/30 to-blue-600/30 backdrop-blur-md border border-blue-400/40 text-blue-200 shadow-lg shadow-blue-500/20'
-                      : 'bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
-                  } transition-all duration-200 rounded-l-xl rounded-r-none border-r-0 h-10 px-3`}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="default"
-                  onClick={() => setViewMode('row')}
-                  className={`${
-                    viewMode === 'row'
-                      ? 'bg-gradient-to-r from-purple-500/30 to-purple-600/30 backdrop-blur-md border border-purple-400/40 text-purple-200 shadow-lg shadow-purple-500/20'
-                      : 'bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
-                  } transition-all duration-200 rounded-none border-x-0 h-10 px-3`}
-                >
-                  <Rows className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="default"
-                  onClick={() => setViewMode('table')}
-                  className={`${
-                    viewMode === 'table'
-                      ? 'bg-gradient-to-r from-green-500/30 to-green-600/30 backdrop-blur-md border border-green-400/40 text-green-200 shadow-lg shadow-green-500/20'
-                      : 'bg-gradient-to-r from-slate-900/60 to-slate-800/60 backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
-                  } transition-all duration-200 rounded-r-xl rounded-l-none border-l-0 h-10 px-3`}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="default"
+                        onClick={() => setViewMode('cards')}
+                        className={`${
+                          viewMode === 'cards'
+                            ? 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20'
+                            : 'backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
+                        } transition-all duration-200 rounded-l-xl rounded-r-none border-r-0 h-10 px-3`}
+                        style={
+                          viewMode === 'cards'
+                            ? {
+                                background: 'radial-gradient(ellipse 120% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                                boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
+                              }
+                            : {
+                                background: 'radial-gradient(ellipse 120% 60% at center, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.6) 100%)',
+                                boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
+                              }
+                        }
+                      >
+                        <LayoutGrid className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Card View</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="default"
+                        onClick={() => setViewMode('row')}
+                        className={`${
+                          viewMode === 'row'
+                            ? 'backdrop-blur-md border border-purple-400/40 text-white shadow-lg shadow-purple-500/20'
+                            : 'backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
+                        } transition-all duration-200 rounded-none border-x-0 h-10 px-3`}
+                        style={
+                          viewMode === 'row'
+                            ? {
+                                background: 'radial-gradient(ellipse 120% 60% at center, rgba(147, 51, 234, 0.4) 0%, rgba(126, 34, 206, 0.3) 50%, rgba(107, 33, 168, 0.2) 100%)',
+                                boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(147, 51, 234, 0.2)',
+                              }
+                            : {
+                                background: 'radial-gradient(ellipse 120% 60% at center, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.6) 100%)',
+                                boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
+                              }
+                        }
+                      >
+                        <Rows className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Row View</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="default"
+                        onClick={() => setViewMode('table')}
+                        className={`${
+                          viewMode === 'table'
+                            ? 'backdrop-blur-md border border-green-400/40 text-white shadow-lg shadow-green-500/20'
+                            : 'backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
+                        } transition-all duration-200 rounded-r-xl rounded-l-none border-l-0 h-10 px-3`}
+                        style={
+                          viewMode === 'table'
+                            ? {
+                                background: 'radial-gradient(ellipse 120% 60% at center, rgba(34, 197, 94, 0.4) 0%, rgba(22, 163, 74, 0.3) 50%, rgba(21, 128, 61, 0.2) 100%)',
+                                boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(34, 197, 94, 0.2)',
+                              }
+                            : {
+                                background: 'radial-gradient(ellipse 120% 60% at center, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.6) 100%)',
+                                boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
+                              }
+                        }
+                      >
+                        <List className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Table View</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           </div>
