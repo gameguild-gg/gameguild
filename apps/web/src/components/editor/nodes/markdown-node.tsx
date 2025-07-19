@@ -1,119 +1,119 @@
-"use client"
+'use client';
 
-import type React from "react"
+import type React from 'react';
 
-import { useEffect, useRef, useState, useContext } from "react"
-import { DecoratorNode, type SerializedLexicalNode, $getNodeByKey } from "lexical"
-import { FileText } from "lucide-react"
-import ReactMarkdown from "react-markdown"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/editor/ui/button"
-import { Textarea } from "@/components/editor/ui/textarea"
-import { EditorLoadingContext } from "../lexical-editor"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+import { useEffect, useRef, useState, useContext } from 'react';
+import { DecoratorNode, type SerializedLexicalNode, $getNodeByKey } from 'lexical';
+import { FileText } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/editor/ui/button';
+import { Textarea } from '@/components/editor/ui/textarea';
+import { EditorLoadingContext } from '../lexical-editor';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 
 export interface MarkdownData {
-  content: string
+  content: string;
 }
 
 export interface SerializedMarkdownNode extends SerializedLexicalNode {
-  type: "markdown"
-  data: MarkdownData
-  version: 1
+  type: 'markdown';
+  data: MarkdownData;
+  version: 1;
 }
 
 export class MarkdownNode extends DecoratorNode<React.ElementType> {
-  __data: MarkdownData
+  __data: MarkdownData;
 
   static getType(): string {
-    return "markdown"
+    return 'markdown';
   }
 
   static clone(node: MarkdownNode): MarkdownNode {
-    return new MarkdownNode(node.__data, node.__key)
+    return new MarkdownNode(node.__data, node.__key);
   }
 
   constructor(data: MarkdownData, key?: string) {
-    super(key)
-    this.__data = data
+    super(key);
+    this.__data = data;
   }
 
   createDOM(): HTMLElement {
-    return document.createElement("div")
+    return document.createElement('div');
   }
 
   updateDOM(): false {
-    return false
+    return false;
   }
 
   setData(data: MarkdownData): void {
-    const writable = this.getWritable()
-    writable.__data = data
+    const writable = this.getWritable();
+    writable.__data = data;
   }
 
   exportJSON(): SerializedMarkdownNode {
     return {
-      type: "markdown",
+      type: 'markdown',
       data: this.__data,
       version: 1,
-    }
+    };
   }
 
   static importJSON(serializedNode: SerializedMarkdownNode): MarkdownNode {
-    return new MarkdownNode(serializedNode.data)
+    return new MarkdownNode(serializedNode.data);
   }
 
   decorate(): React.ElementType {
-    return <MarkdownComponent data={this.__data} nodeKey={this.__key} />
+    return <MarkdownComponent data={this.__data} nodeKey={this.__key} />;
   }
 }
 
 interface MarkdownComponentProps {
-  data: MarkdownData
-  nodeKey: string
+  data: MarkdownData;
+  nodeKey: string;
 }
 
 function MarkdownComponent({ data, nodeKey }: MarkdownComponentProps) {
-  const [editor] = useLexicalComposerContext()
-  const isLoading = useContext(EditorLoadingContext)
-  const [isEditing, setIsEditing] = useState(!data.content && !isLoading)
-  const [content, setContent] = useState(data.content)
-  const markdownRef = useRef<HTMLDivElement>(null)
+  const [editor] = useLexicalComposerContext();
+  const isLoading = useContext(EditorLoadingContext);
+  const [isEditing, setIsEditing] = useState(!data.content && !isLoading);
+  const [content, setContent] = useState(data.content);
+  const markdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      const isClickInsideMarkdown = markdownRef.current && markdownRef.current.contains(e.target as Node)
+      const isClickInsideMarkdown = markdownRef.current && markdownRef.current.contains(e.target as Node);
 
       if (!isClickInsideMarkdown) {
-        setIsEditing(false)
+        setIsEditing(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     if (isLoading) {
-      setIsEditing(false)
+      setIsEditing(false);
     }
-  }, [isLoading])
+  }, [isLoading]);
 
   const updateMarkdown = (newContent: string) => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
+      const node = $getNodeByKey(nodeKey);
       if (node instanceof MarkdownNode) {
-        node.setData({ content: newContent })
+        node.setData({ content: newContent });
       }
-    })
-  }
+    });
+  };
 
   const handleContentChange = (newContent: string) => {
-    setContent(newContent)
-    updateMarkdown(newContent)
-  }
+    setContent(newContent);
+    updateMarkdown(newContent);
+  };
 
   const placeholder = `# Markdown Editor
 
@@ -163,7 +163,7 @@ function example() {
 |----------|----------|
 | Cell 1    | Cell 2    |
 | Cell 3    | Cell 4    |
-`
+`;
 
   return (
     <div ref={markdownRef} className="my-4 relative group" onClick={() => !isEditing && setIsEditing(true)}>
@@ -187,22 +187,17 @@ function example() {
             />
           </div>
         ) : (
-          <div
-            className={cn(
-              "prose prose-stone dark:prose-invert max-w-none",
-              !content && "min-h-[2.5rem] text-sm text-muted-foreground",
-            )}
-          >
-            {content ? <ReactMarkdown>{content}</ReactMarkdown> : "Click to edit markdown..."}
+          <div className={cn('prose prose-stone dark:prose-invert max-w-none', !content && 'min-h-[2.5rem] text-sm text-muted-foreground')}>
+            {content ? <ReactMarkdown>{content}</ReactMarkdown> : 'Click to edit markdown...'}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
 
 export function $createMarkdownNode(): MarkdownNode {
   return new MarkdownNode({
-    content: "",
-  })
+    content: '',
+  });
 }

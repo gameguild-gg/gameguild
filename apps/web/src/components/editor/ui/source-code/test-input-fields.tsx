@@ -1,31 +1,31 @@
-"use client"
-import { Button } from "@/components/editor/ui/button"
-import { PlusIcon, TrashIcon } from "lucide-react"
-import { Input } from "@/components/editor/ui/input"
-import { Label } from "@/components/editor/ui/label"
+'use client';
+import { Button } from '@/components/editor/ui/button';
+import { PlusIcon, TrashIcon } from 'lucide-react';
+import { Input } from '@/components/editor/ui/input';
+import { Label } from '@/components/editor/ui/label';
 
 interface TestInputFieldsProps {
-  inputs: string[]
-  setInputs: (inputs: string[]) => void
-  label?: string
+  inputs: string[];
+  setInputs: (inputs: string[]) => void;
+  label?: string;
 }
 
-export function TestInputFields({ inputs, setInputs, label = "Input" }: TestInputFieldsProps) {
+export function TestInputFields({ inputs, setInputs, label = 'Input' }: TestInputFieldsProps) {
   const addInput = () => {
-    setInputs([...inputs, ""])
-  }
+    setInputs([...inputs, '']);
+  };
 
   const removeInput = (index: number) => {
-    const newInputs = [...inputs]
-    newInputs.splice(index, 1)
-    setInputs(newInputs)
-  }
+    const newInputs = [...inputs];
+    newInputs.splice(index, 1);
+    setInputs(newInputs);
+  };
 
   const updateInput = (index: number, value: string) => {
-    const newInputs = [...inputs]
-    newInputs[index] = value
-    setInputs(newInputs)
-  }
+    const newInputs = [...inputs];
+    newInputs[index] = value;
+    setInputs(newInputs);
+  };
 
   return (
     <div className="space-y-2">
@@ -37,20 +37,12 @@ export function TestInputFields({ inputs, setInputs, label = "Input" }: TestInpu
         </Button>
       </div>
 
-      {inputs.length === 0 && (
-        <div className="text-sm text-muted-foreground italic">
-          No parameters added. Click "Add Parameter" to add input values.
-        </div>
-      )}
+      {inputs.length === 0 && <div className="text-sm text-muted-foreground italic">No parameters added. Click "Add Parameter" to add input values.</div>}
 
       {inputs.map((input, index) => (
         <div key={index} className="flex items-center gap-2">
           <div className="flex-grow">
-            <Input
-              value={input}
-              onChange={(e) => updateInput(index, e.target.value)}
-              placeholder={`Parameter ${index + 1}`}
-            />
+            <Input value={input} onChange={(e) => updateInput(index, e.target.value)} placeholder={`Parameter ${index + 1}`} />
           </div>
           <Button type="button" variant="ghost" size="sm" onClick={() => removeInput(index)} className="h-9 px-2">
             <TrashIcon className="h-4 w-4" />
@@ -58,5 +50,5 @@ export function TestInputFields({ inputs, setInputs, label = "Input" }: TestInpu
         </div>
       ))}
     </div>
-  )
+  );
 }

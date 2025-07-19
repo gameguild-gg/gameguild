@@ -1,14 +1,14 @@
-"use client"
+'use client';
 
-import { Textarea } from "@/components/editor/ui/textarea"
+import { Textarea } from '@/components/editor/ui/textarea';
 
 interface EssayQuestionProps {
-  question: string
-  userAnswer: string
-  onAnswerChange: (answer: string) => void
-  showFeedback: boolean
-  isCorrect: boolean
-  disabled?: boolean
+  question: string;
+  userAnswer: string;
+  onAnswerChange: (answer: string) => void;
+  showFeedback: boolean;
+  isCorrect: boolean;
+  disabled?: boolean;
 }
 
 export function EssayQuestion({ question, userAnswer, onAnswerChange, disabled = false }: EssayQuestionProps) {
@@ -24,5 +24,5 @@ export function EssayQuestion({ question, userAnswer, onAnswerChange, disabled =
         className="min-h-[200px]"
       />
     </div>
-  )
+  );
 }

@@ -1,166 +1,164 @@
-"use client"
+'use client';
 
-import { useState, useEffect, useContext } from "react"
-import { DecoratorNode, type SerializedLexicalNode } from "lexical"
-import { $getNodeByKey } from "lexical"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { ChevronDown, Pencil, Check } from "lucide-react"
-import type { JSX } from "react/jsx-runtime" // Import JSX to fix the undeclared variable error
+import { useState, useEffect, useContext } from 'react';
+import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
+import { $getNodeByKey } from 'lexical';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { ChevronDown, Pencil, Check } from 'lucide-react';
+import type { JSX } from 'react/jsx-runtime'; // Import JSX to fix the undeclared variable error
 
-import { Button } from "@/components/editor/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/editor/ui/dropdown-menu"
-import { EditorLoadingContext } from "../lexical-editor"
+import { Button } from '@/components/editor/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/editor/ui/dropdown-menu';
+import { EditorLoadingContext } from '../lexical-editor';
 
-export type DividerStyle = "simple" | "double" | "dashed" | "dotted" | "gradient" | "icon"
+export type DividerStyle = 'simple' | 'double' | 'dashed' | 'dotted' | 'gradient' | 'icon';
 
 export interface DividerData {
-  style: DividerStyle
-  isNew?: boolean // Flag to indicate if this is a newly created divider
+  style: DividerStyle;
+  isNew?: boolean; // Flag to indicate if this is a newly created divider
 }
 
 export interface SerializedDividerNode extends SerializedLexicalNode {
-  type: "divider"
-  data: DividerData
-  version: 1
+  type: 'divider';
+  data: DividerData;
+  version: 1;
 }
 
 export class DividerNode extends DecoratorNode<JSX.Element> {
-  __data: DividerData
+  __data: DividerData;
 
   static getType(): string {
-    return "divider"
+    return 'divider';
   }
 
   static clone(node: DividerNode): DividerNode {
-    return new DividerNode(node.__data, node.__key)
+    return new DividerNode(node.__data, node.__key);
   }
 
   constructor(data: DividerData, key?: string) {
-    super(key)
+    super(key);
     this.__data = {
-      style: data.style || "simple",
+      style: data.style || 'simple',
       isNew: data.isNew,
-    }
+    };
   }
 
   createDOM(): HTMLElement {
-    return document.createElement("div")
+    return document.createElement('div');
   }
 
   updateDOM(): false {
-    return false
+    return false;
   }
 
   setData(data: DividerData): void {
-    const writable = this.getWritable()
-    writable.__data = data
+    const writable = this.getWritable();
+    writable.__data = data;
   }
 
   exportJSON(): SerializedDividerNode {
     return {
-      type: "divider",
+      type: 'divider',
       data: this.__data,
       version: 1,
-    }
+    };
   }
 
   static importJSON(serializedNode: SerializedDividerNode): DividerNode {
-    return new DividerNode(serializedNode.data)
+    return new DividerNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {
-    return <DividerComponent data={this.__data} nodeKey={this.__key} />
+    return <DividerComponent data={this.__data} nodeKey={this.__key} />;
   }
 }
 
 interface DividerComponentProps {
-  data: DividerData
-  nodeKey: string
+  data: DividerData;
+  nodeKey: string;
 }
 
 function DividerComponent({ data, nodeKey }: DividerComponentProps) {
-  const [editor] = useLexicalComposerContext()
-  const isLoading = useContext(EditorLoadingContext)
-  const [style, setStyle] = useState<DividerStyle>(data.style || "simple")
-  const [isEditing, setIsEditing] = useState((data.isNew || false) && !isLoading)
+  const [editor] = useLexicalComposerContext();
+  const isLoading = useContext(EditorLoadingContext);
+  const [style, setStyle] = useState<DividerStyle>(data.style || 'simple');
+  const [isEditing, setIsEditing] = useState((data.isNew || false) && !isLoading);
 
   useEffect(() => {
     if (data.isNew) {
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
+        const node = $getNodeByKey(nodeKey);
         if (node instanceof DividerNode) {
-          const { isNew, ...rest } = data
-          node.setData(rest)
+          const { isNew, ...rest } = data;
+          node.setData(rest);
         }
-      })
+      });
     }
-  }, [data, editor, nodeKey])
+  }, [data, editor, nodeKey]);
 
   useEffect(() => {
     if (isLoading) {
-      setIsEditing(false)
+      setIsEditing(false);
     }
-  }, [isLoading])
+  }, [isLoading]);
 
   const updateDivider = (newData: Partial<DividerData>) => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
+      const node = $getNodeByKey(nodeKey);
       if (node instanceof DividerNode) {
-        node.setData({ ...data, ...newData })
+        node.setData({ ...data, ...newData });
       }
-    })
-  }
+    });
+  };
 
   const handleStyleChange = (newStyle: DividerStyle) => {
-    setStyle(newStyle)
-    updateDivider({ style: newStyle })
-  }
+    setStyle(newStyle);
+    updateDivider({ style: newStyle });
+  };
 
   const renderDivider = () => {
     switch (style) {
-      case "simple":
-        return <hr className="my-6 border-t border-gray-300 dark:border-gray-700" />
-      case "double":
-        return <hr className="my-6 border-t-2 border-double border-gray-300 dark:border-gray-700" />
-      case "dashed":
-        return <hr className="my-6 border-t-2 border-dashed border-gray-300 dark:border-gray-700" />
-      case "dotted":
-        return <hr className="my-6 border-t-2 border-dotted border-gray-300 dark:border-gray-700" />
-      case "gradient":
-        return (
-          <div className="my-6 h-px bg-gradient-to-r from-transparent via-primary to-transparent" aria-hidden="true" />
-        )
-      case "icon":
+      case 'simple':
+        return <hr className="my-6 border-t border-gray-300 dark:border-gray-700" />;
+      case 'double':
+        return <hr className="my-6 border-t-2 border-double border-gray-300 dark:border-gray-700" />;
+      case 'dashed':
+        return <hr className="my-6 border-t-2 border-dashed border-gray-300 dark:border-gray-700" />;
+      case 'dotted':
+        return <hr className="my-6 border-t-2 border-dotted border-gray-300 dark:border-gray-700" />;
+      case 'gradient':
+        return <div className="my-6 h-px bg-gradient-to-r from-transparent via-primary to-transparent" aria-hidden="true" />;
+      case 'icon':
         return (
           <div className="my-6 flex items-center justify-center">
             <div className="flex-1 border-t border-gray-300 dark:border-gray-700" />
             <div className="mx-4 text-gray-500 dark:text-gray-400">●</div>
             <div className="flex-1 border-t border-gray-300 dark:border-gray-700" />
           </div>
-        )
+        );
       default:
-        return <hr className="my-6 border-t border-gray-300 dark:border-gray-700" />
+        return <hr className="my-6 border-t border-gray-300 dark:border-gray-700" />;
     }
-  }
+  };
 
   const getStyleName = (style: DividerStyle): string => {
     switch (style) {
-      case "simple":
-        return "Simple"
-      case "double":
-        return "Double"
-      case "dashed":
-        return "Dashed"
-      case "dotted":
-        return "Dotted"
-      case "gradient":
-        return "Gradient"
-      case "icon":
-        return "With icon"
+      case 'simple':
+        return 'Simple';
+      case 'double':
+        return 'Double';
+      case 'dashed':
+        return 'Dashed';
+      case 'dotted':
+        return 'Dotted';
+      case 'gradient':
+        return 'Gradient';
+      case 'icon':
+        return 'With icon';
       default:
-        return "Simple"
+        return 'Simple';
     }
-  }
+  };
 
   if (!isEditing) {
     return (
@@ -175,7 +173,7 @@ function DividerComponent({ data, nodeKey }: DividerComponentProps) {
           <Pencil className="h-4 w-4" />
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -192,12 +190,12 @@ function DividerComponent({ data, nodeKey }: DividerComponentProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleStyleChange("simple")}>Simple</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStyleChange("double")}>Double</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStyleChange("dashed")}>Dashed</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStyleChange("dotted")}>Dotted</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStyleChange("gradient")}>Gradient</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStyleChange("icon")}>With icon</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStyleChange('simple')}>Simple</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStyleChange('double')}>Double</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStyleChange('dashed')}>Dashed</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStyleChange('dotted')}>Dotted</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStyleChange('gradient')}>Gradient</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStyleChange('icon')}>With icon</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -210,12 +208,12 @@ function DividerComponent({ data, nodeKey }: DividerComponentProps) {
         </div>
       </div>
     </>
-  )
+  );
 }
 
 export function $createDividerNode(data: Partial<DividerData> = {}): DividerNode {
   return new DividerNode({
-    style: data.style || "simple",
+    style: data.style || 'simple',
     isNew: true,
-  })
+  });
 }

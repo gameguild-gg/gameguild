@@ -1,11 +1,11 @@
-"use client"
+'use client';
 
-import { useEffect } from "react"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { $getSelection, $isRangeSelection, COMMAND_PRIORITY_CRITICAL } from "lexical"
+import { useEffect } from 'react';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { $getSelection, $isRangeSelection, COMMAND_PRIORITY_CRITICAL } from 'lexical';
 
 export function CodePlugin() {
-  const [editor] = useLexicalComposerContext()
+  const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
     // This is a simplified version that doesn't rely on prismjs
@@ -13,16 +13,16 @@ export function CodePlugin() {
     return editor.registerCommand(
       editor.registerUpdateListener(({ editorState }) => {
         editorState.read(() => {
-          const selection = $getSelection()
-          if (!$isRangeSelection(selection)) return
+          const selection = $getSelection();
+          if (!$isRangeSelection(selection)) return;
 
           // You could add custom code handling here if needed
-        })
+        });
       }),
       () => false,
       COMMAND_PRIORITY_CRITICAL,
-    )
-  }, [editor])
+    );
+  }, [editor]);
 
-  return null
+  return null;
 }

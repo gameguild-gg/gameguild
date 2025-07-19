@@ -1,24 +1,24 @@
-"use client"
+'use client';
 
-import type React from "react"
+import type React from 'react';
 
-import { Button } from "@/components/editor/ui/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/editor/ui/dialog"
-import { Label } from "@/components/editor/ui/label"
-import { Upload } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Button } from '@/components/editor/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/editor/ui/dialog';
+import { Label } from '@/components/editor/ui/label';
+import { Upload } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ImportFileDialogProps {
-  showImportDialog: boolean
-  setShowImportDialog: (show: boolean) => void
-  importFileNames: string[]
-  importContents: { name: string; content: string }[]
-  importFileHasStates: boolean
-  setImportFileHasStates: (hasStates: boolean) => void
-  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
-  importFile: () => void
-  fileInputRef: React.RefObject<HTMLInputElement>
-  isPreview?: boolean
+  showImportDialog: boolean;
+  setShowImportDialog: (show: boolean) => void;
+  importFileNames: string[];
+  importContents: { name: string; content: string }[];
+  importFileHasStates: boolean;
+  setImportFileHasStates: (hasStates: boolean) => void;
+  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  importFile: () => void;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  isPreview?: boolean;
 }
 
 export function ImportFileDialog({
@@ -44,16 +44,14 @@ export function ImportFileDialog({
             <Label htmlFor="file-upload">Select file(s)</Label>
             <div
               className={cn(
-                "border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50",
-                importFileNames.length > 0 ? "border-primary/50" : "border-muted-foreground/50",
+                'border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50',
+                importFileNames.length > 0 ? 'border-primary/50' : 'border-muted-foreground/50',
               )}
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
               <p className="text-sm text-muted-foreground mb-1">
-                {importFileNames.length === 0
-                  ? "Click to select files or drag and drop"
-                  : `${importFileNames.length} file(s) selected`}
+                {importFileNames.length === 0 ? 'Click to select files or drag and drop' : `${importFileNames.length} file(s) selected`}
               </p>
               {importFileNames.length > 0 && (
                 <div className="w-full mt-2 max-h-32 overflow-y-auto">
@@ -66,14 +64,7 @@ export function ImportFileDialog({
                   </ul>
                 </div>
               )}
-              <input
-                id="file-upload"
-                type="file"
-                className="hidden"
-                onChange={handleFileUpload}
-                ref={fileInputRef}
-                multiple
-              />
+              <input id="file-upload" type="file" className="hidden" onChange={handleFileUpload} ref={fileInputRef} multiple />
             </div>
           </div>
         </div>
@@ -81,16 +72,16 @@ export function ImportFileDialog({
           <Button
             variant="outline"
             onClick={() => {
-              setShowImportDialog(false)
+              setShowImportDialog(false);
             }}
           >
             Cancel
           </Button>
           <Button onClick={importFile} disabled={importContents.length === 0}>
-            Import {importContents.length > 0 ? `(${importContents.length})` : ""}
+            Import {importContents.length > 0 ? `(${importContents.length})` : ''}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
