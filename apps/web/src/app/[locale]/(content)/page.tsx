@@ -352,8 +352,51 @@ export default function Page(): React.JSX.Element {
                   <Badge variant={session.accessToken ? 'default' : 'destructive'}>{session.accessToken ? 'Present' : 'Missing'}</Badge>
                 </p>
                 <p>
+                  <strong>Refresh Token:</strong>
+                  <Badge variant={(session as any).refreshToken ? 'default' : 'destructive'}>
+                    {(session as any).refreshToken ? 'Present' : 'Missing'}
+                  </Badge>
+                </p>
+                <p>
                   <strong>Session Error:</strong>
                   <Badge variant={(session as any).error ? 'destructive' : 'default'}>{(session as any).error || 'None'}</Badge>
+                </p>
+              </div>
+            </div>
+
+            {/* Token Details Section */}
+            <div className="space-y-2">
+              <h4 className="font-semibold">Token Details (Debug)</h4>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <p className="text-sm">
+                    <strong>Access Token Preview:</strong>
+                  </p>
+                  <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-20">
+                    {session.accessToken ? 
+                      `${session.accessToken.substring(0, 50)}...` : 
+                      'No access token'}
+                  </pre>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm">
+                    <strong>Refresh Token Preview:</strong>
+                  </p>
+                  <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-20">
+                    {(session as any).refreshToken ? 
+                      `${(session as any).refreshToken.substring(0, 50)}...` : 
+                      'No refresh token'}
+                  </pre>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm">
+                  <strong>Session Expires:</strong> {new Date(session.expires).toLocaleString()}
+                </p>
+                <p className="text-sm">
+                  <strong>Token Lengths:</strong> 
+                  Access: {session.accessToken?.length || 0} chars, 
+                  Refresh: {(session as any).refreshToken?.length || 0} chars
                 </p>
               </div>
             </div>
