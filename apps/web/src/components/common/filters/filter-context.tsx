@@ -7,14 +7,16 @@ export interface FilterOption {
   count?: number;
 }
 
-// Generic filter configuration - now type-safe with T
-export interface FilterConfig<T = Record<string, unknown>> {
+// Generic filter configuration - now type-safe with T and ensures key exists on T
+export interface FilterConfig<T extends Record<string, unknown> = Record<string, unknown>> {
   key: keyof T;
   label: string;
   options: FilterOption[];
   placeholder?: string;
   searchPlaceholder?: string;
   emptyText?: string;
+  // Optional transform function to extract filterable values from the property
+  valueExtractor?: (item: T) => string[];
 }
 
 // Base filter state interface - now type-safe with T
