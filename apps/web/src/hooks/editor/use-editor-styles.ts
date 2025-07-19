@@ -1,17 +1,15 @@
-"use client"
+'use client';
 
-import { useEffect } from "react"
+import { useEffect } from 'react';
 
 /**
  * Hook to add editor-related styles to the document
  * @param options Configuration options for the editor styles
  * @returns void
  */
-export function useEditorStyles(options?: {
-  additionalStyles?: string
-}) {
+export function useEditorStyles(options?: { additionalStyles?: string }) {
   useEffect(() => {
-    const style = document.createElement("style")
+    const style = document.createElement('style');
     style.textContent = `
     .monaco-editor-container {
       width: 100%;
@@ -49,13 +47,13 @@ export function useEditorStyles(options?: {
     .monaco-editor .parameter-hints-widget {
       z-index: 1000 !important;
     }
-    ${options?.additionalStyles || ""}
-    `
-    document.head.appendChild(style)
+    ${options?.additionalStyles || ''}
+    `;
+    document.head.appendChild(style);
 
     // Clean up function to remove the style when the component unmounts
     return () => {
-      document.head.removeChild(style)
-    }
-  }, [options?.additionalStyles])
+      document.head.removeChild(style);
+    };
+  }, [options?.additionalStyles]);
 }

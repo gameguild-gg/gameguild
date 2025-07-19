@@ -1,43 +1,39 @@
-import type { TestCase, TestResult } from "../types"
+import type { TestCase, TestResult } from '../types';
 
 /**
  * Run input/output tests for C++ code
  */
-export async function runCppInoutTests(
-  code: string,
-  tests: TestCase[],
-  executeCpp: ((code: string) => Promise<string>) | undefined,
-): Promise<TestResult[]> {
+export async function runCppInoutTests(code: string, tests: TestCase[], executeCpp: ((code: string) => Promise<string>) | undefined): Promise<TestResult[]> {
   // Check if tests exist
   if (!tests || !tests.length) {
-    return []
+    return [];
   }
 
   // Check if C++ execution is available
   if (!executeCpp) {
     return tests.map(() => ({
       passed: false,
-      expected: "C++ execution",
-      actual: "C++ compiler not yet implemented",
-    }))
+      expected: 'C++ execution',
+      actual: 'C++ compiler not yet implemented',
+    }));
   }
 
   try {
     // Generate test harness
-    const testHarness = generateCppInoutTestHarness(code, tests)
+    const testHarness = generateCppInoutTestHarness(code, tests);
 
     // Execute the test harness
-    const output = await executeCpp(testHarness)
+    const output = await executeCpp(testHarness);
 
     // Parse the test results
-    return parseCppTestResults(output)
+    return parseCppTestResults(output);
   } catch (error) {
-    console.error("Error running C++ inout tests:", error)
+    console.error('Error running C++ inout tests:', error);
     return tests.map(() => ({
       passed: false,
-      expected: "Test execution",
+      expected: 'Test execution',
       actual: `Error: ${error}`,
-    }))
+    }));
   }
 }
 
@@ -46,7 +42,7 @@ export async function runCppInoutTests(
  */
 function generateCppInoutTestHarness(code: string, tests: TestCase[]): string {
   // Include the original code
-  let testHarness = code + "\n\n"
+  let testHarness = code + '\n\n';
 
   // Add test harness headers and utilities
   testHarness += `
@@ -98,11 +94,11 @@ int main() {
     
     // Run tests
     try {
-`
+`;
 
   // Add each test
   tests.forEach((test, index) => {
-    const { args = [] } = test
+    const { args = [] } = test;
 
     // Convert args to C++ code
     const argsCode = args
@@ -111,35 +107,35 @@ int main() {
           // Convert array to vector
           const elements = arg
             .map((el) => {
-              if (typeof el === "string") return `"${el}"`
-              return el
+              if (typeof el === 'string') return `"${el}"`;
+              return el;
             })
-            .join(", ")
-          return `std::vector<${typeof arg[0] === "string" ? "std::string" : "int"}>{${elements}}`
-        } else if (typeof arg === "string") {
-          return `"${arg}"`
+            .join(', ');
+          return `std::vector<${typeof arg[0] === 'string' ? 'std::string' : 'int'}>{${elements}}`;
+        } else if (typeof arg === 'string') {
+          return `"${arg}"`;
         }
-        return arg
+        return arg;
       })
-      .join(", ")
+      .join(', ');
 
     // Get expected return value
-    const expectedReturn = test.expectedReturn
-    let expectedReturnCode = ""
+    const expectedReturn = test.expectedReturn;
+    let expectedReturnCode = '';
 
     if (Array.isArray(expectedReturn)) {
       // Convert array to vector
       const elements = expectedReturn
         .map((el) => {
-          if (typeof el === "string") return `"${el}"`
-          return el
+          if (typeof el === 'string') return `"${el}"`;
+          return el;
         })
-        .join(", ")
-      expectedReturnCode = `std::vector<${typeof expectedReturn[0] === "string" ? "std::string" : "int"}>{${elements}}`
-    } else if (typeof expectedReturn === "string") {
-      expectedReturnCode = `"${expectedReturn}"`
+        .join(', ');
+      expectedReturnCode = `std::vector<${typeof expectedReturn[0] === 'string' ? 'std::string' : 'int'}>{${elements}}`;
+    } else if (typeof expectedReturn === 'string') {
+      expectedReturnCode = `"${expectedReturn}"`;
     } else {
-      expectedReturnCode = expectedReturn
+      expectedReturnCode = expectedReturn;
     }
 
     // Add test case
@@ -175,8 +171,8 @@ int main() {
                 testResults.push_back({false, "No exception", std::string("Exception: ") + e.what()});
             }
         }
-`
-  })
+`;
+  });
 
   // Close the test harness and output results
   testHarness += `
@@ -203,9 +199,9 @@ int main() {
         return 1;
     }
 }
-`
+`;
 
-  return testHarness
+  return testHarness;
 }
 
 /**
@@ -214,31 +210,31 @@ int main() {
 function parseCppTestResults(output: string): TestResult[] {
   try {
     // Extract the test results
-    const startMarker = "TEST_RESULTS_START"
-    const endMarker = "TEST_RESULTS_END"
+    const startMarker = 'TEST_RESULTS_START';
+    const endMarker = 'TEST_RESULTS_END';
 
-    const startIndex = output.indexOf(startMarker)
-    const endIndex = output.indexOf(endMarker)
+    const startIndex = output.indexOf(startMarker);
+    const endIndex = output.indexOf(endMarker);
 
     if (startIndex === -1 || endIndex === -1) {
-      console.error("Could not find test results markers in output:", output)
-      return []
+      console.error('Could not find test results markers in output:', output);
+      return [];
     }
 
     // Get the lines between the markers
-    const resultsText = output.substring(startIndex + startMarker.length, endIndex).trim()
-    const lines = resultsText.split("\n")
+    const resultsText = output.substring(startIndex + startMarker.length, endIndex).trim();
+    const lines = resultsText.split('\n');
 
     return lines.map((line) => {
-      const [result, expected, actual] = line.split("|", 3)
+      const [result, expected, actual] = line.split('|', 3);
       return {
-        passed: result === "PASS",
+        passed: result === 'PASS',
         expected,
-        actual: actual || "No output",
-      }
-    })
+        actual: actual || 'No output',
+      };
+    });
   } catch (error) {
-    console.error("Error parsing C++ test results:", error)
-    return []
+    console.error('Error parsing C++ test results:', error);
+    return [];
   }
 }

@@ -1,26 +1,26 @@
-"use client"
-import { QuizFeedback } from "./quiz-feedback"
-import type { QuizAnswer, QuestionType, FillBlankAlternative } from "../../nodes/quiz-node"
+'use client';
+import { QuizFeedback } from './quiz-feedback';
+import type { QuizAnswer, QuestionType, FillBlankAlternative } from '../../nodes/quiz-node';
 
 interface QuizDisplayProps {
-  question: string
-  questionType: QuestionType
-  answers: QuizAnswer[]
-  selectedAnswers: string[]
-  setSelectedAnswers: (answers: string[]) => void
-  showFeedback: boolean
-  isCorrect: boolean
-  correctFeedback: string
-  incorrectFeedback: string
-  allowRetry: boolean
-  checkAnswers: () => void
-  toggleAnswer: (answerId: string) => void
-  blanks?: string[]
-  fillBlankMode?: "text" | "multiple-choice"
-  fillBlankOptions?: string[]
-  ratingScale?: { min: number; max: number; step: number }
-  correctRating?: number
-  fillBlankAlternatives?: FillBlankAlternative[]
+  question: string;
+  questionType: QuestionType;
+  answers: QuizAnswer[];
+  selectedAnswers: string[];
+  setSelectedAnswers: (answers: string[]) => void;
+  showFeedback: boolean;
+  isCorrect: boolean;
+  correctFeedback: string;
+  incorrectFeedback: string;
+  allowRetry: boolean;
+  checkAnswers: () => void;
+  toggleAnswer: (answerId: string) => void;
+  blanks?: string[];
+  fillBlankMode?: 'text' | 'multiple-choice';
+  fillBlankOptions?: string[];
+  ratingScale?: { min: number; max: number; step: number };
+  correctRating?: number;
+  fillBlankAlternatives?: FillBlankAlternative[];
 }
 
 export function QuizDisplay({
@@ -37,7 +37,7 @@ export function QuizDisplay({
   checkAnswers,
   toggleAnswer,
   blanks = [],
-  fillBlankMode = "text",
+  fillBlankMode = 'text',
   fillBlankOptions = [],
   ratingScale = { min: 1, max: 5, step: 1 },
   correctRating = 3,
@@ -45,7 +45,7 @@ export function QuizDisplay({
 }: QuizDisplayProps) {
   const renderQuestionContent = () => {
     switch (questionType) {
-      case "multiple-choice":
+      case 'multiple-choice':
         return (
           <div className="space-y-3">
             {answers.map((answer) => (
@@ -53,19 +53,15 @@ export function QuizDisplay({
                 key={answer.id}
                 className={`
                 relative flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
-                ${
-                  selectedAnswers.includes(answer.id)
-                    ? "border-blue-500 bg-blue-50 shadow-sm"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                }
-                ${showFeedback && !allowRetry ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
+                ${selectedAnswers.includes(answer.id) ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}
+                ${showFeedback && !allowRetry ? 'cursor-not-allowed opacity-75' : 'hover:shadow-sm'}
               `}
                 onClick={() => (!showFeedback || allowRetry ? toggleAnswer(answer.id) : undefined)}
               >
                 <div
                   className={`
                 flex items-center justify-center w-5 h-5 rounded border-2 mr-3 transition-colors
-                ${selectedAnswers.includes(answer.id) ? "border-blue-500 bg-blue-500" : "border-gray-300"}
+                ${selectedAnswers.includes(answer.id) ? 'border-blue-500 bg-blue-500' : 'border-gray-300'}
               `}
                 >
                   {selectedAnswers.includes(answer.id) && (
@@ -82,22 +78,22 @@ export function QuizDisplay({
               </div>
             ))}
           </div>
-        )
+        );
 
-      case "true-false":
+      case 'true-false':
         return (
           <div className="flex gap-4">
             <button
               className={`
               flex items-center justify-center px-6 py-3 rounded-lg border-2 font-medium transition-all duration-200 min-w-[120px]
               ${
-                selectedAnswers.includes("true")
-                  ? "border-green-500 bg-green-50 text-green-700 shadow-sm"
-                  : "border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50"
+                selectedAnswers.includes('true')
+                  ? 'border-green-500 bg-green-50 text-green-700 shadow-sm'
+                  : 'border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50'
               }
-              ${showFeedback && !allowRetry ? "cursor-not-allowed opacity-75" : "hover:shadow-sm cursor-pointer"}
+              ${showFeedback && !allowRetry ? 'cursor-not-allowed opacity-75' : 'hover:shadow-sm cursor-pointer'}
             `}
-              onClick={() => (!(showFeedback && !allowRetry) ? setSelectedAnswers(["true"]) : undefined)}
+              onClick={() => (!(showFeedback && !allowRetry) ? setSelectedAnswers(['true']) : undefined)}
               disabled={showFeedback && !allowRetry}
             >
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -113,13 +109,13 @@ export function QuizDisplay({
               className={`
               flex items-center justify-center px-6 py-3 rounded-lg border-2 font-medium transition-all duration-200 min-w-[120px]
               ${
-                selectedAnswers.includes("false")
-                  ? "border-red-500 bg-red-50 text-red-700 shadow-sm"
-                  : "border-gray-200 text-gray-700 hover:border-red-300 hover:bg-red-50"
+                selectedAnswers.includes('false')
+                  ? 'border-red-500 bg-red-50 text-red-700 shadow-sm'
+                  : 'border-gray-200 text-gray-700 hover:border-red-300 hover:bg-red-50'
               }
-              ${showFeedback && !allowRetry ? "cursor-not-allowed opacity-75" : "hover:shadow-sm cursor-pointer"}
+              ${showFeedback && !allowRetry ? 'cursor-not-allowed opacity-75' : 'hover:shadow-sm cursor-pointer'}
             `}
-              onClick={() => (!(showFeedback && !allowRetry) ? setSelectedAnswers(["false"]) : undefined)}
+              onClick={() => (!(showFeedback && !allowRetry) ? setSelectedAnswers(['false']) : undefined)}
               disabled={showFeedback && !allowRetry}
             >
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -132,11 +128,11 @@ export function QuizDisplay({
               False
             </button>
           </div>
-        )
+        );
 
-      case "fill-blank":
-        if (fillBlankMode === "text") {
-          const questionParts = question.split("___")
+      case 'fill-blank':
+        if (fillBlankMode === 'text') {
+          const questionParts = question.split('___');
           return (
             <div className="space-y-4">
               <div className="text-lg leading-relaxed">
@@ -147,11 +143,11 @@ export function QuizDisplay({
                       <input
                         className="inline-block w-32 mx-2 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
                         placeholder="..."
-                        value={selectedAnswers[index] || ""}
+                        value={selectedAnswers[index] || ''}
                         onChange={(e) => {
-                          const newAnswers = [...selectedAnswers]
-                          newAnswers[index] = e.target.value
-                          setSelectedAnswers(newAnswers)
+                          const newAnswers = [...selectedAnswers];
+                          newAnswers[index] = e.target.value;
+                          setSelectedAnswers(newAnswers);
                         }}
                         disabled={showFeedback && !allowRetry}
                       />
@@ -160,18 +156,16 @@ export function QuizDisplay({
                 ))}
               </div>
             </div>
-          )
+          );
         } else {
-          const questionParts = question.split("___")
+          const questionParts = question.split('___');
           return (
             <div className="space-y-4">
               <div className="text-lg font-medium mb-6 p-4 bg-gray-50 rounded-lg">
                 {questionParts.map((part, index) => (
                   <span key={index}>
                     {part}
-                    {index < questionParts.length - 1 && (
-                      <span className="mx-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-md font-mono">___</span>
-                    )}
+                    {index < questionParts.length - 1 && <span className="mx-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-md font-mono">___</span>}
                   </span>
                 ))}
               </div>
@@ -181,59 +175,55 @@ export function QuizDisplay({
                     key={alternative.id}
                     className={`
                     flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
-                    ${
-                      selectedAnswers[0] === alternative.id
-                        ? "border-blue-500 bg-blue-50 shadow-sm"
-                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                    }
-                    ${showFeedback && !allowRetry ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
+                    ${selectedAnswers[0] === alternative.id ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}
+                    ${showFeedback && !allowRetry ? 'cursor-not-allowed opacity-75' : 'hover:shadow-sm'}
                   `}
                     onClick={() => (!(showFeedback && !allowRetry) ? setSelectedAnswers([alternative.id]) : undefined)}
                   >
                     <div
                       className={`
                     flex items-center justify-center w-5 h-5 rounded-full border-2 mr-4 transition-colors
-                    ${selectedAnswers[0] === alternative.id ? "border-blue-500 bg-blue-500" : "border-gray-300"}
+                    ${selectedAnswers[0] === alternative.id ? 'border-blue-500 bg-blue-500' : 'border-gray-300'}
                   `}
                     >
                       {selectedAnswers[0] === alternative.id && <div className="w-2 h-2 bg-white rounded-full"></div>}
                     </div>
-                    <span className="text-base font-medium text-gray-800">{alternative.words.join(", ")}</span>
+                    <span className="text-base font-medium text-gray-800">{alternative.words.join(', ')}</span>
                   </div>
                 ))}
               </div>
             </div>
-          )
+          );
         }
 
-      case "short-answer":
+      case 'short-answer':
         return (
           <div className="space-y-2">
             <input
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-base"
               placeholder="Enter your answer..."
-              value={selectedAnswers[0] || ""}
+              value={selectedAnswers[0] || ''}
               onChange={(e) => setSelectedAnswers([e.target.value])}
               disabled={showFeedback && !allowRetry}
             />
           </div>
-        )
+        );
 
-      case "essay":
+      case 'essay':
         return (
           <div className="space-y-2">
             <textarea
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-base resize-vertical"
               placeholder="Write your essay here..."
-              value={selectedAnswers[0] || ""}
+              value={selectedAnswers[0] || ''}
               onChange={(e) => setSelectedAnswers([e.target.value])}
               disabled={showFeedback && !allowRetry}
               rows={6}
             />
           </div>
-        )
+        );
 
-      case "rating":
+      case 'rating':
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -241,42 +231,36 @@ export function QuizDisplay({
               <span className="text-sm text-gray-600 font-medium">{ratingScale.max} (Highest)</span>
             </div>
             <div className="flex items-center justify-center space-x-3">
-              {Array.from({ length: ratingScale.max - ratingScale.min + 1 }, (_, i) => ratingScale.min + i).map(
-                (value) => (
-                  <button
-                    key={value}
-                    className={`
+              {Array.from({ length: ratingScale.max - ratingScale.min + 1 }, (_, i) => ratingScale.min + i).map((value) => (
+                <button
+                  key={value}
+                  className={`
                     w-12 h-12 rounded-lg border-2 font-bold text-lg transition-all duration-200
                     ${
                       selectedAnswers.includes(value.toString())
-                        ? "border-blue-500 bg-blue-500 text-white shadow-lg scale-110"
-                        : "border-gray-300 text-gray-700 hover:border-blue-300 hover:bg-blue-50"
+                        ? 'border-blue-500 bg-blue-500 text-white shadow-lg scale-110'
+                        : 'border-gray-300 text-gray-700 hover:border-blue-300 hover:bg-blue-50'
                     }
-                    ${showFeedback && !allowRetry ? "cursor-not-allowed opacity-75" : "hover:shadow-md cursor-pointer"}
+                    ${showFeedback && !allowRetry ? 'cursor-not-allowed opacity-75' : 'hover:shadow-md cursor-pointer'}
                   `}
-                    onClick={() =>
-                      !(showFeedback && !allowRetry) ? setSelectedAnswers([value.toString()]) : undefined
-                    }
-                    disabled={showFeedback && !allowRetry}
-                  >
-                    {value}
-                  </button>
-                ),
-              )}
+                  onClick={() => (!(showFeedback && !allowRetry) ? setSelectedAnswers([value.toString()]) : undefined)}
+                  disabled={showFeedback && !allowRetry}
+                >
+                  {value}
+                </button>
+              ))}
             </div>
           </div>
-        )
+        );
 
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
-      {questionType !== "fill-blank" || fillBlankMode !== "multiple-choice" ? (
-        <div className="text-lg font-medium">{question}</div>
-      ) : null}
+      {questionType !== 'fill-blank' || fillBlankMode !== 'multiple-choice' ? <div className="text-lg font-medium">{question}</div> : null}
 
       {renderQuestionContent()}
 
@@ -289,14 +273,7 @@ export function QuizDisplay({
         </button>
       )}
 
-      {showFeedback && (
-        <QuizFeedback
-          isCorrect={isCorrect}
-          correctFeedback={correctFeedback}
-          incorrectFeedback={incorrectFeedback}
-          allowRetry={allowRetry}
-        />
-      )}
+      {showFeedback && <QuizFeedback isCorrect={isCorrect} correctFeedback={correctFeedback} incorrectFeedback={incorrectFeedback} allowRetry={allowRetry} />}
     </div>
-  )
+  );
 }

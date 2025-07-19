@@ -1,9 +1,9 @@
-import type React from "react"
+import type React from 'react';
 
 interface QuizAnswerItemProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function QuizAnswerItem({ children }: QuizAnswerItemProps) {
-  return <div className="flex items-center gap-2">{children}</div>
+  return <div className="flex items-center gap-2">{children}</div>;
 }

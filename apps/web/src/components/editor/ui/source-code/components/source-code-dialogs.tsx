@@ -1,67 +1,67 @@
-"use client"
+'use client';
 
-import type React from "react"
-import type { CodeFile, LanguageType, ProgrammingLanguage } from "../types"
-import { NewFileDialog } from "../dialogs/new-file-dialog"
-import { ImportFileDialog } from "../dialogs/import-file-dialog"
-import { ConfirmDialog } from "../dialogs/confirm-dialog"
-import { RenameFileDialog } from "../dialogs/rename-file-dialog"
-import { LanguageSettingsDialog } from "../dialogs/language-settings-dialog"
+import type React from 'react';
+import type { CodeFile, LanguageType, ProgrammingLanguage } from '../types';
+import { NewFileDialog } from '../dialogs/new-file-dialog';
+import { ImportFileDialog } from '../dialogs/import-file-dialog';
+import { ConfirmDialog } from '../dialogs/confirm-dialog';
+import { RenameFileDialog } from '../dialogs/rename-file-dialog';
+import { LanguageSettingsDialog } from '../dialogs/language-settings-dialog';
 
 interface SourceCodeDialogsProps {
   // File dialog props
-  showFileDialog: boolean
-  setShowFileDialog: (show: boolean) => void
-  newFileName: string
-  setNewFileName: (name: string) => void
-  newFileLanguage: LanguageType
-  setNewFileLanguage: (lang: LanguageType) => void
-  addNewFile: () => void
-  getAllowedLanguageTypes: () => LanguageType[]
-  getLanguageLabel: (lang: LanguageType) => string
+  showFileDialog: boolean;
+  setShowFileDialog: (show: boolean) => void;
+  newFileName: string;
+  setNewFileName: (name: string) => void;
+  newFileLanguage: LanguageType;
+  setNewFileLanguage: (lang: LanguageType) => void;
+  addNewFile: () => void;
+  getAllowedLanguageTypes: () => LanguageType[];
+  getLanguageLabel: (lang: LanguageType) => string;
 
   // Import dialog props
-  showImportDialog: boolean
-  setShowImportDialog: (show: boolean) => void
-  importFileNames: string[]
-  importContents: { name: string; content: string }[]
-  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
-  importFile: () => void
-  fileInputRef: React.RefObject<HTMLInputElement>
+  showImportDialog: boolean;
+  setShowImportDialog: (show: boolean) => void;
+  importFileNames: string[];
+  importContents: { name: string; content: string }[];
+  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  importFile: () => void;
+  fileInputRef: React.RefObject<HTMLInputElement>;
 
   // Confirm dialog props
-  showConfirmDialog: boolean
-  setShowConfirmDialog: (show: boolean) => void
-  activeFileId: string
+  showConfirmDialog: boolean;
+  setShowConfirmDialog: (show: boolean) => void;
+  activeFileId: string;
 
   // Rename dialog props
-  showRenameDialog: boolean
-  setShowRenameDialog: (show: boolean) => void
-  renameFileName: string
-  setRenameFileName: (name: string) => void
-  renameFileLanguage: LanguageType
-  setRenameFileLanguage: (lang: LanguageType) => void
-  fileToRename: string | null
-  renameFile: () => void
-  files: CodeFile[]
+  showRenameDialog: boolean;
+  setShowRenameDialog: (show: boolean) => void;
+  renameFileName: string;
+  setRenameFileName: (name: string) => void;
+  renameFileLanguage: LanguageType;
+  setRenameFileLanguage: (lang: LanguageType) => void;
+  fileToRename: string | null;
+  renameFile: () => void;
+  files: CodeFile[];
 
   // Language settings dialog props
-  showLanguagesDialog: boolean
-  setShowLanguagesDialog: (show: boolean) => void
-  allowedLanguages: Record<LanguageType, boolean>
-  setAllowedLanguages: (langs: Record<LanguageType, boolean>) => void
-  selectedLanguage: ProgrammingLanguage
-  setSelectedLanguage: (lang: ProgrammingLanguage) => void
-  updateSourceCode: (data: any) => void
-  isAutocompleteEnabled: boolean
-  setIsAutocompleteEnabled: (enabled: boolean) => void
-  hasConfiguredSettings: boolean
-  setHasConfiguredSettings: (configured: boolean) => void
-  activeEnvironments: Record<string, boolean>
-  setActiveEnvironments: (envs: Record<string, boolean>) => void
+  showLanguagesDialog: boolean;
+  setShowLanguagesDialog: (show: boolean) => void;
+  allowedLanguages: Record<LanguageType, boolean>;
+  setAllowedLanguages: (langs: Record<LanguageType, boolean>) => void;
+  selectedLanguage: ProgrammingLanguage;
+  setSelectedLanguage: (lang: ProgrammingLanguage) => void;
+  updateSourceCode: (data: any) => void;
+  isAutocompleteEnabled: boolean;
+  setIsAutocompleteEnabled: (enabled: boolean) => void;
+  hasConfiguredSettings: boolean;
+  setHasConfiguredSettings: (configured: boolean) => void;
+  activeEnvironments: Record<string, boolean>;
+  setActiveEnvironments: (envs: Record<string, boolean>) => void;
 
   // Common props
-  isPreview?: boolean
+  isPreview?: boolean;
 }
 
 export function SourceCodeDialogs({
@@ -145,12 +145,7 @@ export function SourceCodeDialogs({
         isPreview={isPreview}
       />
 
-      <ConfirmDialog
-        showConfirmDialog={showConfirmDialog}
-        setShowConfirmDialog={setShowConfirmDialog}
-        activeFileId={activeFileId}
-        isPreview={isPreview}
-      />
+      <ConfirmDialog showConfirmDialog={showConfirmDialog} setShowConfirmDialog={setShowConfirmDialog} activeFileId={activeFileId} isPreview={isPreview} />
 
       <RenameFileDialog
         showRenameDialog={showRenameDialog}
@@ -170,14 +165,14 @@ export function SourceCodeDialogs({
       <LanguageSettingsDialog
         showLanguagesDialog={showLanguagesDialog}
         setShowLanguagesDialog={(show) => {
-          setShowLanguagesDialog(show)
+          setShowLanguagesDialog(show);
           if (!show && !hasConfiguredSettings) {
-            setHasConfiguredSettings(true)
+            setHasConfiguredSettings(true);
             updateSourceCode({
               hasConfiguredSettings: true,
               allowedLanguages: allowedLanguages,
               activeEnvironments: activeEnvironments,
-            })
+            });
           }
         }}
         allowedLanguages={allowedLanguages}
@@ -189,7 +184,7 @@ export function SourceCodeDialogs({
           updateSourceCode({
             ...data,
             activeEnvironments: activeEnvironments,
-          })
+          });
         }}
         isAutocompleteEnabled={isAutocompleteEnabled}
         setIsAutocompleteEnabled={setIsAutocompleteEnabled}
@@ -199,5 +194,5 @@ export function SourceCodeDialogs({
         setActiveEnvironments={setActiveEnvironments}
       />
     </>
-  )
+  );
 }

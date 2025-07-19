@@ -1,211 +1,211 @@
-"use client"
+'use client';
 
-import type React from "react"
+import type React from 'react';
 
-import { useState, useEffect, useRef, useContext } from "react"
-import { DecoratorNode, type SerializedLexicalNode } from "lexical"
-import { $getNodeByKey } from "lexical"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { ChevronLeft, ChevronRight, Edit, Expand, ImageIcon, LayoutGrid, Maximize2, Minimize2, X } from "lucide-react"
-import { Download, Upload, FileType, AlertCircle } from "lucide-react"
+import { useState, useEffect, useRef, useContext } from 'react';
+import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
+import { $getNodeByKey } from 'lexical';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { ChevronLeft, ChevronRight, Edit, Expand, ImageIcon, LayoutGrid, Maximize2, Minimize2, X } from 'lucide-react';
+import { Download, Upload, FileType, AlertCircle } from 'lucide-react';
 
-import { Button } from "@/components/editor/ui/button"
-import { ContentEditMenu, type EditMenuOption } from "@/components/editor/ui/content-edit-menu"
-import { Input } from "@/components/editor/ui/input"
-import { Label } from "@/components/editor/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/editor/ui/switch"
-import { cn } from "@/lib/utils"
-import { Alert, AlertDescription } from "@/components/editor/ui/alert"
-import { Progress } from "@/components/editor/ui/progress"
-import type { JSX } from "react/jsx-runtime" // Import JSX from react/jsx-runtime
-import { EditorLoadingContext } from "../lexical-editor"
+import { Button } from '@/components/editor/ui/button';
+import { ContentEditMenu, type EditMenuOption } from '@/components/editor/ui/content-edit-menu';
+import { Input } from '@/components/editor/ui/input';
+import { Label } from '@/components/editor/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/editor/ui/switch';
+import { cn } from '@/lib/utils';
+import { Alert, AlertDescription } from '@/components/editor/ui/alert';
+import { Progress } from '@/components/editor/ui/progress';
+import type { JSX } from 'react/jsx-runtime'; // Import JSX from react/jsx-runtime
+import { EditorLoadingContext } from '../lexical-editor';
 
-export type SlideTheme = "light" | "dark" | "gradient" | "image" | "standard" | "custom"
-export type SlideLayout = "title" | "content" | "title-content" | "image-text" | "text-image" | "full-image"
-export type TransitionEffect = "none" | "fade" | "slide" | "zoom"
+export type SlideTheme = 'light' | 'dark' | 'gradient' | 'image' | 'standard' | 'custom';
+export type SlideLayout = 'title' | 'content' | 'title-content' | 'image-text' | 'text-image' | 'full-image';
+export type TransitionEffect = 'none' | 'fade' | 'slide' | 'zoom';
 
 export interface Slide {
-  id: string
-  title?: string
-  content?: string
-  layout: SlideLayout
-  theme: SlideTheme
-  backgroundImage?: string
-  backgroundGradient?: string
-  notes?: string
+  id: string;
+  title?: string;
+  content?: string;
+  layout: SlideLayout;
+  theme: SlideTheme;
+  backgroundImage?: string;
+  backgroundGradient?: string;
+  notes?: string;
 }
 
 export interface PresentationData {
-  slides: Slide[]
-  title?: string
-  theme: SlideTheme
-  transitionEffect: TransitionEffect
-  autoAdvance: boolean
-  autoAdvanceDelay: number
-  showControls: boolean
-  isNew?: boolean
-  customThemeColor?: string
+  slides: Slide[];
+  title?: string;
+  theme: SlideTheme;
+  transitionEffect: TransitionEffect;
+  autoAdvance: boolean;
+  autoAdvanceDelay: number;
+  showControls: boolean;
+  isNew?: boolean;
+  customThemeColor?: string;
 }
 
 export interface SerializedPresentationNode extends SerializedLexicalNode {
-  type: "presentation"
-  data: PresentationData
-  version: 1
+  type: 'presentation';
+  data: PresentationData;
+  version: 1;
 }
 
 export class PresentationNode extends DecoratorNode<JSX.Element> {
-  __data: PresentationData
+  __data: PresentationData;
 
   static getType(): string {
-    return "presentation"
+    return 'presentation';
   }
 
   static clone(node: PresentationNode): PresentationNode {
-    return new PresentationNode(node.__data, node.__key)
+    return new PresentationNode(node.__data, node.__key);
   }
 
   constructor(data: PresentationData, key?: string) {
-    super(key)
+    super(key);
     this.__data = {
       slides: data.slides || [],
-      title: data.title || "Untitled Presentation",
-      theme: data.theme || "light",
-      transitionEffect: data.transitionEffect || "fade",
+      title: data.title || 'Untitled Presentation',
+      theme: data.theme || 'light',
+      transitionEffect: data.transitionEffect || 'fade',
       autoAdvance: data.autoAdvance || false,
       autoAdvanceDelay: data.autoAdvanceDelay || 5,
       showControls: data.showControls !== undefined ? data.showControls : true,
       isNew: data.isNew,
       customThemeColor: data.customThemeColor,
-    }
+    };
   }
 
   createDOM(): HTMLElement {
-    return document.createElement("div")
+    return document.createElement('div');
   }
 
   updateDOM(): false {
-    return false
+    return false;
   }
 
   setData(data: PresentationData): void {
-    const writable = this.getWritable()
-    writable.__data = data
+    const writable = this.getWritable();
+    writable.__data = data;
   }
 
   exportJSON(): SerializedPresentationNode {
     return {
-      type: "presentation",
+      type: 'presentation',
       data: this.__data,
       version: 1,
-    }
+    };
   }
 
   static importJSON(serializedNode: SerializedPresentationNode): PresentationNode {
-    return new PresentationNode(serializedNode.data)
+    return new PresentationNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {
-    return <PresentationComponent data={this.__data} nodeKey={this.__key} />
+    return <PresentationComponent data={this.__data} nodeKey={this.__key} />;
   }
 }
 
 interface PresentationComponentProps {
-  data: PresentationData
-  nodeKey: string
+  data: PresentationData;
+  nodeKey: string;
 }
 
 function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
-  const [editor] = useLexicalComposerContext()
-  const isLoading = useContext(EditorLoadingContext)
-  const [isEditing, setIsEditing] = useState((data.isNew || false) && !isLoading)
-  const [slides, setSlides] = useState<Slide[]>(data.slides || [])
-  const [title, setTitle] = useState(data.title || "Untitled Presentation")
-  const [theme, setTheme] = useState<SlideTheme>(data.theme || "light")
-  const [transitionEffect, setTransitionEffect] = useState<TransitionEffect>(data.transitionEffect || "fade")
-  const [autoAdvance, setAutoAdvance] = useState(data.autoAdvance || false)
-  const [autoAdvanceDelay, setAutoAdvanceDelay] = useState(data.autoAdvanceDelay || 5)
-  const [showControls, setShowControls] = useState(data.showControls !== undefined ? data.showControls : true)
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
-  const [showMenu, setShowMenu] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [isPresenting, setIsPresenting] = useState(false)
-  const [fileError, setFileError] = useState<string | null>(null)
-  const [isImporting, setIsImporting] = useState(false)
-  const [importProgress, setImportProgress] = useState(0)
-  const [importStatus, setImportStatus] = useState("")
-  const [customThemeColor, setCustomThemeColor] = useState<string | null>(null)
+  const [editor] = useLexicalComposerContext();
+  const isLoading = useContext(EditorLoadingContext);
+  const [isEditing, setIsEditing] = useState((data.isNew || false) && !isLoading);
+  const [slides, setSlides] = useState<Slide[]>(data.slides || []);
+  const [title, setTitle] = useState(data.title || 'Untitled Presentation');
+  const [theme, setTheme] = useState<SlideTheme>(data.theme || 'light');
+  const [transitionEffect, setTransitionEffect] = useState<TransitionEffect>(data.transitionEffect || 'fade');
+  const [autoAdvance, setAutoAdvance] = useState(data.autoAdvance || false);
+  const [autoAdvanceDelay, setAutoAdvanceDelay] = useState(data.autoAdvanceDelay || 5);
+  const [showControls, setShowControls] = useState(data.showControls !== undefined ? data.showControls : true);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPresenting, setIsPresenting] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importStatus, setImportStatus] = useState('');
+  const [customThemeColor, setCustomThemeColor] = useState<string | null>(null);
 
-  const containerRef = useRef<HTMLDivElement>(null)
-  const presentationRef = useRef<HTMLDivElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null);
+  const presentationRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Remove isNew flag after first render
   useEffect(() => {
     if (data.isNew) {
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
+        const node = $getNodeByKey(nodeKey);
         if (node instanceof PresentationNode) {
-          const { isNew, ...rest } = data
-          node.setData(rest)
+          const { isNew, ...rest } = data;
+          node.setData(rest);
         }
-      })
+      });
     }
-  }, [data, editor, nodeKey])
+  }, [data, editor, nodeKey]);
 
   useEffect(() => {
     if (isLoading) {
-      setIsEditing(false)
+      setIsEditing(false);
     }
-  }, [isLoading])
+  }, [isLoading]);
 
   // Handle fullscreen mode
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement)
+      setIsFullscreen(!!document.fullscreenElement);
       if (!document.fullscreenElement) {
-        setIsPresenting(false)
+        setIsPresenting(false);
       }
-    }
+    };
 
-    document.addEventListener("fullscreenchange", handleFullscreenChange)
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange)
-    }
-  }, [])
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   // Handle auto-advance
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null
+    let timer: NodeJS.Timeout | null = null;
 
     if (isPresenting && autoAdvance && !isEditing) {
       timer = setTimeout(() => {
         if (currentSlideIndex < slides.length - 1) {
-          setCurrentSlideIndex(currentSlideIndex + 1)
+          setCurrentSlideIndex(currentSlideIndex + 1);
         } else if (isPresenting) {
           // Loop back to the first slide
-          setCurrentSlideIndex(0)
+          setCurrentSlideIndex(0);
         }
-      }, autoAdvanceDelay * 1000)
+      }, autoAdvanceDelay * 1000);
     }
 
     return () => {
-      if (timer) clearTimeout(timer)
-    }
-  }, [isPresenting, autoAdvance, autoAdvanceDelay, currentSlideIndex, slides.length, isEditing])
+      if (timer) clearTimeout(timer);
+    };
+  }, [isPresenting, autoAdvance, autoAdvanceDelay, currentSlideIndex, slides.length, isEditing]);
 
   const updatePresentation = (newData: Partial<PresentationData>) => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
+      const node = $getNodeByKey(nodeKey);
       if (node instanceof PresentationNode) {
         node.setData({
           ...data,
           ...newData,
           customThemeColor: customThemeColor, // Add the custom theme color
-        })
+        });
       }
-    })
-  }
+    });
+  };
 
   const handleSave = () => {
     updatePresentation({
@@ -216,34 +216,34 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
       autoAdvance,
       autoAdvanceDelay,
       showControls,
-    })
-    setIsEditing(false)
-  }
+    });
+    setIsEditing(false);
+  };
 
   // Function to parse PowerPoint files
   const parsePPTX = async (file: File): Promise<Slide[]> => {
     return new Promise((resolve, reject) => {
-      setImportStatus("Reading PowerPoint file...")
-      setImportProgress(10)
+      setImportStatus('Reading PowerPoint file...');
+      setImportProgress(10);
 
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = async (e) => {
         try {
-          setImportStatus("Parsing slides...")
-          setImportProgress(30)
+          setImportStatus('Parsing slides...');
+          setImportProgress(30);
 
           // Use a library like pptx.js to parse the file
           // This is a simplified example - in reality, you'd need to use a proper PPTX parsing library
-          const arrayBuffer = e.target?.result as ArrayBuffer
+          const arrayBuffer = e.target?.result as ArrayBuffer;
 
           // Simulate parsing with a timeout
           setTimeout(() => {
-            setImportStatus("Extracting content...")
-            setImportProgress(60)
+            setImportStatus('Extracting content...');
+            setImportProgress(60);
 
             // Create slides from the parsed content
             // This is where you'd actually extract slide content from the PPTX
-            const extractedSlides: Slide[] = []
+            const extractedSlides: Slide[] = [];
 
             // Simulate extracting 5 slides
             for (let i = 0; i < 5; i++) {
@@ -251,48 +251,48 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                 id: `slide-${Date.now()}-${i}`,
                 title: `Slide ${i + 1}`,
                 content: `Content extracted from PowerPoint slide ${i + 1}`,
-                layout: "title-content",
-                theme: "light",
-              })
+                layout: 'title-content',
+                theme: 'light',
+              });
             }
 
-            setImportStatus("Processing complete")
-            setImportProgress(100)
+            setImportStatus('Processing complete');
+            setImportProgress(100);
 
-            resolve(extractedSlides)
-          }, 1500)
+            resolve(extractedSlides);
+          }, 1500);
         } catch (error) {
-          reject(error)
+          reject(error);
         }
-      }
+      };
 
       reader.onerror = () => {
-        reject(new Error("Error reading file"))
-      }
+        reject(new Error('Error reading file'));
+      };
 
-      reader.readAsArrayBuffer(file)
-    })
-  }
+      reader.readAsArrayBuffer(file);
+    });
+  };
 
   // Function to parse OpenDocument Presentation files
   const parseODP = async (file: File): Promise<Slide[]> => {
     return new Promise((resolve, reject) => {
-      setImportStatus("Reading OpenDocument file...")
-      setImportProgress(10)
+      setImportStatus('Reading OpenDocument file...');
+      setImportProgress(10);
 
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = async (e) => {
         try {
-          setImportStatus("Parsing ODP format...")
-          setImportProgress(30)
+          setImportStatus('Parsing ODP format...');
+          setImportProgress(30);
 
           // Simulate parsing with a timeout
           setTimeout(() => {
-            setImportStatus("Extracting content...")
-            setImportProgress(60)
+            setImportStatus('Extracting content...');
+            setImportProgress(60);
 
             // Create slides from the parsed content
-            const extractedSlides: Slide[] = []
+            const extractedSlides: Slide[] = [];
 
             // Simulate extracting 3 slides
             for (let i = 0; i < 3; i++) {
@@ -300,99 +300,99 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                 id: `slide-${Date.now()}-${i}`,
                 title: `ODP Slide ${i + 1}`,
                 content: `Content extracted from OpenDocument slide ${i + 1}`,
-                layout: "title-content",
-                theme: "dark", // Different default theme for ODP
-              })
+                layout: 'title-content',
+                theme: 'dark', // Different default theme for ODP
+              });
             }
 
-            setImportStatus("Processing complete")
-            setImportProgress(100)
+            setImportStatus('Processing complete');
+            setImportProgress(100);
 
-            resolve(extractedSlides)
-          }, 1500)
+            resolve(extractedSlides);
+          }, 1500);
         } catch (error) {
-          reject(error)
+          reject(error);
         }
-      }
+      };
 
       reader.onerror = () => {
-        reject(new Error("Error reading file"))
-      }
+        reject(new Error('Error reading file'));
+      };
 
-      reader.readAsArrayBuffer(file)
-    })
-  }
+      reader.readAsArrayBuffer(file);
+    });
+  };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    setIsImporting(true)
-    setFileError(null)
-    setImportProgress(0)
-    setImportStatus("Starting import...")
+    setIsImporting(true);
+    setFileError(null);
+    setImportProgress(0);
+    setImportStatus('Starting import...');
 
     try {
-      let importedSlides: Slide[] = []
+      let importedSlides: Slide[] = [];
 
       // Check file type and use appropriate parser
-      if (file.name.endsWith(".json")) {
+      if (file.name.endsWith('.json')) {
         // Handle JSON files
-        const reader = new FileReader()
+        const reader = new FileReader();
 
         const jsonContent = await new Promise<string>((resolve, reject) => {
-          reader.onload = (e) => resolve(e.target?.result as string)
-          reader.onerror = () => reject(new Error("Error reading file"))
-          reader.readAsText(file)
-        })
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.onerror = () => reject(new Error('Error reading file'));
+          reader.readAsText(file);
+        });
 
-        const parsedData = JSON.parse(jsonContent)
+        const parsedData = JSON.parse(jsonContent);
 
         // Validate the imported data
         if (!Array.isArray(parsedData.slides)) {
-          throw new Error("Invalid presentation format: slides array is missing")
+          throw new Error('Invalid presentation format: slides array is missing');
         }
 
         // Map the imported data to our slide format
         importedSlides = parsedData.slides.map((slide: any) => {
           // Ensure each slide has required properties
           if (!slide.id || !slide.layout || !slide.theme) {
-            throw new Error("Invalid slide format: missing required properties")
+            throw new Error('Invalid slide format: missing required properties');
           }
 
           return {
             id: slide.id,
-            title: slide.title || "",
-            content: slide.content || "",
+            title: slide.title || '',
+            content: slide.content || '',
             layout: slide.layout,
             theme: slide.theme,
             backgroundImage: slide.backgroundImage,
             backgroundGradient: slide.backgroundGradient,
-            notes: slide.notes || "",
-          } as Slide
-        })
+            notes: slide.notes || '',
+          } as Slide;
+        });
 
         // Update presentation settings from JSON
-        if (parsedData.title) setTitle(parsedData.title)
-        if (parsedData.theme) setTheme(parsedData.theme)
-        if (parsedData.transitionEffect) setTransitionEffect(parsedData.transitionEffect)
-        if (parsedData.autoAdvance !== undefined) setAutoAdvance(parsedData.autoAdvance)
-        if (parsedData.autoAdvanceDelay) setAutoAdvanceDelay(parsedData.autoAdvanceDelay)
-        if (parsedData.showControls !== undefined) setShowControls(parsedData.showControls)
-      } else if (file.name.endsWith(".pptx")) {
+        if (parsedData.title) setTitle(parsedData.title);
+        if (parsedData.theme) setTheme(parsedData.theme);
+        if (parsedData.transitionEffect) setTransitionEffect(parsedData.transitionEffect);
+        if (parsedData.autoAdvance !== undefined) setAutoAdvance(parsedData.autoAdvance);
+        if (parsedData.autoAdvanceDelay) setAutoAdvanceDelay(parsedData.autoAdvanceDelay);
+        if (parsedData.showControls !== undefined) setShowControls(parsedData.showControls);
+      } else if (file.name.endsWith('.pptx')) {
         // Handle PowerPoint files
-        importedSlides = await parsePPTX(file)
-        setTitle(file.name.replace(".pptx", ""))
-      } else if (file.name.endsWith(".odp")) {
+        importedSlides = await parsePPTX(file);
+        setTitle(file.name.replace('.pptx', ''));
+      } else if (file.name.endsWith('.odp')) {
         // Handle OpenDocument Presentation files
-        importedSlides = await parseODP(file)
-        setTitle(file.name.replace(".odp", ""))
+        importedSlides = await parseODP(file);
+        setTitle(file.name.replace('.odp', ''));
       } else {
-        throw new Error("Unsupported file format. Please upload a .json, .pptx, or .odp file")
+        throw new Error('Unsupported file format. Please upload a .json, .pptx, or .odp file');
       }
 
       // Update the slides state
-      setSlides(importedSlides)
+      setSlides(importedSlides);
 
       // Update the node data
       updatePresentation({
@@ -403,20 +403,20 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
         autoAdvance,
         autoAdvanceDelay,
         showControls,
-      })
+      });
 
-      setIsImporting(false)
-      setIsEditing(false)
+      setIsImporting(false);
+      setIsEditing(false);
     } catch (error) {
-      console.error("Error importing presentation file:", error)
-      setFileError(error instanceof Error ? error.message : "Invalid file format")
-      setIsImporting(false)
+      console.error('Error importing presentation file:', error);
+      setFileError(error instanceof Error ? error.message : 'Invalid file format');
+      setIsImporting(false);
     }
-  }
+  };
 
   const handleImportClick = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
   const handleExportClick = () => {
     const exportData = {
@@ -427,187 +427,183 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
       autoAdvance,
       autoAdvanceDelay,
       showControls,
-    }
+    };
 
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
 
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${title.replace(/\s+/g, "-").toLowerCase()}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title.replace(/\s+/g, '-').toLowerCase()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const handlePrevSlide = () => {
     if (currentSlideIndex > 0) {
-      setCurrentSlideIndex(currentSlideIndex - 1)
+      setCurrentSlideIndex(currentSlideIndex - 1);
     }
-  }
+  };
 
   const handleNextSlide = () => {
     if (currentSlideIndex < slides.length - 1) {
-      setCurrentSlideIndex(currentSlideIndex + 1)
+      setCurrentSlideIndex(currentSlideIndex + 1);
     }
-  }
+  };
 
   const toggleFullscreen = () => {
     if (!isFullscreen && presentationRef.current) {
       if (presentationRef.current.requestFullscreen) {
-        presentationRef.current.requestFullscreen()
-        setIsPresenting(true)
+        presentationRef.current.requestFullscreen();
+        setIsPresenting(true);
       }
     } else if (isFullscreen && document.fullscreenElement) {
       document
         .exitFullscreen()
         .then(() => {
-          setIsPresenting(false)
+          setIsPresenting(false);
         })
         .catch((err) => {
-          console.error("Error exiting fullscreen:", err)
-        })
+          console.error('Error exiting fullscreen:', err);
+        });
     }
-  }
+  };
 
   // Edit menu options
   const editMenuOptions: EditMenuOption[] = [
     {
-      id: "edit",
+      id: 'edit',
       icon: <Edit className="h-4 w-4" />,
-      label: "Edit presentation",
+      label: 'Edit presentation',
       action: () => setIsEditing(true),
     },
     {
-      id: "present",
+      id: 'present',
       icon: <Expand className="h-4 w-4" />,
-      label: "Present",
+      label: 'Present',
       action: () => {
-        setIsPresenting(true)
-        toggleFullscreen()
+        setIsPresenting(true);
+        toggleFullscreen();
       },
     },
     {
-      id: "export",
+      id: 'export',
       icon: <Download className="h-4 w-4" />,
-      label: "Export presentation",
+      label: 'Export presentation',
       action: handleExportClick,
     },
-  ]
+  ];
 
   // Get background style based on theme
   const getBackgroundStyle = (slideTheme: SlideTheme, backgroundImage?: string, backgroundGradient?: string) => {
     switch (slideTheme) {
-      case "light":
-        return { backgroundColor: "white", color: "black" }
-      case "dark":
-        return { backgroundColor: "#1a1a1a", color: "white" }
-      case "standard":
-        return { backgroundColor: "#f8f9fa", color: "#333333" }
-      case "gradient":
+      case 'light':
+        return { backgroundColor: 'white', color: 'black' };
+      case 'dark':
+        return { backgroundColor: '#1a1a1a', color: 'white' };
+      case 'standard':
+        return { backgroundColor: '#f8f9fa', color: '#333333' };
+      case 'gradient':
         return {
-          background: backgroundGradient || "linear-gradient(135deg, #6366f1, #8b5cf6)",
-          color: "white",
-        }
-      case "custom":
+          background: backgroundGradient || 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+          color: 'white',
+        };
+      case 'custom':
         return {
-          backgroundColor: customThemeColor || "#3b82f6",
-          color: "#ffffff",
-        }
-      case "image":
+          backgroundColor: customThemeColor || '#3b82f6',
+          color: '#ffffff',
+        };
+      case 'image':
         return {
-          backgroundImage: `url(${backgroundImage || "/placeholder.svg"})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          color: "white",
-          position: "relative" as const,
-        }
+          backgroundImage: `url(${backgroundImage || '/placeholder.svg'})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          color: 'white',
+          position: 'relative' as const,
+        };
       default:
-        return { backgroundColor: "white", color: "black" }
+        return { backgroundColor: 'white', color: 'black' };
     }
-  }
+  };
 
   // Get theme color for controls and outline
   const getThemeColor = () => {
     switch (theme) {
-      case "light":
-        return "border-gray-200 bg-gray-100 text-gray-800"
-      case "dark":
-        return "border-gray-700 bg-gray-800 text-gray-200"
-      case "standard":
-        return "border-blue-200 bg-blue-100 text-blue-800"
-      case "custom":
-        return `border-[${customThemeColor || "#3b82f6"}] bg-opacity-10 bg-[${customThemeColor || "#3b82f6"}] text-[${customThemeColor || "#3b82f6"}]`
-      case "gradient":
-        return "border-purple-200 bg-purple-100 text-purple-800"
-      case "image":
-        return "border-gray-300 bg-gray-200 text-gray-800"
+      case 'light':
+        return 'border-gray-200 bg-gray-100 text-gray-800';
+      case 'dark':
+        return 'border-gray-700 bg-gray-800 text-gray-200';
+      case 'standard':
+        return 'border-blue-200 bg-blue-100 text-blue-800';
+      case 'custom':
+        return `border-[${customThemeColor || '#3b82f6'}] bg-opacity-10 bg-[${customThemeColor || '#3b82f6'}] text-[${customThemeColor || '#3b82f6'}]`;
+      case 'gradient':
+        return 'border-purple-200 bg-purple-100 text-purple-800';
+      case 'image':
+        return 'border-gray-300 bg-gray-200 text-gray-800';
       default:
-        return "border-gray-200 bg-gray-100 text-gray-800"
+        return 'border-gray-200 bg-gray-100 text-gray-800';
     }
-  }
+  };
 
   // Get layout style based on layout type
   const getLayoutStyle = (layout: SlideLayout) => {
     switch (layout) {
-      case "title":
-        return "flex flex-col items-center justify-center text-center"
-      case "content":
-        return "flex flex-col p-8"
-      case "title-content":
-        return "flex flex-col p-8"
-      case "image-text":
-        return "flex flex-col gap-4 p-8"
-      case "text-image":
-        return "flex flex-col gap-4 p-8"
-      case "full-image":
-        return "relative"
+      case 'title':
+        return 'flex flex-col items-center justify-center text-center';
+      case 'content':
+        return 'flex flex-col p-8';
+      case 'title-content':
+        return 'flex flex-col p-8';
+      case 'image-text':
+        return 'flex flex-col gap-4 p-8';
+      case 'text-image':
+        return 'flex flex-col gap-4 p-8';
+      case 'full-image':
+        return 'relative';
       default:
-        return "flex flex-col p-8"
+        return 'flex flex-col p-8';
     }
-  }
+  };
 
   // Render a slide based on its layout
   const renderSlide = (slide: Slide) => {
-    const backgroundStyle = getBackgroundStyle(slide.theme, slide.backgroundImage, slide.backgroundGradient)
-    const layoutClass = getLayoutStyle(slide.layout)
+    const backgroundStyle = getBackgroundStyle(slide.theme, slide.backgroundImage, slide.backgroundGradient);
+    const layoutClass = getLayoutStyle(slide.layout);
 
     // Add overlay for image backgrounds to ensure text readability
-    const hasOverlay = slide.theme === "image"
+    const hasOverlay = slide.theme === 'image';
 
     return (
-      <div className={cn("w-full h-full overflow-hidden relative aspect-video")} style={backgroundStyle}>
+      <div className={cn('w-full h-full overflow-hidden relative aspect-video')} style={backgroundStyle}>
         {hasOverlay && <div className="absolute inset-0 bg-black bg-opacity-40"></div>}
 
-        <div className={cn("relative z-5 w-full h-full", layoutClass)}>
-          {slide.layout === "title" && (
+        <div className={cn('relative z-5 w-full h-full', layoutClass)}>
+          {slide.layout === 'title' && (
             <div className="p-8 flex flex-col items-center justify-center h-full">
               <h1 className="text-4xl font-bold mb-4">{slide.title}</h1>
             </div>
           )}
 
-          {slide.layout === "content" && (
+          {slide.layout === 'content' && (
             <div className="p-8">
               <div className="prose max-w-none">{slide.content}</div>
             </div>
           )}
 
-          {slide.layout === "title-content" && (
+          {slide.layout === 'title-content' && (
             <div className="p-8 flex flex-col h-full">
               <h2 className="text-3xl font-bold mb-6">{slide.title}</h2>
               <div className="prose max-w-none">{slide.content}</div>
             </div>
           )}
 
-          {slide.layout === "image-text" && (
+          {slide.layout === 'image-text' && (
             <div className="flex flex-col gap-8 p-8 h-full">
               {slide.backgroundImage ? (
-                <img
-                  src={slide.backgroundImage || "/placeholder.svg"}
-                  alt="Slide image"
-                  className="max-w-full max-h-full object-contain rounded-lg"
-                />
+                <img src={slide.backgroundImage || '/placeholder.svg'} alt="Slide image" className="max-w-full max-h-full object-contain rounded-lg" />
               ) : (
                 <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-lg">
                   <ImageIcon className="h-12 w-12 text-gray-400" />
@@ -617,15 +613,11 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
             </div>
           )}
 
-          {slide.layout === "text-image" && (
+          {slide.layout === 'text-image' && (
             <div className="flex flex-col gap-8 p-8 h-full">
               <div className="prose max-w-none">{slide.content}</div>
               {slide.backgroundImage ? (
-                <img
-                  src={slide.backgroundImage || "/placeholder.svg"}
-                  alt="Slide image"
-                  className="max-w-full max-h-full object-contain rounded-lg"
-                />
+                <img src={slide.backgroundImage || '/placeholder.svg'} alt="Slide image" className="max-w-full max-h-full object-contain rounded-lg" />
               ) : (
                 <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-lg">
                   <ImageIcon className="h-12 w-12 text-gray-400" />
@@ -634,7 +626,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
             </div>
           )}
 
-          {slide.layout === "full-image" && (
+          {slide.layout === 'full-image' && (
             <div className="relative w-full h-full">
               <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/70 to-transparent">
                 <h2 className="text-3xl font-bold text-white">{slide.title}</h2>
@@ -643,20 +635,15 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
           )}
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   // Render the presentation in view mode
   if (!isEditing) {
-    const currentSlide = slides[currentSlideIndex] || null
+    const currentSlide = slides[currentSlideIndex] || null;
 
     return (
-      <div
-        ref={containerRef}
-        className="my-8 relative group"
-        onMouseEnter={() => setShowMenu(true)}
-        onMouseLeave={() => setShowMenu(false)}
-      >
+      <div ref={containerRef} className="my-8 relative group" onMouseEnter={() => setShowMenu(true)} onMouseLeave={() => setShowMenu(false)}>
         <div ref={presentationRef} className="relative">
           {slides.length > 0 ? (
             <div className={`rounded-lg overflow-hidden border shadow-sm ${getThemeColor()}`}>
@@ -678,7 +665,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`absolute left-2 top-1/2 -translate-y-1/2 ${theme === "dark" ? "bg-white/20 hover:bg-white/40 text-black" : "bg-black/20 hover:bg-black/40 text-white"} rounded-full h-8 w-8 z-20`}
+                      className={`absolute left-2 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'bg-white/20 hover:bg-white/40 text-black' : 'bg-black/20 hover:bg-black/40 text-white'} rounded-full h-8 w-8 z-20`}
                       onClick={handlePrevSlide}
                       disabled={currentSlideIndex === 0}
                     >
@@ -687,7 +674,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`absolute right-2 top-1/2 -translate-y-1/2 ${theme === "dark" ? "bg-white/20 hover:bg-white/40 text-black" : "bg-black/20 hover:bg-black/40 text-white"} rounded-full h-8 w-8 z-20`}
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'bg-white/20 hover:bg-white/40 text-black' : 'bg-black/20 hover:bg-black/40 text-white'} rounded-full h-8 w-8 z-20`}
                       onClick={handleNextSlide}
                       disabled={currentSlideIndex === slides.length - 1}
                     >
@@ -705,16 +692,13 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                       <button
                         key={slide.id}
                         className={cn(
-                          "flex-shrink-0 w-16 h-10 rounded overflow-hidden border-2",
-                          index === currentSlideIndex ? "border-primary" : "border-transparent hover:border-gray-300",
+                          'flex-shrink-0 w-16 h-10 rounded overflow-hidden border-2',
+                          index === currentSlideIndex ? 'border-primary' : 'border-transparent hover:border-gray-300',
                         )}
                         onClick={() => setCurrentSlideIndex(index)}
                       >
-                        <div
-                          className="w-full h-full relative"
-                          style={getBackgroundStyle(slide.theme, slide.backgroundImage)}
-                        >
-                          {slide.theme === "image" && <div className="absolute inset-0 bg-black/40"></div>}
+                        <div className="w-full h-full relative" style={getBackgroundStyle(slide.theme, slide.backgroundImage)}>
+                          {slide.theme === 'image' && <div className="absolute inset-0 bg-black/40"></div>}
                           <div className="w-full h-full flex items-center justify-center">
                             <span className="text-xs">{index + 1}</span>
                           </div>
@@ -757,13 +741,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
               {/* Presentation controls */}
               {showControls && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 rounded-full p-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-white h-8 w-8"
-                    onClick={handlePrevSlide}
-                    disabled={currentSlideIndex === 0}
-                  >
+                  <Button variant="ghost" size="icon" className="text-white h-8 w-8" onClick={handlePrevSlide} disabled={currentSlideIndex === 0}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
 
@@ -781,12 +759,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                     <ChevronRight className="h-4 w-4" />
                   </Button>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-white h-8 w-8"
-                    onClick={() => document.exitFullscreen()}
-                  >
+                  <Button variant="ghost" size="icon" className="text-white h-8 w-8" onClick={() => document.exitFullscreen()}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -798,7 +771,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
           {showMenu && !isPresenting && <ContentEditMenu options={editMenuOptions} />}
         </div>
       </div>
-    )
+    );
   }
 
   // Render the presentation in edit mode (now focused on import/export)
@@ -814,15 +787,13 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
               </div>
               <div>
                 <h2 className="text-xl font-bold">Presentation Settings</h2>
-                <p className="text-sm text-muted-foreground">
-                  Configure your presentation import/export and display options
-                </p>
+                <p className="text-sm text-muted-foreground">Configure your presentation import/export and display options</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={toggleFullscreen}>
                 {isFullscreen ? <Minimize2 className="h-4 w-4 mr-2" /> : <Maximize2 className="h-4 w-4 mr-2" />}
-                {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
               </Button>
               <Button variant="default" size="sm" onClick={handleSave}>
                 Save Changes
@@ -852,31 +823,15 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                 <div className="md:col-span-3">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <Button
-                        variant="outline"
-                        onClick={handleImportClick}
-                        disabled={isImporting}
-                        className="flex-1 sm:flex-none"
-                      >
+                      <Button variant="outline" onClick={handleImportClick} disabled={isImporting} className="flex-1 sm:flex-none">
                         <Upload className="h-4 w-4 mr-2" />
-                        {isImporting ? "Importing..." : "Import Presentation"}
+                        {isImporting ? 'Importing...' : 'Import Presentation'}
                       </Button>
-                      <Button
-                        variant="outline"
-                        onClick={handleExportClick}
-                        disabled={slides.length === 0}
-                        className="flex-1 sm:flex-none"
-                      >
+                      <Button variant="outline" onClick={handleExportClick} disabled={slides.length === 0} className="flex-1 sm:flex-none">
                         <Download className="h-4 w-4 mr-2" />
                         Export Presentation
                       </Button>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        accept=".json,.pptx,.odp"
-                        className="hidden"
-                      />
+                      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json,.pptx,.odp" className="hidden" />
                     </div>
 
                     {isImporting && (
@@ -923,9 +878,9 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                     <Select
                       value={theme}
                       onValueChange={(value) => {
-                        setTheme(value as SlideTheme)
-                        if (value === "custom" && !customThemeColor) {
-                          setCustomThemeColor("#3b82f6")
+                        setTheme(value as SlideTheme);
+                        if (value === 'custom' && !customThemeColor) {
+                          setCustomThemeColor('#3b82f6');
                         }
                       }}
                     >
@@ -942,7 +897,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                       </SelectContent>
                     </Select>
 
-                    {theme === "custom" && (
+                    {theme === 'custom' && (
                       <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
                         <Label htmlFor="custom-color" className="text-sm font-medium">
                           Custom Color:
@@ -951,12 +906,12 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                           <input
                             type="color"
                             id="custom-color"
-                            value={customThemeColor || "#3b82f6"}
+                            value={customThemeColor || '#3b82f6'}
                             onChange={(e) => setCustomThemeColor(e.target.value)}
                             className="w-10 h-10 rounded-lg cursor-pointer border"
                           />
                           <Input
-                            value={customThemeColor || "#3b82f6"}
+                            value={customThemeColor || '#3b82f6'}
                             onChange={(e) => setCustomThemeColor(e.target.value)}
                             className="w-28 h-10 text-sm font-mono"
                             placeholder="#3b82f6"
@@ -973,10 +928,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                   Transition Effect
                 </Label>
                 <div className="md:col-span-3">
-                  <Select
-                    value={transitionEffect}
-                    onValueChange={(value) => setTransitionEffect(value as TransitionEffect)}
-                  >
+                  <Select value={transitionEffect} onValueChange={(value) => setTransitionEffect(value as TransitionEffect)}>
                     <SelectTrigger id="transition-effect">
                       <SelectValue placeholder="Select transition" />
                     </SelectTrigger>
@@ -1056,18 +1008,15 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                         <button
                           key={slide.id}
                           className={cn(
-                            "flex-shrink-0 w-20 h-12 rounded-lg overflow-hidden border-2 transition-all",
+                            'flex-shrink-0 w-20 h-12 rounded-lg overflow-hidden border-2 transition-all',
                             index === currentSlideIndex
-                              ? "border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800"
-                              : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600",
+                              ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600',
                           )}
                           onClick={() => setCurrentSlideIndex(index)}
                         >
-                          <div
-                            className="w-full h-full relative"
-                            style={getBackgroundStyle(slide.theme, slide.backgroundImage)}
-                          >
-                            {slide.theme === "image" && <div className="absolute inset-0 bg-black/40"></div>}
+                          <div className="w-full h-full relative" style={getBackgroundStyle(slide.theme, slide.backgroundImage)}>
+                            {slide.theme === 'image' && <div className="absolute inset-0 bg-black/40"></div>}
                             <div className="w-full h-full flex items-center justify-center">
                               <span className="text-xs font-medium">{index + 1}</span>
                             </div>
@@ -1083,18 +1032,18 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
         </div>
       </div>
     </>
-  )
+  );
 }
 
 export function $createPresentationNode(): PresentationNode {
   return new PresentationNode({
     slides: [],
-    title: "Untitled Presentation",
-    theme: "light",
-    transitionEffect: "fade",
+    title: 'Untitled Presentation',
+    theme: 'light',
+    transitionEffect: 'fade',
     autoAdvance: false,
     autoAdvanceDelay: 5,
     showControls: true,
     isNew: true,
-  })
+  });
 }

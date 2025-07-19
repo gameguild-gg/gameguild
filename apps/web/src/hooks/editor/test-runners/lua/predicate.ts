@@ -1,33 +1,29 @@
-import type { TestCase, TestResult } from "../types"
+import type { TestCase, TestResult } from '../types';
 
 // Convert JavaScript predicate to Lua
 function convertPredicateToLua(predicate: string): string {
   // Replace JavaScript syntax with Lua syntax
   return predicate
-    .replace(/===|==/g, "==")
-    .replace(/!==|!=/g, "~=")
-    .replace(/&&/g, "and")
-    .replace(/\|\|/g, "or")
-    .replace(/!/g, "not ")
-    .replace(/true/g, "true")
-    .replace(/false/g, "false")
-    .replace(/null/g, "nil")
-    .replace(/undefined/g, "nil")
-    .replace(/\./g, ".")
-    .replace(/\[(\d+)\]/g, "[$1+1]") // Lua arrays are 1-indexed
-    .replace(/function\s*$$(.*?)$$\s*{(.*?)}/gs, "function($1) $2 end")
-    .replace(/=>/g, "function(result) return ")
-    .replace(/;/g, "")
+    .replace(/===|==/g, '==')
+    .replace(/!==|!=/g, '~=')
+    .replace(/&&/g, 'and')
+    .replace(/\|\|/g, 'or')
+    .replace(/!/g, 'not ')
+    .replace(/true/g, 'true')
+    .replace(/false/g, 'false')
+    .replace(/null/g, 'nil')
+    .replace(/undefined/g, 'nil')
+    .replace(/\./g, '.')
+    .replace(/\[(\d+)\]/g, '[$1+1]') // Lua arrays are 1-indexed
+    .replace(/function\s*$$(.*?)$$\s*{(.*?)}/gs, 'function($1) $2 end')
+    .replace(/=>/g, 'function(result) return ')
+    .replace(/;/g, '');
 }
 
-export async function runPredicateTests(
-  code: string,
-  tests: TestCase[],
-  executeLua: (code: string) => Promise<string>,
-): Promise<TestResult[]> {
+export async function runPredicateTests(code: string, tests: TestCase[], executeLua: (code: string) => Promise<string>): Promise<TestResult[]> {
   // Extract the main function name from the Lua code
-  const functionNameMatch = code.match(/function\s+(\w+)\s*\(/)
-  const functionName = functionNameMatch ? functionNameMatch[1] : "solution"
+  const functionNameMatch = code.match(/function\s+(\w+)\s*\(/);
+  const functionName = functionNameMatch ? functionNameMatch[1] : 'solution';
 
   // Create a Lua test harness that runs all tests and reports results
   const testHarness = `
@@ -36,11 +32,11 @@ ${code}
 -- Test harness
 local json = require("json")
 local tests = ${JSON.stringify(tests)
-    .replace(/\[/g, "{")
-    .replace(/\]/g, "}")
-    .replace(/"([^"]+)":/g, "$1=")
+    .replace(/\[/g, '{')
+    .replace(/\]/g, '}')
+    .replace(/"([^"]+)":/g, '$1=')
     .replace(/"predicate": "(.*?)"/g, (match, predicate) => {
-      return `predicate = "${predicate.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`
+      return `predicate = "${predicate.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
     })}
 
 local results = {}
@@ -58,7 +54,7 @@ for i, test in ipairs(tests) do
     
     -- Convert the predicate to Lua and evaluate it
     local predicateStr = test.predicate
-    local luaPredicate = ${JSON.stringify(tests.map((t) => convertPredicateToLua(t.predicate || "")))}[i]
+    local luaPredicate = ${JSON.stringify(tests.map((t) => convertPredicateToLua(t.predicate || '')))}[i]
     
     -- Create a function from the predicate
     local predicateFunc = load("return function(result) return " .. luaPredicate .. " end")()
@@ -90,18 +86,18 @@ end
 print("TEST_RESULTS_START")
 print(json.encode(results))
 print("TEST_RESULTS_END")
-`
+`;
 
   try {
     // Execute the test harness
-    const output = await executeLua(testHarness)
+    const output = await executeLua(testHarness);
 
     // Extract the test results from the output
-    const resultsMatch = output.match(/TEST_RESULTS_START\n(.*?)\nTEST_RESULTS_END/s)
+    const resultsMatch = output.match(/TEST_RESULTS_START\n(.*?)\nTEST_RESULTS_END/s);
 
     if (resultsMatch) {
       try {
-        const results = JSON.parse(resultsMatch[1])
+        const results = JSON.parse(resultsMatch[1]);
 
         // Convert the results to the expected format
         return results.map((result: any, index: number) => {
@@ -110,40 +106,40 @@ print("TEST_RESULTS_END")
               passed: false,
               actual: `Error: ${result.error}`,
               expected: `Predicate: ${tests[index].predicate}`,
-            }
+            };
           }
 
           return {
             passed: result.passed,
             actual: `Test #${index + 1} returned: ${JSON.stringify(result.actual)}`,
             expected: `Predicate: ${result.predicate}`,
-          }
-        })
+          };
+        });
       } catch (error) {
         return [
           {
             passed: false,
             actual: `Error parsing test results: ${error.message}`,
-            expected: "Valid test results",
+            expected: 'Valid test results',
           },
-        ]
+        ];
       }
     }
 
     return [
       {
         passed: false,
-        actual: "Could not find test results in output",
-        expected: "Test results in output",
+        actual: 'Could not find test results in output',
+        expected: 'Test results in output',
       },
-    ]
+    ];
   } catch (error) {
     return [
       {
         passed: false,
         actual: `Error executing tests: ${error.message}`,
-        expected: "Successful test execution",
+        expected: 'Successful test execution',
       },
-    ]
+    ];
   }
 }

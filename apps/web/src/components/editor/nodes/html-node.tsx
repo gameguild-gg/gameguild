@@ -1,176 +1,161 @@
-"use client"
+'use client';
 
-import { useEffect, useRef, useState, useContext } from "react"
-import { DecoratorNode, type SerializedLexicalNode, type JSX } from "lexical"
-import { Code2, CornerDownLeft } from "lucide-react"
-import { $getNodeByKey } from "lexical"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import DOMPurify from "dompurify"
-import { cn } from "@/lib/utils"
+import { useEffect, useRef, useState, useContext } from 'react';
+import { DecoratorNode, type SerializedLexicalNode, type JSX } from 'lexical';
+import { Code2, CornerDownLeft } from 'lucide-react';
+import { $getNodeByKey } from 'lexical';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import DOMPurify from 'dompurify';
+import { cn } from '@/lib/utils';
 
-import { Button } from "@/components/editor/ui/button"
-import { Textarea } from "@/components/editor/ui/textarea"
-import { Switch } from "@/components/editor/ui/switch"
-import type React from "react" // Import React
-import { EditorLoadingContext } from "../lexical-editor"
+import { Button } from '@/components/editor/ui/button';
+import { Textarea } from '@/components/editor/ui/textarea';
+import { Switch } from '@/components/editor/ui/switch';
+import type React from 'react'; // Import React
+import { EditorLoadingContext } from '../lexical-editor';
 
 export interface HTMLData {
-  content: string
+  content: string;
 }
 
 export interface SerializedHTMLNode extends SerializedLexicalNode {
-  type: "html"
-  data: HTMLData
-  version: 1
+  type: 'html';
+  data: HTMLData;
+  version: 1;
 }
 
 export class HTMLNode extends DecoratorNode<JSX.Element> {
-  __data: HTMLData
+  __data: HTMLData;
 
   static getType(): string {
-    return "html"
+    return 'html';
   }
 
   static clone(node: HTMLNode): HTMLNode {
-    return new HTMLNode(node.__data, node.__key)
+    return new HTMLNode(node.__data, node.__key);
   }
 
   constructor(data: HTMLData, key?: string) {
-    super(key)
-    this.__data = data
+    super(key);
+    this.__data = data;
   }
 
   createDOM(): HTMLElement {
-    return document.createElement("div")
+    return document.createElement('div');
   }
 
   updateDOM(): false {
-    return false
+    return false;
   }
 
   setData(data: HTMLData): void {
-    const writable = this.getWritable()
-    writable.__data = data
+    const writable = this.getWritable();
+    writable.__data = data;
   }
 
   exportJSON(): SerializedHTMLNode {
     return {
-      type: "html",
+      type: 'html',
       data: this.__data,
       version: 1,
-    }
+    };
   }
 
   static importJSON(serializedNode: SerializedHTMLNode): HTMLNode {
-    return new HTMLNode(serializedNode.data)
+    return new HTMLNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {
-    return <HTMLComponent data={this.__data} nodeKey={this.__key} />
+    return <HTMLComponent data={this.__data} nodeKey={this.__key} />;
   }
 }
 
 interface HTMLComponentProps {
-  data: HTMLData
-  nodeKey: string
+  data: HTMLData;
+  nodeKey: string;
 }
 
-const selfClosingTags = new Set([
-  "area",
-  "base",
-  "br",
-  "col",
-  "embed",
-  "hr",
-  "img",
-  "input",
-  "link",
-  "meta",
-  "param",
-  "source",
-  "track",
-  "wbr",
-])
+const selfClosingTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
 
 function autoCloseTag(content: string, position: number): { text: string; newPosition: number } | null {
-  const beforeCursor = content.slice(0, position)
-  const match = beforeCursor.match(/<([a-zA-Z][a-zA-Z0-9]*)[^>]*>(?![^<]*<\/\1>)[^<]*$/)
+  const beforeCursor = content.slice(0, position);
+  const match = beforeCursor.match(/<([a-zA-Z][a-zA-Z0-9]*)[^>]*>(?![^<]*<\/\1>)[^<]*$/);
 
-  if (!match) return null
+  if (!match) return null;
 
-  const tagName = match[1]
-  if (selfClosingTags.has(tagName.toLowerCase())) return null
+  const tagName = match[1];
+  if (selfClosingTags.has(tagName.toLowerCase())) return null;
 
-  const closingTag = `</${tagName}>`
+  const closingTag = `</${tagName}>`;
   return {
     text: content.slice(0, position) + closingTag + content.slice(position),
     newPosition: position + closingTag.length,
-  }
+  };
 }
 
 function HTMLComponent({ data, nodeKey }: HTMLComponentProps) {
-  const [editor] = useLexicalComposerContext()
-  const isLoading = useContext(EditorLoadingContext)
-  const [isEditing, setIsEditing] = useState(!data.content && !isLoading)
-  const [content, setContent] = useState(data.content)
-  const [autoClose, setAutoClose] = useState(true)
-  const htmlRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [editor] = useLexicalComposerContext();
+  const isLoading = useContext(EditorLoadingContext);
+  const [isEditing, setIsEditing] = useState(!data.content && !isLoading);
+  const [content, setContent] = useState(data.content);
+  const [autoClose, setAutoClose] = useState(true);
+  const htmlRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      const isClickInsideHtml = htmlRef.current && htmlRef.current.contains(e.target as Node)
+      const isClickInsideHtml = htmlRef.current && htmlRef.current.contains(e.target as Node);
 
       if (!isClickInsideHtml) {
-        setIsEditing(false)
+        setIsEditing(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     if (isLoading) {
-      setIsEditing(false)
+      setIsEditing(false);
     }
-  }, [isLoading])
+  }, [isLoading]);
 
   const updateHTML = (newContent: string) => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
+      const node = $getNodeByKey(nodeKey);
       if (node instanceof HTMLNode) {
-        node.setData({ content: newContent })
+        node.setData({ content: newContent });
       }
-    })
-  }
+    });
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (!autoClose) return
+    if (!autoClose) return;
 
-    if (e.key === "Enter") {
-      const textarea = e.currentTarget
-      const cursorPosition = textarea.selectionStart
-      const result = autoCloseTag(content, cursorPosition)
+    if (e.key === 'Enter') {
+      const textarea = e.currentTarget;
+      const cursorPosition = textarea.selectionStart;
+      const result = autoCloseTag(content, cursorPosition);
 
       if (result) {
-        e.preventDefault()
-        setContent(result.text)
-        updateHTML(result.text)
+        e.preventDefault();
+        setContent(result.text);
+        updateHTML(result.text);
 
         // Set cursor position after the next tick
         setTimeout(() => {
-          textarea.selectionStart = result.newPosition
-          textarea.selectionEnd = result.newPosition
-        }, 0)
+          textarea.selectionStart = result.newPosition;
+          textarea.selectionEnd = result.newPosition;
+        }, 0);
       }
     }
-  }
+  };
 
   const getPreviewContent = () => {
-    const sanitizedHtml = DOMPurify.sanitize(content)
+    const sanitizedHtml = DOMPurify.sanitize(content);
     return `
       <!DOCTYPE html>
       <html>
@@ -183,8 +168,8 @@ function HTMLComponent({ data, nodeKey }: HTMLComponentProps) {
           ${sanitizedHtml}
         </body>
       </html>
-    `
-  }
+    `;
+  };
 
   const placeholder = `<!DOCTYPE html>
 <html>
@@ -225,7 +210,7 @@ function HTMLComponent({ data, nodeKey }: HTMLComponentProps) {
     })
   </script>
 </body>
-</html>`
+</html>`;
 
   return (
     <div ref={htmlRef} className="my-0 relative group" onClick={() => setIsEditing(true)}>
@@ -259,8 +244,8 @@ function HTMLComponent({ data, nodeKey }: HTMLComponentProps) {
               ref={textareaRef}
               value={content}
               onChange={(e) => {
-                setContent(e.target.value)
-                updateHTML(e.target.value)
+                setContent(e.target.value);
+                updateHTML(e.target.value);
               }}
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
@@ -268,32 +253,27 @@ function HTMLComponent({ data, nodeKey }: HTMLComponentProps) {
             />
           </div>
         ) : (
-          <div
-            className={cn(
-              "w-full bg-background rounded-md",
-              !content && "min-h-[2.5rem] flex items-center justify-center text-sm text-muted-foreground",
-            )}
-          >
+          <div className={cn('w-full bg-background rounded-md', !content && 'min-h-[2.5rem] flex items-center justify-center text-sm text-muted-foreground')}>
             {content ? (
               <iframe
                 srcDoc={getPreviewContent()}
                 className="w-full rounded-md"
-                style={{ height: content ? "auto" : "0" }}
+                style={{ height: content ? 'auto' : '0' }}
                 sandbox="allow-scripts allow-popups allow-same-origin"
                 title="HTML Preview"
               />
             ) : (
-              "Click to edit HTML..."
+              'Click to edit HTML...'
             )}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
 
 export function $createHTMLNode(): HTMLNode {
   return new HTMLNode({
-    content: "",
-  })
+    content: '',
+  });
 }
