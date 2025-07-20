@@ -122,11 +122,7 @@ const columns: Column<GameSession>[] = [
         medium: 'text-yellow-600',
         hard: 'text-red-600',
       };
-      return (
-        <span className={`font-medium ${colors[difficulty as keyof typeof colors]}`}>
-          {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
-        </span>
-      );
+      return <span className={`font-medium ${colors[difficulty as keyof typeof colors]}`}>{difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</span>;
     },
   },
   {
@@ -165,20 +161,12 @@ function SessionFilterControls() {
         <div className="flex-1 max-w-md">
           <SearchBar placeholder="Search sessions..." />
         </div>
-        
-        <MultiSelectFilter
-          filterKey="status"
-          options={statusOptions}
-          placeholder="Filter by status"
-        />
-        
-        <MultiSelectFilter
-          filterKey="difficulty"
-          options={difficultyOptions}
-          placeholder="Filter by difficulty"
-        />
+
+        <MultiSelectFilter filterKey="status" options={statusOptions} placeholder="Filter by status" />
+
+        <MultiSelectFilter filterKey="difficulty" options={difficultyOptions} placeholder="Filter by difficulty" />
       </div>
-      
+
       <ViewModeToggle />
     </div>
   );
@@ -204,9 +192,7 @@ function SessionsList() {
   const handleSort = (key: string) => {
     setSortConfig((current) => {
       if (current?.key === key) {
-        return current.direction === 'asc' 
-          ? { key, direction: 'desc' }
-          : undefined;
+        return current.direction === 'asc' ? { key, direction: 'desc' } : undefined;
       }
       return { key, direction: 'asc' };
     });
@@ -215,7 +201,7 @@ function SessionsList() {
   return (
     <div className="space-y-6">
       <SessionFilterControls />
-      
+
       <DataDisplay
         data={filteredSessions}
         columns={columns}
@@ -225,7 +211,7 @@ function SessionsList() {
         emptyMessage="No sessions found matching your criteria"
         className="w-full"
       />
-      
+
       {/* Results summary */}
       <div className="text-sm text-gray-600">
         Showing {filteredSessions.length} of {mockSessions.length} sessions
@@ -241,11 +227,9 @@ export function GameSessionsExample() {
       <div className="max-w-7xl mx-auto p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Game Sessions</h1>
-          <p className="mt-2 text-gray-600">
-            Manage and discover gaming sessions in your community
-          </p>
+          <p className="mt-2 text-gray-600">Manage and discover gaming sessions in your community</p>
         </div>
-        
+
         <SessionsList />
       </div>
     </FilterProvider>

@@ -61,9 +61,7 @@ export function UsersDataDisplayExample() {
       render: (value: string) => (
         <span
           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-            value === 'active'
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
+            value === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
           }`}
         >
           {value}
@@ -86,7 +84,7 @@ export function UsersDataDisplayExample() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Users Management</h1>
-        
+
         {/* View mode selector */}
         <div className="flex rounded-lg border border-gray-300 bg-white">
           {(['cards', 'row', 'table'] as const).map((mode) => (
@@ -94,12 +92,8 @@ export function UsersDataDisplayExample() {
               key={mode}
               onClick={() => setViewMode(mode)}
               className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
-                viewMode === mode
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-700 hover:bg-gray-50'
-              } ${
-                mode === 'cards' ? 'rounded-l-lg' : mode === 'table' ? 'rounded-r-lg' : ''
-              }`}
+                viewMode === mode ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'
+              } ${mode === 'cards' ? 'rounded-l-lg' : mode === 'table' ? 'rounded-r-lg' : ''}`}
             >
               {mode}
             </button>
@@ -108,20 +102,10 @@ export function UsersDataDisplayExample() {
       </div>
 
       {/* Generic data display */}
-      <DataDisplay
-        data={users}
-        columns={columns}
-        viewMode={viewMode}
-        loading={loading}
-        emptyMessage="No users found"
-        className="w-full"
-      />
+      <DataDisplay data={users} columns={columns} viewMode={viewMode} loading={loading} emptyMessage="No users found" className="w-full" />
 
       {/* Toggle loading state for demonstration */}
-      <button
-        onClick={() => setLoading(!loading)}
-        className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-      >
+      <button onClick={() => setLoading(!loading)} className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
         Toggle Loading State
       </button>
     </div>
