@@ -51,7 +51,7 @@ export function enhancedFilterReducer<T extends Record<string, unknown>>(
   switch (action.type) {
     case 'SET_SEARCH_TERM':
       return { ...state, searchTerm: action.payload };
-    
+
     case 'SET_FILTER':
       return {
         ...state,
@@ -68,24 +68,22 @@ export function enhancedFilterReducer<T extends Record<string, unknown>>(
       }
       const currentValues = state.selectedFilters[key] || [];
       const valueExists = currentValues.includes(value);
-      const newValues = valueExists
-        ? currentValues.filter((v) => v !== value)
-        : [...currentValues, value];
+      const newValues = valueExists ? currentValues.filter((v) => v !== value) : [...currentValues, value];
       return {
         ...state,
         selectedFilters: { ...state.selectedFilters, [key]: newValues },
       };
     }
-    
+
     case 'SET_PERIOD':
       return { ...state, selectedPeriod: action.payload };
-    
+
     case 'SET_VIEW_MODE':
       return { ...state, viewMode: action.payload };
-    
+
     case 'CLEAR_SEARCH':
       return { ...state, searchTerm: '' };
-    
+
     case 'CLEAR_FILTERS':
       return {
         ...state,
@@ -101,10 +99,10 @@ export function enhancedFilterReducer<T extends Record<string, unknown>>(
         selectedFilters: newFilters,
       };
     }
-    
+
     case 'RESET_STATE':
       return { ...state, ...action.payload };
-    
+
     default:
       return state;
   }
@@ -161,15 +159,12 @@ const defaultEnhancedState: EnhancedFilterState = {
 };
 
 // Enhanced Provider component with optimized performance
-export function EnhancedFilterProvider<T extends Record<string, unknown> = Record<string, unknown>>({ 
-  children, 
-  initialState = {} 
+export function EnhancedFilterProvider<T extends Record<string, unknown> = Record<string, unknown>>({
+  children,
+  initialState = {},
 }: EnhancedFilterProviderProps<T>) {
-  const [state, dispatch] = useReducer(
-    enhancedFilterReducer<T>, 
-    { ...defaultEnhancedState, ...initialState } as EnhancedFilterState<T>
-  );
-  
+  const [state, dispatch] = useReducer(enhancedFilterReducer<T>, { ...defaultEnhancedState, ...initialState } as EnhancedFilterState<T>);
+
   // Use Map for O(1) lookup performance
   const [filterConfigs] = useState<Map<keyof T, EnhancedFilterConfig<T>>>(new Map());
 
@@ -198,28 +193,31 @@ export function EnhancedFilterProvider<T extends Record<string, unknown> = Recor
   const setFilter = useCallback(<K extends keyof T>(key: K, values: string[]) => {
     dispatch({ type: 'SET_FILTER', payload: { key, values } });
   }, []);
-  
+
   const toggleFilter = useCallback(<K extends keyof T>(key: K, value: string) => {
     dispatch({ type: 'TOGGLE_FILTER', payload: { key, value } });
   }, []);
-  
+
   const clearFilter = useCallback(<K extends keyof T>(key: K) => {
     dispatch({ type: 'CLEAR_FILTER', payload: key });
   }, []);
-  
-  const getFilterValues = useCallback(<K extends keyof T>(key: K): string[] => {
-    return state.selectedFilters[key] || [];
-  }, [state.selectedFilters]);
-  
-  const registerFilterConfig = useCallback(<K extends keyof T>(config: EnhancedFilterConfig<T, K>) => {
-    filterConfigs.set(config.key, config as EnhancedFilterConfig<T>);
-  }, [filterConfigs]);
-  
+
+  const getFilterValues = useCallback(
+    <K extends keyof T>(key: K): string[] => {
+      return state.selectedFilters[key] || [];
+    },
+    [state.selectedFilters],
+  );
+
+  const registerFilterConfig = useCallback(
+    <K extends keyof T>(config: EnhancedFilterConfig<T, K>) => {
+      filterConfigs.set(config.key, config as EnhancedFilterConfig<T>);
+    },
+    [filterConfigs],
+  );
+
   const hasActiveFilters = useCallback(() => {
-    return (
-      state.searchTerm !== '' ||
-      Object.values(state.selectedFilters).some((values) => values && values.length > 0)
-    );
+    return state.searchTerm !== '' || Object.values(state.selectedFilters).some((values) => values && values.length > 0);
   }, [state.searchTerm, state.selectedFilters]);
 
   const getActiveFilterCount = useCallback(() => {
@@ -231,96 +229,101 @@ export function EnhancedFilterProvider<T extends Record<string, unknown> = Recor
     return count;
   }, [state.searchTerm, state.selectedFilters]);
 
-  const getFilterOptions = useCallback(<K extends keyof T>(key: K): FilterOption[] => {
-    const config = filterConfigs.get(key);
-    return config?.options || [];
-  }, [filterConfigs]);
+  const getFilterOptions = useCallback(
+    <K extends keyof T>(key: K): FilterOption[] => {
+      const config = filterConfigs.get(key);
+      return config?.options || [];
+    },
+    [filterConfigs],
+  );
 
   // High-performance item filtering with O(n) complexity
-  const filterItems = useCallback((items: T[]): T[] => {
-    if (!hasActiveFilters()) return items;
+  const filterItems = useCallback(
+    (items: T[]): T[] => {
+      if (!hasActiveFilters()) return items;
 
-    return items.filter((item) => {
-      // Search term filtering
-      if (state.searchTerm) {
-        const searchLower = state.searchTerm.toLowerCase();
-        const searchableFields = ['title', 'description', 'name', 'label'];
-        const matchesSearch = searchableFields.some((field) => {
-          const value = item[field as keyof T];
-          return typeof value === 'string' && value.toLowerCase().includes(searchLower);
-        });
-        if (!matchesSearch) return false;
-      }
+      return items.filter((item) => {
+        // Search term filtering
+        if (state.searchTerm) {
+          const searchLower = state.searchTerm.toLowerCase();
+          const searchableFields = ['title', 'description', 'name', 'label'];
+          const matchesSearch = searchableFields.some((field) => {
+            const value = item[field as keyof T];
+            return typeof value === 'string' && value.toLowerCase().includes(searchLower);
+          });
+          if (!matchesSearch) return false;
+        }
 
-      // Dynamic filter filtering
-      for (const [key, selectedValues] of Object.entries(state.selectedFilters)) {
-        if (!selectedValues || selectedValues.length === 0) continue;
+        // Dynamic filter filtering
+        for (const [key, selectedValues] of Object.entries(state.selectedFilters)) {
+          if (!selectedValues || selectedValues.length === 0) continue;
 
-        const config = filterConfigs.get(key as keyof T);
-        const itemValue = item[key as keyof T];
+          const config = filterConfigs.get(key as keyof T);
+          const itemValue = item[key as keyof T];
 
-        // Use custom comparator if available
-        if (config?.comparator) {
-          if (!config.comparator(itemValue, selectedValues)) return false;
-        } else if (config?.valueExtractor) {
-          // Use custom value extractor
-          const extractedValues = config.valueExtractor(item);
-          const valuesArray = Array.isArray(extractedValues) ? extractedValues : [extractedValues].filter(Boolean);
-          if (!valuesArray.some(val => selectedValues.includes(val as string))) return false;
-        } else {
-          // Default comparison
-          if (Array.isArray(itemValue)) {
-            if (!itemValue.some(val => selectedValues.includes(String(val)))) return false;
+          // Use custom comparator if available
+          if (config?.comparator) {
+            if (!config.comparator(itemValue, selectedValues)) return false;
+          } else if (config?.valueExtractor) {
+            // Use custom value extractor
+            const extractedValues = config.valueExtractor(item);
+            const valuesArray = Array.isArray(extractedValues) ? extractedValues : [extractedValues].filter(Boolean);
+            if (!valuesArray.some((val) => selectedValues.includes(val as string))) return false;
           } else {
-            if (!selectedValues.includes(String(itemValue))) return false;
+            // Default comparison
+            if (Array.isArray(itemValue)) {
+              if (!itemValue.some((val) => selectedValues.includes(String(val)))) return false;
+            } else {
+              if (!selectedValues.includes(String(itemValue))) return false;
+            }
           }
         }
-      }
 
-      return true;
-    });
-  }, [state.searchTerm, state.selectedFilters, filterConfigs, hasActiveFilters]);
-
-  const value: EnhancedFilterContextType<T> = useMemo(() => ({
-    state,
-    dispatch,
-    filterConfigs,
-    setSearchTerm,
-    setPeriod,
-    setViewMode,
-    clearSearch,
-    clearFilters,
-    hasActiveFilters,
-    setFilter,
-    toggleFilter,
-    clearFilter,
-    getFilterValues,
-    registerFilterConfig,
-    filterItems,
-    getActiveFilterCount,
-    getFilterOptions,
-  }), [
-    state,
-    filterConfigs,
-    setSearchTerm,
-    setPeriod,
-    setViewMode,
-    clearSearch,
-    clearFilters,
-    hasActiveFilters,
-    setFilter,
-    toggleFilter,
-    clearFilter,
-    getFilterValues,
-    registerFilterConfig,
-    filterItems,
-    getActiveFilterCount,
-    getFilterOptions,
-  ]);
-
-  return (
-    <EnhancedFilterContext.Provider value={value as EnhancedFilterContextType<Record<string, unknown>>}>
-      {children}
-    </EnhancedFilterContext.Provider>
+        return true;
+      });
+    },
+    [state.searchTerm, state.selectedFilters, filterConfigs, hasActiveFilters],
   );
+
+  const value: EnhancedFilterContextType<T> = useMemo(
+    () => ({
+      state,
+      dispatch,
+      filterConfigs,
+      setSearchTerm,
+      setPeriod,
+      setViewMode,
+      clearSearch,
+      clearFilters,
+      hasActiveFilters,
+      setFilter,
+      toggleFilter,
+      clearFilter,
+      getFilterValues,
+      registerFilterConfig,
+      filterItems,
+      getActiveFilterCount,
+      getFilterOptions,
+    }),
+    [
+      state,
+      filterConfigs,
+      setSearchTerm,
+      setPeriod,
+      setViewMode,
+      clearSearch,
+      clearFilters,
+      hasActiveFilters,
+      setFilter,
+      toggleFilter,
+      clearFilter,
+      getFilterValues,
+      registerFilterConfig,
+      filterItems,
+      getActiveFilterCount,
+      getFilterOptions,
+    ],
+  );
+
+  return <EnhancedFilterContext.Provider value={value as EnhancedFilterContextType<Record<string, unknown>>}>{children}</EnhancedFilterContext.Provider>;
 }

@@ -34,8 +34,7 @@ function filterAndSortSessions(sessions: TestSession[], filters: TestingLabFilte
   return sessions
     .filter((session) => {
       const matchesSearch =
-        session.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        session.description.toLowerCase().includes(filters.searchTerm.toLowerCase());
+        session.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) || session.description.toLowerCase().includes(filters.searchTerm.toLowerCase());
       const matchesStatus = filters.selectedStatuses.length === 0 || filters.selectedStatuses.includes(session.status);
       const matchesType = filters.selectedTypes.length === 0 || filters.selectedTypes.includes(session.sessionType);
 
@@ -80,11 +79,7 @@ function getDefaultViewMode(): 'cards' | 'row' | 'table' {
   return 'cards';
 }
 
-export function TestingLabFilterProvider({
-  children,
-  sessions,
-  initialViewMode,
-}: TestingLabFilterProviderProps) {
+export function TestingLabFilterProvider({ children, sessions, initialViewMode }: TestingLabFilterProviderProps) {
   const initialState = {
     viewMode: initialViewMode || getDefaultViewMode(),
   };
@@ -96,13 +91,7 @@ export function TestingLabFilterProvider({
   );
 }
 
-function TestingLabFilterProviderInner({
-  children,
-  sessions,
-}: {
-  children: ReactNode;
-  sessions: TestSession[];
-}) {
+function TestingLabFilterProviderInner({ children, sessions }: { children: ReactNode; sessions: TestSession[] }) {
   const filterContext = useFilterContext();
 
   const state = filterContext.state as TestingLabFilterState;

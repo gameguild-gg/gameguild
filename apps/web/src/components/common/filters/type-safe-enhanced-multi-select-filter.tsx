@@ -45,17 +45,14 @@ export function TypeSafeEnhancedMultiSelectFilter<T extends Record<string, unkno
   // Memoized filtered options for performance
   const filteredOptions = useMemo(() => {
     if (!searchValue) return config.options;
-    return config.options.filter((option) =>
-      option.label.toLowerCase().includes(searchValue.toLowerCase()) ||
-      option.value.toLowerCase().includes(searchValue.toLowerCase())
+    return config.options.filter(
+      (option) => option.label.toLowerCase().includes(searchValue.toLowerCase()) || option.value.toLowerCase().includes(searchValue.toLowerCase()),
     );
   }, [config.options, searchValue]);
 
   // Memoized selected option labels for display
   const selectedLabels = useMemo(() => {
-    return selectedValues
-      .map((value) => config.options.find((option) => option.value === value)?.label || value)
-      .slice(0, maxDisplayItems);
+    return selectedValues.map((value) => config.options.find((option) => option.value === value)?.label || value).slice(0, maxDisplayItems);
   }, [selectedValues, config.options, maxDisplayItems]);
 
   const handleSelect = (value: string) => {
@@ -70,11 +67,11 @@ export function TypeSafeEnhancedMultiSelectFilter<T extends Record<string, unkno
 
   const displayText = useMemo(() => {
     if (!hasSelection) return placeholder;
-    
+
     if (selectedValues.length <= maxDisplayItems) {
       return selectedLabels.join(', ');
     }
-    
+
     return `${selectedLabels.slice(0, maxDisplayItems - 1).join(', ')}, +${selectedValues.length - (maxDisplayItems - 1)} more`;
   }, [hasSelection, selectedValues.length, selectedLabels, maxDisplayItems, placeholder]);
 
@@ -86,22 +83,12 @@ export function TypeSafeEnhancedMultiSelectFilter<T extends Record<string, unkno
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className={cn(
-              'justify-between text-left font-normal',
-              hasSelection && 'bg-accent/50 border-primary/20',
-              'min-w-[200px] max-w-[300px]'
-            )}
+            className={cn('justify-between text-left font-normal', hasSelection && 'bg-accent/50 border-primary/20', 'min-w-[200px] max-w-[300px]')}
           >
             <span className="truncate flex-1">{displayText}</span>
             <div className="flex items-center gap-2 ml-2 flex-shrink-0">
               {hasSelection && showClearAll && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-4 w-4 p-0 hover:bg-destructive/20"
-                  onClick={handleClearAll}
-                  aria-label="Clear all filters"
-                >
+                <Button variant="ghost" size="sm" className="h-4 w-4 p-0 hover:bg-destructive/20" onClick={handleClearAll} aria-label="Clear all filters">
                   <X className="h-3 w-3" />
                 </Button>
               )}
@@ -111,12 +98,7 @@ export function TypeSafeEnhancedMultiSelectFilter<T extends Record<string, unkno
         </PopoverTrigger>
         <PopoverContent className="w-[300px] p-0" align="start">
           <Command>
-            <CommandInput
-              placeholder={searchPlaceholder}
-              value={searchValue}
-              onValueChange={setSearchValue}
-              className="h-9"
-            />
+            <CommandInput placeholder={searchPlaceholder} value={searchValue} onValueChange={setSearchValue} className="h-9" />
             <CommandList>
               <CommandEmpty>{emptyText}</CommandEmpty>
               <CommandGroup>
@@ -130,12 +112,7 @@ export function TypeSafeEnhancedMultiSelectFilter<T extends Record<string, unkno
                       className="flex items-center justify-between"
                     >
                       <div className="flex items-center">
-                        <Check
-                          className={cn(
-                            'mr-2 h-4 w-4',
-                            isSelected ? 'opacity-100' : 'opacity-0'
-                          )}
-                        />
+                        <Check className={cn('mr-2 h-4 w-4', isSelected ? 'opacity-100' : 'opacity-0')} />
                         <span>{option.label}</span>
                       </div>
                       {option.count !== undefined && (
@@ -151,7 +128,7 @@ export function TypeSafeEnhancedMultiSelectFilter<T extends Record<string, unkno
           </Command>
         </PopoverContent>
       </Popover>
-      
+
       {/* Selected items display */}
       {hasSelection && (
         <div className="mt-2 flex flex-wrap gap-1">
@@ -160,12 +137,7 @@ export function TypeSafeEnhancedMultiSelectFilter<T extends Record<string, unkno
             return (
               <Badge key={value} variant="secondary" className="text-xs">
                 {option?.label || value}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-3 w-3 p-0 ml-1 hover:bg-destructive/20"
-                  onClick={() => handleSelect(value)}
-                >
+                <Button variant="ghost" size="sm" className="h-3 w-3 p-0 ml-1 hover:bg-destructive/20" onClick={() => handleSelect(value)}>
                   <X className="h-2 w-2" />
                 </Button>
               </Badge>

@@ -26,7 +26,7 @@ export function TypeSafeMultiSelectFilter<T extends Record<string, unknown>>({
 }: TypeSafeMultiSelectFilterProps<T>) {
   const { getFilterValues, toggleFilter, clearFilter } = useFilterContext<T>();
   const [isOpen, setIsOpen] = useState(false);
-  
+
   const selectedValues = getFilterValues(filterKey);
   const selectedCount = selectedValues.length;
 

@@ -47,21 +47,18 @@ export type FilterAction<T = Record<string, unknown>> =
   | { type: 'RESET_STATE'; payload: Partial<BaseFilterState<T>> };
 
 // Filter reducer - enhanced for type-safe dynamic filters
-export function filterReducer<T extends Record<string, unknown>>(
-  state: BaseFilterState<T>,
-  action: FilterAction<T>,
-): BaseFilterState<T> {
+export function filterReducer<T extends Record<string, unknown>>(state: BaseFilterState<T>, action: FilterAction<T>): BaseFilterState<T> {
   switch (action.type) {
     case 'SET_SEARCH_TERM':
       return { ...state, searchTerm: action.payload };
-    
+
     case 'SET_SELECTED_STATUSES':
       return {
         ...state,
         selectedStatuses: action.payload,
         selectedFilters: { ...state.selectedFilters, status: action.payload } as Partial<Record<keyof T, string[]>>,
       };
-    
+
     case 'TOGGLE_STATUS': {
       if (action.payload === 'all') {
         return {
@@ -71,23 +68,21 @@ export function filterReducer<T extends Record<string, unknown>>(
         };
       }
       const statusExists = state.selectedStatuses.includes(action.payload);
-      const newStatuses = statusExists
-        ? state.selectedStatuses.filter((s) => s !== action.payload)
-        : [...state.selectedStatuses, action.payload];
+      const newStatuses = statusExists ? state.selectedStatuses.filter((s) => s !== action.payload) : [...state.selectedStatuses, action.payload];
       return {
         ...state,
         selectedStatuses: newStatuses,
         selectedFilters: { ...state.selectedFilters, status: newStatuses } as Partial<Record<keyof T, string[]>>,
       };
     }
-    
+
     case 'SET_SELECTED_TYPES':
       return {
         ...state,
         selectedTypes: action.payload,
         selectedFilters: { ...state.selectedFilters, type: action.payload } as Partial<Record<keyof T, string[]>>,
       };
-    
+
     case 'TOGGLE_TYPE': {
       if (action.payload === 'all') {
         return {
@@ -97,9 +92,7 @@ export function filterReducer<T extends Record<string, unknown>>(
         };
       }
       const typeExists = state.selectedTypes.includes(action.payload);
-      const newTypes = typeExists
-        ? state.selectedTypes.filter((t) => t !== action.payload)
-        : [...state.selectedTypes, action.payload];
+      const newTypes = typeExists ? state.selectedTypes.filter((t) => t !== action.payload) : [...state.selectedTypes, action.payload];
       return {
         ...state,
         selectedTypes: newTypes,
@@ -123,24 +116,22 @@ export function filterReducer<T extends Record<string, unknown>>(
       }
       const currentValues = state.selectedFilters[key] || [];
       const valueExists = currentValues.includes(value);
-      const newValues = valueExists
-        ? currentValues.filter((v) => v !== value)
-        : [...currentValues, value];
+      const newValues = valueExists ? currentValues.filter((v) => v !== value) : [...currentValues, value];
       return {
         ...state,
         selectedFilters: { ...state.selectedFilters, [key]: newValues },
       };
     }
-    
+
     case 'SET_PERIOD':
       return { ...state, selectedPeriod: action.payload };
-    
+
     case 'SET_VIEW_MODE':
       return { ...state, viewMode: action.payload };
-    
+
     case 'CLEAR_SEARCH':
       return { ...state, searchTerm: '' };
-    
+
     case 'CLEAR_FILTERS':
       return {
         ...state,
@@ -158,10 +149,10 @@ export function filterReducer<T extends Record<string, unknown>>(
         selectedFilters: newFilters,
       };
     }
-    
+
     case 'RESET_STATE':
       return { ...state, ...action.payload };
-    
+
     default:
       return state;
   }
@@ -234,20 +225,20 @@ export function FilterProvider<T extends Record<string, unknown> = Record<string
 
   // Type-safe dynamic filter methods
   const setFilter = (key: keyof T, values: string[]) => dispatch({ type: 'SET_FILTER', payload: { key, values } });
-  
+
   const toggleFilter = (key: keyof T, value: string) => dispatch({ type: 'TOGGLE_FILTER', payload: { key, value } });
-  
+
   const clearFilter = (key: keyof T) => dispatch({ type: 'CLEAR_FILTER', payload: key });
-  
+
   const getFilterValues = (key: keyof T): string[] => state.selectedFilters[key] || [];
-  
+
   const registerFilterConfig = (config: FilterConfig<T>) => {
     setFilterConfigs((prev) => {
       if (prev.find((c) => c.key === config.key)) return prev;
       return [...prev, config];
     });
   };
-  
+
   const hasActiveFilters = () => {
     return (
       state.searchTerm !== '' ||
@@ -277,9 +268,5 @@ export function FilterProvider<T extends Record<string, unknown> = Record<string
   };
 
   // Type assertion is necessary for generic context compatibility
-  return (
-    <FilterContext.Provider value={value as FilterContextType<Record<string, unknown>>}>
-      {children}
-    </FilterContext.Provider>
-  );
+  return <FilterContext.Provider value={value as FilterContextType<Record<string, unknown>>}>{children}</FilterContext.Provider>;
 }

@@ -20,7 +20,7 @@ export function DataDisplay<T extends Record<string, unknown>>({
       {columns.map((column) => {
         const value = item[column.key as keyof T];
         const displayValue = column.render ? column.render(value, item) : value?.toString() || '-';
-        
+
         return (
           <div key={String(column.key)} className="mb-2 last:mb-0">
             <dt className="text-sm font-medium text-gray-600">{column.label}</dt>
@@ -38,7 +38,7 @@ export function DataDisplay<T extends Record<string, unknown>>({
         {columns.slice(0, 4).map((column) => {
           const value = item[column.key as keyof T];
           const displayValue = column.render ? column.render(value, item) : value?.toString() || '-';
-          
+
           return (
             <div key={String(column.key)} className="flex flex-col">
               <span className="text-xs font-medium text-gray-600">{column.label}</span>
