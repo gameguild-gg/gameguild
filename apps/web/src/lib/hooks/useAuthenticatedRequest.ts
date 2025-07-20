@@ -20,10 +20,7 @@ export function useAuthenticatedRequest() {
   const { data: session, update } = useSession();
 
   const makeRequest = useCallback(
-    async <T>(
-      endpoint: string,
-      options: RequestInit & AuthenticatedRequestOptions = {}
-    ): Promise<T> => {
+    async <T>(endpoint: string, options: RequestInit & AuthenticatedRequestOptions = {}): Promise<T> => {
       const { skipRefresh = false, retryOnAuth = true, ...requestOptions } = options;
 
       // Check if we have a session
@@ -38,34 +35,21 @@ export function useAuthenticatedRequest() {
 
       try {
         // Make the authenticated request
-        return await apiClient.authenticatedRequest<T>(
-          endpoint,
-          session.accessToken,
-          requestOptions
-        );
+        return await apiClient.authenticatedRequest<T>(endpoint, session.accessToken, requestOptions);
       } catch (error) {
         // If it's an authentication error and we haven't already tried refreshing
-        if (
-          retryOnAuth &&
-          !skipRefresh &&
-          error instanceof Error &&
-          (error.message.includes('401') || error.message.includes('Unauthorized'))
-        ) {
+        if (retryOnAuth && !skipRefresh && error instanceof Error && (error.message.includes('401') || error.message.includes('Unauthorized'))) {
           console.log('🔄 [AUTH REQUEST] Received 401, triggering session update...');
-          
+
           try {
             // Trigger session update which should refresh the token
             const updatedSession = await update();
-            
+
             if (updatedSession?.accessToken && !(updatedSession as any)?.error) {
               console.log('✅ [AUTH REQUEST] Session updated, retrying request...');
-              
+
               // Retry the request with the new token
-              return await apiClient.authenticatedRequest<T>(
-                endpoint,
-                updatedSession.accessToken,
-                { ...requestOptions }
-              );
+              return await apiClient.authenticatedRequest<T>(endpoint, updatedSession.accessToken, { ...requestOptions });
             } else {
               console.error('❌ [AUTH REQUEST] Session update failed or returned error');
               throw new Error('Authentication session expired. Please sign in again.');
@@ -80,7 +64,7 @@ export function useAuthenticatedRequest() {
         throw error;
       }
     },
-    [session, update]
+    [session, update],
   );
 
   return {
