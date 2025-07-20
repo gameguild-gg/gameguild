@@ -87,9 +87,9 @@ export const authConfig: NextAuthConfig = {
       },
     }),
   ],
-  session: { 
+  session: {
     strategy: 'jwt',
-    // Extend session duration to 7 days 
+    // Extend session duration to 7 days
     maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
     // Update session every hour to keep it fresh
     updateAge: 60 * 60, // 1 hour in seconds
@@ -235,7 +235,7 @@ export const authConfig: NextAuthConfig = {
           hasAccessToken: !!token.accessToken,
           hasRefreshToken: !!token.refreshToken,
         });
-        
+
         // Mark session as corrupted to force re-authentication
         token.error = 'SessionCorrupted';
         return token;
@@ -293,9 +293,9 @@ export const authConfig: NextAuthConfig = {
       // 4. This is not a session update trigger (to avoid infinite loops)
       if (shouldRefresh && token.refreshToken && !token.error && trigger !== 'update') {
         console.log('🔄 [AUTH DEBUG] Token needs refresh, attempting...');
-        
+
         const refreshResult = await refreshAccessToken(token.refreshToken as string);
-        
+
         if (refreshResult.success && refreshResult.data) {
           console.log('✅ [AUTH DEBUG] Token refresh successful:', {
             newExpiresAt: refreshResult.data.expires,
@@ -313,8 +313,7 @@ export const authConfig: NextAuthConfig = {
           console.error('❌ [AUTH DEBUG] Failed to refresh token:', {
             error: refreshResult.error,
             refreshToken: token.refreshToken ? 'present' : 'missing',
-            refreshTokenPrefix: token.refreshToken ? 
-              (token.refreshToken as string).substring(0, 20) + '...' : 'none',
+            refreshTokenPrefix: token.refreshToken ? (token.refreshToken as string).substring(0, 20) + '...' : 'none',
             tokenLength: token.refreshToken ? (token.refreshToken as string).length : 0,
           });
           // Token refresh failed, user needs to sign in again
@@ -340,7 +339,7 @@ export const authConfig: NextAuthConfig = {
       // If there's any token error, clear the session data and return minimal session
       if (token.error === 'RefreshTokenError' || token.error === 'SessionCorrupted') {
         console.log('🚨 [AUTH DEBUG] Token error detected, clearing session data:', token.error);
-        
+
         // Return null to force NextAuth to clear the session completely
         // This will automatically redirect to sign-in page
         return {
@@ -374,12 +373,12 @@ export const authConfig: NextAuthConfig = {
       if (token.accessToken) {
         session.accessToken = token.accessToken as string;
       }
-      
+
       // DEBUG ONLY: Expose refresh token for debugging (remove in production)
       if (token.refreshToken) {
         (session as any).refreshToken = token.refreshToken as string;
       }
-      
+
       session.user.id = token.id as string;
 
       if (token.user) {
