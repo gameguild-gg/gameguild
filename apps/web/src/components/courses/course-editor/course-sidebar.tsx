@@ -2,7 +2,7 @@
 
 import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, BookOpen, DollarSign, Eye, FileText, Image, Save, Settings } from 'lucide-react';
+import { ArrowLeft, BookOpen, DollarSign, Eye, FileText, Image, Save, Settings, Calendar, Award, Search, Play, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useCourseEditor } from '@/lib/courses/course-editor.context';
@@ -38,6 +38,34 @@ const COURSE_SECTIONS = [
     description: 'Thumbnail, videos, images',
   },
   {
+    id: 'delivery',
+    label: 'Delivery & Schedule',
+    icon: Calendar,
+    path: '/delivery',
+    description: 'Course type, sessions, schedule',
+  },
+  {
+    id: 'certificates',
+    label: 'Certificates & Skills',
+    icon: Award,
+    path: '/certificates',
+    description: 'Skills, prerequisites, certificates',
+  },
+  {
+    id: 'seo',
+    label: 'SEO & Metadata',
+    icon: Search,
+    path: '/seo',
+    description: 'Search optimization, social media',
+  },
+  {
+    id: 'publish',
+    label: 'Preview & Publish',
+    icon: Play,
+    path: '/publish',
+    description: 'Publishing, versions, live preview',
+  },
+  {
     id: 'pricing',
     label: 'Pricing & Sales',
     icon: DollarSign,
@@ -50,6 +78,13 @@ const COURSE_SECTIONS = [
     icon: Settings,
     path: '/settings',
     description: 'Publishing, access, advanced',
+  },
+  {
+    id: 'help',
+    label: 'Help & Guidance',
+    icon: HelpCircle,
+    path: '/help',
+    description: 'Setup guide, tips, resources',
   },
 ];
 
