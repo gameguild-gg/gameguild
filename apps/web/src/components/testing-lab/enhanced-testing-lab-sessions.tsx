@@ -3,18 +3,8 @@
 import React, { useState, useMemo } from 'react';
 import { Play, Users, Calendar, Clock, Star, Eye, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { 
-  EnhancedTestingLabFilters, 
-  TestingLabSession 
-} from './filters/enhanced-testing-lab-filter-controls';
-import { 
-  GenericCardView, 
-  GenericTableView, 
-  GenericRowView,
-  CardConfig,
-  ColumnConfig,
-  ActionConfig
-} from '../common/data-display/generic-data-views';
+import { EnhancedTestingLabFilters, TestingLabSession } from './filters/enhanced-testing-lab-filter-controls';
+import { GenericCardView, GenericTableView, GenericRowView, CardConfig, ColumnConfig, ActionConfig } from '../common/data-display/generic-data-views';
 import { useEnhancedFilterContext } from '../common/filters/enhanced-filter-context';
 
 // Mock data for demonstration
@@ -131,11 +121,7 @@ function SessionsDataDisplay() {
       {
         key: 'difficulty',
         label: 'Difficulty',
-        render: (value) => (
-          <Badge variant={value === 'beginner' ? 'secondary' : value === 'intermediate' ? 'default' : 'destructive'}>
-            {String(value)}
-          </Badge>
-        ),
+        render: (value) => <Badge variant={value === 'beginner' ? 'secondary' : value === 'intermediate' ? 'default' : 'destructive'}>{String(value)}</Badge>,
       },
       {
         key: 'participantCount',
@@ -149,9 +135,7 @@ function SessionsDataDisplay() {
       {
         key: 'category',
         label: 'Category',
-        render: (value) => (
-          <Badge variant="outline">{String(value)}</Badge>
-        ),
+        render: (value) => <Badge variant="outline">{String(value)}</Badge>,
       },
     ],
     actions,
@@ -170,11 +154,7 @@ function SessionsDataDisplay() {
       label: 'Status',
       sortable: true,
       render: (value) => (
-        <Badge variant={
-          value === 'open' ? 'default' : 
-          value === 'in-progress' ? 'secondary' : 
-          value === 'full' ? 'destructive' : 'outline'
-        }>
+        <Badge variant={value === 'open' ? 'default' : value === 'in-progress' ? 'secondary' : value === 'full' ? 'destructive' : 'outline'}>
           {String(value)}
         </Badge>
       ),
@@ -183,19 +163,13 @@ function SessionsDataDisplay() {
       key: 'category',
       label: 'Category',
       sortable: true,
-      render: (value) => (
-        <Badge variant="outline">{String(value)}</Badge>
-      ),
+      render: (value) => <Badge variant="outline">{String(value)}</Badge>,
     },
     {
       key: 'difficulty',
       label: 'Difficulty',
       sortable: true,
-      render: (value) => (
-        <Badge variant={value === 'beginner' ? 'secondary' : value === 'intermediate' ? 'default' : 'destructive'}>
-          {String(value)}
-        </Badge>
-      ),
+      render: (value) => <Badge variant={value === 'beginner' ? 'secondary' : value === 'intermediate' ? 'default' : 'destructive'}>{String(value)}</Badge>,
     },
     {
       key: 'participantCount',
@@ -204,7 +178,9 @@ function SessionsDataDisplay() {
       render: (value, item) => (
         <div className="flex items-center gap-1">
           <Users className="h-3 w-3" />
-          <span>{value}/{item.maxParticipants}</span>
+          <span>
+            {value}/{item.maxParticipants}
+          </span>
         </div>
       ),
     },
@@ -236,7 +212,7 @@ function SessionsDataDisplay() {
           emptyMessage="No testing lab sessions found matching your filters."
         />
       );
-    
+
     case 'table':
       return (
         <GenericTableView
@@ -250,7 +226,7 @@ function SessionsDataDisplay() {
           emptyMessage="No testing lab sessions found matching your filters."
         />
       );
-    
+
     case 'row':
       return (
         <GenericRowView
@@ -260,7 +236,7 @@ function SessionsDataDisplay() {
           emptyMessage="No testing lab sessions found matching your filters."
         />
       );
-    
+
     default:
       return (
         <GenericCardView
@@ -279,9 +255,7 @@ export function EnhancedTestingLabSessions() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Testing Lab Sessions</h1>
-        <p className="text-muted-foreground">
-          Discover and join testing lab sessions to improve your skills and collaborate with peers.
-        </p>
+        <p className="text-muted-foreground">Discover and join testing lab sessions to improve your skills and collaborate with peers.</p>
       </div>
 
       <EnhancedTestingLabFilters>

@@ -11,27 +11,15 @@ interface TestingLabActiveFiltersProps {
   typeOptions?: Array<{ value: string; label: string }>;
 }
 
-export function TestingLabActiveFilters({
-  totalCount,
-  statusOptions = [],
-  typeOptions = [],
-}: TestingLabActiveFiltersProps) {
-  const {
-    state,
-    setSearchTerm,
-    toggleStatus,
-    toggleType,
-    clearFilters,
-    hasActiveFilters,
-    filteredSessions,
-  } = useTestingLabFilters();
+export function TestingLabActiveFilters({ totalCount, statusOptions = [], typeOptions = [] }: TestingLabActiveFiltersProps) {
+  const { state, setSearchTerm, toggleStatus, toggleType, clearFilters, hasActiveFilters, filteredSessions } = useTestingLabFilters();
 
   const getStatusLabel = (value: string) => {
-    return statusOptions.find(opt => opt.value === value)?.label || value;
+    return statusOptions.find((opt) => opt.value === value)?.label || value;
   };
 
   const getTypeLabel = (value: string) => {
-    return typeOptions.find(opt => opt.value === value)?.label || value;
+    return typeOptions.find((opt) => opt.value === value)?.label || value;
   };
 
   if (!hasActiveFilters()) {
@@ -46,17 +34,9 @@ export function TestingLabActiveFilters({
 
         {/* Search Term */}
         {state.searchTerm && (
-          <Badge
-            variant="outline"
-            className="bg-blue-900/20 text-blue-300 border-blue-700/50 flex items-center gap-2"
-          >
+          <Badge variant="outline" className="bg-blue-900/20 text-blue-300 border-blue-700/50 flex items-center gap-2">
             Search: "{state.searchTerm}"
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-auto p-0 hover:bg-transparent"
-              onClick={() => setSearchTerm('')}
-            >
+            <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent" onClick={() => setSearchTerm('')}>
               <X className="h-3 w-3" />
             </Button>
           </Badge>
@@ -64,18 +44,9 @@ export function TestingLabActiveFilters({
 
         {/* Selected Statuses */}
         {state.selectedStatuses.map((status) => (
-          <Badge
-            key={status}
-            variant="outline"
-            className="bg-green-900/20 text-green-300 border-green-700/50 flex items-center gap-2"
-          >
+          <Badge key={status} variant="outline" className="bg-green-900/20 text-green-300 border-green-700/50 flex items-center gap-2">
             Status: {getStatusLabel(status)}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-auto p-0 hover:bg-transparent"
-              onClick={() => toggleStatus(status)}
-            >
+            <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent" onClick={() => toggleStatus(status)}>
               <X className="h-3 w-3" />
             </Button>
           </Badge>
@@ -83,30 +54,16 @@ export function TestingLabActiveFilters({
 
         {/* Selected Types */}
         {state.selectedTypes.map((type) => (
-          <Badge
-            key={type}
-            variant="outline"
-            className="bg-purple-900/20 text-purple-300 border-purple-700/50 flex items-center gap-2"
-          >
+          <Badge key={type} variant="outline" className="bg-purple-900/20 text-purple-300 border-purple-700/50 flex items-center gap-2">
             Type: {getTypeLabel(type)}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-auto p-0 hover:bg-transparent"
-              onClick={() => toggleType(type)}
-            >
+            <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent" onClick={() => toggleType(type)}>
               <X className="h-3 w-3" />
             </Button>
           </Badge>
         ))}
 
         {/* Clear All Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={clearFilters}
-          className="text-slate-400 hover:text-slate-200 text-xs"
-        >
+        <Button variant="ghost" size="sm" onClick={clearFilters} className="text-slate-400 hover:text-slate-200 text-xs">
           Clear all
         </Button>
       </div>

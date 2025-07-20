@@ -28,7 +28,7 @@ export function TestingLabHowItWorks() {
                   <span className="text-2xl font-bold text-white drop-shadow-lg">1</span>
                 </div>
               </div>
-              
+
               <h3 className="text-2xl font-bold text-blue-400 mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] group-hover:text-blue-300 transition-colors">
                 Find & Join Sessions
               </h3>
@@ -61,7 +61,7 @@ export function TestingLabHowItWorks() {
                   <span className="text-2xl font-bold text-white drop-shadow-lg">2</span>
                 </div>
               </div>
-              
+
               <h3 className="text-2xl font-bold text-purple-400 mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] group-hover:text-purple-300 transition-colors">
                 Test & Provide Feedback
               </h3>
@@ -94,7 +94,7 @@ export function TestingLabHowItWorks() {
                   <span className="text-2xl font-bold text-white drop-shadow-lg">3</span>
                 </div>
               </div>
-              
+
               <h3 className="text-2xl font-bold text-green-400 mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] group-hover:text-green-300 transition-colors">
                 Earn Recognition
               </h3>

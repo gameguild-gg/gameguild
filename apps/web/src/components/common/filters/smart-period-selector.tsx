@@ -53,19 +53,19 @@ export function SmartPeriodSelector({
 
   // Generate period values based on current selection and offset
   const periodValues = React.useMemo(() => {
-    const selectedConfig = DEFAULT_PERIODS.find(p => p.type === selectedPeriod) || DEFAULT_PERIODS[2]; // Default to month
-    
+    const selectedConfig = DEFAULT_PERIODS.find((p) => p.type === selectedPeriod) || DEFAULT_PERIODS[2]; // Default to month
+
     return generatePeriodValues(selectedConfig.type, currentOffset, maxVisible);
   }, [selectedPeriod, currentOffset, maxVisible]);
 
-  const selectedConfig = DEFAULT_PERIODS.find(p => p.type === selectedPeriod) || DEFAULT_PERIODS[2];
+  const selectedConfig = DEFAULT_PERIODS.find((p) => p.type === selectedPeriod) || DEFAULT_PERIODS[2];
 
   const handleNext = () => {
-    setCurrentOffset(prev => prev + 1);
+    setCurrentOffset((prev) => prev + 1);
   };
 
   const handlePrev = () => {
-    setCurrentOffset(prev => prev - 1);
+    setCurrentOffset((prev) => prev - 1);
   };
 
   const handlePeriodTypeChange = (newPeriod: string) => {
@@ -82,12 +82,7 @@ export function SmartPeriodSelector({
       {/* Period Values Navigation */}
       {showNavigation && (
         <div className="flex items-center gap-2 flex-1">
-          <PeriodValueRow
-            values={periodValues}
-            onNext={handleNext}
-            onPrev={handlePrev}
-            onSelect={handlePeriodValueSelect}
-          />
+          <PeriodValueRow values={periodValues} onNext={handleNext} onPrev={handlePrev} onSelect={handlePeriodValueSelect} />
         </div>
       )}
 
@@ -114,11 +109,13 @@ export function SmartPeriodSelector({
                   style={
                     selectedPeriod === period.type
                       ? {
-                          background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                          background:
+                            'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                           boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                         }
                       : {
-                          background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                          background:
+                            'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                           boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                         }
                   }
@@ -221,21 +218,19 @@ function PeriodValueRow({ values, onNext, onPrev, onSelect }: PeriodValueRowProp
               style={
                 isActive
                   ? {
-                      background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                      background:
+                        'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                       boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                     }
                   : {
-                      background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                      background:
+                        'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                       boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                     }
               }
               onClick={() => handleSelect(index)}
             >
-              {value.year && (
-                <span className={`text-[9px] truncate leading-none ${isActive ? 'text-white' : 'text-slate-500'}`}>
-                  {value.year}
-                </span>
-              )}
+              {value.year && <span className={`text-[9px] truncate leading-none ${isActive ? 'text-white' : 'text-slate-500'}`}>{value.year}</span>}
               <span className="text-sm font-medium truncate leading-none">{value.label}</span>
             </Button>
           );

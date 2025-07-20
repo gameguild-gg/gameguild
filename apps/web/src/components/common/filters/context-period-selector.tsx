@@ -14,11 +14,7 @@ interface ContextPeriodSelectorProps {
  * A context-aware period selector that automatically integrates with the filter context.
  * This component is SSR-safe and uses the smart period selector internally.
  */
-export function ContextPeriodSelector({
-  className,
-  showNavigation = true,
-  maxVisible = 3,
-}: ContextPeriodSelectorProps) {
+export function ContextPeriodSelector({ className, showNavigation = true, maxVisible = 3 }: ContextPeriodSelectorProps) {
   const { state, setPeriod } = useFilterContext();
 
   const handlePeriodChange = (period: string) => {

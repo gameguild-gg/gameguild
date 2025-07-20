@@ -155,9 +155,7 @@ function TypeSafeTestingLabFilterControlsContent({
       <div className="xl:hidden space-y-4">
         {/* First Row - Period Selector and View Mode Toggle */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {!hidePeriodSelector && <ContextPeriodSelector />}
-          </div>
+          <div className="flex items-center gap-3">{!hidePeriodSelector && <ContextPeriodSelector />}</div>
           {!hideViewToggle && <ContextViewModeToggle />}
         </div>
 
@@ -168,26 +166,10 @@ function TypeSafeTestingLabFilterControlsContent({
 
         {/* Third Row - Filters */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <TypeSafeMultiSelectFilter<TestingLabSession>
-            filterKey="status"
-            options={statusOptions}
-            placeholder="Status"
-          />
-          <TypeSafeMultiSelectFilter<TestingLabSession>
-            filterKey="type"
-            options={typeOptions}
-            placeholder="Type"
-          />
-          <TypeSafeMultiSelectFilter<TestingLabSession>
-            filterKey="category"
-            options={categoryOptions}
-            placeholder="Category"
-          />
-          <TypeSafeMultiSelectFilter<TestingLabSession>
-            filterKey="difficulty"
-            options={difficultyOptions}
-            placeholder="Difficulty"
-          />
+          <TypeSafeMultiSelectFilter<TestingLabSession> filterKey="status" options={statusOptions} placeholder="Status" />
+          <TypeSafeMultiSelectFilter<TestingLabSession> filterKey="type" options={typeOptions} placeholder="Type" />
+          <TypeSafeMultiSelectFilter<TestingLabSession> filterKey="category" options={categoryOptions} placeholder="Category" />
+          <TypeSafeMultiSelectFilter<TestingLabSession> filterKey="difficulty" options={difficultyOptions} placeholder="Difficulty" />
         </div>
       </div>
     </div>
