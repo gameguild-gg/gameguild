@@ -1,32 +1,27 @@
-"use client"
+'use client';
 
-import { Input } from "@/components/editor/ui/input"
+import { Input } from '@/components/ui/input';
 
 interface FillBlankQuestionProps {
-  question: string
-  userAnswer: string
-  onAnswerChange: (answer: string) => void
-  showFeedback: boolean
-  isCorrect: boolean
-  disabled?: boolean
+  question: string;
+  userAnswer: string;
+  onAnswerChange: (answer: string) => void;
+  showFeedback: boolean;
+  isCorrect: boolean;
+  disabled?: boolean;
 }
 
 export function FillBlankQuestion({ question, userAnswer, onAnswerChange, disabled = false }: FillBlankQuestionProps) {
   // Replace blanks in question with input fields
   const renderQuestionWithBlanks = () => {
-    const parts = question.split("___")
+    const parts = question.split('___');
     if (parts.length === 1) {
       return (
         <div className="space-y-4">
           <div className="font-semibold">{question}</div>
-          <Input
-            value={userAnswer}
-            onChange={(e) => onAnswerChange(e.target.value)}
-            disabled={disabled}
-            placeholder="Enter your answer"
-          />
+          <Input value={userAnswer} onChange={(e) => onAnswerChange(e.target.value)} disabled={disabled} placeholder="Enter your answer" />
         </div>
-      )
+      );
     }
 
     return (
@@ -46,8 +41,8 @@ export function FillBlankQuestion({ question, userAnswer, onAnswerChange, disabl
           </span>
         ))}
       </div>
-    )
-  }
+    );
+  };
 
-  return <div className="space-y-4">{renderQuestionWithBlanks()}</div>
+  return <div className="space-y-4">{renderQuestionWithBlanks()}</div>;
 }

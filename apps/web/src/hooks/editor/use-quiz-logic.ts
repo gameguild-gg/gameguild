@@ -1,64 +1,58 @@
-"use client"
+'use client';
 
-import { useState, useCallback } from "react"
+import { useState, useCallback } from 'react';
 
 interface UseQuizLogicProps {
-  answers: { id: string; text: string; isCorrect: boolean }[]
-  correctFeedback?: string
-  incorrectFeedback?: string
-  allowRetry: boolean
+  answers: { id: string; text: string; isCorrect: boolean }[];
+  correctFeedback?: string;
+  incorrectFeedback?: string;
+  allowRetry: boolean;
 }
 
 interface UseQuizLogicReturn {
-  selectedAnswers: string[]
-  setSelectedAnswers: (answers: string[]) => void
-  showFeedback: boolean
-  setShowFeedback: (show: boolean) => void
-  isCorrect: boolean
-  setIsCorrect: (correct: boolean) => void
-  resetQuiz: () => void
-  checkAnswers: () => void
-  toggleAnswer: (id: string) => void
+  selectedAnswers: string[];
+  setSelectedAnswers: (answers: string[]) => void;
+  showFeedback: boolean;
+  setShowFeedback: (show: boolean) => void;
+  isCorrect: boolean;
+  setIsCorrect: (correct: boolean) => void;
+  resetQuiz: () => void;
+  checkAnswers: () => void;
+  toggleAnswer: (id: string) => void;
 }
 
-export function useQuizLogic({
-  answers,
-  allowRetry,
-  correctFeedback,
-  incorrectFeedback,
-}: UseQuizLogicProps): UseQuizLogicReturn {
-  const [selectedAnswers, setSelectedAnswers] = useState<string[]>([])
-  const [showFeedback, setShowFeedback] = useState(false)
-  const [isCorrect, setIsCorrect] = useState(false)
+export function useQuizLogic({ answers, allowRetry, correctFeedback, incorrectFeedback }: UseQuizLogicProps): UseQuizLogicReturn {
+  const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
 
   const checkAnswers = () => {
-    const correctAnswers = answers.filter((a) => a.isCorrect).map((a) => a.id)
-    const isAllCorrect =
-      correctAnswers.length === selectedAnswers.length && correctAnswers.every((id) => selectedAnswers.includes(id))
+    const correctAnswers = answers.filter((a) => a.isCorrect).map((a) => a.id);
+    const isAllCorrect = correctAnswers.length === selectedAnswers.length && correctAnswers.every((id) => selectedAnswers.includes(id));
 
-    setIsCorrect(isAllCorrect)
-    setShowFeedback(true)
+    setIsCorrect(isAllCorrect);
+    setShowFeedback(true);
 
     if (!allowRetry) {
-      setSelectedAnswers([])
+      setSelectedAnswers([]);
     }
-  }
+  };
 
   const toggleAnswer = (id: string) => {
     setSelectedAnswers((prevSelected) => {
       if (prevSelected.includes(id)) {
-        return prevSelected.filter((answerId) => answerId !== id)
+        return prevSelected.filter((answerId) => answerId !== id);
       } else {
-        return [...prevSelected, id]
+        return [...prevSelected, id];
       }
-    })
-  }
+    });
+  };
 
   const resetQuiz = useCallback(() => {
-    setSelectedAnswers([])
-    setShowFeedback(false)
-    setIsCorrect(false)
-  }, [setSelectedAnswers, setShowFeedback, setIsCorrect])
+    setSelectedAnswers([]);
+    setShowFeedback(false);
+    setIsCorrect(false);
+  }, [setSelectedAnswers, setShowFeedback, setIsCorrect]);
 
   return {
     selectedAnswers,
@@ -70,5 +64,5 @@ export function useQuizLogic({
     resetQuiz,
     checkAnswers,
     toggleAnswer,
-  }
+  };
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef, useContext } from 'react';
 import { Code, Play, Settings } from 'lucide-react';
-import type { EditMenuOption } from '@/components/editor/ui/content-edit-menu';
+import type { EditMenuOption } from '@/components/ui/content-edit-menu';
 import type { CodeFile, LanguageType, ProgrammingLanguage } from '../ui/source-code/types';
 import { SourceCodeRenderer } from '../ui/source-code/source-code-renderer';
 import { EditorLoadingContext } from '../lexical-editor';

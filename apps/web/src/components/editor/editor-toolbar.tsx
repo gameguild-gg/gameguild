@@ -4,7 +4,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getRoot, $createParagraphNode } from 'lexical';
 import { ArrowUp } from 'lucide-react';
 import { PreviewPlugin } from './plugins/preview-plugin';
-import { Button } from '@/components/editor/ui/button';
+import { Button } from '@/components/ui/button';
 
 export function EditorToolbar() {
   const [editor] = useLexicalComposerContext();

@@ -1,25 +1,25 @@
-"use client"
+'use client';
 
-import { Editor } from "@/components/editor/lexical-editor"
-import { Button } from "@/components/editor/ui/button"
-import { Input } from "@/components/editor/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/editor/ui/dialog"
-import { Label } from "@/components/editor/ui/label"
-import { Save, SaveAll, FolderOpen, Trash2, HardDrive } from "lucide-react"
-import { useState, useEffect, useRef } from "react"
-import { toast } from "sonner"
-import { Sun, Moon } from "lucide-react"
-import type { LexicalEditor } from "lexical"
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DialogContent } from '@radix-ui/react-dialog';
+import { FolderOpen, HardDrive, Moon, Save, SaveAll, Sun, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { LexicalEditor } from 'lexical';
+import Editor from '@monaco-editor/react';
 
 // Função para comprimir dados usando LZ-based compression
 function compressData(data: string): string {
   try {
     // Adicionar prefixo para identificar dados comprimidos
-    const compressed = btoa(encodeURIComponent(data))
-    return `COMPRESSED:${compressed}`
+    const compressed = btoa(encodeURIComponent(data));
+    return `COMPRESSED:${compressed}`;
   } catch (error) {
-    console.error("Compression error:", error)
-    return data // Fallback para dados não comprimidos
+    console.error('Compression error:', error);
+    return data; // Fallback para dados não comprimidos
   }
 }
 
@@ -27,18 +27,18 @@ function compressData(data: string): string {
 function decompressData(data: string): string {
   try {
     // Verificar se os dados têm o prefixo de compressão
-    if (data.startsWith("COMPRESSED:")) {
-      const compressedData = data.substring(11) // Remove o prefixo "COMPRESSED:"
-      return decodeURIComponent(atob(compressedData))
+    if (data.startsWith('COMPRESSED:')) {
+      const compressedData = data.substring(11); // Remove o prefixo "COMPRESSED:"
+      return decodeURIComponent(atob(compressedData));
     }
 
     // Se não tem prefixo, tentar detectar se é base64 válido
     if (isValidBase64(data)) {
       try {
-        const decoded = atob(data)
+        const decoded = atob(data);
         // Verificar se o resultado parece ser JSON válido
         if (decoded.includes('"root"') && decoded.includes('"children"')) {
-          return decodeURIComponent(decoded)
+          return decodeURIComponent(decoded);
         }
       } catch (e) {
         // Se falhar, não é base64 válido, retornar original
@@ -46,10 +46,10 @@ function decompressData(data: string): string {
     }
 
     // Retornar dados originais se não conseguir descomprimir
-    return data
+    return data;
   } catch (error) {
-    console.error("Decompression error:", error)
-    return data // Retorna os dados originais se falhar
+    console.error('Decompression error:', error);
+    return data; // Retorna os dados originais se falhar
   }
 }
 
@@ -57,220 +57,216 @@ function decompressData(data: string): string {
 function isValidBase64(str: string): boolean {
   try {
     // Verificar se a string tem caracteres válidos de base64
-    const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
+    const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
     if (!base64Regex.test(str)) {
-      return false
+      return false;
     }
 
     // Tentar decodificar para verificar se é válido
-    atob(str)
-    return true
+    atob(str);
+    return true;
   } catch (error) {
-    return false
+    return false;
   }
 }
 
 // Função para estimar o tamanho dos dados em KB
 function estimateSize(data: string): number {
-  return new Blob([data]).size / 1024
+  return new Blob([data]).size / 1024;
 }
 
 // Função para formatar tamanho em KB/MB
 function formatSize(sizeInKB: number): string {
   if (sizeInKB < 1024) {
-    return `${sizeInKB.toFixed(1)}KB`
+    return `${sizeInKB.toFixed(1)}KB`;
   } else {
-    return `${(sizeInKB / 1024).toFixed(1)}MB`
+    return `${(sizeInKB / 1024).toFixed(1)}MB`;
   }
 }
 
 export default function Page() {
-  const [editorState, setEditorState] = useState<string>("")
-  const [currentProjectName, setCurrentProjectName] = useState<string>("")
-  const [saveAsDialogOpen, setSaveAsDialogOpen] = useState(false)
-  const [openDialogOpen, setOpenDialogOpen] = useState(false)
-  const [newProjectName, setNewProjectName] = useState("")
-  const [savedProjects, setSavedProjects] = useState<string[]>([])
-  const [isLoadingProject, setIsLoadingProject] = useState(false)
-  const [currentProjectSize, setCurrentProjectSize] = useState<number>(0)
-  const [totalStorageUsed, setTotalStorageUsed] = useState<number>(0)
-  const setLoadingRef = useRef<((loading: boolean) => void) | null>(null)
+  const [editorState, setEditorState] = useState<string>('');
+  const [currentProjectName, setCurrentProjectName] = useState<string>('');
+  const [saveAsDialogOpen, setSaveAsDialogOpen] = useState(false);
+  const [openDialogOpen, setOpenDialogOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [savedProjects, setSavedProjects] = useState<string[]>([]);
+  const [isLoadingProject, setIsLoadingProject] = useState(false);
+  const [currentProjectSize, setCurrentProjectSize] = useState<number>(0);
+  const [totalStorageUsed, setTotalStorageUsed] = useState<number>(0);
+  const setLoadingRef = useRef<((loading: boolean) => void) | null>(null);
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
   // Estado para modo escuro
-  const [isDark, setIsDark] = useState(
-    typeof window !== "undefined"
-      ? document.documentElement.classList.contains("dark")
-      : false
-  )
+  const [isDark, setIsDark] = useState(typeof window !== 'undefined' ? document.documentElement.classList.contains('dark') : false);
 
   // Alternar tema
   const toggleTheme = () => {
-    if (typeof window === "undefined") return
-    const root = document.documentElement
-    if (root.classList.contains("dark")) {
-      root.classList.remove("dark")
-      setIsDark(false)
-      localStorage.setItem("theme", "light")
+    if (typeof window === 'undefined') return;
+    const root = document.documentElement;
+    if (root.classList.contains('dark')) {
+      root.classList.remove('dark');
+      setIsDark(false);
+      localStorage.setItem('theme', 'light');
     } else {
-      root.classList.add("dark")
-      setIsDark(true)
-      localStorage.setItem("theme", "dark")
+      root.classList.add('dark');
+      setIsDark(true);
+      localStorage.setItem('theme', 'dark');
     }
-  }
+  };
 
   // Sincronizar com localStorage (opcional)
   useEffect(() => {
-    if (typeof window === "undefined") return
-    const saved = localStorage.getItem("theme")
-    if (saved === "dark") {
-      document.documentElement.classList.add("dark")
-      setIsDark(true)
-    } else if (saved === "light") {
-      document.documentElement.classList.remove("dark")
-      setIsDark(false)
+    if (typeof window === 'undefined') return;
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') {
+      document.documentElement.classList.add('dark');
+      setIsDark(true);
+    } else if (saved === 'light') {
+      document.documentElement.classList.remove('dark');
+      setIsDark(false);
     }
-  }, [])
+  }, []);
 
   // Storage limit system
-  const [storageLimit, setStorageLimit] = useState<number | null>(100) // null = unlimited, number = MB limit
-  const [showStorageLimitDialog, setShowStorageLimitDialog] = useState(false)
-  const [newStorageLimit, setNewStorageLimit] = useState("")
+  const [storageLimit, setStorageLimit] = useState<number | null>(100); // null = unlimited, number = MB limit
+  const [showStorageLimitDialog, setShowStorageLimitDialog] = useState(false);
+  const [newStorageLimit, setNewStorageLimit] = useState('');
 
   // Calculate storage usage percentage
   const getStorageUsagePercentage = (): number => {
-    if (!storageLimit) return 0
-    return (totalStorageUsed / 1024 / storageLimit) * 100 // Convert KB to MB
-  }
+    if (!storageLimit) return 0;
+    return (totalStorageUsed / 1024 / storageLimit) * 100; // Convert KB to MB
+  };
 
   // Format storage size with appropriate units
   const formatStorageSize = (sizeInKB: number): string => {
-    const sizeInMB = sizeInKB / 1024
-    const sizeInGB = sizeInMB / 1024
+    const sizeInMB = sizeInKB / 1024;
+    const sizeInGB = sizeInMB / 1024;
 
     if (sizeInGB >= 1) {
-      return `${sizeInGB.toFixed(1)}GB`
+      return `${sizeInGB.toFixed(1)}GB`;
     } else if (sizeInMB >= 1) {
-      return `${sizeInMB.toFixed(1)}MB`
+      return `${sizeInMB.toFixed(1)}MB`;
     } else {
-      return `${sizeInKB.toFixed(1)}KB`
+      return `${sizeInKB.toFixed(1)}KB`;
     }
-  }
+  };
 
   // Check if storage operations should be blocked
   const isStorageNearLimit = (): boolean => {
-    if (!storageLimit) return false
-    return getStorageUsagePercentage() >= 90
-  }
+    if (!storageLimit) return false;
+    return getStorageUsagePercentage() >= 90;
+  };
 
   const isStorageAtLimit = (): boolean => {
-    if (!storageLimit) return false
-    return getStorageUsagePercentage() >= 100
-  }
+    if (!storageLimit) return false;
+    return getStorageUsagePercentage() >= 100;
+  };
 
   // Get storage limit display
   const getStorageLimitDisplay = (): string => {
-    if (!storageLimit) return "∞"
-    return `${storageLimit}MB`
-  }
+    if (!storageLimit) return '∞';
+    return `${storageLimit}MB`;
+  };
 
   // Cache em memória para projetos que não puderam ser salvos no localStorage
-  const memoryCache = useRef<Map<string, string>>(new Map())
+  const memoryCache = useRef<Map<string, string>>(new Map());
 
-  const editorRef = useRef<LexicalEditor | null>(null)
+  const editorRef = useRef<LexicalEditor | null>(null);
 
   // Tamanho recomendado em KB (500KB)
-  const RECOMMENDED_SIZE_KB = 500
+  const RECOMMENDED_SIZE_KB = 500;
 
-  const [isFirstTime, setIsFirstTime] = useState(true)
+  const [isFirstTime, setIsFirstTime] = useState(true);
 
   // Load saved projects list on component mount
   useEffect(() => {
-    loadSavedProjectsList()
-    updateStorageInfo()
-  }, [])
+    loadSavedProjectsList();
+    updateStorageInfo();
+  }, []);
 
   // Force open dialog on first visit
   useEffect(() => {
     // Check if it's the first time (no current project and no saved projects)
     if (isFirstTime && !currentProjectName && savedProjects.length === 0) {
-      setOpenDialogOpen(true)
+      setOpenDialogOpen(true);
     } else if (isFirstTime && savedProjects.length > 0) {
       // If there are saved projects but no current project, also show dialog
-      setOpenDialogOpen(true)
+      setOpenDialogOpen(true);
     }
-    setIsFirstTime(false)
-  }, [savedProjects, currentProjectName, isFirstTime])
+    setIsFirstTime(false);
+  }, [savedProjects, currentProjectName, isFirstTime]);
 
   // Atualizar informações de armazenamento sempre que o editor mudar
   useEffect(() => {
     if (editorState) {
-      const size = estimateSize(editorState)
-      setCurrentProjectSize(size)
+      const size = estimateSize(editorState);
+      setCurrentProjectSize(size);
     }
-  }, [editorState])
+  }, [editorState]);
 
   // Atualizar informações de armazenamento
   const updateStorageInfo = () => {
     try {
-      let totalSize = 0
+      let totalSize = 0;
       for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (key && key.startsWith("gg-editor-")) {
-          const value = localStorage.getItem(key) || ""
-          totalSize += estimateSize(value)
+        const key = localStorage.key(i);
+        if (key && key.startsWith('gg-editor-')) {
+          const value = localStorage.getItem(key) || '';
+          totalSize += estimateSize(value);
         }
       }
-      setTotalStorageUsed(totalSize)
+      setTotalStorageUsed(totalSize);
     } catch (error) {
-      console.error("Error updating storage info:", error)
+      console.error('Error updating storage info:', error);
     }
-  }
+  };
 
   // Storage interface - sempre "funciona" do ponto de vista do usuário
   const storageAdapter = {
     save: (key: string, data: string) => {
       if (!key || !data) {
-        console.warn("Invalid key or data, but continuing...")
-        return // Não lança erro, apenas retorna
+        console.warn('Invalid key or data, but continuing...');
+        return; // Não lança erro, apenas retorna
       }
-      const vVar = false // Simula uma variável de controle para o exemplo
+      const vVar = false; // Simula uma variável de controle para o exemplo
       // Só bloquear se false for true (nunca vai acontecer)
       if (vVar) {
-        throw new Error("Impossible condition met - save blocked")
+        throw new Error('Impossible condition met - save blocked');
       }
 
-      const dataSize = estimateSize(data)
-      console.log(`Project size: ${formatSize(dataSize)}`)
+      const dataSize = estimateSize(data);
+      console.log(`Project size: ${formatSize(dataSize)}`);
 
       // Tentar salvar no localStorage
       try {
-        let storageData = data
+        let storageData = data;
 
         // Comprimir dados se forem grandes
         if (dataSize > 500) {
-          storageData = compressData(data)
-          const compressedSize = estimateSize(storageData)
-          console.log(`Compressed from ${formatSize(dataSize)} to ${formatSize(compressedSize)}`)
+          storageData = compressData(data);
+          const compressedSize = estimateSize(storageData);
+          console.log(`Compressed from ${formatSize(dataSize)} to ${formatSize(compressedSize)}`);
         } else {
           // Para dados pequenos, adicionar um prefixo para identificar que não estão comprimidos
-          storageData = `UNCOMPRESSED:${data}`
+          storageData = `UNCOMPRESSED:${data}`;
         }
 
-        localStorage.setItem(`gg-editor-${key}`, storageData)
-        console.log("✅ Saved to localStorage successfully")
-        updateStorageInfo()
+        localStorage.setItem(`gg-editor-${key}`, storageData);
+        console.log('✅ Saved to localStorage successfully');
+        updateStorageInfo();
       } catch (localStorageError: any) {
-        console.warn("⚠️ localStorage failed, using memory cache:", localStorageError.message)
+        console.warn('⚠️ localStorage failed, using memory cache:', localStorageError.message);
 
         // Salvar no cache de memória como fallback
-        memoryCache.current.set(key, data)
+        memoryCache.current.set(key, data);
 
         // Mostrar aviso discreto mas não bloquear
-        if (localStorageError.toString().includes("quota") || localStorageError.toString().includes("storage")) {
-          console.log("📝 Project saved in memory (localStorage full)")
+        if (localStorageError.toString().includes('quota') || localStorageError.toString().includes('storage')) {
+          console.log('📝 Project saved in memory (localStorage full)');
         }
 
         // NUNCA lançar erro - sempre "funciona"
@@ -279,29 +275,29 @@ export default function Page() {
 
     load: (key: string): string | null => {
       try {
-        const data = localStorage.getItem(`gg-editor-${key}`)
-        if (!data) return null
+        const data = localStorage.getItem(`gg-editor-${key}`);
+        if (!data) return null;
 
         // Verificar se tem prefixo de não-comprimido
-        if (data.startsWith("UNCOMPRESSED:")) {
-          return data.substring(13) // Remove o prefixo "UNCOMPRESSED:"
+        if (data.startsWith('UNCOMPRESSED:')) {
+          return data.substring(13); // Remove o prefixo "UNCOMPRESSED:"
         }
 
         // Tentar descomprimir (inclui verificação de prefixo COMPRESSED:)
-        return decompressData(data)
+        return decompressData(data);
       } catch (error) {
-        console.error("Storage load error:", error)
-        return null
+        console.error('Storage load error:', error);
+        return null;
       }
     },
 
     delete: (key: string) => {
       try {
-        localStorage.removeItem(`gg-editor-${key}`)
-        memoryCache.current.delete(key)
-        updateStorageInfo()
+        localStorage.removeItem(`gg-editor-${key}`);
+        memoryCache.current.delete(key);
+        updateStorageInfo();
       } catch (error) {
-        console.error("Storage delete error:", error)
+        console.error('Storage delete error:', error);
         // Não lançar erro, apenas continuar
       }
     },
@@ -309,295 +305,295 @@ export default function Page() {
     list: (): string[] => {
       try {
         const localStorageKeys = Object.keys(localStorage)
-          .filter((key) => key.startsWith("gg-editor-"))
-          .map((key) => key.replace("gg-editor-", ""))
+          .filter((key) => key.startsWith('gg-editor-'))
+          .map((key) => key.replace('gg-editor-', ''));
 
-        const memoryCacheKeys = Array.from(memoryCache.current.keys())
+        const memoryCacheKeys = Array.from(memoryCache.current.keys());
 
         // Combinar e remover duplicatas
-        const allKeys = [...new Set([...localStorageKeys, ...memoryCacheKeys])]
-        return allKeys
+        const allKeys = [...new Set([...localStorageKeys, ...memoryCacheKeys])];
+        return allKeys;
       } catch (error) {
-        console.error("Storage list error:", error)
-        return Array.from(memoryCache.current.keys())
+        console.error('Storage list error:', error);
+        return Array.from(memoryCache.current.keys());
       }
     },
-  }
+  };
 
   const loadSavedProjectsList = () => {
-    const projects = storageAdapter.list()
-    setSavedProjects(projects)
-  }
+    const projects = storageAdapter.list();
+    setSavedProjects(projects);
+  };
 
   const handleSave = () => {
     if (!currentProjectName) {
-      setSaveAsDialogOpen(true)
-      return
+      setSaveAsDialogOpen(true);
+      return;
     }
 
     // Check storage limit before saving
     if (isStorageAtLimit()) {
-      toast.error("Armazenamento lotado", {
-        description: "Limite de armazenamento atingido. Exclua projetos para liberar espaço",
+      toast.error('Armazenamento lotado', {
+        description: 'Limite de armazenamento atingido. Exclua projetos para liberar espaço',
         duration: 5000,
-        icon: "🚫",
-      })
-      return
+        icon: '🚫',
+      });
+      return;
     }
 
     // Get current editor state if editorState is empty
-    let stateToSave = editorState
+    let stateToSave = editorState;
     if (!stateToSave && editorRef.current) {
       try {
-        const currentState = editorRef.current.getEditorState()
-        stateToSave = JSON.stringify(currentState.toJSON())
+        const currentState = editorRef.current.getEditorState();
+        stateToSave = JSON.stringify(currentState.toJSON());
       } catch (error) {
-        console.error("Failed to get editor state:", error)
-        toast.error("Erro no editor", {
-          description: "Não foi possível obter o conteúdo do editor",
+        console.error('Failed to get editor state:', error);
+        toast.error('Erro no editor', {
+          description: 'Não foi possível obter o conteúdo do editor',
           duration: 4000,
-          icon: "⚠️",
-        })
-        return
+          icon: '⚠️',
+        });
+        return;
       }
     }
 
-    if (!stateToSave || stateToSave.trim() === "") {
-      toast.error("Nada para salvar", {
-        description: "O editor está vazio. Adicione conteúdo antes de salvar",
+    if (!stateToSave || stateToSave.trim() === '') {
+      toast.error('Nada para salvar', {
+        description: 'O editor está vazio. Adicione conteúdo antes de salvar',
         duration: 3000,
-        icon: "📄",
-      })
-      return
+        icon: '📄',
+      });
+      return;
     }
 
     // SEMPRE funciona - nunca falha
     try {
-      storageAdapter.save(currentProjectName, stateToSave)
+      storageAdapter.save(currentProjectName, stateToSave);
 
       // Check storage usage after save and show appropriate notification
-      const usagePercentage = getStorageUsagePercentage()
-      const wasInLocalStorage = localStorage.getItem(`gg-editor-${currentProjectName}`) !== null
-      const wasInMemoryCache = memoryCache.current.has(currentProjectName)
+      const usagePercentage = getStorageUsagePercentage();
+      const wasInLocalStorage = localStorage.getItem(`gg-editor-${currentProjectName}`) !== null;
+      const wasInMemoryCache = memoryCache.current.has(currentProjectName);
 
       if (wasInLocalStorage) {
         if (storageLimit && usagePercentage >= 90) {
-          toast.warning("Projeto salvo - Pouco espaço", {
+          toast.warning('Projeto salvo - Pouco espaço', {
             description: `"${currentProjectName}" salvo. Espaço restante: ${(100 - usagePercentage).toFixed(1)}%`,
             duration: 4000,
-            icon: "⚠️",
-          })
+            icon: '⚠️',
+          });
         } else {
-          toast.success("Projeto salvo com sucesso", {
+          toast.success('Projeto salvo com sucesso', {
             description: `"${currentProjectName}" foi salvo no armazenamento local`,
             duration: 3000,
-            icon: "💾",
-          })
+            icon: '💾',
+          });
         }
       } else if (wasInMemoryCache) {
-        toast.warning("Projeto salvo temporariamente", {
+        toast.warning('Projeto salvo temporariamente', {
           description: `"${currentProjectName}" foi salvo na sessão atual`,
           duration: 4000,
-          icon: "⚠️",
-        })
+          icon: '⚠️',
+        });
       } else {
-        toast.success("Projeto salvo", {
+        toast.success('Projeto salvo', {
           description: `"${currentProjectName}" foi salvo com sucesso`,
           duration: 3000,
-          icon: "✅",
-        })
+          icon: '✅',
+        });
       }
     } catch (error: any) {
       // Isso nunca deveria acontecer agora, mas por segurança
-      console.error("Unexpected save error:", error)
-      toast.success(`Project "${currentProjectName}" saved (with warnings)`)
+      console.error('Unexpected save error:', error);
+      toast.success(`Project "${currentProjectName}" saved (with warnings)`);
     }
-  }
+  };
 
   const handleSaveAs = () => {
     if (!newProjectName.trim()) {
-      toast.error("Nome obrigatório", {
-        description: "Por favor, digite um nome para o projeto",
+      toast.error('Nome obrigatório', {
+        description: 'Por favor, digite um nome para o projeto',
         duration: 3000,
-        icon: "✏️",
-      })
-      return
+        icon: '✏️',
+      });
+      return;
     }
 
     // Check storage limit before saving new project
     if (isStorageAtLimit()) {
-      toast.error("Armazenamento lotado", {
-        description: "Limite de armazenamento atingido. Exclua projetos para liberar espaço",
+      toast.error('Armazenamento lotado', {
+        description: 'Limite de armazenamento atingido. Exclua projetos para liberar espaço',
         duration: 5000,
-        icon: "🚫",
-      })
-      return
+        icon: '🚫',
+      });
+      return;
     }
 
     // Check if project with same name already exists
-    const existingProjects = storageAdapter.list()
+    const existingProjects = storageAdapter.list();
     if (existingProjects.includes(newProjectName.trim())) {
       // Generate suggested name with version number
-      let suggestedName = `${newProjectName.trim()}-v2`
-      let counter = 2
+      let suggestedName = `${newProjectName.trim()}-v2`;
+      let counter = 2;
 
       // Keep incrementing until we find an available name
       while (existingProjects.includes(suggestedName)) {
-        counter++
-        suggestedName = `${newProjectName.trim()}-v${counter}`
+        counter++;
+        suggestedName = `${newProjectName.trim()}-v${counter}`;
       }
 
-      toast.error("Nome já existe", {
+      toast.error('Nome já existe', {
         description: `Já há projeto com o nome "${newProjectName.trim()}". Sugestão: ${suggestedName}`,
         duration: 5000,
-        icon: "🚫",
-      })
-      return
+        icon: '🚫',
+      });
+      return;
     }
 
     // Get current editor state if editorState is empty
-    let stateToSave = editorState
+    let stateToSave = editorState;
     if (!stateToSave && editorRef.current) {
       try {
-        const currentState = editorRef.current.getEditorState()
-        stateToSave = JSON.stringify(currentState.toJSON())
+        const currentState = editorRef.current.getEditorState();
+        stateToSave = JSON.stringify(currentState.toJSON());
       } catch (error) {
-        console.error("Failed to get editor state:", error)
-        toast.error("Erro no editor", {
-          description: "Não foi possível obter o conteúdo do editor",
+        console.error('Failed to get editor state:', error);
+        toast.error('Erro no editor', {
+          description: 'Não foi possível obter o conteúdo do editor',
           duration: 4000,
-          icon: "⚠️",
-        })
-        return
+          icon: '⚠️',
+        });
+        return;
       }
     }
 
-    if (!stateToSave || stateToSave.trim() === "") {
-      toast.error("Nada para salvar", {
-        description: "O editor está vazio. Adicione conteúdo antes de salvar",
+    if (!stateToSave || stateToSave.trim() === '') {
+      toast.error('Nada para salvar', {
+        description: 'O editor está vazio. Adicione conteúdo antes de salvar',
         duration: 3000,
-        icon: "📄",
-      })
-      return
+        icon: '📄',
+      });
+      return;
     }
 
     // SEMPRE funciona - nunca falha
     try {
-      storageAdapter.save(newProjectName, stateToSave)
-      setCurrentProjectName(newProjectName)
-      setNewProjectName("")
-      setSaveAsDialogOpen(false)
-      loadSavedProjectsList()
+      storageAdapter.save(newProjectName, stateToSave);
+      setCurrentProjectName(newProjectName);
+      setNewProjectName('');
+      setSaveAsDialogOpen(false);
+      loadSavedProjectsList();
 
       // Check storage usage after save
-      const usagePercentage = getStorageUsagePercentage()
-      const wasInLocalStorage = localStorage.getItem(`gg-editor-${newProjectName}`) !== null
-      const wasInMemoryCache = memoryCache.current.has(newProjectName)
+      const usagePercentage = getStorageUsagePercentage();
+      const wasInLocalStorage = localStorage.getItem(`gg-editor-${newProjectName}`) !== null;
+      const wasInMemoryCache = memoryCache.current.has(newProjectName);
 
       if (wasInLocalStorage) {
         if (storageLimit && usagePercentage >= 90) {
-          toast.warning("Projeto criado - Pouco espaço", {
+          toast.warning('Projeto criado - Pouco espaço', {
             description: `"${newProjectName}" criado. Espaço restante: ${(100 - usagePercentage).toFixed(1)}%`,
             duration: 4000,
-            icon: "⚠️",
-          })
+            icon: '⚠️',
+          });
         } else {
-          toast.success("Novo projeto criado", {
+          toast.success('Novo projeto criado', {
             description: `"${newProjectName}" foi criado e salvo com sucesso`,
             duration: 3000,
-            icon: "🎉",
-          })
+            icon: '🎉',
+          });
         }
       } else if (wasInMemoryCache) {
-        toast.warning("Projeto criado temporariamente", {
+        toast.warning('Projeto criado temporariamente', {
           description: `"${newProjectName}" foi criado na sessão atual`,
           duration: 4000,
-          icon: "⚠️",
-        })
+          icon: '⚠️',
+        });
       } else {
-        toast.success("Projeto criado", {
+        toast.success('Projeto criado', {
           description: `"${newProjectName}" foi criado com sucesso`,
           duration: 3000,
-          icon: "✨",
-        })
+          icon: '✨',
+        });
       }
     } catch (error: any) {
       // Isso nunca deveria acontecer agora, mas por segurança
-      console.error("Unexpected save error:", error)
-      toast.success(`Project "${newProjectName}" saved (with warnings)`)
+      console.error('Unexpected save error:', error);
+      toast.success(`Project "${newProjectName}" saved (with warnings)`);
     }
-  }
+  };
 
   const handleOpen = async (projectName: string) => {
-    const projectData = storageAdapter.load(projectName)
+    const projectData = storageAdapter.load(projectName);
     if (projectData && editorRef.current) {
       try {
         // Ativar o estado de carregamento
         if (setLoadingRef.current) {
-          setLoadingRef.current(true)
+          setLoadingRef.current(true);
         }
 
-        const editorState = editorRef.current.parseEditorState(projectData)
-        editorRef.current.setEditorState(editorState)
+        const editorState = editorRef.current.parseEditorState(projectData);
+        editorRef.current.setEditorState(editorState);
 
         // Aguardar um pouco para que os nós sejam renderizados
-        await new Promise((resolve) => setTimeout(resolve, 100))
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Desativar o estado de carregamento
         if (setLoadingRef.current) {
-          setLoadingRef.current(false)
+          setLoadingRef.current(false);
         }
 
-        setCurrentProjectName(projectName)
-        setOpenDialogOpen(false)
-        setIsFirstTime(false) // Mark as no longer first time
-        toast.success("Projeto carregado", {
+        setCurrentProjectName(projectName);
+        setOpenDialogOpen(false);
+        setIsFirstTime(false); // Mark as no longer first time
+        toast.success('Projeto carregado', {
           description: `"${projectName}" foi aberto com sucesso`,
           duration: 2500,
-          icon: "📂",
-        })
+          icon: '📂',
+        });
       } catch (error) {
         // Desativar o estado de carregamento em caso de erro
         if (setLoadingRef.current) {
-          setLoadingRef.current(false)
+          setLoadingRef.current(false);
         }
-        toast.error("Erro ao carregar projeto", {
-          description: "O arquivo do projeto está corrompido ou em formato inválido",
+        toast.error('Erro ao carregar projeto', {
+          description: 'O arquivo do projeto está corrompido ou em formato inválido',
           duration: 4000,
-          icon: "❌",
-        })
+          icon: '❌',
+        });
       }
     } else {
-      toast.error("Projeto não encontrado", {
-        description: "Não foi possível localizar o arquivo do projeto",
+      toast.error('Projeto não encontrado', {
+        description: 'Não foi possível localizar o arquivo do projeto',
         duration: 3000,
-        icon: "🔍",
-      })
+        icon: '🔍',
+      });
     }
-  }
+  };
 
   const handleConfirmDelete = (projectName: string) => {
-    setProjectToDelete(projectName)
-    setDeleteDialogOpen(true)
-  }
+    setProjectToDelete(projectName);
+    setDeleteDialogOpen(true);
+  };
 
   const handleDelete = (projectName: string) => {
     try {
-      storageAdapter.delete(projectName)
-      loadSavedProjectsList()
+      storageAdapter.delete(projectName);
+      loadSavedProjectsList();
       if (currentProjectName === projectName) {
-        setCurrentProjectName("")
+        setCurrentProjectName('');
       }
-      toast.success("Projeto excluído", {
+      toast.success('Projeto excluído', {
         description: `"${projectName}" foi removido permanentemente`,
         duration: 3000,
-        icon: "🗑️",
-      })
+        icon: '🗑️',
+      });
     } catch (error) {
       // Mesmo se falhar, mostrar sucesso
-      toast.success(`Project "${projectName}" removed`)
+      toast.success(`Project "${projectName}" removed`);
     }
-  }
+  };
 
   const handleNewProject = () => {
     if (editorRef.current) {
@@ -605,104 +601,104 @@ export default function Page() {
         editorRef.current.parseEditorState(
           '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
         ),
-      )
-      setCurrentProjectName("")
-      setOpenDialogOpen(false)
-      setIsFirstTime(false) // Mark as no longer first time
-      toast.success("Novo projeto iniciado", {
-        description: "Editor limpo e pronto para criar conteúdo",
+      );
+      setCurrentProjectName('');
+      setOpenDialogOpen(false);
+      setIsFirstTime(false); // Mark as no longer first time
+      toast.success('Novo projeto iniciado', {
+        description: 'Editor limpo e pronto para criar conteúdo',
         duration: 2500,
-        icon: "📝",
-      })
+        icon: '📝',
+      });
     }
-  }
+  };
 
   // Determinar a cor do indicador de tamanho
   const getSizeIndicatorColor = () => {
-    if (currentProjectSize > RECOMMENDED_SIZE_KB * 2) return "text-red-600"
-    if (currentProjectSize > RECOMMENDED_SIZE_KB) return "text-amber-600"
-    return "text-green-600"
-  }
+    if (currentProjectSize > RECOMMENDED_SIZE_KB * 2) return 'text-red-600';
+    if (currentProjectSize > RECOMMENDED_SIZE_KB) return 'text-amber-600';
+    return 'text-green-600';
+  };
 
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(false)
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
 
   // Auto-save functionality
   useEffect(() => {
-    if (!autoSaveEnabled || !currentProjectName || !editorState) return
+    if (!autoSaveEnabled || !currentProjectName || !editorState) return;
 
     const autoSaveTimer = setTimeout(() => {
       try {
-        storageAdapter.save(currentProjectName, editorState)
+        storageAdapter.save(currentProjectName, editorState);
         // Show a very subtle auto-save notification
-        toast.success("Auto-salvo", {
-          description: "Alterações salvas automaticamente",
+        toast.success('Auto-salvo', {
+          description: 'Alterações salvas automaticamente',
           duration: 1500,
-          icon: "💾",
+          icon: '💾',
           style: {
             opacity: 0.8,
-            fontSize: "0.875rem",
+            fontSize: '0.875rem',
           },
-        })
-        console.log("Auto-saved project:", currentProjectName)
+        });
+        console.log('Auto-saved project:', currentProjectName);
       } catch (error) {
-        console.error("Auto-save failed:", error)
-        toast.error("Falha no auto-save", {
-          description: "Salve manualmente para garantir",
+        console.error('Auto-save failed:', error);
+        toast.error('Falha no auto-save', {
+          description: 'Salve manualmente para garantir',
           duration: 2000,
-          icon: "⚠️",
-        })
+          icon: '⚠️',
+        });
       }
-    }, 2000) // Auto-save after 2 seconds of inactivity
+    }, 2000); // Auto-save after 2 seconds of inactivity
 
-    return () => clearTimeout(autoSaveTimer)
-  }, [editorState, autoSaveEnabled, currentProjectName])
+    return () => clearTimeout(autoSaveTimer);
+  }, [editorState, autoSaveEnabled, currentProjectName]);
 
   const handleSetStorageLimit = () => {
-    const limitValue = newStorageLimit.trim()
+    const limitValue = newStorageLimit.trim();
 
-    if (limitValue === "" || limitValue === "0") {
+    if (limitValue === '' || limitValue === '0') {
       // Remove limit (unlimited)
-      setStorageLimit(null)
-      setNewStorageLimit("")
-      setShowStorageLimitDialog(false)
-      toast.success("Limite removido", {
-        description: "Armazenamento agora é ilimitado",
+      setStorageLimit(null);
+      setNewStorageLimit('');
+      setShowStorageLimitDialog(false);
+      toast.success('Limite removido', {
+        description: 'Armazenamento agora é ilimitado',
         duration: 3000,
-        icon: "∞",
-      })
-      return
+        icon: '∞',
+      });
+      return;
     }
 
-    const limit = Number.parseFloat(limitValue)
+    const limit = Number.parseFloat(limitValue);
     if (isNaN(limit) || limit <= 0) {
-      toast.error("Valor inválido", {
-        description: "Digite um número válido em MB ou deixe vazio para ilimitado",
+      toast.error('Valor inválido', {
+        description: 'Digite um número válido em MB ou deixe vazio para ilimitado',
         duration: 3000,
-        icon: "❌",
-      })
-      return
+        icon: '❌',
+      });
+      return;
     }
 
     // Check if current usage exceeds new limit
-    const currentUsageMB = totalStorageUsed / 1024
+    const currentUsageMB = totalStorageUsed / 1024;
     if (currentUsageMB > limit) {
-      toast.error("Limite muito baixo", {
+      toast.error('Limite muito baixo', {
         description: `Uso atual (${formatStorageSize(totalStorageUsed)}) excede o limite proposto`,
         duration: 4000,
-        icon: "⚠️",
-      })
-      return
+        icon: '⚠️',
+      });
+      return;
     }
 
-    setStorageLimit(limit)
-    setNewStorageLimit("")
-    setShowStorageLimitDialog(false)
-    toast.success("Limite configurado", {
+    setStorageLimit(limit);
+    setNewStorageLimit('');
+    setShowStorageLimitDialog(false);
+    toast.success('Limite configurado', {
       description: `Limite de armazenamento definido para ${limit}MB`,
       duration: 3000,
-      icon: "📊",
-    })
-  }
+      icon: '📊',
+    });
+  };
 
   return (
     <>
@@ -747,15 +743,13 @@ export default function Page() {
                       onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
                       className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                     >
-                      <div
-                        className={`w-3 h-3 rounded-full ${autoSaveEnabled ? "bg-green-500 animate-pulse" : "bg-gray-400 dark:bg-gray-600"}`}
-                      ></div>
-                      <span className={`text-sm font-medium ${autoSaveEnabled ? "text-green-700 dark:text-green-400" : "text-gray-500 dark:text-gray-300"}`}>
-                        {autoSaveEnabled ? "Auto-save" : "Manual"}
+                      <div className={`w-3 h-3 rounded-full ${autoSaveEnabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400 dark:bg-gray-600'}`}></div>
+                      <span className={`text-sm font-medium ${autoSaveEnabled ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-300'}`}>
+                        {autoSaveEnabled ? 'Auto-save' : 'Manual'}
                       </span>
                     </button>
                     <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{currentProjectName || "Untitled Project"}</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{currentProjectName || 'Untitled Project'}</h2>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-300">
                     <div className="flex items-center gap-2">
@@ -793,11 +787,7 @@ export default function Page() {
                       <span className="text-xs text-gray-400 dark:text-gray-500">•</span>
                       <span
                         className={`text-xs font-medium ${
-                          getStorageUsagePercentage() >= 90
-                            ? "text-red-600"
-                            : getStorageUsagePercentage() >= 70
-                              ? "text-amber-600"
-                              : "text-green-600"
+                          getStorageUsagePercentage() >= 90 ? 'text-red-600' : getStorageUsagePercentage() >= 70 ? 'text-amber-600' : 'text-green-600'
                         }`}
                       >
                         {getStorageUsagePercentage().toFixed(1)}%
@@ -831,15 +821,13 @@ export default function Page() {
                           value={newProjectName}
                           onChange={(e) => setNewProjectName(e.target.value)}
                           placeholder="Enter project name..."
-                          onKeyDown={(e) => e.key === "Enter" && handleSaveAs()}
+                          onKeyDown={(e) => e.key === 'Enter' && handleSaveAs()}
                           className="mt-1"
                         />
                       </div>
                       <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <span className="text-sm text-gray-600">Project size:</span>
-                        <span className={`text-sm font-medium ${getSizeIndicatorColor()}`}>
-                          {formatSize(currentProjectSize)}
-                        </span>
+                        <span className={`text-sm font-medium ${getSizeIndicatorColor()}`}>{formatSize(currentProjectSize)}</span>
                       </div>
                       <div className="flex justify-end gap-2">
                         <Button variant="outline" onClick={() => setSaveAsDialogOpen(false)}>
@@ -854,7 +842,7 @@ export default function Page() {
                 <Dialog
                   open={openDialogOpen}
                   onOpenChange={(open) => {
-                    setOpenDialogOpen(open)
+                    setOpenDialogOpen(open);
                   }}
                 >
                   <DialogTrigger asChild>
@@ -865,12 +853,8 @@ export default function Page() {
                   </DialogTrigger>
                   <DialogContent className="max-w-lg" onInteractOutside={(e) => e.preventDefault()}>
                     <DialogHeader>
-                      <DialogTitle>{isFirstTime ? "Welcome! Choose an Option" : "Open Project"}</DialogTitle>
-                      {isFirstTime && (
-                        <p className="text-sm text-muted-foreground">
-                          To get started, please open an existing project or create a new one.
-                        </p>
-                      )}
+                      <DialogTitle>{isFirstTime ? 'Welcome! Choose an Option' : 'Open Project'}</DialogTitle>
+                      {isFirstTime && <p className="text-sm text-muted-foreground">To get started, please open an existing project or create a new one.</p>}
                     </DialogHeader>
                     <div className="space-y-4">
                       {isStorageNearLimit() && (
@@ -886,8 +870,8 @@ export default function Page() {
                             <span className="text-sm font-medium text-amber-800">Armazenamento quase cheio</span>
                           </div>
                           <p className="text-xs text-amber-700">
-                            Uso: {getStorageUsagePercentage().toFixed(1)}% ({formatStorageSize(totalStorageUsed)} de{" "}
-                            {storageLimit}MB). Criação de novos projetos bloqueada para preservar margem de salvamento.
+                            Uso: {getStorageUsagePercentage().toFixed(1)}% ({formatStorageSize(totalStorageUsed)} de {storageLimit}MB). Criação de novos
+                            projetos bloqueada para preservar margem de salvamento.
                           </p>
                         </div>
                       )}
@@ -900,15 +884,12 @@ export default function Page() {
                       ) : (
                         <div className="space-y-2 max-h-80 overflow-y-auto">
                           {savedProjects.map((projectName) => {
-                            const projectData = storageAdapter.load(projectName)
-                            const projectSize = projectData ? estimateSize(projectData) : 0
-                            const isInMemory = memoryCache.current.has(projectName)
+                            const projectData = storageAdapter.load(projectName);
+                            const projectSize = projectData ? estimateSize(projectData) : 0;
+                            const isInMemory = memoryCache.current.has(projectName);
 
                             return (
-                              <div
-                                key={projectName}
-                                className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                              >
+                              <div key={projectName} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
                                 <div className="flex flex-col flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
                                     <span className="text-sm font-medium text-gray-900 truncate">{projectName}</span>
@@ -925,12 +906,7 @@ export default function Page() {
                                   </div>
                                 </div>
                                 <div className="flex gap-1 ml-3">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleOpen(projectName)}
-                                    className="text-blue-600 hover:text-blue-700"
-                                  >
+                                  <Button variant="ghost" size="sm" onClick={() => handleOpen(projectName)} className="text-blue-600 hover:text-blue-700">
                                     Open
                                   </Button>
                                   <Button
@@ -943,7 +919,7 @@ export default function Page() {
                                   </Button>
                                 </div>
                               </div>
-                            )
+                            );
                           })}
                         </div>
                       )}
@@ -956,9 +932,7 @@ export default function Page() {
                               </svg>
                               Novo Projeto
                             </Button>
-                            <span className="text-xs text-red-600 mt-1">
-                              Armazenamento quase cheio ({getStorageUsagePercentage().toFixed(1)}%)
-                            </span>
+                            <span className="text-xs text-red-600 mt-1">Armazenamento quase cheio ({getStorageUsagePercentage().toFixed(1)}%)</span>
                           </div>
                         ) : (
                           <Button variant="ghost" onClick={() => setSaveAsDialogOpen(true)} className="gap-2">
@@ -988,8 +962,7 @@ export default function Page() {
                         </div>
                         <h3 className="text-lg font-medium">Excluir projeto?</h3>
                         <p className="text-sm text-gray-500 mt-2 mb-3">
-                          Você está prestes a excluir <span className="font-semibold">{projectToDelete}</span>. Esta ação
-                          não pode ser desfeita.
+                          Você está prestes a excluir <span className="font-semibold">{projectToDelete}</span>. Esta ação não pode ser desfeita.
                         </p>
                       </div>
                       <div className="flex justify-between gap-3 pt-2">
@@ -1001,9 +974,9 @@ export default function Page() {
                           className="flex-1"
                           onClick={() => {
                             if (projectToDelete) {
-                              handleDelete(projectToDelete)
-                              setDeleteDialogOpen(false)
-                              setProjectToDelete(null)
+                              handleDelete(projectToDelete);
+                              setDeleteDialogOpen(false);
+                              setProjectToDelete(null);
                             }
                           }}
                         >
@@ -1028,7 +1001,7 @@ export default function Page() {
                           value={newStorageLimit}
                           onChange={(e) => setNewStorageLimit(e.target.value)}
                           placeholder="Ex: 100 (para 100MB)"
-                          onKeyDown={(e) => e.key === "Enter" && handleSetStorageLimit()}
+                          onKeyDown={(e) => e.key === 'Enter' && handleSetStorageLimit()}
                           className="mt-1"
                         />
                       </div>
@@ -1047,11 +1020,7 @@ export default function Page() {
                             <span className="text-gray-600">Uso:</span>
                             <span
                               className={`font-medium ${
-                                getStorageUsagePercentage() >= 90
-                                  ? "text-red-600"
-                                  : getStorageUsagePercentage() >= 70
-                                    ? "text-amber-600"
-                                    : "text-green-600"
+                                getStorageUsagePercentage() >= 90 ? 'text-red-600' : getStorageUsagePercentage() >= 70 ? 'text-amber-600' : 'text-green-600'
                               }`}
                             >
                               {getStorageUsagePercentage().toFixed(1)}%
@@ -1088,7 +1057,7 @@ export default function Page() {
                 initialState={editorState}
                 onChange={setEditorState}
                 onLoadingChange={(setLoading) => {
-                  setLoadingRef.current = setLoading
+                  setLoadingRef.current = setLoading;
                 }}
               />
             </div>
@@ -1112,5 +1081,5 @@ export default function Page() {
         </div>
       </div>
     </>
-  )
+  );
 }

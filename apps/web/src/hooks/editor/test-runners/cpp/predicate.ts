@@ -1,4 +1,4 @@
-import type { TestCase, TestResult } from "../types"
+import type { TestCase, TestResult } from '../types';
 
 /**
  * Run predicate tests for C++ code
@@ -10,34 +10,34 @@ export async function runCppPredicateTests(
 ): Promise<TestResult[]> {
   // Check if tests exist
   if (!tests || !tests.length) {
-    return []
+    return [];
   }
 
   // Check if C++ execution is available
   if (!executeCpp) {
     return tests.map(() => ({
       passed: false,
-      expected: "C++ execution",
-      actual: "C++ compiler not yet implemented",
-    }))
+      expected: 'C++ execution',
+      actual: 'C++ compiler not yet implemented',
+    }));
   }
 
   try {
     // Generate test harness
-    const testHarness = generateCppPredicateTestHarness(code, tests)
+    const testHarness = generateCppPredicateTestHarness(code, tests);
 
     // Execute the test harness
-    const output = await executeCpp(testHarness)
+    const output = await executeCpp(testHarness);
 
     // Parse the test results
-    return parseCppTestResults(output)
+    return parseCppTestResults(output);
   } catch (error) {
-    console.error("Error running C++ predicate tests:", error)
+    console.error('Error running C++ predicate tests:', error);
     return tests.map(() => ({
       passed: false,
-      expected: "Test execution",
+      expected: 'Test execution',
       actual: `Error: ${error}`,
-    }))
+    }));
   }
 }
 
@@ -46,7 +46,7 @@ export async function runCppPredicateTests(
  */
 function generateCppPredicateTestHarness(code: string, tests: TestCase[]): string {
   // Include the original code
-  let testHarness = code + "\n\n"
+  let testHarness = code + '\n\n';
 
   // Add test harness headers and utilities
   testHarness += `
@@ -98,11 +98,11 @@ int main() {
     
     // Run tests
     try {
-`
+`;
 
   // Add each test
   tests.forEach((test, index) => {
-    const { args = [], predicate = "result => true" } = test
+    const { args = [], predicate = 'result => true' } = test;
 
     // Convert args to C++ code
     const argsCode = args
@@ -111,20 +111,20 @@ int main() {
           // Convert array to vector
           const elements = arg
             .map((el) => {
-              if (typeof el === "string") return `"${el}"`
-              return el
+              if (typeof el === 'string') return `"${el}"`;
+              return el;
             })
-            .join(", ")
-          return `std::vector<${typeof arg[0] === "string" ? "std::string" : "int"}>{${elements}}`
-        } else if (typeof arg === "string") {
-          return `"${arg}"`
+            .join(', ');
+          return `std::vector<${typeof arg[0] === 'string' ? 'std::string' : 'int'}>{${elements}}`;
+        } else if (typeof arg === 'string') {
+          return `"${arg}"`;
         }
-        return arg
+        return arg;
       })
-      .join(", ")
+      .join(', ');
 
     // Convert JavaScript predicate to C++ condition
-    const cppPredicate = convertJsPredicateToCpp(predicate)
+    const cppPredicate = convertJsPredicateToCpp(predicate);
 
     // Add test case
     testHarness += `
@@ -160,8 +160,8 @@ int main() {
                 });
             }
         }
-`
-  })
+`;
+  });
 
   // Close the test harness and output results
   testHarness += `
@@ -188,9 +188,9 @@ int main() {
         return 1;
     }
 }
-`
+`;
 
-  return testHarness
+  return testHarness;
 }
 
 /**
@@ -198,32 +198,32 @@ int main() {
  */
 function convertJsPredicateToCpp(predicate: string): string {
   // Convert arrow function
-  if (predicate.includes("=>")) {
-    const arrowMatch = predicate.match(/\s*(?:$$([^)]*)$$|([^=]*?))\s*=>\s*(.*)/)
+  if (predicate.includes('=>')) {
+    const arrowMatch = predicate.match(/\s*(?:$$([^)]*)$$|([^=]*?))\s*=>\s*(.*)/);
     if (arrowMatch) {
-      const paramName = arrowMatch[1] || arrowMatch[2] || "result"
-      const body = arrowMatch[3].trim()
+      const paramName = arrowMatch[1] || arrowMatch[2] || 'result';
+      const body = arrowMatch[3].trim();
 
       // Simple case: checking if result matches a value
-      if (body.includes("===") || body.includes("==")) {
-        return body.replace(/===|==/g, "==").replace(/!==|!=/g, "!=")
+      if (body.includes('===') || body.includes('==')) {
+        return body.replace(/===|==/g, '==').replace(/!==|!=/g, '!=');
       }
 
       // Check for type
-      if (body.includes("typeof") && body.includes("number")) {
-        return "std::is_arithmetic<decltype(result)>::value"
+      if (body.includes('typeof') && body.includes('number')) {
+        return 'std::is_arithmetic<decltype(result)>::value';
       }
-      if (body.includes("typeof") && body.includes("string")) {
-        return "std::is_same_v<decltype(result), std::string>"
+      if (body.includes('typeof') && body.includes('string')) {
+        return 'std::is_same_v<decltype(result), std::string>';
       }
 
       // Default true for complex cases
-      return "true /* Complex predicate not fully converted */"
+      return 'true /* Complex predicate not fully converted */';
     }
   }
 
   // If none of the above, assume it's a simple check
-  return "(result != 0)" // fallback for default case
+  return '(result != 0)'; // fallback for default case
 }
 
 /**
@@ -232,31 +232,31 @@ function convertJsPredicateToCpp(predicate: string): string {
 function parseCppTestResults(output: string): TestResult[] {
   try {
     // Extract the test results
-    const startMarker = "TEST_RESULTS_START"
-    const endMarker = "TEST_RESULTS_END"
+    const startMarker = 'TEST_RESULTS_START';
+    const endMarker = 'TEST_RESULTS_END';
 
-    const startIndex = output.indexOf(startMarker)
-    const endIndex = output.indexOf(endMarker)
+    const startIndex = output.indexOf(startMarker);
+    const endIndex = output.indexOf(endMarker);
 
     if (startIndex === -1 || endIndex === -1) {
-      console.error("Could not find test results markers in output:", output)
-      return []
+      console.error('Could not find test results markers in output:', output);
+      return [];
     }
 
     // Get the lines between the markers
-    const resultsText = output.substring(startIndex + startMarker.length, endIndex).trim()
-    const lines = resultsText.split("\n")
+    const resultsText = output.substring(startIndex + startMarker.length, endIndex).trim();
+    const lines = resultsText.split('\n');
 
     return lines.map((line) => {
-      const [result, expected, actual] = line.split("|", 3)
+      const [result, expected, actual] = line.split('|', 3);
       return {
-        passed: result === "PASS",
+        passed: result === 'PASS',
         expected,
-        actual: actual || "No output",
-      }
-    })
+        actual: actual || 'No output',
+      };
+    });
   } catch (error) {
-    console.error("Error parsing C++ test results:", error)
-    return []
+    console.error('Error parsing C++ test results:', error);
+    return [];
   }
 }

@@ -1,29 +1,29 @@
-"use client"
+'use client';
 
-import { useEffect } from "react"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { $insertNodes } from "lexical"
-import { INSERT_QUIZ_COMMAND } from "./floating-content-insert-plugin"
-import { $createQuizNode } from "../nodes/quiz-node"
+import { useEffect } from 'react';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { $insertNodes } from 'lexical';
+import { INSERT_QUIZ_COMMAND } from './floating-content-insert-plugin';
+import { $createQuizNode } from '../nodes/quiz-node';
 
 export function QuizPlugin() {
-  const [editor] = useLexicalComposerContext()
+  const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
-    if (!editor) return
+    if (!editor) return;
 
     return editor.registerCommand(
       INSERT_QUIZ_COMMAND,
       () => {
         editor.update(() => {
-          const quizNode = $createQuizNode()
-          $insertNodes([quizNode])
-        })
-        return true
+          const quizNode = $createQuizNode();
+          $insertNodes([quizNode]);
+        });
+        return true;
       },
       1,
-    )
-  }, [editor])
+    );
+  }, [editor]);
 
-  return null
+  return null;
 }

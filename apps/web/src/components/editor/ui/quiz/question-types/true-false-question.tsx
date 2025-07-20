@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/editor/ui/button';
+import { Button } from '@/components/ui/button';
 import { Check, X } from 'lucide-react';
 
 interface TrueFalseQuestionProps {
