@@ -1,23 +1,13 @@
-import type { TestRunnerOptions } from "../types"
+import type { TestRunnerOptions } from '../types';
 
 /**
  * Run In/Out tests for Python code
  */
 export async function runInOutTestsPython(options: TestRunnerOptions): Promise<void> {
-  const {
-    fileId,
-    file,
-    fileCases,
-    files,
-    selectedLanguage,
-    addOutput,
-    setIsExecuting,
-    setTestResults,
-    normalizeOutput,
-  } = options
+  const { fileId, file, fileCases, files, selectedLanguage, addOutput, setIsExecuting, setTestResults, normalizeOutput } = options;
 
   try {
-    addOutput(`Running In/Out tests for Python...`)
+    addOutput(`Running In/Out tests for Python...`);
 
     // Create a test harness in Python that will run all the tests
     const testPythonScript = `
@@ -115,59 +105,59 @@ for i, test in enumerate(test_cases):
 print("TEST_RESULTS_START")
 print(json.dumps(results))
 print("TEST_RESULTS_END")
-`
+`;
 
     // Execute the Python script
-    const executor = getExecutor("python")
+    const executor = getExecutor('python');
     let testResults: { passed: boolean; actual: string; expected: string }[] = fileCases.map(() => ({
       passed: false,
-      actual: "",
-      expected: "",
-    }))
+      actual: '',
+      expected: '',
+    }));
 
     // Create a temporary file to hold the test script
     const testFile: CodeFile = {
-      id: "temp-test-file",
-      name: "test.py",
+      id: 'temp-test-file',
+      name: 'test.py',
       content: testPythonScript,
       isSelected: false,
       isEdited: false,
-    }
+    };
 
     // Function to process output
     const processOutput = (output: string) => {
       // Extract the JSON results
-      const resultsMatch = output.match(/TEST_RESULTS_START\n([\s\S]*?)\nTEST_RESULTS_END/)
+      const resultsMatch = output.match(/TEST_RESULTS_START\n([\s\S]*?)\nTEST_RESULTS_END/);
       if (resultsMatch) {
         try {
-          const parsedResults = JSON.parse(resultsMatch[1])
-          testResults = parsedResults
-          setTestResults({ [fileId]: testResults })
+          const parsedResults = JSON.parse(resultsMatch[1]);
+          testResults = parsedResults;
+          setTestResults({ [fileId]: testResults });
         } catch (error) {
-          addOutput(`Error parsing test results: ${error}`)
+          addOutput(`Error parsing test results: ${error}`);
         }
       } else {
-        addOutput(`Error: Could not find test results in output`)
+        addOutput(`Error: Could not find test results in output`);
       }
-    }
+    };
 
     // Create an execution context
     const context: ExecutionContext = {
       files: [...files, testFile],
-      selectedLanguage: "python",
+      selectedLanguage: 'python',
       addOutput,
       clearTerminal: () => {},
       setIsExecuting,
-    }
+    };
 
     // Execute the test script
-    await executor.execute("temp-test-file", context, { processOutput })
+    await executor.execute('temp-test-file', context, { processOutput });
 
-    setTestResults({ [fileId]: testResults })
+    setTestResults({ [fileId]: testResults });
   } catch (error) {
-    addOutput(`Error running tests: ${error.message}`)
+    addOutput(`Error running tests: ${error.message}`);
   } finally {
-    setIsExecuting(false)
+    setIsExecuting(false);
   }
 }
 
@@ -175,34 +165,30 @@ print("TEST_RESULTS_END")
 function getExecutor(language: string) {
   // This is a simplified version - in a real implementation, you would import the actual executor
   return {
-    execute: async (
-      fileId: string,
-      context: ExecutionContext,
-      options?: { processOutput: (output: string) => void },
-    ) => {
+    execute: async (fileId: string, context: ExecutionContext, options?: { processOutput: (output: string) => void }) => {
       // Mock implementation
-      context.addOutput(`Executing ${language} code...`)
+      context.addOutput(`Executing ${language} code...`);
       // In a real implementation, this would execute the code
-      return ""
+      return '';
     },
     isCompiled: false,
-  }
+  };
 }
 
 // Simplified ExecutionContext type for this example
 interface ExecutionContext {
-  files: CodeFile[]
-  selectedLanguage: string
-  addOutput: (output: string | string[]) => void
-  clearTerminal: () => void
-  setIsExecuting: (isExecuting: boolean) => void
+  files: CodeFile[];
+  selectedLanguage: string;
+  addOutput: (output: string | string[]) => void;
+  clearTerminal: () => void;
+  setIsExecuting: (isExecuting: boolean) => void;
 }
 
 // Simplified CodeFile type for this example
 interface CodeFile {
-  id: string
-  name: string
-  content: string
-  isSelected: boolean
-  isEdited: boolean
+  id: string;
+  name: string;
+  content: string;
+  isSelected: boolean;
+  isEdited: boolean;
 }

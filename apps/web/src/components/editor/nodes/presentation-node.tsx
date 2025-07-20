@@ -9,15 +9,15 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { ChevronLeft, ChevronRight, Edit, Expand, ImageIcon, LayoutGrid, Maximize2, Minimize2, X } from 'lucide-react';
 import { Download, Upload, FileType, AlertCircle } from 'lucide-react';
 
-import { Button } from '@/components/editor/ui/button';
-import { ContentEditMenu, type EditMenuOption } from '@/components/editor/ui/content-edit-menu';
-import { Input } from '@/components/editor/ui/input';
-import { Label } from '@/components/editor/ui/label';
+import { Button } from '@/components/ui/button';
+import { ContentEditMenu, type EditMenuOption } from '@/components/ui/content-edit-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/editor/ui/switch';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { Alert, AlertDescription } from '@/components/editor/ui/alert';
-import { Progress } from '@/components/editor/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import type { JSX } from 'react/jsx-runtime'; // Import JSX from react/jsx-runtime
 import { EditorLoadingContext } from '../lexical-editor';
 

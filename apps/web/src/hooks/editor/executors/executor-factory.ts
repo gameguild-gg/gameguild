@@ -1,4 +1,4 @@
-import type { ProgrammingLanguage } from '@/components/editor/ui/source-code/types';
+import type { ProgrammingLanguage } from '@/components/ui/source-code/types';
 import type { Executor } from './types';
 import { javascriptExecutor } from './javascript-executor';
 import { typescriptExecutor } from './typescript-executor';

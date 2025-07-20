@@ -1,11 +1,11 @@
-"use client"
+'use client';
 
-import { useEffect } from "react"
+import { useEffect } from 'react';
 
 export function YouTubeAudioStyle() {
   useEffect(() => {
     // Adicionar CSS para ocultar o vídeo e mostrar apenas os controles
-    const style = document.createElement("style")
+    const style = document.createElement('style');
     style.textContent = `
       .youtube-audio-embed {
         height: 60px !important;
@@ -17,13 +17,13 @@ export function YouTubeAudioStyle() {
         margin-top: -150px;
         opacity: 0.8;
       }
-    `
-    document.head.appendChild(style)
+    `;
+    document.head.appendChild(style);
 
     return () => {
-      document.head.removeChild(style)
-    }
-  }, [])
+      document.head.removeChild(style);
+    };
+  }, []);
 
-  return null
+  return null;
 }

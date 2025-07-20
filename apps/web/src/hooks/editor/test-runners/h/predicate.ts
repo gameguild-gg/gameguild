@@ -1,35 +1,31 @@
-import type { TestCase, TestResult } from "../types"
+import type { TestCase, TestResult } from '../types';
 
 /**
  * Run predicate tests for C header files
  */
-export async function runPredicateTests(
-  code: string,
-  tests: TestCase[],
-  executeC: (code: string) => Promise<string>,
-): Promise<TestResult[]> {
+export async function runPredicateTests(code: string, tests: TestCase[], executeC: (code: string) => Promise<string>): Promise<TestResult[]> {
   // Extract the function name from the header file
-  const functionNameMatch = code.match(/\b(\w+)\s*$$[^)]*$$\s*;/)
-  const functionName = functionNameMatch ? functionNameMatch[1] : "solution"
+  const functionNameMatch = code.match(/\b(\w+)\s*$$[^)]*$$\s*;/);
+  const functionName = functionNameMatch ? functionNameMatch[1] : 'solution';
 
   // Create a C file that includes the header and runs the tests
-  const testHarness = generateCHeaderPredicateTestHarness(code, functionName, tests)
+  const testHarness = generateCHeaderPredicateTestHarness(code, functionName, tests);
 
   try {
     // Execute the test harness
-    const output = await executeC(testHarness)
+    const output = await executeC(testHarness);
 
     // Parse the test results from the output
-    return parseTestResults(output, tests)
+    return parseTestResults(output, tests);
   } catch (error) {
     // Handle execution errors
     return tests.map((test) => ({
       passed: false,
       message: `Error: ${error instanceof Error ? error.message : String(error)}`,
-      expected: test.predicate || "Unknown predicate",
-      actual: "Error",
+      expected: test.predicate || 'Unknown predicate',
+      actual: 'Error',
       testCase: test,
-    }))
+    }));
   }
 }
 
@@ -82,28 +78,28 @@ int main() {
       const args = test.args
         .map((arg) => {
           if (Array.isArray(arg)) {
-            return `(int[]){${arg.join(", ")}}`
-          } else if (typeof arg === "string") {
-            return `"${arg}"`
+            return `(int[]){${arg.join(', ')}}`;
+          } else if (typeof arg === 'string') {
+            return `"${arg}"`;
           } else {
-            return String(arg)
+            return String(arg);
           }
         })
-        .join(", ")
+        .join(', ');
 
       // Convert JavaScript predicate to C condition
-      const predicate = test.predicate || ""
-      let condition = "false"
+      const predicate = test.predicate || '';
+      let condition = 'false';
 
-      if (predicate.includes("=>")) {
+      if (predicate.includes('=>')) {
         // Arrow function
-        const body = predicate.split("=>")[1].trim()
-        condition = convertJsConditionToC(body, "result")
-      } else if (predicate.includes("return")) {
+        const body = predicate.split('=>')[1].trim();
+        condition = convertJsConditionToC(body, 'result');
+      } else if (predicate.includes('return')) {
         // Regular function
-        const returnStatement = predicate.match(/return\s+(.*?);/)
+        const returnStatement = predicate.match(/return\s+(.*?);/);
         if (returnStatement) {
-          condition = convertJsConditionToC(returnStatement[1], "result")
+          condition = convertJsConditionToC(returnStatement[1], 'result');
         }
       }
 
@@ -120,16 +116,16 @@ int main() {
       }
       
       passed_tests += passed ? 1 : 0;
-    }`
+    }`;
     })
-    .join("\n")}
+    .join('\n')}
   
   printf("\\nPassed %d out of %d tests\\n", passed_tests, total_tests);
   printf("TEST_RESULTS_END\\n");
   
   return 0;
 }
-`
+`;
 }
 
 /**
@@ -137,83 +133,83 @@ int main() {
  */
 function convertJsConditionToC(jsCondition: string, resultVar: string): string {
   return jsCondition
-    .replace(/===|==/g, "==")
-    .replace(/!==|!=/g, "!=")
-    .replace(/&&/g, "&&")
-    .replace(/\|\|/g, "||")
-    .replace(/!/g, "!")
+    .replace(/===|==/g, '==')
+    .replace(/!==|!=/g, '!=')
+    .replace(/&&/g, '&&')
+    .replace(/\|\|/g, '||')
+    .replace(/!/g, '!')
     .replace(/\bx\b/g, resultVar)
-    .replace(/\btrue\b/g, "true")
-    .replace(/\bfalse\b/g, "false")
+    .replace(/\btrue\b/g, 'true')
+    .replace(/\bfalse\b/g, 'false');
 }
 
 /**
  * Parse test results from the output
  */
 function parseTestResults(output: string, tests: TestCase[]): TestResult[] {
-  const results: TestResult[] = []
+  const results: TestResult[] = [];
 
   // Extract the test results section
-  const resultsMatch = output.match(/TEST_RESULTS_START\n([\s\S]*?)\nTEST_RESULTS_END/)
+  const resultsMatch = output.match(/TEST_RESULTS_START\n([\s\S]*?)\nTEST_RESULTS_END/);
   if (!resultsMatch) {
     return tests.map((test) => ({
       passed: false,
-      message: "Could not parse test results",
-      expected: test.predicate || "Unknown predicate",
-      actual: "Unknown",
+      message: 'Could not parse test results',
+      expected: test.predicate || 'Unknown predicate',
+      actual: 'Unknown',
       testCase: test,
-    }))
+    }));
   }
 
-  const resultsText = resultsMatch[1]
+  const resultsText = resultsMatch[1];
 
   // Parse individual test results
-  const testLines = resultsText.split("\n").filter((line) => line.match(/Test \d+: (PASSED|FAILED)/))
+  const testLines = resultsText.split('\n').filter((line) => line.match(/Test \d+: (PASSED|FAILED)/));
 
   testLines.forEach((line, index) => {
-    if (index >= tests.length) return
+    if (index >= tests.length) return;
 
-    const passed = line.includes("PASSED")
-    const test = tests[index]
+    const passed = line.includes('PASSED');
+    const test = tests[index];
 
     if (passed) {
       results.push({
         passed: true,
-        message: "Test passed",
-        expected: test.predicate || "Unknown predicate",
-        actual: "Predicate satisfied",
+        message: 'Test passed',
+        expected: test.predicate || 'Unknown predicate',
+        actual: 'Predicate satisfied',
         testCase: test,
-      })
+      });
     } else {
       // Find the result line for this test
-      const resultLineIndex = resultsText.indexOf(`Test ${index + 1}: FAILED`)
+      const resultLineIndex = resultsText.indexOf(`Test ${index + 1}: FAILED`);
       const resultLine = resultsText
         .substring(resultLineIndex)
-        .split("\n")
-        .find((line) => line.includes("Result:"))
-      const actual = resultLine ? resultLine.replace("Result:", "").trim() : "Unknown"
+        .split('\n')
+        .find((line) => line.includes('Result:'));
+      const actual = resultLine ? resultLine.replace('Result:', '').trim() : 'Unknown';
 
       results.push({
         passed: false,
         message: `Test failed: predicate ${test.predicate} not satisfied with result ${actual}`,
-        expected: test.predicate || "Unknown predicate",
+        expected: test.predicate || 'Unknown predicate',
         actual,
         testCase: test,
-      })
+      });
     }
-  })
+  });
 
   // Fill in any missing results
   while (results.length < tests.length) {
-    const test = tests[results.length]
+    const test = tests[results.length];
     results.push({
       passed: false,
-      message: "Test not executed",
-      expected: test.predicate || "Unknown predicate",
-      actual: "Unknown",
+      message: 'Test not executed',
+      expected: test.predicate || 'Unknown predicate',
+      actual: 'Unknown',
       testCase: test,
-    })
+    });
   }
 
-  return results
+  return results;
 }

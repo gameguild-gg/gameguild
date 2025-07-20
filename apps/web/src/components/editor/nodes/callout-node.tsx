@@ -7,12 +7,12 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { ChevronDown, Pencil, Check } from 'lucide-react';
 import type { JSX } from 'react/jsx-runtime';
 
-import { Button } from '@/components/editor/ui/button';
-import { Input } from '@/components/editor/ui/input';
-import { Textarea } from '@/components/editor/ui/textarea';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/editor/ui/dropdown-menu';
-import { Callout as UICallout, type CalloutType } from '@/components/editor/ui/callout';
-import { ContentEditMenu } from '@/components/editor/ui/content-edit-menu';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Callout as UICallout, type CalloutType } from '@/components/ui/callout';
+import { ContentEditMenu } from '@/components/ui/content-edit-menu';
 import { EditorLoadingContext } from '../lexical-editor';
 
 export interface CalloutData {

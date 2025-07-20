@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { TooltipProvider } from '@/components/editor/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { useEffect } from 'react';
 
 // Import types

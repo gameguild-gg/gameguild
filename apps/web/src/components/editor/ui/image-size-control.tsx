@@ -1,7 +1,7 @@
 'use client';
 import { Minus, Plus } from 'lucide-react';
-import { Button } from '@/components/editor/ui/button';
-import { Slider } from '@/components/editor/ui/slider';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 
 interface ImageSizeControlProps {
   size: number;
