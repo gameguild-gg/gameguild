@@ -38,11 +38,7 @@ function ProjectFilters() {
     if (status === 'all') {
       setSelectedStatuses([]);
     } else {
-      setSelectedStatuses(prev => 
-        prev.includes(status) 
-          ? prev.filter(s => s !== status)
-          : [...prev, status]
-      );
+      setSelectedStatuses((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]));
     }
   };
 
@@ -50,11 +46,7 @@ function ProjectFilters() {
     if (type === 'all') {
       setSelectedTypes([]);
     } else {
-      setSelectedTypes(prev => 
-        prev.includes(type) 
-          ? prev.filter(t => t !== type)
-          : [...prev, type]
-      );
+      setSelectedTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
     }
   };
 
@@ -63,13 +55,9 @@ function ProjectFilters() {
       {/* Filter Controls */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex-1 min-w-[300px]">
-          <SearchBar
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            placeholder="Search projects..."
-          />
+          <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} placeholder="Search projects..." />
         </div>
-        
+
         <MultiSelectFilter
           options={statusOptions}
           selectedValues={selectedStatuses}
@@ -77,7 +65,7 @@ function ProjectFilters() {
           placeholder="Status"
           searchPlaceholder="Search status..."
         />
-        
+
         <MultiSelectFilter
           options={typeOptions}
           selectedValues={selectedTypes}
@@ -85,24 +73,15 @@ function ProjectFilters() {
           placeholder="Project Type"
           searchPlaceholder="Search types..."
         />
-        
-        <ViewModeToggle
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-        />
+
+        <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
       </div>
 
       {/* Example of filtered content */}
       <div className="text-slate-400 text-sm">
-        {selectedStatuses.length > 0 && (
-          <span>Status: {selectedStatuses.join(', ')} | </span>
-        )}
-        {selectedTypes.length > 0 && (
-          <span>Type: {selectedTypes.join(', ')} | </span>
-        )}
-        {searchTerm && (
-          <span>Search: "{searchTerm}" | </span>
-        )}
+        {selectedStatuses.length > 0 && <span>Status: {selectedStatuses.join(', ')} | </span>}
+        {selectedTypes.length > 0 && <span>Type: {selectedTypes.join(', ')} | </span>}
+        {searchTerm && <span>Search: "{searchTerm}" | </span>}
         View: {viewMode}
       </div>
     </div>
@@ -112,8 +91,8 @@ function ProjectFilters() {
 // Example using FilterProvider for global state
 function ProjectBrowserWithProvider({ projects }: ProjectBrowserProps) {
   return (
-    <FilterProvider 
-      initialState={{ 
+    <FilterProvider
+      initialState={{
         viewMode: 'cards',
         searchTerm: '',
         selectedStatuses: [],
@@ -125,9 +104,7 @@ function ProjectBrowserWithProvider({ projects }: ProjectBrowserProps) {
         <h2 className="text-2xl font-bold mb-6">Project Browser</h2>
         <ProjectFilters />
         <div className="mt-8">
-          <p className="text-slate-400">
-            Projects would be displayed here based on filters...
-          </p>
+          <p className="text-slate-400">Projects would be displayed here based on filters...</p>
         </div>
       </div>
     </FilterProvider>
