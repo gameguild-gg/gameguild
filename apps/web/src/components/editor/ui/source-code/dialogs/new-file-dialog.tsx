@@ -1,8 +1,8 @@
 'use client';
 
-import { Label } from '@/components/editor/ui/label';
-import { Input } from '@/components/editor/ui/input';
-import { Button } from '@/components/editor/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { NewFileDialogProps } from '../types';
 import { useState } from 'react';

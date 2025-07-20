@@ -1,13 +1,9 @@
-import type { TestCase, TestResult } from "../types"
+import type { TestCase, TestResult } from '../types';
 
-export async function runInOutTests(
-  code: string,
-  tests: TestCase[],
-  executeLua: (code: string) => Promise<string>,
-): Promise<TestResult[]> {
+export async function runInOutTests(code: string, tests: TestCase[], executeLua: (code: string) => Promise<string>): Promise<TestResult[]> {
   // Extract the main function name from the Lua code
-  const functionNameMatch = code.match(/function\s+(\w+)\s*\(/)
-  const functionName = functionNameMatch ? functionNameMatch[1] : "solution"
+  const functionNameMatch = code.match(/function\s+(\w+)\s*\(/);
+  const functionName = functionNameMatch ? functionNameMatch[1] : 'solution';
 
   // Create a Lua test harness that runs all tests and reports results
   const testHarness = `
@@ -16,9 +12,9 @@ ${code}
 -- Test harness
 local json = require("json")
 local tests = ${JSON.stringify(tests)
-    .replace(/\[/g, "{")
-    .replace(/\]/g, "}")
-    .replace(/"([^"]+)":/g, "$1=")}
+    .replace(/\[/g, '{')
+    .replace(/\]/g, '}')
+    .replace(/"([^"]+)":/g, '$1=')}
 
 local results = {}
 
@@ -84,18 +80,18 @@ end
 print("TEST_RESULTS_START")
 print(json.encode(results))
 print("TEST_RESULTS_END")
-`
+`;
 
   try {
     // Execute the test harness
-    const output = await executeLua(testHarness)
+    const output = await executeLua(testHarness);
 
     // Extract the test results from the output
-    const resultsMatch = output.match(/TEST_RESULTS_START\n(.*?)\nTEST_RESULTS_END/s)
+    const resultsMatch = output.match(/TEST_RESULTS_START\n(.*?)\nTEST_RESULTS_END/s);
 
     if (resultsMatch) {
       try {
-        const results = JSON.parse(resultsMatch[1])
+        const results = JSON.parse(resultsMatch[1]);
 
         // Convert the results to the expected format
         return results.map((result: any, index: number) => {
@@ -104,40 +100,40 @@ print("TEST_RESULTS_END")
               passed: false,
               actual: `Error: ${result.error}`,
               expected: `Expected: ${JSON.stringify(tests[index].expectedReturn)}`,
-            }
+            };
           }
 
           return {
             passed: result.passed,
             actual: `Test #${index + 1} returned: ${JSON.stringify(result.actual)}`,
             expected: `Expected: ${JSON.stringify(result.expected)}`,
-          }
-        })
+          };
+        });
       } catch (error) {
         return [
           {
             passed: false,
             actual: `Error parsing test results: ${error.message}`,
-            expected: "Valid test results",
+            expected: 'Valid test results',
           },
-        ]
+        ];
       }
     }
 
     return [
       {
         passed: false,
-        actual: "Could not find test results in output",
-        expected: "Test results in output",
+        actual: 'Could not find test results in output',
+        expected: 'Test results in output',
       },
-    ]
+    ];
   } catch (error) {
     return [
       {
         passed: false,
         actual: `Error executing tests: ${error.message}`,
-        expected: "Successful test execution",
+        expected: 'Successful test execution',
       },
-    ]
+    ];
   }
 }

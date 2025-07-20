@@ -1,8 +1,8 @@
 'use client';
-import { Button } from '@/components/editor/ui/button';
+import { Button } from '@/components/ui/button';
 import { PlusIcon, TrashIcon } from 'lucide-react';
-import { Input } from '@/components/editor/ui/input';
-import { Label } from '@/components/editor/ui/label';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface TestInputFieldsProps {
   inputs: string[];

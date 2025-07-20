@@ -1,36 +1,36 @@
-"use client"
+'use client';
 
-import { X } from "lucide-react"
-import { Button } from "@/components/editor/ui/button"
-import { Switch } from "@/components/editor/ui/switch"
-import { Label } from "@/components/editor/ui/label"
-import type { ProgrammingLanguage } from "@/lib/types"
+import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import type { ProgrammingLanguage } from '@/lib/types';
 
 interface SettingsPanelProps {
-  selectedLanguage: ProgrammingLanguage
-  setSelectedLanguage: (language: ProgrammingLanguage) => void
-  fontSize: number
-  setFontSize: (size: number) => void
-  tabSize: number
-  setTabSize: (size: number) => void
-  wordWrap: boolean
-  setWordWrap: (wrap: boolean) => void
-  showLineNumbers: boolean
-  setShowLineNumbers: (show: boolean) => void
-  showMinimap: boolean
-  setShowMinimap: (show: boolean) => void
-  isDarkTheme: boolean
-  setIsDarkTheme: (dark: boolean) => void
-  showExecution: boolean
-  setShowExecution: (show: boolean) => void
-  clearTerminalOnRun: boolean
-  setClearTerminalOnRun: (clear: boolean) => void
-  showTests: boolean
-  setShowTests: (show: boolean) => void
-  readonly: boolean
-  setReadonly: (readonly: boolean) => void
-  setShowSettings: (show: boolean) => void
-  updateSourceCode: (updates: Partial<{ readonly: boolean; showExecution: boolean; showTests: boolean }>) => void
+  selectedLanguage: ProgrammingLanguage;
+  setSelectedLanguage: (language: ProgrammingLanguage) => void;
+  fontSize: number;
+  setFontSize: (size: number) => void;
+  tabSize: number;
+  setTabSize: (size: number) => void;
+  wordWrap: boolean;
+  setWordWrap: (wrap: boolean) => void;
+  showLineNumbers: boolean;
+  setShowLineNumbers: (show: boolean) => void;
+  showMinimap: boolean;
+  setShowMinimap: (show: boolean) => void;
+  isDarkTheme: boolean;
+  setIsDarkTheme: (dark: boolean) => void;
+  showExecution: boolean;
+  setShowExecution: (show: boolean) => void;
+  clearTerminalOnRun: boolean;
+  setClearTerminalOnRun: (clear: boolean) => void;
+  showTests: boolean;
+  setShowTests: (show: boolean) => void;
+  readonly: boolean;
+  setReadonly: (readonly: boolean) => void;
+  setShowSettings: (show: boolean) => void;
+  updateSourceCode: (updates: Partial<{ readonly: boolean; showExecution: boolean; showTests: boolean }>) => void;
 }
 
 export function SettingsPanel({
@@ -60,13 +60,13 @@ export function SettingsPanel({
               checked={readonly}
               onCheckedChange={(checked) => {
                 // Primeiro atualize o estado local
-                setReadonly(checked)
+                setReadonly(checked);
 
                 // Em seguida, atualize o nó com uma cópia profunda dos dados atuais
                 updateSourceCode({
                   readonly: checked,
                   // Não inclua os arquivos aqui, pois a função updateSourceCode já lida com isso
-                })
+                });
               }}
             />
             <Label htmlFor="readonly-toggle" className="text-sm">
@@ -82,8 +82,8 @@ export function SettingsPanel({
             id="execution-toggle"
             checked={showExecution}
             onCheckedChange={(checked) => {
-              setShowExecution(checked)
-              updateSourceCode({ showExecution: checked })
+              setShowExecution(checked);
+              updateSourceCode({ showExecution: checked });
             }}
           />
         </div>
@@ -96,8 +96,8 @@ export function SettingsPanel({
               id="tests-toggle"
               checked={showTests}
               onCheckedChange={(checked) => {
-                setShowTests(checked)
-                updateSourceCode({ showTests: checked })
+                setShowTests(checked);
+                updateSourceCode({ showTests: checked });
               }}
             />
           </div>
@@ -111,5 +111,5 @@ export function SettingsPanel({
         )}
       </div>
     </div>
-  )
+  );
 }

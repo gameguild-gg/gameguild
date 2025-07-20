@@ -1,30 +1,30 @@
-"use client"
+'use client';
 
-import { useEffect } from "react"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { $insertNodes } from "lexical"
-import { INSERT_HEADER_COMMAND } from "./floating-content-insert-plugin"
-import { $createHeaderNode } from "../nodes/header-node"
-import type { HeaderData } from "../nodes/header-node"
+import { useEffect } from 'react';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { $insertNodes } from 'lexical';
+import { INSERT_HEADER_COMMAND } from './floating-content-insert-plugin';
+import { $createHeaderNode } from '../nodes/header-node';
+import type { HeaderData } from '../nodes/header-node';
 
 export function HeaderPlugin() {
-  const [editor] = useLexicalComposerContext()
+  const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
-    if (!editor) return
+    if (!editor) return;
 
     return editor.registerCommand(
       INSERT_HEADER_COMMAND,
       (payload: HeaderData) => {
         editor.update(() => {
-          const headerNode = $createHeaderNode(payload)
-          $insertNodes([headerNode])
-        })
-        return true
+          const headerNode = $createHeaderNode(payload);
+          $insertNodes([headerNode]);
+        });
+        return true;
       },
       1,
-    )
-  }, [editor])
+    );
+  }, [editor]);
 
-  return null
+  return null;
 }

@@ -1,161 +1,155 @@
-"use client"
+'use client';
 
-import { useEffect, useRef, useState } from "react"
-import { DecoratorNode, type SerializedLexicalNode } from "lexical"
-import { $getNodeByKey } from "lexical"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { Move, Type } from "lucide-react"
+import { useEffect, useRef, useState } from 'react';
+import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
+import { $getNodeByKey } from 'lexical';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { Move, Type } from 'lucide-react';
 
-import { ImageSizeControl } from "@/components/editor/ui/image-size-control"
-import { CaptionInput } from "@/components/editor/ui/caption-input"
-import { Button } from "@/components/editor/ui/button"
-import { X } from "lucide-react"
-import { ContentEditMenu, type EditMenuOption } from "@/components/editor/ui/content-edit-menu"
+import { ImageSizeControl } from '@/components/ui/image-size-control';
+import { CaptionInput } from '@/components/ui/caption-input';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
+import { ContentEditMenu, type EditMenuOption } from '@/components/ui/content-edit-menu';
 
 export interface ImageData {
-  src: string
-  alt: string
-  caption?: string
-  size?: number // Size as a percentage (1-100)
+  src: string;
+  alt: string;
+  caption?: string;
+  size?: number; // Size as a percentage (1-100)
 }
 
 export interface SerializedImageNode extends SerializedLexicalNode {
-  type: "image"
-  data: ImageData
-  version: 1
+  type: 'image';
+  data: ImageData;
+  version: 1;
 }
 
 export class ImageNode extends DecoratorNode<JSX.Element> {
-  __data: ImageData
+  __data: ImageData;
 
   static getType(): string {
-    return "image"
+    return 'image';
   }
 
   static clone(node: ImageNode): ImageNode {
-    return new ImageNode(node.__data, node.__key)
+    return new ImageNode(node.__data, node.__key);
   }
 
   constructor(data: ImageData, key?: string) {
-    super(key)
+    super(key);
     this.__data = {
       ...data,
       size: data.size ?? 100, // Default to 100% if not specified
-    }
+    };
   }
 
   createDOM(): HTMLElement {
-    return document.createElement("div")
+    return document.createElement('div');
   }
 
   updateDOM(): false {
-    return false
+    return false;
   }
 
   setData(data: ImageData): void {
-    const writable = this.getWritable()
-    writable.__data = data
+    const writable = this.getWritable();
+    writable.__data = data;
   }
 
   exportJSON(): SerializedImageNode {
     return {
-      type: "image",
+      type: 'image',
       data: this.__data,
       version: 1,
-    }
+    };
   }
 
   static importJSON(serializedNode: SerializedImageNode): ImageNode {
-    return new ImageNode(serializedNode.data)
+    return new ImageNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {
-    return <ImageComponent data={this.__data} nodeKey={this.__key} />
+    return <ImageComponent data={this.__data} nodeKey={this.__key} />;
   }
 }
 
 interface ImageComponentProps {
-  data: ImageData
-  nodeKey: string
+  data: ImageData;
+  nodeKey: string;
 }
 
 function ImageComponent({ data, nodeKey }: ImageComponentProps) {
-  const [editor] = useLexicalComposerContext()
-  const [isEditing, setIsEditing] = useState(false)
-  const [caption, setCaption] = useState(data.caption || "")
-  const [size, setSize] = useState(data.size || 100)
-  const [showSizeControls, setShowSizeControls] = useState(false)
-  const [showMenu, setShowMenu] = useState(false)
-  const imageRef = useRef<HTMLImageElement>(null)
-  const controlsRef = useRef<HTMLDivElement>(null)
-  const sizeControlsRef = useRef<HTMLDivElement>(null)
-  const captionControlsRef = useRef<HTMLDivElement>(null)
+  const [editor] = useLexicalComposerContext();
+  const [isEditing, setIsEditing] = useState(false);
+  const [caption, setCaption] = useState(data.caption || '');
+  const [size, setSize] = useState(data.size || 100);
+  const [showSizeControls, setShowSizeControls] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const controlsRef = useRef<HTMLDivElement>(null);
+  const sizeControlsRef = useRef<HTMLDivElement>(null);
+  const captionControlsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      const isClickInsideImage = imageRef.current && imageRef.current.contains(e.target as Node)
-      const isClickInsideControls = controlsRef.current && controlsRef.current.contains(e.target as Node)
-      const isClickInsideSizeControls = sizeControlsRef.current && sizeControlsRef.current.contains(e.target as Node)
-      const isClickInsideCaptionControls =
-        captionControlsRef.current && captionControlsRef.current.contains(e.target as Node)
-      const isClickInsideWrapper =
-        e.target instanceof Node && (e.target as HTMLElement).closest(".image-wrapper") !== null
+      const isClickInsideImage = imageRef.current && imageRef.current.contains(e.target as Node);
+      const isClickInsideControls = controlsRef.current && controlsRef.current.contains(e.target as Node);
+      const isClickInsideSizeControls = sizeControlsRef.current && sizeControlsRef.current.contains(e.target as Node);
+      const isClickInsideCaptionControls = captionControlsRef.current && captionControlsRef.current.contains(e.target as Node);
+      const isClickInsideWrapper = e.target instanceof Node && (e.target as HTMLElement).closest('.image-wrapper') !== null;
 
       // Não fechamos automaticamente nenhum controle ao clicar fora
       // Apenas os botões X podem fechar os controles
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const updateImage = (newData: Partial<ImageData>) => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
+      const node = $getNodeByKey(nodeKey);
       if (node instanceof ImageNode) {
-        node.setData({ ...data, ...newData })
+        node.setData({ ...data, ...newData });
       }
-    })
-  }
+    });
+  };
 
   const handleCaptionChange = (newCaption: string) => {
-    setCaption(newCaption)
-    updateImage({ caption: newCaption })
-  }
+    setCaption(newCaption);
+    updateImage({ caption: newCaption });
+  };
 
   const handleSizeChange = (newSize: number) => {
-    setSize(newSize)
-    updateImage({ size: newSize })
-  }
+    setSize(newSize);
+    updateImage({ size: newSize });
+  };
 
   // Opções do menu de edição
   const editMenuOptions: EditMenuOption[] = [
     {
-      id: "size",
+      id: 'size',
       icon: <Move className="h-4 w-4" />,
-      label: "Ajustar tamanho",
+      label: 'Ajustar tamanho',
       action: () => setShowSizeControls(true),
     },
     {
-      id: "caption",
+      id: 'caption',
       icon: <Type className="h-4 w-4" />,
-      label: caption ? "Editar legenda" : "Adicionar legenda",
+      label: caption ? 'Editar legenda' : 'Adicionar legenda',
       action: () => setIsEditing(true),
     },
-  ]
+  ];
 
   return (
-    <div
-      className="my-8 relative group image-wrapper"
-      onMouseEnter={() => setShowMenu(true)}
-      onMouseLeave={() => setShowMenu(false)}
-    >
+    <div className="my-8 relative group image-wrapper" onMouseEnter={() => setShowMenu(true)} onMouseLeave={() => setShowMenu(false)}>
       <div className="relative flex justify-center">
         <img
           ref={imageRef}
-          src={data.src || "/placeholder.svg"}
+          src={data.src || '/placeholder.svg'}
           alt={data.alt}
           style={{ width: `${size}%` }}
           className="h-auto rounded-lg cursor-pointer transition-all duration-200"
@@ -180,8 +174,8 @@ function ImageComponent({ data, nodeKey }: ImageComponentProps) {
                 size="sm"
                 className="h-6 w-6 p-0"
                 onClick={(e) => {
-                  e.stopPropagation()
-                  setShowSizeControls(false)
+                  e.stopPropagation();
+                  setShowSizeControls(false);
                 }}
               >
                 <X className="h-4 w-4" />
@@ -207,8 +201,8 @@ function ImageComponent({ data, nodeKey }: ImageComponentProps) {
                 size="sm"
                 className="h-6 w-6 p-0"
                 onClick={(e) => {
-                  e.stopPropagation()
-                  setIsEditing(false)
+                  e.stopPropagation();
+                  setIsEditing(false);
                 }}
               >
                 <X className="h-4 w-4" />
@@ -222,9 +216,9 @@ function ImageComponent({ data, nodeKey }: ImageComponentProps) {
       {/* Exibir legenda quando não estiver editando */}
       {!isEditing && caption && <div className="mt-2 text-sm text-muted-foreground text-center">{caption}</div>}
     </div>
-  )
+  );
 }
 
 export function $createImageNode(data: ImageData): ImageNode {
-  return new ImageNode(data)
+  return new ImageNode(data);
 }

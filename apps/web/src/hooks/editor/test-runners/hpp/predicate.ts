@@ -1,5 +1,5 @@
-import type { TestCase, TestResult } from "../types"
-import { formatTestOutput } from "../utils"
+import type { TestCase, TestResult } from '../types';
+import { formatTestOutput } from '../utils';
 
 /**
  * Convert JavaScript predicate to C++ condition
@@ -7,30 +7,26 @@ import { formatTestOutput } from "../utils"
 function convertPredicateToCpp(predicate: string): string {
   // Remove arrow function syntax and convert to C++ lambda
   const cppPredicate = predicate
-    .replace(/$$([^)]*)$$\s*=>\s*/, "")
-    .replace(/===|===/g, "==")
-    .replace(/!==|!==/g, "!=")
-    .replace(/&&/g, "&&")
-    .replace(/\|\|/g, "||")
-    .replace(/!/g, "!")
-    .replace(/\btrue\b/g, "true")
-    .replace(/\bfalse\b/g, "false")
-    .replace(/\bfunction\s*$$([^)]*)$$\s*{([\s\S]*?)return\s+(.*?);?\s*}/g, "$3")
+    .replace(/$$([^)]*)$$\s*=>\s*/, '')
+    .replace(/===|===/g, '==')
+    .replace(/!==|!==/g, '!=')
+    .replace(/&&/g, '&&')
+    .replace(/\|\|/g, '||')
+    .replace(/!/g, '!')
+    .replace(/\btrue\b/g, 'true')
+    .replace(/\bfalse\b/g, 'false')
+    .replace(/\bfunction\s*$$([^)]*)$$\s*{([\s\S]*?)return\s+(.*?);?\s*}/g, '$3');
 
-  return cppPredicate
+  return cppPredicate;
 }
 
 /**
  * Run predicate tests for C++ header files
  */
-export async function runHppPredicateTests(
-  code: string,
-  tests: TestCase[],
-  executeCpp: (code: string) => Promise<string>,
-): Promise<TestResult[]> {
+export async function runHppPredicateTests(code: string, tests: TestCase[], executeCpp: (code: string) => Promise<string>): Promise<TestResult[]> {
   // Extract function name from the header
-  const functionMatch = code.match(/\b(\w+)\s*$$[^)]*$$\s*;/)
-  const functionName = functionMatch ? functionMatch[1] : "solution"
+  const functionMatch = code.match(/\b(\w+)\s*$$[^)]*$$\s*;/);
+  const functionName = functionMatch ? functionMatch[1] : 'solution';
 
   // Create a test harness that includes the header and tests the function
   const testHarness = `
@@ -75,23 +71,23 @@ int main() {
     
     ${tests
       .map((test, index) => {
-        const { args, predicate } = test
+        const { args, predicate } = test;
 
         // Handle different argument types
         const argsStr = args
           .map((arg) => {
             if (Array.isArray(arg)) {
-              return `std::vector<int>{${arg.join(", ")}}`
-            } else if (typeof arg === "string") {
-              return `"${arg}"`
+              return `std::vector<int>{${arg.join(', ')}}`;
+            } else if (typeof arg === 'string') {
+              return `"${arg}"`;
             } else {
-              return arg
+              return arg;
             }
           })
-          .join(", ")
+          .join(', ');
 
         // Convert JavaScript predicate to C++ condition
-        const cppPredicate = convertPredicateToCpp(predicate || "")
+        const cppPredicate = convertPredicateToCpp(predicate || '');
 
         return `
     try {
@@ -112,31 +108,31 @@ int main() {
         testResult["actual"] = "Error";
         testResult["error"] = e.what();
         results.push_back(testResult);
-    }`
+    }`;
       })
-      .join("\n")}
+      .join('\n')}
     
     std::cout << results.dump(2) << std::endl;
     std::cout << "TEST_RESULTS_END" << std::endl;
     return 0;
 }
-`
+`;
 
   try {
     // Execute the test harness
-    const output = await executeCpp(testHarness)
+    const output = await executeCpp(testHarness);
 
     // Parse the test results
-    const resultsMatch = output.match(/TEST_RESULTS_START\s*([\s\S]*?)\s*TEST_RESULTS_END/)
+    const resultsMatch = output.match(/TEST_RESULTS_START\s*([\s\S]*?)\s*TEST_RESULTS_END/);
     if (!resultsMatch) {
       return tests.map(() => ({
         passed: false,
-        error: "Failed to parse test results",
-      }))
+        error: 'Failed to parse test results',
+      }));
     }
 
-    const resultsJson = resultsMatch[1].trim()
-    const results = JSON.parse(resultsJson)
+    const resultsJson = resultsMatch[1].trim();
+    const results = JSON.parse(resultsJson);
 
     return results.map((result: any, index: number) => ({
       passed: result.passed,
@@ -144,11 +140,11 @@ int main() {
       actual: result.actual,
       error: result.error,
       output: formatTestOutput(tests[index], result),
-    }))
+    }));
   } catch (error) {
     return tests.map(() => ({
       passed: false,
       error: error instanceof Error ? error.message : String(error),
-    }))
+    }));
   }
 }
