@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Save, Eye } from 'lucide-react';
+import { ArrowLeft, Save, Eye, FileText, Image, DollarSign, Settings, Users, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useCourseEditor } from '@/lib/courses/course-editor.context';
 import { GeneralDetailsSection } from './sections/general-details-section';
@@ -15,8 +15,17 @@ interface CourseEditorProps {
   isCreating?: boolean;
 }
 
+const SECTIONS = [
+  { id: 'general', label: 'General Details', icon: FileText, description: 'Title, description, category' },
+  { id: 'media', label: 'Media & Assets', icon: Image, description: 'Thumbnail, videos, images' },
+  { id: 'content', label: 'Course Content', icon: BookOpen, description: 'Lessons, modules, materials' },
+  { id: 'pricing', label: 'Pricing & Sales', icon: DollarSign, description: 'Products, pricing, enrollment' },
+  { id: 'settings', label: 'Settings', icon: Settings, description: 'Publishing, access, advanced' },
+] as const;
+
 export function CourseEditor({ courseSlug, isCreating = false }: CourseEditorProps) {
   const { state, validate } = useCourseEditor();
+  const [activeSection, setActiveSection] = useState<string>('general');
 
   const handleSave = async () => {
     validate();
