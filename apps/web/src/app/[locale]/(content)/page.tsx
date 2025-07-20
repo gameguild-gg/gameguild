@@ -175,8 +175,7 @@ export default function Page(): React.JSX.Element {
         hasUser: !!session?.user,
         hasAccessToken: !!session?.accessToken,
         hasRefreshToken: !!(session as any)?.refreshToken,
-        refreshTokenPrefix: (session as any)?.refreshToken ? 
-          (session as any).refreshToken.substring(0, 20) + '...' : 'none',
+        refreshTokenPrefix: (session as any)?.refreshToken ? (session as any).refreshToken.substring(0, 20) + '...' : 'none',
         error: (session as any)?.error,
         expires: session?.expires,
       });
@@ -353,9 +352,7 @@ export default function Page(): React.JSX.Element {
                 </p>
                 <p>
                   <strong>Refresh Token:</strong>
-                  <Badge variant={(session as any).refreshToken ? 'default' : 'destructive'}>
-                    {(session as any).refreshToken ? 'Present' : 'Missing'}
-                  </Badge>
+                  <Badge variant={(session as any).refreshToken ? 'default' : 'destructive'}>{(session as any).refreshToken ? 'Present' : 'Missing'}</Badge>
                 </p>
                 <p>
                   <strong>Session Error:</strong>
@@ -373,9 +370,7 @@ export default function Page(): React.JSX.Element {
                     <strong>Access Token Preview:</strong>
                   </p>
                   <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-20">
-                    {session.accessToken ? 
-                      `${session.accessToken.substring(0, 50)}...` : 
-                      'No access token'}
+                    {session.accessToken ? `${session.accessToken.substring(0, 50)}...` : 'No access token'}
                   </pre>
                 </div>
                 <div className="space-y-2">
@@ -383,9 +378,7 @@ export default function Page(): React.JSX.Element {
                     <strong>Refresh Token Preview:</strong>
                   </p>
                   <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-20">
-                    {(session as any).refreshToken ? 
-                      `${(session as any).refreshToken.substring(0, 50)}...` : 
-                      'No refresh token'}
+                    {(session as any).refreshToken ? `${(session as any).refreshToken.substring(0, 50)}...` : 'No refresh token'}
                   </pre>
                 </div>
               </div>
@@ -394,9 +387,8 @@ export default function Page(): React.JSX.Element {
                   <strong>Session Expires:</strong> {new Date(session.expires).toLocaleString()}
                 </p>
                 <p className="text-sm">
-                  <strong>Token Lengths:</strong> 
-                  Access: {session.accessToken?.length || 0} chars, 
-                  Refresh: {(session as any).refreshToken?.length || 0} chars
+                  <strong>Token Lengths:</strong>
+                  Access: {session.accessToken?.length || 0} chars, Refresh: {(session as any).refreshToken?.length || 0} chars
                 </p>
               </div>
             </div>
