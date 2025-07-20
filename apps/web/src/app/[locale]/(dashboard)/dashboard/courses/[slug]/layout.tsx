@@ -9,7 +9,7 @@ import { CourseSidebar } from '@/components/courses/course-editor/course-sidebar
 import { Skeleton } from '@/components/ui/skeleton';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
-export default function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
+export default function Layout({ children }: PropsWithChildren): React.JSX.Element {
   const params = useParams();
   const slug = params.slug as string;
 
