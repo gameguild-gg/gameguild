@@ -9,7 +9,7 @@ export function AuthDebug() {
 
   const handleRefreshSession = async () => {
     console.log('🔄 [AUTH DEBUG] Manually refreshing session...');
-    setRefreshCount(prev => prev + 1);
+    setRefreshCount((prev) => prev + 1);
     await update();
   };
 
@@ -22,7 +22,7 @@ export function AuthDebug() {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (response.ok) {
         const sessionData = await response.json();
         console.log('✅ [AUTH DEBUG] Session API call successful:', sessionData);
@@ -60,19 +60,13 @@ export function AuthDebug() {
   const hasError = !!sessionError;
 
   return (
-    <div className={`fixed bottom-4 right-4 border rounded p-4 max-w-sm ${
-      hasError ? 'bg-red-100 border-red-400' : 
-      session ? 'bg-green-100 border-green-400' : 
-      'bg-gray-100 border-gray-400'
-    }`}>
-      <h3 className={`font-bold ${
-        hasError ? 'text-red-800' : 
-        session ? 'text-green-800' : 
-        'text-gray-800'
-      }`}>
-        Auth Debug ({status})
-      </h3>
-      
+    <div
+      className={`fixed bottom-4 right-4 border rounded p-4 max-w-sm ${
+        hasError ? 'bg-red-100 border-red-400' : session ? 'bg-green-100 border-green-400' : 'bg-gray-100 border-gray-400'
+      }`}
+    >
+      <h3 className={`font-bold ${hasError ? 'text-red-800' : session ? 'text-green-800' : 'text-gray-800'}`}>Auth Debug ({status})</h3>
+
       <div className="text-sm mt-2 space-y-1">
         <div>
           <strong>Status:</strong> {status}
@@ -99,29 +93,18 @@ export function AuthDebug() {
       </div>
 
       <div className="mt-3 space-y-2">
-        <button
-          onClick={handleRefreshSession}
-          className="block w-full px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
+        <button onClick={handleRefreshSession} className="block w-full px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
           Refresh Session
         </button>
-        <button
-          onClick={handleTestApiCall}
-          className="block w-full px-3 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600"
-        >
+        <button onClick={handleTestApiCall} className="block w-full px-3 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600">
           Test API Call
         </button>
       </div>
 
       {hasError && (
         <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
-          <p className="text-xs text-red-700">
-            Authentication error detected. Please sign in again.
-          </p>
-          <button
-            onClick={() => window.location.href = '/sign-in'}
-            className="mt-1 px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
-          >
+          <p className="text-xs text-red-700">Authentication error detected. Please sign in again.</p>
+          <button onClick={() => (window.location.href = '/sign-in')} className="mt-1 px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600">
             Sign In
           </button>
         </div>
