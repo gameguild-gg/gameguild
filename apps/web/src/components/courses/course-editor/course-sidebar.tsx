@@ -1,28 +1,10 @@
 'use client';
 
-import { usePathname, useParams } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  FileText, 
-  Image, 
-  BookOpen, 
-  DollarSign, 
-  Settings, 
-  Users,
-  ArrowLeft,
-  Save,
-  Eye
-} from 'lucide-react';
+import { ArrowLeft, BookOpen, DollarSign, Eye, FileText, Image, Save, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { 
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem
-} from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useCourseEditor } from '@/lib/courses/course-editor.context';
 import { cn } from '@/lib/utils';
 
@@ -32,36 +14,36 @@ const COURSE_SECTIONS = [
     label: 'General Details',
     icon: FileText,
     path: '',
-    description: 'Title, description, category'
+    description: 'Title, description, category',
   },
   {
     id: 'media',
     label: 'Media & Assets',
     icon: Image,
     path: '/media',
-    description: 'Thumbnail, videos, images'
+    description: 'Thumbnail, videos, images',
   },
   {
     id: 'content',
     label: 'Course Content',
     icon: BookOpen,
     path: '/content',
-    description: 'Lessons, modules, materials'
+    description: 'Lessons, modules, materials',
   },
   {
     id: 'pricing',
     label: 'Pricing & Sales',
     icon: DollarSign,
     path: '/pricing',
-    description: 'Products, pricing, enrollment'
+    description: 'Products, pricing, enrollment',
   },
   {
     id: 'settings',
     label: 'Settings',
     icon: Settings,
     path: '/settings',
-    description: 'Publishing, access, advanced'
-  }
+    description: 'Publishing, access, advanced',
+  },
 ];
 
 export function CourseSidebar() {
@@ -74,7 +56,7 @@ export function CourseSidebar() {
 
   const handleSave = async () => {
     validate();
-    
+
     if (!state.isValid) {
       // Scroll to first error or show toast
       return;
@@ -95,7 +77,7 @@ export function CourseSidebar() {
   };
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="none">
       <SidebarHeader className="border-b border-border">
         <div className="p-4">
           <Link href="/dashboard/courses">
@@ -104,27 +86,23 @@ export function CourseSidebar() {
               Back to Courses
             </Button>
           </Link>
-          
+
           <div>
-            <h2 className="font-semibold text-lg text-foreground truncate">
-              {state.title || 'Untitled Course'}
-            </h2>
-            {state.slug && (
-              <p className="text-sm text-muted-foreground truncate">
-                /{state.slug}
-              </p>
-            )}
+            <h2 className="font-semibold text-lg text-foreground truncate">{state.title || 'Untitled Course'}</h2>
+            {state.slug && <p className="text-sm text-muted-foreground truncate">/{state.slug}</p>}
           </div>
 
           {/* Status Badge */}
-          <div className={cn(
-            "mt-3 px-3 py-1 rounded-full text-xs font-medium inline-block",
-            state.status === 'published' 
-              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-              : state.status === 'draft'
-              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-              : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
-          )}>
+          <div
+            className={cn(
+              'mt-3 px-3 py-1 rounded-full text-xs font-medium inline-block',
+              state.status === 'published'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                : state.status === 'draft'
+                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                  : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+            )}
+          >
             {state.status.charAt(0).toUpperCase() + state.status.slice(1)}
           </div>
         </div>
@@ -133,35 +111,23 @@ export function CourseSidebar() {
       <SidebarContent className="p-4">
         <SidebarMenu>
           {COURSE_SECTIONS.map((section) => {
-            const isActive = pathname === `${basePath}${section.path}` || 
-                           (section.path === '' && pathname === basePath);
-            
+            const isActive = pathname === `${basePath}${section.path}` || (section.path === '' && pathname === basePath);
+
             return (
               <SidebarMenuItem key={section.id}>
                 <SidebarMenuButton asChild>
-                  <Link 
+                  <Link
                     href={`${basePath}${section.path}`}
                     className={cn(
-                      "flex flex-col items-start p-3 rounded-lg transition-colors group",
-                      isActive 
-                        ? "bg-primary text-primary-foreground" 
-                        : "hover:bg-muted text-foreground"
+                      'flex flex-col items-start p-3 rounded-lg transition-colors group',
+                      isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-foreground',
                     )}
                   >
                     <div className="flex items-center gap-3 w-full">
                       <section.icon className="h-5 w-5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">
-                          {section.label}
-                        </div>
-                        <div className={cn(
-                          "text-xs truncate",
-                          isActive 
-                            ? "text-primary-foreground/80" 
-                            : "text-muted-foreground"
-                        )}>
-                          {section.description}
-                        </div>
+                        <div className="font-medium text-sm truncate">{section.label}</div>
+                        <div className={cn('text-xs truncate', isActive ? 'text-primary-foreground/80' : 'text-muted-foreground')}>{section.description}</div>
                       </div>
                     </div>
                   </Link>
@@ -174,18 +140,16 @@ export function CourseSidebar() {
         {/* Validation Errors */}
         {Object.keys(state.errors).length > 0 && (
           <div className="mt-6 p-3 bg-red-50/50 border border-red-200 rounded-lg">
-            <h4 className="font-medium text-sm text-red-800 mb-2">
-              ⚠️ Validation Errors
-            </h4>
+            <h4 className="font-medium text-sm text-red-800 mb-2">⚠️ Validation Errors</h4>
             <ul className="space-y-1 text-xs text-red-700">
-              {Object.entries(state.errors).slice(0, 3).map(([field, error]) => (
-                <li key={field} className="truncate">• {error}</li>
-              ))}
-              {Object.keys(state.errors).length > 3 && (
-                <li className="text-red-600">
-                  +{Object.keys(state.errors).length - 3} more errors
-                </li>
-              )}
+              {Object.entries(state.errors)
+                .slice(0, 3)
+                .map(([field, error]) => (
+                  <li key={field} className="truncate">
+                    • {error}
+                  </li>
+                ))}
+              {Object.keys(state.errors).length > 3 && <li className="text-red-600">+{Object.keys(state.errors).length - 3} more errors</li>}
             </ul>
           </div>
         )}
@@ -194,7 +158,7 @@ export function CourseSidebar() {
       <SidebarFooter className="border-t border-border p-4">
         <div className="space-y-2">
           {/* Save Button */}
-          <Button 
+          <Button
             onClick={handleSave}
             disabled={!state.isValid}
             className="w-full bg-gradient-to-r from-primary to-chart-2 hover:from-primary/90 hover:to-chart-2/90"
@@ -205,13 +169,7 @@ export function CourseSidebar() {
           </Button>
 
           {/* Preview Button */}
-          <Button 
-            variant="outline" 
-            onClick={handlePreview} 
-            disabled={!state.slug}
-            className="w-full"
-            size="sm"
-          >
+          <Button variant="outline" onClick={handlePreview} disabled={!state.slug} className="w-full" size="sm">
             <Eye className="h-4 w-4 mr-2" />
             Preview
           </Button>
