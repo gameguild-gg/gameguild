@@ -1,5 +1,9 @@
 import { Locale } from 'next-intl';
 
+export type RequiredFields<T, K extends keyof T> = T & { [P in K]-?: T[P] };
+export type OptionalFields<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+export type BaseIdentifier = number | string;
+
 export type ParamsWithLocale<P = unknown> = P & { locale: Locale };
 
 export type ParamsWithSlug<P = unknown> = P & { slug: string };
@@ -19,8 +23,6 @@ export type PropsWithLocaleSlugParams<P = unknown> = P & {
   params: Promise<ParamsWithLocale<ParamsWithSlug>>;
 };
 
-export type BaseIdentifier = number | string;
-
 export type Identifiable<T = unknown, TIdentifier extends BaseIdentifier = string> = T & { id: TIdentifier };
 
 export type InvertRecord<T extends Record<string, PropertyKey>> = { [V in T[keyof T]]: { [K in keyof T]: T[K] extends V ? K : never }[keyof T] };
@@ -34,9 +36,10 @@ export type ActionCompleteResult<T> = T extends object
   : {
       success: HttpStatusCode;
     };
-export type ActionErrorResult = { success: false; error: Error };
+export type ActionErrorResult = { status: HttpStatusCode; success: false; error: Error };
 export type ActionValidationErrorResult<T> = T extends object
   ? {
+      status: HttpStatusCode;
       success: false;
       fieldErrors: Partial<Record<keyof T, Error>>;
     }
