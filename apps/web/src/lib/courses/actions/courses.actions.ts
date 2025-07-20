@@ -126,17 +126,13 @@ export async function getCourseData(): Promise<EnhancedCourseData> {
       throw new Error('Invalid course data structure - expected array');
     }
 
-    // Filter out tracks (programs with "track" in slug or title) and transform the API response
-    const filteredData = data.filter((program: { slug?: string; title?: string }) => {
-      // Exclude programs that are tracks
-      const isTrack = program.slug?.includes('-track-') || program.title?.includes('Track');
-      console.log(`Program: ${program.title}, slug: ${program.slug}, isTrack: ${isTrack}`);
-      return !isTrack;
-    });
+    // Transform the API response - these are all learning tracks/courses
+    console.log(
+      'Programs from API:',
+      data.map((p: { title?: string; slug?: string }) => ({ title: p.title, slug: p.slug })),
+    );
 
-    console.log('Filtered data length:', filteredData.length);
-
-    const transformedCourses = filteredData.map(transformProgramToCourse);
+    const transformedCourses = data.map(transformProgramToCourse);
     console.log('Transformed courses length:', transformedCourses.length);
 
     return {
