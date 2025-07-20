@@ -83,7 +83,7 @@ public static class WebApplicationBuilderExtensions {
       EnableResponseCompression = !builder.Environment.IsDevelopment(),
       EnableRateLimiting = !builder.Environment.IsDevelopment(),
       ApiTitle = "GameGuild API",
-      ApiVersion = "v1"
+      ApiVersion = "v1",
     };
   }
 }
