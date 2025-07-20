@@ -174,26 +174,26 @@ function TypeSafeSessionFilterControls() {
         <div className="flex-1 max-w-md">
           <ContextSearchBar placeholder="Search sessions..." />
         </div>
-        
+
         {/* Type-safe filters - TypeScript prevents typos! */}
         <TypeSafeMultiSelectFilter<GameSession>
           filterKey="status" // ✅ Must be a valid GameSession property
           options={statusOptions}
           placeholder="Filter by status"
         />
-        
+
         <TypeSafeMultiSelectFilter<GameSession>
           filterKey="difficulty" // ✅ Must be a valid GameSession property
           options={difficultyOptions}
           placeholder="Filter by difficulty"
         />
-        
+
         <TypeSafeMultiSelectFilter<GameSession>
           filterKey="category" // ✅ Must be a valid GameSession property
           options={categoryOptions}
           placeholder="Filter by category"
         />
-        
+
         {/* This would cause a TypeScript error:
         <TypeSafeMultiSelectFilter<GameSession>
           filterKey="invalidKey" // ❌ TypeScript error!
@@ -201,7 +201,7 @@ function TypeSafeSessionFilterControls() {
         />
         */}
       </div>
-      
+
       <ContextViewModeToggle />
     </div>
   );
@@ -238,7 +238,7 @@ function TypeSafeSessionsList() {
   return (
     <div className="space-y-6">
       <TypeSafeSessionFilterControls />
-      
+
       <DataDisplay
         data={filteredSessions}
         columns={columns}
@@ -248,7 +248,7 @@ function TypeSafeSessionsList() {
         emptyMessage="No sessions found matching your criteria"
         className="w-full"
       />
-      
+
       {/* Results summary */}
       <div className="text-sm text-gray-600">
         Showing {filteredSessions.length} of {mockSessions.length} sessions
@@ -277,7 +277,7 @@ export function TypeSafeGameSessionsExample() {
             </ul>
           </div>
         </div>
-        
+
         <TypeSafeSessionsList />
       </div>
     </FilterProvider>
