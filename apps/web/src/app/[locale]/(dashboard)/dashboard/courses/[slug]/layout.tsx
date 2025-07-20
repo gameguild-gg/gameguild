@@ -1,19 +1,15 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import React, { PropsWithChildren, useEffect, useState } from 'react';
 import { getCourseBySlug } from '@/lib/courses/actions';
 import { Course } from '@/components/legacy/types/courses';
 import { CourseEditorProvider } from '@/lib/courses/course-editor.context';
 import { CourseSidebar } from '@/components/courses/course-editor/course-sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
-interface CourseLayoutProps {
-  children: React.ReactNode;
-}
-
-export default function CourseLayout({ children }: CourseLayoutProps) {
+export default function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
   const params = useParams();
   const slug = params.slug as string;
 
@@ -48,7 +44,7 @@ export default function CourseLayout({ children }: CourseLayoutProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="flex flex-col flex-1">
         <div className="container mx-auto max-w-7xl p-6">
           <div className="space-y-8">
             <Skeleton className="h-16 w-full" />
@@ -67,7 +63,7 @@ export default function CourseLayout({ children }: CourseLayoutProps) {
 
   if (error || !course) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex flex-col flex-1 items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-2">Course Not Found</h1>
           <p className="text-muted-foreground mb-4">{error || 'The requested course could not be found.'}</p>
@@ -92,27 +88,27 @@ export default function CourseLayout({ children }: CourseLayoutProps) {
     status: 'published' as const, // Default status
     media: {
       thumbnail: undefined, // Will be handled by the media section
-      showcaseVideo: undefined
+      showcaseVideo: undefined,
     },
     products: [],
     enrollment: {
       isOpen: true,
-      currentEnrollments: 0
+      currentEnrollments: 0,
     },
     tags: Array.isArray(course.tools) ? course.tools : [],
-    manualSlugEdit: true // Since it's an existing course
+    manualSlugEdit: true, // Since it's an existing course
   };
 
   return (
-    <CourseEditorProvider initialCourse={initialCourseData}>
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-background">
-          <CourseSidebar />
-          <SidebarInset className="flex-1 flex flex-col min-w-0">
-            {children}
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
-    </CourseEditorProvider>
+    <div className="flex flex-col flex-1 relative">
+      <CourseEditorProvider initialCourse={initialCourseData}>
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full bg-background">
+            <CourseSidebar />
+            <SidebarInset className="flex-1 flex flex-col min-w-0">{children}</SidebarInset>
+          </div>
+        </SidebarProvider>
+      </CourseEditorProvider>
+    </div>
   );
 }
