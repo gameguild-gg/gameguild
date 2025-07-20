@@ -99,29 +99,17 @@ export function GenericCardView<T extends DataItem>({
   return (
     <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4', className)}>
       {items.map((item) => (
-        <Card 
-          key={item.id} 
-          className={cn(
-            'transition-all duration-200 hover:shadow-md',
-            onItemClick && 'cursor-pointer hover:border-primary/50',
-            config.className
-          )}
+        <Card
+          key={item.id}
+          className={cn('transition-all duration-200 hover:shadow-md', onItemClick && 'cursor-pointer hover:border-primary/50', config.className)}
           onClick={() => onItemClick?.(item)}
         >
           <CardHeader>
             <CardTitle className="flex items-start justify-between">
               <span>{String(item[config.titleKey])}</span>
-              {config.badgeKey && (
-                <Badge variant="secondary">
-                  {String(item[config.badgeKey])}
-                </Badge>
-              )}
+              {config.badgeKey && <Badge variant="secondary">{String(item[config.badgeKey])}</Badge>}
             </CardTitle>
-            {config.descriptionKey && (
-              <CardDescription>
-                {String(item[config.descriptionKey])}
-              </CardDescription>
-            )}
+            {config.descriptionKey && <CardDescription>{String(item[config.descriptionKey])}</CardDescription>}
           </CardHeader>
           <CardContent>
             {config.metaFields && (
@@ -129,12 +117,7 @@ export function GenericCardView<T extends DataItem>({
                 {config.metaFields.map((field) => (
                   <div key={String(field.key)} className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{field.label}:</span>
-                    <span>
-                      {field.render 
-                        ? field.render(item[field.key], item)
-                        : String(item[field.key])
-                      }
-                    </span>
+                    <span>{field.render ? field.render(item[field.key], item) : String(item[field.key])}</span>
                   </div>
                 ))}
               </div>
@@ -196,11 +179,11 @@ export function GenericTableView<T extends DataItem>({
 }: GenericTableViewProps<T>) {
   const sortedItems = useMemo(() => {
     if (!sortKey || !sortDirection) return items;
-    
+
     return [...items].sort((a, b) => {
       const aValue = a[sortKey];
       const bValue = b[sortKey];
-      
+
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
       return 0;
@@ -218,9 +201,7 @@ export function GenericTableView<T extends DataItem>({
                   {column.label}
                 </TableHead>
               ))}
-              {actions && actions.length > 0 && (
-                <TableHead className="w-[120px]">Actions</TableHead>
-              )}
+              {actions && actions.length > 0 && <TableHead className="w-[120px]">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -258,45 +239,27 @@ export function GenericTableView<T extends DataItem>({
         <TableHeader>
           <TableRow>
             {columns.map((column) => (
-              <TableHead 
-                key={String(column.key)} 
-                className={cn(
-                  column.className,
-                  column.sortable && onSort && 'cursor-pointer hover:bg-muted/50'
-                )}
+              <TableHead
+                key={String(column.key)}
+                className={cn(column.className, column.sortable && onSort && 'cursor-pointer hover:bg-muted/50')}
                 style={{ width: column.width }}
                 onClick={() => column.sortable && onSort?.(column.key)}
               >
                 <div className="flex items-center gap-2">
                   {column.label}
-                  {column.sortable && sortKey === column.key && (
-                    <span className="text-xs">
-                      {sortDirection === 'asc' ? '↑' : '↓'}
-                    </span>
-                  )}
+                  {column.sortable && sortKey === column.key && <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                 </div>
               </TableHead>
             ))}
-            {actions && actions.length > 0 && (
-              <TableHead className="w-[120px]">Actions</TableHead>
-            )}
+            {actions && actions.length > 0 && <TableHead className="w-[120px]">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {sortedItems.map((item) => (
-            <TableRow 
-              key={item.id}
-              className={cn(
-                onItemClick && 'cursor-pointer hover:bg-muted/50'
-              )}
-              onClick={() => onItemClick?.(item)}
-            >
+            <TableRow key={item.id} className={cn(onItemClick && 'cursor-pointer hover:bg-muted/50')} onClick={() => onItemClick?.(item)}>
               {columns.map((column) => (
                 <TableCell key={String(column.key)} className={column.className}>
-                  {column.render 
-                    ? column.render(item[column.key], item)
-                    : String(item[column.key])
-                  }
+                  {column.render ? column.render(item[column.key], item) : String(item[column.key])}
                 </TableCell>
               ))}
               {actions && actions.length > 0 && (
@@ -378,12 +341,12 @@ export function GenericRowView<T extends DataItem>({
   return (
     <div className={cn('space-y-2', className)}>
       {items.map((item) => (
-        <div 
+        <div
           key={item.id}
           className={cn(
             'border rounded-lg p-4 transition-all duration-200 hover:shadow-md',
             onItemClick && 'cursor-pointer hover:border-primary/50',
-            config.className
+            config.className,
           )}
           onClick={() => onItemClick?.(item)}
         >
@@ -391,25 +354,14 @@ export function GenericRowView<T extends DataItem>({
             <div className="flex-1 space-y-1">
               <div className="flex items-center gap-2">
                 <h3 className="font-medium">{String(item[config.titleKey])}</h3>
-                {config.badgeKey && (
-                  <Badge variant="secondary">
-                    {String(item[config.badgeKey])}
-                  </Badge>
-                )}
+                {config.badgeKey && <Badge variant="secondary">{String(item[config.badgeKey])}</Badge>}
               </div>
-              {config.descriptionKey && (
-                <p className="text-sm text-muted-foreground">
-                  {String(item[config.descriptionKey])}
-                </p>
-              )}
+              {config.descriptionKey && <p className="text-sm text-muted-foreground">{String(item[config.descriptionKey])}</p>}
               {config.metaFields && (
                 <div className="flex gap-4 text-xs text-muted-foreground">
                   {config.metaFields.map((field) => (
                     <span key={String(field.key)}>
-                      {field.label}: {field.render 
-                        ? field.render(item[field.key], item)
-                        : String(item[field.key])
-                      }
+                      {field.label}: {field.render ? field.render(item[field.key], item) : String(item[field.key])}
                     </span>
                   ))}
                 </div>

@@ -27,14 +27,7 @@ export function TestingLabFilterControls({
   statusOptions = defaultStatusOptions,
   typeOptions = defaultTypeOptions,
 }: TestingLabFilterControlsProps) {
-  const {
-    state,
-    setSearchTerm,
-    toggleStatus,
-    toggleType,
-    setPeriod,
-    setViewMode,
-  } = useTestingLabFilters();
+  const { state, setSearchTerm, toggleStatus, toggleType, setPeriod, setViewMode } = useTestingLabFilters();
 
   return (
     <div className="space-y-4">
@@ -42,11 +35,7 @@ export function TestingLabFilterControls({
       <div className="hidden xl:flex xl:items-center xl:justify-between xl:gap-6">
         {/* Left Side - Search Bar */}
         <div className="flex-1 max-w-md">
-          <SearchBar
-            searchTerm={state.searchTerm}
-            onSearchChange={setSearchTerm}
-            placeholder="Search sessions..."
-          />
+          <SearchBar searchTerm={state.searchTerm} onSearchChange={setSearchTerm} placeholder="Search sessions..." />
         </div>
 
         {/* Center - Filter Dropdowns */}
@@ -88,11 +77,7 @@ export function TestingLabFilterControls({
         <div className="flex items-center gap-4">
           {/* Search Bar - Full width on mobile, flex-1 on sm+ */}
           <div className="flex-1 min-w-0">
-            <SearchBar
-              searchTerm={state.searchTerm}
-              onSearchChange={setSearchTerm}
-              placeholder="Search sessions..."
-            />
+            <SearchBar searchTerm={state.searchTerm} onSearchChange={setSearchTerm} placeholder="Search sessions..." />
           </div>
 
           {/* Filter Dropdowns */}

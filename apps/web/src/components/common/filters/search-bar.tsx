@@ -10,12 +10,7 @@ interface SearchBarProps {
   className?: string;
 }
 
-export function SearchBar({
-  searchTerm,
-  onSearchChange,
-  placeholder = 'Search...',
-  className = '',
-}: SearchBarProps) {
+export function SearchBar({ searchTerm, onSearchChange, placeholder = 'Search...', className = '' }: SearchBarProps) {
   return (
     <div className={`w-full relative ${className}`}>
       <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4 z-10" />
@@ -32,13 +27,11 @@ export function SearchBar({
         style={
           searchTerm
             ? {
-                background:
-                  'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
               }
             : {
-                background:
-                  'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
               }
         }

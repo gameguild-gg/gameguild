@@ -3,11 +3,7 @@ export type { BaseFilterState, FilterAction, FilterConfig, FilterOption } from '
 
 // Enhanced filter system
 export { EnhancedFilterProvider, useEnhancedFilterContext } from './enhanced-filter-context';
-export type { 
-  EnhancedFilterState, 
-  EnhancedFilterAction, 
-  EnhancedFilterConfig 
-} from './enhanced-filter-context';
+export type { EnhancedFilterState, EnhancedFilterAction, EnhancedFilterConfig } from './enhanced-filter-context';
 
 // Context-aware components (SSR-compatible)
 export { ContextSearchBar } from './context-search-bar';

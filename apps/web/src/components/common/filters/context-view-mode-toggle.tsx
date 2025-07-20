@@ -31,12 +31,8 @@ export function ContextViewModeToggle({ className = '' }: ContextViewModeToggleP
                 type="button"
                 onClick={() => setViewMode(mode)}
                 className={`flex items-center justify-center px-3 py-2 text-sm font-medium transition-colors ${
-                  state.viewMode === mode
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-50'
-                } ${
-                  mode === 'cards' ? 'rounded-l-lg' : mode === 'table' ? 'rounded-r-lg' : ''
-                }`}
+                  state.viewMode === mode ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'
+                } ${mode === 'cards' ? 'rounded-l-lg' : mode === 'table' ? 'rounded-r-lg' : ''}`}
               >
                 <Icon className="h-4 w-4" />
               </button>

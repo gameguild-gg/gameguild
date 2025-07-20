@@ -6,12 +6,7 @@ import { SessionHeader } from './sessions/session-header';
 import { SessionContent } from './sessions/session-content';
 import { SessionEmptyState } from './sessions/session-empty-state';
 import { useResponsiveViewMode } from '../common/hooks/use-responsive-view-mode';
-import {
-  TestingLabFilterProvider,
-  useTestingLabFilters,
-  TestingLabFilterControls,
-  TestingLabActiveFilters,
-} from './filters';
+import { TestingLabFilterProvider, useTestingLabFilters, TestingLabFilterControls, TestingLabActiveFilters } from './filters';
 
 interface TestingLabSessionsProps {
   testSessions: TestSession[];

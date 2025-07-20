@@ -12,10 +12,7 @@ export function RowDisplay<T extends Record<string, unknown>>({
     return (
       <div className={`space-y-2 ${className}`}>
         {[...Array(8)].map((_, index) => (
-          <div
-            key={index}
-            className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-          >
+          <div key={index} className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
             <div className="flex items-center space-x-4">
               <div className="h-4 bg-gray-200 rounded w-1/4"></div>
               <div className="h-4 bg-gray-200 rounded w-1/3"></div>

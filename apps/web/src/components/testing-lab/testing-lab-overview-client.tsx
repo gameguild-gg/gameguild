@@ -6,18 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  BarChart3,
-  Calendar,
-  CheckCircle,
-  Clock,
-  Download,
-  MessageSquare,
-  Plus,
-  TestTube,
-  Upload,
-  Users,
-} from 'lucide-react';
+import { BarChart3, Calendar, CheckCircle, Clock, Download, MessageSquare, Plus, TestTube, Upload, Users } from 'lucide-react';
 import Link from 'next/link';
 
 interface TestingLabStats {
@@ -165,9 +154,7 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
       return (
         <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Quick Actions
-            </CardTitle>
+            <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Quick Actions</CardTitle>
             <CardDescription className="text-slate-400">Common tasks for students</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -200,9 +187,7 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
       return (
         <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Professor Tools
-            </CardTitle>
+            <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Professor Tools</CardTitle>
             <CardDescription className="text-slate-400">Manage testing lab operations</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -240,19 +225,12 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Testing Lab
-            </h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Testing Lab</h1>
             <p className="text-slate-400 mt-2">
-              {userRoleObj.isStudent
-                ? 'Submit your games and participate in testing sessions'
-                : 'Manage testing sessions and review feedback'}
+              {userRoleObj.isStudent ? 'Submit your games and participate in testing sessions' : 'Manage testing sessions and review feedback'}
             </p>
           </div>
-          <Badge
-            variant="outline"
-            className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20 text-blue-300"
-          >
+          <Badge variant="outline" className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20 text-blue-300">
             {userRoleObj.type.charAt(0).toUpperCase() + userRoleObj.type.slice(1)} Dashboard
           </Badge>
         </div>
@@ -289,9 +267,7 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
                     Testing Requests
                   </CardTitle>
                   <CardDescription className="text-slate-400">
-                    {userRoleObj.isStudent
-                      ? 'Track your game submissions and their status'
-                      : 'Manage all student testing requests'}
+                    {userRoleObj.isStudent ? 'Track your game submissions and their status' : 'Manage all student testing requests'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -306,11 +282,7 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
                       <span className="text-sm text-slate-400">Total Requests</span>
                       <span className="text-sm text-white">{stats.totalRequests}</span>
                     </div>
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-                    >
+                    <Button asChild variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
                       <Link href="/dashboard/testing-lab/requests">View All Requests</Link>
                     </Button>
                   </div>
@@ -326,9 +298,7 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
                     Testing Sessions
                   </CardTitle>
                   <CardDescription className="text-slate-400">
-                    {userRoleObj.isStudent
-                      ? 'View your scheduled testing sessions'
-                      : 'Manage and create testing sessions'}
+                    {userRoleObj.isStudent ? 'View your scheduled testing sessions' : 'Manage and create testing sessions'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -343,11 +313,7 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
                       <span className="text-sm text-slate-400">Total Sessions</span>
                       <span className="text-sm text-white">{stats.totalSessions}</span>
                     </div>
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-                    >
+                    <Button asChild variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
                       <Link href="/dashboard/testing-lab/sessions">Manage Sessions</Link>
                     </Button>
                   </div>
@@ -361,9 +327,7 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
                     Feedback System
                   </CardTitle>
                   <CardDescription className="text-slate-400">
-                    {userRoleObj.isStudent
-                      ? 'Complete feedback for games you tested'
-                      : 'Review and approve feedback responses'}
+                    {userRoleObj.isStudent ? 'Complete feedback for games you tested' : 'Review and approve feedback responses'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -378,11 +342,7 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
                       <span className="text-sm text-slate-400">Total Feedback</span>
                       <span className="text-sm text-white">{stats.totalFeedback}</span>
                     </div>
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-                    >
+                    <Button asChild variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
                       <Link href="/dashboard/testing-lab/feedback">Manage Feedback</Link>
                     </Button>
                   </div>
@@ -394,9 +354,7 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
           <TabsContent value="requests">
             <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  Recent Activity
-                </CardTitle>
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Recent Activity</CardTitle>
                 <CardDescription className="text-slate-400">Latest updates and notifications</CardDescription>
               </CardHeader>
               <CardContent>

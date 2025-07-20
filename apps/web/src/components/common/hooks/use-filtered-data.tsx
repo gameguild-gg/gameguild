@@ -25,7 +25,7 @@ export function useFilteredData<T extends Record<string, unknown>>({ data, searc
         searchFields.some((field) => {
           const value = item[field];
           return value?.toString().toLowerCase().includes(lowerSearchTerm);
-        })
+        }),
       );
     }
 
@@ -60,7 +60,7 @@ export function useFilteredData<T extends Record<string, unknown>>({ data, searc
         // String comparison for other types
         const aStr = String(aValue || '').toLowerCase();
         const bStr = String(bValue || '').toLowerCase();
-        
+
         if (sortConfig.direction === 'asc') {
           return aStr.localeCompare(bStr);
         } else {
@@ -77,15 +77,11 @@ export function useFilteredData<T extends Record<string, unknown>>({ data, searc
  * Performance-optimized pagination hook
  * Returns only the items needed for current page - O(1) slice operation
  */
-export function usePaginatedData<T>(
-  data: T[],
-  page: number = 1,
-  pageSize: number = 20
-) {
+export function usePaginatedData<T>(data: T[], page: number = 1, pageSize: number = 20) {
   return useMemo(() => {
     const startIndex = (page - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    
+
     return {
       items: data.slice(startIndex, endIndex),
       totalItems: data.length,

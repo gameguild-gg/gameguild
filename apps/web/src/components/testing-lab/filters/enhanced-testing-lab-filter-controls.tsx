@@ -1,12 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import {
-  EnhancedFilterProvider,
-  useEnhancedFilterContext,
-  EnhancedFilterConfig,
-  FilterOption,
-} from '../../common/filters/enhanced-filter-context';
+import { EnhancedFilterProvider, useEnhancedFilterContext, EnhancedFilterConfig, FilterOption } from '../../common/filters/enhanced-filter-context';
 import { TypeSafeEnhancedMultiSelectFilter } from '../../common/filters/type-safe-enhanced-multi-select-filter';
 import { ContextSearchBar } from '../../common/filters/context-search-bar';
 import { ContextViewModeToggle } from '../../common/filters/context-view-mode-toggle';
@@ -144,36 +139,12 @@ function EnhancedTestingLabFilterControls() {
 
       {/* Filter Controls */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <TypeSafeEnhancedMultiSelectFilter
-          filterKey="status"
-          config={statusConfig}
-          className="w-full"
-        />
-        <TypeSafeEnhancedMultiSelectFilter
-          filterKey="type"
-          config={typeConfig}
-          className="w-full"
-        />
-        <TypeSafeEnhancedMultiSelectFilter
-          filterKey="category"
-          config={categoryConfig}
-          className="w-full"
-        />
-        <TypeSafeEnhancedMultiSelectFilter
-          filterKey="difficulty"
-          config={difficultyConfig}
-          className="w-full"
-        />
-        <TypeSafeEnhancedMultiSelectFilter
-          filterKey="tags"
-          config={tagsConfig}
-          className="w-full"
-        />
-        <TypeSafeEnhancedMultiSelectFilter
-          filterKey="technologies"
-          config={technologiesConfig}
-          className="w-full"
-        />
+        <TypeSafeEnhancedMultiSelectFilter filterKey="status" config={statusConfig} className="w-full" />
+        <TypeSafeEnhancedMultiSelectFilter filterKey="type" config={typeConfig} className="w-full" />
+        <TypeSafeEnhancedMultiSelectFilter filterKey="category" config={categoryConfig} className="w-full" />
+        <TypeSafeEnhancedMultiSelectFilter filterKey="difficulty" config={difficultyConfig} className="w-full" />
+        <TypeSafeEnhancedMultiSelectFilter filterKey="tags" config={tagsConfig} className="w-full" />
+        <TypeSafeEnhancedMultiSelectFilter filterKey="technologies" config={technologiesConfig} className="w-full" />
       </div>
 
       {/* Active Filters Summary */}
@@ -182,10 +153,7 @@ function EnhancedTestingLabFilterControls() {
           <span className="text-sm text-muted-foreground">
             {getActiveFilterCount()} active filter{getActiveFilterCount() !== 1 ? 's' : ''}
           </span>
-          <button
-            onClick={clearFilters}
-            className="text-sm text-primary hover:text-primary/80 underline"
-          >
+          <button onClick={clearFilters} className="text-sm text-primary hover:text-primary/80 underline">
             Clear all filters
           </button>
         </div>
@@ -201,11 +169,7 @@ interface EnhancedTestingLabFiltersProps {
   onFilteredSessionsChange?: (sessions: TestingLabSession[]) => void;
 }
 
-export function EnhancedTestingLabFilters({ 
-  children, 
-  sessions = [], 
-  onFilteredSessionsChange 
-}: EnhancedTestingLabFiltersProps) {
+export function EnhancedTestingLabFilters({ children, sessions = [], onFilteredSessionsChange }: EnhancedTestingLabFiltersProps) {
   return (
     <EnhancedFilterProvider<TestingLabSession>
       initialState={{
@@ -215,21 +179,18 @@ export function EnhancedTestingLabFilters({
     >
       <EnhancedTestingLabFilterControls />
       {children && <div className="mt-6">{children}</div>}
-      <FilteredSessionsHandler 
-        sessions={sessions} 
-        onFilteredSessionsChange={onFilteredSessionsChange} 
-      />
+      <FilteredSessionsHandler sessions={sessions} onFilteredSessionsChange={onFilteredSessionsChange} />
     </EnhancedFilterProvider>
   );
 }
 
 // Component to handle filtered sessions and notify parent
-function FilteredSessionsHandler({ 
-  sessions, 
-  onFilteredSessionsChange 
-}: { 
-  sessions: TestingLabSession[]; 
-  onFilteredSessionsChange?: (sessions: TestingLabSession[]) => void; 
+function FilteredSessionsHandler({
+  sessions,
+  onFilteredSessionsChange,
+}: {
+  sessions: TestingLabSession[];
+  onFilteredSessionsChange?: (sessions: TestingLabSession[]) => void;
 }) {
   const { filterItems, state } = useEnhancedFilterContext<TestingLabSession>();
 
