@@ -42,8 +42,8 @@ export async function CommunityFeedServer({ searchParams = {} }: CommunityFeedSe
   let posts: PostDto[] = [];
   let pinnedPosts: PostDto[] = [];
   let totalPosts = 0;
-  let activeUsers = 1200;
-  let engagementRate = 75.5;
+  const activeUsers = 1200;
+  const engagementRate = 75.5;
 
   try {
     const [postsData, pinnedData] = await Promise.all([
