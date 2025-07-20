@@ -2,552 +2,358 @@
 
 export type AccessLevel = 0 | 1 | 2 | 5 | 6;
 
-export type AchievementReadable = {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  rowVersion?: string | null;
-  isDeleted?: boolean;
-  deletedAt?: string | null;
-  name: string;
-  description?: string | null;
-  category: string;
-  type: string;
-  iconUrl?: string | null;
-  color?: string | null;
-  points?: number;
-  isActive?: boolean;
-  isSecret?: boolean;
-  isRepeatable?: boolean;
-  conditions?: string | null;
-  displayOrder?: number;
-  tenantId?: string | null;
-  userAchievements?: Array<UserAchievementReadable> | null;
-  levels?: Array<AchievementLevelReadable> | null;
-  prerequisites?: Array<AchievementPrerequisiteReadable> | null;
-};
-
-export type AchievementWritable = {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  rowVersion?: string | null;
-  isDeleted?: boolean;
-  deletedAt?: string | null;
-  name: string;
-  description?: string | null;
-  category: string;
-  type: string;
-  iconUrl?: string | null;
-  color?: string | null;
-  points?: number;
-  isActive?: boolean;
-  isSecret?: boolean;
-  isRepeatable?: boolean;
-  conditions?: string | null;
-  displayOrder?: number;
-  tenantId?: string | null;
-  userAchievements?: Array<UserAchievementWritable> | null;
-  levels?: Array<AchievementLevelWritable> | null;
-  prerequisites?: Array<AchievementPrerequisiteWritable> | null;
+export type Achievement = {
+    id?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    rowVersion?: string | null;
+    isDeleted?: boolean;
+    deletedAt?: string | null;
+    name: string;
+    description?: string | null;
+    category: string;
+    type: string;
+    iconUrl?: string | null;
+    color?: string | null;
+    points?: number;
+    isActive?: boolean;
+    isSecret?: boolean;
+    isRepeatable?: boolean;
+    conditions?: string | null;
+    displayOrder?: number;
+    tenantId?: string | null;
+    userAchievements?: Array<UserAchievement> | null;
+    levels?: Array<AchievementLevel> | null;
+    prerequisites?: Array<AchievementPrerequisite> | null;
 };
 
 export type AchievementDto = {
-  id?: string;
-  name?: string | null;
-  description?: string | null;
-  category?: string | null;
-  type?: string | null;
-  iconUrl?: string | null;
-  color?: string | null;
-  points?: number;
-  isActive?: boolean;
-  isSecret?: boolean;
-  isRepeatable?: boolean;
-  conditions?: string | null;
-  displayOrder?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  levels?: Array<AchievementLevelDto> | null;
-  prerequisites?: Array<AchievementDto> | null;
+    id?: string;
+    name?: string | null;
+    description?: string | null;
+    category?: string | null;
+    type?: string | null;
+    iconUrl?: string | null;
+    color?: string | null;
+    points?: number;
+    isActive?: boolean;
+    isSecret?: boolean;
+    isRepeatable?: boolean;
+    conditions?: string | null;
+    displayOrder?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    levels?: Array<AchievementLevelDto> | null;
+    prerequisites?: Array<AchievementDto> | null;
 };
 
-export type AchievementLevelReadable = {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  rowVersion?: string | null;
-  isDeleted?: boolean;
-  deletedAt?: string | null;
-  achievementId?: string;
-  achievement?: AchievementReadable;
-  level?: number;
-  name: string;
-  description?: string | null;
-  requiredProgress?: number;
-  points?: number;
-  iconUrl?: string | null;
-  color?: string | null;
-};
-
-export type AchievementLevelWritable = {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  rowVersion?: string | null;
-  isDeleted?: boolean;
-  deletedAt?: string | null;
-  achievementId?: string;
-  achievement?: AchievementWritable;
-  level?: number;
-  name: string;
-  description?: string | null;
-  requiredProgress?: number;
-  points?: number;
-  iconUrl?: string | null;
-  color?: string | null;
+export type AchievementLevel = {
+    id?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    rowVersion?: string | null;
+    isDeleted?: boolean;
+    deletedAt?: string | null;
+    achievementId?: string;
+    achievement?: Achievement;
+    level?: number;
+    name: string;
+    description?: string | null;
+    requiredProgress?: number;
+    points?: number;
+    iconUrl?: string | null;
+    color?: string | null;
 };
 
 export type AchievementLevelDto = {
-  id?: string;
-  level?: number;
-  name?: string | null;
-  description?: string | null;
-  requiredProgress?: number;
-  points?: number;
-  iconUrl?: string | null;
-  color?: string | null;
+    id?: string;
+    level?: number;
+    name?: string | null;
+    description?: string | null;
+    requiredProgress?: number;
+    points?: number;
+    iconUrl?: string | null;
+    color?: string | null;
 };
 
 export type AchievementPopularityDto = {
-  achievementId?: string;
-  name?: string | null;
-  timesEarned?: number;
-  earnRate?: number;
+    achievementId?: string;
+    name?: string | null;
+    timesEarned?: number;
+    earnRate?: number;
 };
 
-export type AchievementPrerequisiteReadable = {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  rowVersion?: string | null;
-  isDeleted?: boolean;
-  deletedAt?: string | null;
-  achievementId?: string;
-  achievement?: AchievementReadable;
-  prerequisiteAchievementId?: string;
-  prerequisiteAchievement?: AchievementReadable;
-  requiresCompletion?: boolean;
-  minimumLevel?: number | null;
-};
-
-export type AchievementPrerequisiteWritable = {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  rowVersion?: string | null;
-  isDeleted?: boolean;
-  deletedAt?: string | null;
-  achievementId?: string;
-  achievement?: AchievementWritable;
-  prerequisiteAchievementId?: string;
-  prerequisiteAchievement?: AchievementWritable;
-  requiresCompletion?: boolean;
-  minimumLevel?: number | null;
+export type AchievementPrerequisite = {
+    id?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    rowVersion?: string | null;
+    isDeleted?: boolean;
+    deletedAt?: string | null;
+    achievementId?: string;
+    achievement?: Achievement;
+    prerequisiteAchievementId?: string;
+    prerequisiteAchievement?: Achievement;
+    requiresCompletion?: boolean;
+    minimumLevel?: number | null;
 };
 
 export type AchievementPrerequisiteCheckDto = {
-  achievementId?: string;
-  canEarn?: boolean;
-  prerequisites?: Array<PrerequisiteStatusDto> | null;
+    achievementId?: string;
+    canEarn?: boolean;
+    prerequisites?: Array<PrerequisiteStatusDto> | null;
 };
 
-export type AchievementProgressReadable = {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  rowVersion?: string | null;
-  isDeleted?: boolean;
-  deletedAt?: string | null;
-  userId?: string;
-  user?: UserReadable;
-  achievementId?: string;
-  achievement?: AchievementReadable;
-  currentProgress?: number;
-  targetProgress?: number;
-  lastUpdated?: string;
-  isCompleted?: boolean;
-  context?: string | null;
-  tenantId?: string | null;
+export type AchievementProgress = {
+    id?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    rowVersion?: string | null;
+    isDeleted?: boolean;
+    deletedAt?: string | null;
+    userId?: string;
+    user?: User;
+    achievementId?: string;
+    achievement?: Achievement;
+    currentProgress?: number;
+    targetProgress?: number;
+    lastUpdated?: string;
+    isCompleted?: boolean;
+    context?: string | null;
+    tenantId?: string | null;
 };
 
-export type AchievementProgressWritable = {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  rowVersion?: string | null;
-  isDeleted?: boolean;
-  deletedAt?: string | null;
-  userId?: string;
-  user?: UserWritable;
-  achievementId?: string;
-  achievement?: AchievementWritable;
-  currentProgress?: number;
-  targetProgress?: number;
-  lastUpdated?: string;
-  isCompleted?: boolean;
-  context?: string | null;
-  tenantId?: string | null;
-};
-
-export type AchievementProgressDtoReadable = {
-  id?: string;
-  userId?: string;
-  achievementId?: string;
-  achievement?: AchievementDto;
-  currentProgress?: number;
-  targetProgress?: number;
-  readonly progressPercentage?: number;
-  lastUpdated?: string;
-  isCompleted?: boolean;
-  context?: string | null;
-};
-
-export type AchievementProgressDtoWritable = {
-  id?: string;
-  userId?: string;
-  achievementId?: string;
-  achievement?: AchievementDto;
-  currentProgress?: number;
-  targetProgress?: number;
-  lastUpdated?: string;
-  isCompleted?: boolean;
-  context?: string | null;
+export type AchievementProgressDto = {
+    id?: string;
+    userId?: string;
+    achievementId?: string;
+    achievement?: AchievementDto;
+    currentProgress?: number;
+    targetProgress?: number;
+    readonly progressPercentage?: number;
+    lastUpdated?: string;
+    isCompleted?: boolean;
+    context?: string | null;
 };
 
 export type AchievementStatisticsDto = {
-  achievementId?: string;
-  totalEarned?: number;
-  totalUsers?: number;
-  inProgress?: number;
-  completionRate?: number;
-  firstEarned?: string | null;
-  lastEarned?: string | null;
-  totalAchievements?: number;
-  activeAchievements?: number;
-  secretAchievements?: number;
-  repeatableAchievements?: number;
-  usersWithAchievements?: number;
-  totalAchievementsAwarded?: number;
-  achievementsByCategory?: {
-    [key: string]: number;
-  } | null;
-  achievementsByType?: {
-    [key: string]: number;
-  } | null;
-  mostEarnedAchievements?: Array<AchievementPopularityDto> | null;
-  rarestAchievements?: Array<AchievementPopularityDto> | null;
+    achievementId?: string;
+    totalEarned?: number;
+    totalUsers?: number;
+    inProgress?: number;
+    completionRate?: number;
+    firstEarned?: string | null;
+    lastEarned?: string | null;
+    totalAchievements?: number;
+    activeAchievements?: number;
+    secretAchievements?: number;
+    repeatableAchievements?: number;
+    usersWithAchievements?: number;
+    totalAchievementsAwarded?: number;
+    achievementsByCategory?: {
+        [key: string]: number;
+    } | null;
+    achievementsByType?: {
+        [key: string]: number;
+    } | null;
+    mostEarnedAchievements?: Array<AchievementPopularityDto> | null;
+    rarestAchievements?: Array<AchievementPopularityDto> | null;
 };
 
 export type AchievementsPageDto = {
-  achievements?: Array<AchievementDto> | null;
-  totalCount?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  hasNextPage?: boolean;
-  hasPreviousPage?: boolean;
+    achievements?: Array<AchievementDto> | null;
+    totalCount?: number;
+    pageNumber?: number;
+    pageSize?: number;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
 };
 
-export type ActivityGradeReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  contentInteractionId?: string;
-  graderProgramUserId?: string;
-  grade?: number;
-  feedback?: string | null;
-  gradingDetails?: string | null;
-  gradedAt?: string;
-  contentInteraction?: ContentInteractionReadable;
-  graderProgramUser?: ProgramUserReadable;
+export type ActivityGrade = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    contentInteractionId?: string;
+    graderProgramUserId?: string;
+    grade?: number;
+    feedback?: string | null;
+    gradingDetails?: string | null;
+    gradedAt?: string;
+    contentInteraction?: ContentInteraction;
+    graderProgramUser?: ProgramUser;
 };
 
-export type ActivityGradeWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  contentInteractionId?: string;
-  graderProgramUserId?: string;
-  grade?: number;
-  feedback?: string | null;
-  gradingDetails?: string | null;
-  gradedAt?: string;
-  contentInteraction?: ContentInteractionWritable;
-  graderProgramUser?: ProgramUserWritable;
-};
-
-export type ActivityGradeDtoReadable = {
-  id?: string;
-  contentInteractionId?: string;
-  graderProgramUserId?: string;
-  grade?: number;
-  feedback?: string | null;
-  gradingDetails?: string | null;
-  gradedAt?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  contentInteraction?: ContentInteractionSummaryDto;
-  grader?: GraderSummaryDto;
-  readonly isPassingGrade?: boolean;
-  readonly gradePercentage?: string | null;
-  readonly hasFeedback?: boolean;
-  readonly hasGradingDetails?: boolean;
-};
-
-export type ActivityGradeDtoWritable = {
-  id?: string;
-  contentInteractionId?: string;
-  graderProgramUserId?: string;
-  grade?: number;
-  feedback?: string | null;
-  gradingDetails?: string | null;
-  gradedAt?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  contentInteraction?: ContentInteractionSummaryDto;
-  grader?: GraderSummaryDto;
+export type ActivityGradeDto = {
+    id?: string;
+    contentInteractionId?: string;
+    graderProgramUserId?: string;
+    grade?: number;
+    feedback?: string | null;
+    gradingDetails?: string | null;
+    gradedAt?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    contentInteraction?: ContentInteractionSummaryDto;
+    grader?: GraderSummaryDto;
+    readonly isPassingGrade?: boolean;
+    readonly gradePercentage?: string | null;
+    readonly hasFeedback?: boolean;
+    readonly hasGradingDetails?: boolean;
 };
 
 export type AddUserToGroupDto = {
-  userId: string;
-  userGroupId: string;
-  isAutoAssigned?: boolean;
+    userId: string;
+    userGroupId: string;
+    isAutoAssigned?: boolean;
 };
 
-export type ArchiveProjectResultReadable = {
-  success?: boolean;
-  project?: ProjectReadable;
-  error?: string | null;
-};
-
-export type ArchiveProjectResultWritable = {
-  success?: boolean;
-  project?: ProjectWritable;
-  error?: string | null;
+export type ArchiveProjectResult = {
+    success?: boolean;
+    project?: Project;
+    error?: string | null;
 };
 
 export type AttendanceStatus = 0 | 1 | 2 | 3;
 
 export type AutoAssignUserDto = {
-  userId: string;
-  email: string;
-  emailDomain: string;
-  tenantId: string;
+    userId: string;
+    email: string;
+    emailDomain: string;
+    tenantId: string;
 };
 
 export type AutoAssignUsersDto = {
-  userIds?: Array<string> | null;
-  userEmails?: Array<string> | null;
-  tenantId?: string | null;
-  forceReassignment?: boolean;
+    userIds?: Array<string> | null;
+    userEmails?: Array<string> | null;
+    tenantId?: string | null;
+    forceReassignment?: boolean;
 };
 
 export type AwardAchievementRequest = {
-  userId?: string;
-  level?: number | null;
-  progress?: number;
-  maxProgress?: number;
-  context?: string | null;
-  notifyUser?: boolean;
+    userId?: string;
+    level?: number | null;
+    progress?: number;
+    maxProgress?: number;
+    context?: string | null;
+    notifyUser?: boolean;
 };
 
 export type BulkAwardAchievementRequest = {
-  userIds?: Array<string> | null;
-  userCriteria?: string | null;
-  context?: string | null;
-  notifyUsers?: boolean;
+    userIds?: Array<string> | null;
+    userCriteria?: string | null;
+    context?: string | null;
+    notifyUsers?: boolean;
 };
 
 export type BulkDeleteTenantsDto = {
-  tenantIds: Array<string>;
+    tenantIds: Array<string>;
 };
 
-export type BulkOperationResultReadable = {
-  totalRequested?: number;
-  successful?: number;
-  failed?: number;
-  readonly errors?: Array<string> | null;
-  readonly isCompletelySuccessful?: boolean;
-  readonly isPartiallySuccessful?: boolean;
-  readonly isCompletelyFailed?: boolean;
-};
-
-export type BulkOperationResultWritable = {
-  totalRequested?: number;
-  successful?: number;
-  failed?: number;
+export type BulkOperationResult = {
+    totalRequested?: number;
+    successful?: number;
+    failed?: number;
+    readonly errors?: Array<string> | null;
+    readonly isCompletelySuccessful?: boolean;
+    readonly isPartiallySuccessful?: boolean;
+    readonly isCompletelyFailed?: boolean;
 };
 
 export type BulkRestoreTenantsDto = {
-  tenantIds: Array<string>;
+    tenantIds: Array<string>;
 };
 
 export type CancelPaymentRequest = {
-  reason?: string | null;
+    reason?: string | null;
 };
 
 export type CancelPaymentResult = {
-  success?: boolean;
-  payment?: Payment;
-  error?: string | null;
+    success?: boolean;
+    payment?: Payment;
+    error?: string | null;
 };
 
-export type CertificateReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  name: string;
-  description?: string | null;
-  type?: CertificateType;
-  programId?: string | null;
-  productId?: string | null;
-  completionPercentage?: number;
-  minimumGrade?: number | null;
-  requiresFeedback?: boolean;
-  requiresRating?: boolean;
-  minimumRating?: number | null;
-  validityDays?: number | null;
-  verificationMethod?: VerificationMethod;
-  certificateTemplate?: string | null;
-  isActive?: boolean;
-  tenantId?: string | null;
-  program?: ProgramReadable;
-  product?: ProductReadable;
-  userCertificates?: Array<UserCertificateReadable> | null;
-  certificateTags?: Array<CertificateTagReadable> | null;
+export type Certificate = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    name: string;
+    description?: string | null;
+    type?: CertificateType;
+    programId?: string | null;
+    productId?: string | null;
+    completionPercentage?: number;
+    minimumGrade?: number | null;
+    requiresFeedback?: boolean;
+    requiresRating?: boolean;
+    minimumRating?: number | null;
+    validityDays?: number | null;
+    verificationMethod?: VerificationMethod;
+    certificateTemplate?: string | null;
+    isActive?: boolean;
+    tenantId?: string | null;
+    program?: Program;
+    product?: Product;
+    userCertificates?: Array<UserCertificate> | null;
+    certificateTags?: Array<CertificateTag> | null;
 };
 
-export type CertificateWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  name: string;
-  description?: string | null;
-  type?: CertificateType;
-  programId?: string | null;
-  productId?: string | null;
-  completionPercentage?: number;
-  minimumGrade?: number | null;
-  requiresFeedback?: boolean;
-  requiresRating?: boolean;
-  minimumRating?: number | null;
-  validityDays?: number | null;
-  verificationMethod?: VerificationMethod;
-  certificateTemplate?: string | null;
-  isActive?: boolean;
-  tenantId?: string | null;
-  program?: ProgramWritable;
-  product?: ProductWritable;
-  userCertificates?: Array<UserCertificateWritable> | null;
-  certificateTags?: Array<CertificateTagWritable> | null;
-};
-
-export type CertificateBlockchainAnchorReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  certificateId?: string;
-  blockchainNetwork: string;
-  transactionHash: string;
-  blockHash?: string | null;
-  blockNumber?: number | null;
-  contractAddress?: string | null;
-  tokenId?: string | null;
-  status?: string | null;
-  anchoredAt?: string;
-  confirmedAt?: string | null;
-  certificate?: UserCertificateReadable;
-};
-
-export type CertificateBlockchainAnchorWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  certificateId?: string;
-  blockchainNetwork: string;
-  transactionHash: string;
-  blockHash?: string | null;
-  blockNumber?: number | null;
-  contractAddress?: string | null;
-  tokenId?: string | null;
-  status?: string | null;
-  anchoredAt?: string;
-  confirmedAt?: string | null;
-  certificate?: UserCertificateWritable;
+export type CertificateBlockchainAnchor = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    certificateId?: string;
+    blockchainNetwork: string;
+    transactionHash: string;
+    blockHash?: string | null;
+    blockNumber?: number | null;
+    contractAddress?: string | null;
+    tokenId?: string | null;
+    status?: string | null;
+    anchoredAt?: string;
+    confirmedAt?: string | null;
+    certificate?: UserCertificate;
 };
 
 export type CertificateStatus = 0 | 1 | 2 | 3;
 
-export type CertificateTagReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  certificateId?: string;
-  tagId?: string;
-  relationshipType?: CertificateTagRelationshipType;
-  certificate?: CertificateReadable;
-  tag?: TagProficiencyReadable;
-};
-
-export type CertificateTagWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  certificateId?: string;
-  tagId?: string;
-  relationshipType?: CertificateTagRelationshipType;
-  certificate?: CertificateWritable;
-  tag?: TagProficiencyWritable;
+export type CertificateTag = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    certificateId?: string;
+    tagId?: string;
+    relationshipType?: CertificateTagRelationshipType;
+    certificate?: Certificate;
+    tag?: TagProficiency;
 };
 
 export type CertificateTagRelationshipType = 0 | 1 | 2;
@@ -555,641 +361,512 @@ export type CertificateTagRelationshipType = 0 | 1 | 2;
 export type CertificateType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
 export type CloneProgramDto = {
-  newTitle?: string | null;
-  newDescription?: string | null;
+    newTitle?: string | null;
+    newDescription?: string | null;
 };
 
 export type CompleteContentRequest = {
-  programUserId?: string;
-  contentId?: string;
+    programUserId?: string;
+    contentId?: string;
 };
 
 export type CompletionRatesDto = {
-  programId?: string;
-  overallCompletionRate?: number;
-  contentCompletionRates?: {
-    [key: string]: number;
-  } | null;
-  completionTrends?: Array<CompletionTrendDto> | null;
+    programId?: string;
+    overallCompletionRate?: number;
+    contentCompletionRates?: {
+        [key: string]: number;
+    } | null;
+    completionTrends?: Array<CompletionTrendDto> | null;
 };
 
 export type CompletionTrendDto = {
-  date?: string;
-  completedCount?: number;
-  totalCount?: number;
-  rate?: number;
+    date?: string;
+    completedCount?: number;
+    totalCount?: number;
+    rate?: number;
 };
 
-export type ContentReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataReadable;
-  tenant?: TenantReadable;
-  readonly isGlobal?: boolean;
-  localizations?: Array<ResourceLocalizationReadable> | null;
-  licenses?: Array<ContentLicenseReadable> | null;
-  slug?: string | null;
-  status?: ContentStatus;
+export type Content = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    title: string;
+    description?: string | null;
+    visibility: AccessLevel;
+    metadata?: ResourceMetadata;
+    tenant?: Tenant;
+    readonly isGlobal?: boolean;
+    localizations?: Array<ResourceLocalization> | null;
+    licenses?: Array<ContentLicense> | null;
+    slug?: string | null;
+    status?: ContentStatus;
 };
 
-export type ContentWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataWritable;
-  tenant?: TenantWritable;
-  localizations?: Array<ResourceLocalizationWritable> | null;
-  licenses?: Array<ContentLicenseWritable> | null;
-  slug?: string | null;
-  status?: ContentStatus;
+export type ContentInteraction = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    programUserId?: string;
+    contentId?: string;
+    status?: ProgressStatus;
+    submissionData?: string | null;
+    completionPercentage?: number;
+    timeSpentMinutes?: number | null;
+    firstAccessedAt?: string | null;
+    lastAccessedAt?: string | null;
+    completedAt?: string | null;
+    submittedAt?: string | null;
+    programUser?: ProgramUser;
+    content?: ProgramContent;
+    activityGrades?: Array<ActivityGrade> | null;
 };
 
-export type ContentInteractionReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  programUserId?: string;
-  contentId?: string;
-  status?: ProgressStatus;
-  submissionData?: string | null;
-  completionPercentage?: number;
-  timeSpentMinutes?: number | null;
-  firstAccessedAt?: string | null;
-  lastAccessedAt?: string | null;
-  completedAt?: string | null;
-  submittedAt?: string | null;
-  programUser?: ProgramUserReadable;
-  content?: ProgramContentReadable;
-  activityGrades?: Array<ActivityGradeReadable> | null;
-};
-
-export type ContentInteractionWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  programUserId?: string;
-  contentId?: string;
-  status?: ProgressStatus;
-  submissionData?: string | null;
-  completionPercentage?: number;
-  timeSpentMinutes?: number | null;
-  firstAccessedAt?: string | null;
-  lastAccessedAt?: string | null;
-  completedAt?: string | null;
-  submittedAt?: string | null;
-  programUser?: ProgramUserWritable;
-  content?: ProgramContentWritable;
-  activityGrades?: Array<ActivityGradeWritable> | null;
-};
-
-export type ContentInteractionDtoReadable = {
-  id?: string;
-  programUserId?: string;
-  contentId?: string;
-  status?: ProgressStatus;
-  submissionData?: string | null;
-  completionPercentage?: number;
-  timeSpentMinutes?: number | null;
-  firstAccessedAt?: string | null;
-  lastAccessedAt?: string | null;
-  completedAt?: string | null;
-  submittedAt?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-  content?: ContentSummaryDto;
-  programUser?: ProgramUserSummaryDto;
-  readonly isSubmitted?: boolean;
-  readonly isCompleted?: boolean;
-  readonly canModify?: boolean;
-  readonly durationInMinutes?: number;
-};
-
-export type ContentInteractionDtoWritable = {
-  id?: string;
-  programUserId?: string;
-  contentId?: string;
-  status?: ProgressStatus;
-  submissionData?: string | null;
-  completionPercentage?: number;
-  timeSpentMinutes?: number | null;
-  firstAccessedAt?: string | null;
-  lastAccessedAt?: string | null;
-  completedAt?: string | null;
-  submittedAt?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-  content?: ContentSummaryDto;
-  programUser?: ProgramUserSummaryDto;
+export type ContentInteractionDto = {
+    id?: string;
+    programUserId?: string;
+    contentId?: string;
+    status?: ProgressStatus;
+    submissionData?: string | null;
+    completionPercentage?: number;
+    timeSpentMinutes?: number | null;
+    firstAccessedAt?: string | null;
+    lastAccessedAt?: string | null;
+    completedAt?: string | null;
+    submittedAt?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+    content?: ContentSummaryDto;
+    programUser?: ProgramUserSummaryDto;
+    readonly isSubmitted?: boolean;
+    readonly isCompleted?: boolean;
+    readonly canModify?: boolean;
+    readonly durationInMinutes?: number;
 };
 
 export type ContentInteractionSummaryDto = {
-  id?: string;
-  programUserId?: string;
-  contentId?: string;
-  status?: string | null;
-  submittedAt?: string | null;
-  content?: ContentSummaryDto;
-  student?: StudentSummaryDto;
+    id?: string;
+    programUserId?: string;
+    contentId?: string;
+    status?: string | null;
+    submittedAt?: string | null;
+    content?: ContentSummaryDto;
+    student?: StudentSummaryDto;
 };
 
-export type ContentLicenseReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataReadable;
-  tenant?: TenantReadable;
-  readonly isGlobal?: boolean;
-  localizations?: Array<ResourceLocalizationReadable> | null;
-  url?: string | null;
-  contents?: Array<ContentReadable> | null;
-};
-
-export type ContentLicenseWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataWritable;
-  tenant?: TenantWritable;
-  localizations?: Array<ResourceLocalizationWritable> | null;
-  url?: string | null;
-  contents?: Array<ContentWritable> | null;
+export type ContentLicense = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    title: string;
+    description?: string | null;
+    visibility: AccessLevel;
+    metadata?: ResourceMetadata;
+    tenant?: Tenant;
+    readonly isGlobal?: boolean;
+    localizations?: Array<ResourceLocalization> | null;
+    url?: string | null;
+    contents?: Array<Content> | null;
 };
 
 export type ContentProgressDto = {
-  contentId?: string;
-  title?: string | null;
-  status?: ProgressStatus;
-  completionPercentage?: number;
-  firstAccessedAt?: string | null;
-  lastAccessedAt?: string | null;
-  completedAt?: string | null;
+    contentId?: string;
+    title?: string | null;
+    status?: ProgressStatus;
+    completionPercentage?: number;
+    firstAccessedAt?: string | null;
+    lastAccessedAt?: string | null;
+    completedAt?: string | null;
 };
 
 export type ContentReferenceDto = {
-  resourceId?: string;
-  resourceTitle?: string | null;
-  resourceType?: string | null;
-  referenceType?: string | null;
-  context?: string | null;
+    resourceId?: string;
+    resourceTitle?: string | null;
+    resourceType?: string | null;
+    referenceType?: string | null;
+    context?: string | null;
 };
 
 export type ContentStatsDto = {
-  programId?: string;
-  totalContent?: number;
-  requiredContent?: number;
-  optionalContent?: number;
-  contentByType?: {
-    Page?: number;
-    Assignment?: number;
-    Questionnaire?: number;
-    Discussion?: number;
-    Code?: number;
-    Challenge?: number;
-    Reflection?: number;
-    Survey?: number;
-  } | null;
-  contentByVisibility?: {
-    Draft?: number;
-    Published?: number;
-    Archived?: number;
-  } | null;
-  topLevelContent?: number;
-  nestedContent?: number;
+    programId?: string;
+    totalContent?: number;
+    requiredContent?: number;
+    optionalContent?: number;
+    contentByType?: {
+        Page?: number;
+        Assignment?: number;
+        Questionnaire?: number;
+        Discussion?: number;
+        Code?: number;
+        Challenge?: number;
+        Reflection?: number;
+        Survey?: number;
+    } | null;
+    contentByVisibility?: {
+        Draft?: number;
+        Published?: number;
+        Archived?: number;
+    } | null;
+    topLevelContent?: number;
+    nestedContent?: number;
 };
 
 export type ContentStatus = 0 | 1 | 2 | 3;
 
 export type ContentSummaryDto = {
-  id?: string;
-  title?: string | null;
-  contentType?: string | null;
-  estimatedMinutes?: number | null;
+    id?: string;
+    title?: string | null;
+    contentType?: string | null;
+    estimatedMinutes?: number | null;
 };
 
-export type ContentTypePermissionReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  permissionFlags1?: number;
-  permissionFlags2?: number;
-  userId?: string | null;
-  user?: UserReadable;
-  tenantId?: string | null;
-  tenant?: TenantReadable;
-  expiresAt?: string | null;
-  readonly isExpired?: boolean;
-  readonly isValid?: boolean;
-  readonly isDefaultPermission?: boolean;
-  readonly isGlobalDefaultPermission?: boolean;
-  readonly isUserPermission?: boolean;
-  contentType: string;
-};
-
-export type ContentTypePermissionWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  permissionFlags1?: number;
-  permissionFlags2?: number;
-  userId?: string | null;
-  user?: UserWritable;
-  tenantId?: string | null;
-  tenant?: TenantWritable;
-  expiresAt?: string | null;
-  contentType: string;
+export type ContentTypePermission = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    permissionFlags1?: number;
+    permissionFlags2?: number;
+    userId?: string | null;
+    user?: User;
+    tenantId?: string | null;
+    tenant?: Tenant;
+    expiresAt?: string | null;
+    readonly isExpired?: boolean;
+    readonly isValid?: boolean;
+    readonly isDefaultPermission?: boolean;
+    readonly isGlobalDefaultPermission?: boolean;
+    readonly isUserPermission?: boolean;
+    contentType: string;
 };
 
 export type CreateAchievementCommand = {
-  name?: string | null;
-  description?: string | null;
-  category?: string | null;
-  type?: string | null;
-  iconUrl?: string | null;
-  color?: string | null;
-  points?: number;
-  isActive?: boolean;
-  isSecret?: boolean;
-  isRepeatable?: boolean;
-  conditions?: string | null;
-  displayOrder?: number;
-  tenantId?: string | null;
-  levels?: Array<CreateAchievementLevelCommand> | null;
-  prerequisiteAchievementIds?: Array<string> | null;
+    name?: string | null;
+    description?: string | null;
+    category?: string | null;
+    type?: string | null;
+    iconUrl?: string | null;
+    color?: string | null;
+    points?: number;
+    isActive?: boolean;
+    isSecret?: boolean;
+    isRepeatable?: boolean;
+    conditions?: string | null;
+    displayOrder?: number;
+    tenantId?: string | null;
+    levels?: Array<CreateAchievementLevelCommand> | null;
+    prerequisiteAchievementIds?: Array<string> | null;
 };
 
 export type CreateAchievementLevelCommand = {
-  level?: number;
-  name?: string | null;
-  description?: string | null;
-  requiredProgress?: number;
-  points?: number;
-  iconUrl?: string | null;
-  color?: string | null;
+    level?: number;
+    name?: string | null;
+    description?: string | null;
+    requiredProgress?: number;
+    points?: number;
+    iconUrl?: string | null;
+    color?: string | null;
 };
 
 export type CreateActivityGradeDto = {
-  contentInteractionId?: string;
-  graderProgramUserId?: string;
-  grade?: number;
-  feedback?: string | null;
-  gradingDetails?: string | null;
+    contentInteractionId?: string;
+    graderProgramUserId?: string;
+    grade?: number;
+    feedback?: string | null;
+    gradingDetails?: string | null;
 };
 
 export type CreateContentDto = {
-  title?: string | null;
-  description?: string | null;
-  type?: ProgramContentType;
-  body?: string | null;
-  sortOrder?: number | null;
-  isRequired?: boolean;
-  estimatedMinutes?: number | null;
+    title?: string | null;
+    description?: string | null;
+    type?: ProgramContentType;
+    body?: string | null;
+    sortOrder?: number | null;
+    isRequired?: boolean;
+    estimatedMinutes?: number | null;
 };
 
 export type CreateCredentialDto = {
-  userId: string;
-  type: string;
-  value: string;
-  metadata?: string | null;
-  expiresAt?: string | null;
-  isActive?: boolean;
+    userId: string;
+    type: string;
+    value: string;
+    metadata?: string | null;
+    expiresAt?: string | null;
+    isActive?: boolean;
 };
 
 export type CreatePaymentCommand = {
-  userId?: string;
-  productId?: string | null;
-  amount?: number;
-  currency?: string | null;
-  method?: PaymentMethod;
-  description?: string | null;
-  tenantId?: string | null;
-  metadata?: {
-    [key: string]: unknown;
-  } | null;
+    userId?: string;
+    productId?: string | null;
+    amount?: number;
+    currency?: string | null;
+    method?: PaymentMethod;
+    description?: string | null;
+    tenantId?: string | null;
+    metadata?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type CreatePaymentRequest = {
-  userId?: string | null;
-  productId?: string | null;
-  amount?: number;
-  currency?: string | null;
-  method?: PaymentMethod;
-  description?: string | null;
-  tenantId?: string | null;
-  metadata?: {
-    [key: string]: unknown;
-  } | null;
+    userId?: string | null;
+    productId?: string | null;
+    amount?: number;
+    currency?: string | null;
+    method?: PaymentMethod;
+    description?: string | null;
+    tenantId?: string | null;
+    metadata?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type CreatePaymentResult = {
-  success?: boolean;
-  payment?: Payment;
-  error?: string | null;
-  clientSecret?: string | null;
+    success?: boolean;
+    payment?: Payment;
+    error?: string | null;
+    clientSecret?: string | null;
 };
 
 export type CreatePostDto = {
-  title?: string | null;
-  description?: string | null;
-  postType?: string | null;
-  visibility?: AccessLevel;
-  richContent?: string | null;
-  contentReferences?: Array<string> | null;
+    title?: string | null;
+    description?: string | null;
+    postType?: string | null;
+    visibility?: AccessLevel;
+    richContent?: string | null;
+    contentReferences?: Array<string> | null;
 };
 
 export type CreateProductCommand = {
-  name?: string | null;
-  description?: string | null;
-  shortDescription?: string | null;
-  imageUrl?: string | null;
-  type?: ProductType;
-  isBundle?: boolean;
-  creatorId?: string;
-  bundleItems?: Array<string> | null;
-  referralCommissionPercentage?: number;
-  maxAffiliateDiscount?: number;
-  affiliateCommissionPercentage?: number;
-  visibility?: AccessLevel;
-  status?: ContentStatus;
-  tenantId?: string | null;
+    name?: string | null;
+    description?: string | null;
+    shortDescription?: string | null;
+    imageUrl?: string | null;
+    type?: ProductType;
+    isBundle?: boolean;
+    creatorId?: string;
+    bundleItems?: Array<string> | null;
+    referralCommissionPercentage?: number;
+    maxAffiliateDiscount?: number;
+    affiliateCommissionPercentage?: number;
+    visibility?: AccessLevel;
+    status?: ContentStatus;
+    tenantId?: string | null;
 };
 
 export type CreateProductFromProgramDto = {
-  name?: string | null;
-  description?: string | null;
-  basePrice?: number;
-  currency?: string | null;
+    name?: string | null;
+    description?: string | null;
+    basePrice?: number;
+    currency?: string | null;
 };
 
 export type CreateProgramContentDto = {
-  programId: string;
-  parentId?: string | null;
-  title: string;
-  description?: string | null;
-  type: ProgramContentType;
-  body?: string | null;
-  sortOrder?: number;
-  isRequired?: boolean;
-  gradingMethod?: GradingMethod;
-  maxPoints?: number | null;
-  estimatedMinutes?: number | null;
-  visibility?: Visibility;
+    programId: string;
+    parentId?: string | null;
+    title: string;
+    description?: string | null;
+    type: ProgramContentType;
+    body?: string | null;
+    sortOrder?: number;
+    isRequired?: boolean;
+    gradingMethod?: GradingMethod;
+    maxPoints?: number | null;
+    estimatedMinutes?: number | null;
+    visibility?: Visibility;
 };
 
 export type CreateProgramDto = {
-  title?: string | null;
-  description?: string | null;
-  slug?: string | null;
-  thumbnail?: string | null;
+    title?: string | null;
+    description?: string | null;
+    slug?: string | null;
+    thumbnail?: string | null;
 };
 
 export type CreateProjectRequest = {
-  title: string;
-  description?: string | null;
-  shortDescription?: string | null;
-  imageUrl?: string | null;
-  repositoryUrl?: string | null;
-  websiteUrl?: string | null;
-  downloadUrl?: string | null;
-  type?: ProjectType;
-  categoryId?: string | null;
-  visibility?: AccessLevel;
-  status?: ContentStatus;
-  tags?: Array<string> | null;
+    title: string;
+    description?: string | null;
+    shortDescription?: string | null;
+    imageUrl?: string | null;
+    repositoryUrl?: string | null;
+    websiteUrl?: string | null;
+    downloadUrl?: string | null;
+    type?: ProjectType;
+    categoryId?: string | null;
+    visibility?: AccessLevel;
+    status?: ContentStatus;
+    tags?: Array<string> | null;
 };
 
-export type CreateProjectResultReadable = {
-  success?: boolean;
-  project?: ProjectReadable;
-  error?: string | null;
-};
-
-export type CreateProjectResultWritable = {
-  success?: boolean;
-  project?: ProjectWritable;
-  error?: string | null;
+export type CreateProjectResult = {
+    success?: boolean;
+    project?: Project;
+    error?: string | null;
 };
 
 export type CreateSimpleTestingRequestDto = {
-  title: string;
-  description?: string | null;
-  versionNumber: string;
-  downloadUrl?: string | null;
-  instructionsType: InstructionType;
-  instructionsContent?: string | null;
-  instructionsUrl?: string | null;
-  feedbackFormContent?: string | null;
-  maxTesters?: number | null;
-  startDate?: string | null;
-  endDate?: string | null;
-  teamIdentifier: string;
+    title: string;
+    description?: string | null;
+    versionNumber: string;
+    downloadUrl?: string | null;
+    instructionsType: InstructionType;
+    instructionsContent?: string | null;
+    instructionsUrl?: string | null;
+    feedbackFormContent?: string | null;
+    maxTesters?: number | null;
+    startDate?: string | null;
+    endDate?: string | null;
+    teamIdentifier: string;
 };
 
 export type CreateSubscriptionDto = {
-  subscriptionPlanId?: string;
-  paymentMethodId?: string | null;
-  externalSubscriptionId?: string | null;
-  trialEndsAt?: string | null;
+    subscriptionPlanId?: string;
+    paymentMethodId?: string | null;
+    externalSubscriptionId?: string | null;
+    trialEndsAt?: string | null;
 };
 
 export type CreateTenantDomainDto = {
-  tenantId: string;
-  topLevelDomain: string;
-  subdomain?: string | null;
-  isMainDomain?: boolean;
-  isSecondaryDomain?: boolean;
-  userGroupId?: string | null;
+    tenantId: string;
+    topLevelDomain: string;
+    subdomain?: string | null;
+    isMainDomain?: boolean;
+    isSecondaryDomain?: boolean;
+    userGroupId?: string | null;
 };
 
 export type CreateTenantDto = {
-  name: string;
-  description?: string | null;
-  slug: string;
-  isActive?: boolean;
+    name: string;
+    description?: string | null;
+    slug: string;
+    isActive?: boolean;
 };
 
 export type CreateTenantUserGroupDto = {
-  name: string;
-  description?: string | null;
-  tenantId: string;
-  parentGroupId?: string | null;
-  isActive?: boolean;
-  isDefault?: boolean;
+    name: string;
+    description?: string | null;
+    tenantId: string;
+    parentGroupId?: string | null;
+    isActive?: boolean;
+    isDefault?: boolean;
 };
 
 export type CreateTestingRequestDto = {
-  projectVersionId: string;
-  title: string;
-  description?: string | null;
-  downloadUrl?: string | null;
-  instructionsType: InstructionType;
-  instructionsContent?: string | null;
-  instructionsUrl?: string | null;
-  instructionsFileId?: string | null;
-  feedbackFormContent?: string | null;
-  maxTesters?: number | null;
-  startDate: string;
-  endDate: string;
-  status: TestingRequestStatus;
+    projectVersionId: string;
+    title: string;
+    description?: string | null;
+    downloadUrl?: string | null;
+    instructionsType: InstructionType;
+    instructionsContent?: string | null;
+    instructionsUrl?: string | null;
+    instructionsFileId?: string | null;
+    feedbackFormContent?: string | null;
+    maxTesters?: number | null;
+    startDate: string;
+    endDate: string;
+    status: TestingRequestStatus;
 };
 
 export type CreateUserDto = {
-  name: string;
-  email: string;
-  isActive?: boolean;
-  initialBalance?: number;
+    name: string;
+    email: string;
+    isActive?: boolean;
+    initialBalance?: number;
 };
 
 export type CreateUserProfileDto = {
-  givenName: string;
-  familyName: string;
-  displayName: string;
-  title?: string | null;
-  description?: string | null;
-  slug?: string | null;
-  userId: string;
-  tenantId?: string | null;
+    givenName: string;
+    familyName: string;
+    displayName: string;
+    title?: string | null;
+    description?: string | null;
+    slug?: string | null;
+    userId: string;
+    tenantId?: string | null;
 };
 
-export type CredentialReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  userId: string;
-  user?: UserReadable;
-  tenantId?: string | null;
-  tenant?: TenantReadable;
-  readonly isGlobal?: boolean;
-  type: string;
-  value: string;
-  metadata?: string | null;
-  expiresAt?: string | null;
-  isActive?: boolean;
-  lastUsedAt?: string | null;
-  readonly isExpired?: boolean;
-  readonly isValid?: boolean;
+export type Credential = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    userId: string;
+    user?: User;
+    tenantId?: string | null;
+    tenant?: Tenant;
+    readonly isGlobal?: boolean;
+    type: string;
+    value: string;
+    metadata?: string | null;
+    expiresAt?: string | null;
+    isActive?: boolean;
+    lastUsedAt?: string | null;
+    readonly isExpired?: boolean;
+    readonly isValid?: boolean;
 };
 
-export type CredentialWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  userId: string;
-  user?: UserWritable;
-  tenantId?: string | null;
-  tenant?: TenantWritable;
-  type: string;
-  value: string;
-  metadata?: string | null;
-  expiresAt?: string | null;
-  isActive?: boolean;
-  lastUsedAt?: string | null;
-};
-
-export type CredentialResponseDtoReadable = {
-  id?: string;
-  userId?: string;
-  type?: string | null;
-  value?: string | null;
-  metadata?: string | null;
-  expiresAt?: string | null;
-  isActive?: boolean;
-  lastUsedAt?: string | null;
-  readonly isExpired?: boolean;
-  readonly isValid?: boolean;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  user?: UserResponseDto;
-};
-
-export type CredentialResponseDtoWritable = {
-  id?: string;
-  userId?: string;
-  type?: string | null;
-  value?: string | null;
-  metadata?: string | null;
-  expiresAt?: string | null;
-  isActive?: boolean;
-  lastUsedAt?: string | null;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  user?: UserResponseDto;
+export type CredentialResponseDto = {
+    id?: string;
+    userId?: string;
+    type?: string | null;
+    value?: string | null;
+    metadata?: string | null;
+    expiresAt?: string | null;
+    isActive?: boolean;
+    lastUsedAt?: string | null;
+    readonly isExpired?: boolean;
+    readonly isValid?: boolean;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    user?: UserResponseDto;
 };
 
 export type DeleteProjectResult = {
-  success?: boolean;
-  error?: string | null;
+    success?: boolean;
+    error?: string | null;
 };
 
 export type DevelopmentStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export type EngagementMetricsDto = {
-  programId?: string;
-  dailyActiveUsers?: number;
-  weeklyActiveUsers?: number;
-  monthlyActiveUsers?: number;
-  averageSessionDuration?: string;
-  totalSessions?: number;
-  retentionRate?: number;
-  contentEngagement?: {
-    [key: string]: number;
-  } | null;
+    programId?: string;
+    dailyActiveUsers?: number;
+    weeklyActiveUsers?: number;
+    monthlyActiveUsers?: number;
+    averageSessionDuration?: string;
+    totalSessions?: number;
+    retentionRate?: number;
+    contentEngagement?: {
+        [key: string]: number;
+    } | null;
 };
 
 export type EnrollmentStatus = 0 | 1 | 2 | 3 | 4 | 5;
@@ -1197,255 +874,166 @@ export type EnrollmentStatus = 0 | 1 | 2 | 3 | 4 | 5;
 export type FeedbackQuality = 1 | 2 | 3;
 
 export type FeedbackRequest = {
-  feedbackFormId?: string;
-  feedbackData?: string | null;
-  testingContext?: TestingContext;
-  sessionId?: string | null;
-  additionalNotes?: string | null;
+    feedbackFormId?: string;
+    feedbackData?: string | null;
+    testingContext?: TestingContext;
+    sessionId?: string | null;
+    additionalNotes?: string | null;
 };
 
-export type FinancialTransactionReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  fromUserId?: string | null;
-  toUserId?: string | null;
-  type?: TransactionType;
-  amount?: number;
-  currency?: string | null;
-  status?: TransactionStatus;
-  externalTransactionId?: string | null;
-  paymentMethodId?: string | null;
-  promoCodeId?: string | null;
-  platformFee?: number | null;
-  processorFee?: number | null;
-  netAmount?: number | null;
-  description?: string | null;
-  metadata?: string | null;
-  processedAt?: string | null;
-  failedAt?: string | null;
-  error?: string | null;
-  failureReason?: string | null;
-  fromUser?: UserReadable;
-  toUser?: UserReadable;
-  paymentMethod?: UserFinancialMethodReadable;
-  promoCode?: PromoCodeReadable;
-  promoCodeUses?: Array<PromoCodeUseReadable> | null;
-};
-
-export type FinancialTransactionWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  fromUserId?: string | null;
-  toUserId?: string | null;
-  type?: TransactionType;
-  amount?: number;
-  currency?: string | null;
-  status?: TransactionStatus;
-  externalTransactionId?: string | null;
-  paymentMethodId?: string | null;
-  promoCodeId?: string | null;
-  platformFee?: number | null;
-  processorFee?: number | null;
-  netAmount?: number | null;
-  description?: string | null;
-  metadata?: string | null;
-  processedAt?: string | null;
-  failedAt?: string | null;
-  error?: string | null;
-  failureReason?: string | null;
-  fromUser?: UserWritable;
-  toUser?: UserWritable;
-  paymentMethod?: UserFinancialMethodWritable;
-  promoCode?: PromoCodeWritable;
-  promoCodeUses?: Array<PromoCodeUseWritable> | null;
+export type FinancialTransaction = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    fromUserId?: string | null;
+    toUserId?: string | null;
+    type?: TransactionType;
+    amount?: number;
+    currency?: string | null;
+    status?: TransactionStatus;
+    externalTransactionId?: string | null;
+    paymentMethodId?: string | null;
+    promoCodeId?: string | null;
+    platformFee?: number | null;
+    processorFee?: number | null;
+    netAmount?: number | null;
+    description?: string | null;
+    metadata?: string | null;
+    processedAt?: string | null;
+    failedAt?: string | null;
+    error?: string | null;
+    failureReason?: string | null;
+    fromUser?: User;
+    toUser?: User;
+    paymentMethod?: UserFinancialMethod;
+    promoCode?: PromoCode;
+    promoCodeUses?: Array<PromoCodeUse> | null;
 };
 
 export type GoogleIdTokenRequestDto = {
-  idToken?: string | null;
-  tenantId?: string | null;
+    idToken?: string | null;
+    tenantId?: string | null;
 };
 
-export type GradeStatisticsDtoReadable = {
-  totalGrades?: number;
-  averageGrade?: number;
-  minGrade?: number;
-  maxGrade?: number;
-  passingRate?: number;
-  readonly averageGradeFormatted?: string | null;
-  readonly passingRateFormatted?: string | null;
-  readonly hasGrades?: boolean;
-};
-
-export type GradeStatisticsDtoWritable = {
-  totalGrades?: number;
-  averageGrade?: number;
-  minGrade?: number;
-  maxGrade?: number;
-  passingRate?: number;
+export type GradeStatisticsDto = {
+    totalGrades?: number;
+    averageGrade?: number;
+    minGrade?: number;
+    maxGrade?: number;
+    passingRate?: number;
+    readonly averageGradeFormatted?: string | null;
+    readonly passingRateFormatted?: string | null;
+    readonly hasGrades?: boolean;
 };
 
 export type GraderSummaryDto = {
-  id?: string;
-  userDisplayName?: string | null;
-  userEmail?: string | null;
-  role?: string | null;
+    id?: string;
+    userDisplayName?: string | null;
+    userEmail?: string | null;
+    role?: string | null;
 };
 
 export type GradingMethod = 0 | 1 | 2 | 3;
 
 export type GrantAccessRequest = {
-  acquisitionType?: ProductAcquisitionType;
-  purchasePrice?: number;
-  currency?: string | null;
-  expiresAt?: string | null;
+    acquisitionType?: ProductAcquisitionType;
+    purchasePrice?: number;
+    currency?: string | null;
+    expiresAt?: string | null;
 };
 
 export type IDomainEvent = {
-  readonly eventId?: string;
-  readonly occurredAt?: string;
-  readonly version?: number;
-  readonly aggregateId?: string;
-  readonly aggregateType?: string | null;
+    readonly eventId?: string;
+    readonly occurredAt?: string;
+    readonly version?: number;
+    readonly aggregateId?: string;
+    readonly aggregateType?: string | null;
 };
 
 export type InstructionType = 0 | 1 | 2;
 
-export type JamReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  name: string;
-  slug: string;
-  theme?: string | null;
-  description?: string | null;
-  rules?: string | null;
-  submissionCriteria?: string | null;
-  startDate: string;
-  endDate: string;
-  votingEndDate?: string | null;
-  maxParticipants?: number | null;
-  participantCount?: number;
-  status: JamStatus;
-  createdBy: string;
+export type Jam = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    name: string;
+    slug: string;
+    theme?: string | null;
+    description?: string | null;
+    rules?: string | null;
+    submissionCriteria?: string | null;
+    startDate: string;
+    endDate: string;
+    votingEndDate?: string | null;
+    maxParticipants?: number | null;
+    participantCount?: number;
+    status: JamStatus;
+    createdBy: string;
 };
 
-export type JamWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  name: string;
-  slug: string;
-  theme?: string | null;
-  description?: string | null;
-  rules?: string | null;
-  submissionCriteria?: string | null;
-  startDate: string;
-  endDate: string;
-  votingEndDate?: string | null;
-  maxParticipants?: number | null;
-  participantCount?: number;
-  status: JamStatus;
-  createdBy: string;
-};
-
-export type JamScoreReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  submissionId: string;
-  criteriaId: string;
-  judgeUserId: string;
-  score: number;
-  feedback?: string | null;
-};
-
-export type JamScoreWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  submissionId: string;
-  criteriaId: string;
-  judgeUserId: string;
-  score: number;
-  feedback?: string | null;
+export type JamScore = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    submissionId: string;
+    criteriaId: string;
+    judgeUserId: string;
+    score: number;
+    feedback?: string | null;
 };
 
 export type JamStatus = 0 | 1 | 2 | 3 | 4;
 
-export type LanguageReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  code: string;
-  name: string;
-  isActive?: boolean;
-  resourceLocalizations?: Array<ResourceLocalizationReadable> | null;
-};
-
-export type LanguageWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  code: string;
-  name: string;
-  isActive?: boolean;
-  resourceLocalizations?: Array<ResourceLocalizationWritable> | null;
+export type Language = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    code: string;
+    name: string;
+    isActive?: boolean;
+    resourceLocalizations?: Array<ResourceLocalization> | null;
 };
 
 export type LocalSignInRequestDto = {
-  username?: string | null;
-  email: string;
-  password: string;
-  tenantId?: string | null;
+    username?: string | null;
+    email: string;
+    password: string;
+    tenantId?: string | null;
 };
 
 export type LocalSignUpRequestDto = {
-  username?: string | null;
-  email: string;
-  password: string;
-  tenantId?: string | null;
+    username?: string | null;
+    email: string;
+    password: string;
+    tenantId?: string | null;
 };
 
 export type LocalizationStatus = 0 | 1 | 2 | 3 | 4;
@@ -1455,41 +1043,41 @@ export type LocationStatus = 0 | 1 | 2;
 export type MemberStatus = 0 | 1 | 2;
 
 export type MonetizationDto = {
-  price?: number;
-  currency?: string | null;
-  isSubscription?: boolean;
-  subscriptionDurationDays?: number | null;
+    price?: number;
+    currency?: string | null;
+    isSubscription?: boolean;
+    subscriptionDurationDays?: number | null;
 };
 
 export type MoveContentDto = {
-  contentId: string;
-  newParentId?: string | null;
-  newSortOrder: number;
+    contentId: string;
+    newParentId?: string | null;
+    newSortOrder: number;
 };
 
 export type Payment = {
-  id?: string;
-  userId: string;
-  productId?: string | null;
-  amount?: number;
-  currency: string | null;
-  status?: PaymentStatus;
-  method?: PaymentMethod;
-  gateway?: PaymentGateway;
-  providerTransactionId?: string | null;
-  paymentIntentId?: string | null;
-  discountCodeId?: string | null;
-  discountAmount?: number;
-  finalAmount?: number;
-  processingFee?: number;
-  netAmount?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  processedAt?: string | null;
-  failedAt?: string | null;
-  failureReason?: string | null;
-  metadata?: string | null;
-  refunds?: Array<PaymentRefund> | null;
+    id?: string;
+    userId: string;
+    productId?: string | null;
+    amount?: number;
+    currency: string | null;
+    status?: PaymentStatus;
+    method?: PaymentMethod;
+    gateway?: PaymentGateway;
+    providerTransactionId?: string | null;
+    paymentIntentId?: string | null;
+    discountCodeId?: string | null;
+    discountAmount?: number;
+    finalAmount?: number;
+    processingFee?: number;
+    netAmount?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    processedAt?: string | null;
+    failedAt?: string | null;
+    failureReason?: string | null;
+    metadata?: string | null;
+    refunds?: Array<PaymentRefund> | null;
 };
 
 export type PaymentGateway = 0 | 1 | 2 | 3 | 4 | 99;
@@ -1501,1321 +1089,811 @@ export type PaymentMethodStatus = 0 | 1 | 2 | 3;
 export type PaymentMethodType = 0 | 1 | 2 | 3 | 4;
 
 export type PaymentRefund = {
-  id?: string;
-  paymentId?: string;
-  payment?: Payment;
-  externalRefundId: string;
-  refundAmount?: number;
-  reason: string;
-  status?: RefundStatus;
-  processedAt?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
+    id?: string;
+    paymentId?: string;
+    payment?: Payment;
+    externalRefundId: string;
+    refundAmount?: number;
+    reason: string;
+    status?: RefundStatus;
+    processedAt?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
 };
 
 export type PaymentStats = {
-  totalPayments?: number;
-  totalRevenue?: number;
-  averagePaymentAmount?: number;
-  successfulPayments?: number;
-  failedPayments?: number;
-  refundedPayments?: number;
-  totalRefunded?: number;
-  netRevenue?: number;
-  paymentsByMethod?: {
-    [key: string]: number;
-  } | null;
-  revenueByMethod?: {
-    [key: string]: number;
-  } | null;
+    totalPayments?: number;
+    totalRevenue?: number;
+    averagePaymentAmount?: number;
+    successfulPayments?: number;
+    failedPayments?: number;
+    refundedPayments?: number;
+    totalRefunded?: number;
+    netRevenue?: number;
+    paymentsByMethod?: {
+        [key: string]: number;
+    } | null;
+    revenueByMethod?: {
+        [key: string]: number;
+    } | null;
 };
 
 export type PaymentStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export type PostDto = {
-  id?: string;
-  title?: string | null;
-  description?: string | null;
-  slug?: string | null;
-  postType?: string | null;
-  authorId?: string;
-  authorName?: string | null;
-  isSystemGenerated?: boolean;
-  visibility?: AccessLevel;
-  status?: ContentStatus;
-  isPinned?: boolean;
-  likesCount?: number;
-  commentsCount?: number;
-  sharesCount?: number;
-  richContent?: string | null;
-  contentReferences?: Array<ContentReferenceDto> | null;
-  createdAt?: string;
-  updatedAt?: string;
+    id?: string;
+    title?: string | null;
+    description?: string | null;
+    slug?: string | null;
+    postType?: string | null;
+    authorId?: string;
+    authorName?: string | null;
+    isSystemGenerated?: boolean;
+    visibility?: AccessLevel;
+    status?: ContentStatus;
+    isPinned?: boolean;
+    likesCount?: number;
+    commentsCount?: number;
+    sharesCount?: number;
+    richContent?: string | null;
+    contentReferences?: Array<ContentReferenceDto> | null;
+    createdAt?: string;
+    updatedAt?: string;
 };
 
 export type PostsPageDto = {
-  posts?: Array<PostDto> | null;
-  totalCount?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  hasNextPage?: boolean;
-  hasPreviousPage?: boolean;
+    posts?: Array<PostDto> | null;
+    totalCount?: number;
+    pageNumber?: number;
+    pageSize?: number;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
 };
 
 export type PrerequisiteStatusDto = {
-  prerequisiteAchievementId?: string;
-  name?: string | null;
-  isMet?: boolean;
-  requiresCompletion?: boolean;
-  minimumLevel?: number | null;
-  userLevel?: number | null;
+    prerequisiteAchievementId?: string;
+    name?: string | null;
+    isMet?: boolean;
+    requiresCompletion?: boolean;
+    minimumLevel?: number | null;
+    userLevel?: number | null;
 };
 
 export type PricingDto = {
-  price?: number;
-  currency?: string | null;
-  isSubscription?: boolean;
-  subscriptionDurationDays?: number | null;
-  isMonetizationEnabled?: boolean;
+    price?: number;
+    currency?: string | null;
+    isSubscription?: boolean;
+    subscriptionDurationDays?: number | null;
+    isMonetizationEnabled?: boolean;
 };
 
 export type ProblemDetails = {
-  type?: string | null;
-  title?: string | null;
-  status?: number | null;
-  detail?: string | null;
-  instance?: string | null;
-  [key: string]: unknown | (string | null) | (string | null) | (number | null) | (string | null) | (string | null) | undefined;
+    type?: string | null;
+    title?: string | null;
+    status?: number | null;
+    detail?: string | null;
+    instance?: string | null;
+    [key: string]: unknown | (string | null) | (string | null) | (number | null) | (string | null) | (string | null) | undefined;
 };
 
 export type ProcessPaymentRequest = {
-  providerTransactionId?: string | null;
-  providerMetadata?: {
-    [key: string]: unknown;
-  } | null;
+    providerTransactionId?: string | null;
+    providerMetadata?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type ProcessPaymentResult = {
-  success?: boolean;
-  payment?: Payment;
-  error?: string | null;
-  autoEnrollTriggered?: boolean;
+    success?: boolean;
+    payment?: Payment;
+    error?: string | null;
+    autoEnrollTriggered?: boolean;
 };
 
-export type ProductReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataReadable;
-  tenant?: TenantReadable;
-  readonly isGlobal?: boolean;
-  localizations?: Array<ResourceLocalizationReadable> | null;
-  licenses?: Array<ContentLicenseReadable> | null;
-  slug?: string | null;
-  status?: ContentStatus;
-  name: string;
-  shortDescription?: string | null;
-  imageUrl?: string | null;
-  type?: ProductType;
-  isBundle?: boolean;
-  creatorId?: string;
-  creator?: UserReadable;
-  bundleItems?: string | null;
-  referralCommissionPercentage?: number;
-  maxAffiliateDiscount?: number;
-  affiliateCommissionPercentage?: number;
-  productPrograms?: Array<ProductProgramReadable> | null;
-  productPricings?: Array<ProductPricingReadable> | null;
-  subscriptionPlans?: Array<ProductSubscriptionPlanReadable> | null;
-  userProducts?: Array<UserProductReadable> | null;
-  promoCodes?: Array<PromoCodeReadable> | null;
-};
-
-export type ProductWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataWritable;
-  tenant?: TenantWritable;
-  localizations?: Array<ResourceLocalizationWritable> | null;
-  licenses?: Array<ContentLicenseWritable> | null;
-  slug?: string | null;
-  status?: ContentStatus;
-  name: string;
-  shortDescription?: string | null;
-  imageUrl?: string | null;
-  type?: ProductType;
-  isBundle?: boolean;
-  creatorId?: string;
-  creator?: UserWritable;
-  bundleItems?: string | null;
-  referralCommissionPercentage?: number;
-  maxAffiliateDiscount?: number;
-  affiliateCommissionPercentage?: number;
-  productPrograms?: Array<ProductProgramWritable> | null;
-  productPricings?: Array<ProductPricingWritable> | null;
-  subscriptionPlans?: Array<ProductSubscriptionPlanWritable> | null;
-  userProducts?: Array<UserProductWritable> | null;
-  promoCodes?: Array<PromoCodeWritable> | null;
+export type Product = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    title: string;
+    description?: string | null;
+    visibility: AccessLevel;
+    metadata?: ResourceMetadata;
+    tenant?: Tenant;
+    readonly isGlobal?: boolean;
+    localizations?: Array<ResourceLocalization> | null;
+    licenses?: Array<ContentLicense> | null;
+    slug?: string | null;
+    status?: ContentStatus;
+    name: string;
+    shortDescription?: string | null;
+    imageUrl?: string | null;
+    type?: ProductType;
+    isBundle?: boolean;
+    creatorId?: string;
+    creator?: User;
+    bundleItems?: string | null;
+    referralCommissionPercentage?: number;
+    maxAffiliateDiscount?: number;
+    affiliateCommissionPercentage?: number;
+    productPrograms?: Array<ProductProgram> | null;
+    productPricings?: Array<ProductPricing> | null;
+    subscriptionPlans?: Array<ProductSubscriptionPlan> | null;
+    userProducts?: Array<UserProduct> | null;
+    promoCodes?: Array<PromoCode> | null;
 };
 
 export type ProductAccessStatus = 0 | 1 | 2 | 3;
 
 export type ProductAcquisitionType = 0 | 1 | 2 | 3;
 
-export type ProductPricingReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  productId: string;
-  product?: ProductReadable;
-  name: string;
-  basePrice?: number;
-  salePrice?: number | null;
-  currency?: string | null;
-  saleStartDate?: string | null;
-  saleEndDate?: string | null;
-  isDefault?: boolean;
+export type ProductPricing = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    productId: string;
+    product?: Product;
+    name: string;
+    basePrice?: number;
+    salePrice?: number | null;
+    currency?: string | null;
+    saleStartDate?: string | null;
+    saleEndDate?: string | null;
+    isDefault?: boolean;
 };
 
-export type ProductPricingWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  productId: string;
-  product?: ProductWritable;
-  name: string;
-  basePrice?: number;
-  salePrice?: number | null;
-  currency?: string | null;
-  saleStartDate?: string | null;
-  saleEndDate?: string | null;
-  isDefault?: boolean;
+export type ProductProgram = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    productId: string;
+    product?: Product;
+    programId: string;
+    program?: Program;
+    sortOrder?: number;
 };
 
-export type ProductProgramReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  productId: string;
-  product?: ProductReadable;
-  programId: string;
-  program?: ProgramReadable;
-  sortOrder?: number;
-};
-
-export type ProductProgramWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  productId: string;
-  product?: ProductWritable;
-  programId: string;
-  program?: ProgramWritable;
-  sortOrder?: number;
-};
-
-export type ProductSubscriptionPlanReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  productId: string;
-  product?: ProductReadable;
-  name: string;
-  description?: string | null;
-  price?: number;
-  currency?: string | null;
-  billingInterval?: SubscriptionBillingInterval;
-  intervalCount?: number;
-  trialPeriodDays?: number | null;
-  isActive?: boolean;
-  isDefault?: boolean;
-  userSubscriptions?: Array<UserSubscriptionReadable> | null;
-};
-
-export type ProductSubscriptionPlanWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  productId: string;
-  product?: ProductWritable;
-  name: string;
-  description?: string | null;
-  price?: number;
-  currency?: string | null;
-  billingInterval?: SubscriptionBillingInterval;
-  intervalCount?: number;
-  trialPeriodDays?: number | null;
-  isActive?: boolean;
-  isDefault?: boolean;
-  userSubscriptions?: Array<UserSubscriptionWritable> | null;
+export type ProductSubscriptionPlan = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    productId: string;
+    product?: Product;
+    name: string;
+    description?: string | null;
+    price?: number;
+    currency?: string | null;
+    billingInterval?: SubscriptionBillingInterval;
+    intervalCount?: number;
+    trialPeriodDays?: number | null;
+    isActive?: boolean;
+    isDefault?: boolean;
+    userSubscriptions?: Array<UserSubscription> | null;
 };
 
 export type ProductType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
-export type ProgramReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataReadable;
-  tenant?: TenantReadable;
-  readonly isGlobal?: boolean;
-  localizations?: Array<ResourceLocalizationReadable> | null;
-  licenses?: Array<ContentLicenseReadable> | null;
-  slug?: string | null;
-  status?: ContentStatus;
-  thumbnail?: string | null;
-  videoShowcaseUrl?: string | null;
-  estimatedHours?: number | null;
-  enrollmentStatus?: EnrollmentStatus;
-  maxEnrollments?: number | null;
-  enrollmentDeadline?: string | null;
-  category?: ProgramCategory;
-  difficulty?: ProgramDifficulty;
-  programContents?: Array<ProgramContentReadable> | null;
-  programUsers?: Array<ProgramUserReadable> | null;
-  productPrograms?: Array<ProductProgramReadable> | null;
-  certificates?: Array<CertificateReadable> | null;
-  feedbackSubmissions?: Array<ProgramFeedbackSubmissionReadable> | null;
-  programRatings?: Array<ProgramRatingReadable> | null;
-  programWishlists?: Array<ProgramWishlistReadable> | null;
-  readonly skillsRequired?: Array<CertificateTagReadable> | null;
-  readonly skillsProvided?: Array<CertificateTagReadable> | null;
-  readonly currentEnrollments?: number;
-  readonly averageRating?: number;
-  readonly totalRatings?: number;
-  readonly isEnrollmentOpen?: boolean;
-};
-
-export type ProgramWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataWritable;
-  tenant?: TenantWritable;
-  localizations?: Array<ResourceLocalizationWritable> | null;
-  licenses?: Array<ContentLicenseWritable> | null;
-  slug?: string | null;
-  status?: ContentStatus;
-  thumbnail?: string | null;
-  videoShowcaseUrl?: string | null;
-  estimatedHours?: number | null;
-  enrollmentStatus?: EnrollmentStatus;
-  maxEnrollments?: number | null;
-  enrollmentDeadline?: string | null;
-  category?: ProgramCategory;
-  difficulty?: ProgramDifficulty;
-  programContents?: Array<ProgramContentWritable> | null;
-  programUsers?: Array<ProgramUserWritable> | null;
-  productPrograms?: Array<ProductProgramWritable> | null;
-  certificates?: Array<CertificateWritable> | null;
-  feedbackSubmissions?: Array<ProgramFeedbackSubmissionWritable> | null;
-  programRatings?: Array<ProgramRatingWritable> | null;
-  programWishlists?: Array<ProgramWishlistWritable> | null;
+export type Program = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    title: string;
+    description?: string | null;
+    visibility: AccessLevel;
+    metadata?: ResourceMetadata;
+    tenant?: Tenant;
+    readonly isGlobal?: boolean;
+    localizations?: Array<ResourceLocalization> | null;
+    licenses?: Array<ContentLicense> | null;
+    slug?: string | null;
+    status?: ContentStatus;
+    thumbnail?: string | null;
+    videoShowcaseUrl?: string | null;
+    estimatedHours?: number | null;
+    enrollmentStatus?: EnrollmentStatus;
+    maxEnrollments?: number | null;
+    enrollmentDeadline?: string | null;
+    category?: ProgramCategory;
+    difficulty?: ProgramDifficulty;
+    programContents?: Array<ProgramContent> | null;
+    programUsers?: Array<ProgramUser> | null;
+    productPrograms?: Array<ProductProgram> | null;
+    certificates?: Array<Certificate> | null;
+    feedbackSubmissions?: Array<ProgramFeedbackSubmission> | null;
+    programRatings?: Array<ProgramRating> | null;
+    programWishlists?: Array<ProgramWishlist> | null;
+    readonly skillsRequired?: Array<CertificateTag> | null;
+    readonly skillsProvided?: Array<CertificateTag> | null;
+    readonly currentEnrollments?: number;
+    readonly averageRating?: number;
+    readonly totalRatings?: number;
+    readonly isEnrollmentOpen?: boolean;
 };
 
 export type ProgramAnalyticsDto = {
-  programId?: string;
-  title?: string | null;
-  totalUsers?: number;
-  activeUsers?: number;
-  completedUsers?: number;
-  completionRate?: number;
-  averageCompletionTime?: string;
-  totalViews?: number;
-  lastActivity?: string | null;
-  additionalMetrics?: {
-    [key: string]: unknown;
-  } | null;
+    programId?: string;
+    title?: string | null;
+    totalUsers?: number;
+    activeUsers?: number;
+    completedUsers?: number;
+    completionRate?: number;
+    averageCompletionTime?: string;
+    totalViews?: number;
+    lastActivity?: string | null;
+    additionalMetrics?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type ProgramCategory = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17;
 
-export type ProgramContentReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  programId: string;
-  parentId?: string | null;
-  title: string;
-  description?: string | null;
-  type?: ProgramContentType;
-  body?: string | null;
-  sortOrder?: number;
-  isRequired?: boolean;
-  gradingMethod?: GradingMethod;
-  maxPoints?: number | null;
-  estimatedMinutes?: number | null;
-  visibility?: Visibility;
-  program?: ProgramReadable;
-  parent?: ProgramContentReadable;
-  children?: Array<ProgramContentReadable> | null;
-  contentInteractions?: Array<ContentInteractionReadable> | null;
-};
-
-export type ProgramContentWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  programId: string;
-  parentId?: string | null;
-  title: string;
-  description?: string | null;
-  type?: ProgramContentType;
-  body?: string | null;
-  sortOrder?: number;
-  isRequired?: boolean;
-  gradingMethod?: GradingMethod;
-  maxPoints?: number | null;
-  estimatedMinutes?: number | null;
-  visibility?: Visibility;
-  program?: ProgramWritable;
-  parent?: ProgramContentWritable;
-  children?: Array<ProgramContentWritable> | null;
-  contentInteractions?: Array<ContentInteractionWritable> | null;
+export type ProgramContent = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    programId: string;
+    parentId?: string | null;
+    title: string;
+    description?: string | null;
+    type?: ProgramContentType;
+    body?: string | null;
+    sortOrder?: number;
+    isRequired?: boolean;
+    gradingMethod?: GradingMethod;
+    maxPoints?: number | null;
+    estimatedMinutes?: number | null;
+    visibility?: Visibility;
+    program?: Program;
+    parent?: ProgramContent;
+    children?: Array<ProgramContent> | null;
+    contentInteractions?: Array<ContentInteraction> | null;
 };
 
 export type ProgramContentDto = {
-  id?: string;
-  programId?: string;
-  parentId?: string | null;
-  title?: string | null;
-  description?: string | null;
-  type?: ProgramContentType;
-  body?: unknown;
-  sortOrder?: number;
-  isRequired?: boolean;
-  gradingMethod?: GradingMethod;
-  maxPoints?: number | null;
-  estimatedMinutes?: number | null;
-  visibility?: Visibility;
-  createdAt?: string;
-  updatedAt?: string | null;
-  programTitle?: string | null;
-  parentTitle?: string | null;
-  childrenCount?: number;
-  children?: Array<ProgramContentDto> | null;
+    id?: string;
+    programId?: string;
+    parentId?: string | null;
+    title?: string | null;
+    description?: string | null;
+    type?: ProgramContentType;
+    body?: unknown;
+    sortOrder?: number;
+    isRequired?: boolean;
+    gradingMethod?: GradingMethod;
+    maxPoints?: number | null;
+    estimatedMinutes?: number | null;
+    visibility?: Visibility;
+    createdAt?: string;
+    updatedAt?: string | null;
+    programTitle?: string | null;
+    parentTitle?: string | null;
+    childrenCount?: number;
+    children?: Array<ProgramContentDto> | null;
 };
 
 export type ProgramContentType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export type ProgramDifficulty = 0 | 1 | 2 | 3;
 
-export type ProgramFeedbackSubmissionReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  userId?: string;
-  programId?: string;
-  productId?: string | null;
-  programUserId?: string;
-  feedbackData?: string | null;
-  overallRating?: number | null;
-  comments?: string | null;
-  wouldRecommend?: boolean | null;
-  submittedAt?: string;
-  user?: UserReadable;
-  program?: ProgramReadable;
-  product?: ProductReadable;
-  programUser?: ProgramUserReadable;
+export type ProgramFeedbackSubmission = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    userId?: string;
+    programId?: string;
+    productId?: string | null;
+    programUserId?: string;
+    feedbackData?: string | null;
+    overallRating?: number | null;
+    comments?: string | null;
+    wouldRecommend?: boolean | null;
+    submittedAt?: string;
+    user?: User;
+    program?: Program;
+    product?: Product;
+    programUser?: ProgramUser;
 };
 
-export type ProgramFeedbackSubmissionWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  userId?: string;
-  programId?: string;
-  productId?: string | null;
-  programUserId?: string;
-  feedbackData?: string | null;
-  overallRating?: number | null;
-  comments?: string | null;
-  wouldRecommend?: boolean | null;
-  submittedAt?: string;
-  user?: UserWritable;
-  program?: ProgramWritable;
-  product?: ProductWritable;
-  programUser?: ProgramUserWritable;
+export type ProgramRating = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    programId?: string;
+    userId?: string | null;
+    rating?: number;
+    review?: string | null;
+    isVerified?: boolean;
+    isFeatured?: boolean;
+    helpfulVotes?: number;
+    unhelpfulVotes?: number;
+    program?: Program;
 };
 
-export type ProgramRatingReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  programId?: string;
-  userId?: string | null;
-  rating?: number;
-  review?: string | null;
-  isVerified?: boolean;
-  isFeatured?: boolean;
-  helpfulVotes?: number;
-  unhelpfulVotes?: number;
-  program?: ProgramReadable;
-};
-
-export type ProgramRatingWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  programId?: string;
-  userId?: string | null;
-  rating?: number;
-  review?: string | null;
-  isVerified?: boolean;
-  isFeatured?: boolean;
-  helpfulVotes?: number;
-  unhelpfulVotes?: number;
-  program?: ProgramWritable;
-};
-
-export type ProgramUserReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  userId: string;
-  user?: UserReadable;
-  programId: string;
-  program?: ProgramReadable;
-  isActive?: boolean;
-  joinedAt?: string;
-  completionPercentage?: number;
-  finalGrade?: number | null;
-  startedAt?: string | null;
-  completedAt?: string | null;
-  lastAccessedAt?: string | null;
-  contentInteractions?: Array<ContentInteractionReadable> | null;
-  receivedGrades?: Array<ActivityGradeReadable> | null;
-  givenGrades?: Array<ActivityGradeReadable> | null;
-  userCertificates?: Array<UserCertificateReadable> | null;
-  feedbackSubmissions?: Array<ProgramFeedbackSubmissionReadable> | null;
-  programRatings?: Array<ProgramRatingReadable> | null;
-};
-
-export type ProgramUserWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  userId: string;
-  user?: UserWritable;
-  programId: string;
-  program?: ProgramWritable;
-  isActive?: boolean;
-  joinedAt?: string;
-  completionPercentage?: number;
-  finalGrade?: number | null;
-  startedAt?: string | null;
-  completedAt?: string | null;
-  lastAccessedAt?: string | null;
-  contentInteractions?: Array<ContentInteractionWritable> | null;
-  receivedGrades?: Array<ActivityGradeWritable> | null;
-  givenGrades?: Array<ActivityGradeWritable> | null;
-  userCertificates?: Array<UserCertificateWritable> | null;
-  feedbackSubmissions?: Array<ProgramFeedbackSubmissionWritable> | null;
-  programRatings?: Array<ProgramRatingWritable> | null;
+export type ProgramUser = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    userId: string;
+    user?: User;
+    programId: string;
+    program?: Program;
+    isActive?: boolean;
+    joinedAt?: string;
+    completionPercentage?: number;
+    finalGrade?: number | null;
+    startedAt?: string | null;
+    completedAt?: string | null;
+    lastAccessedAt?: string | null;
+    contentInteractions?: Array<ContentInteraction> | null;
+    receivedGrades?: Array<ActivityGrade> | null;
+    givenGrades?: Array<ActivityGrade> | null;
+    userCertificates?: Array<UserCertificate> | null;
+    feedbackSubmissions?: Array<ProgramFeedbackSubmission> | null;
+    programRatings?: Array<ProgramRating> | null;
 };
 
 export type ProgramUserSummaryDto = {
-  id?: string;
-  userDisplayName?: string | null;
-  userEmail?: string | null;
+    id?: string;
+    userDisplayName?: string | null;
+    userEmail?: string | null;
 };
 
-export type ProgramWishlistReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  userId?: string;
-  programId?: string;
-  addedAt?: string;
-  notes?: string | null;
-  user?: UserReadable;
-  program?: ProgramReadable;
-};
-
-export type ProgramWishlistWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  userId?: string;
-  programId?: string;
-  addedAt?: string;
-  notes?: string | null;
-  user?: UserWritable;
-  program?: ProgramWritable;
+export type ProgramWishlist = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    userId?: string;
+    programId?: string;
+    addedAt?: string;
+    notes?: string | null;
+    user?: User;
+    program?: Program;
 };
 
 export type ProgressStatus = 0 | 1 | 2 | 3;
 
-export type ProjectReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataReadable;
-  readonly isGlobal?: boolean;
-  localizations?: Array<ResourceLocalizationReadable> | null;
-  licenses?: Array<ContentLicenseReadable> | null;
-  slug?: string | null;
-  status?: ContentStatus;
-  shortDescription?: string | null;
-  imageUrl?: string | null;
-  type?: ProjectType;
-  developmentStatus?: DevelopmentStatus;
-  category?: ProjectCategoryReadable;
-  categoryId?: string | null;
-  websiteUrl?: string | null;
-  repositoryUrl?: string | null;
-  socialLinks?: string | null;
-  downloadUrl?: string | null;
-  tags?: string | null;
-  projectMetadata?: ProjectMetadataReadable;
-  versions?: Array<ProjectVersionReadable> | null;
-  collaborators?: Array<ProjectCollaboratorReadable> | null;
-  releases?: Array<ProjectReleaseReadable> | null;
-  teams?: Array<ProjectTeamReadable> | null;
-  followers?: Array<ProjectFollowerReadable> | null;
-  feedbacks?: Array<ProjectFeedbackReadable> | null;
-  jamSubmissions?: Array<ProjectJamSubmissionReadable> | null;
-  createdBy?: UserReadable;
-  createdById?: string | null;
-  tenant?: TenantReadable;
-  tenantId?: string | null;
-  readonly isActive?: boolean;
-  latestVersion?: ProjectVersionReadable;
-  readonly followerCount?: number;
-  readonly averageRating?: number | null;
-  readonly feedbackCount?: number;
-  readonly isInJam?: boolean;
-  readonly teamCount?: number;
+export type Project = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    title: string;
+    description?: string | null;
+    visibility: AccessLevel;
+    metadata?: ResourceMetadata;
+    readonly isGlobal?: boolean;
+    localizations?: Array<ResourceLocalization> | null;
+    licenses?: Array<ContentLicense> | null;
+    slug?: string | null;
+    status?: ContentStatus;
+    shortDescription?: string | null;
+    imageUrl?: string | null;
+    type?: ProjectType;
+    developmentStatus?: DevelopmentStatus;
+    category?: ProjectCategory;
+    categoryId?: string | null;
+    websiteUrl?: string | null;
+    repositoryUrl?: string | null;
+    socialLinks?: string | null;
+    downloadUrl?: string | null;
+    tags?: string | null;
+    projectMetadata?: ProjectMetadata;
+    versions?: Array<ProjectVersion> | null;
+    collaborators?: Array<ProjectCollaborator> | null;
+    releases?: Array<ProjectRelease> | null;
+    teams?: Array<ProjectTeam> | null;
+    followers?: Array<ProjectFollower> | null;
+    feedbacks?: Array<ProjectFeedback> | null;
+    jamSubmissions?: Array<ProjectJamSubmission> | null;
+    createdBy?: User;
+    createdById?: string | null;
+    tenant?: Tenant;
+    tenantId?: string | null;
+    readonly isActive?: boolean;
+    latestVersion?: ProjectVersion;
+    readonly followerCount?: number;
+    readonly averageRating?: number | null;
+    readonly feedbackCount?: number;
+    readonly isInJam?: boolean;
+    readonly teamCount?: number;
 };
 
-export type ProjectWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataWritable;
-  localizations?: Array<ResourceLocalizationWritable> | null;
-  licenses?: Array<ContentLicenseWritable> | null;
-  slug?: string | null;
-  status?: ContentStatus;
-  shortDescription?: string | null;
-  imageUrl?: string | null;
-  type?: ProjectType;
-  developmentStatus?: DevelopmentStatus;
-  category?: ProjectCategoryWritable;
-  categoryId?: string | null;
-  websiteUrl?: string | null;
-  repositoryUrl?: string | null;
-  socialLinks?: string | null;
-  downloadUrl?: string | null;
-  tags?: string | null;
-  projectMetadata?: ProjectMetadataWritable;
-  versions?: Array<ProjectVersionWritable> | null;
-  collaborators?: Array<ProjectCollaboratorWritable> | null;
-  releases?: Array<ProjectReleaseWritable> | null;
-  teams?: Array<ProjectTeamWritable> | null;
-  followers?: Array<ProjectFollowerWritable> | null;
-  feedbacks?: Array<ProjectFeedbackWritable> | null;
-  jamSubmissions?: Array<ProjectJamSubmissionWritable> | null;
-  createdBy?: UserWritable;
-  createdById?: string | null;
-  tenant?: TenantWritable;
-  tenantId?: string | null;
-  latestVersion?: ProjectVersionWritable;
+export type ProjectCategory = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    title: string;
+    description?: string | null;
+    visibility: AccessLevel;
+    metadata?: ResourceMetadata;
+    tenant?: Tenant;
+    readonly isGlobal?: boolean;
+    localizations?: Array<ResourceLocalization> | null;
+    name: string;
+    projects?: Array<Project> | null;
 };
 
-export type ProjectCategoryReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataReadable;
-  tenant?: TenantReadable;
-  readonly isGlobal?: boolean;
-  localizations?: Array<ResourceLocalizationReadable> | null;
-  name: string;
-  projects?: Array<ProjectReadable> | null;
+export type ProjectCollaborator = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    title: string;
+    description?: string | null;
+    visibility: AccessLevel;
+    metadata?: ResourceMetadata;
+    tenant?: Tenant;
+    readonly isGlobal?: boolean;
+    localizations?: Array<ResourceLocalization> | null;
+    projectId?: string;
+    project?: Project;
+    userId?: string;
+    user?: User;
+    role: string;
+    permissions: string;
+    isActive?: boolean;
+    joinedAt?: string;
+    leftAt?: string | null;
 };
 
-export type ProjectCategoryWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataWritable;
-  tenant?: TenantWritable;
-  localizations?: Array<ResourceLocalizationWritable> | null;
-  name: string;
-  projects?: Array<ProjectWritable> | null;
+export type ProjectFeedback = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    description?: string | null;
+    visibility: AccessLevel;
+    metadata?: ResourceMetadata;
+    tenant?: Tenant;
+    readonly isGlobal?: boolean;
+    localizations?: Array<ResourceLocalization> | null;
+    projectId?: string;
+    project?: Project;
+    userId?: string;
+    user?: User;
+    rating?: number;
+    title: string;
+    content?: string | null;
+    categories?: string | null;
+    isFeatured?: boolean;
+    isVerified?: boolean;
+    status?: ContentStatus;
+    helpfulVotes?: number;
+    totalVotes?: number;
+    platform?: string | null;
+    projectVersion?: string | null;
 };
 
-export type ProjectCollaboratorReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataReadable;
-  tenant?: TenantReadable;
-  readonly isGlobal?: boolean;
-  localizations?: Array<ResourceLocalizationReadable> | null;
-  projectId?: string;
-  project?: ProjectReadable;
-  userId?: string;
-  user?: UserReadable;
-  role: string;
-  permissions: string;
-  isActive?: boolean;
-  joinedAt?: string;
-  leftAt?: string | null;
+export type ProjectFollower = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    title: string;
+    description?: string | null;
+    visibility: AccessLevel;
+    metadata?: ResourceMetadata;
+    tenant?: Tenant;
+    readonly isGlobal?: boolean;
+    localizations?: Array<ResourceLocalization> | null;
+    projectId?: string;
+    project?: Project;
+    userId?: string;
+    user?: User;
+    followedAt?: string;
+    notificationSettings?: string | null;
+    emailNotifications?: boolean;
+    pushNotifications?: boolean;
 };
 
-export type ProjectCollaboratorWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataWritable;
-  tenant?: TenantWritable;
-  localizations?: Array<ResourceLocalizationWritable> | null;
-  projectId?: string;
-  project?: ProjectWritable;
-  userId?: string;
-  user?: UserWritable;
-  role: string;
-  permissions: string;
-  isActive?: boolean;
-  joinedAt?: string;
-  leftAt?: string | null;
+export type ProjectJamSubmission = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    title: string;
+    description?: string | null;
+    visibility: AccessLevel;
+    metadata?: ResourceMetadata;
+    tenant?: Tenant;
+    readonly isGlobal?: boolean;
+    localizations?: Array<ResourceLocalization> | null;
+    projectId?: string;
+    project?: Project;
+    jamId?: string;
+    jam?: Jam;
+    submittedAt?: string;
+    isEligible?: boolean;
+    submissionNotes?: string | null;
+    finalScore?: number | null;
+    ranking?: number | null;
+    hasAward?: boolean;
+    awardDetails?: string | null;
+    scores?: Array<JamScore> | null;
 };
 
-export type ProjectFeedbackReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataReadable;
-  tenant?: TenantReadable;
-  readonly isGlobal?: boolean;
-  localizations?: Array<ResourceLocalizationReadable> | null;
-  projectId?: string;
-  project?: ProjectReadable;
-  userId?: string;
-  user?: UserReadable;
-  rating?: number;
-  title: string;
-  content?: string | null;
-  categories?: string | null;
-  isFeatured?: boolean;
-  isVerified?: boolean;
-  status?: ContentStatus;
-  helpfulVotes?: number;
-  totalVotes?: number;
-  platform?: string | null;
-  projectVersion?: string | null;
+export type ProjectMetadata = {
+    id?: string;
+    project: Project;
+    projectId?: string;
+    viewCount?: number;
+    downloadCount?: number;
+    followerCount?: number;
 };
 
-export type ProjectFeedbackWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataWritable;
-  tenant?: TenantWritable;
-  localizations?: Array<ResourceLocalizationWritable> | null;
-  projectId?: string;
-  project?: ProjectWritable;
-  userId?: string;
-  user?: UserWritable;
-  rating?: number;
-  title: string;
-  content?: string | null;
-  categories?: string | null;
-  isFeatured?: boolean;
-  isVerified?: boolean;
-  status?: ContentStatus;
-  helpfulVotes?: number;
-  totalVotes?: number;
-  platform?: string | null;
-  projectVersion?: string | null;
-};
-
-export type ProjectFollowerReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataReadable;
-  tenant?: TenantReadable;
-  readonly isGlobal?: boolean;
-  localizations?: Array<ResourceLocalizationReadable> | null;
-  projectId?: string;
-  project?: ProjectReadable;
-  userId?: string;
-  user?: UserReadable;
-  followedAt?: string;
-  notificationSettings?: string | null;
-  emailNotifications?: boolean;
-  pushNotifications?: boolean;
-};
-
-export type ProjectFollowerWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataWritable;
-  tenant?: TenantWritable;
-  localizations?: Array<ResourceLocalizationWritable> | null;
-  projectId?: string;
-  project?: ProjectWritable;
-  userId?: string;
-  user?: UserWritable;
-  followedAt?: string;
-  notificationSettings?: string | null;
-  emailNotifications?: boolean;
-  pushNotifications?: boolean;
-};
-
-export type ProjectJamSubmissionReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataReadable;
-  tenant?: TenantReadable;
-  readonly isGlobal?: boolean;
-  localizations?: Array<ResourceLocalizationReadable> | null;
-  projectId?: string;
-  project?: ProjectReadable;
-  jamId?: string;
-  jam?: JamReadable;
-  submittedAt?: string;
-  isEligible?: boolean;
-  submissionNotes?: string | null;
-  finalScore?: number | null;
-  ranking?: number | null;
-  hasAward?: boolean;
-  awardDetails?: string | null;
-  scores?: Array<JamScoreReadable> | null;
-};
-
-export type ProjectJamSubmissionWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataWritable;
-  tenant?: TenantWritable;
-  localizations?: Array<ResourceLocalizationWritable> | null;
-  projectId?: string;
-  project?: ProjectWritable;
-  jamId?: string;
-  jam?: JamWritable;
-  submittedAt?: string;
-  isEligible?: boolean;
-  submissionNotes?: string | null;
-  finalScore?: number | null;
-  ranking?: number | null;
-  hasAward?: boolean;
-  awardDetails?: string | null;
-  scores?: Array<JamScoreWritable> | null;
-};
-
-export type ProjectMetadataReadable = {
-  id?: string;
-  project: ProjectReadable;
-  projectId?: string;
-  viewCount?: number;
-  downloadCount?: number;
-  followerCount?: number;
-};
-
-export type ProjectMetadataWritable = {
-  id?: string;
-  project: ProjectWritable;
-  projectId?: string;
-  viewCount?: number;
-  downloadCount?: number;
-  followerCount?: number;
-};
-
-export type ProjectReleaseReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataReadable;
-  tenant?: TenantReadable;
-  readonly isGlobal?: boolean;
-  localizations?: Array<ResourceLocalizationReadable> | null;
-  projectId?: string;
-  releaseVersion: string;
-  releasedAt?: string;
-  isLatest?: boolean;
-  isPrerelease?: boolean;
-  downloadUrl?: string | null;
-  fileSize?: number | null;
-  downloadCount?: number;
-  releaseNotes?: string | null;
-  checksum?: string | null;
-  systemRequirements?: string | null;
-  supportedPlatforms?: string | null;
-  releaseType?: string | null;
-  status?: ContentStatus;
-  buildNumber?: string | null;
-  releaseMetadata?: string | null;
-};
-
-export type ProjectReleaseWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataWritable;
-  tenant?: TenantWritable;
-  localizations?: Array<ResourceLocalizationWritable> | null;
-  projectId?: string;
-  releaseVersion: string;
-  releasedAt?: string;
-  isLatest?: boolean;
-  isPrerelease?: boolean;
-  downloadUrl?: string | null;
-  fileSize?: number | null;
-  downloadCount?: number;
-  releaseNotes?: string | null;
-  checksum?: string | null;
-  systemRequirements?: string | null;
-  supportedPlatforms?: string | null;
-  releaseType?: string | null;
-  status?: ContentStatus;
-  buildNumber?: string | null;
-  releaseMetadata?: string | null;
+export type ProjectRelease = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    title: string;
+    description?: string | null;
+    visibility: AccessLevel;
+    metadata?: ResourceMetadata;
+    tenant?: Tenant;
+    readonly isGlobal?: boolean;
+    localizations?: Array<ResourceLocalization> | null;
+    projectId?: string;
+    releaseVersion: string;
+    releasedAt?: string;
+    isLatest?: boolean;
+    isPrerelease?: boolean;
+    downloadUrl?: string | null;
+    fileSize?: number | null;
+    downloadCount?: number;
+    releaseNotes?: string | null;
+    checksum?: string | null;
+    systemRequirements?: string | null;
+    supportedPlatforms?: string | null;
+    releaseType?: string | null;
+    status?: ContentStatus;
+    buildNumber?: string | null;
+    releaseMetadata?: string | null;
 };
 
 export type ProjectStatistics = {
-  projectId?: string;
-  followerCount?: number;
-  feedbackCount?: number;
-  averageRating?: number | null;
-  totalDownloads?: number;
-  activeTeamCount?: number;
-  collaboratorCount?: number;
-  releaseCount?: number;
-  jamSubmissionCount?: number;
-  awardCount?: number;
-  viewsLast30Days?: number;
-  downloadsLast30Days?: number;
-  newFollowersLast30Days?: number;
-  calculatedAt?: string;
-  trendingScore?: number;
-  popularityRank?: number | null;
+    projectId?: string;
+    followerCount?: number;
+    feedbackCount?: number;
+    averageRating?: number | null;
+    totalDownloads?: number;
+    activeTeamCount?: number;
+    collaboratorCount?: number;
+    releaseCount?: number;
+    jamSubmissionCount?: number;
+    awardCount?: number;
+    viewsLast30Days?: number;
+    downloadsLast30Days?: number;
+    newFollowersLast30Days?: number;
+    calculatedAt?: string;
+    trendingScore?: number;
+    popularityRank?: number | null;
 };
 
-export type ProjectTeamReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataReadable;
-  tenant?: TenantReadable;
-  readonly isGlobal?: boolean;
-  localizations?: Array<ResourceLocalizationReadable> | null;
-  projectId?: string;
-  project?: ProjectReadable;
-  teamId?: string;
-  team?: TeamReadable;
-  role: string;
-  assignedAt?: string;
-  endedAt?: string | null;
-  isActive?: boolean;
-  permissions?: string | null;
-  notes?: string | null;
-  contributionPercentage?: number;
-};
-
-export type ProjectTeamWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataWritable;
-  tenant?: TenantWritable;
-  localizations?: Array<ResourceLocalizationWritable> | null;
-  projectId?: string;
-  project?: ProjectWritable;
-  teamId?: string;
-  team?: TeamWritable;
-  role: string;
-  assignedAt?: string;
-  endedAt?: string | null;
-  isActive?: boolean;
-  permissions?: string | null;
-  notes?: string | null;
-  contributionPercentage?: number;
+export type ProjectTeam = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    title: string;
+    description?: string | null;
+    visibility: AccessLevel;
+    metadata?: ResourceMetadata;
+    tenant?: Tenant;
+    readonly isGlobal?: boolean;
+    localizations?: Array<ResourceLocalization> | null;
+    projectId?: string;
+    project?: Project;
+    teamId?: string;
+    team?: Team;
+    role: string;
+    assignedAt?: string;
+    endedAt?: string | null;
+    isActive?: boolean;
+    permissions?: string | null;
+    notes?: string | null;
+    contributionPercentage?: number;
 };
 
 export type ProjectType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 99;
 
-export type ProjectVersionReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  project: ProjectReadable;
-  projectId?: string;
-  versionNumber: string;
-  releaseNotes?: string | null;
-  status: string;
-  downloadCount?: number;
-  createdBy: UserReadable;
-  createdById?: string;
+export type ProjectVersion = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    project: Project;
+    projectId?: string;
+    versionNumber: string;
+    releaseNotes?: string | null;
+    status: string;
+    downloadCount?: number;
+    createdBy: User;
+    createdById?: string;
 };
 
-export type ProjectVersionWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  project: ProjectWritable;
-  projectId?: string;
-  versionNumber: string;
-  releaseNotes?: string | null;
-  status: string;
-  downloadCount?: number;
-  createdBy: UserWritable;
-  createdById?: string;
-};
-
-export type PromoCodeReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  code: string;
-  name: string;
-  description?: string | null;
-  type?: PromoCodeType;
-  discountPercentage?: number | null;
-  discountAmount?: number | null;
-  currency?: string | null;
-  minimumOrderAmount?: number | null;
-  maxUses?: number | null;
-  maxUsesPerUser?: number | null;
-  validFrom?: string | null;
-  validUntil?: string | null;
-  isActive?: boolean;
-  productId?: string | null;
-  product?: ProductReadable;
-  createdBy: string;
-  createdByUser?: UserReadable;
-  promoCodeUses?: Array<PromoCodeUseReadable> | null;
-  financialTransactions?: Array<FinancialTransactionReadable> | null;
-};
-
-export type PromoCodeWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  code: string;
-  name: string;
-  description?: string | null;
-  type?: PromoCodeType;
-  discountPercentage?: number | null;
-  discountAmount?: number | null;
-  currency?: string | null;
-  minimumOrderAmount?: number | null;
-  maxUses?: number | null;
-  maxUsesPerUser?: number | null;
-  validFrom?: string | null;
-  validUntil?: string | null;
-  isActive?: boolean;
-  productId?: string | null;
-  product?: ProductWritable;
-  createdBy: string;
-  createdByUser?: UserWritable;
-  promoCodeUses?: Array<PromoCodeUseWritable> | null;
-  financialTransactions?: Array<FinancialTransactionWritable> | null;
+export type PromoCode = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    code: string;
+    name: string;
+    description?: string | null;
+    type?: PromoCodeType;
+    discountPercentage?: number | null;
+    discountAmount?: number | null;
+    currency?: string | null;
+    minimumOrderAmount?: number | null;
+    maxUses?: number | null;
+    maxUsesPerUser?: number | null;
+    validFrom?: string | null;
+    validUntil?: string | null;
+    isActive?: boolean;
+    productId?: string | null;
+    product?: Product;
+    createdBy: string;
+    createdByUser?: User;
+    promoCodeUses?: Array<PromoCodeUse> | null;
+    financialTransactions?: Array<FinancialTransaction> | null;
 };
 
 export type PromoCodeType = 0 | 1 | 2 | 3;
 
-export type PromoCodeUseReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  promoCodeId: string;
-  promoCode?: PromoCodeReadable;
-  userId: string;
-  user?: UserReadable;
-  financialTransactionId: string;
-  financialTransaction?: FinancialTransactionReadable;
-  discountApplied?: number;
+export type PromoCodeUse = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    promoCodeId: string;
+    promoCode?: PromoCode;
+    userId: string;
+    user?: User;
+    financialTransactionId: string;
+    financialTransaction?: FinancialTransaction;
+    discountApplied?: number;
 };
 
-export type PromoCodeUseWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  promoCodeId: string;
-  promoCode?: PromoCodeWritable;
-  userId: string;
-  user?: UserWritable;
-  financialTransactionId: string;
-  financialTransaction?: FinancialTransactionWritable;
-  discountApplied?: number;
-};
-
-export type PublishProjectResultReadable = {
-  success?: boolean;
-  project?: ProjectReadable;
-  error?: string | null;
-};
-
-export type PublishProjectResultWritable = {
-  success?: boolean;
-  project?: ProjectWritable;
-  error?: string | null;
+export type PublishProjectResult = {
+    success?: boolean;
+    project?: Project;
+    error?: string | null;
 };
 
 export type RateFeedbackQualityDto = {
-  quality?: FeedbackQuality;
+    quality?: FeedbackQuality;
 };
 
 export type RefreshTokenRequestDto = {
-  refreshToken?: string | null;
-  tenantId?: string | null;
+    refreshToken?: string | null;
+    tenantId?: string | null;
 };
 
 export type RefundPaymentRequest = {
-  refundAmount?: number | null;
-  reason?: string | null;
+    refundAmount?: number | null;
+    reason?: string | null;
 };
 
 export type RefundPaymentResult = {
-  success?: boolean;
-  refund?: PaymentRefund;
-  error?: string | null;
+    success?: boolean;
+    refund?: PaymentRefund;
+    error?: string | null;
 };
 
 export type RefundStatus = 0 | 1 | 2 | 3 | 4;
@@ -2823,233 +1901,170 @@ export type RefundStatus = 0 | 1 | 2 | 3 | 4;
 export type RegistrationType = 0 | 1;
 
 export type RejectProgramDto = {
-  reason?: string | null;
+    reason?: string | null;
 };
 
 export type ReorderContentDto = {
-  contentIds?: Array<string> | null;
+    contentIds?: Array<string> | null;
 };
 
 export type ReportFeedbackDto = {
-  reason?: string | null;
+    reason?: string | null;
 };
 
-export type ResourceLocalizationReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  resourceType: string;
-  language: LanguageReadable;
-  fieldName: string;
-  resourceId: string;
-  content: string;
-  isDefault?: boolean;
-  status?: LocalizationStatus;
+export type ResourceLocalization = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    resourceType: string;
+    language: Language;
+    fieldName: string;
+    resourceId: string;
+    content: string;
+    isDefault?: boolean;
+    status?: LocalizationStatus;
 };
 
-export type ResourceLocalizationWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  resourceType: string;
-  language: LanguageWritable;
-  fieldName: string;
-  resourceId: string;
-  content: string;
-  isDefault?: boolean;
-  status?: LocalizationStatus;
-};
-
-export type ResourceMetadataReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  resourceType: string;
-  additionalData?: string | null;
-  tags?: string | null;
-  seoMetadata?: string | null;
-};
-
-export type ResourceMetadataWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  resourceType: string;
-  additionalData?: string | null;
-  tags?: string | null;
-  seoMetadata?: string | null;
+export type ResourceMetadata = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    resourceType: string;
+    additionalData?: string | null;
+    tags?: string | null;
+    seoMetadata?: string | null;
 };
 
 export type RevenueAnalyticsDto = {
-  programId?: string;
-  totalRevenue?: number;
-  monthlyRevenue?: number;
-  totalPurchases?: number;
-  monthlyPurchases?: number;
-  averageRevenuePerUser?: number;
-  conversionRate?: number;
-  revenueChart?: Array<RevenueChartDto> | null;
+    programId?: string;
+    totalRevenue?: number;
+    monthlyRevenue?: number;
+    totalPurchases?: number;
+    monthlyPurchases?: number;
+    averageRevenuePerUser?: number;
+    conversionRate?: number;
+    revenueChart?: Array<RevenueChartDto> | null;
 };
 
 export type RevenueChartDto = {
-  date?: string;
-  revenue?: number;
-  purchases?: number;
+    date?: string;
+    revenue?: number;
+    purchases?: number;
 };
 
 export type RevenueDataPoint = {
-  date?: string;
-  revenue?: number;
-  netRevenue?: number;
-  transactionCount?: number;
-  averageTransactionValue?: number;
+    date?: string;
+    revenue?: number;
+    netRevenue?: number;
+    transactionCount?: number;
+    averageTransactionValue?: number;
 };
 
 export type RevenueReport = {
-  fromDate?: string;
-  toDate?: string;
-  totalRevenue?: number;
-  netRevenue?: number;
-  totalTransactions?: number;
-  dataPoints?: Array<RevenueDataPoint> | null;
+    fromDate?: string;
+    toDate?: string;
+    totalRevenue?: number;
+    netRevenue?: number;
+    totalTransactions?: number;
+    dataPoints?: Array<RevenueDataPoint> | null;
 };
 
 export type RevokeAchievementRequest = {
-  reason?: string | null;
+    reason?: string | null;
 };
 
 export type RevokeTokenRequestDto = {
-  refreshToken?: string | null;
+    refreshToken?: string | null;
 };
 
 export type ScheduleProgramDto = {
-  publishAt?: string;
+    publishAt?: string;
 };
 
 export type SearchContentDto = {
-  programId: string;
-  searchTerm: string;
-  type?: ProgramContentType;
-  visibility?: Visibility;
-  isRequired?: boolean | null;
-  parentId?: string | null;
+    programId: string;
+    searchTerm: string;
+    type?: ProgramContentType;
+    visibility?: Visibility;
+    isRequired?: boolean | null;
+    parentId?: string | null;
 };
 
-export type SessionRegistrationReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  sessionId?: string;
-  session?: TestingSessionReadable;
-  userId?: string;
-  user?: UserReadable;
-  registrationType: RegistrationType;
-  projectRole?: TeamRole;
-  registrationNotes?: string | null;
-  attendanceStatus: AttendanceStatus;
-  attendedAt?: string | null;
-};
-
-export type SessionRegistrationWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  sessionId?: string;
-  session?: TestingSessionWritable;
-  userId?: string;
-  user?: UserWritable;
-  registrationType: RegistrationType;
-  projectRole?: TeamRole;
-  registrationNotes?: string | null;
-  attendanceStatus: AttendanceStatus;
-  attendedAt?: string | null;
+export type SessionRegistration = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    sessionId?: string;
+    session?: TestingSession;
+    userId?: string;
+    user?: User;
+    registrationType: RegistrationType;
+    projectRole?: TeamRole;
+    registrationNotes?: string | null;
+    attendanceStatus: AttendanceStatus;
+    attendedAt?: string | null;
 };
 
 export type SessionRegistrationRequest = {
-  registrationType?: RegistrationType;
-  notes?: string | null;
+    registrationType?: RegistrationType;
+    notes?: string | null;
 };
 
 export type SessionStatus = 0 | 1 | 2 | 3;
 
-export type SessionWaitlistReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  sessionId?: string;
-  session?: TestingSessionReadable;
-  userId?: string;
-  user?: UserReadable;
-  registrationType: RegistrationType;
-  position: number;
-  registrationNotes?: string | null;
-};
-
-export type SessionWaitlistWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  sessionId?: string;
-  session?: TestingSessionWritable;
-  userId?: string;
-  user?: UserWritable;
-  registrationType: RegistrationType;
-  position: number;
-  registrationNotes?: string | null;
+export type SessionWaitlist = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    sessionId?: string;
+    session?: TestingSession;
+    userId?: string;
+    user?: User;
+    registrationType: RegistrationType;
+    position: number;
+    registrationNotes?: string | null;
 };
 
 export type SetPricingRequest = {
-  basePrice?: number;
-  currency?: string | null;
+    basePrice?: number;
+    currency?: string | null;
 };
 
 export type SignInResponseDto = {
-  accessToken?: string | null;
-  refreshToken?: string | null;
-  expires?: string;
-  user?: UserDto;
-  tenantId?: string | null;
-  availableTenants?: Array<TenantInfoDto> | null;
+    accessToken?: string | null;
+    refreshToken?: string | null;
+    expires?: string;
+    user?: UserDto;
+    tenantId?: string | null;
+    availableTenants?: Array<TenantInfoDto> | null;
 };
 
 export type SkillProficiencyLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -3057,1301 +2072,884 @@ export type SkillProficiencyLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export type SortDirection = 0 | 1;
 
 export type StartContentRequest = {
-  programUserId?: string;
-  contentId?: string;
+    programUserId?: string;
+    contentId?: string;
 };
 
 export type StudentSummaryDto = {
-  id?: string;
-  userDisplayName?: string | null;
-  userEmail?: string | null;
+    id?: string;
+    userDisplayName?: string | null;
+    userEmail?: string | null;
 };
 
 export type SubmitContentRequest = {
-  programUserId?: string;
-  contentId?: string;
-  submissionData?: string | null;
+    programUserId?: string;
+    contentId?: string;
+    submissionData?: string | null;
 };
 
 export type SubmitFeedbackDto = {
-  testingRequestId: string;
-  feedbackResponses: string;
-  overallRating?: number | null;
-  wouldRecommend?: boolean | null;
-  additionalNotes?: string | null;
-  sessionId?: string | null;
+    testingRequestId: string;
+    feedbackResponses: string;
+    overallRating?: number | null;
+    wouldRecommend?: boolean | null;
+    additionalNotes?: string | null;
+    sessionId?: string | null;
 };
 
 export type SubscriptionBillingInterval = 0 | 1 | 2 | 3;
 
 export type SubscriptionStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-export type TagProficiencyReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  name: string;
-  description?: string | null;
-  type?: TagType;
-  proficiencyLevel?: SkillProficiencyLevel;
-  color?: string | null;
-  icon?: string | null;
-  isActive?: boolean;
-  certificateTags?: Array<CertificateTagReadable> | null;
-};
-
-export type TagProficiencyWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  name: string;
-  description?: string | null;
-  type?: TagType;
-  proficiencyLevel?: SkillProficiencyLevel;
-  color?: string | null;
-  icon?: string | null;
-  isActive?: boolean;
-  certificateTags?: Array<CertificateTagWritable> | null;
+export type TagProficiency = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    name: string;
+    description?: string | null;
+    type?: TagType;
+    proficiencyLevel?: SkillProficiencyLevel;
+    color?: string | null;
+    icon?: string | null;
+    isActive?: boolean;
+    certificateTags?: Array<CertificateTag> | null;
 };
 
 export type TagType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-export type TeamReadable = {
-  id?: string;
-  name?: string | null;
-  description?: string | null;
-  members?: Array<TeamMemberReadable> | null;
+export type Team = {
+    id?: string;
+    name?: string | null;
+    description?: string | null;
+    members?: Array<TeamMember> | null;
 };
 
-export type TeamWritable = {
-  id?: string;
-  name?: string | null;
-  description?: string | null;
-  members?: Array<TeamMemberWritable> | null;
-};
-
-export type TeamMemberReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  teamId?: string;
-  userId?: string | null;
-  role?: TeamRole;
-  invitedBy?: string | null;
-  status?: MemberStatus;
-  team?: TeamReadable;
-};
-
-export type TeamMemberWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  teamId?: string;
-  userId?: string | null;
-  role?: TeamRole;
-  invitedBy?: string | null;
-  status?: MemberStatus;
-  team?: TeamWritable;
+export type TeamMember = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    teamId?: string;
+    userId?: string | null;
+    role?: TeamRole;
+    invitedBy?: string | null;
+    status?: MemberStatus;
+    team?: Team;
 };
 
 export type TeamRole = 0 | 1 | 2;
 
-export type TenantReadable = {
-  readonly isNew?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataReadable;
-  tenant?: TenantReadable;
-  readonly isGlobal?: boolean;
-  localizations?: Array<ResourceLocalizationReadable> | null;
-  name: string;
-  isActive?: boolean;
-  slug: string;
-  tenantPermissions?: Array<TenantPermissionReadable> | null;
+export type Tenant = {
+    readonly isNew?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    title: string;
+    description?: string | null;
+    visibility: AccessLevel;
+    metadata?: ResourceMetadata;
+    tenant?: Tenant;
+    readonly isGlobal?: boolean;
+    localizations?: Array<ResourceLocalization> | null;
+    name: string;
+    isActive?: boolean;
+    slug: string;
+    tenantPermissions?: Array<TenantPermission> | null;
 };
 
-export type TenantWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  title: string;
-  description?: string | null;
-  visibility: AccessLevel;
-  metadata?: ResourceMetadataWritable;
-  tenant?: TenantWritable;
-  localizations?: Array<ResourceLocalizationWritable> | null;
-  name: string;
-  isActive?: boolean;
-  slug: string;
-  tenantPermissions?: Array<TenantPermissionWritable> | null;
-};
-
-export type TenantDomainReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  topLevelDomain: string;
-  subdomain?: string | null;
-  isMainDomain?: boolean;
-  isSecondaryDomain?: boolean;
-  tenantId: string;
-  userGroupId?: string | null;
-  tenant?: TenantReadable;
-  userGroup?: TenantUserGroupReadable;
-  readonly fullDomainName?: string | null;
-  readonly domainType?: string | null;
-};
-
-export type TenantDomainWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  topLevelDomain: string;
-  subdomain?: string | null;
-  isMainDomain?: boolean;
-  isSecondaryDomain?: boolean;
-  tenantId: string;
-  userGroupId?: string | null;
-  tenant?: TenantWritable;
-  userGroup?: TenantUserGroupWritable;
+export type TenantDomain = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    topLevelDomain: string;
+    subdomain?: string | null;
+    isMainDomain?: boolean;
+    isSecondaryDomain?: boolean;
+    tenantId: string;
+    userGroupId?: string | null;
+    tenant?: Tenant;
+    userGroup?: TenantUserGroup;
+    readonly fullDomainName?: string | null;
+    readonly domainType?: string | null;
 };
 
 export type TenantInfoDto = {
-  id?: string;
-  name?: string | null;
-  isActive?: boolean;
+    id?: string;
+    name?: string | null;
+    isActive?: boolean;
 };
 
-export type TenantPermissionReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  permissionFlags1?: number;
-  permissionFlags2?: number;
-  userId?: string | null;
-  user?: UserReadable;
-  tenantId?: string | null;
-  tenant?: TenantReadable;
-  expiresAt?: string | null;
-  readonly isExpired?: boolean;
-  readonly isValid?: boolean;
-  readonly isDefaultPermission?: boolean;
-  readonly isGlobalDefaultPermission?: boolean;
-  readonly isUserPermission?: boolean;
-  contentTypePermissions?: Array<ContentTypePermissionReadable> | null;
-  readonly isActiveMembership?: boolean;
-};
-
-export type TenantPermissionWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  permissionFlags1?: number;
-  permissionFlags2?: number;
-  userId?: string | null;
-  user?: UserWritable;
-  tenantId?: string | null;
-  tenant?: TenantWritable;
-  expiresAt?: string | null;
-  contentTypePermissions?: Array<ContentTypePermissionWritable> | null;
+export type TenantPermission = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    permissionFlags1?: number;
+    permissionFlags2?: number;
+    userId?: string | null;
+    user?: User;
+    tenantId?: string | null;
+    tenant?: Tenant;
+    expiresAt?: string | null;
+    readonly isExpired?: boolean;
+    readonly isValid?: boolean;
+    readonly isDefaultPermission?: boolean;
+    readonly isGlobalDefaultPermission?: boolean;
+    readonly isUserPermission?: boolean;
+    contentTypePermissions?: Array<ContentTypePermission> | null;
+    readonly isActiveMembership?: boolean;
 };
 
 export type TenantSortField = 0 | 1 | 2 | 3 | 4 | 5;
 
 export type TenantStatistics = {
-  totalTenants?: number;
-  activeTenants?: number;
-  inactiveTenants?: number;
-  deletedTenants?: number;
-  oldestTenantCreatedAt?: string | null;
-  newestTenantCreatedAt?: string | null;
-  lastUpdatedAt?: string;
+    totalTenants?: number;
+    activeTenants?: number;
+    inactiveTenants?: number;
+    deletedTenants?: number;
+    oldestTenantCreatedAt?: string | null;
+    newestTenantCreatedAt?: string | null;
+    lastUpdatedAt?: string;
 };
 
-export type TenantUserGroupReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  name: string;
-  description?: string | null;
-  tenantId: string;
-  parentGroupId?: string | null;
-  isActive?: boolean;
-  isDefault?: boolean;
-  tenant?: TenantReadable;
-  parentGroup?: TenantUserGroupReadable;
-  subGroups?: Array<TenantUserGroupReadable> | null;
-  memberships?: Array<TenantUserGroupMembershipReadable> | null;
-  domains?: Array<TenantDomainReadable> | null;
-};
-
-export type TenantUserGroupWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  name: string;
-  description?: string | null;
-  tenantId: string;
-  parentGroupId?: string | null;
-  isActive?: boolean;
-  isDefault?: boolean;
-  tenant?: TenantWritable;
-  parentGroup?: TenantUserGroupWritable;
-  subGroups?: Array<TenantUserGroupWritable> | null;
-  memberships?: Array<TenantUserGroupMembershipWritable> | null;
-  domains?: Array<TenantDomainWritable> | null;
+export type TenantUserGroup = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    name: string;
+    description?: string | null;
+    tenantId: string;
+    parentGroupId?: string | null;
+    isActive?: boolean;
+    isDefault?: boolean;
+    tenant?: Tenant;
+    parentGroup?: TenantUserGroup;
+    subGroups?: Array<TenantUserGroup> | null;
+    memberships?: Array<TenantUserGroupMembership> | null;
+    domains?: Array<TenantDomain> | null;
 };
 
 export type TenantUserGroupDto = {
-  id?: string;
-  name?: string | null;
-  description?: string | null;
-  tenantId?: string;
-  parentGroupId?: string | null;
-  isActive?: boolean;
-  isDefault?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+    id?: string;
+    name?: string | null;
+    description?: string | null;
+    tenantId?: string;
+    parentGroupId?: string | null;
+    isActive?: boolean;
+    isDefault?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
 };
 
-export type TenantUserGroupMembershipReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  userId: string;
-  userGroupId: string;
-  joinedAt: string;
-  isAutoAssigned?: boolean;
-  user?: UserReadable;
-  userGroup?: TenantUserGroupReadable;
-};
-
-export type TenantUserGroupMembershipWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  userId: string;
-  userGroupId: string;
-  joinedAt: string;
-  isAutoAssigned?: boolean;
-  user?: UserWritable;
-  userGroup?: TenantUserGroupWritable;
+export type TenantUserGroupMembership = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    userId: string;
+    userGroupId: string;
+    joinedAt: string;
+    isAutoAssigned?: boolean;
+    user?: User;
+    userGroup?: TenantUserGroup;
 };
 
 export type TenantUserGroupMembershipDto = {
-  id?: string;
-  userId?: string;
-  userGroupId?: string;
-  groupId?: string;
-  joinedAt?: string;
-  isAutoAssigned?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+    id?: string;
+    userId?: string;
+    userGroupId?: string;
+    groupId?: string;
+    joinedAt?: string;
+    isAutoAssigned?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
 };
 
 export type TestingContext = 0 | 1;
 
-export type TestingFeedbackReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  testingRequestId?: string;
-  testingRequest?: TestingRequestReadable;
-  feedbackFormId?: string;
-  feedbackForm?: TestingFeedbackFormReadable;
-  userId?: string;
-  user?: UserReadable;
-  sessionId?: string | null;
-  session?: TestingSessionReadable;
-  testingContext: TestingContext;
-  feedbackData: string;
-  overallRating?: number | null;
-  wouldRecommend?: boolean | null;
-  additionalNotes?: string | null;
-  isReported?: boolean;
-  qualityRating?: FeedbackQuality;
-  reportReason?: string | null;
-  reportedByUserId?: string | null;
-  reportedByUser?: UserReadable;
-  reportedAt?: string | null;
+export type TestingFeedback = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    testingRequestId?: string;
+    testingRequest?: TestingRequest;
+    feedbackFormId?: string;
+    feedbackForm?: TestingFeedbackForm;
+    userId?: string;
+    user?: User;
+    sessionId?: string | null;
+    session?: TestingSession;
+    testingContext: TestingContext;
+    feedbackData: string;
+    overallRating?: number | null;
+    wouldRecommend?: boolean | null;
+    additionalNotes?: string | null;
+    isReported?: boolean;
+    qualityRating?: FeedbackQuality;
+    reportReason?: string | null;
+    reportedByUserId?: string | null;
+    reportedByUser?: User;
+    reportedAt?: string | null;
 };
 
-export type TestingFeedbackWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  testingRequestId?: string;
-  testingRequest?: TestingRequestWritable;
-  feedbackFormId?: string;
-  feedbackForm?: TestingFeedbackFormWritable;
-  userId?: string;
-  user?: UserWritable;
-  sessionId?: string | null;
-  session?: TestingSessionWritable;
-  testingContext: TestingContext;
-  feedbackData: string;
-  overallRating?: number | null;
-  wouldRecommend?: boolean | null;
-  additionalNotes?: string | null;
-  isReported?: boolean;
-  qualityRating?: FeedbackQuality;
-  reportReason?: string | null;
-  reportedByUserId?: string | null;
-  reportedByUser?: UserWritable;
-  reportedAt?: string | null;
+export type TestingFeedbackForm = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    testingRequestId: string;
+    formSchema: string;
+    isForOnline?: boolean;
+    isForSessions?: boolean;
 };
 
-export type TestingFeedbackFormReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  testingRequestId: string;
-  formSchema: string;
-  isForOnline?: boolean;
-  isForSessions?: boolean;
+export type TestingLocation = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    name: string;
+    description?: string | null;
+    address?: string | null;
+    maxTestersCapacity: number;
+    maxProjectsCapacity: number;
+    equipmentAvailable?: string | null;
+    status: LocationStatus;
 };
 
-export type TestingFeedbackFormWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  testingRequestId: string;
-  formSchema: string;
-  isForOnline?: boolean;
-  isForSessions?: boolean;
+export type TestingParticipant = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    testingRequestId?: string;
+    testingRequest?: TestingRequest;
+    userId?: string;
+    user?: User;
+    instructionsAcknowledged: boolean;
+    instructionsAcknowledgedAt?: string | null;
+    startedAt: string;
+    completedAt?: string | null;
 };
 
-export type TestingLocationReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  name: string;
-  description?: string | null;
-  address?: string | null;
-  maxTestersCapacity: number;
-  maxProjectsCapacity: number;
-  equipmentAvailable?: string | null;
-  status: LocationStatus;
-};
-
-export type TestingLocationWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  name: string;
-  description?: string | null;
-  address?: string | null;
-  maxTestersCapacity: number;
-  maxProjectsCapacity: number;
-  equipmentAvailable?: string | null;
-  status: LocationStatus;
-};
-
-export type TestingParticipantReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  testingRequestId?: string;
-  testingRequest?: TestingRequestReadable;
-  userId?: string;
-  user?: UserReadable;
-  instructionsAcknowledged: boolean;
-  instructionsAcknowledgedAt?: string | null;
-  startedAt: string;
-  completedAt?: string | null;
-};
-
-export type TestingParticipantWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  testingRequestId?: string;
-  testingRequest?: TestingRequestWritable;
-  userId?: string;
-  user?: UserWritable;
-  instructionsAcknowledged: boolean;
-  instructionsAcknowledgedAt?: string | null;
-  startedAt: string;
-  completedAt?: string | null;
-};
-
-export type TestingRequestReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  projectVersionId?: string;
-  projectVersion?: ProjectVersionReadable;
-  title: string;
-  description?: string | null;
-  downloadUrl?: string | null;
-  instructionsType: InstructionType;
-  instructionsContent?: string | null;
-  instructionsUrl?: string | null;
-  instructionsFileId?: string | null;
-  feedbackFormContent?: string | null;
-  maxTesters?: number | null;
-  currentTesterCount?: number;
-  startDate: string;
-  endDate: string;
-  status: TestingRequestStatus;
-  createdById?: string;
-  createdBy?: UserReadable;
-};
-
-export type TestingRequestWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  projectVersionId?: string;
-  projectVersion?: ProjectVersionWritable;
-  title: string;
-  description?: string | null;
-  downloadUrl?: string | null;
-  instructionsType: InstructionType;
-  instructionsContent?: string | null;
-  instructionsUrl?: string | null;
-  instructionsFileId?: string | null;
-  feedbackFormContent?: string | null;
-  maxTesters?: number | null;
-  currentTesterCount?: number;
-  startDate: string;
-  endDate: string;
-  status: TestingRequestStatus;
-  createdById?: string;
-  createdBy?: UserWritable;
+export type TestingRequest = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    projectVersionId?: string;
+    projectVersion?: ProjectVersion;
+    title: string;
+    description?: string | null;
+    downloadUrl?: string | null;
+    instructionsType: InstructionType;
+    instructionsContent?: string | null;
+    instructionsUrl?: string | null;
+    instructionsFileId?: string | null;
+    feedbackFormContent?: string | null;
+    maxTesters?: number | null;
+    currentTesterCount?: number;
+    startDate: string;
+    endDate: string;
+    status: TestingRequestStatus;
+    createdById?: string;
+    createdBy?: User;
 };
 
 export type TestingRequestStatus = 0 | 1 | 2 | 3 | 4;
 
-export type TestingSessionReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  testingRequestId?: string;
-  testingRequest?: TestingRequestReadable;
-  locationId?: string;
-  location?: TestingLocationReadable;
-  sessionName: string;
-  sessionDate: string;
-  startTime: string;
-  endTime: string;
-  maxTesters: number;
-  registeredTesterCount?: number;
-  registeredProjectMemberCount?: number;
-  registeredProjectCount?: number;
-  status: SessionStatus;
-  managerUserId?: string;
-  manager?: UserReadable;
-  createdById?: string;
-  createdBy?: UserReadable;
-};
-
-export type TestingSessionWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  testingRequestId?: string;
-  testingRequest?: TestingRequestWritable;
-  locationId?: string;
-  location?: TestingLocationWritable;
-  sessionName: string;
-  sessionDate: string;
-  startTime: string;
-  endTime: string;
-  maxTesters: number;
-  registeredTesterCount?: number;
-  registeredProjectMemberCount?: number;
-  registeredProjectCount?: number;
-  status: SessionStatus;
-  managerUserId?: string;
-  manager?: UserWritable;
-  createdById?: string;
-  createdBy?: UserWritable;
+export type TestingSession = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    testingRequestId?: string;
+    testingRequest?: TestingRequest;
+    locationId?: string;
+    location?: TestingLocation;
+    sessionName: string;
+    sessionDate: string;
+    startTime: string;
+    endTime: string;
+    maxTesters: number;
+    registeredTesterCount?: number;
+    registeredProjectMemberCount?: number;
+    registeredProjectCount?: number;
+    status: SessionStatus;
+    managerUserId?: string;
+    manager?: User;
+    createdById?: string;
+    createdBy?: User;
 };
 
 export type TransactionStatus = 0 | 1 | 2 | 3 | 4 | 5;
 
 export type TransactionType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-export type UnpublishProjectResultReadable = {
-  success?: boolean;
-  project?: ProjectReadable;
-  error?: string | null;
-};
-
-export type UnpublishProjectResultWritable = {
-  success?: boolean;
-  project?: ProjectWritable;
-  error?: string | null;
+export type UnpublishProjectResult = {
+    success?: boolean;
+    project?: Project;
+    error?: string | null;
 };
 
 export type UpdateAchievementCommand = {
-  achievementId?: string;
-  name?: string | null;
-  description?: string | null;
-  category?: string | null;
-  type?: string | null;
-  iconUrl?: string | null;
-  color?: string | null;
-  points?: number | null;
-  isActive?: boolean | null;
-  isSecret?: boolean | null;
-  isRepeatable?: boolean | null;
-  conditions?: string | null;
-  displayOrder?: number | null;
-  userId?: string;
+    achievementId?: string;
+    name?: string | null;
+    description?: string | null;
+    category?: string | null;
+    type?: string | null;
+    iconUrl?: string | null;
+    color?: string | null;
+    points?: number | null;
+    isActive?: boolean | null;
+    isSecret?: boolean | null;
+    isRepeatable?: boolean | null;
+    conditions?: string | null;
+    displayOrder?: number | null;
+    userId?: string;
 };
 
 export type UpdateAchievementProgressRequest = {
-  progressIncrement?: number;
-  context?: string | null;
-  autoAward?: boolean;
+    progressIncrement?: number;
+    context?: string | null;
+    autoAward?: boolean;
 };
 
 export type UpdateActivityGradeDto = {
-  grade?: number | null;
-  feedback?: string | null;
-  gradingDetails?: string | null;
+    grade?: number | null;
+    feedback?: string | null;
+    gradingDetails?: string | null;
 };
 
 export type UpdateAttendanceDto = {
-  userId?: string;
-  attendanceStatus?: AttendanceStatus;
+    userId?: string;
+    attendanceStatus?: AttendanceStatus;
 };
 
 export type UpdateContentDto = {
-  title?: string | null;
-  description?: string | null;
-  body?: string | null;
-  sortOrder?: number | null;
-  isRequired?: boolean | null;
-  estimatedMinutes?: number | null;
+    title?: string | null;
+    description?: string | null;
+    body?: string | null;
+    sortOrder?: number | null;
+    isRequired?: boolean | null;
+    estimatedMinutes?: number | null;
 };
 
 export type UpdateCredentialDto = {
-  type: string;
-  value: string;
-  metadata?: string | null;
-  expiresAt?: string | null;
-  isActive?: boolean;
+    type: string;
+    value: string;
+    metadata?: string | null;
+    expiresAt?: string | null;
+    isActive?: boolean;
 };
 
 export type UpdatePaymentMethodDto = {
-  paymentMethodId?: string;
+    paymentMethodId?: string;
 };
 
 export type UpdatePricingDto = {
-  price?: number | null;
-  currency?: string | null;
-  isSubscription?: boolean | null;
-  subscriptionDurationDays?: number | null;
+    price?: number | null;
+    currency?: string | null;
+    isSubscription?: boolean | null;
+    subscriptionDurationDays?: number | null;
 };
 
 export type UpdateProductCommand = {
-  productId?: string;
-  name?: string | null;
-  description?: string | null;
-  shortDescription?: string | null;
-  imageUrl?: string | null;
-  type?: ProductType;
-  isBundle?: boolean | null;
-  bundleItems?: Array<string> | null;
-  referralCommissionPercentage?: number | null;
-  maxAffiliateDiscount?: number | null;
-  affiliateCommissionPercentage?: number | null;
-  visibility?: AccessLevel;
-  status?: ContentStatus;
-  updatedBy?: string;
+    productId?: string;
+    name?: string | null;
+    description?: string | null;
+    shortDescription?: string | null;
+    imageUrl?: string | null;
+    type?: ProductType;
+    isBundle?: boolean | null;
+    bundleItems?: Array<string> | null;
+    referralCommissionPercentage?: number | null;
+    maxAffiliateDiscount?: number | null;
+    affiliateCommissionPercentage?: number | null;
+    visibility?: AccessLevel;
+    status?: ContentStatus;
+    updatedBy?: string;
 };
 
 export type UpdateProgramContentDto = {
-  id: string;
-  title?: string | null;
-  description?: string | null;
-  type?: ProgramContentType;
-  body?: string | null;
-  sortOrder?: number | null;
-  isRequired?: boolean | null;
-  gradingMethod?: GradingMethod;
-  maxPoints?: number | null;
-  estimatedMinutes?: number | null;
-  visibility?: Visibility;
+    id: string;
+    title?: string | null;
+    description?: string | null;
+    type?: ProgramContentType;
+    body?: string | null;
+    sortOrder?: number | null;
+    isRequired?: boolean | null;
+    gradingMethod?: GradingMethod;
+    maxPoints?: number | null;
+    estimatedMinutes?: number | null;
+    visibility?: Visibility;
 };
 
 export type UpdateProgramDto = {
-  title?: string | null;
-  description?: string | null;
-  thumbnail?: string | null;
+    title?: string | null;
+    description?: string | null;
+    thumbnail?: string | null;
 };
 
 export type UpdateProgressDto = {
-  status?: ProgressStatus;
-  lastAccessedAt?: string | null;
-  additionalData?: {
-    [key: string]: unknown;
-  } | null;
+    status?: ProgressStatus;
+    lastAccessedAt?: string | null;
+    additionalData?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type UpdateProgressRequest = {
-  programUserId?: string;
-  contentId?: string;
-  completionPercentage?: number;
+    programUserId?: string;
+    contentId?: string;
+    completionPercentage?: number;
 };
 
 export type UpdateProjectRequest = {
-  title?: string | null;
-  description?: string | null;
-  shortDescription?: string | null;
-  imageUrl?: string | null;
-  repositoryUrl?: string | null;
-  websiteUrl?: string | null;
-  downloadUrl?: string | null;
-  type?: ProjectType;
-  categoryId?: string | null;
-  visibility?: AccessLevel;
-  status?: ContentStatus;
-  tags?: Array<string> | null;
+    title?: string | null;
+    description?: string | null;
+    shortDescription?: string | null;
+    imageUrl?: string | null;
+    repositoryUrl?: string | null;
+    websiteUrl?: string | null;
+    downloadUrl?: string | null;
+    type?: ProjectType;
+    categoryId?: string | null;
+    visibility?: AccessLevel;
+    status?: ContentStatus;
+    tags?: Array<string> | null;
 };
 
-export type UpdateProjectResultReadable = {
-  success?: boolean;
-  project?: ProjectReadable;
-  error?: string | null;
-};
-
-export type UpdateProjectResultWritable = {
-  success?: boolean;
-  project?: ProjectWritable;
-  error?: string | null;
+export type UpdateProjectResult = {
+    success?: boolean;
+    project?: Project;
+    error?: string | null;
 };
 
 export type UpdateTenantDomainDto = {
-  topLevelDomain?: string | null;
-  subdomain?: string | null;
-  isMainDomain?: boolean | null;
-  isSecondaryDomain?: boolean | null;
-  userGroupId?: string | null;
+    topLevelDomain?: string | null;
+    subdomain?: string | null;
+    isMainDomain?: boolean | null;
+    isSecondaryDomain?: boolean | null;
+    userGroupId?: string | null;
 };
 
 export type UpdateTenantDto = {
-  name?: string | null;
-  description?: string | null;
-  slug?: string | null;
-  isActive?: boolean | null;
+    name?: string | null;
+    description?: string | null;
+    slug?: string | null;
+    isActive?: boolean | null;
 };
 
 export type UpdateTenantUserGroupDto = {
-  name?: string | null;
-  description?: string | null;
-  parentGroupId?: string | null;
-  isActive?: boolean | null;
-  isDefault?: boolean | null;
+    name?: string | null;
+    description?: string | null;
+    parentGroupId?: string | null;
+    isActive?: boolean | null;
+    isDefault?: boolean | null;
 };
 
 export type UpdateTimeSpentRequest = {
-  programUserId?: string;
-  contentId?: string;
-  additionalMinutes?: number;
+    programUserId?: string;
+    contentId?: string;
+    additionalMinutes?: number;
 };
 
 export type UpdateUserBalanceDto = {
-  balance?: number;
-  availableBalance?: number;
-  reason?: string | null;
-  expectedVersion?: number | null;
+    balance?: number;
+    availableBalance?: number;
+    reason?: string | null;
+    expectedVersion?: number | null;
 };
 
 export type UpdateUserDto = {
-  name?: string | null;
-  email?: string | null;
-  isActive?: boolean | null;
-  expectedVersion?: number | null;
+    name?: string | null;
+    email?: string | null;
+    isActive?: boolean | null;
+    expectedVersion?: number | null;
 };
 
 export type UpdateUserProfileDto = {
-  givenName?: string | null;
-  familyName?: string | null;
-  displayName?: string | null;
-  title?: string | null;
-  description?: string | null;
-  slug?: string | null;
-  tenantId?: string | null;
+    givenName?: string | null;
+    familyName?: string | null;
+    displayName?: string | null;
+    title?: string | null;
+    description?: string | null;
+    slug?: string | null;
+    tenantId?: string | null;
 };
 
-export type UserReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  name: string;
-  email: string;
-  isActive?: boolean;
-  balance?: number;
-  availableBalance?: number;
-  credentials?: Array<CredentialReadable> | null;
-  tenantPermissions?: Array<TenantPermissionReadable> | null;
-  contentTypePermissions?: Array<ContentTypePermissionReadable> | null;
+export type User = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    name: string;
+    email: string;
+    isActive?: boolean;
+    balance?: number;
+    availableBalance?: number;
+    credentials?: Array<Credential> | null;
+    tenantPermissions?: Array<TenantPermission> | null;
+    contentTypePermissions?: Array<ContentTypePermission> | null;
 };
 
-export type UserWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  name: string;
-  email: string;
-  isActive?: boolean;
-  balance?: number;
-  availableBalance?: number;
-  credentials?: Array<CredentialWritable> | null;
-  tenantPermissions?: Array<TenantPermissionWritable> | null;
-  contentTypePermissions?: Array<ContentTypePermissionWritable> | null;
-};
-
-export type UserAchievementReadable = {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  rowVersion?: string | null;
-  isDeleted?: boolean;
-  deletedAt?: string | null;
-  userId?: string;
-  user?: UserReadable;
-  achievementId?: string;
-  achievement?: AchievementReadable;
-  earnedAt?: string;
-  level?: number | null;
-  progress?: number;
-  maxProgress?: number;
-  isCompleted?: boolean;
-  isNotified?: boolean;
-  context?: string | null;
-  pointsEarned?: number;
-  tenantId?: string | null;
-  earnCount?: number;
-};
-
-export type UserAchievementWritable = {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  rowVersion?: string | null;
-  isDeleted?: boolean;
-  deletedAt?: string | null;
-  userId?: string;
-  user?: UserWritable;
-  achievementId?: string;
-  achievement?: AchievementWritable;
-  earnedAt?: string;
-  level?: number | null;
-  progress?: number;
-  maxProgress?: number;
-  isCompleted?: boolean;
-  isNotified?: boolean;
-  context?: string | null;
-  pointsEarned?: number;
-  tenantId?: string | null;
-  earnCount?: number;
+export type UserAchievement = {
+    id?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    rowVersion?: string | null;
+    isDeleted?: boolean;
+    deletedAt?: string | null;
+    userId?: string;
+    user?: User;
+    achievementId?: string;
+    achievement?: Achievement;
+    earnedAt?: string;
+    level?: number | null;
+    progress?: number;
+    maxProgress?: number;
+    isCompleted?: boolean;
+    isNotified?: boolean;
+    context?: string | null;
+    pointsEarned?: number;
+    tenantId?: string | null;
+    earnCount?: number;
 };
 
 export type UserAchievementDto = {
-  id?: string;
-  userId?: string;
-  achievementId?: string;
-  achievement?: AchievementDto;
-  earnedAt?: string;
-  level?: number | null;
-  progress?: number;
-  maxProgress?: number;
-  isCompleted?: boolean;
-  isNotified?: boolean;
-  context?: string | null;
-  pointsEarned?: number;
-  earnCount?: number;
+    id?: string;
+    userId?: string;
+    achievementId?: string;
+    achievement?: AchievementDto;
+    earnedAt?: string;
+    level?: number | null;
+    progress?: number;
+    maxProgress?: number;
+    isCompleted?: boolean;
+    isNotified?: boolean;
+    context?: string | null;
+    pointsEarned?: number;
+    earnCount?: number;
 };
 
-export type UserAchievementSummaryDtoReadable = {
-  userId?: string;
-  totalAchievements?: number;
-  totalPoints?: number;
-  completedAchievements?: number;
-  inProgressAchievements?: number;
-  recentAchievements?: Array<UserAchievementDto> | null;
-  nearCompletion?: Array<AchievementProgressDtoReadable> | null;
-  achievementsByCategory?: {
-    [key: string]: number;
-  } | null;
-};
-
-export type UserAchievementSummaryDtoWritable = {
-  userId?: string;
-  totalAchievements?: number;
-  totalPoints?: number;
-  completedAchievements?: number;
-  inProgressAchievements?: number;
-  recentAchievements?: Array<UserAchievementDto> | null;
-  nearCompletion?: Array<AchievementProgressDtoWritable> | null;
-  achievementsByCategory?: {
-    [key: string]: number;
-  } | null;
+export type UserAchievementSummaryDto = {
+    userId?: string;
+    totalAchievements?: number;
+    totalPoints?: number;
+    completedAchievements?: number;
+    inProgressAchievements?: number;
+    recentAchievements?: Array<UserAchievementDto> | null;
+    nearCompletion?: Array<AchievementProgressDto> | null;
+    achievementsByCategory?: {
+        [key: string]: number;
+    } | null;
 };
 
 export type UserAchievementsPageDto = {
-  userAchievements?: Array<UserAchievementDto> | null;
-  totalCount?: number;
-  pageNumber?: number;
-  pageSize?: number;
-  hasNextPage?: boolean;
-  hasPreviousPage?: boolean;
+    userAchievements?: Array<UserAchievementDto> | null;
+    totalCount?: number;
+    pageNumber?: number;
+    pageSize?: number;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
 };
 
-export type UserCertificateReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  userId: string;
-  certificateId: string;
-  programId?: string | null;
-  productId?: string | null;
-  programUserId?: string | null;
-  verificationCode: string;
-  finalGrade?: number | null;
-  metadata?: string | null;
-  status?: CertificateStatus;
-  issuedAt?: string;
-  expiresAt?: string | null;
-  revokedAt?: string | null;
-  revocationReason?: string | null;
-  user?: UserReadable;
-  certificate?: CertificateReadable;
-  program?: ProgramReadable;
-  product?: ProductReadable;
-  programUser?: ProgramUserReadable;
-  blockchainAnchors?: Array<CertificateBlockchainAnchorReadable> | null;
-};
-
-export type UserCertificateWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  userId: string;
-  certificateId: string;
-  programId?: string | null;
-  productId?: string | null;
-  programUserId?: string | null;
-  verificationCode: string;
-  finalGrade?: number | null;
-  metadata?: string | null;
-  status?: CertificateStatus;
-  issuedAt?: string;
-  expiresAt?: string | null;
-  revokedAt?: string | null;
-  revocationReason?: string | null;
-  user?: UserWritable;
-  certificate?: CertificateWritable;
-  program?: ProgramWritable;
-  product?: ProductWritable;
-  programUser?: ProgramUserWritable;
-  blockchainAnchors?: Array<CertificateBlockchainAnchorWritable> | null;
+export type UserCertificate = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    userId: string;
+    certificateId: string;
+    programId?: string | null;
+    productId?: string | null;
+    programUserId?: string | null;
+    verificationCode: string;
+    finalGrade?: number | null;
+    metadata?: string | null;
+    status?: CertificateStatus;
+    issuedAt?: string;
+    expiresAt?: string | null;
+    revokedAt?: string | null;
+    revocationReason?: string | null;
+    user?: User;
+    certificate?: Certificate;
+    program?: Program;
+    product?: Product;
+    programUser?: ProgramUser;
+    blockchainAnchors?: Array<CertificateBlockchainAnchor> | null;
 };
 
 export type UserDto = {
-  id?: string;
-  username?: string | null;
-  email?: string | null;
+    id?: string;
+    username?: string | null;
+    email?: string | null;
 };
 
-export type UserFinancialMethodReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  userId?: string;
-  type?: PaymentMethodType;
-  name: string;
-  externalId?: string | null;
-  lastFour?: string | null;
-  expiryMonth?: string | null;
-  expiryYear?: string | null;
-  brand?: string | null;
-  status?: PaymentMethodStatus;
-  isDefault?: boolean;
-  isActive?: boolean;
-  displayName?: string | null;
-  readonly lastFourDigits?: string | null;
-  user?: UserReadable;
+export type UserFinancialMethod = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    userId?: string;
+    type?: PaymentMethodType;
+    name: string;
+    externalId?: string | null;
+    lastFour?: string | null;
+    expiryMonth?: string | null;
+    expiryYear?: string | null;
+    brand?: string | null;
+    status?: PaymentMethodStatus;
+    isDefault?: boolean;
+    isActive?: boolean;
+    displayName?: string | null;
+    readonly lastFourDigits?: string | null;
+    user?: User;
 };
 
-export type UserFinancialMethodWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  userId?: string;
-  type?: PaymentMethodType;
-  name: string;
-  externalId?: string | null;
-  lastFour?: string | null;
-  expiryMonth?: string | null;
-  expiryYear?: string | null;
-  brand?: string | null;
-  status?: PaymentMethodStatus;
-  isDefault?: boolean;
-  isActive?: boolean;
-  displayName?: string | null;
-  user?: UserWritable;
-};
-
-export type UserProductReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  userId: string;
-  user?: UserReadable;
-  productId: string;
-  product?: ProductReadable;
-  subscriptionId?: string | null;
-  subscription?: UserSubscriptionReadable;
-  acquisitionType?: ProductAcquisitionType;
-  accessStatus?: ProductAccessStatus;
-  pricePaid?: number;
-  currency?: string | null;
-  accessStartDate?: string | null;
-  accessEndDate?: string | null;
-  giftedByUserId?: string | null;
-  giftedByUser?: UserReadable;
-};
-
-export type UserProductWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  userId: string;
-  user?: UserWritable;
-  productId: string;
-  product?: ProductWritable;
-  subscriptionId?: string | null;
-  subscription?: UserSubscriptionWritable;
-  acquisitionType?: ProductAcquisitionType;
-  accessStatus?: ProductAccessStatus;
-  pricePaid?: number;
-  currency?: string | null;
-  accessStartDate?: string | null;
-  accessEndDate?: string | null;
-  giftedByUserId?: string | null;
-  giftedByUser?: UserWritable;
+export type UserProduct = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    userId: string;
+    user?: User;
+    productId: string;
+    product?: Product;
+    subscriptionId?: string | null;
+    subscription?: UserSubscription;
+    acquisitionType?: ProductAcquisitionType;
+    accessStatus?: ProductAccessStatus;
+    pricePaid?: number;
+    currency?: string | null;
+    accessStartDate?: string | null;
+    accessEndDate?: string | null;
+    giftedByUserId?: string | null;
+    giftedByUser?: User;
 };
 
 export type UserProfileDto = {
-  id?: string;
-  email?: string | null;
-  username?: string | null;
-  givenName?: string | null;
-  familyName?: string | null;
-  displayName?: string | null;
-  title?: string | null;
-  description?: string | null;
-  isEmailVerified?: boolean;
-  createdAt?: string;
-  updatedAt?: string | null;
-  currentTenant?: TenantInfoDto;
-  availableTenants?: Array<TenantInfoDto> | null;
+    id?: string;
+    email?: string | null;
+    username?: string | null;
+    givenName?: string | null;
+    familyName?: string | null;
+    displayName?: string | null;
+    title?: string | null;
+    description?: string | null;
+    isEmailVerified?: boolean;
+    createdAt?: string;
+    updatedAt?: string | null;
+    currentTenant?: TenantInfoDto;
+    availableTenants?: Array<TenantInfoDto> | null;
 };
 
 export type UserProfileResponseDto = {
-  id?: string;
-  version?: number;
-  givenName?: string | null;
-  familyName?: string | null;
-  displayName?: string | null;
-  title?: string | null;
-  description?: string | null;
-  slug?: string | null;
-  tenantId?: string | null;
-  createdBy?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  isDeleted?: boolean;
+    id?: string;
+    version?: number;
+    givenName?: string | null;
+    familyName?: string | null;
+    displayName?: string | null;
+    title?: string | null;
+    description?: string | null;
+    slug?: string | null;
+    tenantId?: string | null;
+    createdBy?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    isDeleted?: boolean;
 };
 
 export type UserProgressDto = {
-  completionPercentage?: number;
-  lastAccessedAt?: string | null;
-  startedAt?: string | null;
-  completedAt?: string | null;
-  contentProgress?: Array<ContentProgressDto> | null;
+    completionPercentage?: number;
+    lastAccessedAt?: string | null;
+    startedAt?: string | null;
+    completedAt?: string | null;
+    contentProgress?: Array<ContentProgressDto> | null;
 };
 
 export type UserResponseDto = {
-  id?: string;
-  version?: number;
-  name?: string | null;
-  email?: string | null;
-  isActive?: boolean;
-  balance?: number;
-  availableBalance?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  isDeleted?: boolean;
-  activeSubscription?: UserSubscriptionSummaryDto;
-  role?: string | null;
-  subscriptionType?: string | null;
+    id?: string;
+    version?: number;
+    name?: string | null;
+    email?: string | null;
+    isActive?: boolean;
+    balance?: number;
+    availableBalance?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    isDeleted?: boolean;
+    activeSubscription?: UserSubscriptionSummaryDto;
+    role?: string | null;
+    subscriptionType?: string | null;
 };
 
-export type UserResponseDtoPagedResultReadable = {
-  items?: Array<UserResponseDto> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
-  readonly pageNumber?: number;
-  readonly totalPages?: number;
-  readonly hasNextPage?: boolean;
-  readonly hasPreviousPage?: boolean;
-};
-
-export type UserResponseDtoPagedResultWritable = {
-  items?: Array<UserResponseDto> | null;
-  totalCount?: number;
-  skip?: number;
-  take?: number;
+export type UserResponseDtoPagedResult = {
+    items?: Array<UserResponseDto> | null;
+    totalCount?: number;
+    skip?: number;
+    take?: number;
+    readonly pageNumber?: number;
+    readonly totalPages?: number;
+    readonly hasNextPage?: boolean;
+    readonly hasPreviousPage?: boolean;
 };
 
 export type UserSortField = 0 | 1 | 2 | 3 | 4 | 5;
 
 export type UserStatistics = {
-  totalUsers?: number;
-  activeUsers?: number;
-  inactiveUsers?: number;
-  deletedUsers?: number;
-  totalBalance?: number;
-  averageBalance?: number;
-  usersCreatedToday?: number;
-  usersCreatedThisWeek?: number;
-  usersCreatedThisMonth?: number;
+    totalUsers?: number;
+    activeUsers?: number;
+    inactiveUsers?: number;
+    deletedUsers?: number;
+    totalBalance?: number;
+    averageBalance?: number;
+    usersCreatedToday?: number;
+    usersCreatedThisWeek?: number;
+    usersCreatedThisMonth?: number;
 };
 
-export type UserSubscriptionReadable = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  tenant?: TenantReadable;
-  userId?: string;
-  subscriptionPlanId?: string;
-  status?: SubscriptionStatus;
-  externalSubscriptionId?: string | null;
-  currentPeriodStart?: string;
-  currentPeriodEnd?: string;
-  canceledAt?: string | null;
-  endsAt?: string | null;
-  trialEndsAt?: string | null;
-  lastPaymentAt?: string | null;
-  nextBillingAt?: string | null;
-  user?: UserReadable;
-  subscriptionPlan?: ProductSubscriptionPlanReadable;
-  userProducts?: Array<UserProductReadable> | null;
-};
-
-export type UserSubscriptionWritable = {
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  tenant?: TenantWritable;
-  userId?: string;
-  subscriptionPlanId?: string;
-  status?: SubscriptionStatus;
-  externalSubscriptionId?: string | null;
-  currentPeriodStart?: string;
-  currentPeriodEnd?: string;
-  canceledAt?: string | null;
-  endsAt?: string | null;
-  trialEndsAt?: string | null;
-  lastPaymentAt?: string | null;
-  nextBillingAt?: string | null;
-  user?: UserWritable;
-  subscriptionPlan?: ProductSubscriptionPlanWritable;
-  userProducts?: Array<UserProductWritable> | null;
+export type UserSubscription = {
+    readonly isNew?: boolean;
+    readonly isGlobal?: boolean;
+    readonly domainEvents?: Array<IDomainEvent> | null;
+    id?: string;
+    version?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    readonly isDeleted?: boolean;
+    tenant?: Tenant;
+    userId?: string;
+    subscriptionPlanId?: string;
+    status?: SubscriptionStatus;
+    externalSubscriptionId?: string | null;
+    currentPeriodStart?: string;
+    currentPeriodEnd?: string;
+    canceledAt?: string | null;
+    endsAt?: string | null;
+    trialEndsAt?: string | null;
+    lastPaymentAt?: string | null;
+    nextBillingAt?: string | null;
+    user?: User;
+    subscriptionPlan?: ProductSubscriptionPlan;
+    userProducts?: Array<UserProduct> | null;
 };
 
 export type UserSubscriptionSummaryDto = {
-  id?: string;
-  status?: SubscriptionStatus;
-  planName?: string | null;
-  currentPeriodStart?: string;
-  currentPeriodEnd?: string;
-  trialEndsAt?: string | null;
-  nextBillingAt?: string | null;
-  isTrialActive?: boolean;
-  isActive?: boolean;
+    id?: string;
+    status?: SubscriptionStatus;
+    planName?: string | null;
+    currentPeriodStart?: string;
+    currentPeriodEnd?: string;
+    trialEndsAt?: string | null;
+    nextBillingAt?: string | null;
+    isTrialActive?: boolean;
+    isActive?: boolean;
 };
 
 export type VerificationMethod = 0 | 1 | 2;
@@ -4359,5521 +2957,5466 @@ export type VerificationMethod = 0 | 1 | 2;
 export type Visibility = 0 | 1 | 2;
 
 export type GetApiAchievementsLeaderboardData = {
-  body?: never;
-  path?: never;
-  query?: {
-    category?: string;
-    limit?: number;
-    orderBy?: string;
-    timeFrame?: string;
-  };
-  url: '/api/achievements/leaderboard';
+    body?: never;
+    path?: never;
+    query?: {
+        category?: string;
+        limit?: number;
+        orderBy?: string;
+        timeFrame?: string;
+    };
+    url: '/api/achievements/leaderboard';
 };
 
 export type GetApiAchievementsLeaderboardResponses = {
-  /**
-   * OK
-   */
-  200: Array<UserAchievementSummaryDtoReadable>;
+    /**
+     * OK
+     */
+    200: Array<UserAchievementSummaryDto>;
 };
 
 export type GetApiAchievementsLeaderboardResponse = GetApiAchievementsLeaderboardResponses[keyof GetApiAchievementsLeaderboardResponses];
 
 export type GetApiAchievementsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    pageNumber?: number;
-    pageSize?: number;
-    category?: string;
-    type?: string;
-    isActive?: boolean;
-    isSecret?: boolean;
-    includeSecrets?: boolean;
-    searchTerm?: string;
-    orderBy?: string;
-    descending?: boolean;
-    tenantId?: string;
-  };
-  url: '/api/Achievements';
+    body?: never;
+    path?: never;
+    query?: {
+        pageNumber?: number;
+        pageSize?: number;
+        category?: string;
+        type?: string;
+        isActive?: boolean;
+        isSecret?: boolean;
+        includeSecrets?: boolean;
+        searchTerm?: string;
+        orderBy?: string;
+        descending?: boolean;
+        tenantId?: string;
+    };
+    url: '/api/achievements';
 };
 
 export type GetApiAchievementsResponses = {
-  /**
-   * OK
-   */
-  200: AchievementsPageDto;
+    /**
+     * OK
+     */
+    200: AchievementsPageDto;
 };
 
 export type GetApiAchievementsResponse = GetApiAchievementsResponses[keyof GetApiAchievementsResponses];
 
 export type PostApiAchievementsData = {
-  body?: CreateAchievementCommand;
-  path?: never;
-  query?: never;
-  url: '/api/Achievements';
+    body?: CreateAchievementCommand;
+    path?: never;
+    query?: never;
+    url: '/api/achievements';
 };
 
 export type PostApiAchievementsResponses = {
-  /**
-   * OK
-   */
-  200: AchievementReadable;
+    /**
+     * OK
+     */
+    200: Achievement;
 };
 
 export type PostApiAchievementsResponse = PostApiAchievementsResponses[keyof PostApiAchievementsResponses];
 
 export type DeleteApiAchievementsByAchievementIdData = {
-  body?: never;
-  path: {
-    achievementId: string;
-  };
-  query?: never;
-  url: '/api/Achievements/{achievementId}';
+    body?: never;
+    path: {
+        achievementId: string;
+    };
+    query?: never;
+    url: '/api/achievements/{achievementId}';
 };
 
 export type DeleteApiAchievementsByAchievementIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiAchievementsByAchievementIdData = {
-  body?: never;
-  path: {
-    achievementId: string;
-  };
-  query?: {
-    includeLevels?: boolean;
-    includePrerequisites?: boolean;
-  };
-  url: '/api/Achievements/{achievementId}';
+    body?: never;
+    path: {
+        achievementId: string;
+    };
+    query?: {
+        includeLevels?: boolean;
+        includePrerequisites?: boolean;
+    };
+    url: '/api/achievements/{achievementId}';
 };
 
 export type GetApiAchievementsByAchievementIdResponses = {
-  /**
-   * OK
-   */
-  200: AchievementReadable;
+    /**
+     * OK
+     */
+    200: Achievement;
 };
 
 export type GetApiAchievementsByAchievementIdResponse = GetApiAchievementsByAchievementIdResponses[keyof GetApiAchievementsByAchievementIdResponses];
 
 export type PutApiAchievementsByAchievementIdData = {
-  body?: UpdateAchievementCommand;
-  path: {
-    achievementId: string;
-  };
-  query?: never;
-  url: '/api/Achievements/{achievementId}';
+    body?: UpdateAchievementCommand;
+    path: {
+        achievementId: string;
+    };
+    query?: never;
+    url: '/api/achievements/{achievementId}';
 };
 
 export type PutApiAchievementsByAchievementIdResponses = {
-  /**
-   * OK
-   */
-  200: AchievementReadable;
+    /**
+     * OK
+     */
+    200: Achievement;
 };
 
 export type PutApiAchievementsByAchievementIdResponse = PutApiAchievementsByAchievementIdResponses[keyof PutApiAchievementsByAchievementIdResponses];
 
 export type PostApiAchievementsByAchievementIdAwardData = {
-  body?: AwardAchievementRequest;
-  path: {
-    achievementId: string;
-  };
-  query?: never;
-  url: '/api/Achievements/{achievementId}/award';
+    body?: AwardAchievementRequest;
+    path: {
+        achievementId: string;
+    };
+    query?: never;
+    url: '/api/achievements/{achievementId}/award';
 };
 
 export type PostApiAchievementsByAchievementIdAwardResponses = {
-  /**
-   * OK
-   */
-  200: UserAchievementReadable;
+    /**
+     * OK
+     */
+    200: UserAchievement;
 };
 
-export type PostApiAchievementsByAchievementIdAwardResponse =
-  PostApiAchievementsByAchievementIdAwardResponses[keyof PostApiAchievementsByAchievementIdAwardResponses];
+export type PostApiAchievementsByAchievementIdAwardResponse = PostApiAchievementsByAchievementIdAwardResponses[keyof PostApiAchievementsByAchievementIdAwardResponses];
 
 export type PostApiAchievementsByAchievementIdBulkAwardData = {
-  body?: BulkAwardAchievementRequest;
-  path: {
-    achievementId: string;
-  };
-  query?: never;
-  url: '/api/Achievements/{achievementId}/bulk-award';
+    body?: BulkAwardAchievementRequest;
+    path: {
+        achievementId: string;
+    };
+    query?: never;
+    url: '/api/achievements/{achievementId}/bulk-award';
 };
 
 export type PostApiAchievementsByAchievementIdBulkAwardResponses = {
-  /**
-   * OK
-   */
-  200: Array<UserAchievementReadable>;
+    /**
+     * OK
+     */
+    200: Array<UserAchievement>;
 };
 
-export type PostApiAchievementsByAchievementIdBulkAwardResponse =
-  PostApiAchievementsByAchievementIdBulkAwardResponses[keyof PostApiAchievementsByAchievementIdBulkAwardResponses];
+export type PostApiAchievementsByAchievementIdBulkAwardResponse = PostApiAchievementsByAchievementIdBulkAwardResponses[keyof PostApiAchievementsByAchievementIdBulkAwardResponses];
 
 export type GetApiAchievementsByAchievementIdStatisticsData = {
-  body?: never;
-  path: {
-    achievementId: string;
-  };
-  query?: never;
-  url: '/api/Achievements/{achievementId}/statistics';
+    body?: never;
+    path: {
+        achievementId: string;
+    };
+    query?: never;
+    url: '/api/achievements/{achievementId}/statistics';
 };
 
 export type GetApiAchievementsByAchievementIdStatisticsResponses = {
-  /**
-   * OK
-   */
-  200: AchievementStatisticsDto;
+    /**
+     * OK
+     */
+    200: AchievementStatisticsDto;
 };
 
-export type GetApiAchievementsByAchievementIdStatisticsResponse =
-  GetApiAchievementsByAchievementIdStatisticsResponses[keyof GetApiAchievementsByAchievementIdStatisticsResponses];
+export type GetApiAchievementsByAchievementIdStatisticsResponse = GetApiAchievementsByAchievementIdStatisticsResponses[keyof GetApiAchievementsByAchievementIdStatisticsResponses];
 
 export type GetApiAchievementsStatisticsData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/Achievements/statistics';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/achievements/statistics';
 };
 
 export type GetApiAchievementsStatisticsResponses = {
-  /**
-   * OK
-   */
-  200: AchievementStatisticsDto;
+    /**
+     * OK
+     */
+    200: AchievementStatisticsDto;
 };
 
 export type GetApiAchievementsStatisticsResponse = GetApiAchievementsStatisticsResponses[keyof GetApiAchievementsStatisticsResponses];
 
 export type PostApiProgramsByProgramIdActivityGradesData = {
-  body?: CreateActivityGradeDto;
-  path: {
-    programId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/activity-grades';
+    body?: CreateActivityGradeDto;
+    path: {
+        programId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/activity-grades';
 };
 
 export type PostApiProgramsByProgramIdActivityGradesResponses = {
-  /**
-   * OK
-   */
-  200: ActivityGradeDtoReadable;
+    /**
+     * OK
+     */
+    200: ActivityGradeDto;
 };
 
-export type PostApiProgramsByProgramIdActivityGradesResponse =
-  PostApiProgramsByProgramIdActivityGradesResponses[keyof PostApiProgramsByProgramIdActivityGradesResponses];
+export type PostApiProgramsByProgramIdActivityGradesResponse = PostApiProgramsByProgramIdActivityGradesResponses[keyof PostApiProgramsByProgramIdActivityGradesResponses];
 
 export type GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdData = {
-  body?: never;
-  path: {
-    programId: string;
-    contentInteractionId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/activity-grades/interaction/{contentInteractionId}';
+    body?: never;
+    path: {
+        programId: string;
+        contentInteractionId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/activity-grades/interaction/{contentInteractionId}';
 };
 
 export type GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponses = {
-  /**
-   * OK
-   */
-  200: ActivityGradeDtoReadable;
+    /**
+     * OK
+     */
+    200: ActivityGradeDto;
 };
 
-export type GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponse =
-  GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponses[keyof GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponses];
+export type GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponse = GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponses[keyof GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponses];
 
 export type GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdData = {
-  body?: never;
-  path: {
-    programId: string;
-    graderProgramUserId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/activity-grades/grader/{graderProgramUserId}';
+    body?: never;
+    path: {
+        programId: string;
+        graderProgramUserId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/activity-grades/grader/{graderProgramUserId}';
 };
 
 export type GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<ActivityGradeDtoReadable>;
+    /**
+     * OK
+     */
+    200: Array<ActivityGradeDto>;
 };
 
-export type GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponse =
-  GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponses[keyof GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponses];
+export type GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponse = GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponses[keyof GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponses];
 
 export type GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdData = {
-  body?: never;
-  path: {
-    programId: string;
-    programUserId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/activity-grades/student/{programUserId}';
+    body?: never;
+    path: {
+        programId: string;
+        programUserId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/activity-grades/student/{programUserId}';
 };
 
 export type GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<ActivityGradeDtoReadable>;
+    /**
+     * OK
+     */
+    200: Array<ActivityGradeDto>;
 };
 
-export type GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponse =
-  GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses[keyof GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses];
+export type GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponse = GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses[keyof GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses];
 
 export type DeleteApiProgramsByProgramIdActivityGradesByGradeIdData = {
-  body?: never;
-  path: {
-    programId: string;
-    gradeId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/activity-grades/{gradeId}';
+    body?: never;
+    path: {
+        programId: string;
+        gradeId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/activity-grades/{gradeId}';
 };
 
 export type DeleteApiProgramsByProgramIdActivityGradesByGradeIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PutApiProgramsByProgramIdActivityGradesByGradeIdData = {
-  body?: UpdateActivityGradeDto;
-  path: {
-    programId: string;
-    gradeId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/activity-grades/{gradeId}';
+    body?: UpdateActivityGradeDto;
+    path: {
+        programId: string;
+        gradeId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/activity-grades/{gradeId}';
 };
 
 export type PutApiProgramsByProgramIdActivityGradesByGradeIdResponses = {
-  /**
-   * OK
-   */
-  200: ActivityGradeDtoReadable;
+    /**
+     * OK
+     */
+    200: ActivityGradeDto;
 };
 
-export type PutApiProgramsByProgramIdActivityGradesByGradeIdResponse =
-  PutApiProgramsByProgramIdActivityGradesByGradeIdResponses[keyof PutApiProgramsByProgramIdActivityGradesByGradeIdResponses];
+export type PutApiProgramsByProgramIdActivityGradesByGradeIdResponse = PutApiProgramsByProgramIdActivityGradesByGradeIdResponses[keyof PutApiProgramsByProgramIdActivityGradesByGradeIdResponses];
 
 export type GetApiProgramsByProgramIdActivityGradesPendingData = {
-  body?: never;
-  path: {
-    programId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/activity-grades/pending';
+    body?: never;
+    path: {
+        programId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/activity-grades/pending';
 };
 
 export type GetApiProgramsByProgramIdActivityGradesPendingResponses = {
-  /**
-   * OK
-   */
-  200: Array<ContentInteractionDtoReadable>;
+    /**
+     * OK
+     */
+    200: Array<ContentInteractionDto>;
 };
 
-export type GetApiProgramsByProgramIdActivityGradesPendingResponse =
-  GetApiProgramsByProgramIdActivityGradesPendingResponses[keyof GetApiProgramsByProgramIdActivityGradesPendingResponses];
+export type GetApiProgramsByProgramIdActivityGradesPendingResponse = GetApiProgramsByProgramIdActivityGradesPendingResponses[keyof GetApiProgramsByProgramIdActivityGradesPendingResponses];
 
 export type GetApiProgramsByProgramIdActivityGradesStatisticsData = {
-  body?: never;
-  path: {
-    programId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/activity-grades/statistics';
+    body?: never;
+    path: {
+        programId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/activity-grades/statistics';
 };
 
 export type GetApiProgramsByProgramIdActivityGradesStatisticsResponses = {
-  /**
-   * OK
-   */
-  200: GradeStatisticsDtoReadable;
+    /**
+     * OK
+     */
+    200: GradeStatisticsDto;
 };
 
-export type GetApiProgramsByProgramIdActivityGradesStatisticsResponse =
-  GetApiProgramsByProgramIdActivityGradesStatisticsResponses[keyof GetApiProgramsByProgramIdActivityGradesStatisticsResponses];
+export type GetApiProgramsByProgramIdActivityGradesStatisticsResponse = GetApiProgramsByProgramIdActivityGradesStatisticsResponses[keyof GetApiProgramsByProgramIdActivityGradesStatisticsResponses];
 
 export type GetApiProgramsByProgramIdActivityGradesContentByContentIdData = {
-  body?: never;
-  path: {
-    programId: string;
-    contentId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/activity-grades/content/{contentId}';
+    body?: never;
+    path: {
+        programId: string;
+        contentId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/activity-grades/content/{contentId}';
 };
 
 export type GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<ActivityGradeDtoReadable>;
+    /**
+     * OK
+     */
+    200: Array<ActivityGradeDto>;
 };
 
-export type GetApiProgramsByProgramIdActivityGradesContentByContentIdResponse =
-  GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses[keyof GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses];
+export type GetApiProgramsByProgramIdActivityGradesContentByContentIdResponse = GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses[keyof GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses];
 
 export type PostApiAuthSignupData = {
-  body?: LocalSignUpRequestDto;
-  path?: never;
-  query?: never;
-  url: '/api/Auth/signup';
+    body?: LocalSignUpRequestDto;
+    path?: never;
+    query?: never;
+    url: '/api/auth/signup';
 };
 
 export type PostApiAuthSignupErrors = {
-  /**
-   * Bad Request
-   */
-  400: ProblemDetails;
-  /**
-   * Conflict
-   */
-  409: ProblemDetails;
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
 };
 
 export type PostApiAuthSignupError = PostApiAuthSignupErrors[keyof PostApiAuthSignupErrors];
 
 export type PostApiAuthSignupResponses = {
-  /**
-   * Created
-   */
-  201: SignInResponseDto;
+    /**
+     * Created
+     */
+    201: SignInResponseDto;
 };
 
 export type PostApiAuthSignupResponse = PostApiAuthSignupResponses[keyof PostApiAuthSignupResponses];
 
 export type PostApiAuthSigninData = {
-  body?: LocalSignInRequestDto;
-  path?: never;
-  query?: never;
-  url: '/api/Auth/signin';
+    body?: LocalSignInRequestDto;
+    path?: never;
+    query?: never;
+    url: '/api/auth/signin';
 };
 
 export type PostApiAuthSigninErrors = {
-  /**
-   * Bad Request
-   */
-  400: ProblemDetails;
-  /**
-   * Unauthorized
-   */
-  401: ProblemDetails;
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: ProblemDetails;
 };
 
 export type PostApiAuthSigninError = PostApiAuthSigninErrors[keyof PostApiAuthSigninErrors];
 
 export type PostApiAuthSigninResponses = {
-  /**
-   * OK
-   */
-  200: SignInResponseDto;
+    /**
+     * OK
+     */
+    200: SignInResponseDto;
 };
 
 export type PostApiAuthSigninResponse = PostApiAuthSigninResponses[keyof PostApiAuthSigninResponses];
 
 export type PostApiAuthGoogleIdTokenData = {
-  body?: GoogleIdTokenRequestDto;
-  path?: never;
-  query?: never;
-  url: '/api/Auth/google/id-token';
+    body?: GoogleIdTokenRequestDto;
+    path?: never;
+    query?: never;
+    url: '/api/auth/google/id-token';
 };
 
 export type PostApiAuthGoogleIdTokenErrors = {
-  /**
-   * Bad Request
-   */
-  400: ProblemDetails;
-  /**
-   * Unauthorized
-   */
-  401: ProblemDetails;
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: ProblemDetails;
 };
 
 export type PostApiAuthGoogleIdTokenError = PostApiAuthGoogleIdTokenErrors[keyof PostApiAuthGoogleIdTokenErrors];
 
 export type PostApiAuthGoogleIdTokenResponses = {
-  /**
-   * OK
-   */
-  200: SignInResponseDto;
+    /**
+     * OK
+     */
+    200: SignInResponseDto;
 };
 
 export type PostApiAuthGoogleIdTokenResponse = PostApiAuthGoogleIdTokenResponses[keyof PostApiAuthGoogleIdTokenResponses];
 
 export type PostApiAuthRefreshData = {
-  body?: RefreshTokenRequestDto;
-  path?: never;
-  query?: never;
-  url: '/api/Auth/refresh';
+    body?: RefreshTokenRequestDto;
+    path?: never;
+    query?: never;
+    url: '/api/auth/refresh';
 };
 
 export type PostApiAuthRefreshErrors = {
-  /**
-   * Bad Request
-   */
-  400: ProblemDetails;
-  /**
-   * Unauthorized
-   */
-  401: ProblemDetails;
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: ProblemDetails;
 };
 
 export type PostApiAuthRefreshError = PostApiAuthRefreshErrors[keyof PostApiAuthRefreshErrors];
 
 export type PostApiAuthRefreshResponses = {
-  /**
-   * OK
-   */
-  200: SignInResponseDto;
+    /**
+     * OK
+     */
+    200: SignInResponseDto;
 };
 
 export type PostApiAuthRefreshResponse = PostApiAuthRefreshResponses[keyof PostApiAuthRefreshResponses];
 
 export type PostApiAuthRevokeData = {
-  body?: RevokeTokenRequestDto;
-  path?: never;
-  query?: never;
-  url: '/api/Auth/revoke';
+    body?: RevokeTokenRequestDto;
+    path?: never;
+    query?: never;
+    url: '/api/auth/revoke';
 };
 
 export type PostApiAuthRevokeErrors = {
-  /**
-   * Bad Request
-   */
-  400: ProblemDetails;
-  /**
-   * Unauthorized
-   */
-  401: ProblemDetails;
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: ProblemDetails;
 };
 
 export type PostApiAuthRevokeError = PostApiAuthRevokeErrors[keyof PostApiAuthRevokeErrors];
 
 export type PostApiAuthRevokeResponses = {
-  /**
-   * No Content
-   */
-  204: void;
+    /**
+     * No Content
+     */
+    204: void;
 };
 
 export type PostApiAuthRevokeResponse = PostApiAuthRevokeResponses[keyof PostApiAuthRevokeResponses];
 
 export type GetApiAuthProfileData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/Auth/profile';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/auth/profile';
 };
 
 export type GetApiAuthProfileErrors = {
-  /**
-   * Unauthorized
-   */
-  401: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: ProblemDetails;
 };
 
 export type GetApiAuthProfileError = GetApiAuthProfileErrors[keyof GetApiAuthProfileErrors];
 
 export type GetApiAuthProfileResponses = {
-  /**
-   * OK
-   */
-  200: UserProfileDto;
+    /**
+     * OK
+     */
+    200: UserProfileDto;
 };
 
 export type GetApiAuthProfileResponse = GetApiAuthProfileResponses[keyof GetApiAuthProfileResponses];
 
-export type PostApiContentInteractionStartData = {
-  body?: StartContentRequest;
-  path?: never;
-  query?: {
-    programId?: string;
-  };
-  url: '/api/ContentInteraction/start';
+export type PostApiContentinteractionStartData = {
+    body?: StartContentRequest;
+    path?: never;
+    query?: {
+        programId?: string;
+    };
+    url: '/api/contentinteraction/start';
 };
 
-export type PostApiContentInteractionStartResponses = {
-  /**
-   * OK
-   */
-  200: ContentInteractionDtoReadable;
+export type PostApiContentinteractionStartResponses = {
+    /**
+     * OK
+     */
+    200: ContentInteractionDto;
 };
 
-export type PostApiContentInteractionStartResponse = PostApiContentInteractionStartResponses[keyof PostApiContentInteractionStartResponses];
+export type PostApiContentinteractionStartResponse = PostApiContentinteractionStartResponses[keyof PostApiContentinteractionStartResponses];
 
-export type PutApiContentInteractionByInteractionIdProgressData = {
-  body?: UpdateProgressRequest;
-  path: {
-    interactionId: string;
-  };
-  query?: {
-    programId?: string;
-  };
-  url: '/api/ContentInteraction/{interactionId}/progress';
+export type PutApiContentinteractionByInteractionIdProgressData = {
+    body?: UpdateProgressRequest;
+    path: {
+        interactionId: string;
+    };
+    query?: {
+        programId?: string;
+    };
+    url: '/api/contentinteraction/{interactionId}/progress';
 };
 
-export type PutApiContentInteractionByInteractionIdProgressResponses = {
-  /**
-   * OK
-   */
-  200: ContentInteractionDtoReadable;
+export type PutApiContentinteractionByInteractionIdProgressResponses = {
+    /**
+     * OK
+     */
+    200: ContentInteractionDto;
 };
 
-export type PutApiContentInteractionByInteractionIdProgressResponse =
-  PutApiContentInteractionByInteractionIdProgressResponses[keyof PutApiContentInteractionByInteractionIdProgressResponses];
+export type PutApiContentinteractionByInteractionIdProgressResponse = PutApiContentinteractionByInteractionIdProgressResponses[keyof PutApiContentinteractionByInteractionIdProgressResponses];
 
-export type PostApiContentInteractionByInteractionIdSubmitData = {
-  body?: SubmitContentRequest;
-  path: {
-    interactionId: string;
-  };
-  query?: {
-    programId?: string;
-  };
-  url: '/api/ContentInteraction/{interactionId}/submit';
+export type PostApiContentinteractionByInteractionIdSubmitData = {
+    body?: SubmitContentRequest;
+    path: {
+        interactionId: string;
+    };
+    query?: {
+        programId?: string;
+    };
+    url: '/api/contentinteraction/{interactionId}/submit';
 };
 
-export type PostApiContentInteractionByInteractionIdSubmitResponses = {
-  /**
-   * OK
-   */
-  200: ContentInteractionDtoReadable;
+export type PostApiContentinteractionByInteractionIdSubmitResponses = {
+    /**
+     * OK
+     */
+    200: ContentInteractionDto;
 };
 
-export type PostApiContentInteractionByInteractionIdSubmitResponse =
-  PostApiContentInteractionByInteractionIdSubmitResponses[keyof PostApiContentInteractionByInteractionIdSubmitResponses];
+export type PostApiContentinteractionByInteractionIdSubmitResponse = PostApiContentinteractionByInteractionIdSubmitResponses[keyof PostApiContentinteractionByInteractionIdSubmitResponses];
 
-export type PostApiContentInteractionByInteractionIdCompleteData = {
-  body?: CompleteContentRequest;
-  path: {
-    interactionId: string;
-  };
-  query?: {
-    programId?: string;
-  };
-  url: '/api/ContentInteraction/{interactionId}/complete';
+export type PostApiContentinteractionByInteractionIdCompleteData = {
+    body?: CompleteContentRequest;
+    path: {
+        interactionId: string;
+    };
+    query?: {
+        programId?: string;
+    };
+    url: '/api/contentinteraction/{interactionId}/complete';
 };
 
-export type PostApiContentInteractionByInteractionIdCompleteResponses = {
-  /**
-   * OK
-   */
-  200: ContentInteractionDtoReadable;
+export type PostApiContentinteractionByInteractionIdCompleteResponses = {
+    /**
+     * OK
+     */
+    200: ContentInteractionDto;
 };
 
-export type PostApiContentInteractionByInteractionIdCompleteResponse =
-  PostApiContentInteractionByInteractionIdCompleteResponses[keyof PostApiContentInteractionByInteractionIdCompleteResponses];
+export type PostApiContentinteractionByInteractionIdCompleteResponse = PostApiContentinteractionByInteractionIdCompleteResponses[keyof PostApiContentinteractionByInteractionIdCompleteResponses];
 
-export type GetApiContentInteractionUserByProgramUserIdContentByContentIdData = {
-  body?: never;
-  path: {
-    programUserId: string;
-    contentId: string;
-  };
-  query?: {
-    programId?: string;
-  };
-  url: '/api/ContentInteraction/user/{programUserId}/content/{contentId}';
+export type GetApiContentinteractionUserByProgramUserIdContentByContentIdData = {
+    body?: never;
+    path: {
+        programUserId: string;
+        contentId: string;
+    };
+    query?: {
+        programId?: string;
+    };
+    url: '/api/contentinteraction/user/{programUserId}/content/{contentId}';
 };
 
-export type GetApiContentInteractionUserByProgramUserIdContentByContentIdResponses = {
-  /**
-   * OK
-   */
-  200: ContentInteractionDtoReadable;
+export type GetApiContentinteractionUserByProgramUserIdContentByContentIdResponses = {
+    /**
+     * OK
+     */
+    200: ContentInteractionDto;
 };
 
-export type GetApiContentInteractionUserByProgramUserIdContentByContentIdResponse =
-  GetApiContentInteractionUserByProgramUserIdContentByContentIdResponses[keyof GetApiContentInteractionUserByProgramUserIdContentByContentIdResponses];
+export type GetApiContentinteractionUserByProgramUserIdContentByContentIdResponse = GetApiContentinteractionUserByProgramUserIdContentByContentIdResponses[keyof GetApiContentinteractionUserByProgramUserIdContentByContentIdResponses];
 
-export type GetApiContentInteractionUserByProgramUserIdData = {
-  body?: never;
-  path: {
-    programUserId: string;
-  };
-  query?: {
-    programId?: string;
-  };
-  url: '/api/ContentInteraction/user/{programUserId}';
+export type GetApiContentinteractionUserByProgramUserIdData = {
+    body?: never;
+    path: {
+        programUserId: string;
+    };
+    query?: {
+        programId?: string;
+    };
+    url: '/api/contentinteraction/user/{programUserId}';
 };
 
-export type GetApiContentInteractionUserByProgramUserIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<ContentInteractionDtoReadable>;
+export type GetApiContentinteractionUserByProgramUserIdResponses = {
+    /**
+     * OK
+     */
+    200: Array<ContentInteractionDto>;
 };
 
-export type GetApiContentInteractionUserByProgramUserIdResponse =
-  GetApiContentInteractionUserByProgramUserIdResponses[keyof GetApiContentInteractionUserByProgramUserIdResponses];
+export type GetApiContentinteractionUserByProgramUserIdResponse = GetApiContentinteractionUserByProgramUserIdResponses[keyof GetApiContentinteractionUserByProgramUserIdResponses];
 
-export type PutApiContentInteractionByInteractionIdTimeSpentData = {
-  body?: UpdateTimeSpentRequest;
-  path: {
-    interactionId: string;
-  };
-  query?: {
-    programId?: string;
-  };
-  url: '/api/ContentInteraction/{interactionId}/time-spent';
+export type PutApiContentinteractionByInteractionIdTimeSpentData = {
+    body?: UpdateTimeSpentRequest;
+    path: {
+        interactionId: string;
+    };
+    query?: {
+        programId?: string;
+    };
+    url: '/api/contentinteraction/{interactionId}/time-spent';
 };
 
-export type PutApiContentInteractionByInteractionIdTimeSpentResponses = {
-  /**
-   * OK
-   */
-  200: ContentInteractionDtoReadable;
+export type PutApiContentinteractionByInteractionIdTimeSpentResponses = {
+    /**
+     * OK
+     */
+    200: ContentInteractionDto;
 };
 
-export type PutApiContentInteractionByInteractionIdTimeSpentResponse =
-  PutApiContentInteractionByInteractionIdTimeSpentResponses[keyof PutApiContentInteractionByInteractionIdTimeSpentResponses];
+export type PutApiContentinteractionByInteractionIdTimeSpentResponse = PutApiContentinteractionByInteractionIdTimeSpentResponses[keyof PutApiContentinteractionByInteractionIdTimeSpentResponses];
 
 export type GetCredentialsData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/Credentials';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/credentials';
 };
 
 export type GetCredentialsResponses = {
-  /**
-   * OK
-   */
-  200: Array<CredentialResponseDtoReadable>;
+    /**
+     * OK
+     */
+    200: Array<CredentialResponseDto>;
 };
 
 export type GetCredentialsResponse = GetCredentialsResponses[keyof GetCredentialsResponses];
 
 export type PostCredentialsData = {
-  body?: CreateCredentialDto;
-  path?: never;
-  query?: never;
-  url: '/Credentials';
+    body?: CreateCredentialDto;
+    path?: never;
+    query?: never;
+    url: '/credentials';
 };
 
 export type PostCredentialsResponses = {
-  /**
-   * OK
-   */
-  200: CredentialResponseDtoReadable;
+    /**
+     * OK
+     */
+    200: CredentialResponseDto;
 };
 
 export type PostCredentialsResponse = PostCredentialsResponses[keyof PostCredentialsResponses];
 
 export type GetCredentialsUserByUserIdData = {
-  body?: never;
-  path: {
-    userId: string;
-  };
-  query?: never;
-  url: '/Credentials/user/{userId}';
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query?: never;
+    url: '/credentials/user/{userId}';
 };
 
 export type GetCredentialsUserByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<CredentialResponseDtoReadable>;
+    /**
+     * OK
+     */
+    200: Array<CredentialResponseDto>;
 };
 
 export type GetCredentialsUserByUserIdResponse = GetCredentialsUserByUserIdResponses[keyof GetCredentialsUserByUserIdResponses];
 
 export type DeleteCredentialsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Credentials/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/credentials/{id}';
 };
 
 export type DeleteCredentialsByIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetCredentialsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Credentials/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/credentials/{id}';
 };
 
 export type GetCredentialsByIdResponses = {
-  /**
-   * OK
-   */
-  200: CredentialResponseDtoReadable;
+    /**
+     * OK
+     */
+    200: CredentialResponseDto;
 };
 
 export type GetCredentialsByIdResponse = GetCredentialsByIdResponses[keyof GetCredentialsByIdResponses];
 
 export type PutCredentialsByIdData = {
-  body?: UpdateCredentialDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Credentials/{id}';
+    body?: UpdateCredentialDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/credentials/{id}';
 };
 
 export type PutCredentialsByIdResponses = {
-  /**
-   * OK
-   */
-  200: CredentialResponseDtoReadable;
+    /**
+     * OK
+     */
+    200: CredentialResponseDto;
 };
 
 export type PutCredentialsByIdResponse = PutCredentialsByIdResponses[keyof PutCredentialsByIdResponses];
 
 export type GetCredentialsUserByUserIdTypeByTypeData = {
-  body?: never;
-  path: {
-    userId: string;
-    type: string;
-  };
-  query?: never;
-  url: '/Credentials/user/{userId}/type/{type}';
+    body?: never;
+    path: {
+        userId: string;
+        type: string;
+    };
+    query?: never;
+    url: '/credentials/user/{userId}/type/{type}';
 };
 
 export type GetCredentialsUserByUserIdTypeByTypeResponses = {
-  /**
-   * OK
-   */
-  200: CredentialResponseDtoReadable;
+    /**
+     * OK
+     */
+    200: CredentialResponseDto;
 };
 
 export type GetCredentialsUserByUserIdTypeByTypeResponse = GetCredentialsUserByUserIdTypeByTypeResponses[keyof GetCredentialsUserByUserIdTypeByTypeResponses];
 
 export type PostCredentialsByIdRestoreData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Credentials/{id}/restore';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/credentials/{id}/restore';
 };
 
 export type PostCredentialsByIdRestoreResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type DeleteCredentialsByIdHardData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Credentials/{id}/hard';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/credentials/{id}/hard';
 };
 
 export type DeleteCredentialsByIdHardResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostCredentialsByIdMarkUsedData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Credentials/{id}/mark-used';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/credentials/{id}/mark-used';
 };
 
 export type PostCredentialsByIdMarkUsedResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostCredentialsByIdDeactivateData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Credentials/{id}/deactivate';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/credentials/{id}/deactivate';
 };
 
 export type PostCredentialsByIdDeactivateResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostCredentialsByIdActivateData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Credentials/{id}/activate';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/credentials/{id}/activate';
 };
 
 export type PostCredentialsByIdActivateResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetCredentialsDeletedData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/Credentials/deleted';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/credentials/deleted';
 };
 
 export type GetCredentialsDeletedResponses = {
-  /**
-   * OK
-   */
-  200: Array<CredentialResponseDtoReadable>;
+    /**
+     * OK
+     */
+    200: Array<CredentialResponseDto>;
 };
 
 export type GetCredentialsDeletedResponse = GetCredentialsDeletedResponses[keyof GetCredentialsDeletedResponses];
 
 export type GetHealthData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/Health';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/health';
 };
 
 export type GetHealthResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetHealthDatabaseData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/Health/database';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/health/database';
 };
 
 export type GetHealthDatabaseResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiPaymentMethodsMeData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/Payment/methods/me';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/payment/methods/me';
 };
 
 export type GetApiPaymentMethodsMeResponses = {
-  /**
-   * OK
-   */
-  200: Array<UserFinancialMethodReadable>;
+    /**
+     * OK
+     */
+    200: Array<UserFinancialMethod>;
 };
 
 export type GetApiPaymentMethodsMeResponse = GetApiPaymentMethodsMeResponses[keyof GetApiPaymentMethodsMeResponses];
 
 export type PostApiPaymentIntentData = {
-  body?: CreatePaymentCommand;
-  path?: never;
-  query?: never;
-  url: '/api/Payment/intent';
+    body?: CreatePaymentCommand;
+    path?: never;
+    query?: never;
+    url: '/api/payment/intent';
 };
 
 export type PostApiPaymentIntentResponses = {
-  /**
-   * OK
-   */
-  200: Payment;
+    /**
+     * OK
+     */
+    200: Payment;
 };
 
 export type PostApiPaymentIntentResponse = PostApiPaymentIntentResponses[keyof PostApiPaymentIntentResponses];
 
 export type PostApiPaymentByIdProcessData = {
-  body?: ProcessPaymentRequest;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Payment/{id}/process';
+    body?: ProcessPaymentRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/payment/{id}/process';
 };
 
 export type PostApiPaymentByIdProcessResponses = {
-  /**
-   * OK
-   */
-  200: Payment;
+    /**
+     * OK
+     */
+    200: Payment;
 };
 
 export type PostApiPaymentByIdProcessResponse = PostApiPaymentByIdProcessResponses[keyof PostApiPaymentByIdProcessResponses];
 
 export type PostApiPaymentByIdRefundData = {
-  body?: RefundPaymentRequest;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Payment/{id}/refund';
+    body?: RefundPaymentRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/payment/{id}/refund';
 };
 
 export type PostApiPaymentByIdRefundResponses = {
-  /**
-   * OK
-   */
-  200: PaymentRefund;
+    /**
+     * OK
+     */
+    200: PaymentRefund;
 };
 
 export type PostApiPaymentByIdRefundResponse = PostApiPaymentByIdRefundResponses[keyof PostApiPaymentByIdRefundResponses];
 
 export type GetApiPaymentByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Payment/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/payment/{id}';
 };
 
 export type GetApiPaymentByIdResponses = {
-  /**
-   * OK
-   */
-  200: Payment;
+    /**
+     * OK
+     */
+    200: Payment;
 };
 
 export type GetApiPaymentByIdResponse = GetApiPaymentByIdResponses[keyof GetApiPaymentByIdResponses];
 
 export type GetApiPaymentUserByUserIdData = {
-  body?: never;
-  path: {
-    userId: string;
-  };
-  query?: never;
-  url: '/api/Payment/user/{userId}';
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query?: never;
+    url: '/api/payment/user/{userId}';
 };
 
 export type GetApiPaymentUserByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<Payment>;
+    /**
+     * OK
+     */
+    200: Array<Payment>;
 };
 
 export type GetApiPaymentUserByUserIdResponse = GetApiPaymentUserByUserIdResponses[keyof GetApiPaymentUserByUserIdResponses];
 
 export type GetApiPaymentStatsData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/Payment/stats';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/payment/stats';
 };
 
 export type GetApiPaymentStatsResponses = {
-  /**
-   * OK
-   */
-  200: PaymentStats;
+    /**
+     * OK
+     */
+    200: PaymentStats;
 };
 
 export type GetApiPaymentStatsResponse = GetApiPaymentStatsResponses[keyof GetApiPaymentStatsResponses];
 
 export type PostApiPaymentsData = {
-  body?: CreatePaymentRequest;
-  path?: never;
-  query?: never;
-  url: '/api/Payments';
+    body?: CreatePaymentRequest;
+    path?: never;
+    query?: never;
+    url: '/api/payments';
 };
 
 export type PostApiPaymentsResponses = {
-  /**
-   * OK
-   */
-  200: CreatePaymentResult;
+    /**
+     * OK
+     */
+    200: CreatePaymentResult;
 };
 
 export type PostApiPaymentsResponse = PostApiPaymentsResponses[keyof PostApiPaymentsResponses];
 
 export type GetApiPaymentsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Payments/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/payments/{id}';
 };
 
 export type GetApiPaymentsByIdResponses = {
-  /**
-   * OK
-   */
-  200: Payment;
+    /**
+     * OK
+     */
+    200: Payment;
 };
 
 export type GetApiPaymentsByIdResponse = GetApiPaymentsByIdResponses[keyof GetApiPaymentsByIdResponses];
 
 export type GetApiPaymentsMyPaymentsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    status?: PaymentStatus;
-    fromDate?: string;
-    toDate?: string;
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Payments/my-payments';
+    body?: never;
+    path?: never;
+    query?: {
+        status?: PaymentStatus;
+        fromDate?: string;
+        toDate?: string;
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/payments/my-payments';
 };
 
 export type GetApiPaymentsMyPaymentsResponses = {
-  /**
-   * OK
-   */
-  200: Array<Payment>;
+    /**
+     * OK
+     */
+    200: Array<Payment>;
 };
 
 export type GetApiPaymentsMyPaymentsResponse = GetApiPaymentsMyPaymentsResponses[keyof GetApiPaymentsMyPaymentsResponses];
 
 export type GetApiPaymentsUsersByUserIdData = {
-  body?: never;
-  path: {
-    userId: string;
-  };
-  query?: {
-    status?: PaymentStatus;
-    fromDate?: string;
-    toDate?: string;
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Payments/users/{userId}';
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query?: {
+        status?: PaymentStatus;
+        fromDate?: string;
+        toDate?: string;
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/payments/users/{userId}';
 };
 
 export type GetApiPaymentsUsersByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<Payment>;
+    /**
+     * OK
+     */
+    200: Array<Payment>;
 };
 
 export type GetApiPaymentsUsersByUserIdResponse = GetApiPaymentsUsersByUserIdResponses[keyof GetApiPaymentsUsersByUserIdResponses];
 
 export type GetApiPaymentsProductsByProductIdData = {
-  body?: never;
-  path: {
-    productId: string;
-  };
-  query?: {
-    status?: PaymentStatus;
-    fromDate?: string;
-    toDate?: string;
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Payments/products/{productId}';
+    body?: never;
+    path: {
+        productId: string;
+    };
+    query?: {
+        status?: PaymentStatus;
+        fromDate?: string;
+        toDate?: string;
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/payments/products/{productId}';
 };
 
 export type GetApiPaymentsProductsByProductIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<Payment>;
+    /**
+     * OK
+     */
+    200: Array<Payment>;
 };
 
 export type GetApiPaymentsProductsByProductIdResponse = GetApiPaymentsProductsByProductIdResponses[keyof GetApiPaymentsProductsByProductIdResponses];
 
 export type PostApiPaymentsByIdProcessData = {
-  body?: ProcessPaymentRequest;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Payments/{id}/process';
+    body?: ProcessPaymentRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/payments/{id}/process';
 };
 
 export type PostApiPaymentsByIdProcessResponses = {
-  /**
-   * OK
-   */
-  200: ProcessPaymentResult;
+    /**
+     * OK
+     */
+    200: ProcessPaymentResult;
 };
 
 export type PostApiPaymentsByIdProcessResponse = PostApiPaymentsByIdProcessResponses[keyof PostApiPaymentsByIdProcessResponses];
 
 export type PostApiPaymentsByIdRefundData = {
-  body?: RefundPaymentRequest;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Payments/{id}/refund';
+    body?: RefundPaymentRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/payments/{id}/refund';
 };
 
 export type PostApiPaymentsByIdRefundResponses = {
-  /**
-   * OK
-   */
-  200: RefundPaymentResult;
+    /**
+     * OK
+     */
+    200: RefundPaymentResult;
 };
 
 export type PostApiPaymentsByIdRefundResponse = PostApiPaymentsByIdRefundResponses[keyof PostApiPaymentsByIdRefundResponses];
 
 export type PostApiPaymentsByIdCancelData = {
-  body?: CancelPaymentRequest;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Payments/{id}/cancel';
+    body?: CancelPaymentRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/payments/{id}/cancel';
 };
 
 export type PostApiPaymentsByIdCancelResponses = {
-  /**
-   * OK
-   */
-  200: CancelPaymentResult;
+    /**
+     * OK
+     */
+    200: CancelPaymentResult;
 };
 
 export type PostApiPaymentsByIdCancelResponse = PostApiPaymentsByIdCancelResponses[keyof PostApiPaymentsByIdCancelResponses];
 
 export type GetApiPaymentsStatsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    userId?: string;
-    productId?: string;
-    fromDate?: string;
-    toDate?: string;
-  };
-  url: '/api/Payments/stats';
+    body?: never;
+    path?: never;
+    query?: {
+        userId?: string;
+        productId?: string;
+        fromDate?: string;
+        toDate?: string;
+    };
+    url: '/api/payments/stats';
 };
 
 export type GetApiPaymentsStatsResponses = {
-  /**
-   * OK
-   */
-  200: PaymentStats;
+    /**
+     * OK
+     */
+    200: PaymentStats;
 };
 
 export type GetApiPaymentsStatsResponse = GetApiPaymentsStatsResponses[keyof GetApiPaymentsStatsResponses];
 
 export type GetApiPaymentsRevenueReportData = {
-  body?: never;
-  path?: never;
-  query?: {
-    fromDate?: string;
-    toDate?: string;
-    groupBy?: string;
-    productId?: string;
-  };
-  url: '/api/Payments/revenue-report';
+    body?: never;
+    path?: never;
+    query?: {
+        fromDate?: string;
+        toDate?: string;
+        groupBy?: string;
+        productId?: string;
+    };
+    url: '/api/payments/revenue-report';
 };
 
 export type GetApiPaymentsRevenueReportResponses = {
-  /**
-   * OK
-   */
-  200: RevenueReport;
+    /**
+     * OK
+     */
+    200: RevenueReport;
 };
 
 export type GetApiPaymentsRevenueReportResponse = GetApiPaymentsRevenueReportResponses[keyof GetApiPaymentsRevenueReportResponses];
 
 export type GetApiPostsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    pageNumber?: number;
-    pageSize?: number;
-    postType?: string;
-    userId?: string;
-    isPinned?: boolean;
-    searchTerm?: string;
-    orderBy?: string;
-    descending?: boolean;
-    tenantId?: string;
-  };
-  url: '/api/Posts';
+    body?: never;
+    path?: never;
+    query?: {
+        pageNumber?: number;
+        pageSize?: number;
+        postType?: string;
+        userId?: string;
+        isPinned?: boolean;
+        searchTerm?: string;
+        orderBy?: string;
+        descending?: boolean;
+        tenantId?: string;
+    };
+    url: '/api/posts';
 };
 
 export type GetApiPostsResponses = {
-  /**
-   * OK
-   */
-  200: PostsPageDto;
+    /**
+     * OK
+     */
+    200: PostsPageDto;
 };
 
 export type GetApiPostsResponse = GetApiPostsResponses[keyof GetApiPostsResponses];
 
 export type PostApiPostsData = {
-  body?: CreatePostDto;
-  path?: never;
-  query?: never;
-  url: '/api/Posts';
+    body?: CreatePostDto;
+    path?: never;
+    query?: never;
+    url: '/api/posts';
 };
 
 export type PostApiPostsResponses = {
-  /**
-   * OK
-   */
-  200: PostDto;
+    /**
+     * OK
+     */
+    200: PostDto;
 };
 
 export type PostApiPostsResponse = PostApiPostsResponses[keyof PostApiPostsResponses];
 
 export type GetApiPostsByPostIdData = {
-  body?: never;
-  path: {
-    postId: string;
-  };
-  query?: never;
-  url: '/api/Posts/{postId}';
+    body?: never;
+    path: {
+        postId: string;
+    };
+    query?: never;
+    url: '/api/posts/{postId}';
 };
 
 export type GetApiPostsByPostIdResponses = {
-  /**
-   * OK
-   */
-  200: PostDto;
+    /**
+     * OK
+     */
+    200: PostDto;
 };
 
 export type GetApiPostsByPostIdResponse = GetApiPostsByPostIdResponses[keyof GetApiPostsByPostIdResponses];
 
 export type GetApiProductData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/Product';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/product';
 };
 
 export type GetApiProductResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProductReadable>;
+    /**
+     * OK
+     */
+    200: Array<Product>;
 };
 
 export type GetApiProductResponse = GetApiProductResponses[keyof GetApiProductResponses];
 
 export type PostApiProductData = {
-  body?: CreateProductCommand;
-  path?: never;
-  query?: never;
-  url: '/api/Product';
+    body?: CreateProductCommand;
+    path?: never;
+    query?: never;
+    url: '/api/product';
 };
 
 export type PostApiProductResponses = {
-  /**
-   * OK
-   */
-  200: ProductReadable;
+    /**
+     * OK
+     */
+    200: Product;
 };
 
 export type PostApiProductResponse = PostApiProductResponses[keyof PostApiProductResponses];
 
 export type DeleteApiProductByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}';
 };
 
 export type DeleteApiProductByIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiProductByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}';
 };
 
 export type GetApiProductByIdResponses = {
-  /**
-   * OK
-   */
-  200: ProductReadable;
+    /**
+     * OK
+     */
+    200: Product;
 };
 
 export type GetApiProductByIdResponse = GetApiProductByIdResponses[keyof GetApiProductByIdResponses];
 
 export type PutApiProductByIdData = {
-  body?: UpdateProductCommand;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}';
+    body?: UpdateProductCommand;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}';
 };
 
 export type PutApiProductByIdResponses = {
-  /**
-   * OK
-   */
-  200: ProductReadable;
+    /**
+     * OK
+     */
+    200: Product;
 };
 
 export type PutApiProductByIdResponse = PutApiProductByIdResponses[keyof PutApiProductByIdResponses];
 
 export type GetApiProductTypeByTypeData = {
-  body?: never;
-  path: {
-    type: ProductType;
-  };
-  query?: {
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Product/type/{type}';
+    body?: never;
+    path: {
+        type: ProductType;
+    };
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/product/type/{type}';
 };
 
 export type GetApiProductTypeByTypeResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProductReadable>;
+    /**
+     * OK
+     */
+    200: Array<Product>;
 };
 
 export type GetApiProductTypeByTypeResponse = GetApiProductTypeByTypeResponses[keyof GetApiProductTypeByTypeResponses];
 
 export type GetApiProductPublishedData = {
-  body?: never;
-  path?: never;
-  query?: {
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Product/published';
+    body?: never;
+    path?: never;
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/product/published';
 };
 
 export type GetApiProductPublishedResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProductReadable>;
+    /**
+     * OK
+     */
+    200: Array<Product>;
 };
 
 export type GetApiProductPublishedResponse = GetApiProductPublishedResponses[keyof GetApiProductPublishedResponses];
 
 export type GetApiProductSearchData = {
-  body?: never;
-  path?: never;
-  query?: {
-    searchTerm?: string;
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Product/search';
+    body?: never;
+    path?: never;
+    query?: {
+        searchTerm?: string;
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/product/search';
 };
 
 export type GetApiProductSearchResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProductReadable>;
+    /**
+     * OK
+     */
+    200: Array<Product>;
 };
 
 export type GetApiProductSearchResponse = GetApiProductSearchResponses[keyof GetApiProductSearchResponses];
 
 export type GetApiProductCreatorByCreatorIdData = {
-  body?: never;
-  path: {
-    creatorId: string;
-  };
-  query?: {
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Product/creator/{creatorId}';
+    body?: never;
+    path: {
+        creatorId: string;
+    };
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/product/creator/{creatorId}';
 };
 
 export type GetApiProductCreatorByCreatorIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProductReadable>;
+    /**
+     * OK
+     */
+    200: Array<Product>;
 };
 
 export type GetApiProductCreatorByCreatorIdResponse = GetApiProductCreatorByCreatorIdResponses[keyof GetApiProductCreatorByCreatorIdResponses];
 
 export type GetApiProductPriceRangeData = {
-  body?: never;
-  path?: never;
-  query?: {
-    minPrice?: number;
-    maxPrice?: number;
-    currency?: string;
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Product/price-range';
+    body?: never;
+    path?: never;
+    query?: {
+        minPrice?: number;
+        maxPrice?: number;
+        currency?: string;
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/product/price-range';
 };
 
 export type GetApiProductPriceRangeResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProductReadable>;
+    /**
+     * OK
+     */
+    200: Array<Product>;
 };
 
 export type GetApiProductPriceRangeResponse = GetApiProductPriceRangeResponses[keyof GetApiProductPriceRangeResponses];
 
 export type GetApiProductPopularData = {
-  body?: never;
-  path?: never;
-  query?: {
-    count?: number;
-  };
-  url: '/api/Product/popular';
+    body?: never;
+    path?: never;
+    query?: {
+        count?: number;
+    };
+    url: '/api/product/popular';
 };
 
 export type GetApiProductPopularResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProductReadable>;
+    /**
+     * OK
+     */
+    200: Array<Product>;
 };
 
 export type GetApiProductPopularResponse = GetApiProductPopularResponses[keyof GetApiProductPopularResponses];
 
 export type GetApiProductRecentData = {
-  body?: never;
-  path?: never;
-  query?: {
-    count?: number;
-  };
-  url: '/api/Product/recent';
+    body?: never;
+    path?: never;
+    query?: {
+        count?: number;
+    };
+    url: '/api/product/recent';
 };
 
 export type GetApiProductRecentResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProductReadable>;
+    /**
+     * OK
+     */
+    200: Array<Product>;
 };
 
 export type GetApiProductRecentResponse = GetApiProductRecentResponses[keyof GetApiProductRecentResponses];
 
 export type PostApiProductByIdPublishData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/publish';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/publish';
 };
 
 export type PostApiProductByIdPublishResponses = {
-  /**
-   * OK
-   */
-  200: ProductReadable;
+    /**
+     * OK
+     */
+    200: Product;
 };
 
 export type PostApiProductByIdPublishResponse = PostApiProductByIdPublishResponses[keyof PostApiProductByIdPublishResponses];
 
 export type PostApiProductByIdUnpublishData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/unpublish';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/unpublish';
 };
 
 export type PostApiProductByIdUnpublishResponses = {
-  /**
-   * OK
-   */
-  200: ProductReadable;
+    /**
+     * OK
+     */
+    200: Product;
 };
 
 export type PostApiProductByIdUnpublishResponse = PostApiProductByIdUnpublishResponses[keyof PostApiProductByIdUnpublishResponses];
 
 export type PostApiProductByIdArchiveData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/archive';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/archive';
 };
 
 export type PostApiProductByIdArchiveResponses = {
-  /**
-   * OK
-   */
-  200: ProductReadable;
+    /**
+     * OK
+     */
+    200: Product;
 };
 
 export type PostApiProductByIdArchiveResponse = PostApiProductByIdArchiveResponses[keyof PostApiProductByIdArchiveResponses];
 
 export type PutApiProductByIdVisibilityData = {
-  body?: AccessLevel;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/visibility';
+    body?: AccessLevel;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/visibility';
 };
 
 export type PutApiProductByIdVisibilityResponses = {
-  /**
-   * OK
-   */
-  200: ProductReadable;
+    /**
+     * OK
+     */
+    200: Product;
 };
 
 export type PutApiProductByIdVisibilityResponse = PutApiProductByIdVisibilityResponses[keyof PutApiProductByIdVisibilityResponses];
 
 export type GetApiProductByIdBundleItemsData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/bundle-items';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/bundle-items';
 };
 
 export type GetApiProductByIdBundleItemsResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProductReadable>;
+    /**
+     * OK
+     */
+    200: Array<Product>;
 };
 
 export type GetApiProductByIdBundleItemsResponse = GetApiProductByIdBundleItemsResponses[keyof GetApiProductByIdBundleItemsResponses];
 
 export type DeleteApiProductByBundleIdBundleItemsByProductIdData = {
-  body?: never;
-  path: {
-    bundleId: string;
-    productId: string;
-  };
-  query?: never;
-  url: '/api/Product/{bundleId}/bundle-items/{productId}';
+    body?: never;
+    path: {
+        bundleId: string;
+        productId: string;
+    };
+    query?: never;
+    url: '/api/product/{bundleId}/bundle-items/{productId}';
 };
 
 export type DeleteApiProductByBundleIdBundleItemsByProductIdResponses = {
-  /**
-   * OK
-   */
-  200: ProductReadable;
+    /**
+     * OK
+     */
+    200: Product;
 };
 
-export type DeleteApiProductByBundleIdBundleItemsByProductIdResponse =
-  DeleteApiProductByBundleIdBundleItemsByProductIdResponses[keyof DeleteApiProductByBundleIdBundleItemsByProductIdResponses];
+export type DeleteApiProductByBundleIdBundleItemsByProductIdResponse = DeleteApiProductByBundleIdBundleItemsByProductIdResponses[keyof DeleteApiProductByBundleIdBundleItemsByProductIdResponses];
 
 export type PostApiProductByBundleIdBundleItemsByProductIdData = {
-  body?: never;
-  path: {
-    bundleId: string;
-    productId: string;
-  };
-  query?: never;
-  url: '/api/Product/{bundleId}/bundle-items/{productId}';
+    body?: never;
+    path: {
+        bundleId: string;
+        productId: string;
+    };
+    query?: never;
+    url: '/api/product/{bundleId}/bundle-items/{productId}';
 };
 
 export type PostApiProductByBundleIdBundleItemsByProductIdResponses = {
-  /**
-   * OK
-   */
-  200: ProductReadable;
+    /**
+     * OK
+     */
+    200: Product;
 };
 
-export type PostApiProductByBundleIdBundleItemsByProductIdResponse =
-  PostApiProductByBundleIdBundleItemsByProductIdResponses[keyof PostApiProductByBundleIdBundleItemsByProductIdResponses];
+export type PostApiProductByBundleIdBundleItemsByProductIdResponse = PostApiProductByBundleIdBundleItemsByProductIdResponses[keyof PostApiProductByBundleIdBundleItemsByProductIdResponses];
 
 export type GetApiProductByIdPricingCurrentData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/pricing/current';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/pricing/current';
 };
 
 export type GetApiProductByIdPricingCurrentResponses = {
-  /**
-   * OK
-   */
-  200: ProductPricingReadable;
+    /**
+     * OK
+     */
+    200: ProductPricing;
 };
 
 export type GetApiProductByIdPricingCurrentResponse = GetApiProductByIdPricingCurrentResponses[keyof GetApiProductByIdPricingCurrentResponses];
 
 export type GetApiProductByIdPricingHistoryData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/pricing/history';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/pricing/history';
 };
 
 export type GetApiProductByIdPricingHistoryResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProductPricingReadable>;
+    /**
+     * OK
+     */
+    200: Array<ProductPricing>;
 };
 
 export type GetApiProductByIdPricingHistoryResponse = GetApiProductByIdPricingHistoryResponses[keyof GetApiProductByIdPricingHistoryResponses];
 
 export type PostApiProductByIdPricingData = {
-  body?: SetPricingRequest;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/pricing';
+    body?: SetPricingRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/pricing';
 };
 
 export type PostApiProductByIdPricingResponses = {
-  /**
-   * OK
-   */
-  200: ProductPricingReadable;
+    /**
+     * OK
+     */
+    200: ProductPricing;
 };
 
 export type PostApiProductByIdPricingResponse = PostApiProductByIdPricingResponses[keyof PostApiProductByIdPricingResponses];
 
 export type GetApiProductByIdSubscriptionPlansData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/subscription-plans';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/subscription-plans';
 };
 
 export type GetApiProductByIdSubscriptionPlansResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProductSubscriptionPlanReadable>;
+    /**
+     * OK
+     */
+    200: Array<ProductSubscriptionPlan>;
 };
 
 export type GetApiProductByIdSubscriptionPlansResponse = GetApiProductByIdSubscriptionPlansResponses[keyof GetApiProductByIdSubscriptionPlansResponses];
 
 export type PostApiProductByIdSubscriptionPlansData = {
-  body?: ProductSubscriptionPlanWritable;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/subscription-plans';
+    body?: ProductSubscriptionPlan;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/subscription-plans';
 };
 
 export type PostApiProductByIdSubscriptionPlansResponses = {
-  /**
-   * OK
-   */
-  200: ProductSubscriptionPlanReadable;
+    /**
+     * OK
+     */
+    200: ProductSubscriptionPlan;
 };
 
 export type PostApiProductByIdSubscriptionPlansResponse = PostApiProductByIdSubscriptionPlansResponses[keyof PostApiProductByIdSubscriptionPlansResponses];
 
 export type GetApiProductSubscriptionPlansByPlanIdData = {
-  body?: never;
-  path: {
-    planId: string;
-  };
-  query?: never;
-  url: '/api/Product/subscription-plans/{planId}';
+    body?: never;
+    path: {
+        planId: string;
+    };
+    query?: never;
+    url: '/api/product/subscription-plans/{planId}';
 };
 
 export type GetApiProductSubscriptionPlansByPlanIdResponses = {
-  /**
-   * OK
-   */
-  200: ProductSubscriptionPlanReadable;
+    /**
+     * OK
+     */
+    200: ProductSubscriptionPlan;
 };
 
-export type GetApiProductSubscriptionPlansByPlanIdResponse =
-  GetApiProductSubscriptionPlansByPlanIdResponses[keyof GetApiProductSubscriptionPlansByPlanIdResponses];
+export type GetApiProductSubscriptionPlansByPlanIdResponse = GetApiProductSubscriptionPlansByPlanIdResponses[keyof GetApiProductSubscriptionPlansByPlanIdResponses];
 
 export type DeleteApiProductByIdAccessByUserIdData = {
-  body?: never;
-  path: {
-    id: string;
-    userId: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/access/{userId}';
+    body?: never;
+    path: {
+        id: string;
+        userId: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/access/{userId}';
 };
 
 export type DeleteApiProductByIdAccessByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiProductByIdAccessByUserIdData = {
-  body?: never;
-  path: {
-    id: string;
-    userId: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/access/{userId}';
+    body?: never;
+    path: {
+        id: string;
+        userId: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/access/{userId}';
 };
 
 export type GetApiProductByIdAccessByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: boolean;
+    /**
+     * OK
+     */
+    200: boolean;
 };
 
 export type GetApiProductByIdAccessByUserIdResponse = GetApiProductByIdAccessByUserIdResponses[keyof GetApiProductByIdAccessByUserIdResponses];
 
 export type PostApiProductByIdAccessByUserIdData = {
-  body?: GrantAccessRequest;
-  path: {
-    id: string;
-    userId: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/access/{userId}';
+    body?: GrantAccessRequest;
+    path: {
+        id: string;
+        userId: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/access/{userId}';
 };
 
 export type PostApiProductByIdAccessByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: UserProductReadable;
+    /**
+     * OK
+     */
+    200: UserProduct;
 };
 
 export type PostApiProductByIdAccessByUserIdResponse = PostApiProductByIdAccessByUserIdResponses[keyof PostApiProductByIdAccessByUserIdResponses];
 
 export type GetApiProductByIdUserProductByUserIdData = {
-  body?: never;
-  path: {
-    id: string;
-    userId: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/user-product/{userId}';
+    body?: never;
+    path: {
+        id: string;
+        userId: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/user-product/{userId}';
 };
 
 export type GetApiProductByIdUserProductByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: UserProductReadable;
+    /**
+     * OK
+     */
+    200: UserProduct;
 };
 
 export type GetApiProductByIdUserProductByUserIdResponse = GetApiProductByIdUserProductByUserIdResponses[keyof GetApiProductByIdUserProductByUserIdResponses];
 
 export type GetApiProductAnalyticsCountData = {
-  body?: never;
-  path?: never;
-  query?: {
-    type?: ProductType;
-    status?: ContentStatus;
-  };
-  url: '/api/Product/analytics/count';
+    body?: never;
+    path?: never;
+    query?: {
+        type?: ProductType;
+        status?: ContentStatus;
+    };
+    url: '/api/product/analytics/count';
 };
 
 export type GetApiProductAnalyticsCountResponses = {
-  /**
-   * OK
-   */
-  200: number;
+    /**
+     * OK
+     */
+    200: number;
 };
 
 export type GetApiProductAnalyticsCountResponse = GetApiProductAnalyticsCountResponses[keyof GetApiProductAnalyticsCountResponses];
 
 export type GetApiProductByIdAnalyticsUserCountData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/analytics/user-count';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/analytics/user-count';
 };
 
 export type GetApiProductByIdAnalyticsUserCountResponses = {
-  /**
-   * OK
-   */
-  200: number;
+    /**
+     * OK
+     */
+    200: number;
 };
 
 export type GetApiProductByIdAnalyticsUserCountResponse = GetApiProductByIdAnalyticsUserCountResponses[keyof GetApiProductByIdAnalyticsUserCountResponses];
 
 export type GetApiProductByIdAnalyticsRevenueData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Product/{id}/analytics/revenue';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/product/{id}/analytics/revenue';
 };
 
 export type GetApiProductByIdAnalyticsRevenueResponses = {
-  /**
-   * OK
-   */
-  200: number;
+    /**
+     * OK
+     */
+    200: number;
 };
 
 export type GetApiProductByIdAnalyticsRevenueResponse = GetApiProductByIdAnalyticsRevenueResponses[keyof GetApiProductByIdAnalyticsRevenueResponses];
 
 export type GetApiProgramData = {
-  body?: never;
-  path?: never;
-  query?: {
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Program';
+    body?: never;
+    path?: never;
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/program';
 };
 
 export type GetApiProgramResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramReadable>;
+    /**
+     * OK
+     */
+    200: Array<Program>;
 };
 
 export type GetApiProgramResponse = GetApiProgramResponses[keyof GetApiProgramResponses];
 
 export type PostApiProgramData = {
-  body?: CreateProgramDto;
-  path?: never;
-  query?: never;
-  url: '/api/Program';
+    body?: CreateProgramDto;
+    path?: never;
+    query?: never;
+    url: '/api/program';
 };
 
 export type PostApiProgramResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type PostApiProgramResponse = PostApiProgramResponses[keyof PostApiProgramResponses];
 
 export type GetApiProgramPublishedData = {
-  body?: never;
-  path?: never;
-  query?: {
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Program/published';
+    body?: never;
+    path?: never;
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/program/published';
 };
 
 export type GetApiProgramPublishedResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramReadable>;
+    /**
+     * OK
+     */
+    200: Array<Program>;
 };
 
 export type GetApiProgramPublishedResponse = GetApiProgramPublishedResponses[keyof GetApiProgramPublishedResponses];
 
 export type GetApiProgramCategoryByCategoryData = {
-  body?: never;
-  path: {
-    category: ProgramCategory;
-  };
-  query?: {
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Program/category/{category}';
+    body?: never;
+    path: {
+        category: ProgramCategory;
+    };
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/program/category/{category}';
 };
 
 export type GetApiProgramCategoryByCategoryResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramReadable>;
+    /**
+     * OK
+     */
+    200: Array<Program>;
 };
 
 export type GetApiProgramCategoryByCategoryResponse = GetApiProgramCategoryByCategoryResponses[keyof GetApiProgramCategoryByCategoryResponses];
 
 export type GetApiProgramDifficultyByDifficultyData = {
-  body?: never;
-  path: {
-    difficulty: ProgramDifficulty;
-  };
-  query?: {
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Program/difficulty/{difficulty}';
+    body?: never;
+    path: {
+        difficulty: ProgramDifficulty;
+    };
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/program/difficulty/{difficulty}';
 };
 
 export type GetApiProgramDifficultyByDifficultyResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramReadable>;
+    /**
+     * OK
+     */
+    200: Array<Program>;
 };
 
 export type GetApiProgramDifficultyByDifficultyResponse = GetApiProgramDifficultyByDifficultyResponses[keyof GetApiProgramDifficultyByDifficultyResponses];
 
 export type GetApiProgramSearchData = {
-  body?: never;
-  path?: never;
-  query?: {
-    searchTerm?: string;
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Program/search';
+    body?: never;
+    path?: never;
+    query?: {
+        searchTerm?: string;
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/program/search';
 };
 
 export type GetApiProgramSearchResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramReadable>;
+    /**
+     * OK
+     */
+    200: Array<Program>;
 };
 
 export type GetApiProgramSearchResponse = GetApiProgramSearchResponses[keyof GetApiProgramSearchResponses];
 
 export type GetApiProgramCreatorByCreatorIdData = {
-  body?: never;
-  path: {
-    creatorId: string;
-  };
-  query?: {
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Program/creator/{creatorId}';
+    body?: never;
+    path: {
+        creatorId: string;
+    };
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/program/creator/{creatorId}';
 };
 
 export type GetApiProgramCreatorByCreatorIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramReadable>;
+    /**
+     * OK
+     */
+    200: Array<Program>;
 };
 
 export type GetApiProgramCreatorByCreatorIdResponse = GetApiProgramCreatorByCreatorIdResponses[keyof GetApiProgramCreatorByCreatorIdResponses];
 
 export type GetApiProgramPopularData = {
-  body?: never;
-  path?: never;
-  query?: {
-    count?: number;
-  };
-  url: '/api/Program/popular';
+    body?: never;
+    path?: never;
+    query?: {
+        count?: number;
+    };
+    url: '/api/program/popular';
 };
 
 export type GetApiProgramPopularResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramReadable>;
+    /**
+     * OK
+     */
+    200: Array<Program>;
 };
 
 export type GetApiProgramPopularResponse = GetApiProgramPopularResponses[keyof GetApiProgramPopularResponses];
 
 export type GetApiProgramRecentData = {
-  body?: never;
-  path?: never;
-  query?: {
-    count?: number;
-  };
-  url: '/api/Program/recent';
+    body?: never;
+    path?: never;
+    query?: {
+        count?: number;
+    };
+    url: '/api/program/recent';
 };
 
 export type GetApiProgramRecentResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramReadable>;
+    /**
+     * OK
+     */
+    200: Array<Program>;
 };
 
 export type GetApiProgramRecentResponse = GetApiProgramRecentResponses[keyof GetApiProgramRecentResponses];
 
 export type DeleteApiProgramByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}';
 };
 
 export type DeleteApiProgramByIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiProgramByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}';
 };
 
 export type GetApiProgramByIdResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type GetApiProgramByIdResponse = GetApiProgramByIdResponses[keyof GetApiProgramByIdResponses];
 
 export type PutApiProgramByIdData = {
-  body?: UpdateProgramDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}';
+    body?: UpdateProgramDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}';
 };
 
 export type PutApiProgramByIdResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type PutApiProgramByIdResponse = PutApiProgramByIdResponses[keyof PutApiProgramByIdResponses];
 
 export type GetApiProgramByIdWithContentData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/with-content';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/with-content';
 };
 
 export type GetApiProgramByIdWithContentResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type GetApiProgramByIdWithContentResponse = GetApiProgramByIdWithContentResponses[keyof GetApiProgramByIdWithContentResponses];
 
 export type PostApiProgramByIdCloneData = {
-  body?: CloneProgramDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/clone';
+    body?: CloneProgramDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/clone';
 };
 
 export type PostApiProgramByIdCloneResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type PostApiProgramByIdCloneResponse = PostApiProgramByIdCloneResponses[keyof PostApiProgramByIdCloneResponses];
 
 export type GetApiProgramSlugBySlugData = {
-  body?: never;
-  path: {
-    slug: string;
-  };
-  query?: never;
-  url: '/api/Program/slug/{slug}';
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/program/slug/{slug}';
 };
 
 export type GetApiProgramSlugBySlugResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type GetApiProgramSlugBySlugResponse = GetApiProgramSlugBySlugResponses[keyof GetApiProgramSlugBySlugResponses];
 
 export type PostApiProgramByIdContentData = {
-  body?: CreateContentDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/content';
+    body?: CreateContentDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/content';
 };
 
 export type PostApiProgramByIdContentResponses = {
-  /**
-   * OK
-   */
-  200: ProgramContentReadable;
+    /**
+     * OK
+     */
+    200: ProgramContent;
 };
 
 export type PostApiProgramByIdContentResponse = PostApiProgramByIdContentResponses[keyof PostApiProgramByIdContentResponses];
 
 export type DeleteApiProgramByIdContentByContentIdData = {
-  body?: never;
-  path: {
-    id: string;
-    contentId: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/content/{contentId}';
+    body?: never;
+    path: {
+        id: string;
+        contentId: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/content/{contentId}';
 };
 
 export type DeleteApiProgramByIdContentByContentIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PutApiProgramByIdContentByContentIdData = {
-  body?: UpdateContentDto;
-  path: {
-    id: string;
-    contentId: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/content/{contentId}';
+    body?: UpdateContentDto;
+    path: {
+        id: string;
+        contentId: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/content/{contentId}';
 };
 
 export type PutApiProgramByIdContentByContentIdResponses = {
-  /**
-   * OK
-   */
-  200: ProgramContentReadable;
+    /**
+     * OK
+     */
+    200: ProgramContent;
 };
 
 export type PutApiProgramByIdContentByContentIdResponse = PutApiProgramByIdContentByContentIdResponses[keyof PutApiProgramByIdContentByContentIdResponses];
 
 export type PostApiProgramByIdContentReorderData = {
-  body?: ReorderContentDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/content/reorder';
+    body?: ReorderContentDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/content/reorder';
 };
 
 export type PostApiProgramByIdContentReorderResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type DeleteApiProgramByIdUsersByUserIdData = {
-  body?: never;
-  path: {
-    id: string;
-    userId: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/users/{userId}';
+    body?: never;
+    path: {
+        id: string;
+        userId: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/users/{userId}';
 };
 
 export type DeleteApiProgramByIdUsersByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostApiProgramByIdUsersByUserIdData = {
-  body?: never;
-  path: {
-    id: string;
-    userId: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/users/{userId}';
+    body?: never;
+    path: {
+        id: string;
+        userId: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/users/{userId}';
 };
 
 export type PostApiProgramByIdUsersByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: UserProgressDto;
+    /**
+     * OK
+     */
+    200: UserProgressDto;
 };
 
 export type PostApiProgramByIdUsersByUserIdResponse = PostApiProgramByIdUsersByUserIdResponses[keyof PostApiProgramByIdUsersByUserIdResponses];
 
 export type GetApiProgramByIdUsersData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: {
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Program/{id}/users';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/program/{id}/users';
 };
 
 export type GetApiProgramByIdUsersResponses = {
-  /**
-   * OK
-   */
-  200: Array<UserProgressDto>;
+    /**
+     * OK
+     */
+    200: Array<UserProgressDto>;
 };
 
 export type GetApiProgramByIdUsersResponse = GetApiProgramByIdUsersResponses[keyof GetApiProgramByIdUsersResponses];
 
 export type GetApiProgramByIdUsersByUserIdProgressData = {
-  body?: never;
-  path: {
-    id: string;
-    userId: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/users/{userId}/progress';
+    body?: never;
+    path: {
+        id: string;
+        userId: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/users/{userId}/progress';
 };
 
 export type GetApiProgramByIdUsersByUserIdProgressResponses = {
-  /**
-   * OK
-   */
-  200: UserProgressDto;
+    /**
+     * OK
+     */
+    200: UserProgressDto;
 };
 
-export type GetApiProgramByIdUsersByUserIdProgressResponse =
-  GetApiProgramByIdUsersByUserIdProgressResponses[keyof GetApiProgramByIdUsersByUserIdProgressResponses];
+export type GetApiProgramByIdUsersByUserIdProgressResponse = GetApiProgramByIdUsersByUserIdProgressResponses[keyof GetApiProgramByIdUsersByUserIdProgressResponses];
 
 export type PutApiProgramByIdUsersByUserIdProgressData = {
-  body?: UpdateProgressDto;
-  path: {
-    id: string;
-    userId: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/users/{userId}/progress';
+    body?: UpdateProgressDto;
+    path: {
+        id: string;
+        userId: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/users/{userId}/progress';
 };
 
 export type PutApiProgramByIdUsersByUserIdProgressResponses = {
-  /**
-   * OK
-   */
-  200: UserProgressDto;
+    /**
+     * OK
+     */
+    200: UserProgressDto;
 };
 
-export type PutApiProgramByIdUsersByUserIdProgressResponse =
-  PutApiProgramByIdUsersByUserIdProgressResponses[keyof PutApiProgramByIdUsersByUserIdProgressResponses];
+export type PutApiProgramByIdUsersByUserIdProgressResponse = PutApiProgramByIdUsersByUserIdProgressResponses[keyof PutApiProgramByIdUsersByUserIdProgressResponses];
 
 export type PostApiProgramByIdUsersByUserIdContentByContentIdCompleteData = {
-  body?: never;
-  path: {
-    id: string;
-    userId: string;
-    contentId: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/users/{userId}/content/{contentId}/complete';
+    body?: never;
+    path: {
+        id: string;
+        userId: string;
+        contentId: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/users/{userId}/content/{contentId}/complete';
 };
 
 export type PostApiProgramByIdUsersByUserIdContentByContentIdCompleteResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostApiProgramByIdUsersByUserIdResetData = {
-  body?: never;
-  path: {
-    id: string;
-    userId: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/users/{userId}/reset';
+    body?: never;
+    path: {
+        id: string;
+        userId: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/users/{userId}/reset';
 };
 
 export type PostApiProgramByIdUsersByUserIdResetResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostApiProgramByIdSubmitData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/submit';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/submit';
 };
 
 export type PostApiProgramByIdSubmitResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type PostApiProgramByIdSubmitResponse = PostApiProgramByIdSubmitResponses[keyof PostApiProgramByIdSubmitResponses];
 
 export type PostApiProgramByIdApproveData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/approve';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/approve';
 };
 
 export type PostApiProgramByIdApproveResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type PostApiProgramByIdApproveResponse = PostApiProgramByIdApproveResponses[keyof PostApiProgramByIdApproveResponses];
 
 export type PostApiProgramByIdRejectData = {
-  body?: RejectProgramDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/reject';
+    body?: RejectProgramDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/reject';
 };
 
 export type PostApiProgramByIdRejectResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type PostApiProgramByIdRejectResponse = PostApiProgramByIdRejectResponses[keyof PostApiProgramByIdRejectResponses];
 
 export type PostApiProgramByIdWithdrawData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/withdraw';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/withdraw';
 };
 
 export type PostApiProgramByIdWithdrawResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type PostApiProgramByIdWithdrawResponse = PostApiProgramByIdWithdrawResponses[keyof PostApiProgramByIdWithdrawResponses];
 
 export type PostApiProgramByIdArchiveData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/archive';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/archive';
 };
 
 export type PostApiProgramByIdArchiveResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type PostApiProgramByIdArchiveResponse = PostApiProgramByIdArchiveResponses[keyof PostApiProgramByIdArchiveResponses];
 
 export type PostApiProgramByIdRestoreData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/restore';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/restore';
 };
 
 export type PostApiProgramByIdRestoreResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type PostApiProgramByIdRestoreResponse = PostApiProgramByIdRestoreResponses[keyof PostApiProgramByIdRestoreResponses];
 
 export type PostApiProgramByIdPublishData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/publish';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/publish';
 };
 
 export type PostApiProgramByIdPublishResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type PostApiProgramByIdPublishResponse = PostApiProgramByIdPublishResponses[keyof PostApiProgramByIdPublishResponses];
 
 export type PostApiProgramByIdUnpublishData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/unpublish';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/unpublish';
 };
 
 export type PostApiProgramByIdUnpublishResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type PostApiProgramByIdUnpublishResponse = PostApiProgramByIdUnpublishResponses[keyof PostApiProgramByIdUnpublishResponses];
 
 export type PostApiProgramByIdScheduleData = {
-  body?: ScheduleProgramDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/schedule';
+    body?: ScheduleProgramDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/schedule';
 };
 
 export type PostApiProgramByIdScheduleResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type PostApiProgramByIdScheduleResponse = PostApiProgramByIdScheduleResponses[keyof PostApiProgramByIdScheduleResponses];
 
 export type PostApiProgramByIdMonetizeData = {
-  body?: MonetizationDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/monetize';
+    body?: MonetizationDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/monetize';
 };
 
 export type PostApiProgramByIdMonetizeResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
 export type PostApiProgramByIdMonetizeResponse = PostApiProgramByIdMonetizeResponses[keyof PostApiProgramByIdMonetizeResponses];
 
 export type PostApiProgramByIdDisableMonetizationData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/disable-monetization';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/disable-monetization';
 };
 
 export type PostApiProgramByIdDisableMonetizationResponses = {
-  /**
-   * OK
-   */
-  200: ProgramReadable;
+    /**
+     * OK
+     */
+    200: Program;
 };
 
-export type PostApiProgramByIdDisableMonetizationResponse =
-  PostApiProgramByIdDisableMonetizationResponses[keyof PostApiProgramByIdDisableMonetizationResponses];
+export type PostApiProgramByIdDisableMonetizationResponse = PostApiProgramByIdDisableMonetizationResponses[keyof PostApiProgramByIdDisableMonetizationResponses];
 
 export type GetApiProgramByIdPricingData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/pricing';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/pricing';
 };
 
 export type GetApiProgramByIdPricingResponses = {
-  /**
-   * OK
-   */
-  200: PricingDto;
+    /**
+     * OK
+     */
+    200: PricingDto;
 };
 
 export type GetApiProgramByIdPricingResponse = GetApiProgramByIdPricingResponses[keyof GetApiProgramByIdPricingResponses];
 
 export type PutApiProgramByIdPricingData = {
-  body?: UpdatePricingDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/pricing';
+    body?: UpdatePricingDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/pricing';
 };
 
 export type PutApiProgramByIdPricingResponses = {
-  /**
-   * OK
-   */
-  200: PricingDto;
+    /**
+     * OK
+     */
+    200: PricingDto;
 };
 
 export type PutApiProgramByIdPricingResponse = PutApiProgramByIdPricingResponses[keyof PutApiProgramByIdPricingResponses];
 
 export type GetApiProgramByIdAnalyticsData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/analytics';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/analytics';
 };
 
 export type GetApiProgramByIdAnalyticsResponses = {
-  /**
-   * OK
-   */
-  200: ProgramAnalyticsDto;
+    /**
+     * OK
+     */
+    200: ProgramAnalyticsDto;
 };
 
 export type GetApiProgramByIdAnalyticsResponse = GetApiProgramByIdAnalyticsResponses[keyof GetApiProgramByIdAnalyticsResponses];
 
 export type GetApiProgramByIdAnalyticsCompletionRatesData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/analytics/completion-rates';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/analytics/completion-rates';
 };
 
 export type GetApiProgramByIdAnalyticsCompletionRatesResponses = {
-  /**
-   * OK
-   */
-  200: CompletionRatesDto;
+    /**
+     * OK
+     */
+    200: CompletionRatesDto;
 };
 
-export type GetApiProgramByIdAnalyticsCompletionRatesResponse =
-  GetApiProgramByIdAnalyticsCompletionRatesResponses[keyof GetApiProgramByIdAnalyticsCompletionRatesResponses];
+export type GetApiProgramByIdAnalyticsCompletionRatesResponse = GetApiProgramByIdAnalyticsCompletionRatesResponses[keyof GetApiProgramByIdAnalyticsCompletionRatesResponses];
 
 export type GetApiProgramByIdAnalyticsEngagementData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/analytics/engagement';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/analytics/engagement';
 };
 
 export type GetApiProgramByIdAnalyticsEngagementResponses = {
-  /**
-   * OK
-   */
-  200: EngagementMetricsDto;
+    /**
+     * OK
+     */
+    200: EngagementMetricsDto;
 };
 
 export type GetApiProgramByIdAnalyticsEngagementResponse = GetApiProgramByIdAnalyticsEngagementResponses[keyof GetApiProgramByIdAnalyticsEngagementResponses];
 
 export type GetApiProgramByIdAnalyticsRevenueData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/analytics/revenue';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/analytics/revenue';
 };
 
 export type GetApiProgramByIdAnalyticsRevenueResponses = {
-  /**
-   * OK
-   */
-  200: RevenueAnalyticsDto;
+    /**
+     * OK
+     */
+    200: RevenueAnalyticsDto;
 };
 
 export type GetApiProgramByIdAnalyticsRevenueResponse = GetApiProgramByIdAnalyticsRevenueResponses[keyof GetApiProgramByIdAnalyticsRevenueResponses];
 
 export type PostApiProgramByIdCreateProductData = {
-  body?: CreateProductFromProgramDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/create-product';
+    body?: CreateProductFromProgramDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/create-product';
 };
 
 export type PostApiProgramByIdCreateProductResponses = {
-  /**
-   * OK
-   */
-  200: string;
+    /**
+     * OK
+     */
+    200: string;
 };
 
 export type PostApiProgramByIdCreateProductResponse = PostApiProgramByIdCreateProductResponses[keyof PostApiProgramByIdCreateProductResponses];
 
 export type DeleteApiProgramByIdLinkProductByProductIdData = {
-  body?: never;
-  path: {
-    id: string;
-    productId: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/link-product/{productId}';
+    body?: never;
+    path: {
+        id: string;
+        productId: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/link-product/{productId}';
 };
 
 export type DeleteApiProgramByIdLinkProductByProductIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostApiProgramByIdLinkProductByProductIdData = {
-  body?: never;
-  path: {
-    id: string;
-    productId: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/link-product/{productId}';
+    body?: never;
+    path: {
+        id: string;
+        productId: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/link-product/{productId}';
 };
 
 export type PostApiProgramByIdLinkProductByProductIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiProgramByIdProductsData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Program/{id}/products';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/program/{id}/products';
 };
 
 export type GetApiProgramByIdProductsResponses = {
-  /**
-   * OK
-   */
-  200: Array<string>;
+    /**
+     * OK
+     */
+    200: Array<string>;
 };
 
 export type GetApiProgramByIdProductsResponse = GetApiProgramByIdProductsResponses[keyof GetApiProgramByIdProductsResponses];
 
 export type GetApiProgramsByProgramIdContentData = {
-  body?: never;
-  path: {
-    programId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content';
+    body?: never;
+    path: {
+        programId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content';
 };
 
 export type GetApiProgramsByProgramIdContentResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramContentDto>;
+    /**
+     * OK
+     */
+    200: Array<ProgramContentDto>;
 };
 
 export type GetApiProgramsByProgramIdContentResponse = GetApiProgramsByProgramIdContentResponses[keyof GetApiProgramsByProgramIdContentResponses];
 
 export type PostApiProgramsByProgramIdContentData = {
-  body?: CreateProgramContentDto;
-  path: {
-    programId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content';
+    body?: CreateProgramContentDto;
+    path: {
+        programId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content';
 };
 
 export type PostApiProgramsByProgramIdContentResponses = {
-  /**
-   * OK
-   */
-  200: ProgramContentDto;
+    /**
+     * OK
+     */
+    200: ProgramContentDto;
 };
 
 export type PostApiProgramsByProgramIdContentResponse = PostApiProgramsByProgramIdContentResponses[keyof PostApiProgramsByProgramIdContentResponses];
 
 export type GetApiProgramsByProgramIdContentTopLevelData = {
-  body?: never;
-  path: {
-    programId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content/top-level';
+    body?: never;
+    path: {
+        programId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content/top-level';
 };
 
 export type GetApiProgramsByProgramIdContentTopLevelResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramContentDto>;
+    /**
+     * OK
+     */
+    200: Array<ProgramContentDto>;
 };
 
-export type GetApiProgramsByProgramIdContentTopLevelResponse =
-  GetApiProgramsByProgramIdContentTopLevelResponses[keyof GetApiProgramsByProgramIdContentTopLevelResponses];
+export type GetApiProgramsByProgramIdContentTopLevelResponse = GetApiProgramsByProgramIdContentTopLevelResponses[keyof GetApiProgramsByProgramIdContentTopLevelResponses];
 
 export type DeleteApiProgramsByProgramIdContentByIdData = {
-  body?: never;
-  path: {
-    programId: string;
-    id: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content/{id}';
+    body?: never;
+    path: {
+        programId: string;
+        id: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content/{id}';
 };
 
 export type DeleteApiProgramsByProgramIdContentByIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiProgramsByProgramIdContentByIdData = {
-  body?: never;
-  path: {
-    programId: string;
-    id: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content/{id}';
+    body?: never;
+    path: {
+        programId: string;
+        id: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content/{id}';
 };
 
 export type GetApiProgramsByProgramIdContentByIdResponses = {
-  /**
-   * OK
-   */
-  200: ProgramContentDto;
+    /**
+     * OK
+     */
+    200: ProgramContentDto;
 };
 
 export type GetApiProgramsByProgramIdContentByIdResponse = GetApiProgramsByProgramIdContentByIdResponses[keyof GetApiProgramsByProgramIdContentByIdResponses];
 
 export type PutApiProgramsByProgramIdContentByIdData = {
-  body?: UpdateProgramContentDto;
-  path: {
-    programId: string;
-    id: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content/{id}';
+    body?: UpdateProgramContentDto;
+    path: {
+        programId: string;
+        id: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content/{id}';
 };
 
 export type PutApiProgramsByProgramIdContentByIdResponses = {
-  /**
-   * OK
-   */
-  200: ProgramContentDto;
+    /**
+     * OK
+     */
+    200: ProgramContentDto;
 };
 
 export type PutApiProgramsByProgramIdContentByIdResponse = PutApiProgramsByProgramIdContentByIdResponses[keyof PutApiProgramsByProgramIdContentByIdResponses];
 
 export type GetApiProgramsByProgramIdContentByParentIdChildrenData = {
-  body?: never;
-  path: {
-    programId: string;
-    parentId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content/{parentId}/children';
+    body?: never;
+    path: {
+        programId: string;
+        parentId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content/{parentId}/children';
 };
 
 export type GetApiProgramsByProgramIdContentByParentIdChildrenResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramContentDto>;
+    /**
+     * OK
+     */
+    200: Array<ProgramContentDto>;
 };
 
-export type GetApiProgramsByProgramIdContentByParentIdChildrenResponse =
-  GetApiProgramsByProgramIdContentByParentIdChildrenResponses[keyof GetApiProgramsByProgramIdContentByParentIdChildrenResponses];
+export type GetApiProgramsByProgramIdContentByParentIdChildrenResponse = GetApiProgramsByProgramIdContentByParentIdChildrenResponses[keyof GetApiProgramsByProgramIdContentByParentIdChildrenResponses];
 
 export type PostApiProgramsByProgramIdContentReorderData = {
-  body?: ReorderContentDto;
-  path: {
-    programId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content/reorder';
+    body?: ReorderContentDto;
+    path: {
+        programId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content/reorder';
 };
 
 export type PostApiProgramsByProgramIdContentReorderResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostApiProgramsByProgramIdContentByIdMoveData = {
-  body?: MoveContentDto;
-  path: {
-    programId: string;
-    id: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content/{id}/move';
+    body?: MoveContentDto;
+    path: {
+        programId: string;
+        id: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content/{id}/move';
 };
 
 export type PostApiProgramsByProgramIdContentByIdMoveResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiProgramsByProgramIdContentRequiredData = {
-  body?: never;
-  path: {
-    programId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content/required';
+    body?: never;
+    path: {
+        programId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content/required';
 };
 
 export type GetApiProgramsByProgramIdContentRequiredResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramContentDto>;
+    /**
+     * OK
+     */
+    200: Array<ProgramContentDto>;
 };
 
-export type GetApiProgramsByProgramIdContentRequiredResponse =
-  GetApiProgramsByProgramIdContentRequiredResponses[keyof GetApiProgramsByProgramIdContentRequiredResponses];
+export type GetApiProgramsByProgramIdContentRequiredResponse = GetApiProgramsByProgramIdContentRequiredResponses[keyof GetApiProgramsByProgramIdContentRequiredResponses];
 
 export type GetApiProgramsByProgramIdContentByTypeByTypeData = {
-  body?: never;
-  path: {
-    programId: string;
-    type: ProgramContentType;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content/by-type/{type}';
+    body?: never;
+    path: {
+        programId: string;
+        type: ProgramContentType;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content/by-type/{type}';
 };
 
 export type GetApiProgramsByProgramIdContentByTypeByTypeResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramContentDto>;
+    /**
+     * OK
+     */
+    200: Array<ProgramContentDto>;
 };
 
-export type GetApiProgramsByProgramIdContentByTypeByTypeResponse =
-  GetApiProgramsByProgramIdContentByTypeByTypeResponses[keyof GetApiProgramsByProgramIdContentByTypeByTypeResponses];
+export type GetApiProgramsByProgramIdContentByTypeByTypeResponse = GetApiProgramsByProgramIdContentByTypeByTypeResponses[keyof GetApiProgramsByProgramIdContentByTypeByTypeResponses];
 
 export type GetApiProgramsByProgramIdContentByVisibilityByVisibilityData = {
-  body?: never;
-  path: {
-    programId: string;
-    visibility: Visibility;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content/by-visibility/{visibility}';
+    body?: never;
+    path: {
+        programId: string;
+        visibility: Visibility;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content/by-visibility/{visibility}';
 };
 
 export type GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramContentDto>;
+    /**
+     * OK
+     */
+    200: Array<ProgramContentDto>;
 };
 
-export type GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponse =
-  GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses[keyof GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses];
+export type GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponse = GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses[keyof GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses];
 
 export type PostApiProgramsByProgramIdContentSearchData = {
-  body?: SearchContentDto;
-  path: {
-    programId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content/search';
+    body?: SearchContentDto;
+    path: {
+        programId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content/search';
 };
 
 export type PostApiProgramsByProgramIdContentSearchResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProgramContentDto>;
+    /**
+     * OK
+     */
+    200: Array<ProgramContentDto>;
 };
 
-export type PostApiProgramsByProgramIdContentSearchResponse =
-  PostApiProgramsByProgramIdContentSearchResponses[keyof PostApiProgramsByProgramIdContentSearchResponses];
+export type PostApiProgramsByProgramIdContentSearchResponse = PostApiProgramsByProgramIdContentSearchResponses[keyof PostApiProgramsByProgramIdContentSearchResponses];
 
 export type GetApiProgramsByProgramIdContentStatsData = {
-  body?: never;
-  path: {
-    programId: string;
-  };
-  query?: never;
-  url: '/api/programs/{programId}/content/stats';
+    body?: never;
+    path: {
+        programId: string;
+    };
+    query?: never;
+    url: '/api/programs/{programId}/content/stats';
 };
 
 export type GetApiProgramsByProgramIdContentStatsResponses = {
-  /**
-   * OK
-   */
-  200: ContentStatsDto;
+    /**
+     * OK
+     */
+    200: ContentStatsDto;
 };
 
-export type GetApiProgramsByProgramIdContentStatsResponse =
-  GetApiProgramsByProgramIdContentStatsResponses[keyof GetApiProgramsByProgramIdContentStatsResponses];
+export type GetApiProgramsByProgramIdContentStatsResponse = GetApiProgramsByProgramIdContentStatsResponses[keyof GetApiProgramsByProgramIdContentStatsResponses];
 
 export type GetApiProjectsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    type?: ProjectType;
-    status?: ContentStatus;
-    visibility?: AccessLevel;
-    creatorId?: string;
-    categoryId?: string;
-    searchTerm?: string;
-    skip?: number;
-    take?: number;
-    sortBy?: string;
-    sortDirection?: string;
-  };
-  url: '/api/Projects';
+    body?: never;
+    path?: never;
+    query?: {
+        type?: ProjectType;
+        status?: ContentStatus;
+        visibility?: AccessLevel;
+        creatorId?: string;
+        categoryId?: string;
+        searchTerm?: string;
+        skip?: number;
+        take?: number;
+        sortBy?: string;
+        sortDirection?: string;
+    };
+    url: '/api/projects';
 };
 
 export type GetApiProjectsResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProjectReadable>;
+    /**
+     * OK
+     */
+    200: Array<Project>;
 };
 
 export type GetApiProjectsResponse = GetApiProjectsResponses[keyof GetApiProjectsResponses];
 
 export type PostApiProjectsData = {
-  body?: CreateProjectRequest;
-  path?: never;
-  query?: never;
-  url: '/api/Projects';
+    body?: CreateProjectRequest;
+    path?: never;
+    query?: never;
+    url: '/api/projects';
 };
 
 export type PostApiProjectsResponses = {
-  /**
-   * OK
-   */
-  200: CreateProjectResultReadable;
+    /**
+     * OK
+     */
+    200: CreateProjectResult;
 };
 
 export type PostApiProjectsResponse = PostApiProjectsResponses[keyof PostApiProjectsResponses];
 
 export type DeleteApiProjectsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: {
-    softDelete?: boolean;
-    reason?: string;
-  };
-  url: '/api/Projects/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        softDelete?: boolean;
+        reason?: string;
+    };
+    url: '/api/projects/{id}';
 };
 
 export type DeleteApiProjectsByIdResponses = {
-  /**
-   * OK
-   */
-  200: DeleteProjectResult;
+    /**
+     * OK
+     */
+    200: DeleteProjectResult;
 };
 
 export type DeleteApiProjectsByIdResponse = DeleteApiProjectsByIdResponses[keyof DeleteApiProjectsByIdResponses];
 
 export type GetApiProjectsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: {
-    includeTeam?: boolean;
-    includeReleases?: boolean;
-    includeCollaborators?: boolean;
-    includeStatistics?: boolean;
-  };
-  url: '/api/Projects/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        includeTeam?: boolean;
+        includeReleases?: boolean;
+        includeCollaborators?: boolean;
+        includeStatistics?: boolean;
+    };
+    url: '/api/projects/{id}';
 };
 
 export type GetApiProjectsByIdResponses = {
-  /**
-   * OK
-   */
-  200: ProjectReadable;
+    /**
+     * OK
+     */
+    200: Project;
 };
 
 export type GetApiProjectsByIdResponse = GetApiProjectsByIdResponses[keyof GetApiProjectsByIdResponses];
 
 export type PutApiProjectsByIdData = {
-  body?: UpdateProjectRequest;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Projects/{id}';
+    body?: UpdateProjectRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/projects/{id}';
 };
 
 export type PutApiProjectsByIdResponses = {
-  /**
-   * OK
-   */
-  200: UpdateProjectResultReadable;
+    /**
+     * OK
+     */
+    200: UpdateProjectResult;
 };
 
 export type PutApiProjectsByIdResponse = PutApiProjectsByIdResponses[keyof PutApiProjectsByIdResponses];
 
 export type GetApiProjectsSlugBySlugData = {
-  body?: never;
-  path: {
-    slug: string;
-  };
-  query?: {
-    includeTeam?: boolean;
-    includeReleases?: boolean;
-    includeCollaborators?: boolean;
-  };
-  url: '/api/Projects/slug/{slug}';
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: {
+        includeTeam?: boolean;
+        includeReleases?: boolean;
+        includeCollaborators?: boolean;
+    };
+    url: '/api/projects/slug/{slug}';
 };
 
 export type GetApiProjectsSlugBySlugResponses = {
-  /**
-   * OK
-   */
-  200: ProjectReadable;
+    /**
+     * OK
+     */
+    200: Project;
 };
 
 export type GetApiProjectsSlugBySlugResponse = GetApiProjectsSlugBySlugResponses[keyof GetApiProjectsSlugBySlugResponses];
 
 export type PostApiProjectsByIdPublishData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Projects/{id}/publish';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/projects/{id}/publish';
 };
 
 export type PostApiProjectsByIdPublishResponses = {
-  /**
-   * OK
-   */
-  200: PublishProjectResultReadable;
+    /**
+     * OK
+     */
+    200: PublishProjectResult;
 };
 
 export type PostApiProjectsByIdPublishResponse = PostApiProjectsByIdPublishResponses[keyof PostApiProjectsByIdPublishResponses];
 
 export type PostApiProjectsByIdUnpublishData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Projects/{id}/unpublish';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/projects/{id}/unpublish';
 };
 
 export type PostApiProjectsByIdUnpublishResponses = {
-  /**
-   * OK
-   */
-  200: UnpublishProjectResultReadable;
+    /**
+     * OK
+     */
+    200: UnpublishProjectResult;
 };
 
 export type PostApiProjectsByIdUnpublishResponse = PostApiProjectsByIdUnpublishResponses[keyof PostApiProjectsByIdUnpublishResponses];
 
 export type PostApiProjectsByIdArchiveData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Projects/{id}/archive';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/projects/{id}/archive';
 };
 
 export type PostApiProjectsByIdArchiveResponses = {
-  /**
-   * OK
-   */
-  200: ArchiveProjectResultReadable;
+    /**
+     * OK
+     */
+    200: ArchiveProjectResult;
 };
 
 export type PostApiProjectsByIdArchiveResponse = PostApiProjectsByIdArchiveResponses[keyof PostApiProjectsByIdArchiveResponses];
 
 export type GetApiProjectsSearchData = {
-  body?: never;
-  path?: never;
-  query?: {
-    searchTerm?: string;
-    type?: ProjectType;
-    categoryId?: string;
-    status?: ContentStatus;
-    visibility?: AccessLevel;
-    skip?: number;
-    take?: number;
-    sortBy?: string;
-    sortDirection?: string;
-  };
-  url: '/api/Projects/search';
+    body?: never;
+    path?: never;
+    query?: {
+        searchTerm?: string;
+        type?: ProjectType;
+        categoryId?: string;
+        status?: ContentStatus;
+        visibility?: AccessLevel;
+        skip?: number;
+        take?: number;
+        sortBy?: string;
+        sortDirection?: string;
+    };
+    url: '/api/projects/search';
 };
 
 export type GetApiProjectsSearchResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProjectReadable>;
+    /**
+     * OK
+     */
+    200: Array<Project>;
 };
 
 export type GetApiProjectsSearchResponse = GetApiProjectsSearchResponses[keyof GetApiProjectsSearchResponses];
 
 export type GetApiProjectsPopularData = {
-  body?: never;
-  path?: never;
-  query?: {
-    type?: ProjectType;
-    take?: number;
-  };
-  url: '/api/Projects/popular';
+    body?: never;
+    path?: never;
+    query?: {
+        type?: ProjectType;
+        take?: number;
+    };
+    url: '/api/projects/popular';
 };
 
 export type GetApiProjectsPopularResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProjectReadable>;
+    /**
+     * OK
+     */
+    200: Array<Project>;
 };
 
 export type GetApiProjectsPopularResponse = GetApiProjectsPopularResponses[keyof GetApiProjectsPopularResponses];
 
 export type GetApiProjectsRecentData = {
-  body?: never;
-  path?: never;
-  query?: {
-    type?: ProjectType;
-    take?: number;
-  };
-  url: '/api/Projects/recent';
+    body?: never;
+    path?: never;
+    query?: {
+        type?: ProjectType;
+        take?: number;
+    };
+    url: '/api/projects/recent';
 };
 
 export type GetApiProjectsRecentResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProjectReadable>;
+    /**
+     * OK
+     */
+    200: Array<Project>;
 };
 
 export type GetApiProjectsRecentResponse = GetApiProjectsRecentResponses[keyof GetApiProjectsRecentResponses];
 
 export type GetApiProjectsFeaturedData = {
-  body?: never;
-  path?: never;
-  query?: {
-    type?: ProjectType;
-    take?: number;
-  };
-  url: '/api/Projects/featured';
+    body?: never;
+    path?: never;
+    query?: {
+        type?: ProjectType;
+        take?: number;
+    };
+    url: '/api/projects/featured';
 };
 
 export type GetApiProjectsFeaturedResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProjectReadable>;
+    /**
+     * OK
+     */
+    200: Array<Project>;
 };
 
 export type GetApiProjectsFeaturedResponse = GetApiProjectsFeaturedResponses[keyof GetApiProjectsFeaturedResponses];
 
 export type GetApiProjectsByIdStatisticsData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: {
-    fromDate?: string;
-    toDate?: string;
-  };
-  url: '/api/Projects/{id}/statistics';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        fromDate?: string;
+        toDate?: string;
+    };
+    url: '/api/projects/{id}/statistics';
 };
 
 export type GetApiProjectsByIdStatisticsResponses = {
-  /**
-   * OK
-   */
-  200: ProjectStatistics;
+    /**
+     * OK
+     */
+    200: ProjectStatistics;
 };
 
 export type GetApiProjectsByIdStatisticsResponse = GetApiProjectsByIdStatisticsResponses[keyof GetApiProjectsByIdStatisticsResponses];
 
 export type GetApiProjectsCategoryByCategoryIdData = {
-  body?: never;
-  path: {
-    categoryId: string;
-  };
-  query?: {
-    status?: ContentStatus;
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Projects/category/{categoryId}';
+    body?: never;
+    path: {
+        categoryId: string;
+    };
+    query?: {
+        status?: ContentStatus;
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/projects/category/{categoryId}';
 };
 
 export type GetApiProjectsCategoryByCategoryIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProjectReadable>;
+    /**
+     * OK
+     */
+    200: Array<Project>;
 };
 
 export type GetApiProjectsCategoryByCategoryIdResponse = GetApiProjectsCategoryByCategoryIdResponses[keyof GetApiProjectsCategoryByCategoryIdResponses];
 
 export type GetApiProjectsCreatorByCreatorIdData = {
-  body?: never;
-  path: {
-    creatorId: string;
-  };
-  query?: {
-    status?: ContentStatus;
-    skip?: number;
-    take?: number;
-  };
-  url: '/api/Projects/creator/{creatorId}';
+    body?: never;
+    path: {
+        creatorId: string;
+    };
+    query?: {
+        status?: ContentStatus;
+        skip?: number;
+        take?: number;
+    };
+    url: '/api/projects/creator/{creatorId}';
 };
 
 export type GetApiProjectsCreatorByCreatorIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<ProjectReadable>;
+    /**
+     * OK
+     */
+    200: Array<Project>;
 };
 
 export type GetApiProjectsCreatorByCreatorIdResponse = GetApiProjectsCreatorByCreatorIdResponses[keyof GetApiProjectsCreatorByCreatorIdResponses];
 
 export type GetApiSubscriptionMeData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/Subscription/me';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/subscription/me';
 };
 
 export type GetApiSubscriptionMeResponses = {
-  /**
-   * OK
-   */
-  200: Array<UserSubscriptionReadable>;
+    /**
+     * OK
+     */
+    200: Array<UserSubscription>;
 };
 
 export type GetApiSubscriptionMeResponse = GetApiSubscriptionMeResponses[keyof GetApiSubscriptionMeResponses];
 
 export type GetApiSubscriptionMeActiveData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/Subscription/me/active';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/subscription/me/active';
 };
 
 export type GetApiSubscriptionMeActiveResponses = {
-  /**
-   * OK
-   */
-  200: UserSubscriptionReadable;
+    /**
+     * OK
+     */
+    200: UserSubscription;
 };
 
 export type GetApiSubscriptionMeActiveResponse = GetApiSubscriptionMeActiveResponses[keyof GetApiSubscriptionMeActiveResponses];
 
 export type GetApiSubscriptionByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Subscription/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/subscription/{id}';
 };
 
 export type GetApiSubscriptionByIdResponses = {
-  /**
-   * OK
-   */
-  200: UserSubscriptionReadable;
+    /**
+     * OK
+     */
+    200: UserSubscription;
 };
 
 export type GetApiSubscriptionByIdResponse = GetApiSubscriptionByIdResponses[keyof GetApiSubscriptionByIdResponses];
 
 export type GetApiSubscriptionData = {
-  body?: never;
-  path?: never;
-  query?: {
-    skip?: number;
-    take?: number;
-    status?: SubscriptionStatus;
-  };
-  url: '/api/Subscription';
+    body?: never;
+    path?: never;
+    query?: {
+        skip?: number;
+        take?: number;
+        status?: SubscriptionStatus;
+    };
+    url: '/api/subscription';
 };
 
 export type GetApiSubscriptionResponses = {
-  /**
-   * OK
-   */
-  200: Array<UserSubscriptionReadable>;
+    /**
+     * OK
+     */
+    200: Array<UserSubscription>;
 };
 
 export type GetApiSubscriptionResponse = GetApiSubscriptionResponses[keyof GetApiSubscriptionResponses];
 
 export type PostApiSubscriptionData = {
-  body?: CreateSubscriptionDto;
-  path?: never;
-  query?: never;
-  url: '/api/Subscription';
+    body?: CreateSubscriptionDto;
+    path?: never;
+    query?: never;
+    url: '/api/subscription';
 };
 
 export type PostApiSubscriptionResponses = {
-  /**
-   * OK
-   */
-  200: UserSubscriptionReadable;
+    /**
+     * OK
+     */
+    200: UserSubscription;
 };
 
 export type PostApiSubscriptionResponse = PostApiSubscriptionResponses[keyof PostApiSubscriptionResponses];
 
 export type PostApiSubscriptionByIdCancelData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Subscription/{id}/cancel';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/subscription/{id}/cancel';
 };
 
 export type PostApiSubscriptionByIdCancelResponses = {
-  /**
-   * OK
-   */
-  200: UserSubscriptionReadable;
+    /**
+     * OK
+     */
+    200: UserSubscription;
 };
 
 export type PostApiSubscriptionByIdCancelResponse = PostApiSubscriptionByIdCancelResponses[keyof PostApiSubscriptionByIdCancelResponses];
 
 export type PostApiSubscriptionByIdResumeData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Subscription/{id}/resume';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/subscription/{id}/resume';
 };
 
 export type PostApiSubscriptionByIdResumeResponses = {
-  /**
-   * OK
-   */
-  200: UserSubscriptionReadable;
+    /**
+     * OK
+     */
+    200: UserSubscription;
 };
 
 export type PostApiSubscriptionByIdResumeResponse = PostApiSubscriptionByIdResumeResponses[keyof PostApiSubscriptionByIdResumeResponses];
 
 export type PutApiSubscriptionByIdPaymentMethodData = {
-  body?: UpdatePaymentMethodDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Subscription/{id}/payment-method';
+    body?: UpdatePaymentMethodDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/subscription/{id}/payment-method';
 };
 
 export type PutApiSubscriptionByIdPaymentMethodResponses = {
-  /**
-   * OK
-   */
-  200: UserSubscriptionReadable;
+    /**
+     * OK
+     */
+    200: UserSubscription;
 };
 
 export type PutApiSubscriptionByIdPaymentMethodResponse = PutApiSubscriptionByIdPaymentMethodResponses[keyof PutApiSubscriptionByIdPaymentMethodResponses];
 
 export type GetApiTenantDomainsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    tenantId?: string;
-  };
-  url: '/api/tenant-domains';
+    body?: never;
+    path?: never;
+    query?: {
+        tenantId?: string;
+    };
+    url: '/api/tenant-domains';
 };
 
 export type GetApiTenantDomainsResponses = {
-  /**
-   * OK
-   */
-  200: Array<TenantDomainReadable>;
+    /**
+     * OK
+     */
+    200: Array<TenantDomain>;
 };
 
 export type GetApiTenantDomainsResponse = GetApiTenantDomainsResponses[keyof GetApiTenantDomainsResponses];
 
 export type PostApiTenantDomainsData = {
-  body?: CreateTenantDomainDto;
-  path?: never;
-  query?: never;
-  url: '/api/tenant-domains';
+    body?: CreateTenantDomainDto;
+    path?: never;
+    query?: never;
+    url: '/api/tenant-domains';
 };
 
 export type PostApiTenantDomainsResponses = {
-  /**
-   * OK
-   */
-  200: TenantDomainReadable;
+    /**
+     * OK
+     */
+    200: TenantDomain;
 };
 
 export type PostApiTenantDomainsResponse = PostApiTenantDomainsResponses[keyof PostApiTenantDomainsResponses];
 
 export type DeleteApiTenantDomainsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/tenant-domains/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tenant-domains/{id}';
 };
 
 export type DeleteApiTenantDomainsByIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiTenantDomainsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/tenant-domains/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tenant-domains/{id}';
 };
 
 export type GetApiTenantDomainsByIdResponses = {
-  /**
-   * OK
-   */
-  200: TenantDomainReadable;
+    /**
+     * OK
+     */
+    200: TenantDomain;
 };
 
 export type GetApiTenantDomainsByIdResponse = GetApiTenantDomainsByIdResponses[keyof GetApiTenantDomainsByIdResponses];
 
 export type PutApiTenantDomainsByIdData = {
-  body?: UpdateTenantDomainDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/tenant-domains/{id}';
+    body?: UpdateTenantDomainDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tenant-domains/{id}';
 };
 
 export type PutApiTenantDomainsByIdResponses = {
-  /**
-   * OK
-   */
-  200: TenantDomainReadable;
+    /**
+     * OK
+     */
+    200: TenantDomain;
 };
 
 export type PutApiTenantDomainsByIdResponse = PutApiTenantDomainsByIdResponses[keyof PutApiTenantDomainsByIdResponses];
 
 export type PostApiTenantDomainsByTenantIdSetMainByDomainIdData = {
-  body?: never;
-  path: {
-    tenantId: string;
-    domainId: string;
-  };
-  query?: never;
-  url: '/api/tenant-domains/{tenantId}/set-main/{domainId}';
+    body?: never;
+    path: {
+        tenantId: string;
+        domainId: string;
+    };
+    query?: never;
+    url: '/api/tenant-domains/{tenantId}/set-main/{domainId}';
 };
 
 export type PostApiTenantDomainsByTenantIdSetMainByDomainIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiTenantDomainsUserGroupsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    tenantId?: string;
-    rootOnly?: boolean;
-  };
-  url: '/api/tenant-domains/user-groups';
+    body?: never;
+    path?: never;
+    query?: {
+        tenantId?: string;
+        rootOnly?: boolean;
+    };
+    url: '/api/tenant-domains/user-groups';
 };
 
 export type GetApiTenantDomainsUserGroupsResponses = {
-  /**
-   * OK
-   */
-  200: Array<TenantUserGroupDto>;
+    /**
+     * OK
+     */
+    200: Array<TenantUserGroupDto>;
 };
 
 export type GetApiTenantDomainsUserGroupsResponse = GetApiTenantDomainsUserGroupsResponses[keyof GetApiTenantDomainsUserGroupsResponses];
 
 export type PostApiTenantDomainsUserGroupsData = {
-  body?: CreateTenantUserGroupDto;
-  path?: never;
-  query?: never;
-  url: '/api/tenant-domains/user-groups';
+    body?: CreateTenantUserGroupDto;
+    path?: never;
+    query?: never;
+    url: '/api/tenant-domains/user-groups';
 };
 
 export type PostApiTenantDomainsUserGroupsResponses = {
-  /**
-   * OK
-   */
-  200: TenantUserGroupDto;
+    /**
+     * OK
+     */
+    200: TenantUserGroupDto;
 };
 
 export type PostApiTenantDomainsUserGroupsResponse = PostApiTenantDomainsUserGroupsResponses[keyof PostApiTenantDomainsUserGroupsResponses];
 
 export type DeleteApiTenantDomainsUserGroupsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/tenant-domains/user-groups/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tenant-domains/user-groups/{id}';
 };
 
 export type DeleteApiTenantDomainsUserGroupsByIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiTenantDomainsUserGroupsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/tenant-domains/user-groups/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tenant-domains/user-groups/{id}';
 };
 
 export type GetApiTenantDomainsUserGroupsByIdResponses = {
-  /**
-   * OK
-   */
-  200: TenantUserGroupDto;
+    /**
+     * OK
+     */
+    200: TenantUserGroupDto;
 };
 
 export type GetApiTenantDomainsUserGroupsByIdResponse = GetApiTenantDomainsUserGroupsByIdResponses[keyof GetApiTenantDomainsUserGroupsByIdResponses];
 
 export type PutApiTenantDomainsUserGroupsByIdData = {
-  body?: UpdateTenantUserGroupDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/tenant-domains/user-groups/{id}';
+    body?: UpdateTenantUserGroupDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tenant-domains/user-groups/{id}';
 };
 
 export type PutApiTenantDomainsUserGroupsByIdResponses = {
-  /**
-   * OK
-   */
-  200: TenantUserGroupDto;
+    /**
+     * OK
+     */
+    200: TenantUserGroupDto;
 };
 
 export type PutApiTenantDomainsUserGroupsByIdResponse = PutApiTenantDomainsUserGroupsByIdResponses[keyof PutApiTenantDomainsUserGroupsByIdResponses];
 
 export type GetApiTenantDomainsMembershipsUserByUserIdData = {
-  body?: never;
-  path: {
-    userId: string;
-  };
-  query?: never;
-  url: '/api/tenant-domains/memberships/user/{userId}';
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query?: never;
+    url: '/api/tenant-domains/memberships/user/{userId}';
 };
 
 export type GetApiTenantDomainsMembershipsUserByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<TenantUserGroupMembershipDto>;
+    /**
+     * OK
+     */
+    200: Array<TenantUserGroupMembershipDto>;
 };
 
-export type GetApiTenantDomainsMembershipsUserByUserIdResponse =
-  GetApiTenantDomainsMembershipsUserByUserIdResponses[keyof GetApiTenantDomainsMembershipsUserByUserIdResponses];
+export type GetApiTenantDomainsMembershipsUserByUserIdResponse = GetApiTenantDomainsMembershipsUserByUserIdResponses[keyof GetApiTenantDomainsMembershipsUserByUserIdResponses];
 
 export type DeleteApiTenantDomainsUserGroupsMembershipsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    userId?: string;
-    userGroupId?: string;
-  };
-  url: '/api/tenant-domains/user-groups/memberships';
+    body?: never;
+    path?: never;
+    query?: {
+        userId?: string;
+        userGroupId?: string;
+    };
+    url: '/api/tenant-domains/user-groups/memberships';
 };
 
 export type DeleteApiTenantDomainsUserGroupsMembershipsResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostApiTenantDomainsUserGroupsMembershipsData = {
-  body?: AddUserToGroupDto;
-  path?: never;
-  query?: never;
-  url: '/api/tenant-domains/user-groups/memberships';
+    body?: AddUserToGroupDto;
+    path?: never;
+    query?: never;
+    url: '/api/tenant-domains/user-groups/memberships';
 };
 
 export type PostApiTenantDomainsUserGroupsMembershipsResponses = {
-  /**
-   * OK
-   */
-  200: TenantUserGroupMembershipReadable;
+    /**
+     * OK
+     */
+    200: TenantUserGroupMembership;
 };
 
-export type PostApiTenantDomainsUserGroupsMembershipsResponse =
-  PostApiTenantDomainsUserGroupsMembershipsResponses[keyof PostApiTenantDomainsUserGroupsMembershipsResponses];
+export type PostApiTenantDomainsUserGroupsMembershipsResponse = PostApiTenantDomainsUserGroupsMembershipsResponses[keyof PostApiTenantDomainsUserGroupsMembershipsResponses];
 
 export type GetApiTenantDomainsUserGroupsByGroupIdMembersData = {
-  body?: never;
-  path: {
-    groupId: string;
-  };
-  query?: never;
-  url: '/api/tenant-domains/user-groups/{groupId}/members';
+    body?: never;
+    path: {
+        groupId: string;
+    };
+    query?: never;
+    url: '/api/tenant-domains/user-groups/{groupId}/members';
 };
 
 export type GetApiTenantDomainsUserGroupsByGroupIdMembersResponses = {
-  /**
-   * OK
-   */
-  200: Array<TenantUserGroupMembershipReadable>;
+    /**
+     * OK
+     */
+    200: Array<TenantUserGroupMembership>;
 };
 
-export type GetApiTenantDomainsUserGroupsByGroupIdMembersResponse =
-  GetApiTenantDomainsUserGroupsByGroupIdMembersResponses[keyof GetApiTenantDomainsUserGroupsByGroupIdMembersResponses];
+export type GetApiTenantDomainsUserGroupsByGroupIdMembersResponse = GetApiTenantDomainsUserGroupsByGroupIdMembersResponses[keyof GetApiTenantDomainsUserGroupsByGroupIdMembersResponses];
 
 export type GetApiTenantDomainsUsersByUserIdGroupsData = {
-  body?: never;
-  path: {
-    userId: string;
-  };
-  query?: never;
-  url: '/api/tenant-domains/users/{userId}/groups';
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query?: never;
+    url: '/api/tenant-domains/users/{userId}/groups';
 };
 
 export type GetApiTenantDomainsUsersByUserIdGroupsResponses = {
-  /**
-   * OK
-   */
-  200: Array<TenantUserGroupDto>;
+    /**
+     * OK
+     */
+    200: Array<TenantUserGroupDto>;
 };
 
-export type GetApiTenantDomainsUsersByUserIdGroupsResponse =
-  GetApiTenantDomainsUsersByUserIdGroupsResponses[keyof GetApiTenantDomainsUsersByUserIdGroupsResponses];
+export type GetApiTenantDomainsUsersByUserIdGroupsResponse = GetApiTenantDomainsUsersByUserIdGroupsResponses[keyof GetApiTenantDomainsUsersByUserIdGroupsResponses];
 
 export type GetApiTenantDomainsGroupsByGroupIdUsersData = {
-  body?: never;
-  path: {
-    groupId: string;
-  };
-  query?: never;
-  url: '/api/tenant-domains/groups/{groupId}/users';
+    body?: never;
+    path: {
+        groupId: string;
+    };
+    query?: never;
+    url: '/api/tenant-domains/groups/{groupId}/users';
 };
 
 export type GetApiTenantDomainsGroupsByGroupIdUsersResponses = {
-  /**
-   * OK
-   */
-  200: Array<UserDto>;
+    /**
+     * OK
+     */
+    200: Array<UserDto>;
 };
 
-export type GetApiTenantDomainsGroupsByGroupIdUsersResponse =
-  GetApiTenantDomainsGroupsByGroupIdUsersResponses[keyof GetApiTenantDomainsGroupsByGroupIdUsersResponses];
+export type GetApiTenantDomainsGroupsByGroupIdUsersResponse = GetApiTenantDomainsGroupsByGroupIdUsersResponses[keyof GetApiTenantDomainsGroupsByGroupIdUsersResponses];
 
 export type PostApiTenantDomainsAutoAssignData = {
-  body?: AutoAssignUserDto;
-  path?: never;
-  query?: never;
-  url: '/api/tenant-domains/auto-assign';
+    body?: AutoAssignUserDto;
+    path?: never;
+    query?: never;
+    url: '/api/tenant-domains/auto-assign';
 };
 
 export type PostApiTenantDomainsAutoAssignResponses = {
-  /**
-   * OK
-   */
-  200: TenantUserGroupMembershipDto;
+    /**
+     * OK
+     */
+    200: TenantUserGroupMembershipDto;
 };
 
 export type PostApiTenantDomainsAutoAssignResponse = PostApiTenantDomainsAutoAssignResponses[keyof PostApiTenantDomainsAutoAssignResponses];
 
 export type PostApiTenantDomainsAutoAssignBulkData = {
-  body?: AutoAssignUsersDto;
-  path?: never;
-  query?: never;
-  url: '/api/tenant-domains/auto-assign-bulk';
+    body?: AutoAssignUsersDto;
+    path?: never;
+    query?: never;
+    url: '/api/tenant-domains/auto-assign-bulk';
 };
 
 export type PostApiTenantDomainsAutoAssignBulkResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiTenantDomainsDomainMatchData = {
-  body?: never;
-  path?: never;
-  query?: {
-    email?: string;
-  };
-  url: '/api/tenant-domains/domain-match';
+    body?: never;
+    path?: never;
+    query?: {
+        email?: string;
+    };
+    url: '/api/tenant-domains/domain-match';
 };
 
 export type GetApiTenantDomainsDomainMatchResponses = {
-  /**
-   * OK
-   */
-  200: TenantDomainReadable;
+    /**
+     * OK
+     */
+    200: TenantDomain;
 };
 
 export type GetApiTenantDomainsDomainMatchResponse = GetApiTenantDomainsDomainMatchResponses[keyof GetApiTenantDomainsDomainMatchResponses];
 
 export type PostApiTenantDomainsMembershipsData = {
-  body?: AddUserToGroupDto;
-  path?: never;
-  query?: never;
-  url: '/api/tenant-domains/memberships';
+    body?: AddUserToGroupDto;
+    path?: never;
+    query?: never;
+    url: '/api/tenant-domains/memberships';
 };
 
 export type PostApiTenantDomainsMembershipsResponses = {
-  /**
-   * OK
-   */
-  200: TenantUserGroupMembershipDto;
+    /**
+     * OK
+     */
+    200: TenantUserGroupMembershipDto;
 };
 
 export type PostApiTenantDomainsMembershipsResponse = PostApiTenantDomainsMembershipsResponses[keyof PostApiTenantDomainsMembershipsResponses];
 
 export type GetApiTenantsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    includeDeleted?: boolean;
-  };
-  url: '/api/Tenants';
+    body?: never;
+    path?: never;
+    query?: {
+        includeDeleted?: boolean;
+    };
+    url: '/api/tenants';
 };
 
 export type GetApiTenantsResponses = {
-  /**
-   * OK
-   */
-  200: Array<TenantReadable>;
+    /**
+     * OK
+     */
+    200: Array<Tenant>;
 };
 
 export type GetApiTenantsResponse = GetApiTenantsResponses[keyof GetApiTenantsResponses];
 
 export type PostApiTenantsData = {
-  body?: CreateTenantDto;
-  path?: never;
-  query?: never;
-  url: '/api/Tenants';
+    body?: CreateTenantDto;
+    path?: never;
+    query?: never;
+    url: '/api/tenants';
 };
 
 export type PostApiTenantsResponses = {
-  /**
-   * OK
-   */
-  200: TenantReadable;
+    /**
+     * OK
+     */
+    200: Tenant;
 };
 
 export type PostApiTenantsResponse = PostApiTenantsResponses[keyof PostApiTenantsResponses];
 
 export type DeleteApiTenantsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Tenants/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tenants/{id}';
 };
 
 export type DeleteApiTenantsByIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiTenantsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: {
-    includeDeleted?: boolean;
-  };
-  url: '/api/Tenants/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        includeDeleted?: boolean;
+    };
+    url: '/api/tenants/{id}';
 };
 
 export type GetApiTenantsByIdResponses = {
-  /**
-   * OK
-   */
-  200: TenantReadable;
+    /**
+     * OK
+     */
+    200: Tenant;
 };
 
 export type GetApiTenantsByIdResponse = GetApiTenantsByIdResponses[keyof GetApiTenantsByIdResponses];
 
 export type PutApiTenantsByIdData = {
-  body?: UpdateTenantDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Tenants/{id}';
+    body?: UpdateTenantDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tenants/{id}';
 };
 
 export type PutApiTenantsByIdResponses = {
-  /**
-   * OK
-   */
-  200: TenantReadable;
+    /**
+     * OK
+     */
+    200: Tenant;
 };
 
 export type PutApiTenantsByIdResponse = PutApiTenantsByIdResponses[keyof PutApiTenantsByIdResponses];
 
 export type GetApiTenantsByNameByNameData = {
-  body?: never;
-  path: {
-    name: string;
-  };
-  query?: {
-    includeDeleted?: boolean;
-  };
-  url: '/api/Tenants/by-name/{name}';
+    body?: never;
+    path: {
+        name: string;
+    };
+    query?: {
+        includeDeleted?: boolean;
+    };
+    url: '/api/tenants/by-name/{name}';
 };
 
 export type GetApiTenantsByNameByNameResponses = {
-  /**
-   * OK
-   */
-  200: TenantReadable;
+    /**
+     * OK
+     */
+    200: Tenant;
 };
 
 export type GetApiTenantsByNameByNameResponse = GetApiTenantsByNameByNameResponses[keyof GetApiTenantsByNameByNameResponses];
 
 export type GetApiTenantsBySlugBySlugData = {
-  body?: never;
-  path: {
-    slug: string;
-  };
-  query?: {
-    includeDeleted?: boolean;
-  };
-  url: '/api/Tenants/by-slug/{slug}';
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: {
+        includeDeleted?: boolean;
+    };
+    url: '/api/tenants/by-slug/{slug}';
 };
 
 export type GetApiTenantsBySlugBySlugResponses = {
-  /**
-   * OK
-   */
-  200: TenantReadable;
+    /**
+     * OK
+     */
+    200: Tenant;
 };
 
 export type GetApiTenantsBySlugBySlugResponse = GetApiTenantsBySlugBySlugResponses[keyof GetApiTenantsBySlugBySlugResponses];
 
 export type GetApiTenantsDeletedData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/Tenants/deleted';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/tenants/deleted';
 };
 
 export type GetApiTenantsDeletedResponses = {
-  /**
-   * OK
-   */
-  200: Array<TenantReadable>;
+    /**
+     * OK
+     */
+    200: Array<Tenant>;
 };
 
 export type GetApiTenantsDeletedResponse = GetApiTenantsDeletedResponses[keyof GetApiTenantsDeletedResponses];
 
 export type GetApiTenantsActiveData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/Tenants/active';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/tenants/active';
 };
 
 export type GetApiTenantsActiveResponses = {
-  /**
-   * OK
-   */
-  200: Array<TenantReadable>;
+    /**
+     * OK
+     */
+    200: Array<Tenant>;
 };
 
 export type GetApiTenantsActiveResponse = GetApiTenantsActiveResponses[keyof GetApiTenantsActiveResponses];
 
 export type GetApiTenantsSearchData = {
-  body?: never;
-  path?: never;
-  query?: {
-    searchTerm?: string;
-    isActive?: boolean;
-    includeDeleted?: boolean;
-    sortBy?: TenantSortField;
-    sortDescending?: boolean;
-    limit?: number;
-    offset?: number;
-  };
-  url: '/api/Tenants/search';
+    body?: never;
+    path?: never;
+    query?: {
+        searchTerm?: string;
+        isActive?: boolean;
+        includeDeleted?: boolean;
+        sortBy?: TenantSortField;
+        sortDescending?: boolean;
+        limit?: number;
+        offset?: number;
+    };
+    url: '/api/tenants/search';
 };
 
 export type GetApiTenantsSearchResponses = {
-  /**
-   * OK
-   */
-  200: Array<TenantReadable>;
+    /**
+     * OK
+     */
+    200: Array<Tenant>;
 };
 
 export type GetApiTenantsSearchResponse = GetApiTenantsSearchResponses[keyof GetApiTenantsSearchResponses];
 
 export type GetApiTenantsStatisticsData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/Tenants/statistics';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/tenants/statistics';
 };
 
 export type GetApiTenantsStatisticsResponses = {
-  /**
-   * OK
-   */
-  200: TenantStatistics;
+    /**
+     * OK
+     */
+    200: TenantStatistics;
 };
 
 export type GetApiTenantsStatisticsResponse = GetApiTenantsStatisticsResponses[keyof GetApiTenantsStatisticsResponses];
 
 export type PostApiTenantsByIdRestoreData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Tenants/{id}/restore';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tenants/{id}/restore';
 };
 
 export type PostApiTenantsByIdRestoreResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type DeleteApiTenantsByIdPermanentData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Tenants/{id}/permanent';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tenants/{id}/permanent';
 };
 
 export type DeleteApiTenantsByIdPermanentResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostApiTenantsByIdActivateData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Tenants/{id}/activate';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tenants/{id}/activate';
 };
 
 export type PostApiTenantsByIdActivateResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostApiTenantsByIdDeactivateData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Tenants/{id}/deactivate';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tenants/{id}/deactivate';
 };
 
 export type PostApiTenantsByIdDeactivateResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostApiTenantsBulkDeleteData = {
-  body?: BulkDeleteTenantsDto;
-  path?: never;
-  query?: never;
-  url: '/api/Tenants/bulk-delete';
+    body?: BulkDeleteTenantsDto;
+    path?: never;
+    query?: never;
+    url: '/api/tenants/bulk-delete';
 };
 
 export type PostApiTenantsBulkDeleteResponses = {
-  /**
-   * OK
-   */
-  200: number;
+    /**
+     * OK
+     */
+    200: number;
 };
 
 export type PostApiTenantsBulkDeleteResponse = PostApiTenantsBulkDeleteResponses[keyof PostApiTenantsBulkDeleteResponses];
 
 export type PostApiTenantsBulkRestoreData = {
-  body?: BulkRestoreTenantsDto;
-  path?: never;
-  query?: never;
-  url: '/api/Tenants/bulk-restore';
+    body?: BulkRestoreTenantsDto;
+    path?: never;
+    query?: never;
+    url: '/api/tenants/bulk-restore';
 };
 
 export type PostApiTenantsBulkRestoreResponses = {
-  /**
-   * OK
-   */
-  200: number;
+    /**
+     * OK
+     */
+    200: number;
 };
 
 export type PostApiTenantsBulkRestoreResponse = PostApiTenantsBulkRestoreResponses[keyof PostApiTenantsBulkRestoreResponses];
 
 export type GetTestingRequestsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    skip?: number;
-    take?: number;
-  };
-  url: '/Testing/requests';
+    body?: never;
+    path?: never;
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/testing/requests';
 };
 
 export type GetTestingRequestsResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingRequestReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingRequest>;
 };
 
 export type GetTestingRequestsResponse = GetTestingRequestsResponses[keyof GetTestingRequestsResponses];
 
 export type PostTestingRequestsData = {
-  body?: CreateTestingRequestDto;
-  path?: never;
-  query?: never;
-  url: '/Testing/requests';
+    body?: CreateTestingRequestDto;
+    path?: never;
+    query?: never;
+    url: '/testing/requests';
 };
 
 export type PostTestingRequestsResponses = {
-  /**
-   * OK
-   */
-  200: TestingRequestReadable;
+    /**
+     * OK
+     */
+    200: TestingRequest;
 };
 
 export type PostTestingRequestsResponse = PostTestingRequestsResponses[keyof PostTestingRequestsResponses];
 
 export type DeleteTestingRequestsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Testing/requests/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/testing/requests/{id}';
 };
 
 export type DeleteTestingRequestsByIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetTestingRequestsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Testing/requests/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/testing/requests/{id}';
 };
 
 export type GetTestingRequestsByIdResponses = {
-  /**
-   * OK
-   */
-  200: TestingRequestReadable;
+    /**
+     * OK
+     */
+    200: TestingRequest;
 };
 
 export type GetTestingRequestsByIdResponse = GetTestingRequestsByIdResponses[keyof GetTestingRequestsByIdResponses];
 
 export type PutTestingRequestsByIdData = {
-  body?: TestingRequestWritable;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Testing/requests/{id}';
+    body?: TestingRequest;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/testing/requests/{id}';
 };
 
 export type PutTestingRequestsByIdResponses = {
-  /**
-   * OK
-   */
-  200: TestingRequestReadable;
+    /**
+     * OK
+     */
+    200: TestingRequest;
 };
 
 export type PutTestingRequestsByIdResponse = PutTestingRequestsByIdResponses[keyof PutTestingRequestsByIdResponses];
 
 export type GetTestingRequestsByIdDetailsData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Testing/requests/{id}/details';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/testing/requests/{id}/details';
 };
 
 export type GetTestingRequestsByIdDetailsResponses = {
-  /**
-   * OK
-   */
-  200: TestingRequestReadable;
+    /**
+     * OK
+     */
+    200: TestingRequest;
 };
 
 export type GetTestingRequestsByIdDetailsResponse = GetTestingRequestsByIdDetailsResponses[keyof GetTestingRequestsByIdDetailsResponses];
 
 export type PostTestingRequestsByIdRestoreData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Testing/requests/{id}/restore';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/testing/requests/{id}/restore';
 };
 
 export type PostTestingRequestsByIdRestoreResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetTestingSessionsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    skip?: number;
-    take?: number;
-  };
-  url: '/Testing/sessions';
+    body?: never;
+    path?: never;
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/testing/sessions';
 };
 
 export type GetTestingSessionsResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingSessionReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingSession>;
 };
 
 export type GetTestingSessionsResponse = GetTestingSessionsResponses[keyof GetTestingSessionsResponses];
 
 export type PostTestingSessionsData = {
-  body?: TestingSessionWritable;
-  path?: never;
-  query?: never;
-  url: '/Testing/sessions';
+    body?: TestingSession;
+    path?: never;
+    query?: never;
+    url: '/testing/sessions';
 };
 
 export type PostTestingSessionsResponses = {
-  /**
-   * OK
-   */
-  200: TestingSessionReadable;
+    /**
+     * OK
+     */
+    200: TestingSession;
 };
 
 export type PostTestingSessionsResponse = PostTestingSessionsResponses[keyof PostTestingSessionsResponses];
 
 export type DeleteTestingSessionsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/testing/sessions/{id}';
 };
 
 export type DeleteTestingSessionsByIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetTestingSessionsByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/testing/sessions/{id}';
 };
 
 export type GetTestingSessionsByIdResponses = {
-  /**
-   * OK
-   */
-  200: TestingSessionReadable;
+    /**
+     * OK
+     */
+    200: TestingSession;
 };
 
 export type GetTestingSessionsByIdResponse = GetTestingSessionsByIdResponses[keyof GetTestingSessionsByIdResponses];
 
 export type PutTestingSessionsByIdData = {
-  body?: TestingSessionWritable;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/{id}';
+    body?: TestingSession;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/testing/sessions/{id}';
 };
 
 export type PutTestingSessionsByIdResponses = {
-  /**
-   * OK
-   */
-  200: TestingSessionReadable;
+    /**
+     * OK
+     */
+    200: TestingSession;
 };
 
 export type PutTestingSessionsByIdResponse = PutTestingSessionsByIdResponses[keyof PutTestingSessionsByIdResponses];
 
 export type GetTestingSessionsByIdDetailsData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/{id}/details';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/testing/sessions/{id}/details';
 };
 
 export type GetTestingSessionsByIdDetailsResponses = {
-  /**
-   * OK
-   */
-  200: TestingSessionReadable;
+    /**
+     * OK
+     */
+    200: TestingSession;
 };
 
 export type GetTestingSessionsByIdDetailsResponse = GetTestingSessionsByIdDetailsResponses[keyof GetTestingSessionsByIdDetailsResponses];
 
 export type PostTestingSessionsByIdRestoreData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/{id}/restore';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/testing/sessions/{id}/restore';
 };
 
 export type PostTestingSessionsByIdRestoreResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetTestingRequestsByProjectVersionByProjectVersionIdData = {
-  body?: never;
-  path: {
-    projectVersionId: string;
-  };
-  query?: never;
-  url: '/Testing/requests/by-project-version/{projectVersionId}';
+    body?: never;
+    path: {
+        projectVersionId: string;
+    };
+    query?: never;
+    url: '/testing/requests/by-project-version/{projectVersionId}';
 };
 
 export type GetTestingRequestsByProjectVersionByProjectVersionIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingRequestReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingRequest>;
 };
 
-export type GetTestingRequestsByProjectVersionByProjectVersionIdResponse =
-  GetTestingRequestsByProjectVersionByProjectVersionIdResponses[keyof GetTestingRequestsByProjectVersionByProjectVersionIdResponses];
+export type GetTestingRequestsByProjectVersionByProjectVersionIdResponse = GetTestingRequestsByProjectVersionByProjectVersionIdResponses[keyof GetTestingRequestsByProjectVersionByProjectVersionIdResponses];
 
 export type GetTestingRequestsByCreatorByCreatorIdData = {
-  body?: never;
-  path: {
-    creatorId: string;
-  };
-  query?: never;
-  url: '/Testing/requests/by-creator/{creatorId}';
+    body?: never;
+    path: {
+        creatorId: string;
+    };
+    query?: never;
+    url: '/testing/requests/by-creator/{creatorId}';
 };
 
 export type GetTestingRequestsByCreatorByCreatorIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingRequestReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingRequest>;
 };
 
-export type GetTestingRequestsByCreatorByCreatorIdResponse =
-  GetTestingRequestsByCreatorByCreatorIdResponses[keyof GetTestingRequestsByCreatorByCreatorIdResponses];
+export type GetTestingRequestsByCreatorByCreatorIdResponse = GetTestingRequestsByCreatorByCreatorIdResponses[keyof GetTestingRequestsByCreatorByCreatorIdResponses];
 
 export type GetTestingRequestsByStatusByStatusData = {
-  body?: never;
-  path: {
-    status: TestingRequestStatus;
-  };
-  query?: never;
-  url: '/Testing/requests/by-status/{status}';
+    body?: never;
+    path: {
+        status: TestingRequestStatus;
+    };
+    query?: never;
+    url: '/testing/requests/by-status/{status}';
 };
 
 export type GetTestingRequestsByStatusByStatusResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingRequestReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingRequest>;
 };
 
 export type GetTestingRequestsByStatusByStatusResponse = GetTestingRequestsByStatusByStatusResponses[keyof GetTestingRequestsByStatusByStatusResponses];
 
 export type GetTestingSessionsByRequestByTestingRequestIdData = {
-  body?: never;
-  path: {
-    testingRequestId: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/by-request/{testingRequestId}';
+    body?: never;
+    path: {
+        testingRequestId: string;
+    };
+    query?: never;
+    url: '/testing/sessions/by-request/{testingRequestId}';
 };
 
 export type GetTestingSessionsByRequestByTestingRequestIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingSessionReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingSession>;
 };
 
-export type GetTestingSessionsByRequestByTestingRequestIdResponse =
-  GetTestingSessionsByRequestByTestingRequestIdResponses[keyof GetTestingSessionsByRequestByTestingRequestIdResponses];
+export type GetTestingSessionsByRequestByTestingRequestIdResponse = GetTestingSessionsByRequestByTestingRequestIdResponses[keyof GetTestingSessionsByRequestByTestingRequestIdResponses];
 
 export type GetTestingSessionsByLocationByLocationIdData = {
-  body?: never;
-  path: {
-    locationId: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/by-location/{locationId}';
+    body?: never;
+    path: {
+        locationId: string;
+    };
+    query?: never;
+    url: '/testing/sessions/by-location/{locationId}';
 };
 
 export type GetTestingSessionsByLocationByLocationIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingSessionReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingSession>;
 };
 
-export type GetTestingSessionsByLocationByLocationIdResponse =
-  GetTestingSessionsByLocationByLocationIdResponses[keyof GetTestingSessionsByLocationByLocationIdResponses];
+export type GetTestingSessionsByLocationByLocationIdResponse = GetTestingSessionsByLocationByLocationIdResponses[keyof GetTestingSessionsByLocationByLocationIdResponses];
 
 export type GetTestingSessionsByStatusByStatusData = {
-  body?: never;
-  path: {
-    status: SessionStatus;
-  };
-  query?: never;
-  url: '/Testing/sessions/by-status/{status}';
+    body?: never;
+    path: {
+        status: SessionStatus;
+    };
+    query?: never;
+    url: '/testing/sessions/by-status/{status}';
 };
 
 export type GetTestingSessionsByStatusByStatusResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingSessionReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingSession>;
 };
 
 export type GetTestingSessionsByStatusByStatusResponse = GetTestingSessionsByStatusByStatusResponses[keyof GetTestingSessionsByStatusByStatusResponses];
 
 export type GetTestingSessionsByManagerByManagerIdData = {
-  body?: never;
-  path: {
-    managerId: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/by-manager/{managerId}';
+    body?: never;
+    path: {
+        managerId: string;
+    };
+    query?: never;
+    url: '/testing/sessions/by-manager/{managerId}';
 };
 
 export type GetTestingSessionsByManagerByManagerIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingSessionReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingSession>;
 };
 
-export type GetTestingSessionsByManagerByManagerIdResponse =
-  GetTestingSessionsByManagerByManagerIdResponses[keyof GetTestingSessionsByManagerByManagerIdResponses];
+export type GetTestingSessionsByManagerByManagerIdResponse = GetTestingSessionsByManagerByManagerIdResponses[keyof GetTestingSessionsByManagerByManagerIdResponses];
 
 export type GetTestingRequestsSearchData = {
-  body?: never;
-  path?: never;
-  query?: {
-    searchTerm?: string;
-  };
-  url: '/Testing/requests/search';
+    body?: never;
+    path?: never;
+    query?: {
+        searchTerm?: string;
+    };
+    url: '/testing/requests/search';
 };
 
 export type GetTestingRequestsSearchResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingRequestReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingRequest>;
 };
 
 export type GetTestingRequestsSearchResponse = GetTestingRequestsSearchResponses[keyof GetTestingRequestsSearchResponses];
 
 export type GetTestingSessionsSearchData = {
-  body?: never;
-  path?: never;
-  query?: {
-    searchTerm?: string;
-  };
-  url: '/Testing/sessions/search';
+    body?: never;
+    path?: never;
+    query?: {
+        searchTerm?: string;
+    };
+    url: '/testing/sessions/search';
 };
 
 export type GetTestingSessionsSearchResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingSessionReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingSession>;
 };
 
 export type GetTestingSessionsSearchResponse = GetTestingSessionsSearchResponses[keyof GetTestingSessionsSearchResponses];
 
 export type DeleteTestingRequestsByRequestIdParticipantsByUserIdData = {
-  body?: never;
-  path: {
-    requestId: string;
-    userId: string;
-  };
-  query?: never;
-  url: '/Testing/requests/{requestId}/participants/{userId}';
+    body?: never;
+    path: {
+        requestId: string;
+        userId: string;
+    };
+    query?: never;
+    url: '/testing/requests/{requestId}/participants/{userId}';
 };
 
 export type DeleteTestingRequestsByRequestIdParticipantsByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostTestingRequestsByRequestIdParticipantsByUserIdData = {
-  body?: never;
-  path: {
-    requestId: string;
-    userId: string;
-  };
-  query?: never;
-  url: '/Testing/requests/{requestId}/participants/{userId}';
+    body?: never;
+    path: {
+        requestId: string;
+        userId: string;
+    };
+    query?: never;
+    url: '/testing/requests/{requestId}/participants/{userId}';
 };
 
 export type PostTestingRequestsByRequestIdParticipantsByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: TestingParticipantReadable;
+    /**
+     * OK
+     */
+    200: TestingParticipant;
 };
 
-export type PostTestingRequestsByRequestIdParticipantsByUserIdResponse =
-  PostTestingRequestsByRequestIdParticipantsByUserIdResponses[keyof PostTestingRequestsByRequestIdParticipantsByUserIdResponses];
+export type PostTestingRequestsByRequestIdParticipantsByUserIdResponse = PostTestingRequestsByRequestIdParticipantsByUserIdResponses[keyof PostTestingRequestsByRequestIdParticipantsByUserIdResponses];
 
 export type GetTestingRequestsByRequestIdParticipantsData = {
-  body?: never;
-  path: {
-    requestId: string;
-  };
-  query?: never;
-  url: '/Testing/requests/{requestId}/participants';
+    body?: never;
+    path: {
+        requestId: string;
+    };
+    query?: never;
+    url: '/testing/requests/{requestId}/participants';
 };
 
 export type GetTestingRequestsByRequestIdParticipantsResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingParticipantReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingParticipant>;
 };
 
-export type GetTestingRequestsByRequestIdParticipantsResponse =
-  GetTestingRequestsByRequestIdParticipantsResponses[keyof GetTestingRequestsByRequestIdParticipantsResponses];
+export type GetTestingRequestsByRequestIdParticipantsResponse = GetTestingRequestsByRequestIdParticipantsResponses[keyof GetTestingRequestsByRequestIdParticipantsResponses];
 
 export type GetTestingRequestsByRequestIdParticipantsByUserIdCheckData = {
-  body?: never;
-  path: {
-    requestId: string;
-    userId: string;
-  };
-  query?: never;
-  url: '/Testing/requests/{requestId}/participants/{userId}/check';
+    body?: never;
+    path: {
+        requestId: string;
+        userId: string;
+    };
+    query?: never;
+    url: '/testing/requests/{requestId}/participants/{userId}/check';
 };
 
 export type GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses = {
-  /**
-   * OK
-   */
-  200: boolean;
+    /**
+     * OK
+     */
+    200: boolean;
 };
 
-export type GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponse =
-  GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses[keyof GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses];
+export type GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponse = GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses[keyof GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses];
 
 export type DeleteTestingSessionsBySessionIdRegisterData = {
-  body?: never;
-  path: {
-    sessionId: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/{sessionId}/register';
+    body?: never;
+    path: {
+        sessionId: string;
+    };
+    query?: never;
+    url: '/testing/sessions/{sessionId}/register';
 };
 
 export type DeleteTestingSessionsBySessionIdRegisterResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostTestingSessionsBySessionIdRegisterData = {
-  body?: SessionRegistrationRequest;
-  path: {
-    sessionId: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/{sessionId}/register';
+    body?: SessionRegistrationRequest;
+    path: {
+        sessionId: string;
+    };
+    query?: never;
+    url: '/testing/sessions/{sessionId}/register';
 };
 
 export type PostTestingSessionsBySessionIdRegisterResponses = {
-  /**
-   * OK
-   */
-  200: SessionRegistrationReadable;
+    /**
+     * OK
+     */
+    200: SessionRegistration;
 };
 
-export type PostTestingSessionsBySessionIdRegisterResponse =
-  PostTestingSessionsBySessionIdRegisterResponses[keyof PostTestingSessionsBySessionIdRegisterResponses];
+export type PostTestingSessionsBySessionIdRegisterResponse = PostTestingSessionsBySessionIdRegisterResponses[keyof PostTestingSessionsBySessionIdRegisterResponses];
 
 export type GetTestingSessionsBySessionIdRegistrationsData = {
-  body?: never;
-  path: {
-    sessionId: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/{sessionId}/registrations';
+    body?: never;
+    path: {
+        sessionId: string;
+    };
+    query?: never;
+    url: '/testing/sessions/{sessionId}/registrations';
 };
 
 export type GetTestingSessionsBySessionIdRegistrationsResponses = {
-  /**
-   * OK
-   */
-  200: Array<SessionRegistrationReadable>;
+    /**
+     * OK
+     */
+    200: Array<SessionRegistration>;
 };
 
-export type GetTestingSessionsBySessionIdRegistrationsResponse =
-  GetTestingSessionsBySessionIdRegistrationsResponses[keyof GetTestingSessionsBySessionIdRegistrationsResponses];
+export type GetTestingSessionsBySessionIdRegistrationsResponse = GetTestingSessionsBySessionIdRegistrationsResponses[keyof GetTestingSessionsBySessionIdRegistrationsResponses];
 
 export type DeleteTestingSessionsBySessionIdWaitlistData = {
-  body?: never;
-  path: {
-    sessionId: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/{sessionId}/waitlist';
+    body?: never;
+    path: {
+        sessionId: string;
+    };
+    query?: never;
+    url: '/testing/sessions/{sessionId}/waitlist';
 };
 
 export type DeleteTestingSessionsBySessionIdWaitlistResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetTestingSessionsBySessionIdWaitlistData = {
-  body?: never;
-  path: {
-    sessionId: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/{sessionId}/waitlist';
+    body?: never;
+    path: {
+        sessionId: string;
+    };
+    query?: never;
+    url: '/testing/sessions/{sessionId}/waitlist';
 };
 
 export type GetTestingSessionsBySessionIdWaitlistResponses = {
-  /**
-   * OK
-   */
-  200: Array<SessionWaitlistReadable>;
+    /**
+     * OK
+     */
+    200: Array<SessionWaitlist>;
 };
 
-export type GetTestingSessionsBySessionIdWaitlistResponse =
-  GetTestingSessionsBySessionIdWaitlistResponses[keyof GetTestingSessionsBySessionIdWaitlistResponses];
+export type GetTestingSessionsBySessionIdWaitlistResponse = GetTestingSessionsBySessionIdWaitlistResponses[keyof GetTestingSessionsBySessionIdWaitlistResponses];
 
 export type PostTestingSessionsBySessionIdWaitlistData = {
-  body?: SessionRegistrationRequest;
-  path: {
-    sessionId: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/{sessionId}/waitlist';
+    body?: SessionRegistrationRequest;
+    path: {
+        sessionId: string;
+    };
+    query?: never;
+    url: '/testing/sessions/{sessionId}/waitlist';
 };
 
 export type PostTestingSessionsBySessionIdWaitlistResponses = {
-  /**
-   * OK
-   */
-  200: SessionWaitlistReadable;
+    /**
+     * OK
+     */
+    200: SessionWaitlist;
 };
 
-export type PostTestingSessionsBySessionIdWaitlistResponse =
-  PostTestingSessionsBySessionIdWaitlistResponses[keyof PostTestingSessionsBySessionIdWaitlistResponses];
+export type PostTestingSessionsBySessionIdWaitlistResponse = PostTestingSessionsBySessionIdWaitlistResponses[keyof PostTestingSessionsBySessionIdWaitlistResponses];
 
 export type GetTestingRequestsByRequestIdFeedbackData = {
-  body?: never;
-  path: {
-    requestId: string;
-  };
-  query?: never;
-  url: '/Testing/requests/{requestId}/feedback';
+    body?: never;
+    path: {
+        requestId: string;
+    };
+    query?: never;
+    url: '/testing/requests/{requestId}/feedback';
 };
 
 export type GetTestingRequestsByRequestIdFeedbackResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingFeedbackReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingFeedback>;
 };
 
-export type GetTestingRequestsByRequestIdFeedbackResponse =
-  GetTestingRequestsByRequestIdFeedbackResponses[keyof GetTestingRequestsByRequestIdFeedbackResponses];
+export type GetTestingRequestsByRequestIdFeedbackResponse = GetTestingRequestsByRequestIdFeedbackResponses[keyof GetTestingRequestsByRequestIdFeedbackResponses];
 
 export type PostTestingRequestsByRequestIdFeedbackData = {
-  body?: FeedbackRequest;
-  path: {
-    requestId: string;
-  };
-  query?: never;
-  url: '/Testing/requests/{requestId}/feedback';
+    body?: FeedbackRequest;
+    path: {
+        requestId: string;
+    };
+    query?: never;
+    url: '/testing/requests/{requestId}/feedback';
 };
 
 export type PostTestingRequestsByRequestIdFeedbackResponses = {
-  /**
-   * OK
-   */
-  200: TestingFeedbackReadable;
+    /**
+     * OK
+     */
+    200: TestingFeedback;
 };
 
-export type PostTestingRequestsByRequestIdFeedbackResponse =
-  PostTestingRequestsByRequestIdFeedbackResponses[keyof PostTestingRequestsByRequestIdFeedbackResponses];
+export type PostTestingRequestsByRequestIdFeedbackResponse = PostTestingRequestsByRequestIdFeedbackResponses[keyof PostTestingRequestsByRequestIdFeedbackResponses];
 
 export type GetTestingFeedbackByUserByUserIdData = {
-  body?: never;
-  path: {
-    userId: string;
-  };
-  query?: never;
-  url: '/Testing/feedback/by-user/{userId}';
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query?: never;
+    url: '/testing/feedback/by-user/{userId}';
 };
 
 export type GetTestingFeedbackByUserByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingFeedbackReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingFeedback>;
 };
 
 export type GetTestingFeedbackByUserByUserIdResponse = GetTestingFeedbackByUserByUserIdResponses[keyof GetTestingFeedbackByUserByUserIdResponses];
 
 export type GetTestingRequestsByRequestIdStatisticsData = {
-  body?: never;
-  path: {
-    requestId: string;
-  };
-  query?: never;
-  url: '/Testing/requests/{requestId}/statistics';
+    body?: never;
+    path: {
+        requestId: string;
+    };
+    query?: never;
+    url: '/testing/requests/{requestId}/statistics';
 };
 
 export type GetTestingRequestsByRequestIdStatisticsResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetTestingSessionsBySessionIdStatisticsData = {
-  body?: never;
-  path: {
-    sessionId: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/{sessionId}/statistics';
+    body?: never;
+    path: {
+        sessionId: string;
+    };
+    query?: never;
+    url: '/testing/sessions/{sessionId}/statistics';
 };
 
 export type GetTestingSessionsBySessionIdStatisticsResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetTestingUsersByUserIdActivityData = {
-  body?: never;
-  path: {
-    userId: string;
-  };
-  query?: never;
-  url: '/Testing/users/{userId}/activity';
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query?: never;
+    url: '/testing/users/{userId}/activity';
 };
 
 export type GetTestingUsersByUserIdActivityResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostTestingSubmitSimpleData = {
-  body?: CreateSimpleTestingRequestDto;
-  path?: never;
-  query?: never;
-  url: '/Testing/submit-simple';
+    body?: CreateSimpleTestingRequestDto;
+    path?: never;
+    query?: never;
+    url: '/testing/submit-simple';
 };
 
 export type PostTestingSubmitSimpleResponses = {
-  /**
-   * OK
-   */
-  200: TestingRequestReadable;
+    /**
+     * OK
+     */
+    200: TestingRequest;
 };
 
 export type PostTestingSubmitSimpleResponse = PostTestingSubmitSimpleResponses[keyof PostTestingSubmitSimpleResponses];
 
 export type PostTestingFeedbackData = {
-  body?: SubmitFeedbackDto;
-  path?: never;
-  query?: never;
-  url: '/Testing/feedback';
+    body?: SubmitFeedbackDto;
+    path?: never;
+    query?: never;
+    url: '/testing/feedback';
 };
 
 export type PostTestingFeedbackResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetTestingMyRequestsData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/Testing/my-requests';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/testing/my-requests';
 };
 
 export type GetTestingMyRequestsResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingRequestReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingRequest>;
 };
 
 export type GetTestingMyRequestsResponse = GetTestingMyRequestsResponses[keyof GetTestingMyRequestsResponses];
 
 export type GetTestingAvailableForTestingData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/Testing/available-for-testing';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/testing/available-for-testing';
 };
 
 export type GetTestingAvailableForTestingResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestingRequestReadable>;
+    /**
+     * OK
+     */
+    200: Array<TestingRequest>;
 };
 
 export type GetTestingAvailableForTestingResponse = GetTestingAvailableForTestingResponses[keyof GetTestingAvailableForTestingResponses];
 
 export type GetTestingAttendanceStudentsData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/Testing/attendance/students';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/testing/attendance/students';
 };
 
 export type GetTestingAttendanceStudentsResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetTestingAttendanceSessionsData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/Testing/attendance/sessions';
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/testing/attendance/sessions';
 };
 
 export type GetTestingAttendanceSessionsResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostTestingSessionsBySessionIdAttendanceData = {
-  body?: UpdateAttendanceDto;
-  path: {
-    sessionId: string;
-  };
-  query?: never;
-  url: '/Testing/sessions/{sessionId}/attendance';
+    body?: UpdateAttendanceDto;
+    path: {
+        sessionId: string;
+    };
+    query?: never;
+    url: '/testing/sessions/{sessionId}/attendance';
 };
 
 export type PostTestingSessionsBySessionIdAttendanceResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostTestingFeedbackByFeedbackIdReportData = {
-  body?: ReportFeedbackDto;
-  path: {
-    feedbackId: string;
-  };
-  query?: never;
-  url: '/Testing/feedback/{feedbackId}/report';
+    body?: ReportFeedbackDto;
+    path: {
+        feedbackId: string;
+    };
+    query?: never;
+    url: '/testing/feedback/{feedbackId}/report';
 };
 
 export type PostTestingFeedbackByFeedbackIdReportResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PostTestingFeedbackByFeedbackIdQualityData = {
-  body?: RateFeedbackQualityDto;
-  path: {
-    feedbackId: string;
-  };
-  query?: never;
-  url: '/Testing/feedback/{feedbackId}/quality';
+    body?: RateFeedbackQualityDto;
+    path: {
+        feedbackId: string;
+    };
+    query?: never;
+    url: '/testing/feedback/{feedbackId}/quality';
 };
 
 export type PostTestingFeedbackByFeedbackIdQualityResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiUsersByUserIdAchievementsData = {
-  body?: never;
-  path: {
-    userId: string;
-  };
-  query?: {
-    pageNumber?: number;
-    pageSize?: number;
-    category?: string;
-    type?: string;
-    isCompleted?: boolean;
-    earnedAfter?: string;
-    earnedBefore?: string;
-    orderBy?: string;
-    descending?: boolean;
-  };
-  url: '/api/users/{userId}/achievements';
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query?: {
+        pageNumber?: number;
+        pageSize?: number;
+        category?: string;
+        type?: string;
+        isCompleted?: boolean;
+        earnedAfter?: string;
+        earnedBefore?: string;
+        orderBy?: string;
+        descending?: boolean;
+    };
+    url: '/api/users/{userId}/achievements';
 };
 
 export type GetApiUsersByUserIdAchievementsResponses = {
-  /**
-   * OK
-   */
-  200: UserAchievementsPageDto;
+    /**
+     * OK
+     */
+    200: UserAchievementsPageDto;
 };
 
 export type GetApiUsersByUserIdAchievementsResponse = GetApiUsersByUserIdAchievementsResponses[keyof GetApiUsersByUserIdAchievementsResponses];
 
 export type GetApiUsersByUserIdAchievementsProgressData = {
-  body?: never;
-  path: {
-    userId: string;
-  };
-  query?: {
-    category?: string;
-    onlyInProgress?: boolean;
-  };
-  url: '/api/users/{userId}/achievements/progress';
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query?: {
+        category?: string;
+        onlyInProgress?: boolean;
+    };
+    url: '/api/users/{userId}/achievements/progress';
 };
 
 export type GetApiUsersByUserIdAchievementsProgressResponses = {
-  /**
-   * OK
-   */
-  200: Array<AchievementProgressDtoReadable>;
+    /**
+     * OK
+     */
+    200: Array<AchievementProgressDto>;
 };
 
-export type GetApiUsersByUserIdAchievementsProgressResponse =
-  GetApiUsersByUserIdAchievementsProgressResponses[keyof GetApiUsersByUserIdAchievementsProgressResponses];
+export type GetApiUsersByUserIdAchievementsProgressResponse = GetApiUsersByUserIdAchievementsProgressResponses[keyof GetApiUsersByUserIdAchievementsProgressResponses];
 
 export type GetApiUsersByUserIdAchievementsSummaryData = {
-  body?: never;
-  path: {
-    userId: string;
-  };
-  query?: {
-    recentLimit?: number;
-    nearCompletionThreshold?: number;
-  };
-  url: '/api/users/{userId}/achievements/summary';
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query?: {
+        recentLimit?: number;
+        nearCompletionThreshold?: number;
+    };
+    url: '/api/users/{userId}/achievements/summary';
 };
 
 export type GetApiUsersByUserIdAchievementsSummaryResponses = {
-  /**
-   * OK
-   */
-  200: UserAchievementSummaryDtoReadable;
+    /**
+     * OK
+     */
+    200: UserAchievementSummaryDto;
 };
 
-export type GetApiUsersByUserIdAchievementsSummaryResponse =
-  GetApiUsersByUserIdAchievementsSummaryResponses[keyof GetApiUsersByUserIdAchievementsSummaryResponses];
+export type GetApiUsersByUserIdAchievementsSummaryResponse = GetApiUsersByUserIdAchievementsSummaryResponses[keyof GetApiUsersByUserIdAchievementsSummaryResponses];
 
 export type GetApiUsersByUserIdAchievementsAvailableData = {
-  body?: never;
-  path: {
-    userId: string;
-  };
-  query?: {
-    pageNumber?: number;
-    pageSize?: number;
-    category?: string;
-    onlyEligible?: boolean;
-  };
-  url: '/api/users/{userId}/achievements/available';
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query?: {
+        pageNumber?: number;
+        pageSize?: number;
+        category?: string;
+        onlyEligible?: boolean;
+    };
+    url: '/api/users/{userId}/achievements/available';
 };
 
 export type GetApiUsersByUserIdAchievementsAvailableResponses = {
-  /**
-   * OK
-   */
-  200: AchievementsPageDto;
+    /**
+     * OK
+     */
+    200: AchievementsPageDto;
 };
 
-export type GetApiUsersByUserIdAchievementsAvailableResponse =
-  GetApiUsersByUserIdAchievementsAvailableResponses[keyof GetApiUsersByUserIdAchievementsAvailableResponses];
+export type GetApiUsersByUserIdAchievementsAvailableResponse = GetApiUsersByUserIdAchievementsAvailableResponses[keyof GetApiUsersByUserIdAchievementsAvailableResponses];
 
 export type PostApiUsersByUserIdAchievementsByAchievementIdProgressData = {
-  body?: UpdateAchievementProgressRequest;
-  path: {
-    userId: string;
-    achievementId: string;
-  };
-  query?: never;
-  url: '/api/users/{userId}/achievements/{achievementId}/progress';
+    body?: UpdateAchievementProgressRequest;
+    path: {
+        userId: string;
+        achievementId: string;
+    };
+    query?: never;
+    url: '/api/users/{userId}/achievements/{achievementId}/progress';
 };
 
 export type PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses = {
-  /**
-   * OK
-   */
-  200: AchievementProgressReadable;
+    /**
+     * OK
+     */
+    200: AchievementProgress;
 };
 
-export type PostApiUsersByUserIdAchievementsByAchievementIdProgressResponse =
-  PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses[keyof PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses];
+export type PostApiUsersByUserIdAchievementsByAchievementIdProgressResponse = PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses[keyof PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses];
 
 export type GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData = {
-  body?: never;
-  path: {
-    userId: string;
-    achievementId: string;
-  };
-  query?: never;
-  url: '/api/users/{userId}/achievements/{achievementId}/prerequisites';
+    body?: never;
+    path: {
+        userId: string;
+        achievementId: string;
+    };
+    query?: never;
+    url: '/api/users/{userId}/achievements/{achievementId}/prerequisites';
 };
 
 export type GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses = {
-  /**
-   * OK
-   */
-  200: AchievementPrerequisiteCheckDto;
+    /**
+     * OK
+     */
+    200: AchievementPrerequisiteCheckDto;
 };
 
-export type GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponse =
-  GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses[keyof GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses];
+export type GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponse = GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses[keyof GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses];
 
 export type PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedData = {
-  body?: never;
-  path: {
-    userId: string;
-    userAchievementId: string;
-  };
-  query?: never;
-  url: '/api/users/{userId}/achievements/{userAchievementId}/mark-notified';
+    body?: never;
+    path: {
+        userId: string;
+        userAchievementId: string;
+    };
+    query?: never;
+    url: '/api/users/{userId}/achievements/{userAchievementId}/mark-notified';
 };
 
 export type PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type DeleteApiUsersByUserIdAchievementsByUserAchievementIdData = {
-  body?: RevokeAchievementRequest;
-  path: {
-    userId: string;
-    userAchievementId: string;
-  };
-  query?: never;
-  url: '/api/users/{userId}/achievements/{userAchievementId}';
+    body?: RevokeAchievementRequest;
+    path: {
+        userId: string;
+        userAchievementId: string;
+    };
+    query?: never;
+    url: '/api/users/{userId}/achievements/{userAchievementId}';
 };
 
 export type DeleteApiUsersByUserIdAchievementsByUserAchievementIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
-export type GetApiUserProfilesData = {
-  body?: never;
-  path?: never;
-  query?: {
-    includeDeleted?: boolean;
-    skip?: number;
-    take?: number;
-    searchTerm?: string;
-    tenantId?: string;
-  };
-  url: '/api/UserProfiles';
+export type GetApiUserprofilesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        includeDeleted?: boolean;
+        skip?: number;
+        take?: number;
+        searchTerm?: string;
+        tenantId?: string;
+    };
+    url: '/api/userprofiles';
 };
 
-export type GetApiUserProfilesResponses = {
-  /**
-   * OK
-   */
-  200: Array<UserProfileResponseDto>;
+export type GetApiUserprofilesResponses = {
+    /**
+     * OK
+     */
+    200: Array<UserProfileResponseDto>;
 };
 
-export type GetApiUserProfilesResponse = GetApiUserProfilesResponses[keyof GetApiUserProfilesResponses];
+export type GetApiUserprofilesResponse = GetApiUserprofilesResponses[keyof GetApiUserprofilesResponses];
 
-export type PostApiUserProfilesData = {
-  body?: CreateUserProfileDto;
-  path?: never;
-  query?: never;
-  url: '/api/UserProfiles';
+export type PostApiUserprofilesData = {
+    body?: CreateUserProfileDto;
+    path?: never;
+    query?: never;
+    url: '/api/userprofiles';
 };
 
-export type PostApiUserProfilesResponses = {
-  /**
-   * OK
-   */
-  200: UserProfileResponseDto;
+export type PostApiUserprofilesResponses = {
+    /**
+     * OK
+     */
+    200: UserProfileResponseDto;
 };
 
-export type PostApiUserProfilesResponse = PostApiUserProfilesResponses[keyof PostApiUserProfilesResponses];
+export type PostApiUserprofilesResponse = PostApiUserprofilesResponses[keyof PostApiUserprofilesResponses];
 
-export type DeleteApiUserProfilesByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: {
-    permanent?: boolean;
-  };
-  url: '/api/UserProfiles/{id}';
+export type DeleteApiUserprofilesByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        permanent?: boolean;
+    };
+    url: '/api/userprofiles/{id}';
 };
 
-export type DeleteApiUserProfilesByIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+export type DeleteApiUserprofilesByIdResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
-export type GetApiUserProfilesByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: {
-    includeDeleted?: boolean;
-  };
-  url: '/api/UserProfiles/{id}';
+export type GetApiUserprofilesByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        includeDeleted?: boolean;
+    };
+    url: '/api/userprofiles/{id}';
 };
 
-export type GetApiUserProfilesByIdResponses = {
-  /**
-   * OK
-   */
-  200: UserProfileResponseDto;
+export type GetApiUserprofilesByIdResponses = {
+    /**
+     * OK
+     */
+    200: UserProfileResponseDto;
 };
 
-export type GetApiUserProfilesByIdResponse = GetApiUserProfilesByIdResponses[keyof GetApiUserProfilesByIdResponses];
+export type GetApiUserprofilesByIdResponse = GetApiUserprofilesByIdResponses[keyof GetApiUserprofilesByIdResponses];
 
-export type PutApiUserProfilesByIdData = {
-  body?: UpdateUserProfileDto;
-  headers?: {
-    'If-Match'?: number;
-  };
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/UserProfiles/{id}';
+export type PutApiUserprofilesByIdData = {
+    body?: UpdateUserProfileDto;
+    headers?: {
+        'If-Match'?: number;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/userprofiles/{id}';
 };
 
-export type PutApiUserProfilesByIdResponses = {
-  /**
-   * OK
-   */
-  200: UserProfileResponseDto;
+export type PutApiUserprofilesByIdResponses = {
+    /**
+     * OK
+     */
+    200: UserProfileResponseDto;
 };
 
-export type PutApiUserProfilesByIdResponse = PutApiUserProfilesByIdResponses[keyof PutApiUserProfilesByIdResponses];
+export type PutApiUserprofilesByIdResponse = PutApiUserprofilesByIdResponses[keyof PutApiUserprofilesByIdResponses];
 
-export type GetApiUserProfilesUserByUserIdData = {
-  body?: never;
-  path: {
-    userId: string;
-  };
-  query?: {
-    includeDeleted?: boolean;
-  };
-  url: '/api/UserProfiles/user/{userId}';
+export type GetApiUserprofilesUserByUserIdData = {
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query?: {
+        includeDeleted?: boolean;
+    };
+    url: '/api/userprofiles/user/{userId}';
 };
 
-export type GetApiUserProfilesUserByUserIdResponses = {
-  /**
-   * OK
-   */
-  200: UserProfileResponseDto;
+export type GetApiUserprofilesUserByUserIdResponses = {
+    /**
+     * OK
+     */
+    200: UserProfileResponseDto;
 };
 
-export type GetApiUserProfilesUserByUserIdResponse = GetApiUserProfilesUserByUserIdResponses[keyof GetApiUserProfilesUserByUserIdResponses];
+export type GetApiUserprofilesUserByUserIdResponse = GetApiUserprofilesUserByUserIdResponses[keyof GetApiUserprofilesUserByUserIdResponses];
 
-export type PostApiUserProfilesByIdRestoreData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/UserProfiles/{id}/restore';
+export type PostApiUserprofilesByIdRestoreData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/userprofiles/{id}/restore';
 };
 
-export type PostApiUserProfilesByIdRestoreResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+export type PostApiUserprofilesByIdRestoreResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiUsersData = {
-  body?: never;
-  path?: never;
-  query?: {
-    includeDeleted?: boolean;
-    skip?: number;
-    take?: number;
-    isActive?: boolean;
-  };
-  url: '/api/Users';
+    body?: never;
+    path?: never;
+    query?: {
+        includeDeleted?: boolean;
+        skip?: number;
+        take?: number;
+        isActive?: boolean;
+    };
+    url: '/api/users';
 };
 
 export type GetApiUsersResponses = {
-  /**
-   * OK
-   */
-  200: Array<UserResponseDto>;
+    /**
+     * OK
+     */
+    200: Array<UserResponseDto>;
 };
 
 export type GetApiUsersResponse = GetApiUsersResponses[keyof GetApiUsersResponses];
 
 export type PostApiUsersData = {
-  body?: CreateUserDto;
-  path?: never;
-  query?: never;
-  url: '/api/Users';
+    body?: CreateUserDto;
+    path?: never;
+    query?: never;
+    url: '/api/users';
 };
 
 export type PostApiUsersResponses = {
-  /**
-   * OK
-   */
-  200: UserResponseDto;
+    /**
+     * OK
+     */
+    200: UserResponseDto;
 };
 
 export type PostApiUsersResponse = PostApiUsersResponses[keyof PostApiUsersResponses];
 
 export type DeleteApiUsersByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: {
-    softDelete?: boolean;
-    reason?: string;
-  };
-  url: '/api/Users/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        softDelete?: boolean;
+        reason?: string;
+    };
+    url: '/api/users/{id}';
 };
 
 export type DeleteApiUsersByIdResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetApiUsersByIdData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: {
-    includeDeleted?: boolean;
-  };
-  url: '/api/Users/{id}';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        includeDeleted?: boolean;
+    };
+    url: '/api/users/{id}';
 };
 
 export type GetApiUsersByIdResponses = {
-  /**
-   * OK
-   */
-  200: UserResponseDto;
+    /**
+     * OK
+     */
+    200: UserResponseDto;
 };
 
 export type GetApiUsersByIdResponse = GetApiUsersByIdResponses[keyof GetApiUsersByIdResponses];
 
 export type PutApiUsersByIdData = {
-  body?: UpdateUserDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Users/{id}';
+    body?: UpdateUserDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/users/{id}';
 };
 
 export type PutApiUsersByIdResponses = {
-  /**
-   * OK
-   */
-  200: UserResponseDto;
+    /**
+     * OK
+     */
+    200: UserResponseDto;
 };
 
 export type PutApiUsersByIdResponse = PutApiUsersByIdResponses[keyof PutApiUsersByIdResponses];
 
 export type PostApiUsersByIdRestoreData = {
-  body?: never;
-  path: {
-    id: string;
-  };
-  query?: {
-    reason?: string;
-  };
-  url: '/api/Users/{id}/restore';
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        reason?: string;
+    };
+    url: '/api/users/{id}/restore';
 };
 
 export type PostApiUsersByIdRestoreResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type PutApiUsersByIdBalanceData = {
-  body?: UpdateUserBalanceDto;
-  path: {
-    id: string;
-  };
-  query?: never;
-  url: '/api/Users/{id}/balance';
+    body?: UpdateUserBalanceDto;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/users/{id}/balance';
 };
 
 export type PutApiUsersByIdBalanceResponses = {
-  /**
-   * OK
-   */
-  200: UserResponseDto;
+    /**
+     * OK
+     */
+    200: UserResponseDto;
 };
 
 export type PutApiUsersByIdBalanceResponse = PutApiUsersByIdBalanceResponses[keyof PutApiUsersByIdBalanceResponses];
 
 export type GetApiUsersStatisticsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    fromDate?: string;
-    toDate?: string;
-    includeDeleted?: boolean;
-  };
-  url: '/api/Users/statistics';
+    body?: never;
+    path?: never;
+    query?: {
+        fromDate?: string;
+        toDate?: string;
+        includeDeleted?: boolean;
+    };
+    url: '/api/users/statistics';
 };
 
 export type GetApiUsersStatisticsResponses = {
-  /**
-   * OK
-   */
-  200: UserStatistics;
+    /**
+     * OK
+     */
+    200: UserStatistics;
 };
 
 export type GetApiUsersStatisticsResponse = GetApiUsersStatisticsResponses[keyof GetApiUsersStatisticsResponses];
 
 export type GetApiUsersSearchData = {
-  body?: never;
-  path?: never;
-  query?: {
-    searchTerm?: string;
-    isActive?: boolean;
-    minBalance?: number;
-    maxBalance?: number;
-    createdAfter?: string;
-    createdBefore?: string;
-    includeDeleted?: boolean;
-    skip?: number;
-    take?: number;
-    sortBy?: UserSortField;
-    sortDirection?: SortDirection;
-  };
-  url: '/api/Users/search';
+    body?: never;
+    path?: never;
+    query?: {
+        searchTerm?: string;
+        isActive?: boolean;
+        minBalance?: number;
+        maxBalance?: number;
+        createdAfter?: string;
+        createdBefore?: string;
+        includeDeleted?: boolean;
+        skip?: number;
+        take?: number;
+        sortBy?: UserSortField;
+        sortDirection?: SortDirection;
+    };
+    url: '/api/users/search';
 };
 
 export type GetApiUsersSearchResponses = {
-  /**
-   * OK
-   */
-  200: UserResponseDtoPagedResultReadable;
+    /**
+     * OK
+     */
+    200: UserResponseDtoPagedResult;
 };
 
 export type GetApiUsersSearchResponse = GetApiUsersSearchResponses[keyof GetApiUsersSearchResponses];
 
 export type PostApiUsersBulkData = {
-  body?: Array<CreateUserDto>;
-  path?: never;
-  query?: {
-    reason?: string;
-  };
-  url: '/api/Users/bulk';
+    body?: Array<CreateUserDto>;
+    path?: never;
+    query?: {
+        reason?: string;
+    };
+    url: '/api/users/bulk';
 };
 
 export type PostApiUsersBulkResponses = {
-  /**
-   * OK
-   */
-  200: BulkOperationResultReadable;
+    /**
+     * OK
+     */
+    200: BulkOperationResult;
 };
 
 export type PostApiUsersBulkResponse = PostApiUsersBulkResponses[keyof PostApiUsersBulkResponses];
 
 export type PatchApiUsersBulkActivateData = {
-  body?: Array<string>;
-  path?: never;
-  query?: {
-    reason?: string;
-  };
-  url: '/api/Users/bulk/activate';
+    body?: Array<string>;
+    path?: never;
+    query?: {
+        reason?: string;
+    };
+    url: '/api/users/bulk/activate';
 };
 
 export type PatchApiUsersBulkActivateResponses = {
-  /**
-   * OK
-   */
-  200: BulkOperationResultReadable;
+    /**
+     * OK
+     */
+    200: BulkOperationResult;
 };
 
 export type PatchApiUsersBulkActivateResponse = PatchApiUsersBulkActivateResponses[keyof PatchApiUsersBulkActivateResponses];
 
 export type PatchApiUsersBulkDeactivateData = {
-  body?: Array<string>;
-  path?: never;
-  query?: {
-    reason?: string;
-  };
-  url: '/api/Users/bulk/deactivate';
+    body?: Array<string>;
+    path?: never;
+    query?: {
+        reason?: string;
+    };
+    url: '/api/users/bulk/deactivate';
 };
 
 export type PatchApiUsersBulkDeactivateResponses = {
-  /**
-   * OK
-   */
-  200: BulkOperationResultReadable;
+    /**
+     * OK
+     */
+    200: BulkOperationResult;
 };
 
 export type PatchApiUsersBulkDeactivateResponse = PatchApiUsersBulkDeactivateResponses[keyof PatchApiUsersBulkDeactivateResponses];
 
 export type ClientOptions = {
-  baseUrl: `${string}://${string}` | (string & {});
+    baseUrl: `${string}://${string}` | (string & {});
 };

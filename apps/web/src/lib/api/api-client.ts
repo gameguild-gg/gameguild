@@ -84,7 +84,7 @@ class ApiClient {
       hasToken: !!data.refreshToken,
       endpoint: '/api/auth/refresh',
     });
-    
+
     return this.request<RefreshTokenResponse>('/api/auth/refresh', {
       method: 'POST',
       body: JSON.stringify(data),
