@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, Video, Image, Link, GripVertical, Trash2 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Plus, FileText, Video, Image, Link, GripVertical, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { useCourseEditor } from '@/lib/courses/course-editor.context';
 import { useState } from 'react';
 
@@ -41,6 +42,17 @@ export default function CourseContentPage() {
   const [showAddModule, setShowAddModule] = useState(false);
   const [newModuleTitle, setNewModuleTitle] = useState('');
   const [newModuleDescription, setNewModuleDescription] = useState('');
+  const [openSections, setOpenSections] = useState({
+    overview: true, // First section open by default
+    modules: false,
+  });
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
   const addModule = () => {
     if (!newModuleTitle.trim()) return;
@@ -113,8 +125,8 @@ export default function CourseContentPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      {/* Header */}
-      <div className="border-b border-border bg-background/95 backdrop-blur-sm">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -132,34 +144,44 @@ export default function CourseContentPage() {
       {/* Content */}
       <div className="flex-1 p-6 overflow-auto">
         <div className="max-w-4xl mx-auto space-y-6">
+          
           {/* Course Structure Overview */}
-          <Card className="shadow-lg border-border bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">📚 Course Structure</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                  <div className="text-2xl font-bold text-primary">{modules.length}</div>
-                  <div className="text-sm text-muted-foreground">Modules</div>
-                </div>
-                <div className="p-4 rounded-lg bg-secondary/5 border border-secondary/20">
-                  <div className="text-2xl font-bold text-secondary-foreground">
-                    {modules.reduce((acc, module) => acc + module.lessons.length, 0)}
+          <Collapsible open={openSections.overview} onOpenChange={() => toggleSection('overview')}>
+            <Card className="shadow-lg border-border bg-card/50 backdrop-blur-sm">
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">📚 Course Structure</div>
+                    {openSections.overview ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                      <div className="text-2xl font-bold text-primary">{modules.length}</div>
+                      <div className="text-sm text-muted-foreground">Modules</div>
+                    </div>
+                    <div className="p-4 rounded-lg bg-secondary/5 border border-secondary/20">
+                      <div className="text-2xl font-bold text-secondary-foreground">
+                        {modules.reduce((acc, module) => acc + module.lessons.length, 0)}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Lessons</div>
+                    </div>
+                    <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
+                      <div className="text-2xl font-bold text-accent-foreground">
+                        {modules.reduce((acc, module) => 
+                          acc + module.lessons.reduce((lessonAcc, lesson) => lessonAcc + lesson.duration, 0), 0
+                        )}m
+                      </div>
+                      <div className="text-sm text-muted-foreground">Total Duration</div>
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">Lessons</div>
-                </div>
-                <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
-                  <div className="text-2xl font-bold text-accent-foreground">
-                    {modules.reduce((acc, module) => 
-                      acc + module.lessons.reduce((lessonAcc, lesson) => lessonAcc + lesson.duration, 0), 0
-                    )}m
-                  </div>
-                  <div className="text-sm text-muted-foreground">Total Duration</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
           {/* Add Module Form */}
           {showAddModule && (

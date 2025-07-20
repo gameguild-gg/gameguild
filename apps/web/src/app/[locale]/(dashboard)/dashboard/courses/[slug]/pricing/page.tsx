@@ -6,8 +6,8 @@ import { SalesShowcaseSection } from '@/components/courses/course-editor/section
 export default function CoursePricingPage() {
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      {/* Header */}
-      <div className="border-b border-border bg-background/95 backdrop-blur-sm">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="p-6">
           <div className="flex items-center justify-between">
             <div>
