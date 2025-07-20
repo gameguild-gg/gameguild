@@ -10,18 +10,18 @@ import { cn } from '@/lib/utils';
 
 const COURSE_SECTIONS = [
   {
-    id: 'general',
-    label: 'General Details',
-    icon: FileText,
+    id: 'overview',
+    label: 'Overview',
+    icon: Eye,
     path: '',
-    description: 'Title, description, category',
+    description: 'Course dashboard, quick actions',
   },
   {
-    id: 'media',
-    label: 'Media & Assets',
-    icon: Image,
-    path: '/media',
-    description: 'Thumbnail, videos, images',
+    id: 'details',
+    label: 'Course Details',
+    icon: FileText,
+    path: '/details',
+    description: 'Title, description, category',
   },
   {
     id: 'content',
@@ -29,6 +29,13 @@ const COURSE_SECTIONS = [
     icon: BookOpen,
     path: '/content',
     description: 'Lessons, modules, materials',
+  },
+  {
+    id: 'media',
+    label: 'Media & Assets',
+    icon: Image,
+    path: '/media',
+    description: 'Thumbnail, videos, images',
   },
   {
     id: 'pricing',
