@@ -228,7 +228,6 @@ export async function createPaymentIntent(productId: string): Promise<{
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function processPaymentSuccess(
   productId: string,
   _paymentIntentId: string,
