@@ -9,6 +9,7 @@ import { useCourseEditor } from '@/lib/courses/course-editor.context';
 import { GeneralDetailsSection } from './sections/general-details-section';
 import { ThumbnailMediaSection } from './sections/thumbnail-media-section';
 import { SalesShowcaseSection } from './sections/sales-showcase-section';
+import { ContentStructureSection } from './sections/content-structure-section';
 
 interface CourseEditorProps {
   courseSlug?: string;
@@ -138,6 +139,18 @@ export function CourseEditor({ courseSlug, isCreating = false }: CourseEditorPro
               </CardHeader>
               <CardContent>
                 <ThumbnailMediaSection />
+              </CardContent>
+            </Card>
+
+            {/* Course Content */}
+            <Card className="shadow-lg border-border bg-card/50 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  📚 Course Content
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ContentStructureSection />
               </CardContent>
             </Card>
           </div>
