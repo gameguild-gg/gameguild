@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $getSelection, $isRangeSelection, SELECTION_CHANGE_COMMAND, createCommand } from 'lexical';
+import { $getSelection, $isRangeSelection, createCommand, SELECTION_CHANGE_COMMAND } from 'lexical';
 import {
   AlertCircle,
-  BookMarkedIcon as MarkdownIcon,
   Bookmark,
+  BookMarkedIcon as MarkdownIcon,
   BookOpen,
   BoxIcon as ButtonIcon,
   ClipboardList,
@@ -47,11 +47,11 @@ import type { DividerData } from '../nodes/divider-node';
 import type { ButtonData } from '../nodes/button-node';
 import type { CalloutData } from '../nodes/callout-node';
 import type { YouTubeData } from '../nodes/youtube-node';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { extractYouTubeVideoId } from '../nodes/youtube-node';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { extractYouTubeVideoId } from '../nodes/youtube-node';
 import type { SpotifyData } from '../nodes/spotify-node';
 import { extractSpotifyInfo } from '../nodes/spotify-node';
 

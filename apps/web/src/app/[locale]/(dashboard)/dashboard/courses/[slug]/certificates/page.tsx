@@ -6,55 +6,91 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { 
-  Award,
-  Plus,
-  Trash2,
-  GripVertical,
-  Star,
-  BookOpen,
-  Target,
-  CheckCircle,
-  Users,
-  TrendingUp,
-  Search,
-  X
-} from 'lucide-react';
+import { Award, GripVertical, Plus, Search, Target, Trash2, TrendingUp, X } from 'lucide-react';
+import type { CourseCertificate, CourseSkill } from '@/lib/courses/course-editor.context';
 import { useCourseEditor } from '@/lib/courses/course-editor.context';
 import { useState } from 'react';
-import type { CourseSkill, CourseCertificate } from '@/lib/courses/course-editor.context';
 
 // Mock data for available skills (in a real app, this would come from an API)
 const AVAILABLE_SKILLS = [
-  { id: 'js-basics', name: 'JavaScript Fundamentals', category: 'Programming', level: 'beginner' as const, description: 'Core JavaScript concepts and syntax' },
-  { id: 'react-basics', name: 'React Fundamentals', category: 'Frontend', level: 'intermediate' as const, description: 'Component-based UI development' },
-  { id: 'node-basics', name: 'Node.js Basics', category: 'Backend', level: 'intermediate' as const, description: 'Server-side JavaScript development' },
-  { id: 'db-design', name: 'Database Design', category: 'Data', level: 'intermediate' as const, description: 'Relational database modeling' },
-  { id: 'git-version', name: 'Git Version Control', category: 'Tools', level: 'beginner' as const, description: 'Version control with Git' },
-  { id: 'api-design', name: 'API Design', category: 'Backend', level: 'advanced' as const, description: 'RESTful API development' },
-  { id: 'testing', name: 'Software Testing', category: 'Quality', level: 'intermediate' as const, description: 'Unit and integration testing' },
-  { id: 'deployment', name: 'Application Deployment', category: 'DevOps', level: 'advanced' as const, description: 'Production deployment strategies' },
+  {
+    id: 'js-basics',
+    name: 'JavaScript Fundamentals',
+    category: 'Programming',
+    level: 'beginner' as const,
+    description: 'Core JavaScript concepts and syntax',
+  },
+  {
+    id: 'react-basics',
+    name: 'React Fundamentals',
+    category: 'Frontend',
+    level: 'intermediate' as const,
+    description: 'Component-based UI development',
+  },
+  {
+    id: 'node-basics',
+    name: 'Node.js Basics',
+    category: 'Backend',
+    level: 'intermediate' as const,
+    description: 'Server-side JavaScript development',
+  },
+  {
+    id: 'db-design',
+    name: 'Database Design',
+    category: 'Data',
+    level: 'intermediate' as const,
+    description: 'Relational database modeling',
+  },
+  {
+    id: 'git-version',
+    name: 'Git Version Control',
+    category: 'Tools',
+    level: 'beginner' as const,
+    description: 'Version control with Git',
+  },
+  {
+    id: 'api-design',
+    name: 'API Design',
+    category: 'Backend',
+    level: 'advanced' as const,
+    description: 'RESTful API development',
+  },
+  {
+    id: 'testing',
+    name: 'Software Testing',
+    category: 'Quality',
+    level: 'intermediate' as const,
+    description: 'Unit and integration testing',
+  },
+  {
+    id: 'deployment',
+    name: 'Application Deployment',
+    category: 'DevOps',
+    level: 'advanced' as const,
+    description: 'Production deployment strategies',
+  },
 ];
 
 const AVAILABLE_CERTIFICATES = [
-  { 
-    id: 'web-dev-cert', 
-    name: 'Web Development Certificate', 
+  {
+    id: 'web-dev-cert',
+    name: 'Web Development Certificate',
     description: 'Comprehensive web development skills certification',
     imageUrl: '/certificates/web-dev.png',
     requirements: { completionPercentage: 80, passingGrade: 70, requiredSkills: ['js-basics', 'react-basics'] },
-    template: 'professional'
+    template: 'professional',
   },
-  { 
-    id: 'fullstack-cert', 
-    name: 'Full-Stack Developer Certificate', 
+  {
+    id: 'fullstack-cert',
+    name: 'Full-Stack Developer Certificate',
     description: 'Complete full-stack development certification',
     imageUrl: '/certificates/fullstack.png',
-    requirements: { completionPercentage: 90, passingGrade: 75, requiredSkills: ['js-basics', 'react-basics', 'node-basics', 'db-design'] },
-    template: 'premium'
+    requirements: {
+      completionPercentage: 90,
+      passingGrade: 75,
+      requiredSkills: ['js-basics', 'react-basics', 'node-basics', 'db-design'],
+    },
+    template: 'premium',
   },
 ];
 
@@ -65,12 +101,10 @@ const SKILL_LEVELS = [
   { value: 'expert', label: 'Expert', color: 'bg-red-100 text-red-800' },
 ];
 
-const SKILL_CATEGORIES = [
-  'Programming', 'Frontend', 'Backend', 'Data', 'Tools', 'Quality', 'DevOps', 'Design', 'Business'
-];
+const SKILL_CATEGORIES = ['Programming', 'Frontend', 'Backend', 'Data', 'Tools', 'Quality', 'DevOps', 'Design', 'Business'];
 
 export default function CertificatesPage() {
-  const { 
+  const {
     state,
     addRequiredSkill,
     removeRequiredSkill,
@@ -80,7 +114,7 @@ export default function CertificatesPage() {
     reorderProvidedSkills,
     addCertificate,
     removeCertificate,
-    updateCertificate
+    updateCertificate,
   } = useCourseEditor();
 
   const [showSkillSearch, setShowSkillSearch] = useState(false);
@@ -92,18 +126,17 @@ export default function CertificatesPage() {
     name: '',
     category: 'Programming',
     level: 'beginner' as const,
-    description: ''
+    description: '',
   });
   const [showNewSkillForm, setShowNewSkillForm] = useState(false);
 
-  const filteredSkills = AVAILABLE_SKILLS.filter(skill => 
-    skill.name.toLowerCase().includes(skillSearchQuery.toLowerCase()) ||
-    skill.category.toLowerCase().includes(skillSearchQuery.toLowerCase())
+  const filteredSkills = AVAILABLE_SKILLS.filter(
+    (skill) => skill.name.toLowerCase().includes(skillSearchQuery.toLowerCase()) || skill.category.toLowerCase().includes(skillSearchQuery.toLowerCase()),
   );
 
-  const filteredCertificates = AVAILABLE_CERTIFICATES.filter(cert =>
-    cert.name.toLowerCase().includes(certificateSearchQuery.toLowerCase()) ||
-    cert.description.toLowerCase().includes(certificateSearchQuery.toLowerCase())
+  const filteredCertificates = AVAILABLE_CERTIFICATES.filter(
+    (cert) =>
+      cert.name.toLowerCase().includes(certificateSearchQuery.toLowerCase()) || cert.description.toLowerCase().includes(certificateSearchQuery.toLowerCase()),
   );
 
   const handleAddSkill = (skill: CourseSkill, mode: 'required' | 'provided') => {
@@ -124,7 +157,7 @@ export default function CertificatesPage() {
       name: newSkill.name,
       category: newSkill.category,
       level: newSkill.level,
-      description: newSkill.description
+      description: newSkill.description,
     };
 
     if (skillSearchMode === 'required') {
@@ -145,7 +178,7 @@ export default function CertificatesPage() {
   };
 
   const getSkillLevelStyle = (level: string) => {
-    return SKILL_LEVELS.find(l => l.value === level)?.color || 'bg-gray-100 text-gray-800';
+    return SKILL_LEVELS.find((l) => l.value === level)?.color || 'bg-gray-100 text-gray-800';
   };
 
   return (
@@ -171,7 +204,6 @@ export default function CertificatesPage() {
       {/* Content */}
       <div className="flex-1 p-6 overflow-auto">
         <div className="max-w-4xl mx-auto space-y-6">
-          
           {/* Required Skills Section */}
           <Card className="shadow-lg border-border bg-card/50 backdrop-blur-sm">
             <CardHeader>
@@ -181,7 +213,7 @@ export default function CertificatesPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label>Required Skills</Label>
-                <Button 
+                <Button
                   onClick={() => {
                     setSkillSearchMode('required');
                     setShowSkillSearch(true);
@@ -207,16 +239,9 @@ export default function CertificatesPage() {
                           </Badge>
                           <Badge variant="secondary">{skill.category}</Badge>
                         </div>
-                        {skill.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{skill.description}</p>
-                        )}
+                        {skill.description && <p className="text-sm text-muted-foreground mt-1">{skill.description}</p>}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeRequiredSkill(skill.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => removeRequiredSkill(skill.id)} className="text-destructive hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -241,7 +266,7 @@ export default function CertificatesPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label>Skills Provided</Label>
-                <Button 
+                <Button
                   onClick={() => {
                     setSkillSearchMode('provided');
                     setShowSkillSearch(true);
@@ -267,16 +292,9 @@ export default function CertificatesPage() {
                           </Badge>
                           <Badge variant="secondary">{skill.category}</Badge>
                         </div>
-                        {skill.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{skill.description}</p>
-                        )}
+                        {skill.description && <p className="text-sm text-muted-foreground mt-1">{skill.description}</p>}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeProvidedSkill(skill.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => removeProvidedSkill(skill.id)} className="text-destructive hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -301,11 +319,7 @@ export default function CertificatesPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label>Attached Certificates</Label>
-                <Button 
-                  onClick={() => setShowCertificateSearch(true)}
-                  size="sm"
-                  className="gap-2"
-                >
+                <Button onClick={() => setShowCertificateSearch(true)} size="sm" className="gap-2">
                   <Plus className="h-4 w-4" />
                   Add Certificate
                 </Button>
@@ -322,7 +336,7 @@ export default function CertificatesPage() {
                             <h4 className="font-semibold">{certificate.name}</h4>
                           </div>
                           <p className="text-sm text-muted-foreground mb-3">{certificate.description}</p>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                             <div>
                               <Label className="text-xs">Completion Required</Label>
@@ -340,12 +354,7 @@ export default function CertificatesPage() {
                             </div>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeCertificate(certificate.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => removeCertificate(certificate.id)} className="text-destructive hover:text-destructive">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -372,25 +381,20 @@ export default function CertificatesPage() {
                 <h3 className="font-semibold mb-2">How students will see this course:</h3>
                 <div className="space-y-3 text-sm">
                   <div>
-                    <strong>Prerequisites:</strong> {
-                      state.certificates.skillsRequired.length > 0 
-                        ? state.certificates.skillsRequired.map(s => s.name).join(', ')
-                        : 'None required'
-                    }
+                    <strong>Prerequisites:</strong>{' '}
+                    {state.certificates.skillsRequired.length > 0 ? state.certificates.skillsRequired.map((s) => s.name).join(', ') : 'None required'}
                   </div>
                   <div>
-                    <strong>You'll Learn:</strong> {
-                      state.certificates.skillsProvided.length > 0
-                        ? state.certificates.skillsProvided.map(s => s.name).join(', ')
-                        : 'Learning outcomes not specified'
-                    }
+                    <strong>You'll Learn:</strong>{' '}
+                    {state.certificates.skillsProvided.length > 0
+                      ? state.certificates.skillsProvided.map((s) => s.name).join(', ')
+                      : 'Learning outcomes not specified'}
                   </div>
                   <div>
-                    <strong>Certificates:</strong> {
-                      state.certificates.certificates.length > 0
-                        ? `${state.certificates.certificates.length} certificate(s) available`
-                        : 'No certificates offered'
-                    }
+                    <strong>Certificates:</strong>{' '}
+                    {state.certificates.certificates.length > 0
+                      ? `${state.certificates.certificates.length} certificate(s) available`
+                      : 'No certificates offered'}
                   </div>
                 </div>
               </div>
@@ -405,9 +409,7 @@ export default function CertificatesPage() {
           <div className="bg-background border rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
             <div className="p-4 border-b">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">
-                  Add {skillSearchMode === 'required' ? 'Required' : 'Provided'} Skill
-                </h3>
+                <h3 className="font-semibold">Add {skillSearchMode === 'required' ? 'Required' : 'Provided'} Skill</h3>
                 <Button variant="ghost" size="sm" onClick={() => setShowSkillSearch(false)}>
                   <X className="h-4 w-4" />
                 </Button>
@@ -415,35 +417,22 @@ export default function CertificatesPage() {
               <div className="flex gap-2 mt-3">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search skills..."
-                    value={skillSearchQuery}
-                    onChange={(e) => setSkillSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
+                  <Input placeholder="Search skills..." value={skillSearchQuery} onChange={(e) => setSkillSearchQuery(e.target.value)} className="pl-10" />
                 </div>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowNewSkillForm(true)}
-                  className="gap-2"
-                >
+                <Button variant="outline" onClick={() => setShowNewSkillForm(true)} className="gap-2">
                   <Plus className="h-4 w-4" />
                   New
                 </Button>
               </div>
             </div>
-            
+
             {showNewSkillForm && (
               <div className="p-4 border-b bg-muted/30">
                 <h4 className="font-medium mb-3">Create New Skill</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs">Name</Label>
-                    <Input
-                      value={newSkill.name}
-                      onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
-                      placeholder="Skill name"
-                    />
+                    <Input value={newSkill.name} onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })} placeholder="Skill name" />
                   </div>
                   <div>
                     <Label className="text-xs">Category</Label>
@@ -452,8 +441,10 @@ export default function CertificatesPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {SKILL_CATEGORIES.map(cat => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        {SKILL_CATEGORIES.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -465,8 +456,10 @@ export default function CertificatesPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {SKILL_LEVELS.map(level => (
-                          <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
+                        {SKILL_LEVELS.map((level) => (
+                          <SelectItem key={level.value} value={level.value}>
+                            {level.label}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -481,15 +474,19 @@ export default function CertificatesPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">
-                  <Button onClick={handleCreateNewSkill} size="sm">Create Skill</Button>
-                  <Button variant="outline" onClick={() => setShowNewSkillForm(false)} size="sm">Cancel</Button>
+                  <Button onClick={handleCreateNewSkill} size="sm">
+                    Create Skill
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowNewSkillForm(false)} size="sm">
+                    Cancel
+                  </Button>
                 </div>
               </div>
             )}
-            
+
             <div className="p-4 max-h-96 overflow-y-auto">
               <div className="space-y-2">
-                {filteredSkills.map(skill => (
+                {filteredSkills.map((skill) => (
                   <div
                     key={skill.id}
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
@@ -535,10 +532,10 @@ export default function CertificatesPage() {
                 />
               </div>
             </div>
-            
+
             <div className="p-4 max-h-96 overflow-y-auto">
               <div className="space-y-3">
-                {filteredCertificates.map(cert => (
+                {filteredCertificates.map((cert) => (
                   <div
                     key={cert.id}
                     className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer"

@@ -7,19 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import {
-  BookOpen,
-  Calendar,
-  Filter,
-  GraduationCap,
-  MoreHorizontal,
-  Plus,
-  RefreshCw,
-  Search,
-  TrendingUp,
-  Users,
-  Zap,
-} from 'lucide-react';
+import { BookOpen, Calendar, Filter, GraduationCap, MoreHorizontal, Plus, RefreshCw, Search, TrendingUp, Users, Zap } from 'lucide-react';
 import { getCourseData } from '@/lib/courses/actions';
 import { EnhancedCourse } from '@/lib/courses/courses-enhanced.context';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -52,10 +40,9 @@ export function EnhancedCoursesList() {
   };
 
   const filteredCourses = courses.filter((course) => {
-    const matchesSearch = searchTerm === '' || 
-      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch =
+      searchTerm === '' || course.title.toLowerCase().includes(searchTerm.toLowerCase()) || course.description.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesArea = areaFilter === 'all' || course.area === areaFilter;
     const matchesLevel = levelFilter === 'all' || course.level.toString() === levelFilter;
 
@@ -94,11 +81,16 @@ export function EnhancedCoursesList() {
 
   const getLevelText = (level: number) => {
     switch (level) {
-      case 1: return 'Beginner';
-      case 2: return 'Intermediate';
-      case 3: return 'Advanced';
-      case 4: return 'Expert';
-      default: return 'Unknown';
+      case 1:
+        return 'Beginner';
+      case 2:
+        return 'Intermediate';
+      case 3:
+        return 'Advanced';
+      case 4:
+        return 'Expert';
+      default:
+        return 'Unknown';
     }
   };
 
@@ -134,12 +126,8 @@ export function EnhancedCoursesList() {
         <div className="container mx-auto max-w-7xl px-6 py-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-transparent">
-                Course Management
-              </h1>
-              <p className="text-muted-foreground mt-1 text-base">
-                Manage your educational content and track course performance
-              </p>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-transparent">Course Management</h1>
+              <p className="text-muted-foreground mt-1 text-base">Manage your educational content and track course performance</p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -161,7 +149,6 @@ export function EnhancedCoursesList() {
 
       {/* Main Content */}
       <div className="container mx-auto max-w-7xl p-6 space-y-8">
-
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -196,10 +183,17 @@ export function EnhancedCoursesList() {
                 <div>
                   <p className="text-purple-400 text-sm font-medium">Completion Rate</p>
                   <p className="text-3xl font-bold text-foreground">
-                    {courses.length > 0 ? Math.round(
-                      courses.reduce((acc, c) => acc + (c.analytics?.completions || 0), 0) / 
-                      Math.max(courses.reduce((acc, c) => acc + (c.enrollmentCount || 0), 0), 1) * 100
-                    ) : 0}%
+                    {courses.length > 0
+                      ? Math.round(
+                          (courses.reduce((acc, c) => acc + (c.analytics?.completions || 0), 0) /
+                            Math.max(
+                              courses.reduce((acc, c) => acc + (c.enrollmentCount || 0), 0),
+                              1,
+                            )) *
+                            100,
+                        )
+                      : 0}
+                    %
                   </p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-purple-400" />
@@ -214,9 +208,7 @@ export function EnhancedCoursesList() {
                 <div>
                   <p className="text-orange-400 text-sm font-medium">Avg Rating</p>
                   <p className="text-3xl font-bold text-foreground">
-                    {courses.length > 0 ? (
-                      courses.reduce((acc, c) => acc + (c.analytics?.averageRating || 0), 0) / courses.length
-                    ).toFixed(1) : '0.0'}
+                    {courses.length > 0 ? (courses.reduce((acc, c) => acc + (c.analytics?.averageRating || 0), 0) / courses.length).toFixed(1) : '0.0'}
                   </p>
                 </div>
                 <GraduationCap className="h-8 w-8 text-orange-400" />
@@ -270,11 +262,7 @@ export function EnhancedCoursesList() {
                 </Select>
               </div>
 
-              <ViewModeToggle
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                className="ml-auto"
-              />
+              <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} className="ml-auto" />
             </div>
           </CardContent>
         </Card>
@@ -286,9 +274,7 @@ export function EnhancedCoursesList() {
               <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-foreground mb-2">No courses found</h3>
               <p className="text-muted-foreground mb-6">
-                {searchTerm || areaFilter !== 'all' || levelFilter !== 'all' 
-                  ? 'Try adjusting your search or filters' 
-                  : 'No courses have been created yet'}
+                {searchTerm || areaFilter !== 'all' || levelFilter !== 'all' ? 'Try adjusting your search or filters' : 'No courses have been created yet'}
               </p>
               {!searchTerm && areaFilter === 'all' && levelFilter === 'all' && (
                 <Link href="/dashboard/courses/create">
@@ -335,9 +321,7 @@ export function EnhancedCoursesList() {
                       </TableCell>
                       <TableCell className="text-foreground">{course.enrollmentCount || 0}</TableCell>
                       <TableCell>
-                        <Badge variant={course.status === 'published' ? 'default' : 'secondary'}>
-                          {course.status}
-                        </Badge>
+                        <Badge variant={course.status === 'published' ? 'default' : 'secondary'}>{course.status}</Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">{formatDate(course.updatedAt)}</TableCell>
                     </TableRow>
@@ -351,48 +335,77 @@ export function EnhancedCoursesList() {
             {filteredCourses.map((course) => (
               <Link key={course.id} href={`/dashboard/courses/${course.slug}`}>
                 <Card className="bg-card/50 border-border backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-chart-2/20 rounded-lg flex items-center justify-center">
-                          <BookOpen className="h-6 w-6 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-foreground mb-2">{course.title}</h3>
-                          <p className="text-muted-foreground mb-4 line-clamp-2">{course.description}</p>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            <Badge className={getAreaColor(course.area)} variant="outline">
-                              {course.area}
-                            </Badge>
-                            <Badge className={getLevelColor(course.level)} variant="outline">
-                              {getLevelText(course.level)}
-                            </Badge>
-                            <Badge variant={course.status === 'published' ? 'default' : 'secondary'}>
-                              {course.status}
-                            </Badge>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-chart-2/20 rounded-lg flex items-center justify-center">
+                            <BookOpen className="h-6 w-6 text-primary" />
                           </div>
-                          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4" />
-                              {course.enrollmentCount || 0} students
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{course.title}</h3>
+                            <p className="text-muted-foreground mb-4 line-clamp-2">{course.description}</p>
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              <Badge className={getAreaColor(course.area)} variant="outline">
+                                {course.area}
+                              </Badge>
+                              <Badge className={getLevelColor(course.level)} variant="outline">
+                                {getLevelText(course.level)}
+                              </Badge>
+                              <Badge variant={course.status === 'published' ? 'default' : 'secondary'}>{course.status}</Badge>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              Updated {formatDate(course.updatedAt)}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Zap className="h-4 w-4" />
-                              {course.estimatedHours || 0}h estimated
+                            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Users className="h-4 w-4" />
+                                {course.enrollmentCount || 0} students
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                Updated {formatDate(course.updatedAt)}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Zap className="h-4 w-4" />
+                                {course.estimatedHours || 0}h estimated
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
+                      <div className="flex gap-2 ml-4">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="bg-popover border-border">
+                            <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                            <DropdownMenuItem>Archive</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
-                    <div className="flex gap-2 ml-4">
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCourses.map((course) => (
+              <Link key={course.id} href={`/dashboard/courses/${course.slug}`}>
+                <Card className="bg-card/50 border-border backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">{course.title}</CardTitle>
+                        <p className="text-muted-foreground text-sm mt-2 line-clamp-3">{course.description}</p>
+                      </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -404,78 +417,43 @@ export function EnhancedCoursesList() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCourses.map((course) => (
-              <Link key={course.id} href={`/dashboard/courses/${course.slug}`}>
-                <Card className="bg-card/50 border-border backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                        {course.title}
-                      </CardTitle>
-                      <p className="text-muted-foreground text-sm mt-2 line-clamp-3">{course.description}</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <Badge className={getAreaColor(course.area)} variant="outline">
+                        {course.area}
+                      </Badge>
+                      <Badge className={getLevelColor(course.level)} variant="outline">
+                        {getLevelText(course.level)}
+                      </Badge>
+                      <Badge variant={course.status === 'published' ? 'default' : 'secondary'}>{course.status}</Badge>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="bg-popover border-border">
-                        <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                        <DropdownMenuItem>Archive</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <Badge className={getAreaColor(course.area)} variant="outline">
-                      {course.area}
-                    </Badge>
-                    <Badge className={getLevelColor(course.level)} variant="outline">
-                      {getLevelText(course.level)}
-                    </Badge>
-                    <Badge variant={course.status === 'published' ? 'default' : 'secondary'}>
-                      {course.status}
-                    </Badge>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        Students
-                      </span>
-                      <span className="font-medium text-foreground">{course.enrollmentCount || 0}</span>
+
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <Users className="h-4 w-4" />
+                          Students
+                        </span>
+                        <span className="font-medium text-foreground">{course.enrollmentCount || 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <Zap className="h-4 w-4" />
+                          Duration
+                        </span>
+                        <span className="font-medium text-foreground">{course.estimatedHours || 0}h</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          Updated
+                        </span>
+                        <span className="font-medium text-foreground">{formatDate(course.updatedAt)}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1">
-                        <Zap className="h-4 w-4" />
-                        Duration
-                      </span>
-                      <span className="font-medium text-foreground">{course.estimatedHours || 0}h</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        Updated
-                      </span>
-                      <span className="font-medium text-foreground">{formatDate(course.updatedAt)}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
               </Link>
             ))}
           </div>

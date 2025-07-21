@@ -1,13 +1,10 @@
 'use client';
 
 import type React from 'react';
-
-import { useState, useEffect, useRef, useContext } from 'react';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { $getNodeByKey } from 'lexical';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { ChevronLeft, ChevronRight, Edit, Expand, ImageIcon, LayoutGrid, Maximize2, Minimize2, X } from 'lucide-react';
-import { Download, Upload, FileType, AlertCircle } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight, Download, Edit, Expand, FileType, ImageIcon, LayoutGrid, Maximize2, Minimize2, Upload, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { ContentEditMenu, type EditMenuOption } from '@/components/ui/content-edit-menu';
@@ -57,14 +54,6 @@ export interface SerializedPresentationNode extends SerializedLexicalNode {
 export class PresentationNode extends DecoratorNode<JSX.Element> {
   __data: PresentationData;
 
-  static getType(): string {
-    return 'presentation';
-  }
-
-  static clone(node: PresentationNode): PresentationNode {
-    return new PresentationNode(node.__data, node.__key);
-  }
-
   constructor(data: PresentationData, key?: string) {
     super(key);
     this.__data = {
@@ -78,6 +67,18 @@ export class PresentationNode extends DecoratorNode<JSX.Element> {
       isNew: data.isNew,
       customThemeColor: data.customThemeColor,
     };
+  }
+
+  static getType(): string {
+    return 'presentation';
+  }
+
+  static clone(node: PresentationNode): PresentationNode {
+    return new PresentationNode(node.__data, node.__key);
+  }
+
+  static importJSON(serializedNode: SerializedPresentationNode): PresentationNode {
+    return new PresentationNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -99,10 +100,6 @@ export class PresentationNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedPresentationNode): PresentationNode {
-    return new PresentationNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

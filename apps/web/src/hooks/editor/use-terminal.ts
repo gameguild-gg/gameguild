@@ -1,8 +1,7 @@
 'use client';
 
 import type React from 'react';
-
-import { useState, useRef, useCallback } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 interface UseTerminalOptions {
   onCommand?: (command: string) => boolean;

@@ -11,53 +11,51 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { 
-  Globe, 
-  Eye, 
-  Settings, 
-  Clock, 
-  Play,
-  Pause,
+import {
+  AlertCircle,
+  Bell,
+  Calendar,
+  CheckCircle,
+  Download,
+  ExternalLink,
+  Eye,
+  GitBranch,
+  Globe,
+  History,
+  Lock,
   Monitor,
-  Tablet,
+  Moon,
+  Pause,
+  Play,
+  Plus,
+  RotateCcw,
+  Settings,
+  Share2,
   Smartphone,
   Sun,
-  Moon,
-  RotateCcw,
+  Tablet,
   Trash2,
-  Plus,
-  CheckCircle,
-  AlertCircle,
-  Calendar,
   Users,
-  Lock,
-  Unlock,
-  GitBranch,
-  History,
-  Bell,
-  ExternalLink,
-  Download,
-  Share2
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export default function PublishPage() {
-  const { 
-    state: course, 
-    setVisibility, 
-    setAccessType, 
-    toggleAutoPublish, 
-    setPublishDate, 
-    createVersion, 
-    restoreVersion, 
-    deleteVersion, 
-    setPreviewMode, 
-    setPreviewTheme, 
-    toggleLivePreview, 
-    publishCourse, 
+  const {
+    state: course,
+    setVisibility,
+    setAccessType,
+    toggleAutoPublish,
+    setPublishDate,
+    createVersion,
+    restoreVersion,
+    deleteVersion,
+    setPreviewMode,
+    setPreviewTheme,
+    toggleLivePreview,
+    publishCourse,
     unpublishCourse,
-    setPublishingStatus 
+    setPublishingStatus,
   } = useCourseEditor();
 
   const [newVersionChanges, setNewVersionChanges] = useState('');
@@ -70,7 +68,7 @@ export default function PublishPage() {
 
   const handlePublish = async () => {
     setPublishingStatus('publishing');
-    
+
     // Simulate publishing process
     setTimeout(() => {
       publishCourse();
@@ -88,19 +86,27 @@ export default function PublishPage() {
 
   const getPublishingStatusColor = (status: typeof publishing.publishingStatus) => {
     switch (status) {
-      case 'published': return 'text-green-600';
-      case 'publishing': return 'text-blue-600';
-      case 'failed': return 'text-red-600';
-      default: return 'text-gray-600';
+      case 'published':
+        return 'text-green-600';
+      case 'publishing':
+        return 'text-blue-600';
+      case 'failed':
+        return 'text-red-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
   const getVisibilityIcon = (visibility: typeof publishing.settings.visibility) => {
     switch (visibility) {
-      case 'public': return Globe;
-      case 'private': return Lock;
-      case 'unlisted': return Eye;
-      default: return Globe;
+      case 'public':
+        return Globe;
+      case 'private':
+        return Lock;
+      case 'unlisted':
+        return Eye;
+      default:
+        return Globe;
     }
   };
 
@@ -123,18 +129,13 @@ export default function PublishPage() {
             <Play className="h-6 w-6" />
             Preview & Publish
           </h1>
-          <p className="text-muted-foreground">
-            Manage course publishing, versions, and preview settings
-          </p>
+          <p className="text-muted-foreground">Manage course publishing, versions, and preview settings</p>
         </div>
-        
+
         <div className="flex items-center gap-3">
-          <Badge 
+          <Badge
             variant={course.status === 'published' ? 'default' : 'secondary'}
-            className={cn(
-              'flex items-center gap-1',
-              getPublishingStatusColor(publishing.publishingStatus)
-            )}
+            className={cn('flex items-center gap-1', getPublishingStatusColor(publishing.publishingStatus))}
           >
             {publishing.publishingStatus === 'publishing' ? (
               <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full" />
@@ -145,17 +146,14 @@ export default function PublishPage() {
             )}
             {publishing.publishingStatus === 'publishing' ? 'Publishing...' : course.status.charAt(0).toUpperCase() + course.status.slice(1)}
           </Badge>
-          
+
           {course.status === 'published' ? (
             <Button onClick={unpublishCourse} variant="outline">
               <Pause className="h-4 w-4 mr-2" />
               Unpublish
             </Button>
           ) : (
-            <Button 
-              onClick={handlePublish} 
-              disabled={!course.isValid || publishing.publishingStatus === 'publishing'}
-            >
+            <Button onClick={handlePublish} disabled={!course.isValid || publishing.publishingStatus === 'publishing'}>
               <Play className="h-4 w-4 mr-2" />
               {publishing.publishingStatus === 'publishing' ? 'Publishing...' : 'Publish'}
             </Button>
@@ -173,9 +171,7 @@ export default function PublishPage() {
                 <Settings className="h-5 w-5" />
                 Publishing Settings
               </CardTitle>
-              <CardDescription>
-                Control how and when your course is published
-              </CardDescription>
+              <CardDescription>Control how and when your course is published</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -227,14 +223,9 @@ export default function PublishPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Auto-publish changes</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Automatically publish when you save changes
-                    </p>
+                    <p className="text-sm text-muted-foreground">Automatically publish when you save changes</p>
                   </div>
-                  <Switch 
-                    checked={publishing.settings.autoPublish}
-                    onCheckedChange={toggleAutoPublish}
-                  />
+                  <Switch checked={publishing.settings.autoPublish} onCheckedChange={toggleAutoPublish} />
                 </div>
 
                 <div className="space-y-2">
@@ -242,15 +233,16 @@ export default function PublishPage() {
                   <Input
                     id="publishDate"
                     type="datetime-local"
-                    value={publishing.settings.publishAt ? 
-                      new Date(publishing.settings.publishAt.getTime() - publishing.settings.publishAt.getTimezoneOffset() * 60000)
-                        .toISOString().slice(0, 16) : ''
+                    value={
+                      publishing.settings.publishAt
+                        ? new Date(publishing.settings.publishAt.getTime() - publishing.settings.publishAt.getTimezoneOffset() * 60000)
+                            .toISOString()
+                            .slice(0, 16)
+                        : ''
                     }
                     onChange={(e) => setPublishDate(e.target.value ? new Date(e.target.value) : undefined)}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Leave empty to publish immediately
-                  </p>
+                  <p className="text-xs text-muted-foreground">Leave empty to publish immediately</p>
                 </div>
               </div>
             </CardContent>
@@ -264,9 +256,7 @@ export default function PublishPage() {
                 Version History
                 <Badge variant="outline">{publishing.currentVersion}</Badge>
               </CardTitle>
-              <CardDescription>
-                Track changes and manage course versions
-              </CardDescription>
+              <CardDescription>Track changes and manage course versions</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">
@@ -280,9 +270,7 @@ export default function PublishPage() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Create New Version</DialogTitle>
-                      <DialogDescription>
-                        Document the changes made in this version
-                      </DialogDescription>
+                      <DialogDescription>Document the changes made in this version</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                       <Textarea
@@ -303,11 +291,7 @@ export default function PublishPage() {
                   </DialogContent>
                 </Dialog>
 
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowVersionHistory(!showVersionHistory)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setShowVersionHistory(!showVersionHistory)}>
                   <History className="h-4 w-4 mr-2" />
                   {showVersionHistory ? 'Hide' : 'Show'} History
                 </Button>
@@ -316,9 +300,7 @@ export default function PublishPage() {
               {showVersionHistory && (
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {publishing.versions.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-4 text-center">
-                      No versions created yet
-                    </p>
+                    <p className="text-sm text-muted-foreground py-4 text-center">No versions created yet</p>
                   ) : (
                     publishing.versions.map((version) => (
                       <div key={version.id} className="flex items-center justify-between p-3 border rounded">
@@ -327,7 +309,9 @@ export default function PublishPage() {
                             <Badge variant="outline">{version.version}</Badge>
                             <span className="text-sm font-medium">{version.changes}</span>
                             {version.version === publishing.currentVersion && (
-                              <Badge variant="default" className="text-xs">Current</Badge>
+                              <Badge variant="default" className="text-xs">
+                                Current
+                              </Badge>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
@@ -336,19 +320,11 @@ export default function PublishPage() {
                         </div>
                         <div className="flex items-center gap-1">
                           {version.version !== publishing.currentVersion && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => restoreVersion(version.id)}
-                            >
+                            <Button variant="ghost" size="sm" onClick={() => restoreVersion(version.id)}>
                               <RotateCcw className="h-4 w-4" />
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteVersion(version.id)}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => deleteVersion(version.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -367,20 +343,16 @@ export default function PublishPage() {
                 <Bell className="h-5 w-5" />
                 Publishing Notifications
               </CardTitle>
-              <CardDescription>
-                Get notified when your course is published or updated
-              </CardDescription>
+              <CardDescription>Get notified when your course is published or updated</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Email notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Send email when course is published
-                    </p>
+                    <p className="text-sm text-muted-foreground">Send email when course is published</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={publishing.settings.notifications.email}
                     onCheckedChange={(checked) => {
                       // Would dispatch notification setting change
@@ -391,11 +363,9 @@ export default function PublishPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Slack notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Post to Slack when course is published
-                    </p>
+                    <p className="text-sm text-muted-foreground">Post to Slack when course is published</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={publishing.settings.notifications.slack}
                     onCheckedChange={(checked) => {
                       // Would dispatch notification setting change
@@ -416,17 +386,12 @@ export default function PublishPage() {
                 <Eye className="h-5 w-5" />
                 Live Preview
               </CardTitle>
-              <CardDescription>
-                Preview how your course will look to students
-              </CardDescription>
+              <CardDescription>Preview how your course will look to students</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label>Live preview</Label>
-                <Switch 
-                  checked={publishing.preview.livePreview}
-                  onCheckedChange={toggleLivePreview}
-                />
+                <Switch checked={publishing.preview.livePreview} onCheckedChange={toggleLivePreview} />
               </div>
 
               <div className="space-y-2">
@@ -490,7 +455,7 @@ export default function PublishPage() {
                     Open Preview
                   </a>
                 </Button>
-                
+
                 <Button variant="outline" className="w-full">
                   <Share2 className="h-4 w-4 mr-2" />
                   Share Preview Link
@@ -512,14 +477,8 @@ export default function PublishPage() {
                 <div className="flex items-center justify-between">
                   <span>Course validation</span>
                   <div className="flex items-center gap-1">
-                    {course.isValid ? (
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-red-600" />
-                    )}
-                    <span className={course.isValid ? 'text-green-600' : 'text-red-600'}>
-                      {course.isValid ? 'Valid' : 'Issues found'}
-                    </span>
+                    {course.isValid ? <CheckCircle className="h-4 w-4 text-green-600" /> : <AlertCircle className="h-4 w-4 text-red-600" />}
+                    <span className={course.isValid ? 'text-green-600' : 'text-red-600'}>{course.isValid ? 'Valid' : 'Issues found'}</span>
                   </div>
                 </div>
 
@@ -534,13 +493,13 @@ export default function PublishPage() {
                 <div className="flex items-center justify-between">
                   <span>SEO optimized</span>
                   <div className="flex items-center gap-1">
-                    {(course.metadata.seo.metaTitle && course.metadata.seo.metaDescription) ? (
+                    {course.metadata.seo.metaTitle && course.metadata.seo.metaDescription ? (
                       <CheckCircle className="h-4 w-4 text-green-600" />
                     ) : (
                       <AlertCircle className="h-4 w-4 text-yellow-600" />
                     )}
-                    <span className={(course.metadata.seo.metaTitle && course.metadata.seo.metaDescription) ? 'text-green-600' : 'text-yellow-600'}>
-                      {(course.metadata.seo.metaTitle && course.metadata.seo.metaDescription) ? 'Optimized' : 'Needs work'}
+                    <span className={course.metadata.seo.metaTitle && course.metadata.seo.metaDescription ? 'text-green-600' : 'text-yellow-600'}>
+                      {course.metadata.seo.metaTitle && course.metadata.seo.metaDescription ? 'Optimized' : 'Needs work'}
                     </span>
                   </div>
                 </div>
@@ -567,12 +526,12 @@ export default function PublishPage() {
                 <Download className="h-4 w-4 mr-2" />
                 Export Course Data
               </Button>
-              
+
               <Button variant="outline" className="w-full justify-start">
                 <Users className="h-4 w-4 mr-2" />
                 View Analytics
               </Button>
-              
+
               <Button variant="outline" className="w-full justify-start">
                 <Settings className="h-4 w-4 mr-2" />
                 Advanced Settings

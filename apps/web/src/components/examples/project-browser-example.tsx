@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FilterProvider, SearchBar, ViewModeToggle, MultiSelectFilter, FilterOption } from '../common/filters';
+import { FilterOption, FilterProvider, MultiSelectFilter, SearchBar, ViewModeToggle } from '../common/filters';
 
 // Example: Project Browser with reusable filter components
 interface Project {

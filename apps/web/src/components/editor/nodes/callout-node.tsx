@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useContext } from 'react';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { $getNodeByKey } from 'lexical';
+import { useContext, useEffect, useState } from 'react';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { ChevronDown, Pencil, Check } from 'lucide-react';
+import { Check, ChevronDown, Pencil } from 'lucide-react';
 import type { JSX } from 'react/jsx-runtime';
 
 import { Button } from '@/components/ui/button';
@@ -31,14 +30,6 @@ export interface SerializedCalloutNode extends SerializedLexicalNode {
 export class CalloutNode extends DecoratorNode<JSX.Element> {
   __data: CalloutData;
 
-  static getType(): string {
-    return 'callout';
-  }
-
-  static clone(node: CalloutNode): CalloutNode {
-    return new CalloutNode(node.__data, node.__key);
-  }
-
   constructor(data: CalloutData, key?: string) {
     super(key);
     this.__data = {
@@ -47,6 +38,18 @@ export class CalloutNode extends DecoratorNode<JSX.Element> {
       type: data.type || 'note',
       isNew: data.isNew,
     };
+  }
+
+  static getType(): string {
+    return 'callout';
+  }
+
+  static clone(node: CalloutNode): CalloutNode {
+    return new CalloutNode(node.__data, node.__key);
+  }
+
+  static importJSON(serializedNode: SerializedCalloutNode): CalloutNode {
+    return new CalloutNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -68,10 +71,6 @@ export class CalloutNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedCalloutNode): CalloutNode {
-    return new CalloutNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

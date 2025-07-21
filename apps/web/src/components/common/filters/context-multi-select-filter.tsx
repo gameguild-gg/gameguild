@@ -1,6 +1,6 @@
 'use client';
 
-import { useFilterContext, FilterOption } from './filter-context';
+import { FilterOption, useFilterContext } from './filter-context';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';

@@ -1,10 +1,22 @@
 'use client';
 
 import type React from 'react';
-
-import { useCallback, useRef, useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { ArrowRight, Copy, Download, ExternalLink, Mail, ImageIcon, LayoutGrid, ChevronLeft, ChevronRight, Eye, AlertCircle, RotateCcw } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Download,
+  ExternalLink,
+  Eye,
+  ImageIcon,
+  LayoutGrid,
+  Mail,
+  RotateCcw,
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { SerializedEditorState } from 'lexical';
 import type { SerializedQuizNode } from '../nodes/quiz-node';
@@ -16,7 +28,7 @@ import type { SerializedAudioNode } from '../nodes/audio-node';
 import DOMPurify from 'dompurify';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Adicione o import para o SerializedHeaderNode
 import type { SerializedHeaderNode } from '../nodes/header-node';
@@ -1409,13 +1421,21 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
             const styleString = node.style;
             const styleRules = styleString.split(';').filter((rule: string) => rule.trim());
 
-            styleRules.forEach((rule: { split: (arg0: string) => { (): any; new (): any; map: { (arg0: (s: any) => any): [any, any]; new (): any } } }) => {
-              const [property, value] = rule.split(':').map((s: string) => s.trim());
-              if (property && value) {
-                const camelCaseProperty = property.replace(/-([a-z])/g, (match: any, letter: string) => letter.toUpperCase());
-                headingStyles[camelCaseProperty as keyof React.CSSProperties] = value;
-              }
-            });
+            styleRules.forEach(
+              (rule: {
+                split: (arg0: string) => {
+                  (): any;
+                  new (): any;
+                  map: { (arg0: (s: any) => any): [any, any]; new (): any };
+                };
+              }) => {
+                const [property, value] = rule.split(':').map((s: string) => s.trim());
+                if (property && value) {
+                  const camelCaseProperty = property.replace(/-([a-z])/g, (match: any, letter: string) => letter.toUpperCase());
+                  headingStyles[camelCaseProperty as keyof React.CSSProperties] = value;
+                }
+              },
+            );
           }
 
           // Use switch statement for better reliability

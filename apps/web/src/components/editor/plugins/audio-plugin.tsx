@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $insertNodes } from 'lexical';
 import { INSERT_AUDIO_COMMAND } from './floating-content-insert-plugin';
-import { $createAudioNode } from '../nodes/audio-node';
 import type { AudioData } from '../nodes/audio-node';
+import { $createAudioNode } from '../nodes/audio-node';
 
 export function AudioPlugin() {
   const [editor] = useLexicalComposerContext();

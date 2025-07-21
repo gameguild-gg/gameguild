@@ -1,6 +1,6 @@
 'use client';
 
-import { SearchBar, ViewModeToggle, MultiSelectFilter, PeriodSelector, FilterOption } from '../../common/filters';
+import { FilterOption, MultiSelectFilter, PeriodSelector, SearchBar, ViewModeToggle } from '../../common/filters';
 import { useTestingLabFilters } from './testing-lab-filter-context';
 
 interface TestingLabFilterControlsProps {

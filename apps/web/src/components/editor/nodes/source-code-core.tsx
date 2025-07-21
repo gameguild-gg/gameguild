@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useRef, useContext } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Code, Play, Settings } from 'lucide-react';
 import type { EditMenuOption } from '@/components/ui/content-edit-menu';
 import type { CodeFile, LanguageType, ProgrammingLanguage } from '../ui/source-code/types';
@@ -13,7 +13,7 @@ import { useTerminal } from '@/hooks/editor/use-terminal';
 import { useCodeExecution } from '@/hooks/editor/use-code-execution';
 import { useFileManagement } from '@/hooks/editor/use-file-management';
 import { useFileState } from '@/hooks/editor/use-file-state';
-import { useFileContent, insertSolutionTemplate } from '@/hooks/editor/use-file-content';
+import { insertSolutionTemplate, useFileContent } from '@/hooks/editor/use-file-content';
 import { useLanguageSettings } from '@/hooks/editor/use-language-settings';
 import { useEditorStyles } from '@/hooks/editor/use-editor-styles';
 
@@ -112,7 +112,16 @@ export function SourceCodeCore({ data, isPreview = false, onUpdateSourceCode, on
       }[]
     >
   >(data.testCases ?? {});
-  const [testResults, setTestResults] = useState<Record<string, { passed: boolean; actual: string; expected: string }[]>>({});
+  const [testResults, setTestResults] = useState<
+    Record<
+      string,
+      {
+        passed: boolean;
+        actual: string;
+        expected: string;
+      }[]
+    >
+  >({});
   const [activeTab, setActiveTab] = useState<'terminal' | 'tests'>(data.activeTab ?? 'terminal');
 
   // Track mode sessions to control automatic file selection

@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $insertNodes } from 'lexical';
 import { INSERT_BUTTON_COMMAND } from './floating-content-insert-plugin';
-import { $createButtonNode } from '../nodes/button-node';
 import type { ButtonData } from '../nodes/button-node';
+import { $createButtonNode } from '../nodes/button-node';
 
 export function ButtonPlugin() {
   const [editor] = useLexicalComposerContext();

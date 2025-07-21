@@ -4,16 +4,12 @@ import { getFileContent } from '@/components/ui/source-code/utils';
 
 export abstract class CompiledLanguageExecutor implements LanguageExecutor {
   handleCommand?: ((command: string, context: ExecutionContext) => boolean) | undefined;
+  public isCompiled = true; // Set the isCompiled flag to true
   protected abstract languageName: string;
   protected abstract compilerName: string;
   protected abstract fileExtension: string;
   protected abstract supportedLanguages: ProgrammingLanguage[];
   private isExecutionCancelled = false;
-  public isCompiled = true; // Set the isCompiled flag to true
-
-  // Abstract methods to be implemented by subclasses
-  protected abstract compile(sourceFiles: Record<string, string>, mainFile: string): Promise<{ success: boolean; output: string[] }>;
-  protected abstract executeCompiled(compiledCode: any): Promise<{ success: boolean; output: string[] }>;
 
   // Implementation of the LanguageExecutor interface
   execute = async (fileId: string, context: ExecutionContext): Promise<ExecutionResult> => {
@@ -135,4 +131,15 @@ export abstract class CompiledLanguageExecutor implements LanguageExecutor {
   getSupportedLanguages = (): ProgrammingLanguage[] => {
     return this.supportedLanguages;
   };
+
+  // Abstract methods to be implemented by subclasses
+  protected abstract compile(
+    sourceFiles: Record<string, string>,
+    mainFile: string,
+  ): Promise<{
+    success: boolean;
+    output: string[];
+  }>;
+
+  protected abstract executeCompiled(compiledCode: any): Promise<{ success: boolean; output: string[] }>;
 }
