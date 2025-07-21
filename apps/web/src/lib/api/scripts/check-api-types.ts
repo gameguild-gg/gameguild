@@ -1,7 +1,10 @@
-import { execSync } from 'child_process';
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { exec } from 'child_process';
 import { createHash } from 'crypto';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 interface SwaggerInfo {
   version?: string;
@@ -45,27 +48,17 @@ if (!isDevelopment) {
 }
 
 async function fetchSwaggerSpec(): Promise<SwaggerSpec> {
-  try {
-    console.log(`📡 Fetching API specification from ${SWAGGER_ENDPOINT}`);
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+  console.log(`📡 Fetching API specification from ${SWAGGER_ENDPOINT}`);
 
-    const response = await fetch(SWAGGER_ENDPOINT, {
-      signal: controller.signal,
-      headers: { Accept: 'application/json' },
-    });
+  const response = await fetch(SWAGGER_ENDPOINT, {
+    headers: { Accept: 'application/json' },
+  });
 
-    clearTimeout(timeoutId);
+  if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 
-    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-
-    const spec = (await response.json()) as SwaggerSpec;
-    console.log('✅ Successfully fetched API specification');
-    return spec;
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') throw new Error('Request timed out - make sure API is running');
-    throw error;
-  }
+  const spec = (await response.json()) as SwaggerSpec;
+  console.log('✅ Successfully fetched API specification');
+  return spec;
 }
 
 function calculateHash(content: SwaggerSpec): string {
@@ -108,8 +101,34 @@ function hasGeneratedTypes(): boolean {
   return existsSync(typesFile) || existsSync(servicesFile) || existsSync(schemasFile);
 }
 
+// Status tracking for background operation
+let statusInterval: NodeJS.Timeout | null = null;
+let startTime: number = 0;
+
+function startStatusTracking(operationName: string): void {
+  startTime = Date.now();
+
+  statusInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    const timeStr = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+
+    console.log(`🔄 ${operationName} still working in background for ${timeStr}...`);
+  }, 10000); // Every 10 seconds
+}
+
+function stopStatusTracking(): void {
+  if (statusInterval) {
+    clearInterval(statusInterval);
+    statusInterval = null;
+  }
+}
+
 async function generateTypes(swaggerSpec: SwaggerSpec): Promise<void> {
   console.log('🔄 Generating TypeScript types...');
+  startStatusTracking('Type generation');
+
   if (!existsSync(generatedDir)) {
     mkdirSync(generatedDir, { recursive: true });
   }
@@ -118,31 +137,16 @@ async function generateTypes(swaggerSpec: SwaggerSpec): Promise<void> {
   try {
     const command = `npx @hey-api/openapi-ts -i "${tempSwaggerFile}" -o "${generatedDir}" --client @hey-api/client-next`;
     console.log('Running:', command);
-    execSync(command, {
+    await execAsync(command, {
       cwd: projectRoot,
-      stdio: 'inherit',
-      timeout: 60000,
     });
     console.log('✅ Types generated successfully');
-    // Run ESLint fix on the generated folder
-    console.log('🔧 Running ESLint fix on generated files...');
-    try {
-      const lintCommand = `npx eslint "src/lib/api/generated/**/*.{ts,js}" --fix`;
-      execSync(lintCommand, {
-        cwd: projectRoot,
-        stdio: 'inherit',
-        timeout: 30000,
-      });
-      console.log('✅ ESLint fix completed successfully');
-    } catch (lintError) {
-      const errorMessage = lintError instanceof Error ? lintError.message : String(lintError);
-      console.warn('⚠️  ESLint fix failed (non-critical):', errorMessage);
-    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('❌ Failed to generate types:', errorMessage);
     throw error;
   } finally {
+    stopStatusTracking();
     try {
       if (existsSync(tempSwaggerFile)) {
         unlinkSync(tempSwaggerFile);
@@ -156,6 +160,8 @@ async function generateTypes(swaggerSpec: SwaggerSpec): Promise<void> {
 
 async function main(): Promise<void> {
   try {
+    console.log('🚀 Starting API types check in background...');
+
     const currentSpec = await fetchSwaggerSpec();
     const currentHash = calculateHash(currentSpec);
     const metadata = loadMetadata();
@@ -172,7 +178,10 @@ async function main(): Promise<void> {
     } else {
       console.log('✅ API types are already up to date');
     }
+
+    console.log('🎉 Operation completed successfully');
   } catch (error) {
+    stopStatusTracking();
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('❌ Type check failed:', errorMessage);
     if (hasGeneratedTypes()) {
@@ -187,15 +196,19 @@ async function main(): Promise<void> {
 
 process.on('SIGINT', () => {
   console.log('\n🛑 Process interrupted');
+  stopStatusTracking();
   process.exit(1);
 });
 
 process.on('SIGTERM', () => {
   console.log('\n🛑 Process terminated');
+  stopStatusTracking();
   process.exit(1);
 });
 
+// Run main function in background without blocking
 main().catch((error) => {
   console.error('💥 Unexpected error:', error);
+  stopStatusTracking();
   process.exit(1);
 });
