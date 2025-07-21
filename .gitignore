@@ -54,3 +54,5 @@ old/services/web/.env
 **/package-lock.json
 
 apps/abc/
+
+GameGuild.sln.DotSettings.user
