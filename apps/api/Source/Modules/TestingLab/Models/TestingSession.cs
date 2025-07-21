@@ -46,12 +46,17 @@ namespace GameGuild.Modules.TestingLab {
     /// <summary>
     /// Foreign key to the session manager
     /// </summary>
-    public Guid ManagerUserId { get; set; }
+    public Guid ManagerId { get; set; }
 
     /// <summary>
     /// Navigation property to the session manager
     /// </summary>
     public virtual User Manager { get; set; } = null!;
+
+    /// <summary>
+    /// Additional foreign key to the session manager (for backward compatibility)
+    /// </summary>
+    public Guid ManagerUserId { get; set; }
 
     /// <summary>
     /// Foreign key to the user who created this session

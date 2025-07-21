@@ -1405,6 +1405,7 @@ public class DatabaseSeeder(
           MaxTesters = Math.Min(randomLocation.MaxTestersCapacity, 15),
           RegisteredTesterCount = new Random().Next(0, 8), // Random number of registered testers
           Status = SessionStatus.Scheduled,
+          ManagerId = randomManager.Id,
           ManagerUserId = randomManager.Id,
           CreatedById = randomManager.Id,
           CreatedAt = DateTime.UtcNow,
@@ -1434,6 +1435,7 @@ public class DatabaseSeeder(
         MaxTesters = 10,
         RegisteredTesterCount = new Random().Next(5, 11),
         Status = SessionStatus.Completed,
+        ManagerId = randomManager.Id,
         ManagerUserId = randomManager.Id,
         CreatedById = randomManager.Id,
         CreatedAt = DateTime.UtcNow,
