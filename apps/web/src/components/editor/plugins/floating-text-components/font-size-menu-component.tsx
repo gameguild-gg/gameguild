@@ -91,7 +91,9 @@ export function FontSizeMenuComponent({ editor, currentFontSize, setCurrentFontS
             onKeyDown={(e) => {
               if (e.key === "Enter" && currentFontSize) {
                 handleFontSizeChange(currentFontSize)
+                e.preventDefault()
               }
+              e.stopPropagation()
             }}
             className="w-full text-xs"
           />

@@ -59,14 +59,14 @@ export function TextColorMenuComponent({ editor, currentTextColor, setCurrentTex
     <DropdownMenuSub>
       <DropdownMenuSubTrigger>
         <Palette className="mr-2 h-4 w-4" />
-        <span>Cor do Texto</span>
+        <span>Text Color</span>
         <div
           className="ml-auto h-4 w-4 rounded-full border"
           style={{ backgroundColor: currentTextColor || "transparent" }}
         />
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent side="right" align="start" className="w-64">
-        <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Cor do Texto</div>
+        <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Text Color</div>
         <DropdownMenuSeparator />
         <ColorPalette
           selectedColor={currentTextColor}
