@@ -1,5 +1,4 @@
 import Google from 'next-auth/providers/google';
-import Credentials from 'next-auth/providers/credentials';
 import { environment } from '@/configs/environment';
 import { NextAuthConfig } from 'next-auth';
 import { apiClient } from '@/lib/api/api-client';
@@ -12,19 +11,6 @@ export const authConfig: NextAuthConfig = {
     signIn: '/sign-in',
     error: '/auth/error', // Error code passed in query string as ?error=
   },
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        // Extend session duration to 7 days
-        maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
-      },
-    },
-  },
   providers: [
     Google({
       clientId: environment.googleClientId,
@@ -34,56 +20,6 @@ export const authConfig: NextAuthConfig = {
           request_uri: environment.signInGoogleCallbackUrl,
           // scope: 'openid email profile',
         },
-      },
-    }),
-    // Admin credentials provider for development
-    Credentials({
-      id: 'admin-bypass',
-      name: 'Admin Login',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          console.error('[NextAuth][admin-bypass] Missing credentials:', credentials);
-          return null;
-        }
-
-        try {
-          // Call the backend API for admin authentication
-          console.log('[NextAuth][admin-bypass] Attempting admin login via backend API');
-          const response = await apiClient.adminLogin({
-            email: credentials.email as string,
-            password: credentials.password as string,
-          });
-
-          console.log('[NextAuth][admin-bypass] Raw backend response:', response);
-
-          if (!response || !response.user || !response.user.id || !response.accessToken) {
-            console.error('[NextAuth][admin-bypass] Invalid backend response:', response);
-            return null;
-          }
-
-          // Return the authenticated user with backend response data
-          return {
-            id: response.user.id,
-            email: response.user.email,
-            name: response.user.email, // Use email as name since User type doesn't have name
-            image: null,
-            // Store the backend response for later use in callbacks
-            cmsData: response,
-          };
-        } catch (error) {
-          console.error('[NextAuth][admin-bypass] Admin login failed:', error);
-          if (error instanceof Error) {
-            console.error('[NextAuth][admin-bypass] Error message:', error.message);
-            if ('response' in error && error.response) {
-              console.error('[NextAuth][admin-bypass] Error response:', error.response);
-            }
-          }
-          return null;
-        }
       },
     }),
   ],
@@ -104,20 +40,6 @@ export const authConfig: NextAuthConfig = {
         profileId: profile?.sub,
         timestamp: new Date().toISOString(),
       });
-
-      // Handle admin bypass provider
-      if (account?.provider === 'admin-bypass') {
-        console.log('🔧 [AUTH DEBUG] Admin credentials sign in successful');
-        // For admin login, the user object already contains the backend response
-        const extendedUser = user as any;
-        if (extendedUser.cmsData) {
-          console.log('✅ [AUTH DEBUG] Admin login backend response found');
-          return true;
-        } else {
-          console.error('❌ [AUTH DEBUG] Admin login missing backend response');
-          return false;
-        }
-      }
 
       if (account?.provider === 'google') {
         console.log('🔍 [AUTH DEBUG] Processing Google authentication...');
