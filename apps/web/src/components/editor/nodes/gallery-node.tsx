@@ -1,13 +1,11 @@
 'use client';
 
 import type React from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react/jsx-runtime';
-
-import { useState, useEffect, useRef, useContext } from 'react';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { $getNodeByKey } from 'lexical';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { ImageIcon, Plus, Trash2, Check, Crop, Maximize, Settings } from 'lucide-react';
+import { Check, Crop, ImageIcon, Maximize, Plus, Settings, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { MediaUploadDialog, type MediaUploadResult } from '@/components/ui/media-upload-dialog';
@@ -55,14 +53,6 @@ export interface SerializedGalleryNode extends SerializedLexicalNode {
 export class GalleryNode extends DecoratorNode<JSX.Element> {
   __data: GalleryData;
 
-  static getType(): string {
-    return 'gallery';
-  }
-
-  static clone(node: GalleryNode): GalleryNode {
-    return new GalleryNode(node.__data, node.__key);
-  }
-
   constructor(data: GalleryData, key?: string) {
     super(key);
     this.__data = {
@@ -77,6 +67,18 @@ export class GalleryNode extends DecoratorNode<JSX.Element> {
         fontWeight: 'normal',
       },
     };
+  }
+
+  static getType(): string {
+    return 'gallery';
+  }
+
+  static clone(node: GalleryNode): GalleryNode {
+    return new GalleryNode(node.__data, node.__key);
+  }
+
+  static importJSON(serializedNode: SerializedGalleryNode): GalleryNode {
+    return new GalleryNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -98,10 +100,6 @@ export class GalleryNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedGalleryNode): GalleryNode {
-    return new GalleryNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

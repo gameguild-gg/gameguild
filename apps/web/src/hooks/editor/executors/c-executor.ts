@@ -2,8 +2,8 @@ import type { ProgrammingLanguage } from '@/components/ui/source-code/types';
 import type { ExecutionContext, ExecutionResult, LanguageExecutor } from './types';
 
 class CExecutor implements LanguageExecutor {
-  private isExecutionCancelled = false;
   public isCompiled = true; // Set the isCompiled flag to true for C
+  private isExecutionCancelled = false;
 
   execute = async (fileId: string, context: ExecutionContext): Promise<ExecutionResult> => {
     if (!context) {

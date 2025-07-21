@@ -9,23 +9,13 @@ import { useCourseEditor } from '@/lib/courses/course-editor.context';
 import { RichTextEditor } from '../rich-text-editor';
 import { CourseLevel } from '@/components/legacy/types/courses';
 
-const CATEGORIES = [
-  'Web Development',
-  'Mobile Development',
-  'Data Science',
-  'Machine Learning',
-  'DevOps',
-  'Design',
-  'Business',
-  'Marketing',
-  'Other'
-];
+const CATEGORIES = ['Web Development', 'Mobile Development', 'Data Science', 'Machine Learning', 'DevOps', 'Design', 'Business', 'Marketing', 'Other'];
 
 const DIFFICULTY_LEVELS = [
   { value: 1, label: 'Beginner', description: 'No prior experience needed' },
   { value: 2, label: 'Intermediate', description: 'Some experience helpful' },
   { value: 3, label: 'Advanced', description: 'Significant experience required' },
-  { value: 4, label: 'Expert', description: 'Professional level expertise' }
+  { value: 4, label: 'Expert', description: 'Professional level expertise' },
 ];
 
 export function GeneralDetailsSection() {
@@ -33,7 +23,7 @@ export function GeneralDetailsSection() {
 
   const handleTitleChange = (value: string) => {
     updateTitle(value);
-    
+
     // Auto-generate slug from title if it hasn't been manually set
     if (!state.manualSlugEdit) {
       const autoSlug = value
@@ -66,9 +56,7 @@ export function GeneralDetailsSection() {
           placeholder="Enter a compelling course title..."
           className={state.errors.title ? 'border-red-500' : ''}
         />
-        {state.errors.title && (
-          <p className="text-sm text-red-600">{state.errors.title}</p>
-        )}
+        {state.errors.title && <p className="text-sm text-red-600">{state.errors.title}</p>}
       </div>
 
       {/* Slug */}
@@ -86,12 +74,8 @@ export function GeneralDetailsSection() {
             className={`flex-1 ${state.errors.slug ? 'border-red-500' : ''}`}
           />
         </div>
-        {state.errors.slug && (
-          <p className="text-sm text-red-600">{state.errors.slug}</p>
-        )}
-        <p className="text-xs text-muted-foreground">
-          This will be the URL for your course. Use lowercase letters, numbers, and hyphens only.
-        </p>
+        {state.errors.slug && <p className="text-sm text-red-600">{state.errors.slug}</p>}
+        <p className="text-xs text-muted-foreground">This will be the URL for your course. Use lowercase letters, numbers, and hyphens only.</p>
       </div>
 
       {/* Summary */}
@@ -107,12 +91,8 @@ export function GeneralDetailsSection() {
           rows={3}
           className={state.errors.summary ? 'border-red-500' : ''}
         />
-        {state.errors.summary && (
-          <p className="text-sm text-red-600">{state.errors.summary}</p>
-        )}
-        <p className="text-xs text-muted-foreground">
-          {state.summary.length}/200 characters
-        </p>
+        {state.errors.summary && <p className="text-sm text-red-600">{state.errors.summary}</p>}
+        <p className="text-xs text-muted-foreground">{state.summary.length}/200 characters</p>
       </div>
 
       {/* Category & Difficulty Row */}
@@ -132,9 +112,7 @@ export function GeneralDetailsSection() {
               ))}
             </SelectContent>
           </Select>
-          {state.errors.category && (
-            <p className="text-sm text-red-600">{state.errors.category}</p>
-          )}
+          {state.errors.category && <p className="text-sm text-red-600">{state.errors.category}</p>}
         </div>
 
         {/* Difficulty */}
@@ -162,17 +140,13 @@ export function GeneralDetailsSection() {
               ))}
             </SelectContent>
           </Select>
-          {state.errors.difficulty && (
-            <p className="text-sm text-red-600">{state.errors.difficulty}</p>
-          )}
+          {state.errors.difficulty && <p className="text-sm text-red-600">{state.errors.difficulty}</p>}
         </div>
       </div>
 
       {/* Description */}
       <div className="space-y-2">
-        <Label className="text-sm font-medium">
-          Detailed Description
-        </Label>
+        <Label className="text-sm font-medium">Detailed Description</Label>
         <div className={`border rounded-md ${state.errors.description ? 'border-red-500' : 'border-input'}`}>
           <RichTextEditor
             content={state.description}
@@ -180,9 +154,7 @@ export function GeneralDetailsSection() {
             placeholder="Write a detailed description of your course, including what students will learn, prerequisites, and outcomes..."
           />
         </div>
-        {state.errors.description && (
-          <p className="text-sm text-red-600">{state.errors.description}</p>
-        )}
+        {state.errors.description && <p className="text-sm text-red-600">{state.errors.description}</p>}
         <p className="text-xs text-muted-foreground">
           Use this space to provide comprehensive information about your course content, learning objectives, and what makes it valuable.
         </p>

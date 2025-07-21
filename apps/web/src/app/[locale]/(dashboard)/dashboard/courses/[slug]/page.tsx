@@ -4,19 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  FileText, 
-  BookOpen, 
-  Image, 
-  DollarSign, 
-  Settings, 
-  Eye, 
-  Users, 
-  Clock, 
-  TrendingUp,
-  ExternalLink,
-  Edit
-} from 'lucide-react';
+import { BookOpen, Clock, DollarSign, Edit, ExternalLink, Eye, FileText, Image, Settings, TrendingUp, Users } from 'lucide-react';
 import { useCourseEditor } from '@/lib/courses/course-editor.context';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -121,7 +109,6 @@ export default function CourseOverviewPage() {
       {/* Content */}
       <div className="flex-1 p-6 overflow-auto">
         <div className="max-w-6xl mx-auto space-y-6">
-          
           {/* Course Header */}
           <Card className="shadow-lg border-border bg-card/50 backdrop-blur-sm">
             <CardHeader>
@@ -129,9 +116,7 @@ export default function CourseOverviewPage() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold">{state.title || 'Untitled Course'}</h2>
-                    <Badge variant={state.status === 'published' ? 'default' : 'secondary'}>
-                      {state.status === 'published' ? 'Published' : 'Draft'}
-                    </Badge>
+                    <Badge variant={state.status === 'published' ? 'default' : 'secondary'}>{state.status === 'published' ? 'Published' : 'Draft'}</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground max-w-2xl">
                     {state.description || 'No description provided yet. Add a compelling description to attract students.'}
@@ -164,9 +149,7 @@ export default function CourseOverviewPage() {
           {/* Progress Section */}
           <Card className="shadow-lg border-border bg-card/50 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                📊 Course Development Progress
-              </CardTitle>
+              <CardTitle className="flex items-center gap-2">📊 Course Development Progress</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -177,9 +160,7 @@ export default function CourseOverviewPage() {
                 <Progress value={completionProgress} className="h-2" />
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                   <div className="p-3 rounded-lg bg-muted/30">
-                    <div className="text-lg font-bold text-primary">
-                      {state.title ? '✓' : '○'}
-                    </div>
+                    <div className="text-lg font-bold text-primary">{state.title ? '✓' : '○'}</div>
                     <div className="text-xs text-muted-foreground">Basic Info</div>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/30">
@@ -187,15 +168,11 @@ export default function CourseOverviewPage() {
                     <div className="text-xs text-muted-foreground">Content</div>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/30">
-                    <div className="text-lg font-bold text-primary">
-                      {state.media.thumbnail ? '✓' : '○'}
-                    </div>
+                    <div className="text-lg font-bold text-primary">{state.media.thumbnail ? '✓' : '○'}</div>
                     <div className="text-xs text-muted-foreground">Media</div>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/30">
-                    <div className="text-lg font-bold text-primary">
-                      {state.products.length > 0 ? '✓' : '○'}
-                    </div>
+                    <div className="text-lg font-bold text-primary">{state.products.length > 0 ? '✓' : '○'}</div>
                     <div className="text-xs text-muted-foreground">Pricing</div>
                   </div>
                 </div>
@@ -206,9 +183,7 @@ export default function CourseOverviewPage() {
           {/* Quick Actions */}
           <Card className="shadow-lg border-border bg-card/50 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                � Quick Actions
-              </CardTitle>
+              <CardTitle className="flex items-center gap-2">� Quick Actions</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -226,9 +201,7 @@ export default function CourseOverviewPage() {
                           <Icon className={`h-5 w-5 ${action.color}`} />
                           <span className="font-medium">{action.label}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground text-left">
-                          {action.description}
-                        </p>
+                        <p className="text-xs text-muted-foreground text-left">{action.description}</p>
                       </Link>
                     </Button>
                   );

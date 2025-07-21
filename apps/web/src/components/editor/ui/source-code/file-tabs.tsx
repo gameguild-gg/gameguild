@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Code, Settings, ChevronDown, Sun, Moon, Plus, Upload, EyeOff, Play, Trash2, Lock, Unlock, Check } from 'lucide-react';
+import { Check, ChevronDown, Code, EyeOff, Lock, Moon, Play, Plus, Settings, Sun, Trash2, Unlock, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';

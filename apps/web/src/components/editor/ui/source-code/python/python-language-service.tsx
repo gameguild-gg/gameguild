@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { editor } from 'monaco-editor';
 import { PythonSyntaxHighlighter } from './python-syntax-highlighter';
 import { PythonTypeChecker } from './python-type-checker';

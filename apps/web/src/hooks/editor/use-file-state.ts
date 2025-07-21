@@ -16,7 +16,16 @@ interface UseFileStateReturn {
 export function useFileState({ files, setFiles }: UseFileStateProps): UseFileStateReturn {
   // Toggle file visibility
   const toggleFileVisibility = (fileId: string) => {
-    setFiles((prevFiles) => prevFiles.map((file) => (file.id === fileId ? { ...file, isVisible: !file.isVisible } : file)));
+    setFiles((prevFiles) =>
+      prevFiles.map((file) =>
+        file.id === fileId
+          ? {
+              ...file,
+              isVisible: !file.isVisible,
+            }
+          : file,
+      ),
+    );
   };
 
   // Set main file

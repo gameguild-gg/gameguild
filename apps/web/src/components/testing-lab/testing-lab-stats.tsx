@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TestTube, Users, Calendar, TrendingUp } from 'lucide-react';
+import { Calendar, TestTube, TrendingUp, Users } from 'lucide-react';
 
 interface TestingLabStatsProps {
   totalSessions: number;

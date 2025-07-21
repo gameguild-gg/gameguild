@@ -1,11 +1,12 @@
 import type { ProgrammingLanguage } from '@/components/ui/source-code/types';
-import type { ExecutionResult, ExecutionContext, LanguageExecutor } from './types';
+import type { ExecutionContext, ExecutionResult, LanguageExecutor } from './types';
 import { getFileContent } from '@/components/ui/source-code/utils';
 
 class TypeScriptExecutor implements LanguageExecutor {
+  public isCompiled = false; // Set the isCompiled flag to false
+  resolveFile: any;
   private isExecutionCancelled = false;
   private transpileCache: Record<string, string> = {};
-  public isCompiled = false; // Set the isCompiled flag to false
 
   execute = async (fileId: string, context: ExecutionContext): Promise<ExecutionResult> => {
     const { files, selectedLanguage, addOutput, setIsExecuting } = context;
@@ -148,7 +149,42 @@ class TypeScriptExecutor implements LanguageExecutor {
       return { success: false, output: [`Error: ${errorMessage}`] };
     }
   };
-  resolveFile: any;
+
+  stop = () => {
+    this.isExecutionCancelled = true;
+  };
+
+  getFileExtension = (): string => {
+    return 'ts';
+  };
+
+  getSupportedLanguages = (): ProgrammingLanguage[] => {
+    return ['typescript'];
+  };
+
+  handleCommand = (command: string, context: ExecutionContext): boolean => {
+    const { addOutput } = context;
+
+    // Handle TypeScript-specific commands
+    if (command.toLowerCase() === 'tsc --version') {
+      addOutput('TypeScript Version 5.0.4');
+      return true;
+    }
+
+    // Try to execute TypeScript code directly from the command line
+    if (command.includes(':') || command.includes('interface') || command.includes('class')) {
+      try {
+        // Simple TypeScript evaluation is not supported in the terminal
+        addOutput('Direct TypeScript evaluation in the terminal is not supported. Please create a file to execute TypeScript code.');
+        return true;
+      } catch (error) {
+        addOutput(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        return true;
+      }
+    }
+
+    return false;
+  };
 
   private resolveImports(entryFile: string, vfs: Record<string, string>, addOutput: (msg: string) => void): string {
     const visited = new Set<string>();
@@ -240,42 +276,6 @@ ${namedList.map((name) => `if (typeof ${name} !== 'undefined') { window.${name} 
 
     return null;
   }
-
-  stop = () => {
-    this.isExecutionCancelled = true;
-  };
-
-  getFileExtension = (): string => {
-    return 'ts';
-  };
-
-  getSupportedLanguages = (): ProgrammingLanguage[] => {
-    return ['typescript'];
-  };
-
-  handleCommand = (command: string, context: ExecutionContext): boolean => {
-    const { addOutput } = context;
-
-    // Handle TypeScript-specific commands
-    if (command.toLowerCase() === 'tsc --version') {
-      addOutput('TypeScript Version 5.0.4');
-      return true;
-    }
-
-    // Try to execute TypeScript code directly from the command line
-    if (command.includes(':') || command.includes('interface') || command.includes('class')) {
-      try {
-        // Simple TypeScript evaluation is not supported in the terminal
-        addOutput('Direct TypeScript evaluation in the terminal is not supported. Please create a file to execute TypeScript code.');
-        return true;
-      } catch (error) {
-        addOutput(`Error: ${error instanceof Error ? error.message : String(error)}`);
-        return true;
-      }
-    }
-
-    return false;
-  };
 
   private async loadTypeScriptCompiler(): Promise<any> {
     // In a real implementation, you would dynamically load the TypeScript compiler

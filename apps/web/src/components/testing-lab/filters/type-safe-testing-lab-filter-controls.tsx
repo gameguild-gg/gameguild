@@ -2,13 +2,13 @@
 
 import React, { useEffect } from 'react';
 import {
-  FilterProvider,
-  useFilterContext,
+  ContextPeriodSelector,
   ContextSearchBar,
   ContextViewModeToggle,
-  TypeSafeMultiSelectFilter,
-  ContextPeriodSelector,
   FilterOption,
+  FilterProvider,
+  TypeSafeMultiSelectFilter,
+  useFilterContext,
 } from '../../common/filters';
 
 // Type-safe interface for testing lab sessions

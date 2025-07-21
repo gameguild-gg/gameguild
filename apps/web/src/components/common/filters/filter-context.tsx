@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useState, ReactNode } from 'react';
+import { createContext, ReactNode, useContext, useReducer, useState } from 'react';
 
 // Generic filter option interface
 export interface FilterOption {

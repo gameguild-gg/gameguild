@@ -2,7 +2,7 @@
 
 import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, BookOpen, DollarSign, Eye, FileText, Image, Save, Settings, Calendar, Award, Search, Play, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Award, BookOpen, Calendar, DollarSign, Eye, FileText, HelpCircle, Image, Play, Save, Search, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useCourseEditor } from '@/lib/courses/course-editor.context';

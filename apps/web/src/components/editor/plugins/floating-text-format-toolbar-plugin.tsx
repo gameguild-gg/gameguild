@@ -1,13 +1,5 @@
 'use client';
 
-import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $getSelection, $isRangeSelection, FORMAT_TEXT_COMMAND, SELECTION_CHANGE_COMMAND } from 'lexical';
-import { Bold, Italic, Heading1, Quote, LinkIcon, Type, MoreHorizontal } from 'lucide-react';
-import { $createHeadingNode, $isHeadingNode, type HeadingTagType } from '@lexical/rich-text';
-import { $setBlocksType } from '@lexical/selection';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,9 +8,17 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { $getSelection, $isRangeSelection, FORMAT_TEXT_COMMAND, SELECTION_CHANGE_COMMAND } from 'lexical';
+import { Bold, Heading1, Italic, LinkIcon, MoreHorizontal, Quote, Type } from 'lucide-react';
+import { $createHeadingNode, $isHeadingNode, type HeadingTagType } from '@lexical/rich-text';
+import { $setBlocksType } from '@lexical/selection';
 import { TOGGLE_LINK_COMMAND } from '@lexical/link';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';

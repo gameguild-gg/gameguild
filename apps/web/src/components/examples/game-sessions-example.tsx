@@ -3,7 +3,7 @@ import { FilterProvider, useFilterContext } from '../common/filters/filter-conte
 import { SearchBar } from '../common/filters/search-bar';
 import { ViewModeToggle } from '../common/filters/view-mode-toggle';
 import { MultiSelectFilter } from '../common/filters/multi-select-filter';
-import { DataDisplay, Column } from '../common/data-display';
+import { Column, DataDisplay } from '../common/data-display';
 import { useFilteredData } from '../common/hooks/use-filtered-data';
 
 // Example data types

@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { $getNodeByKey } from 'lexical';
+import { useEffect, useState } from 'react';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { Move, Type, X } from 'lucide-react';
 
@@ -28,7 +27,10 @@ export interface SerializedSpotifyNode extends SerializedLexicalNode {
 }
 
 // Extract Spotify ID and type from URL
-export function extractSpotifyInfo(url: string): { spotifyId: string; type: 'track' | 'album' | 'playlist' | 'artist' } | null {
+export function extractSpotifyInfo(url: string): {
+  spotifyId: string;
+  type: 'track' | 'album' | 'playlist' | 'artist';
+} | null {
   // Track URL patterns
   // https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT
   // spotify:track:4cOdK2wGLETKBW3PvgPWqT
@@ -71,6 +73,15 @@ export function extractSpotifyInfo(url: string): { spotifyId: string; type: 'tra
 export class SpotifyNode extends DecoratorNode<JSX.Element> {
   __data: SpotifyData;
 
+  constructor(data: SpotifyData, key?: string) {
+    super(key);
+    this.__data = {
+      ...data,
+      size: data.size ?? 100, // Default to 100% if not specified
+      showTheme: data.showTheme ?? true, // Default to showing theme if not specified
+    };
+  }
+
   static getType(): string {
     return 'spotify';
   }
@@ -79,13 +90,8 @@ export class SpotifyNode extends DecoratorNode<JSX.Element> {
     return new SpotifyNode(node.__data, node.__key);
   }
 
-  constructor(data: SpotifyData, key?: string) {
-    super(key);
-    this.__data = {
-      ...data,
-      size: data.size ?? 100, // Default to 100% if not specified
-      showTheme: data.showTheme ?? true, // Default to showing theme if not specified
-    };
+  static importJSON(serializedNode: SerializedSpotifyNode): SpotifyNode {
+    return new SpotifyNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -107,10 +113,6 @@ export class SpotifyNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedSpotifyNode): SpotifyNode {
-    return new SpotifyNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

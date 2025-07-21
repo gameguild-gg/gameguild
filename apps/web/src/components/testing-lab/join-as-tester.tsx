@@ -7,8 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, UserPlus, Gamepad2, Monitor, Smartphone } from 'lucide-react';
+import { ArrowLeft, Gamepad2, Monitor, Smartphone, UserPlus } from 'lucide-react';
 
 interface JoinAsTesterProps {
   onBack: () => void;

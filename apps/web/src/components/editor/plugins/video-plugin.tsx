@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $insertNodes } from 'lexical';
 import { INSERT_VIDEO_COMMAND } from './floating-content-insert-plugin';
-import { $createVideoNode } from '../nodes/video-node';
 import type { VideoData } from '../nodes/video-node';
+import { $createVideoNode } from '../nodes/video-node';
 
 export function VideoPlugin() {
   const [editor] = useLexicalComposerContext();

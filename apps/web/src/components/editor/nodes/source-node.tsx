@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { $getNodeByKey } from 'lexical';
+import { useEffect, useState } from 'react';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { BookOpen, Edit, ExternalLink, Plus, Trash2, X, Check } from 'lucide-react';
+import { BookOpen, Check, Edit, ExternalLink, Plus, Trash2, X } from 'lucide-react';
 import type { JSX } from 'react/jsx-runtime';
 
 import { Button } from '@/components/ui/button';
@@ -46,14 +45,6 @@ export interface SerializedSourceNode extends SerializedLexicalNode {
 export class SourceNode extends DecoratorNode<JSX.Element> {
   __data: SourceData;
 
-  static getType(): string {
-    return 'source';
-  }
-
-  static clone(node: SourceNode): SourceNode {
-    return new SourceNode(node.__data, node.__key);
-  }
-
   constructor(data: SourceData, key?: string) {
     super(key);
     this.__data = {
@@ -62,6 +53,18 @@ export class SourceNode extends DecoratorNode<JSX.Element> {
       style: data.style || 'apa',
       isNew: data.isNew,
     };
+  }
+
+  static getType(): string {
+    return 'source';
+  }
+
+  static clone(node: SourceNode): SourceNode {
+    return new SourceNode(node.__data, node.__key);
+  }
+
+  static importJSON(serializedNode: SerializedSourceNode): SourceNode {
+    return new SourceNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -83,10 +86,6 @@ export class SourceNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedSourceNode): SourceNode {
-    return new SourceNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

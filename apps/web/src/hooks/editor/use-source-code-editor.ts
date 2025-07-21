@@ -1,12 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { Play, Settings, Pencil } from 'lucide-react';
+import React, { useState } from 'react';
+import { Pencil, Play, Settings } from 'lucide-react';
 import type { EditMenuOption } from '@/components/ui/content-edit-menu';
-import type { ReactElement } from 'react';
 import type { CodeFile, ProgrammingLanguage, SourceCodeData } from '@/components/ui/source-code/types';
 import { useCodeExecution } from './use-code-execution';
-import React from 'react';
 
 interface UseSourceCodeEditorProps {
   data: SourceCodeData & { hasConfiguredSettings?: boolean; activeEnvironments?: Record<string, boolean> };

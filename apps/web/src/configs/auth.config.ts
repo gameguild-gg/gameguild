@@ -5,7 +5,7 @@ import { NextAuthConfig } from 'next-auth';
 import { apiClient } from '@/lib/api/api-client';
 import { SignInResponse } from '@/components/legacy/types/auth';
 import { getJwtExpiryDate } from '@/lib/utils/jwt-utils';
-import { shouldRefreshToken, refreshAccessToken } from '@/lib/auth/token-refresh';
+import { refreshAccessToken } from '@/lib/auth/token-refresh';
 
 export const authConfig: NextAuthConfig = {
   pages: {

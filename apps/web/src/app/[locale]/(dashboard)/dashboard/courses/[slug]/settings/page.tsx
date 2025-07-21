@@ -9,19 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { 
-  Settings, 
-  Users, 
-  Calendar, 
-  Shield, 
-  Archive, 
-  Trash2, 
-  AlertTriangle,
-  Copy,
-  ExternalLink,
-  ChevronDown,
-  ChevronRight
-} from 'lucide-react';
+import { AlertTriangle, Archive, Calendar, ChevronDown, ChevronRight, Copy, ExternalLink, Settings, Shield, Trash2, Users } from 'lucide-react';
 import { useCourseEditor } from '@/lib/courses/course-editor.context';
 import { useState } from 'react';
 
@@ -36,9 +24,9 @@ export default function CourseSettingsPage() {
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
-    setOpenSections(prev => ({
+    setOpenSections((prev) => ({
       ...prev,
-      [section]: !prev[section]
+      [section]: !prev[section],
     }));
   };
 
@@ -59,7 +47,6 @@ export default function CourseSettingsPage() {
       {/* Content */}
       <div className="flex-1 p-6 overflow-auto">
         <div className="max-w-4xl mx-auto space-y-6">
-          
           {/* Course Status */}
           <Collapsible open={openSections.status} onOpenChange={() => toggleSection('status')}>
             <Card className="shadow-lg border-border bg-card/50 backdrop-blur-sm">
@@ -70,11 +57,7 @@ export default function CourseSettingsPage() {
                       <Settings className="h-5 w-5" />
                       Course Status & Visibility
                     </div>
-                    {openSections.status ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
+                    {openSections.status ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </CardTitle>
                 </CardHeader>
               </CollapsibleTrigger>
@@ -85,11 +68,9 @@ export default function CourseSettingsPage() {
                       <Label className="text-base font-medium">Course Status</Label>
                       <p className="text-sm text-muted-foreground">Control whether your course is published or in draft mode</p>
                     </div>
-                    <Badge variant={state.status === 'published' ? 'default' : 'secondary'}>
-                      {state.status === 'published' ? 'Published' : 'Draft'}
-                    </Badge>
+                    <Badge variant={state.status === 'published' ? 'default' : 'secondary'}>{state.status === 'published' ? 'Published' : 'Draft'}</Badge>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <Label className="text-base font-medium">Course URL</Label>
@@ -120,11 +101,7 @@ export default function CourseSettingsPage() {
                       <Users className="h-5 w-5" />
                       Enrollment Settings
                     </div>
-                    {openSections.enrollment ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
+                    {openSections.enrollment ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </CardTitle>
                 </CardHeader>
               </CollapsibleTrigger>
@@ -137,16 +114,16 @@ export default function CourseSettingsPage() {
                     </div>
                     <Switch checked={state.enrollment.isOpen} onCheckedChange={setEnrollmentStatus} />
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-3">
                     <div>
                       <Label htmlFor="max-enrollments">Maximum Enrollments</Label>
                       <Input id="max-enrollments" type="number" placeholder="Leave empty for unlimited" className="w-full" />
                       <p className="text-xs text-muted-foreground mt-1">Set a limit on how many students can enroll</p>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="enrollment-deadline">Enrollment Deadline</Label>
                       <Input id="enrollment-deadline" type="date" className="w-full" />
@@ -168,11 +145,7 @@ export default function CourseSettingsPage() {
                       <Shield className="h-5 w-5" />
                       Access Control
                     </div>
-                    {openSections.access ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
+                    {openSections.access ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </CardTitle>
                 </CardHeader>
               </CollapsibleTrigger>
@@ -183,7 +156,7 @@ export default function CourseSettingsPage() {
                       <Label htmlFor="prerequisites">Prerequisites</Label>
                       <Textarea id="prerequisites" placeholder="List any required knowledge or courses students should complete first" rows={3} />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label className="text-base font-medium">Require Approval</Label>
@@ -191,7 +164,7 @@ export default function CourseSettingsPage() {
                       </div>
                       <Switch />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label className="text-base font-medium">Member Only</Label>
@@ -215,11 +188,7 @@ export default function CourseSettingsPage() {
                       <Calendar className="h-5 w-5" />
                       Course Schedule
                     </div>
-                    {openSections.schedule ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
+                    {openSections.schedule ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </CardTitle>
                 </CardHeader>
               </CollapsibleTrigger>
@@ -235,7 +204,7 @@ export default function CourseSettingsPage() {
                       <Input id="end-date" type="date" />
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <Label className="text-base font-medium">Self-Paced</Label>
@@ -258,11 +227,7 @@ export default function CourseSettingsPage() {
                       <AlertTriangle className="h-5 w-5" />
                       Danger Zone
                     </div>
-                    {openSections.danger ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
+                    {openSections.danger ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </CardTitle>
                 </CardHeader>
               </CollapsibleTrigger>
@@ -278,9 +243,9 @@ export default function CourseSettingsPage() {
                       Archive
                     </Button>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <Label className="text-base font-medium text-destructive">Delete Course</Label>

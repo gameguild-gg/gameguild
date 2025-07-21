@@ -1,8 +1,7 @@
 'use client';
 
 import type React from 'react';
-
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import type { CodeFile, LanguageType } from '@/components/ui/source-code/types';
 import { getExtension, getExtensionForLanguage, getLanguageFromExtension } from '@/components/ui/source-code/utils';
 

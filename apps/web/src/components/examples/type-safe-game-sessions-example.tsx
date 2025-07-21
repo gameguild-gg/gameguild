@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FilterProvider, useFilterContext } from '../common/filters/filter-context';
 import { ContextSearchBar } from '../common/filters/context-search-bar';
 import { ContextViewModeToggle } from '../common/filters/context-view-mode-toggle';
 import { TypeSafeMultiSelectFilter } from '../common/filters/type-safe-multi-select-filter';
-import { DataDisplay, Column } from '../common/data-display';
+import { Column, DataDisplay } from '../common/data-display';
 import { useFilteredData } from '../common/hooks/use-filtered-data';
 
 // Type-safe data interface - this prevents filter key errors!
@@ -195,11 +195,11 @@ function TypeSafeSessionFilterControls() {
         />
 
         {/* This would cause a TypeScript error:
-        <TypeSafeMultiSelectFilter<GameSession>
-          filterKey="invalidKey" // ❌ TypeScript error!
-          options={[]}
-        />
-        */}
+         <TypeSafeMultiSelectFilter<GameSession>
+         filterKey="invalidKey" // ❌ TypeScript error!
+         options={[]}
+         />
+         */}
       </div>
 
       <ContextViewModeToggle />

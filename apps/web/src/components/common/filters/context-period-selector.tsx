@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useFilterContext } from './filter-context';
-import { SmartPeriodSelector, PeriodValue } from './smart-period-selector';
+import { PeriodValue, SmartPeriodSelector } from './smart-period-selector';
 
 interface ContextPeriodSelectorProps {
   className?: string;

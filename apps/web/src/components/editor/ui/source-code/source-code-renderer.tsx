@@ -1,8 +1,8 @@
 'use client';
 
 import type React from 'react';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import { useEffect } from 'react';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 // Import types
 import type { CodeFile, LanguageType, ProgrammingLanguage, SourceCodeData } from './types';
@@ -13,7 +13,7 @@ import { SourceCodeEditorEdit } from './components/source-code-editor-edit';
 import { SourceCodeDialogs } from './components/source-code-dialogs';
 
 // Import utilities
-import { getBaseName, getFileIcon, getStateIcon, getLanguageLabel } from './utils';
+import { getBaseName, getFileIcon, getLanguageLabel, getStateIcon } from './utils';
 
 // Import hooks
 import { useSourceCodeEditor } from '@/hooks/editor/use-source-code-editor';

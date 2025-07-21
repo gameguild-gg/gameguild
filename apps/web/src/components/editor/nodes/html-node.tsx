@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState, useContext } from 'react';
-import { DecoratorNode, type SerializedLexicalNode, type JSX } from 'lexical';
+import type React from 'react'; // Import React
+import { useContext, useEffect, useRef, useState } from 'react';
+import { $getNodeByKey, DecoratorNode, type JSX, type SerializedLexicalNode } from 'lexical';
 import { Code2, CornerDownLeft } from 'lucide-react';
-import { $getNodeByKey } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import DOMPurify from 'dompurify';
 import { cn } from '@/lib/utils';
@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import type React from 'react'; // Import React
 import { EditorLoadingContext } from '../lexical-editor';
 
 export interface HTMLData {
@@ -27,6 +26,11 @@ export interface SerializedHTMLNode extends SerializedLexicalNode {
 export class HTMLNode extends DecoratorNode<JSX.Element> {
   __data: HTMLData;
 
+  constructor(data: HTMLData, key?: string) {
+    super(key);
+    this.__data = data;
+  }
+
   static getType(): string {
     return 'html';
   }
@@ -35,9 +39,8 @@ export class HTMLNode extends DecoratorNode<JSX.Element> {
     return new HTMLNode(node.__data, node.__key);
   }
 
-  constructor(data: HTMLData, key?: string) {
-    super(key);
-    this.__data = data;
+  static importJSON(serializedNode: SerializedHTMLNode): HTMLNode {
+    return new HTMLNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -59,10 +62,6 @@ export class HTMLNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedHTMLNode): HTMLNode {
-    return new HTMLNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

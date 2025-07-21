@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 interface StatusChipProps {
   status: 'open' | 'full' | 'in-progress' | 'closed';

@@ -76,8 +76,10 @@ import { SourceCodeNode } from './nodes/source-code-node';
 import { SourceCodePlugin } from './plugins/source-code-plugin';
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $getSelection, $isRangeSelection, KEY_BACKSPACE_COMMAND, KEY_DELETE_COMMAND, COMMAND_PRIORITY_HIGH } from 'lexical';
-import { useEffect, createContext } from 'react';
+import type { LexicalEditor } from 'lexical';
+import { $getSelection, $isRangeSelection, COMMAND_PRIORITY_HIGH, KEY_BACKSPACE_COMMAND, KEY_DELETE_COMMAND } from 'lexical';
+import type React from 'react';
+import { createContext, useEffect, useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -88,10 +90,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useState } from 'react';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
-import type { LexicalEditor } from 'lexical';
-import type React from 'react';
 
 // Create and export the EditorLoadingContext
 export const EditorLoadingContext = createContext<boolean>(false);

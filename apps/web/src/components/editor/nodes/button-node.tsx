@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useContext } from 'react';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { $getNodeByKey } from 'lexical';
+import { useContext, useEffect, useState } from 'react';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { ChevronDown, Pencil, Check, ExternalLink, Download, ArrowRight, Mail, Copy } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, Copy, Download, ExternalLink, Mail, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -37,14 +36,6 @@ export interface SerializedButtonNode extends SerializedLexicalNode {
 export class ButtonNode extends DecoratorNode<JSX.Element> {
   __data: ButtonData;
 
-  static getType(): string {
-    return 'button';
-  }
-
-  static clone(node: ButtonNode): ButtonNode {
-    return new ButtonNode(node.__data, node.__key);
-  }
-
   constructor(data: ButtonData, key?: string) {
     super(key);
     this.__data = {
@@ -56,6 +47,18 @@ export class ButtonNode extends DecoratorNode<JSX.Element> {
       showIcon: data.showIcon ?? true,
       isNew: data.isNew,
     };
+  }
+
+  static getType(): string {
+    return 'button';
+  }
+
+  static clone(node: ButtonNode): ButtonNode {
+    return new ButtonNode(node.__data, node.__key);
+  }
+
+  static importJSON(serializedNode: SerializedButtonNode): ButtonNode {
+    return new ButtonNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -77,10 +80,6 @@ export class ButtonNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedButtonNode): ButtonNode {
-    return new ButtonNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

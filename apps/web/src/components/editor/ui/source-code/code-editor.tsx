@@ -1,8 +1,7 @@
 'use client';
 
 import type React from 'react';
-
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Editor, { useMonaco } from '@monaco-editor/react';
 import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';

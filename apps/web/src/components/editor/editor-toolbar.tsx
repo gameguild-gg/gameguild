@@ -1,7 +1,7 @@
 'use client';
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $getRoot, $createParagraphNode } from 'lexical';
+import { $createParagraphNode, $getRoot } from 'lexical';
 import { ArrowUp } from 'lucide-react';
 import { PreviewPlugin } from './plugins/preview-plugin';
 import { Button } from '@/components/ui/button';

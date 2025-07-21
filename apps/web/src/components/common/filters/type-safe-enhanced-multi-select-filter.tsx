@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { Check, ChevronsUpDown, Search, X } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Check, ChevronsUpDown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useEnhancedFilterContext, FilterOption, EnhancedFilterConfig } from './enhanced-filter-context';
+import { EnhancedFilterConfig, useEnhancedFilterContext } from './enhanced-filter-context';
 
 interface TypeSafeEnhancedMultiSelectFilterProps<T extends Record<string, unknown>, K extends keyof T> {
   filterKey: K;

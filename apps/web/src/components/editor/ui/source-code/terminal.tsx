@@ -1,14 +1,14 @@
 'use client';
 
 import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ProgrammingLanguage } from './types';
 
-import { Play, X, Plus, CheckSquare, Square, TerminalIcon, AlertTriangle, MessageSquare, HelpCircle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { AlertTriangle, CheckSquare, HelpCircle, MessageSquare, Play, Plus, Square, TerminalIcon, X } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {

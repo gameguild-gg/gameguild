@@ -1,15 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { $getNodeByKey } from 'lexical';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { Move, Type } from 'lucide-react';
+import { Move, Type, X } from 'lucide-react';
 
 import { ImageSizeControl } from '@/components/ui/image-size-control';
 import { CaptionInput } from '@/components/ui/caption-input';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
 import { ContentEditMenu, type EditMenuOption } from '@/components/ui/content-edit-menu';
 
 export interface ImageData {
@@ -28,6 +26,14 @@ export interface SerializedImageNode extends SerializedLexicalNode {
 export class ImageNode extends DecoratorNode<JSX.Element> {
   __data: ImageData;
 
+  constructor(data: ImageData, key?: string) {
+    super(key);
+    this.__data = {
+      ...data,
+      size: data.size ?? 100, // Default to 100% if not specified
+    };
+  }
+
   static getType(): string {
     return 'image';
   }
@@ -36,12 +42,8 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
     return new ImageNode(node.__data, node.__key);
   }
 
-  constructor(data: ImageData, key?: string) {
-    super(key);
-    this.__data = {
-      ...data,
-      size: data.size ?? 100, // Default to 100% if not specified
-    };
+  static importJSON(serializedNode: SerializedImageNode): ImageNode {
+    return new ImageNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -63,10 +65,6 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedImageNode): ImageNode {
-    return new ImageNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

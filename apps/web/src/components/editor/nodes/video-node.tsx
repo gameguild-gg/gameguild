@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { $getNodeByKey } from 'lexical';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { Play, Pause, Volume2, VolumeX, Maximize, AlertCircle, X, Move, Type } from 'lucide-react';
+import { AlertCircle, Maximize, Move, Pause, Play, Type, Volume2, VolumeX, X } from 'lucide-react';
 
 import { ImageSizeControl } from '@/components/ui/image-size-control';
 import { CaptionInput } from '@/components/ui/caption-input';
@@ -31,6 +30,14 @@ export interface SerializedVideoNode extends SerializedLexicalNode {
 export class VideoNode extends DecoratorNode<JSX.Element> {
   __data: VideoData;
 
+  constructor(data: VideoData, key?: string) {
+    super(key);
+    this.__data = {
+      ...data,
+      size: data.size ?? 100, // Default to 100% if not specified
+    };
+  }
+
   static getType(): string {
     return 'video';
   }
@@ -39,12 +46,8 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
     return new VideoNode(node.__data, node.__key);
   }
 
-  constructor(data: VideoData, key?: string) {
-    super(key);
-    this.__data = {
-      ...data,
-      size: data.size ?? 100, // Default to 100% if not specified
-    };
+  static importJSON(serializedNode: SerializedVideoNode): VideoNode {
+    return new VideoNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -66,10 +69,6 @@ export class VideoNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedVideoNode): VideoNode {
-    return new VideoNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

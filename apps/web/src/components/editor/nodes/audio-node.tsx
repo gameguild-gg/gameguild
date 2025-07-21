@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { $getNodeByKey } from 'lexical';
+import { useEffect, useRef, useState } from 'react';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { Play, Pause, Volume2, VolumeX, AlertCircle, X, Move, Type } from 'lucide-react';
+import { AlertCircle, Move, Pause, Play, Type, Volume2, VolumeX, X } from 'lucide-react';
 
 import { ImageSizeControl } from '@/components/ui/image-size-control';
 import { CaptionInput } from '@/components/ui/caption-input';
@@ -31,6 +30,14 @@ export interface SerializedAudioNode extends SerializedLexicalNode {
 export class AudioNode extends DecoratorNode<JSX.Element> {
   __data: AudioData;
 
+  constructor(data: AudioData, key?: string) {
+    super(key);
+    this.__data = {
+      ...data,
+      size: data.size ?? 100, // Default to 100% if not specified
+    };
+  }
+
   static getType(): string {
     return 'audio';
   }
@@ -39,12 +46,8 @@ export class AudioNode extends DecoratorNode<JSX.Element> {
     return new AudioNode(node.__data, node.__key);
   }
 
-  constructor(data: AudioData, key?: string) {
-    super(key);
-    this.__data = {
-      ...data,
-      size: data.size ?? 100, // Default to 100% if not specified
-    };
+  static importJSON(serializedNode: SerializedAudioNode): AudioNode {
+    return new AudioNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -66,10 +69,6 @@ export class AudioNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedAudioNode): AudioNode {
-    return new AudioNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

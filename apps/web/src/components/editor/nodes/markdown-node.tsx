@@ -1,9 +1,8 @@
 'use client';
 
 import type React from 'react';
-
-import { useEffect, useRef, useState, useContext } from 'react';
-import { DecoratorNode, type SerializedLexicalNode, $getNodeByKey } from 'lexical';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { FileText } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
@@ -25,6 +24,11 @@ export interface SerializedMarkdownNode extends SerializedLexicalNode {
 export class MarkdownNode extends DecoratorNode<React.ElementType> {
   __data: MarkdownData;
 
+  constructor(data: MarkdownData, key?: string) {
+    super(key);
+    this.__data = data;
+  }
+
   static getType(): string {
     return 'markdown';
   }
@@ -33,9 +37,8 @@ export class MarkdownNode extends DecoratorNode<React.ElementType> {
     return new MarkdownNode(node.__data, node.__key);
   }
 
-  constructor(data: MarkdownData, key?: string) {
-    super(key);
-    this.__data = data;
+  static importJSON(serializedNode: SerializedMarkdownNode): MarkdownNode {
+    return new MarkdownNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -57,10 +60,6 @@ export class MarkdownNode extends DecoratorNode<React.ElementType> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedMarkdownNode): MarkdownNode {
-    return new MarkdownNode(serializedNode.data);
   }
 
   decorate(): React.ElementType {

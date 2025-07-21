@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, createContext, useContext } from 'react';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { Pencil, Plus, Trash2, RotateCcw, X } from 'lucide-react';
-import { $getNodeByKey } from 'lexical';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
+import { Pencil, Plus, RotateCcw, Trash2, X } from 'lucide-react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import type { JSX } from 'react/jsx-runtime';
 
@@ -80,14 +79,6 @@ export interface SerializedQuizNode extends SerializedLexicalNode {
 export class QuizNode extends DecoratorNode<JSX.Element> {
   __data: QuizData;
 
-  static getType(): string {
-    return 'quiz';
-  }
-
-  static clone(node: QuizNode): QuizNode {
-    return new QuizNode(node.__data, node.__key);
-  }
-
   constructor(data: QuizData, key?: string) {
     super(key);
     this.__data = {
@@ -96,6 +87,18 @@ export class QuizNode extends DecoratorNode<JSX.Element> {
       incorrectFeedback: data.incorrectFeedback || '',
       allowRetry: data.allowRetry !== undefined ? data.allowRetry : true,
     };
+  }
+
+  static getType(): string {
+    return 'quiz';
+  }
+
+  static clone(node: QuizNode): QuizNode {
+    return new QuizNode(node.__data, node.__key);
+  }
+
+  static importJSON(serializedNode: SerializedQuizNode): QuizNode {
+    return new QuizNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -117,10 +120,6 @@ export class QuizNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedQuizNode): QuizNode {
-    return new QuizNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

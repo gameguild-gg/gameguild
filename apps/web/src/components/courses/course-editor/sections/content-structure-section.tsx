@@ -4,49 +4,34 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  ChevronDown, 
-  ChevronRight, 
-  Plus, 
-  MoreHorizontal, 
-  Trash2, 
-  Edit, 
-  Copy,
-  FileText,
-  Video,
-  HelpCircle,
-  File,
+import {
   Activity,
+  BookOpen,
   CheckSquare,
-  GripVertical,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Edit,
   Eye,
   EyeOff,
-  Undo,
-  Redo,
-  FolderOpen,
+  File,
+  FileText,
   Folder,
-  BookOpen
+  FolderOpen,
+  GripVertical,
+  HelpCircle,
+  MoreHorizontal,
+  Plus,
+  Redo,
+  Trash2,
+  Undo,
+  Video,
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { 
-  useCourseEditor,
-  type CourseModule, 
-  type CourseLesson 
-} from '@/lib/courses/course-editor.context';
+import { type CourseLesson, type CourseModule, useCourseEditor } from '@/lib/courses/course-editor.context';
 
 // Content type icons
 const CONTENT_TYPE_ICONS = {
@@ -175,12 +160,12 @@ export function ContentStructureSection() {
         // TODO: Implement module duplication
         break;
       case 'toggle-visibility':
-        dispatch({ 
-          type: 'UPDATE_MODULE', 
-          moduleId, 
-          updates: { 
-            visibility: state.content.modules.find(m => m.id === moduleId)?.visibility === 'public' ? 'private' : 'public'
-          }
+        dispatch({
+          type: 'UPDATE_MODULE',
+          moduleId,
+          updates: {
+            visibility: state.content.modules.find((m) => m.id === moduleId)?.visibility === 'public' ? 'private' : 'public',
+          },
         });
         break;
       case 'toggle-expanded':
@@ -202,16 +187,14 @@ export function ContentStructureSection() {
         dispatch({ type: 'DUPLICATE_LESSON', lessonId });
         break;
       case 'toggle-visibility':
-        const lesson = state.content.modules
-          .flatMap(m => m.lessons)
-          .find(l => l.id === lessonId);
+        const lesson = state.content.modules.flatMap((m) => m.lessons).find((l) => l.id === lessonId);
         if (lesson) {
-          dispatch({ 
-            type: 'UPDATE_LESSON', 
-            lessonId, 
-            updates: { 
-              visibility: lesson.visibility === 'public' ? 'private' : 'public'
-            }
+          dispatch({
+            type: 'UPDATE_LESSON',
+            lessonId,
+            updates: {
+              visibility: lesson.visibility === 'public' ? 'private' : 'public',
+            },
           });
         }
         break;
@@ -227,14 +210,12 @@ export function ContentStructureSection() {
       <div
         key={lesson.id}
         className={`group flex items-center gap-3 p-3 rounded-lg border transition-all hover:shadow-sm ${
-          state.content.selectedItems.includes(lesson.id)
-            ? 'bg-primary/5 border-primary/20'
-            : 'bg-background border-border hover:border-border/60'
+          state.content.selectedItems.includes(lesson.id) ? 'bg-primary/5 border-primary/20' : 'bg-background border-border hover:border-border/60'
         }`}
       >
         {/* Drag handle */}
         <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 cursor-grab" />
-        
+
         {/* Content type icon */}
         <div className={`p-1.5 rounded ${colorClass}`}>
           <IconComponent className="h-3 w-3" />
@@ -245,28 +226,19 @@ export function ContentStructureSection() {
           <div className="flex items-center gap-2">
             <h4 className="text-sm font-medium truncate">{lesson.title}</h4>
             {lesson.isRequired && (
-              <Badge variant="secondary" className="text-xs">Required</Badge>
+              <Badge variant="secondary" className="text-xs">
+                Required
+              </Badge>
             )}
-            {lesson.visibility === 'private' && (
-              <EyeOff className="h-3 w-3 text-muted-foreground" />
-            )}
+            {lesson.visibility === 'private' && <EyeOff className="h-3 w-3 text-muted-foreground" />}
           </div>
-          {lesson.description && (
-            <p className="text-xs text-muted-foreground truncate mt-1">
-              {lesson.description}
-            </p>
-          )}
+          {lesson.description && <p className="text-xs text-muted-foreground truncate mt-1">{lesson.description}</p>}
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="outline" className="text-xs">
               {lesson.type}
             </Badge>
-            <span className="text-xs text-muted-foreground">
-              {lesson.duration}m
-            </span>
-            <Badge 
-              variant={lesson.status === 'published' ? 'default' : 'secondary'}
-              className="text-xs"
-            >
+            <span className="text-xs text-muted-foreground">{lesson.duration}m</span>
+            <Badge variant={lesson.status === 'published' ? 'default' : 'secondary'} className="text-xs">
               {lesson.status}
             </Badge>
           </div>
@@ -275,11 +247,7 @@ export function ContentStructureSection() {
         {/* Actions */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100"
-            >
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -306,10 +274,7 @@ export function ContentStructureSection() {
               )}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={() => handleLessonAction(lesson.id, 'delete')}
-              className="text-destructive focus:text-destructive"
-            >
+            <DropdownMenuItem onClick={() => handleLessonAction(lesson.id, 'delete')} className="text-destructive focus:text-destructive">
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </DropdownMenuItem>
@@ -330,61 +295,33 @@ export function ContentStructureSection() {
         {/* Module header */}
         <div
           className={`group flex items-center gap-3 p-4 transition-all hover:bg-muted/30 ${
-            state.content.selectedItems.includes(module.id)
-              ? 'bg-primary/5 border-primary/20'
-              : 'bg-background'
+            state.content.selectedItems.includes(module.id) ? 'bg-primary/5 border-primary/20' : 'bg-background'
           }`}
         >
           {/* Drag handle */}
           <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 cursor-grab" />
-          
+
           {/* Expand/collapse button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0"
-            onClick={() => handleModuleAction(module.id, 'toggle-expanded')}
-          >
-            {isExpanded ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
+          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => handleModuleAction(module.id, 'toggle-expanded')}>
+            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
 
           {/* Module icon */}
-          <div className="p-1.5 rounded bg-primary/10 text-primary">
-            {isExpanded ? (
-              <FolderOpen className="h-4 w-4" />
-            ) : (
-              <Folder className="h-4 w-4" />
-            )}
-          </div>
+          <div className="p-1.5 rounded bg-primary/10 text-primary">{isExpanded ? <FolderOpen className="h-4 w-4" /> : <Folder className="h-4 w-4" />}</div>
 
           {/* Module info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-medium truncate">{module.title}</h3>
-              {module.visibility === 'private' && (
-                <EyeOff className="h-4 w-4 text-muted-foreground" />
-              )}
+              {module.visibility === 'private' && <EyeOff className="h-4 w-4 text-muted-foreground" />}
             </div>
-            {module.description && (
-              <p className="text-sm text-muted-foreground truncate mt-1">
-                {module.description}
-              </p>
-            )}
+            {module.description && <p className="text-sm text-muted-foreground truncate mt-1">{module.description}</p>}
             <div className="flex items-center gap-3 mt-2">
               <span className="text-xs text-muted-foreground">
                 {lessonCount} lesson{lessonCount !== 1 ? 's' : ''}
               </span>
-              <span className="text-xs text-muted-foreground">
-                ~{Math.round(totalDuration)}m
-              </span>
-              <Badge 
-                variant={module.status === 'published' ? 'default' : 'secondary'}
-                className="text-xs"
-              >
+              <span className="text-xs text-muted-foreground">~{Math.round(totalDuration)}m</span>
+              <Badge variant={module.status === 'published' ? 'default' : 'secondary'} className="text-xs">
                 {module.status}
               </Badge>
             </div>
@@ -407,11 +344,7 @@ export function ContentStructureSection() {
           {/* Module actions */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100"
-              >
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -438,10 +371,7 @@ export function ContentStructureSection() {
                 )}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => handleModuleAction(module.id, 'delete')}
-                className="text-destructive focus:text-destructive"
-              >
+              <DropdownMenuItem onClick={() => handleModuleAction(module.id, 'delete')} className="text-destructive focus:text-destructive">
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
               </DropdownMenuItem>
@@ -484,35 +414,20 @@ export function ContentStructureSection() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Course Content</h2>
-          <p className="text-sm text-muted-foreground">
-            Organize your course into modules and lessons
-          </p>
+          <p className="text-sm text-muted-foreground">Organize your course into modules and lessons</p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {/* Undo/Redo */}
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!state.undoRedo.canUndo}
-            onClick={() => dispatch({ type: 'UNDO' })}
-          >
+          <Button variant="outline" size="sm" disabled={!state.undoRedo.canUndo} onClick={() => dispatch({ type: 'UNDO' })}>
             <Undo className="h-4 w-4" />
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!state.undoRedo.canRedo}
-            onClick={() => dispatch({ type: 'REDO' })}
-          >
+          <Button variant="outline" size="sm" disabled={!state.undoRedo.canRedo} onClick={() => dispatch({ type: 'REDO' })}>
             <Redo className="h-4 w-4" />
           </Button>
-          
+
           {/* Add Module Button */}
-          <Button
-            onClick={() => setShowModuleDialog(true)}
-            className="bg-gradient-to-r from-primary to-chart-2"
-          >
+          <Button onClick={() => setShowModuleDialog(true)} className="bg-gradient-to-r from-primary to-chart-2">
             <Plus className="h-4 w-4 mr-2" />
             Add Module
           </Button>
@@ -521,20 +436,13 @@ export function ContentStructureSection() {
 
       {/* Content */}
       {state.content.modules.length > 0 ? (
-        <div className="space-y-4">
-          {state.content.modules.map(renderModule)}
-        </div>
+        <div className="space-y-4">{state.content.modules.map(renderModule)}</div>
       ) : (
         <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
           <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
           <h3 className="text-lg font-medium mb-2">No modules yet</h3>
-          <p className="text-muted-foreground mb-4">
-            Start building your course by adding your first module
-          </p>
-          <Button
-            onClick={() => setShowModuleDialog(true)}
-            className="bg-gradient-to-r from-primary to-chart-2"
-          >
+          <p className="text-muted-foreground mb-4">Start building your course by adding your first module</p>
+          <Button onClick={() => setShowModuleDialog(true)} className="bg-gradient-to-r from-primary to-chart-2">
             <Plus className="h-4 w-4 mr-2" />
             Add First Module
           </Button>
@@ -556,7 +464,7 @@ export function ContentStructureSection() {
                 onChange={(e) => setModuleFormData({ ...moduleFormData, title: e.target.value })}
               />
             </div>
-            
+
             <div>
               <label className="text-sm font-medium">Description</label>
               <Textarea
@@ -573,26 +481,30 @@ export function ContentStructureSection() {
                 <select
                   className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
                   value={moduleFormData.visibility}
-                  onChange={(e) => setModuleFormData({ 
-                    ...moduleFormData, 
-                    visibility: e.target.value as 'public' | 'private' | 'premium'
-                  })}
+                  onChange={(e) =>
+                    setModuleFormData({
+                      ...moduleFormData,
+                      visibility: e.target.value as 'public' | 'private' | 'premium',
+                    })
+                  }
                 >
                   <option value="public">Public</option>
                   <option value="private">Private</option>
                   <option value="premium">Premium</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium">Status</label>
                 <select
                   className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
                   value={moduleFormData.status}
-                  onChange={(e) => setModuleFormData({ 
-                    ...moduleFormData, 
-                    status: e.target.value as 'draft' | 'published' | 'archived'
-                  })}
+                  onChange={(e) =>
+                    setModuleFormData({
+                      ...moduleFormData,
+                      status: e.target.value as 'draft' | 'published' | 'archived',
+                    })
+                  }
                 >
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
@@ -628,7 +540,7 @@ export function ContentStructureSection() {
                 onChange={(e) => setLessonFormData({ ...lessonFormData, title: e.target.value })}
               />
             </div>
-            
+
             <div>
               <label className="text-sm font-medium">Description</label>
               <Textarea
@@ -644,10 +556,12 @@ export function ContentStructureSection() {
               <select
                 className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
                 value={lessonFormData.type}
-                onChange={(e) => setLessonFormData({ 
-                  ...lessonFormData, 
-                  type: e.target.value as 'text' | 'video' | 'quiz' | 'assignment' | 'file' | 'interactive'
-                })}
+                onChange={(e) =>
+                  setLessonFormData({
+                    ...lessonFormData,
+                    type: e.target.value as 'text' | 'video' | 'quiz' | 'assignment' | 'file' | 'interactive',
+                  })
+                }
               >
                 <option value="text">Text/Article</option>
                 <option value="video">Video</option>
@@ -665,22 +579,26 @@ export function ContentStructureSection() {
                   type="number"
                   min="1"
                   value={lessonFormData.duration}
-                  onChange={(e) => setLessonFormData({ 
-                    ...lessonFormData, 
-                    duration: parseInt(e.target.value) || 15
-                  })}
+                  onChange={(e) =>
+                    setLessonFormData({
+                      ...lessonFormData,
+                      duration: parseInt(e.target.value) || 15,
+                    })
+                  }
                 />
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium">Status</label>
                 <select
                   className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
                   value={lessonFormData.status}
-                  onChange={(e) => setLessonFormData({ 
-                    ...lessonFormData, 
-                    status: e.target.value as 'draft' | 'published' | 'archived'
-                  })}
+                  onChange={(e) =>
+                    setLessonFormData({
+                      ...lessonFormData,
+                      status: e.target.value as 'draft' | 'published' | 'archived',
+                    })
+                  }
                 >
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
@@ -693,10 +611,12 @@ export function ContentStructureSection() {
               <div className="flex items-center space-x-2">
                 <Switch
                   checked={lessonFormData.isRequired}
-                  onCheckedChange={(checked) => setLessonFormData({ 
-                    ...lessonFormData, 
-                    isRequired: checked 
-                  })}
+                  onCheckedChange={(checked) =>
+                    setLessonFormData({
+                      ...lessonFormData,
+                      isRequired: checked,
+                    })
+                  }
                 />
                 <label className="text-sm font-medium">Required lesson</label>
               </div>

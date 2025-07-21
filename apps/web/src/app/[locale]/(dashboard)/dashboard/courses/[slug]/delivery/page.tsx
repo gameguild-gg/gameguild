@@ -8,19 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  Users, 
-  Plus, 
-  Trash2, 
-  Video, 
-  Globe,
-  Monitor,
-  User,
-  Edit
-} from 'lucide-react';
+import { Calendar, Clock, Edit, Globe, MapPin, Monitor, Plus, Trash2, User, Users, Video } from 'lucide-react';
 import { useCourseEditor } from '@/lib/courses/course-editor.context';
 import { useState } from 'react';
 import { format } from 'date-fns';
@@ -67,7 +55,7 @@ const DELIVERY_MODES = [
 const TIMEZONES = [
   'UTC',
   'America/New_York',
-  'America/Chicago', 
+  'America/Chicago',
   'America/Denver',
   'America/Los_Angeles',
   'Europe/London',
@@ -78,17 +66,8 @@ const TIMEZONES = [
 ];
 
 export default function CourseDeliveryPage() {
-  const { 
-    state, 
-    setDeliveryMode, 
-    setAccessWindow, 
-    setEnrollmentWindow,
-    addSession,
-    updateSession,
-    removeSession,
-    setTimezone
-  } = useCourseEditor();
-  
+  const { state, setDeliveryMode, setAccessWindow, setEnrollmentWindow, addSession, updateSession, removeSession, setTimezone } = useCourseEditor();
+
   const [showAddSession, setShowAddSession] = useState(false);
   const [newSession, setNewSession] = useState({
     title: '',
@@ -102,7 +81,7 @@ export default function CourseDeliveryPage() {
     },
   });
 
-  const selectedMode = DELIVERY_MODES.find(mode => mode.value === state.delivery.mode);
+  const selectedMode = DELIVERY_MODES.find((mode) => mode.value === state.delivery.mode);
   const requiresSessions = state.delivery.mode === 'live' || state.delivery.mode === 'offline' || state.delivery.mode === 'hybrid';
 
   const handleModeChange = (mode: typeof state.delivery.mode) => {
@@ -119,7 +98,7 @@ export default function CourseDeliveryPage() {
         enrolled: 0,
         location: newSession.location,
       });
-      
+
       // Reset form
       setNewSession({
         title: '',
@@ -159,7 +138,6 @@ export default function CourseDeliveryPage() {
       {/* Content */}
       <div className="flex-1 p-6 overflow-auto">
         <div className="max-w-4xl mx-auto space-y-6">
-          
           {/* Delivery Mode Selection */}
           <Card className="shadow-lg border-border bg-card/50 backdrop-blur-sm">
             <CardHeader>
@@ -170,14 +148,12 @@ export default function CourseDeliveryPage() {
                 {DELIVERY_MODES.map((mode) => {
                   const Icon = mode.icon;
                   const isSelected = state.delivery.mode === mode.value;
-                  
+
                   return (
                     <Card
                       key={mode.value}
                       className={`cursor-pointer transition-all ${
-                        isSelected 
-                          ? `ring-2 ring-primary ${mode.bgColor} ${mode.borderColor}` 
-                          : 'hover:shadow-md border-border'
+                        isSelected ? `ring-2 ring-primary ${mode.bgColor} ${mode.borderColor}` : 'hover:shadow-md border-border'
                       }`}
                       onClick={() => handleModeChange(mode.value)}
                     >
@@ -189,7 +165,9 @@ export default function CourseDeliveryPage() {
                             <p className="text-sm text-muted-foreground mt-1">{mode.description}</p>
                           </div>
                           {isSelected && (
-                            <Badge variant="default" className="ml-auto">Selected</Badge>
+                            <Badge variant="default" className="ml-auto">
+                              Selected
+                            </Badge>
                           )}
                         </div>
                       </CardContent>
@@ -209,14 +187,12 @@ export default function CourseDeliveryPage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">Limit access period</Label>
-                  <Switch 
+                  <Switch
                     checked={!!state.delivery.accessWindow}
-                    onCheckedChange={(checked) => 
-                      setAccessWindow(checked ? { startDate: undefined, endDate: undefined } : undefined)
-                    }
+                    onCheckedChange={(checked) => setAccessWindow(checked ? { startDate: undefined, endDate: undefined } : undefined)}
                   />
                 </div>
-                
+
                 {state.delivery.accessWindow && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -224,13 +200,13 @@ export default function CourseDeliveryPage() {
                       <Input
                         id="access-start"
                         type="datetime-local"
-                        value={state.delivery.accessWindow.startDate ? 
-                          state.delivery.accessWindow.startDate.toISOString().slice(0, 16) : ''
+                        value={state.delivery.accessWindow.startDate ? state.delivery.accessWindow.startDate.toISOString().slice(0, 16) : ''}
+                        onChange={(e) =>
+                          setAccessWindow({
+                            ...state.delivery.accessWindow!,
+                            startDate: e.target.value ? new Date(e.target.value) : undefined,
+                          })
                         }
-                        onChange={(e) => setAccessWindow({
-                          ...state.delivery.accessWindow!,
-                          startDate: e.target.value ? new Date(e.target.value) : undefined
-                        })}
                       />
                     </div>
                     <div>
@@ -238,13 +214,13 @@ export default function CourseDeliveryPage() {
                       <Input
                         id="access-end"
                         type="datetime-local"
-                        value={state.delivery.accessWindow.endDate ? 
-                          state.delivery.accessWindow.endDate.toISOString().slice(0, 16) : ''
+                        value={state.delivery.accessWindow.endDate ? state.delivery.accessWindow.endDate.toISOString().slice(0, 16) : ''}
+                        onChange={(e) =>
+                          setAccessWindow({
+                            ...state.delivery.accessWindow!,
+                            endDate: e.target.value ? new Date(e.target.value) : undefined,
+                          })
                         }
-                        onChange={(e) => setAccessWindow({
-                          ...state.delivery.accessWindow!,
-                          endDate: e.target.value ? new Date(e.target.value) : undefined
-                        })}
                       />
                     </div>
                   </div>
@@ -261,14 +237,12 @@ export default function CourseDeliveryPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label className="text-sm">Set enrollment period</Label>
-                <Switch 
+                <Switch
                   checked={!!state.enrollment.enrollmentWindow}
-                  onCheckedChange={(checked) => 
-                    setEnrollmentWindow(checked ? { opensAt: undefined, closesAt: undefined } : undefined)
-                  }
+                  onCheckedChange={(checked) => setEnrollmentWindow(checked ? { opensAt: undefined, closesAt: undefined } : undefined)}
                 />
               </div>
-              
+
               {state.enrollment.enrollmentWindow && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -276,13 +250,13 @@ export default function CourseDeliveryPage() {
                     <Input
                       id="enrollment-start"
                       type="datetime-local"
-                      value={state.enrollment.enrollmentWindow.opensAt ? 
-                        state.enrollment.enrollmentWindow.opensAt.toISOString().slice(0, 16) : ''
+                      value={state.enrollment.enrollmentWindow.opensAt ? state.enrollment.enrollmentWindow.opensAt.toISOString().slice(0, 16) : ''}
+                      onChange={(e) =>
+                        setEnrollmentWindow({
+                          ...state.enrollment.enrollmentWindow!,
+                          opensAt: e.target.value ? new Date(e.target.value) : undefined,
+                        })
                       }
-                      onChange={(e) => setEnrollmentWindow({
-                        ...state.enrollment.enrollmentWindow!,
-                        opensAt: e.target.value ? new Date(e.target.value) : undefined
-                      })}
                     />
                   </div>
                   <div>
@@ -290,13 +264,13 @@ export default function CourseDeliveryPage() {
                     <Input
                       id="enrollment-end"
                       type="datetime-local"
-                      value={state.enrollment.enrollmentWindow.closesAt ? 
-                        state.enrollment.enrollmentWindow.closesAt.toISOString().slice(0, 16) : ''
+                      value={state.enrollment.enrollmentWindow.closesAt ? state.enrollment.enrollmentWindow.closesAt.toISOString().slice(0, 16) : ''}
+                      onChange={(e) =>
+                        setEnrollmentWindow({
+                          ...state.enrollment.enrollmentWindow!,
+                          closesAt: e.target.value ? new Date(e.target.value) : undefined,
+                        })
                       }
-                      onChange={(e) => setEnrollmentWindow({
-                        ...state.enrollment.enrollmentWindow!,
-                        closesAt: e.target.value ? new Date(e.target.value) : undefined
-                      })}
                     />
                   </div>
                 </div>
@@ -325,8 +299,10 @@ export default function CourseDeliveryPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {TIMEZONES.map(tz => (
-                        <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                      {TIMEZONES.map((tz) => (
+                        <SelectItem key={tz} value={tz}>
+                          {tz}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -339,58 +315,63 @@ export default function CourseDeliveryPage() {
                   <Card className="bg-muted/30 border-dashed">
                     <CardContent className="p-4 space-y-4">
                       <h4 className="font-semibold">New Session</h4>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="md:col-span-2">
                           <Label htmlFor="session-title">Session Title</Label>
                           <Input
                             id="session-title"
                             value={newSession.title}
-                            onChange={(e) => setNewSession({...newSession, title: e.target.value})}
+                            onChange={(e) => setNewSession({ ...newSession, title: e.target.value })}
                             placeholder="e.g., Week 1: Introduction"
                           />
                         </div>
-                        
+
                         <div>
                           <Label htmlFor="session-start">Start Date & Time</Label>
                           <Input
                             id="session-start"
                             type="datetime-local"
                             value={newSession.startDate}
-                            onChange={(e) => setNewSession({...newSession, startDate: e.target.value})}
+                            onChange={(e) => setNewSession({ ...newSession, startDate: e.target.value })}
                           />
                         </div>
-                        
+
                         <div>
                           <Label htmlFor="session-end">End Date & Time</Label>
                           <Input
                             id="session-end"
                             type="datetime-local"
                             value={newSession.endDate}
-                            onChange={(e) => setNewSession({...newSession, endDate: e.target.value})}
+                            onChange={(e) => setNewSession({ ...newSession, endDate: e.target.value })}
                           />
                         </div>
-                        
+
                         <div>
                           <Label htmlFor="session-capacity">Capacity</Label>
                           <Input
                             id="session-capacity"
                             type="number"
                             value={newSession.capacity}
-                            onChange={(e) => setNewSession({...newSession, capacity: parseInt(e.target.value) || 20})}
+                            onChange={(e) =>
+                              setNewSession({
+                                ...newSession,
+                                capacity: parseInt(e.target.value) || 20,
+                              })
+                            }
                             min="1"
                             max="1000"
                           />
                         </div>
-                        
+
                         <div>
                           <Label>Location Type</Label>
-                          <Select 
+                          <Select
                             value={newSession.location.type}
-                            onValueChange={(value: 'virtual' | 'physical') => 
+                            onValueChange={(value: 'virtual' | 'physical') =>
                               setNewSession({
-                                ...newSession, 
-                                location: { ...newSession.location, type: value }
+                                ...newSession,
+                                location: { ...newSession.location, type: value },
                               })
                             }
                           >
@@ -403,17 +384,19 @@ export default function CourseDeliveryPage() {
                             </SelectContent>
                           </Select>
                         </div>
-                        
+
                         {newSession.location.type === 'virtual' ? (
                           <div className="md:col-span-2">
                             <Label htmlFor="meeting-url">Meeting URL</Label>
                             <Input
                               id="meeting-url"
                               value={newSession.location.meetingUrl}
-                              onChange={(e) => setNewSession({
-                                ...newSession, 
-                                location: { ...newSession.location, meetingUrl: e.target.value }
-                              })}
+                              onChange={(e) =>
+                                setNewSession({
+                                  ...newSession,
+                                  location: { ...newSession.location, meetingUrl: e.target.value },
+                                })
+                              }
                               placeholder="https://zoom.us/j/..."
                             />
                           </div>
@@ -423,16 +406,18 @@ export default function CourseDeliveryPage() {
                             <Input
                               id="address"
                               value={newSession.location.address}
-                              onChange={(e) => setNewSession({
-                                ...newSession, 
-                                location: { ...newSession.location, address: e.target.value }
-                              })}
+                              onChange={(e) =>
+                                setNewSession({
+                                  ...newSession,
+                                  location: { ...newSession.location, address: e.target.value },
+                                })
+                              }
                               placeholder="123 Main St, City, State"
                             />
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="flex gap-2">
                         <Button onClick={handleAddSession} disabled={!newSession.title || !newSession.startDate || !newSession.endDate}>
                           Add Session
@@ -479,12 +464,7 @@ export default function CourseDeliveryPage() {
                               <Button variant="ghost" size="sm">
                                 <Edit className="h-3 w-3" />
                               </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => removeSession(session.id)}
-                                className="text-destructive hover:text-destructive"
-                              >
+                              <Button variant="ghost" size="sm" onClick={() => removeSession(session.id)} className="text-destructive hover:text-destructive">
                                 <Trash2 className="h-3 w-3" />
                               </Button>
                             </div>
@@ -513,17 +493,24 @@ export default function CourseDeliveryPage() {
               <div className="p-6 bg-muted/30 rounded-lg border-2 border-dashed">
                 <h3 className="font-semibold mb-2">How students will see this course:</h3>
                 <div className="space-y-2 text-sm">
-                  <p><strong>Delivery:</strong> {selectedMode?.label}</p>
-                  <p><strong>Format:</strong> {selectedMode?.description}</p>
+                  <p>
+                    <strong>Delivery:</strong> {selectedMode?.label}
+                  </p>
+                  <p>
+                    <strong>Format:</strong> {selectedMode?.description}
+                  </p>
                   {state.delivery.sessions.length > 0 && (
-                    <p><strong>Sessions:</strong> {state.delivery.sessions.length} scheduled sessions</p>
+                    <p>
+                      <strong>Sessions:</strong> {state.delivery.sessions.length} scheduled sessions
+                    </p>
                   )}
                   {state.enrollment.enrollmentWindow && (
-                    <p><strong>Enrollment:</strong> {
-                      state.enrollment.enrollmentWindow.opensAt ? 
-                        `Opens ${format(state.enrollment.enrollmentWindow.opensAt, 'MMM d, yyyy')}` : 
-                        'Open enrollment'
-                    }</p>
+                    <p>
+                      <strong>Enrollment:</strong>{' '}
+                      {state.enrollment.enrollmentWindow.opensAt
+                        ? `Opens ${format(state.enrollment.enrollmentWindow.opensAt, 'MMM d, yyyy')}`
+                        : 'Open enrollment'}
+                    </p>
                   )}
                 </div>
               </div>

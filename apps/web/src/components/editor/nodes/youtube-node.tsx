@@ -1,12 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { $getNodeByKey } from 'lexical';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { X, Move, Type, Play } from 'lucide-react';
+import { Move, Play, Type, X } from 'lucide-react';
 import type { JSX } from 'react/jsx-runtime'; // Import JSX to fix the undeclared variable error
-
 import { ImageSizeControl } from '@/components/ui/image-size-control';
 import { CaptionInput } from '@/components/ui/caption-input';
 import { Button } from '@/components/ui/button';
@@ -33,14 +31,6 @@ export interface SerializedYouTubeNode extends SerializedLexicalNode {
 export class YouTubeNode extends DecoratorNode<JSX.Element> {
   __data: YouTubeData;
 
-  static getType(): string {
-    return 'youtube';
-  }
-
-  static clone(node: YouTubeNode): YouTubeNode {
-    return new YouTubeNode(node.__data, node.__key);
-  }
-
   constructor(data: YouTubeData, key?: string) {
     super(key);
     this.__data = {
@@ -50,6 +40,18 @@ export class YouTubeNode extends DecoratorNode<JSX.Element> {
       showInfo: data.showInfo ?? true,
       showRelated: data.showRelated ?? false,
     };
+  }
+
+  static getType(): string {
+    return 'youtube';
+  }
+
+  static clone(node: YouTubeNode): YouTubeNode {
+    return new YouTubeNode(node.__data, node.__key);
+  }
+
+  static importJSON(serializedNode: SerializedYouTubeNode): YouTubeNode {
+    return new YouTubeNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -71,10 +73,6 @@ export class YouTubeNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedYouTubeNode): YouTubeNode {
-    return new YouTubeNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

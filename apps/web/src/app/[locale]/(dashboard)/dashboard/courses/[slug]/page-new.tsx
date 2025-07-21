@@ -90,15 +90,15 @@ export default function CourseDetailPage() {
     status: 'published' as const, // Default status
     media: {
       thumbnail: undefined, // Will be handled by the media section
-      showcaseVideo: undefined
+      showcaseVideo: undefined,
     },
     products: [],
     enrollment: {
       isOpen: true,
-      currentEnrollments: 0
+      currentEnrollments: 0,
     },
     tags: Array.isArray(course.tools) ? course.tools : [],
-    manualSlugEdit: true // Since it's an existing course
+    manualSlugEdit: true, // Since it's an existing course
   };
 
   return (

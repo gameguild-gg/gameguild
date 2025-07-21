@@ -1,6 +1,6 @@
 import React from 'react';
-import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
-import { TableDisplayProps, Column, SortConfig } from './types';
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/20/solid';
+import { Column, TableDisplayProps } from './types';
 
 export function TableDisplay<T extends Record<string, unknown>>({
   data,
