@@ -168,8 +168,9 @@ namespace GameGuild.Modules.Authentication {
       refreshToken.ReplacedByToken = newRefreshToken;
 
       // Create new refresh token
+      var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
       var newRefreshTokenEntity = new RefreshToken {
-        UserId = user.Id, Token = newRefreshToken, ExpiresAt = DateTime.UtcNow.AddDays(7), CreatedByIp = "0.0.0.0", // TODO: get real IP address
+        UserId = user.Id, Token = newRefreshToken, ExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays), CreatedByIp = "0.0.0.0", // TODO: get real IP address
       };
 
       context.RefreshTokens.Add(newRefreshTokenEntity);
@@ -366,10 +367,11 @@ namespace GameGuild.Modules.Authentication {
     private async Task SaveRefreshTokenAsync(Guid userId, string refreshToken) {
       if (string.IsNullOrEmpty(refreshToken)) { throw new ArgumentException("Refresh token cannot be null or empty", nameof(refreshToken)); }
 
+      var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
       var refreshTokenEntity = new RefreshToken {
         UserId = userId,
         Token = refreshToken, // This is required and must not be empty
-        ExpiresAt = DateTime.UtcNow.AddDays(7),
+        ExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays),
         IsRevoked = false, // Explicitly set IsRevoked to false
         CreatedByIp = "0.0.0.0", // TODO: get real IP address
       };
