@@ -10,33 +10,31 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "build:api": "npm run build --workspace=apps/api",
+    "build:api": "dotnet build apps/api/GameGuild.API.csproj",
     "build:storybook": "npm run build --workspace=apps/storybook",
     "build:web": "npm run build --workspace=apps/web",
     "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next package-lock.json",
     "db:diagram": "npm run db:diagram --workspace=apps/api",
-    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
-    "dev:api": "npm run dev --workspace=apps/api",
+    "dev": "run-p dev:api dev:web",
+    "dev:api": "dotnet run --project apps/api/GameGuild.API.csproj",
     "dev:storybook": "npm run dev --workspace=apps/storybook",
     "dev:web": "npm run dev --workspace=apps/web",
     "format": "npm run format --workspaces --if-present",
-    "format:api": "npm run format --workspace=apps/api",
     "format:web": "npm run format --workspace=apps/web",
     "gource": "old/contributors/gource.sh",
-    "install:api": "npm install --workspace=apps/api",
+    "install:api": "dotnet restore apps/api/GameGuild.API.csproj",
     "install:apiclient": "npm install @game-guild/apiclient --no-save --workspace=apps/web",
     "install:web": "npm install --workspace=apps/web",
     "lint": "npm run lint --fix --workspaces --if-present",
-    "lint:api": "npm run lint --workspace=apps/api",
     "lint:web": "npm run lint --workspace=apps/web",
     "open:tests": "npm run cy:open --workspace=tests",
     "prepare_": "husky install",
     "start": "npm run start --workspaces --if-present",
-    "start:api": "npm run start:prod --workspace=apps/api",
-    "start:both": "concurrently \"npm:dev:api\" \"npm:dev:web\"",
+    "start:api": "dotnet run --project apps/api/GameGuild.API.csproj --configuration Release",
+    "start:both": "run-p dev:api dev:web",
     "start:web": "npm run start --workspace=apps/web",
     "test": "npm run test --workspaces --if-present",
-    "test:api": "npm run test --workspace=apps/api",
+    "test:api": "dotnet test apps/api/GameGuild.API.csproj",
     "test:web": "npm run test --workspace=apps/web"
   },
   "devDependencies": {
@@ -59,5 +57,9 @@
     "syncpack": "^13.0.3",
     "tailwindcss": "^4.1.11",
     "typescript": "^5"
+  },
+  "dependencies": {
+    "concurrently": "^9.2.0",
+    "npm-run-all": "^4.1.5"
   }
 }
