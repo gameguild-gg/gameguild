@@ -221,7 +221,16 @@ export const SyncProvider: FunctionComponent<PropsWithChildren<SyncProviderProps
             });
 
             const batchResults = await Promise.allSettled(batchPromises);
-            allResults.push(...batchResults.map((r) => (r.status === 'fulfilled' ? r.value : { success: false, error: r.reason })));
+            allResults.push(
+              ...batchResults.map((r) =>
+                r.status === 'fulfilled'
+                  ? r.value
+                  : {
+                      success: false,
+                      error: r.reason,
+                    },
+              ),
+            );
           }
         }
       }

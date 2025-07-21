@@ -1,4 +1,4 @@
-import { Content } from "@/types";
+import { Content } from '@/types';
 
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error' | 'partial';
 

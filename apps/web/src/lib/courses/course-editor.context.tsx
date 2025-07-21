@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, ReactNode, Dispatch } from 'react';
+import React, { createContext, Dispatch, ReactNode, useContext, useReducer } from 'react';
 import { CourseArea, CourseLevel } from '@/components/legacy/types/courses';
 
 // Course Editor Types
@@ -286,44 +286,44 @@ export interface CourseEditorData {
   summary: string;
   category: CourseArea;
   difficulty: CourseLevel;
-  
+
   // Media
   media: CourseMedia;
-  
+
   // Sales & Showcase
   products: CourseProduct[];
   enrollment: CourseEnrollment;
   estimatedHours: number;
-  
+
   // Delivery & Schedule
   delivery: CourseDelivery;
-  
+
   // Certificates & Skills
   certificates: CourseCertificates;
-  
+
   // SEO & Metadata
   metadata: CourseMetadata;
-  
+
   // Publishing & Preview
   publishing: CoursePublishing;
-  
+
   // Content Structure
   content: CourseContent;
-  
+
   // Undo/Redo System
   undoRedo: UndoRedoState;
-  
+
   // Metadata
   tags: string[];
   status: 'draft' | 'published' | 'archived';
   publishedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
-  
+
   // Validation
   isValid: boolean;
   errors: Record<string, string>;
-  
+
   // UI State
   manualSlugEdit: boolean;
 }
@@ -449,34 +449,34 @@ const validateCourse = (course: CourseEditorData): { isValid: boolean; errors: R
   if (!course.title.trim()) {
     errors.title = 'Title is required';
   }
-  
+
   if (!course.slug.trim()) {
     errors.slug = 'Slug is required';
   } else if (!/^[a-z0-9-]+$/.test(course.slug)) {
     errors.slug = 'Slug can only contain lowercase letters, numbers, and hyphens';
   }
-  
+
   if (!course.description.trim()) {
     errors.description = 'Description is required';
   }
-  
+
   if (!course.summary.trim()) {
     errors.summary = 'Summary is required';
   }
-  
+
   if (course.estimatedHours <= 0) {
     errors.estimatedHours = 'Estimated hours must be greater than 0';
   }
-  
+
   // Enrollment validation
   if (course.enrollment.maxEnrollments && course.enrollment.maxEnrollments <= 0) {
     errors.maxEnrollments = 'Max enrollments must be greater than 0';
   }
-  
+
   if (course.enrollment.deadline && course.enrollment.deadline <= new Date()) {
     errors.enrollmentDeadline = 'Enrollment deadline must be in the future';
   }
-  
+
   // Media validation
   if (course.media.showcaseVideo?.url && !isValidUrl(course.media.showcaseVideo.url)) {
     errors.showcaseVideo = 'Invalid video URL';
@@ -570,7 +570,7 @@ const initialState: CourseEditorData = {
   isValid: false,
   errors: {},
   manualSlugEdit: false,
-  
+
   // Content Structure
   content: {
     modules: [],
@@ -580,7 +580,7 @@ const initialState: CourseEditorData = {
     treeViewCollapsed: false,
     lessonEditHistory: [],
   },
-  
+
   // Undo/Redo State
   undoRedo: {
     history: [],
@@ -592,10 +592,7 @@ const initialState: CourseEditorData = {
 };
 
 // Reducer
-export const courseEditorReducer = (
-  state: CourseEditorData,
-  action: CourseEditorAction
-): CourseEditorData => {
+export const courseEditorReducer = (state: CourseEditorData, action: CourseEditorAction): CourseEditorData => {
   let newState: CourseEditorData = state;
 
   switch (action.type) {
@@ -662,7 +659,7 @@ export const courseEditorReducer = (
     case 'SET_SHOWCASE_VIDEO':
       const video = action.value;
       let embedId: string | undefined;
-      
+
       if (video?.url) {
         if (video.url.includes('youtube.com') || video.url.includes('youtu.be')) {
           embedId = extractVideoId(video.url, 'youtube');
@@ -695,16 +692,14 @@ export const courseEditorReducer = (
     case 'REMOVE_PRODUCT':
       newState = {
         ...state,
-        products: state.products.filter(p => p.id !== action.productId),
+        products: state.products.filter((p) => p.id !== action.productId),
       };
       break;
 
     case 'UPDATE_PRODUCT':
       newState = {
         ...state,
-        products: state.products.map(p =>
-          p.id === action.productId ? { ...p, ...action.updates } : p
-        ),
+        products: state.products.map((p) => (p.id === action.productId ? { ...p, ...action.updates } : p)),
       };
       break;
 
@@ -759,7 +754,7 @@ export const courseEditorReducer = (
     case 'REMOVE_TAG':
       newState = {
         ...state,
-        tags: state.tags.filter(tag => tag !== action.tag),
+        tags: state.tags.filter((tag) => tag !== action.tag),
       };
       break;
 
@@ -871,9 +866,7 @@ export const courseEditorReducer = (
         ...state,
         delivery: {
           ...state.delivery,
-          sessions: state.delivery.sessions.map((session) =>
-            session.id === action.sessionId ? { ...session, ...action.updates } : session
-          ),
+          sessions: state.delivery.sessions.map((session) => (session.id === action.sessionId ? { ...session, ...action.updates } : session)),
         },
       };
       break;
@@ -914,7 +907,7 @@ export const courseEditorReducer = (
         ...state,
         certificates: {
           ...state.certificates,
-          skillsRequired: state.certificates.skillsRequired.filter(skill => skill.id !== action.skillId),
+          skillsRequired: state.certificates.skillsRequired.filter((skill) => skill.id !== action.skillId),
         },
       };
       break;
@@ -934,7 +927,7 @@ export const courseEditorReducer = (
         ...state,
         certificates: {
           ...state.certificates,
-          skillsProvided: state.certificates.skillsProvided.filter(skill => skill.id !== action.skillId),
+          skillsProvided: state.certificates.skillsProvided.filter((skill) => skill.id !== action.skillId),
         },
       };
       break;
@@ -944,9 +937,7 @@ export const courseEditorReducer = (
         ...state,
         certificates: {
           ...state.certificates,
-          skillsRequired: action.skillIds.map(id => 
-            state.certificates.skillsRequired.find(skill => skill.id === id)!
-          ),
+          skillsRequired: action.skillIds.map((id) => state.certificates.skillsRequired.find((skill) => skill.id === id)!),
         },
       };
       break;
@@ -956,9 +947,7 @@ export const courseEditorReducer = (
         ...state,
         certificates: {
           ...state.certificates,
-          skillsProvided: action.skillIds.map(id => 
-            state.certificates.skillsProvided.find(skill => skill.id === id)!
-          ),
+          skillsProvided: action.skillIds.map((id) => state.certificates.skillsProvided.find((skill) => skill.id === id)!),
         },
       };
       break;
@@ -978,7 +967,7 @@ export const courseEditorReducer = (
         ...state,
         certificates: {
           ...state.certificates,
-          certificates: state.certificates.certificates.filter(cert => cert.id !== action.certificateId),
+          certificates: state.certificates.certificates.filter((cert) => cert.id !== action.certificateId),
         },
       };
       break;
@@ -988,9 +977,7 @@ export const courseEditorReducer = (
         ...state,
         certificates: {
           ...state.certificates,
-          certificates: state.certificates.certificates.map(cert =>
-            cert.id === action.certificateId ? { ...cert, ...action.updates } : cert
-          ),
+          certificates: state.certificates.certificates.map((cert) => (cert.id === action.certificateId ? { ...cert, ...action.updates } : cert)),
         },
       };
       break;
@@ -1213,7 +1200,7 @@ export const courseEditorReducer = (
     }
 
     case 'RESTORE_VERSION': {
-      const version = state.publishing.versions.find(v => v.id === action.versionId);
+      const version = state.publishing.versions.find((v) => v.id === action.versionId);
       if (version && version.snapshot) {
         newState = {
           ...version.snapshot,
@@ -1234,7 +1221,7 @@ export const courseEditorReducer = (
         ...state,
         publishing: {
           ...state.publishing,
-          versions: state.publishing.versions.filter(v => v.id !== action.versionId),
+          versions: state.publishing.versions.filter((v) => v.id !== action.versionId),
         },
       };
       break;
@@ -1342,16 +1329,16 @@ export const courseEditorReducer = (
         content: {
           ...state.content,
           modules: state.content.modules.map((module) =>
-            module.id === action.moduleId 
-              ? { 
-                  ...module, 
+            module.id === action.moduleId
+              ? {
+                  ...module,
                   ...action.updates,
                   metadata: {
                     ...module.metadata,
                     updatedAt: new Date(),
                   },
-                } 
-              : module
+                }
+              : module,
           ),
         },
       };
@@ -1371,9 +1358,7 @@ export const courseEditorReducer = (
     }
 
     case 'REORDER_MODULES': {
-      const reorderedModules = action.moduleIds.map((id) => 
-        state.content.modules.find((module) => module.id === id)!
-      ).filter(Boolean);
+      const reorderedModules = action.moduleIds.map((id) => state.content.modules.find((module) => module.id === id)!).filter(Boolean);
       newState = {
         ...state,
         content: {
@@ -1389,11 +1374,7 @@ export const courseEditorReducer = (
         ...state,
         content: {
           ...state.content,
-          modules: state.content.modules.map((module) =>
-            module.id === action.moduleId 
-              ? { ...module, isExpanded: !module.isExpanded }
-              : module
-          ),
+          modules: state.content.modules.map((module) => (module.id === action.moduleId ? { ...module, isExpanded: !module.isExpanded } : module)),
         },
       };
       break;
@@ -1425,7 +1406,7 @@ export const courseEditorReducer = (
                     updatedAt: new Date(),
                   },
                 }
-              : module
+              : module,
           ),
         },
       };
@@ -1456,7 +1437,7 @@ export const courseEditorReducer = (
                     updatedAt: new Date(),
                   },
                 }
-              : module
+              : module,
           ),
         },
       };
@@ -1480,7 +1461,7 @@ export const courseEditorReducer = (
                       updatedAt: new Date(),
                     },
                   }
-                : lesson
+                : lesson,
             ),
           })),
         },
@@ -1504,10 +1485,8 @@ export const courseEditorReducer = (
     }
 
     case 'DUPLICATE_LESSON': {
-      const originalLesson = state.content.modules
-        .flatMap((module) => module.lessons || [])
-        .find((lesson) => lesson.id === action.lessonId);
-      
+      const originalLesson = state.content.modules.flatMap((module) => module.lessons || []).find((lesson) => lesson.id === action.lessonId);
+
       if (originalLesson) {
         const duplicatedLesson: CourseLesson = {
           ...originalLesson,
@@ -1520,9 +1499,7 @@ export const courseEditorReducer = (
           },
         };
 
-        const moduleWithOriginal = state.content.modules.find((module) =>
-          (module.lessons || []).some((lesson) => lesson.id === action.lessonId)
-        );
+        const moduleWithOriginal = state.content.modules.find((module) => (module.lessons || []).some((lesson) => lesson.id === action.lessonId));
 
         if (moduleWithOriginal) {
           newState = {
@@ -1539,7 +1516,7 @@ export const courseEditorReducer = (
                         updatedAt: new Date(),
                       },
                     }
-                  : module
+                  : module,
               ),
             },
           };
@@ -1566,9 +1543,7 @@ export const courseEditorReducer = (
         ...state,
         content: {
           ...state.content,
-          selectedItems: state.content.selectedItems.includes(itemId)
-            ? state.content.selectedItems
-            : [...state.content.selectedItems, itemId],
+          selectedItems: state.content.selectedItems.includes(itemId) ? state.content.selectedItems : [...state.content.selectedItems, itemId],
         },
       };
       break;
@@ -1642,20 +1617,20 @@ export const courseEditorReducer = (
 
     case 'ADD_TO_HISTORY': {
       const newHistory = [...state.undoRedo.history];
-      
+
       // Remove any future history if we're not at the end
       if (state.undoRedo.currentIndex < newHistory.length - 1) {
         newHistory.splice(state.undoRedo.currentIndex + 1);
       }
-      
+
       // Add new action to history
       newHistory.push(action.action);
-      
+
       // Limit history size
       if (newHistory.length > state.undoRedo.maxHistorySize) {
         newHistory.shift();
       }
-      
+
       newState = {
         ...state,
         undoRedo: {
@@ -1702,7 +1677,7 @@ export const courseEditorReducer = (
 interface CourseEditorContextType {
   state: CourseEditorData;
   dispatch: Dispatch<CourseEditorAction>;
-  
+
   // Convenience methods
   setTitle: (title: string) => void;
   setSlug: (slug: string) => void;
@@ -1726,7 +1701,7 @@ interface CourseEditorContextType {
   validate: () => void;
   reset: () => void;
   loadCourse: (course: Partial<CourseEditorData>) => void;
-  
+
   // Delivery & Schedule methods
   setDeliveryMode: (mode: CourseDelivery['mode']) => void;
   setAccessWindow: (window: CourseDelivery['accessWindow']) => void;
@@ -1735,7 +1710,7 @@ interface CourseEditorContextType {
   updateSession: (sessionId: string, updates: Partial<CourseSession>) => void;
   removeSession: (sessionId: string) => void;
   setTimezone: (timezone: string) => void;
-  
+
   // Certificates & Skills methods
   addRequiredSkill: (skill: CourseSkill) => void;
   removeRequiredSkill: (skillId: string) => void;
@@ -1746,7 +1721,7 @@ interface CourseEditorContextType {
   addCertificate: (certificate: CourseCertificate) => void;
   removeCertificate: (certificateId: string) => void;
   updateCertificate: (certificateId: string, updates: Partial<CourseCertificate>) => void;
-  
+
   // SEO & Metadata methods
   setMetaTitle: (title: string) => void;
   setMetaDescription: (description: string) => void;
@@ -1758,7 +1733,7 @@ interface CourseEditorContextType {
   setCanonicalUrl: (url: string) => void;
   setCustomField: (key: string, value: any) => void;
   removeCustomField: (key: string) => void;
-  
+
   // Publishing & Preview methods
   setPublishSettings: (settings: Partial<CoursePublishSettings>) => void;
   setVisibility: (visibility: CoursePublishSettings['visibility']) => void;
@@ -1774,7 +1749,7 @@ interface CourseEditorContextType {
   publishCourse: () => void;
   unpublishCourse: () => void;
   setPublishingStatus: (status: CoursePublishing['publishingStatus'], error?: string) => void;
-  
+
   // Aliases for component compatibility
   updateTitle: (title: string) => void;
   updateSlug: (slug: string) => void;
@@ -1792,10 +1767,7 @@ interface CourseEditorProviderProps {
   initialCourse?: Partial<CourseEditorData>;
 }
 
-export const CourseEditorProvider: React.FC<CourseEditorProviderProps> = ({
-  children,
-  initialCourse,
-}) => {
+export const CourseEditorProvider: React.FC<CourseEditorProviderProps> = ({ children, initialCourse }) => {
   const [state, dispatch] = useReducer(courseEditorReducer, {
     ...initialState,
     ...initialCourse,
@@ -1804,7 +1776,7 @@ export const CourseEditorProvider: React.FC<CourseEditorProviderProps> = ({
   const contextValue: CourseEditorContextType = {
     state,
     dispatch,
-    
+
     // Convenience methods
     setTitle: (title: string) => dispatch({ type: 'SET_TITLE', value: title }),
     setSlug: (slug: string) => dispatch({ type: 'SET_SLUG', value: slug }),
@@ -1816,11 +1788,14 @@ export const CourseEditorProvider: React.FC<CourseEditorProviderProps> = ({
     setShowcaseVideo: (video: CourseMedia['showcaseVideo']) => dispatch({ type: 'SET_SHOWCASE_VIDEO', value: video }),
     addProduct: (product: CourseProduct) => dispatch({ type: 'ADD_PRODUCT', product }),
     removeProduct: (productId: string) => dispatch({ type: 'REMOVE_PRODUCT', productId }),
-    updateProduct: (productId: string, updates: Partial<CourseProduct>) => 
-      dispatch({ type: 'UPDATE_PRODUCT', productId, updates }),
+    updateProduct: (productId: string, updates: Partial<CourseProduct>) => dispatch({ type: 'UPDATE_PRODUCT', productId, updates }),
     setEnrollmentStatus: (isOpen: boolean) => dispatch({ type: 'SET_ENROLLMENT_STATUS', isOpen }),
     setMaxEnrollments: (max: number | undefined) => dispatch({ type: 'SET_MAX_ENROLLMENTS', value: max }),
-    setEnrollmentDeadline: (deadline: Date | undefined) => dispatch({ type: 'SET_ENROLLMENT_DEADLINE', value: deadline }),
+    setEnrollmentDeadline: (deadline: Date | undefined) =>
+      dispatch({
+        type: 'SET_ENROLLMENT_DEADLINE',
+        value: deadline,
+      }),
     setEstimatedHours: (hours: number) => dispatch({ type: 'SET_ESTIMATED_HOURS', value: hours }),
     addTag: (tag: string) => dispatch({ type: 'ADD_TAG', tag }),
     removeTag: (tag: string) => dispatch({ type: 'REMOVE_TAG', tag }),
@@ -1829,16 +1804,25 @@ export const CourseEditorProvider: React.FC<CourseEditorProviderProps> = ({
     validate: () => dispatch({ type: 'VALIDATE' }),
     reset: () => dispatch({ type: 'RESET' }),
     loadCourse: (course: Partial<CourseEditorData>) => dispatch({ type: 'LOAD_COURSE', course }),
-    
+
     // Delivery & Schedule methods
     setDeliveryMode: (mode: CourseDelivery['mode']) => dispatch({ type: 'SET_DELIVERY_MODE', mode }),
     setAccessWindow: (window: CourseDelivery['accessWindow']) => dispatch({ type: 'SET_ACCESS_WINDOW', window }),
-    setEnrollmentWindow: (window: CourseEnrollment['enrollmentWindow']) => dispatch({ type: 'SET_ENROLLMENT_WINDOW', window }),
+    setEnrollmentWindow: (window: CourseEnrollment['enrollmentWindow']) =>
+      dispatch({
+        type: 'SET_ENROLLMENT_WINDOW',
+        window,
+      }),
     addSession: (session: Omit<CourseSession, 'id'>) => dispatch({ type: 'ADD_SESSION', session }),
-    updateSession: (sessionId: string, updates: Partial<CourseSession>) => dispatch({ type: 'UPDATE_SESSION', sessionId, updates }),
+    updateSession: (sessionId: string, updates: Partial<CourseSession>) =>
+      dispatch({
+        type: 'UPDATE_SESSION',
+        sessionId,
+        updates,
+      }),
     removeSession: (sessionId: string) => dispatch({ type: 'REMOVE_SESSION', sessionId }),
     setTimezone: (timezone: string) => dispatch({ type: 'SET_TIMEZONE', timezone }),
-    
+
     // Certificates & Skills methods
     addRequiredSkill: (skill: CourseSkill) => dispatch({ type: 'ADD_REQUIRED_SKILL', skill }),
     removeRequiredSkill: (skillId: string) => dispatch({ type: 'REMOVE_REQUIRED_SKILL', skillId }),
@@ -1848,24 +1832,46 @@ export const CourseEditorProvider: React.FC<CourseEditorProviderProps> = ({
     reorderProvidedSkills: (skillIds: string[]) => dispatch({ type: 'REORDER_PROVIDED_SKILLS', skillIds }),
     addCertificate: (certificate: CourseCertificate) => dispatch({ type: 'ADD_CERTIFICATE', certificate }),
     removeCertificate: (certificateId: string) => dispatch({ type: 'REMOVE_CERTIFICATE', certificateId }),
-    updateCertificate: (certificateId: string, updates: Partial<CourseCertificate>) => dispatch({ type: 'UPDATE_CERTIFICATE', certificateId, updates }),
-    
+    updateCertificate: (certificateId: string, updates: Partial<CourseCertificate>) =>
+      dispatch({
+        type: 'UPDATE_CERTIFICATE',
+        certificateId,
+        updates,
+      }),
+
     // SEO & Metadata methods
     setMetaTitle: (title: string) => dispatch({ type: 'SET_META_TITLE', title }),
     setMetaDescription: (description: string) => dispatch({ type: 'SET_META_DESCRIPTION', description }),
     addSEOKeyword: (keyword: string) => dispatch({ type: 'ADD_SEO_KEYWORD', keyword }),
     removeSEOKeyword: (keyword: string) => dispatch({ type: 'REMOVE_SEO_KEYWORD', keyword }),
     setSEOKeywords: (keywords: string[]) => dispatch({ type: 'SET_SEO_KEYWORDS', keywords }),
-    setOGData: (field: 'ogTitle' | 'ogDescription' | 'ogImage', value: string) => dispatch({ type: 'SET_OG_DATA', field, value }),
+    setOGData: (field: 'ogTitle' | 'ogDescription' | 'ogImage', value: string) =>
+      dispatch({
+        type: 'SET_OG_DATA',
+        field,
+        value,
+      }),
     setTwitterData: (field: 'twitterTitle' | 'twitterDescription' | 'twitterImage', value: string) => dispatch({ type: 'SET_TWITTER_DATA', field, value }),
     setCanonicalUrl: (url: string) => dispatch({ type: 'SET_CANONICAL_URL', url }),
     setCustomField: (key: string, value: any) => dispatch({ type: 'SET_CUSTOM_FIELD', key, value }),
     removeCustomField: (key: string) => dispatch({ type: 'REMOVE_CUSTOM_FIELD', key }),
-    
+
     // Publishing & Preview methods
-    setPublishSettings: (settings: Partial<CoursePublishSettings>) => dispatch({ type: 'SET_PUBLISH_SETTINGS', settings }),
-    setVisibility: (visibility: CoursePublishSettings['visibility']) => dispatch({ type: 'SET_VISIBILITY', visibility }),
-    setAccessType: (accessType: CoursePublishSettings['accessType']) => dispatch({ type: 'SET_ACCESS_TYPE', accessType }),
+    setPublishSettings: (settings: Partial<CoursePublishSettings>) =>
+      dispatch({
+        type: 'SET_PUBLISH_SETTINGS',
+        settings,
+      }),
+    setVisibility: (visibility: CoursePublishSettings['visibility']) =>
+      dispatch({
+        type: 'SET_VISIBILITY',
+        visibility,
+      }),
+    setAccessType: (accessType: CoursePublishSettings['accessType']) =>
+      dispatch({
+        type: 'SET_ACCESS_TYPE',
+        accessType,
+      }),
     toggleAutoPublish: () => dispatch({ type: 'TOGGLE_AUTO_PUBLISH' }),
     setPublishDate: (date: Date | undefined) => dispatch({ type: 'SET_PUBLISH_DATE', date }),
     createVersion: (changes: string, createdBy: string) => dispatch({ type: 'CREATE_VERSION', changes, createdBy }),
@@ -1876,8 +1882,13 @@ export const CourseEditorProvider: React.FC<CourseEditorProviderProps> = ({
     toggleLivePreview: () => dispatch({ type: 'TOGGLE_LIVE_PREVIEW' }),
     publishCourse: () => dispatch({ type: 'PUBLISH_COURSE' }),
     unpublishCourse: () => dispatch({ type: 'UNPUBLISH_COURSE' }),
-    setPublishingStatus: (status: CoursePublishing['publishingStatus'], error?: string) => dispatch({ type: 'SET_PUBLISHING_STATUS', status, error }),
-    
+    setPublishingStatus: (status: CoursePublishing['publishingStatus'], error?: string) =>
+      dispatch({
+        type: 'SET_PUBLISHING_STATUS',
+        status,
+        error,
+      }),
+
     // Aliases for component compatibility
     updateTitle: (title: string) => dispatch({ type: 'SET_TITLE', value: title }),
     updateSlug: (slug: string) => dispatch({ type: 'SET_SLUG', value: slug }),
@@ -1887,11 +1898,7 @@ export const CourseEditorProvider: React.FC<CourseEditorProviderProps> = ({
     updateDifficulty: (difficulty: CourseLevel) => dispatch({ type: 'SET_DIFFICULTY', value: difficulty }),
   };
 
-  return (
-    <CourseEditorContext.Provider value={contextValue}>
-      {children}
-    </CourseEditorContext.Provider>
-  );
+  return <CourseEditorContext.Provider value={contextValue}>{children}</CourseEditorContext.Provider>;
 };
 
 // Hook
