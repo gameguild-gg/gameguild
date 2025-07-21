@@ -7,9 +7,10 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { signIn } from 'next-auth/react';
+
 import { useAuthError } from '@/lib/hooks/useAuthError';
 import { Link } from '@/i18n/navigation';
+import { signIn } from '@/auth';
 
 export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'div'>) => {
   const { hasError, error } = useAuthError();
