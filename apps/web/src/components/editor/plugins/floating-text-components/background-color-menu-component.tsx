@@ -86,7 +86,7 @@ export function BackgroundColorMenuComponent({
     <DropdownMenuSub>
       <DropdownMenuSubTrigger>
         <Paintbrush className="mr-2 h-4 w-4" />
-        <span>Cor do Fundo</span>
+        <span>Background Color</span>
         <div
           className="ml-auto h-4 w-4 rounded-full border"
           style={{
@@ -100,14 +100,14 @@ export function BackgroundColorMenuComponent({
         />
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent side="right" align="start" className="w-64">
-        <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Cor do Fundo</div>
+        <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Background Color</div>
         <DropdownMenuSeparator />
         <div className="p-2">
           <button
             onClick={handleRemoveBackground}
             className="w-full mb-2 px-3 py-2 text-sm border rounded hover:bg-accent transition-colors"
           >
-            Remover Fundo
+            Background Remove
           </button>
         </div>
         <ColorPalette

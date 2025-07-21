@@ -114,10 +114,12 @@ export function ColorPalette({
             {customInputLabel}
           </Label>
           <Input
+            onSelect={(e) => e.preventDefault()}
             id="custom-color"
             type="color"
             value={selectedColor || "#000000"}
             onChange={(e) => onColorChange(e.target.value)}
+            onPointerDown={(e) => e.stopPropagation()}
             className="w-12 h-8 p-0 border-0"
           />
           <Input
@@ -128,7 +130,9 @@ export function ColorPalette({
             onKeyDown={(e) => {
               if (e.key === "Enter" && e.currentTarget.value) {
                 onColorChange(e.currentTarget.value)
+                e.preventDefault()
               }
+              e.stopPropagation()
             }}
             className="flex-1 text-xs"
           />
