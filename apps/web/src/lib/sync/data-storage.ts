@@ -50,7 +50,13 @@ export const getAllContents = async (type?: ContentType, limit?: number, offset?
 };
 
 // O(1) lookup operations
-export const getContent = async (type: ContentType, idOrSlug: string): Promise<{ metadata: Content; content: string } | null> => {
+export const getContent = async (
+  type: ContentType,
+  idOrSlug: string,
+): Promise<{
+  metadata: Content;
+  content: string;
+} | null> => {
   // Try ID first (O(1))
   let content = await contentRepo.findById(idOrSlug);
 
@@ -122,7 +128,12 @@ export const createManyContents = async <T extends Content>(items: Array<Omit<T,
   return created as T[];
 };
 
-export const updateManyContents = async <T extends Content>(updates: Array<{ id: string; data: Partial<T> }>): Promise<Map<string, T>> => {
+export const updateManyContents = async <T extends Content>(
+  updates: Array<{
+    id: string;
+    data: Partial<T>;
+  }>,
+): Promise<Map<string, T>> => {
   const updateMap = new Map<string, Partial<T>>();
 
   updates.forEach(({ id, data }) => {
