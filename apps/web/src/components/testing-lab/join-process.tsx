@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { UserPlus, Briefcase, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Briefcase, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 
 interface JoinProcessProps {

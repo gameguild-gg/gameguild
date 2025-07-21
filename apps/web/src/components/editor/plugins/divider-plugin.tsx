@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $insertNodes } from 'lexical';
 import { INSERT_DIVIDER_COMMAND } from './floating-content-insert-plugin';
-import { $createDividerNode } from '../nodes/divider-node';
 import type { DividerData } from '../nodes/divider-node';
+import { $createDividerNode } from '../nodes/divider-node';
 
 export function DividerPlugin() {
   const [editor] = useLexicalComposerContext();

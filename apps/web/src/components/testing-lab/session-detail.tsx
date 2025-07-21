@@ -2,7 +2,7 @@ import { TestSession } from '@/lib/api/testing-lab/test-sessions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Users, Monitor, Trophy, Star, ArrowLeft, GamepadIcon, Zap, Target } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, GamepadIcon, Monitor, Target, Trophy, Users, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 

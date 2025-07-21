@@ -1,8 +1,7 @@
 'use client';
 
 import type React from 'react';
-
-import { useMemo, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { CodeFile } from '@/components/ui/source-code/types';
 
 interface UseFileContentProps {

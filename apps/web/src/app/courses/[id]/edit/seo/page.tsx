@@ -8,9 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Globe, Search, Tag, Eye, ExternalLink, Twitter, Facebook, Plus, X, AlertCircle, CheckCircle
-} from 'lucide-react';
+import { AlertCircle, CheckCircle, ExternalLink, Eye, Facebook, Globe, Plus, Search, Tag, Twitter, X } from 'lucide-react';
 import { useState } from 'react';
 
 export default function SEOPage() {
@@ -41,38 +39,34 @@ export default function SEOPage() {
       { condition: (seo.canonicalUrl ?? '').length > 0, weight: 10 },
       { condition: (seo.twitterTitle ?? '').length > 0, weight: 5 },
     ];
-    
-    checks.forEach(check => {
+
+    checks.forEach((check) => {
       if (check.condition) score += check.weight;
     });
-    
+
     return score;
   }
 
   const renderPreview = () => {
-    const title = seo.metaTitle || course.title
-    const description = seo.metaDescription || course.description
-    const url = seo.canonicalUrl || `https://example.com/courses/${course.title.toLowerCase().replace(/\s+/g, '-')}`
+    const title = seo.metaTitle || course.title;
+    const description = seo.metaDescription || course.description;
+    const url = seo.canonicalUrl || `https://example.com/courses/${course.title.toLowerCase().replace(/\s+/g, '-')}`;
 
     switch (previewMode) {
       case 'google':
         return (
           <div className="border rounded-lg p-4 bg-white">
             <div className="text-sm text-gray-600 mb-1">{url}</div>
-            <div className="text-lg text-blue-600 hover:underline cursor-pointer font-medium">
-              {title}
-            </div>
-            <div className="text-sm text-gray-700 mt-1">
-              {description}
-            </div>
+            <div className="text-lg text-blue-600 hover:underline cursor-pointer font-medium">{title}</div>
+            <div className="text-sm text-gray-700 mt-1">{description}</div>
           </div>
-        )
-      
+        );
+
       case 'twitter':
-        const twitterTitle = seo.twitterTitle || seo.ogTitle || title
-        const twitterDescription = seo.twitterDescription || seo.ogDescription || description
-        const twitterImage = seo.twitterImage || seo.ogImage
-        
+        const twitterTitle = seo.twitterTitle || seo.ogTitle || title;
+        const twitterDescription = seo.twitterDescription || seo.ogDescription || description;
+        const twitterImage = seo.twitterImage || seo.ogImage;
+
         return (
           <div className="border rounded-xl overflow-hidden bg-white max-w-md">
             {twitterImage && (
@@ -86,13 +80,13 @@ export default function SEOPage() {
               <div className="text-xs text-gray-600 mt-1">{twitterDescription}</div>
             </div>
           </div>
-        )
-      
+        );
+
       case 'facebook':
-        const ogTitle = seo.ogTitle || title
-        const ogDescription = seo.ogDescription || description
-        const ogImage = seo.ogImage
-        
+        const ogTitle = seo.ogTitle || title;
+        const ogDescription = seo.ogDescription || description;
+        const ogImage = seo.ogImage;
+
         return (
           <div className="border rounded-lg overflow-hidden bg-white max-w-md">
             {ogImage && (
@@ -101,19 +95,17 @@ export default function SEOPage() {
               </div>
             )}
             <div className="p-3">
-              <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                {new URL(url).hostname}
-              </div>
+              <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">{new URL(url).hostname}</div>
               <div className="font-semibold text-sm mb-1">{ogTitle}</div>
               <div className="text-xs text-gray-600">{ogDescription}</div>
             </div>
           </div>
-        )
-      
+        );
+
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -124,11 +116,9 @@ export default function SEOPage() {
             <Search className="h-6 w-6" />
             SEO & Metadata
           </h1>
-          <p className="text-muted-foreground">
-            Optimize your course for search engines and social media
-          </p>
+          <p className="text-muted-foreground">Optimize your course for search engines and social media</p>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className={`flex items-center gap-1 ${seoScore >= 80 ? 'text-green-600' : seoScore >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
@@ -149,9 +139,7 @@ export default function SEOPage() {
                 <Globe className="h-5 w-5" />
                 Basic SEO Settings
               </CardTitle>
-              <CardDescription>
-                Essential metadata for search engine optimization
-              </CardDescription>
+              <CardDescription>Essential metadata for search engine optimization</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -165,9 +153,7 @@ export default function SEOPage() {
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Appears in search results and browser tabs</span>
-                  <span className={(seo.metaTitle ?? '').length > 60 ? 'text-red-500' : 'text-green-500'}>
-                    {(seo.metaTitle ?? '').length}/60
-                  </span>
+                  <span className={(seo.metaTitle ?? '').length > 60 ? 'text-red-500' : 'text-green-500'}>{(seo.metaTitle ?? '').length}/60</span>
                 </div>
               </div>
 
@@ -183,9 +169,7 @@ export default function SEOPage() {
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Appears below the title in search results</span>
-                  <span className={(seo.metaDescription ?? '').length > 160 ? 'text-red-500' : 'text-green-500'}>
-                    {(seo.metaDescription ?? '').length}/160
-                  </span>
+                  <span className={(seo.metaDescription ?? '').length > 160 ? 'text-red-500' : 'text-green-500'}>{(seo.metaDescription ?? '').length}/160</span>
                 </div>
               </div>
 
@@ -197,9 +181,7 @@ export default function SEOPage() {
                   onChange={(e) => setCanonicalUrl(e.target.value)}
                   placeholder="https://example.com/courses/course-name"
                 />
-                <div className="text-xs text-muted-foreground">
-                  Helps prevent duplicate content issues
-                </div>
+                <div className="text-xs text-muted-foreground">Helps prevent duplicate content issues</div>
               </div>
             </CardContent>
           </Card>
@@ -211,9 +193,7 @@ export default function SEOPage() {
                 <Tag className="h-5 w-5" />
                 SEO Keywords
               </CardTitle>
-              <CardDescription>
-                Target keywords for search optimization
-              </CardDescription>
+              <CardDescription>Target keywords for search optimization</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">
@@ -227,26 +207,19 @@ export default function SEOPage() {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              
+
               <div className="flex flex-wrap gap-2">
                 {seo.keywords.map((keyword: string, index: number) => (
                   <Badge key={index} variant="secondary" className="flex items-center gap-1">
                     {keyword}
-                    <button
-                      onClick={() => removeSEOKeyword(keyword)}
-                      className="ml-1 hover:text-red-500"
-                    >
+                    <button onClick={() => removeSEOKeyword(keyword)} className="ml-1 hover:text-red-500">
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
                 ))}
               </div>
-              
-              {seo.keywords.length === 0 && (
-                <div className="text-sm text-muted-foreground">
-                  Add 3-5 relevant keywords that describe your course content
-                </div>
-              )}
+
+              {seo.keywords.length === 0 && <div className="text-sm text-muted-foreground">Add 3-5 relevant keywords that describe your course content</div>}
             </CardContent>
           </Card>
 
@@ -257,20 +230,13 @@ export default function SEOPage() {
                 <Facebook className="h-5 w-5" />
                 Social Media (Open Graph)
               </CardTitle>
-              <CardDescription>
-                Optimize how your course appears when shared on social media
-              </CardDescription>
+              <CardDescription>Optimize how your course appears when shared on social media</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="ogTitle">Open Graph Title</Label>
-                  <Input
-                    id="ogTitle"
-                    value={seo.ogTitle ?? ''}
-                    onChange={(e) => setOGData('ogTitle', e.target.value)}
-                    placeholder="Social media title"
-                  />
+                  <Input id="ogTitle" value={seo.ogTitle ?? ''} onChange={(e) => setOGData('ogTitle', e.target.value)} placeholder="Social media title" />
                 </div>
 
                 <div className="space-y-2">
@@ -304,9 +270,7 @@ export default function SEOPage() {
                 <Twitter className="h-5 w-5" />
                 Twitter Settings
               </CardTitle>
-              <CardDescription>
-                Customize appearance on Twitter/X
-              </CardDescription>
+              <CardDescription>Customize appearance on Twitter/X</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -353,41 +317,22 @@ export default function SEOPage() {
                 <Eye className="h-5 w-5" />
                 Preview
               </CardTitle>
-              <CardDescription>
-                See how your course will appear
-              </CardDescription>
+              <CardDescription>See how your course will appear</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-1 p-1 bg-muted rounded-md">
-                <Button
-                  variant={previewMode === 'google' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setPreviewMode('google')}
-                  className="flex-1"
-                >
+                <Button variant={previewMode === 'google' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('google')} className="flex-1">
                   Google
                 </Button>
-                <Button
-                  variant={previewMode === 'twitter' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setPreviewMode('twitter')}
-                  className="flex-1"
-                >
+                <Button variant={previewMode === 'twitter' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('twitter')} className="flex-1">
                   Twitter
                 </Button>
-                <Button
-                  variant={previewMode === 'facebook' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setPreviewMode('facebook')}
-                  className="flex-1"
-                >
+                <Button variant={previewMode === 'facebook' ? 'default' : 'ghost'} size="sm" onClick={() => setPreviewMode('facebook')} className="flex-1">
                   Facebook
                 </Button>
               </div>
 
-              <div className="min-h-[200px]">
-                {renderPreview()}
-              </div>
+              <div className="min-h-[200px]">{renderPreview()}</div>
 
               <Separator />
 
@@ -395,12 +340,24 @@ export default function SEOPage() {
               <div className="space-y-2">
                 <h4 className="font-medium">SEO Checklist</h4>
                 <div className="space-y-1 text-sm">
-                  <div className={`flex items-center gap-2 ${(seo.metaTitle ?? '').length > 0 && (seo.metaTitle ?? '').length <= 60 ? 'text-green-600' : 'text-red-600'}`}>
-                    {(seo.metaTitle ?? '').length > 0 && (seo.metaTitle ?? '').length <= 60 ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                  <div
+                    className={`flex items-center gap-2 ${(seo.metaTitle ?? '').length > 0 && (seo.metaTitle ?? '').length <= 60 ? 'text-green-600' : 'text-red-600'}`}
+                  >
+                    {(seo.metaTitle ?? '').length > 0 && (seo.metaTitle ?? '').length <= 60 ? (
+                      <CheckCircle className="h-3 w-3" />
+                    ) : (
+                      <AlertCircle className="h-3 w-3" />
+                    )}
                     Meta title (50-60 chars)
                   </div>
-                  <div className={`flex items-center gap-2 ${(seo.metaDescription ?? '').length > 0 && (seo.metaDescription ?? '').length <= 160 ? 'text-green-600' : 'text-red-600'}`}>
-                    {(seo.metaDescription ?? '').length > 0 && (seo.metaDescription ?? '').length <= 160 ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                  <div
+                    className={`flex items-center gap-2 ${(seo.metaDescription ?? '').length > 0 && (seo.metaDescription ?? '').length <= 160 ? 'text-green-600' : 'text-red-600'}`}
+                  >
+                    {(seo.metaDescription ?? '').length > 0 && (seo.metaDescription ?? '').length <= 160 ? (
+                      <CheckCircle className="h-3 w-3" />
+                    ) : (
+                      <AlertCircle className="h-3 w-3" />
+                    )}
                     Meta description (150-160 chars)
                   </div>
                   <div className={`flex items-center gap-2 ${seo.keywords.length >= 3 ? 'text-green-600' : 'text-red-600'}`}>
@@ -429,5 +386,5 @@ export default function SEOPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

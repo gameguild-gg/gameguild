@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, DollarSign, Users, Calendar, Tag } from 'lucide-react';
+import { Calendar, DollarSign, Plus, Tag, Users, X } from 'lucide-react';
 import { useCourseEditor } from '@/lib/courses/course-editor.context';
 
 export function SalesShowcaseSection() {
-  const { 
-    state, 
-    addProduct, 
-    removeProduct, 
+  const {
+    state,
+    addProduct,
+    removeProduct,
     updateProduct,
     setEnrollmentStatus,
     setMaxEnrollments,
@@ -22,7 +22,7 @@ export function SalesShowcaseSection() {
     setEstimatedHours,
     addTag,
     removeTag,
-    setStatus
+    setStatus,
   } = useCourseEditor();
 
   const [newTag, setNewTag] = React.useState('');
@@ -59,29 +59,19 @@ export function SalesShowcaseSection() {
 
   return (
     <div className="space-y-6">
-      
       {/* Pricing & Products */}
       <div className="space-y-4">
         <Label className="text-sm font-medium flex items-center gap-2">
           <DollarSign className="h-4 w-4" />
           Pricing & Products
         </Label>
-        
+
         {/* Add New Product */}
         <div className="p-4 bg-muted/50 rounded-lg space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <Input
-              placeholder="Product name"
-              value={newProductName}
-              onChange={(e) => setNewProductName(e.target.value)}
-            />
+            <Input placeholder="Product name" value={newProductName} onChange={(e) => setNewProductName(e.target.value)} />
             <div className="flex gap-2">
-              <Input
-                type="number"
-                placeholder="Price"
-                value={newProductPrice}
-                onChange={(e) => setNewProductPrice(e.target.value)}
-              />
+              <Input type="number" placeholder="Price" value={newProductPrice} onChange={(e) => setNewProductPrice(e.target.value)} />
               <Button onClick={handleAddProduct} disabled={!newProductName || !newProductPrice}>
                 <Plus className="h-4 w-4" />
               </Button>
@@ -102,11 +92,7 @@ export function SalesShowcaseSection() {
                     </p>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeProduct(product.id)}
-                >
+                <Button variant="ghost" size="sm" onClick={() => removeProduct(product.id)}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -121,7 +107,7 @@ export function SalesShowcaseSection() {
           <Users className="h-4 w-4" />
           Enrollment Settings
         </Label>
-        
+
         <div className="space-y-4">
           {/* Enrollment Status */}
           <div className="flex items-center justify-between">
@@ -129,10 +115,7 @@ export function SalesShowcaseSection() {
               <p className="text-sm font-medium">Open for Enrollment</p>
               <p className="text-xs text-muted-foreground">Allow new students to enroll</p>
             </div>
-            <Switch
-              checked={state.enrollment.isOpen}
-              onCheckedChange={setEnrollmentStatus}
-            />
+            <Switch checked={state.enrollment.isOpen} onCheckedChange={setEnrollmentStatus} />
           </div>
 
           {/* Max Enrollments */}
@@ -153,9 +136,7 @@ export function SalesShowcaseSection() {
           <div className="p-3 bg-muted/50 rounded-lg">
             <p className="text-sm">
               <span className="font-medium">Current Enrollments:</span> {state.enrollment.currentEnrollments}
-              {state.enrollment.maxEnrollments && (
-                <span className="text-muted-foreground"> / {state.enrollment.maxEnrollments}</span>
-              )}
+              {state.enrollment.maxEnrollments && <span className="text-muted-foreground"> / {state.enrollment.maxEnrollments}</span>}
             </p>
           </div>
         </div>
@@ -205,15 +186,10 @@ export function SalesShowcaseSection() {
           <Tag className="h-4 w-4" />
           Tags
         </Label>
-        
+
         {/* Add Tag */}
         <div className="flex gap-2">
-          <Input
-            placeholder="Add a tag..."
-            value={newTag}
-            onChange={(e) => setNewTag(e.target.value)}
-            onKeyPress={handleTagKeyPress}
-          />
+          <Input placeholder="Add a tag..." value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyPress={handleTagKeyPress} />
           <Button onClick={handleAddTag} disabled={!newTag || state.tags.includes(newTag)}>
             <Plus className="h-4 w-4" />
           </Button>
@@ -225,10 +201,7 @@ export function SalesShowcaseSection() {
             {state.tags.map((tag) => (
               <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                 {tag}
-                <button
-                  onClick={() => removeTag(tag)}
-                  className="ml-1 hover:text-red-500"
-                >
+                <button onClick={() => removeTag(tag)} className="ml-1 hover:text-red-500">
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
@@ -236,9 +209,7 @@ export function SalesShowcaseSection() {
           </div>
         )}
 
-        <p className="text-xs text-muted-foreground">
-          Tags help students find your course and improve discoverability.
-        </p>
+        <p className="text-xs text-muted-foreground">Tags help students find your course and improve discoverability.</p>
       </div>
     </div>
   );

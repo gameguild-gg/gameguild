@@ -1,11 +1,9 @@
 'use client';
 
 import type React from 'react';
+import { useContext, useEffect, useState } from 'react';
 import type { JSX } from 'react/jsx-runtime';
-
-import { useState, useEffect, useContext } from 'react';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { $getNodeByKey } from 'lexical';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { ChevronDown } from 'lucide-react';
 
@@ -29,6 +27,15 @@ export interface SerializedHeaderNode extends SerializedLexicalNode {
 export class HeaderNode extends DecoratorNode<JSX.Element> {
   __data: HeaderData;
 
+  // Update the constructor to define a default style
+  constructor(data: HeaderData, key?: string) {
+    super(key);
+    this.__data = {
+      ...data,
+      style: data.style || 'default', // Default style if not specified
+    };
+  }
+
   static getType(): string {
     return 'header';
   }
@@ -37,13 +44,8 @@ export class HeaderNode extends DecoratorNode<JSX.Element> {
     return new HeaderNode(node.__data, node.__key);
   }
 
-  // Update the constructor to define a default style
-  constructor(data: HeaderData, key?: string) {
-    super(key);
-    this.__data = {
-      ...data,
-      style: data.style || 'default', // Default style if not specified
-    };
+  static importJSON(serializedNode: SerializedHeaderNode): HeaderNode {
+    return new HeaderNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -65,10 +67,6 @@ export class HeaderNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedHeaderNode): HeaderNode {
-    return new HeaderNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

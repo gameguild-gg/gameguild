@@ -1,5 +1,5 @@
 import React from 'react';
-import { DataDisplay, Column } from '../common/data-display';
+import { Column, DataDisplay } from '../common/data-display';
 
 // Example data type
 interface User {

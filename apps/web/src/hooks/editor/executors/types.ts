@@ -11,6 +11,7 @@ export interface Executor {
   isCompiled: any;
   stop: any;
   handleCommand: any;
+
   execute(fileId: string, context: ExecutionContext): Promise<ExecutionResult>;
 }
 

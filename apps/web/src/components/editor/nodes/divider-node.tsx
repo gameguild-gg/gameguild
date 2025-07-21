@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useEffect, useContext } from 'react';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { $getNodeByKey } from 'lexical';
+import { useContext, useEffect, useState } from 'react';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { ChevronDown, Pencil, Check } from 'lucide-react';
+import { Check, ChevronDown, Pencil } from 'lucide-react';
 import type { JSX } from 'react/jsx-runtime'; // Import JSX to fix the undeclared variable error
-
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { EditorLoadingContext } from '../lexical-editor';
@@ -27,6 +25,14 @@ export interface SerializedDividerNode extends SerializedLexicalNode {
 export class DividerNode extends DecoratorNode<JSX.Element> {
   __data: DividerData;
 
+  constructor(data: DividerData, key?: string) {
+    super(key);
+    this.__data = {
+      style: data.style || 'simple',
+      isNew: data.isNew,
+    };
+  }
+
   static getType(): string {
     return 'divider';
   }
@@ -35,12 +41,8 @@ export class DividerNode extends DecoratorNode<JSX.Element> {
     return new DividerNode(node.__data, node.__key);
   }
 
-  constructor(data: DividerData, key?: string) {
-    super(key);
-    this.__data = {
-      style: data.style || 'simple',
-      isNew: data.isNew,
-    };
+  static importJSON(serializedNode: SerializedDividerNode): DividerNode {
+    return new DividerNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -62,10 +64,6 @@ export class DividerNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedDividerNode): DividerNode {
-    return new DividerNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

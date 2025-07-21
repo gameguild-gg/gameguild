@@ -1,6 +1,5 @@
 'use client';
-import { DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { $getNodeByKey } from 'lexical';
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import type { JSX } from 'react/jsx-runtime'; // Import JSX to fix the undeclared variable error
 import { useContext } from 'react';
@@ -55,14 +54,6 @@ export interface SerializedSourceCodeNode extends SerializedLexicalNode {
 export class SourceCodeNode extends DecoratorNode<JSX.Element> {
   __data: SourceCodeNodeData;
 
-  static getType(): string {
-    return 'source-code';
-  }
-
-  static clone(node: SourceCodeNode): SourceCodeNode {
-    return new SourceCodeNode(node.__data, node.__key);
-  }
-
   constructor(data: SourceCodeNodeData, key?: string) {
     super(key);
     this.__data = {
@@ -80,6 +71,18 @@ export class SourceCodeNode extends DecoratorNode<JSX.Element> {
       testCases: data.testCases ?? {},
       activeTab: data.activeTab ?? 'terminal',
     };
+  }
+
+  static getType(): string {
+    return 'source-code';
+  }
+
+  static clone(node: SourceCodeNode): SourceCodeNode {
+    return new SourceCodeNode(node.__data, node.__key);
+  }
+
+  static importJSON(serializedNode: SerializedSourceCodeNode): SourceCodeNode {
+    return new SourceCodeNode(serializedNode.data);
   }
 
   createDOM(): HTMLElement {
@@ -101,10 +104,6 @@ export class SourceCodeNode extends DecoratorNode<JSX.Element> {
       data: this.__data,
       version: 1,
     };
-  }
-
-  static importJSON(serializedNode: SerializedSourceCodeNode): SourceCodeNode {
-    return new SourceCodeNode(serializedNode.data);
   }
 
   decorate(): JSX.Element {

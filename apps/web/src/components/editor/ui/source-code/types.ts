@@ -1,4 +1,5 @@
 import type React from 'react';
+
 export type LanguageType =
   | 'javascript'
   | 'typescript'

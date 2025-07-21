@@ -16,15 +16,15 @@ export default function CreateCoursePage() {
     status: 'draft' as const,
     media: {
       thumbnail: undefined,
-      showcaseVideo: undefined
+      showcaseVideo: undefined,
     },
     products: [],
     enrollment: {
       isOpen: true,
-      currentEnrollments: 0
+      currentEnrollments: 0,
     },
     tags: [],
-    manualSlugEdit: false
+    manualSlugEdit: false,
   };
 
   return (

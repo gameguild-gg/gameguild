@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface DashboardHeaderProps {
   title?: string;

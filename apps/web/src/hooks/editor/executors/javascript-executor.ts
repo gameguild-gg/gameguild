@@ -1,10 +1,10 @@
 import type { ProgrammingLanguage } from '@/components/ui/source-code/types';
-import type { ExecutionResult, ExecutionContext, LanguageExecutor } from './types';
+import type { ExecutionContext, ExecutionResult, LanguageExecutor } from './types';
 import { getFileContent } from '@/components/ui/source-code/utils';
 
 class JavaScriptExecutor implements LanguageExecutor {
-  private isExecutionCancelled = false;
   public isCompiled = false; // Set the isCompiled flag to false
+  private isExecutionCancelled = false;
   private globalFunctions: Set<string> = new Set(); // Track functions added to global scope
   private debugMode = false; // Flag to control debug messages
 
@@ -153,6 +153,36 @@ class JavaScriptExecutor implements LanguageExecutor {
       setIsExecuting(false);
       return { success: false, output: [`Error: ${errorMessage}`] };
     }
+  };
+
+  stop = () => {
+    this.isExecutionCancelled = true;
+  };
+
+  getFileExtension = (): string => {
+    return 'js';
+  };
+
+  getSupportedLanguages = (): ProgrammingLanguage[] => {
+    return ['javascript'];
+  };
+
+  handleCommand = (command: string, context: ExecutionContext): boolean => {
+    const { addOutput } = context;
+
+    // Try to evaluate JavaScript directly
+    if (!command.includes('console.log')) {
+      try {
+        const result = eval(command);
+        addOutput(typeof result === 'undefined' ? 'undefined' : String(result));
+        return true;
+      } catch (error) {
+        addOutput(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        return true;
+      }
+    }
+
+    return false;
   };
 
   private clearGlobalFunctions(): void {
@@ -445,36 +475,6 @@ ${hasDefaultExport && defaultExportName ? `if (typeof ${defaultExportName} !== '
 
     return null;
   }
-
-  stop = () => {
-    this.isExecutionCancelled = true;
-  };
-
-  getFileExtension = (): string => {
-    return 'js';
-  };
-
-  getSupportedLanguages = (): ProgrammingLanguage[] => {
-    return ['javascript'];
-  };
-
-  handleCommand = (command: string, context: ExecutionContext): boolean => {
-    const { addOutput } = context;
-
-    // Try to evaluate JavaScript directly
-    if (!command.includes('console.log')) {
-      try {
-        const result = eval(command);
-        addOutput(typeof result === 'undefined' ? 'undefined' : String(result));
-        return true;
-      } catch (error) {
-        addOutput(`Error: ${error instanceof Error ? error.message : String(error)}`);
-        return true;
-      }
-    }
-
-    return false;
-  };
 }
 
 // Export as named export

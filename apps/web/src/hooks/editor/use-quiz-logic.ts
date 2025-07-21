@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 interface UseQuizLogicProps {
   answers: { id: string; text: string; isCorrect: boolean }[];

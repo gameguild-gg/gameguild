@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Play, Users, Calendar, Clock, Star, Eye, Edit, Trash2 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Edit, Eye, Play, Trash2, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { EnhancedTestingLabFilters, TestingLabSession } from './filters/enhanced-testing-lab-filter-controls';
-import { GenericCardView, GenericTableView, GenericRowView, CardConfig, ColumnConfig, ActionConfig } from '../common/data-display/generic-data-views';
+import { ActionConfig, CardConfig, ColumnConfig, GenericCardView, GenericRowView, GenericTableView } from '../common/data-display/generic-data-views';
 import { useEnhancedFilterContext } from '../common/filters/enhanced-filter-context';
 
 // Mock data for demonstration

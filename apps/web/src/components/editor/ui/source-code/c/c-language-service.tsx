@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { editor } from 'monaco-editor';
 import { CSyntaxHighlighter } from './c-syntax-highlighter';
 import { CTypeChecker } from './c-type-checker';

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { EnhancedFilterProvider, useEnhancedFilterContext, EnhancedFilterConfig, FilterOption } from '../../common/filters/enhanced-filter-context';
+import { EnhancedFilterConfig, EnhancedFilterProvider, useEnhancedFilterContext } from '../../common/filters/enhanced-filter-context';
 import { TypeSafeEnhancedMultiSelectFilter } from '../../common/filters/type-safe-enhanced-multi-select-filter';
 import { ContextSearchBar } from '../../common/filters/context-search-bar';
 import { ContextViewModeToggle } from '../../common/filters/context-view-mode-toggle';

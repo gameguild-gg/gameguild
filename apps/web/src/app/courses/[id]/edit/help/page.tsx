@@ -6,29 +6,29 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { 
-  HelpCircle, 
-  BookOpen, 
-  CheckCircle, 
+import {
   AlertCircle,
+  Award,
+  BookOpen,
+  CheckCircle,
   ChevronDown,
   ChevronRight,
-  Lightbulb,
-  Video,
-  FileText,
-  MessageCircle,
-  ExternalLink,
-  Star,
   Clock,
-  Target,
-  Zap,
-  Users,
-  TrendingUp,
-  Award,
-  Search,
+  DollarSign,
+  ExternalLink,
+  FileText,
+  HelpCircle,
+  Lightbulb,
+  MessageCircle,
   Play,
+  Search,
   Settings,
-  DollarSign
+  Star,
+  Target,
+  TrendingUp,
+  Users,
+  Video,
+  Zap,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -76,11 +76,11 @@ export default function HelpPage() {
         {
           id: 'course-title',
           title: 'Set course title and description',
-          description: 'Choose a clear, descriptive title that tells students what they\'ll learn',
+          description: "Choose a clear, descriptive title that tells students what they'll learn",
           completed: !!course.title && !!course.description,
           priority: 'high',
           category: 'content',
-          estimatedTime: '5 min'
+          estimatedTime: '5 min',
         },
         {
           id: 'course-category',
@@ -89,7 +89,7 @@ export default function HelpPage() {
           completed: !!course.category && !!course.difficulty,
           priority: 'high',
           category: 'setup',
-          estimatedTime: '2 min'
+          estimatedTime: '2 min',
         },
         {
           id: 'course-media',
@@ -98,7 +98,7 @@ export default function HelpPage() {
           completed: !!course.media.thumbnail || !!course.media.showcaseVideo,
           priority: 'medium',
           category: 'content',
-          estimatedTime: '10 min'
+          estimatedTime: '10 min',
         },
         {
           id: 'course-summary',
@@ -107,9 +107,9 @@ export default function HelpPage() {
           completed: !!course.summary,
           priority: 'high',
           category: 'content',
-          estimatedTime: '15 min'
-        }
-      ]
+          estimatedTime: '15 min',
+        },
+      ],
     },
     {
       id: 'content-creation',
@@ -120,11 +120,11 @@ export default function HelpPage() {
         {
           id: 'learning-objectives',
           title: 'Define learning objectives',
-          description: 'Clear goals help students understand what they\'ll achieve',
+          description: "Clear goals help students understand what they'll achieve",
           completed: course.certificates.skillsProvided.length > 0,
           priority: 'high',
           category: 'content',
-          estimatedTime: '20 min'
+          estimatedTime: '20 min',
         },
         {
           id: 'course-structure',
@@ -133,7 +133,7 @@ export default function HelpPage() {
           completed: false, // Would check actual course content
           priority: 'high',
           category: 'content',
-          estimatedTime: '60 min'
+          estimatedTime: '60 min',
         },
         {
           id: 'interactive-elements',
@@ -142,7 +142,7 @@ export default function HelpPage() {
           completed: false,
           priority: 'medium',
           category: 'engagement',
-          estimatedTime: '45 min'
+          estimatedTime: '45 min',
         },
         {
           id: 'supplementary-materials',
@@ -151,9 +151,9 @@ export default function HelpPage() {
           completed: false,
           priority: 'medium',
           category: 'content',
-          estimatedTime: '30 min'
-        }
-      ]
+          estimatedTime: '30 min',
+        },
+      ],
     },
     {
       id: 'marketing-seo',
@@ -168,7 +168,7 @@ export default function HelpPage() {
           completed: !!(course.metadata.seo.metaTitle && course.metadata.seo.metaDescription && course.metadata.seo.keywords.length > 0),
           priority: 'high',
           category: 'marketing',
-          estimatedTime: '25 min'
+          estimatedTime: '25 min',
         },
         {
           id: 'social-media',
@@ -177,7 +177,7 @@ export default function HelpPage() {
           completed: !!(course.metadata.seo.ogTitle && course.metadata.seo.ogImage),
           priority: 'medium',
           category: 'marketing',
-          estimatedTime: '15 min'
+          estimatedTime: '15 min',
         },
         {
           id: 'course-tags',
@@ -186,7 +186,7 @@ export default function HelpPage() {
           completed: course.tags.length >= 3,
           priority: 'medium',
           category: 'marketing',
-          estimatedTime: '10 min'
+          estimatedTime: '10 min',
         },
         {
           id: 'pricing-strategy',
@@ -195,9 +195,9 @@ export default function HelpPage() {
           completed: course.products.length > 0,
           priority: 'high',
           category: 'business',
-          estimatedTime: '20 min'
-        }
-      ]
+          estimatedTime: '20 min',
+        },
+      ],
     },
     {
       id: 'advanced-features',
@@ -212,7 +212,7 @@ export default function HelpPage() {
           completed: course.certificates.certificates.length > 0,
           priority: 'medium',
           category: 'credentials',
-          estimatedTime: '30 min'
+          estimatedTime: '30 min',
         },
         {
           id: 'delivery-options',
@@ -221,7 +221,7 @@ export default function HelpPage() {
           completed: course.delivery.mode !== 'online' ? course.delivery.sessions.length > 0 : true,
           priority: 'medium',
           category: 'delivery',
-          estimatedTime: '25 min'
+          estimatedTime: '25 min',
         },
         {
           id: 'analytics-tracking',
@@ -230,7 +230,7 @@ export default function HelpPage() {
           completed: !!course.metadata.analytics?.trackingId,
           priority: 'low',
           category: 'analytics',
-          estimatedTime: '15 min'
+          estimatedTime: '15 min',
         },
         {
           id: 'community-features',
@@ -239,23 +239,27 @@ export default function HelpPage() {
           completed: false,
           priority: 'low',
           category: 'community',
-          estimatedTime: '20 min'
-        }
-      ]
-    }
+          estimatedTime: '20 min',
+        },
+      ],
+    },
   ];
 
-  const allItems = guideSections.flatMap(section => section.items);
-  const completedItems = allItems.filter(item => item.completed);
-  const highPriorityIncomplete = allItems.filter(item => !item.completed && item.priority === 'high');
+  const allItems = guideSections.flatMap((section) => section.items);
+  const completedItems = allItems.filter((item) => item.completed);
+  const highPriorityIncomplete = allItems.filter((item) => !item.completed && item.priority === 'high');
   const completionPercentage = Math.round((completedItems.length / allItems.length) * 100);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'low':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -272,11 +276,9 @@ export default function HelpPage() {
             <HelpCircle className="h-6 w-6" />
             Help & Guidance
           </h1>
-          <p className="text-muted-foreground">
-            Complete course setup guide and helpful resources
-          </p>
+          <p className="text-muted-foreground">Complete course setup guide and helpful resources</p>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <div className="text-right">
             <div className="text-2xl font-bold text-green-600">{completionPercentage}%</div>
@@ -295,23 +297,20 @@ export default function HelpPage() {
                 <Target className="h-5 w-5" />
                 Course Setup Progress
               </CardTitle>
-              <CardDescription>
-                Track your progress through the course creation process
-              </CardDescription>
+              <CardDescription>Track your progress through the course creation process</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Overall Progress</span>
-                  <span className="text-sm text-muted-foreground">{completedItems.length} of {allItems.length} completed</span>
+                  <span className="text-sm text-muted-foreground">
+                    {completedItems.length} of {allItems.length} completed
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-green-600 h-2 rounded-full transition-all duration-300" 
-                    style={{ width: `${completionPercentage}%` }}
-                  />
+                  <div className="bg-green-600 h-2 rounded-full transition-all duration-300" style={{ width: `${completionPercentage}%` }} />
                 </div>
-                
+
                 {highPriorityIncomplete.length > 0 && (
                   <div className="mt-4 p-3 bg-red-50 rounded-md">
                     <div className="flex items-center gap-2 text-red-800 mb-2">
@@ -319,12 +318,10 @@ export default function HelpPage() {
                       <span className="font-medium">High Priority Items ({highPriorityIncomplete.length})</span>
                     </div>
                     <ul className="text-sm text-red-700 space-y-1">
-                      {highPriorityIncomplete.slice(0, 3).map(item => (
+                      {highPriorityIncomplete.slice(0, 3).map((item) => (
                         <li key={item.id}>• {item.title}</li>
                       ))}
-                      {highPriorityIncomplete.length > 3 && (
-                        <li>• And {highPriorityIncomplete.length - 3} more...</li>
-                      )}
+                      {highPriorityIncomplete.length > 3 && <li>• And {highPriorityIncomplete.length - 3} more...</li>}
                     </ul>
                   </div>
                 )}
@@ -340,31 +337,21 @@ export default function HelpPage() {
                   <BookOpen className="h-5 w-5" />
                   Setup Guide
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowCompleted(!showCompleted)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setShowCompleted(!showCompleted)}>
                   {showCompleted ? 'Hide' : 'Show'} Completed
                 </Button>
               </CardTitle>
-              <CardDescription>
-                Step-by-step guidance to create a successful course
-              </CardDescription>
+              <CardDescription>Step-by-step guidance to create a successful course</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {guideSections.map((section) => {
-                const sectionItems = showCompleted ? section.items : section.items.filter(item => !item.completed);
-                const completedCount = section.items.filter(item => item.completed).length;
-                
+                const sectionItems = showCompleted ? section.items : section.items.filter((item) => !item.completed);
+                const completedCount = section.items.filter((item) => item.completed).length;
+
                 if (!showCompleted && sectionItems.length === 0) return null;
 
                 return (
-                  <Collapsible
-                    key={section.id}
-                    open={expandedSections.has(section.id)}
-                    onOpenChange={() => toggleSection(section.id)}
-                  >
+                  <Collapsible key={section.id} open={expandedSections.has(section.id)} onOpenChange={() => toggleSection(section.id)}>
                     <CollapsibleTrigger asChild>
                       <Button variant="ghost" className="w-full justify-between p-4 h-auto">
                         <div className="flex items-center gap-3 text-left">
@@ -378,11 +365,7 @@ export default function HelpPage() {
                           <Badge variant="outline">
                             {completedCount}/{section.items.length}
                           </Badge>
-                          {expandedSections.has(section.id) ? (
-                            <ChevronDown className="h-4 w-4" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4" />
-                          )}
+                          {expandedSections.has(section.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                         </div>
                       </Button>
                     </CollapsibleTrigger>
@@ -391,10 +374,7 @@ export default function HelpPage() {
                         {sectionItems.map((item) => (
                           <div
                             key={item.id}
-                            className={cn(
-                              "flex items-start gap-3 p-3 rounded-md border",
-                              item.completed ? "bg-green-50 border-green-200" : "bg-white"
-                            )}
+                            className={cn('flex items-start gap-3 p-3 rounded-md border', item.completed ? 'bg-green-50 border-green-200' : 'bg-white')}
                           >
                             <div className="mt-0.5">
                               {item.completed ? (
@@ -414,9 +394,7 @@ export default function HelpPage() {
                                   {item.estimatedTime}
                                 </div>
                               </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {item.description}
-                              </p>
+                              <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
                             </div>
                           </div>
                         ))}
@@ -441,23 +419,29 @@ export default function HelpPage() {
                 <Lightbulb className="h-4 w-4 text-blue-600 mt-0.5" />
                 <div>
                   <h4 className="font-medium text-sm text-blue-900">Start with learning outcomes</h4>
-                  <p className="text-sm text-blue-700">Define what students will achieve before creating content. This helps focus your course and attracts the right audience.</p>
+                  <p className="text-sm text-blue-700">
+                    Define what students will achieve before creating content. This helps focus your course and attracts the right audience.
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-3 p-3 bg-green-50 rounded-md">
                 <Users className="h-4 w-4 text-green-600 mt-0.5" />
                 <div>
                   <h4 className="font-medium text-sm text-green-900">Know your audience</h4>
-                  <p className="text-sm text-green-700">Understanding your target students helps you create relevant content and choose appropriate difficulty levels.</p>
+                  <p className="text-sm text-green-700">
+                    Understanding your target students helps you create relevant content and choose appropriate difficulty levels.
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-md">
                 <TrendingUp className="h-4 w-4 text-purple-600 mt-0.5" />
                 <div>
                   <h4 className="font-medium text-sm text-purple-900">Optimize for discovery</h4>
-                  <p className="text-sm text-purple-700">Use clear titles, detailed descriptions, and relevant tags to help students find your course through search.</p>
+                  <p className="text-sm text-purple-700">
+                    Use clear titles, detailed descriptions, and relevant tags to help students find your course through search.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -481,28 +465,28 @@ export default function HelpPage() {
                   Course Details
                 </a>
               </Button>
-              
+
               <Button variant="ghost" className="w-full justify-start" asChild>
                 <a href="../certificates">
                   <Award className="h-4 w-4 mr-2" />
                   Certificates & Skills
                 </a>
               </Button>
-              
+
               <Button variant="ghost" className="w-full justify-start" asChild>
                 <a href="../seo">
                   <Search className="h-4 w-4 mr-2" />
                   SEO & Metadata
                 </a>
               </Button>
-              
+
               <Button variant="ghost" className="w-full justify-start" asChild>
                 <a href="../publish">
                   <Play className="h-4 w-4 mr-2" />
                   Preview & Publish
                 </a>
               </Button>
-              
+
               <Button variant="ghost" className="w-full justify-start" asChild>
                 <a href="../pricing">
                   <DollarSign className="h-4 w-4 mr-2" />
@@ -528,7 +512,7 @@ export default function HelpPage() {
                   <ExternalLink className="h-3 w-3 ml-auto" />
                 </a>
               </Button>
-              
+
               <Button variant="outline" className="w-full justify-start" asChild>
                 <a href="/docs/video-tutorials" target="_blank" rel="noopener noreferrer">
                   <Video className="h-4 w-4 mr-2" />
@@ -536,7 +520,7 @@ export default function HelpPage() {
                   <ExternalLink className="h-3 w-3 ml-auto" />
                 </a>
               </Button>
-              
+
               <Button variant="outline" className="w-full justify-start" asChild>
                 <a href="/support" target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="h-4 w-4 mr-2" />
@@ -544,9 +528,9 @@ export default function HelpPage() {
                   <ExternalLink className="h-3 w-3 ml-auto" />
                 </a>
               </Button>
-              
+
               <Separator />
-              
+
               <Button variant="outline" className="w-full justify-start" asChild>
                 <a href="/community" target="_blank" rel="noopener noreferrer">
                   <Users className="h-4 w-4 mr-2" />
@@ -567,17 +551,17 @@ export default function HelpPage() {
                 <h4 className="font-medium mb-1">Course Title</h4>
                 <p className="text-muted-foreground">Keep it under 60 characters and include key benefits or outcomes.</p>
               </div>
-              
+
               <div>
                 <h4 className="font-medium mb-1">Description</h4>
                 <p className="text-muted-foreground">Use bullet points to highlight key learning outcomes and course benefits.</p>
               </div>
-              
+
               <div>
                 <h4 className="font-medium mb-1">Pricing</h4>
                 <p className="text-muted-foreground">Research competitor pricing and consider your target audience's budget.</p>
               </div>
-              
+
               <div>
                 <h4 className="font-medium mb-1">Preview Video</h4>
                 <p className="text-muted-foreground">Keep it under 2 minutes and show course content, not just talking heads.</p>

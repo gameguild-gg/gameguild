@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $insertNodes } from 'lexical';
 import { INSERT_SPOTIFY_COMMAND } from './floating-content-insert-plugin';
-import { $createSpotifyNode } from '../nodes/spotify-node';
 import type { SpotifyData } from '../nodes/spotify-node';
+import { $createSpotifyNode } from '../nodes/spotify-node';
 
 export function SpotifyPlugin() {
   const [editor] = useLexicalComposerContext();
