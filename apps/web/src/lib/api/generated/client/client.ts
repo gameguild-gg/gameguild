@@ -1,5 +1,13 @@
 import type { Client, Config, RequestOptions } from './types.js';
-import { buildUrl, createConfig, createInterceptors, getParseAs, mergeConfigs, mergeHeaders, setAuthParams } from './utils.js';
+import {
+  buildUrl,
+  createConfig,
+  createInterceptors,
+  getParseAs,
+  mergeConfigs,
+  mergeHeaders,
+  setAuthParams,
+} from './utils.js';
 
 type ReqInit = Omit<RequestInit, 'body' | 'headers'> & {
   body?: any;
@@ -73,14 +81,20 @@ export const createClient = (config: Config = {}): Client => {
     };
 
     if (response.ok) {
-      if (response.status === 204 || response.headers.get('Content-Length') === '0') {
+      if (
+        response.status === 204 ||
+        response.headers.get('Content-Length') === '0'
+      ) {
         return {
           data: {},
           ...result,
         };
       }
 
-      const parseAs = (opts.parseAs === 'auto' ? getParseAs(response.headers.get('Content-Type')) : opts.parseAs) ?? 'json';
+      const parseAs =
+        (opts.parseAs === 'auto'
+          ? getParseAs(response.headers.get('Content-Type'))
+          : opts.parseAs) ?? 'json';
 
       let data: any;
       switch (parseAs) {
