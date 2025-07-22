@@ -2,7 +2,7 @@
 
 import { useCallback, useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createTenant, deleteTenant, updateTenant, revalidateTenantsData } from '@/lib/tenants/tenants.actions';
+import { createTenantClient, deleteTenantClient, updateTenantClient } from '@/lib/tenants/tenants.client-actions';
 import { TenantResponse } from '@/lib/tenants/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,13 +31,12 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Server action states
-  const [createState, createFormAction, isCreatingTenant] = useActionState(createTenant, { success: false });
-  const [updateState, updateFormAction, isUpdatingTenant] = useActionState(updateTenant.bind(null, editingTenant?.id || ''), { success: false });
+  const [createState, createFormAction, isCreatingTenant] = useActionState(createTenantClient, { success: false });
+  const [updateState, updateFormAction, isUpdatingTenant] = useActionState(updateTenantClient.bind(null, editingTenant?.id || ''), { success: false });
 
   const refreshData = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await revalidateTenantsData();
       router.refresh();
     } finally {
       setIsRefreshing(false);
@@ -60,7 +59,7 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
   }, [updateState.success, refreshData]);
 
   const handleDelete = async (tenantId: string) => {
-    const result = await deleteTenant(tenantId);
+    const result = await deleteTenantClient(tenantId);
     if (result.success) {
       setTenantToDelete(null);
       setIsDeleteDialogOpen(false);
