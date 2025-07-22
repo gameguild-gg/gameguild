@@ -34,7 +34,6 @@ import {
   Users,
   XCircle,
 } from 'lucide-react';
-import { testingLabApi } from '@/lib/api/testing-lab/testing-lab-api';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface TestingSession {
@@ -100,12 +99,16 @@ interface UserRole {
   isAdmin: boolean;
 }
 
-export function EnhancedTestingSessionsList() {
+interface EnhancedTestingSessionsListProps {
+  initialSessions?: TestingSession[];
+}
+
+export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTestingSessionsListProps) {
   const { data: session } = useSession();
-  const [sessions, setSessions] = useState<TestingSession[]>([]);
+  const [sessions, setSessions] = useState<TestingSession[]>(initialSessions);
   const [selectedSession, setSelectedSession] = useState<TestingSession | null>(null);
   const [registrations, setRegistrations] = useState<SessionRegistration[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -135,155 +138,14 @@ export function EnhancedTestingSessionsList() {
     }
   }, [session]);
 
+  // Set initial sessions when props change
   useEffect(() => {
-    fetchSessions();
-  }, []);
+    setSessions(initialSessions);
+  }, [initialSessions]);
 
-  const fetchSessions = async () => {
-    try {
-      setLoading(true);
-      // Load sessions from API
-      const data = await testingLabApi.getTestingSessions();
-      setSessions(
-        data.map((session) => ({
-          id: session.id,
-          sessionName: session.sessionName,
-          sessionDate: session.sessionDate,
-          startTime: session.startTime,
-          endTime: session.endTime,
-          location: session.location,
-          maxTesters: session.maxTesters,
-          registeredTesterCount: session.registeredTesterCount,
-          registeredProjectMemberCount: 0,
-          registeredProjectCount: 0,
-          status: session.status,
-          manager: {
-            id: 'manager-id',
-            name: 'Session Manager',
-            email: 'manager@champlain.edu',
-          },
-          testingRequests: [],
-          description: 'Testing session for game projects',
-          attendanceRate: Math.floor(Math.random() * 30) + 70, // Mock data
-          averageRating: Math.floor(Math.random() * 2) + 3, // Mock data
-          feedbackCount: Math.floor(Math.random() * 20) + 5, // Mock data
-        })),
-      );
-    } catch (error) {
-      console.error('Error fetching sessions:', error);
-      // Enhanced mock data with more realistic information
-      setSessions([
-        {
-          id: '1',
-          sessionName: 'Block 3 Final Testing Session',
-          sessionDate: '2024-12-18',
-          startTime: '14:00',
-          endTime: '16:00',
-          location: {
-            id: 'room-a204',
-            name: 'Room A-204',
-            capacity: 40,
-          },
-          maxTesters: 40,
-          registeredTesterCount: 28,
-          registeredProjectMemberCount: 12,
-          registeredProjectCount: 8,
-          status: 'scheduled',
-          manager: {
-            id: 'prof1',
-            name: 'Dr. Smith',
-            email: 'smith@champlain.edu',
-          },
-          testingRequests: [
-            {
-              id: 'req1',
-              title: 'Space Adventure v1.2',
-              projectVersion: {
-                versionNumber: '1.2.0',
-                project: { title: 'Space Adventure' },
-              },
-            },
-            {
-              id: 'req2',
-              title: 'Puzzle Quest v2.1',
-              projectVersion: {
-                versionNumber: '2.1.0',
-                project: { title: 'Puzzle Quest' },
-              },
-            },
-          ],
-          description: 'Final testing session for Block 3 capstone projects. Please arrive 10 minutes early for setup.',
-          attendanceRate: 85,
-          averageRating: 4.2,
-          feedbackCount: 24,
-        },
-        {
-          id: '2',
-          sessionName: 'Midterm Game Testing',
-          sessionDate: '2024-12-20',
-          startTime: '10:00',
-          endTime: '12:00',
-          location: {
-            id: 'room-b105',
-            name: 'Room B-105',
-            capacity: 32,
-          },
-          maxTesters: 32,
-          registeredTesterCount: 18,
-          registeredProjectMemberCount: 8,
-          registeredProjectCount: 5,
-          status: 'scheduled',
-          manager: {
-            id: 'prof2',
-            name: 'Prof. Johnson',
-            email: 'johnson@champlain.edu',
-          },
-          testingRequests: [
-            {
-              id: 'req3',
-              title: 'Racing Champions v0.8',
-              projectVersion: {
-                versionNumber: '0.8.0',
-                project: { title: 'Racing Champions' },
-              },
-            },
-          ],
-          description: 'Midterm testing for game development projects.',
-          attendanceRate: 92,
-          averageRating: 4.5,
-          feedbackCount: 16,
-        },
-        {
-          id: '3',
-          sessionName: 'Playtesting Lab - Week 12',
-          sessionDate: '2024-12-15',
-          startTime: '16:00',
-          endTime: '18:00',
-          location: {
-            id: 'room-online',
-            name: 'Online Session',
-            capacity: 50,
-          },
-          maxTesters: 50,
-          registeredTesterCount: 35,
-          registeredProjectMemberCount: 15,
-          registeredProjectCount: 10,
-          status: 'completed',
-          manager: {
-            id: 'prof3',
-            name: 'Dr. Williams',
-            email: 'williams@champlain.edu',
-          },
-          testingRequests: [],
-          description: 'Weekly playtesting session for ongoing projects.',
-          attendanceRate: 78,
-          averageRating: 4.0,
-          feedbackCount: 32,
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+  const refreshSessions = () => {
+    // For server-side data, we'll need to refresh the page or use a different approach
+    window.location.reload();
   };
 
   const fetchSessionRegistrations = async () => {
@@ -464,11 +326,11 @@ export function EnhancedTestingSessionsList() {
                       Schedule Session
                     </Button>
                   </DialogTrigger>
-                  <CreateSessionDialog onClose={() => setShowCreateDialog(false)} onSave={fetchSessions} />
+                  <CreateSessionDialog onClose={() => setShowCreateDialog(false)} onSave={refreshSessions} />
                 </Dialog>
               )}
 
-              <Button variant="outline" onClick={() => fetchSessions()} className="border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
+              <Button variant="outline" onClick={() => refreshSessions()} className="border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>

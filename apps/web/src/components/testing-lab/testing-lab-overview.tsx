@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart3, Calendar, CheckCircle, Clock, Download, MessageSquare, Plus, TestTube, Upload, Users } from 'lucide-react';
 import Link from 'next/link';
-import { testingLabApi } from '@/lib/api/testing-lab/testing-lab-api';
+import { getTestingRequestsData, getTestingSessionsData } from '@/lib/testing-lab/testing-lab.actions';
+import type { TestingRequest, TestingSession } from '@/lib/api/generated/types.gen';
 
 interface TestingLabStats {
   totalRequests: number;
@@ -70,45 +71,47 @@ export function TestingLabOverview() {
     const loadStats = async () => {
       setLoading(true);
       try {
-        const accessToken = session?.accessToken as string;
-        
-        // Check if we have an access token before making authenticated requests
-        if (!accessToken) {
-          console.warn('No access token available - skipping API calls');
-          setLoading(false);
-          return;
-        }
-        
         if (userRole.isStudent) {
-          // Load actual data from API for students
-          const [myRequests, availableRequests, sessions] = await Promise.all([
-            testingLabApi.getMyTestingRequests(accessToken),
-            testingLabApi.getAvailableTestingRequests(accessToken),
-            testingLabApi.getTestingSessions(accessToken),
+          // Load actual data from API for students using server actions
+          const [requestsResult, sessionsResult] = await Promise.all([
+            getTestingRequestsData({ take: 100 }),
+            getTestingSessionsData({ take: 100 }),
           ]);
 
+          const requests = requestsResult.testingRequests;
+          const sessions = sessionsResult.testingSessions;
+
           setStats({
-            totalRequests: availableRequests.length,
-            activeRequests: availableRequests.filter((r) => r.status === 'open').length,
+            totalRequests: requests.length,
+            activeRequests: requests.filter((r) => r.status === 1).length, // 1 = open status
             totalSessions: sessions.length,
-            upcomingSessions: sessions.filter((s) => new Date(s.sessionDate) > new Date() && s.status === 'scheduled').length,
+            upcomingSessions: sessions.filter((s) => 
+              s.sessionDate && new Date(s.sessionDate) > new Date()
+            ).length,
             totalFeedback: 0, // Will be implemented when feedback API is available
             pendingFeedback: 0, // Will be implemented when feedback API is available
-            mySubmissions: myRequests.length,
-            myTestingAssignments: availableRequests.filter((r) => r.status === 'open').length,
+            mySubmissions: 0, // TODO: filter by current user when user data is available
+            myTestingAssignments: requests.filter((r) => r.status === 1).length,
           });
         } else if (userRole.isProfessor) {
-          // Load actual data from API for professors/admins
-          const sessions = await testingLabApi.getTestingSessions(accessToken);
+          // Load actual data from API for professors/admins using server actions
+          const [requestsResult, sessionsResult] = await Promise.all([
+            getTestingRequestsData({ take: 100 }),
+            getTestingSessionsData({ take: 100 }),
+          ]);
 
-          // Mock some additional data that would come from other endpoints
+          const requests = requestsResult.testingRequests;
+          const sessions = sessionsResult.testingSessions;
+
           setStats({
-            totalRequests: 120,
-            activeRequests: 45,
+            totalRequests: requests.length,
+            activeRequests: requests.filter((r) => r.status === 1).length, // 1 = open status
             totalSessions: sessions.length,
-            upcomingSessions: sessions.filter((s) => new Date(s.sessionDate) > new Date() && s.status === 'scheduled').length,
-            totalFeedback: 89,
-            pendingFeedback: 12,
+            upcomingSessions: sessions.filter((s) => 
+              s.sessionDate && new Date(s.sessionDate) > new Date()
+            ).length,
+            totalFeedback: 0, // Will be implemented when feedback API is available
+            pendingFeedback: 0, // Will be implemented when feedback API is available
             mySubmissions: 0,
             myTestingAssignments: 0,
           });
@@ -327,7 +330,7 @@ export function TestingLabOverview() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="flex flex-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
           <p className="text-slate-400">Loading testing lab data...</p>
