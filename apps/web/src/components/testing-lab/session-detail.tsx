@@ -3,6 +3,7 @@
 import { TestSession } from '@/lib/api/testing-lab/test-sessions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import {
   Sidebar,
@@ -18,6 +19,7 @@ import {
   SidebarGroupLabel,
   SidebarInset,
 } from '@/components/ui/sidebar';
+import { JoinProcess } from '@/components/testing-lab/join-process';
 import { ArrowLeft, Calendar, Clock, GamepadIcon, Monitor, Target, Trophy, Users, Zap, Star, Play, Info, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
@@ -31,6 +33,7 @@ interface SessionDetailProps {
 export function SessionDetail({ session, selectedGameId }: SessionDetailProps) {
   const [showGameDetails, setShowGameDetails] = useState(false);
   const [showRequirements, setShowRequirements] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
   const sessionDate = new Date(session.sessionDate);
   const spotsLeft = session.maxTesters - session.currentTesters;
   const fillPercentage = (session.currentTesters / session.maxTesters) * 100;
@@ -181,14 +184,12 @@ export function SessionDetail({ session, selectedGameId }: SessionDetailProps) {
           <SidebarFooter className="border-t border-slate-700/50">
             <div className="space-y-3 p-2">
               <Button
-                asChild
+                onClick={() => setShowJoinModal(true)}
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 h-11 group-data-[collapsible=icon]:px-2"
                 disabled={session.status !== 'open'}
               >
-                <Link href={`/testing-lab/sessions/${session.slug}/join`}>
-                  <Zap className="mr-2 h-4 w-4 group-data-[collapsible=icon]:mr-0" />
-                  <span className="group-data-[collapsible=icon]:hidden">{session.status === 'open' ? 'Join Session' : 'Session Full'}</span>
-                </Link>
+                <Zap className="mr-2 h-4 w-4 group-data-[collapsible=icon]:mr-0" />
+                <span className="group-data-[collapsible=icon]:hidden">{session.status === 'open' ? 'Join Session' : 'Session Full'}</span>
               </Button>
             </div>
           </SidebarFooter>
@@ -493,6 +494,18 @@ export function SessionDetail({ session, selectedGameId }: SessionDetailProps) {
             </div>
           </SheetContent>
         </Sheet>
+
+        {/* Join Session Modal */}
+        <Dialog open={showJoinModal} onOpenChange={setShowJoinModal}>
+          <DialogContent className="max-w-5xl h-[85vh] bg-transparent border-0 overflow-hidden p-0 shadow-2xl">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Join Testing Session</DialogTitle>
+            </DialogHeader>
+            <div className="h-full overflow-y-auto rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+              <JoinProcess sessionSlug={session.slug} />
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </SidebarProvider>
   );
