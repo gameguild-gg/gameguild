@@ -420,11 +420,19 @@ export async function bulkUpdateUsers(
   updates: Partial<UpdateUserRequest>,
 ): Promise<{ success: boolean; error?: string; updatedCount?: number }> {
   try {
+    // Get authenticated session
+    const session = await auth();
+    
+    if (!session?.accessToken) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
     const response = await fetch(`${apiUrl}/users/bulk`, {
       method: 'PUT',
       headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -527,6 +535,13 @@ export async function bulkActivateUsers(
   result?: any;
 }> {
   try {
+    // Get authenticated session
+    const session = await auth();
+    
+    if (!session?.accessToken) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
     const params = new URLSearchParams();
     if (reason) params.append('reason', reason);
@@ -534,6 +549,7 @@ export async function bulkActivateUsers(
     const response = await fetch(`${apiUrl}/api/users/bulk/activate?${params}`, {
       method: 'PATCH',
       headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(userIds),
@@ -571,6 +587,13 @@ export async function bulkDeactivateUsers(
   result?: any;
 }> {
   try {
+    // Get authenticated session
+    const session = await auth();
+    
+    if (!session?.accessToken) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
     const params = new URLSearchParams();
     if (reason) params.append('reason', reason);
@@ -578,6 +601,7 @@ export async function bulkDeactivateUsers(
     const response = await fetch(`${apiUrl}/api/users/bulk/deactivate?${params}`, {
       method: 'PATCH',
       headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(userIds),
