@@ -1,4 +1,4 @@
-import { revalidateTag, unstable_cache } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { auth } from '@/auth';
 import { PagedResult, UpdateUserRequest, User } from '@/components/legacy/types/user';
 
@@ -43,58 +43,35 @@ const CACHE_TAGS = {
 const REVALIDATION_TIME = 300; // 5 minutes
 
 /**
- * Get users data with caching
+ * Get users data with authentication
  */
-const getCachedUsersData = unstable_cache(
-  async (page: number = 1, limit: number = 20, search?: string): Promise<UserData> => {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-      const skip = (page - 1) * limit;
+export async function getUsersData(page: number = 1, limit: number = 20, search?: string): Promise<UserData> {
+  try {
+    // Get authenticated session
+    const session = await auth();
+    
+    if (!session?.accessToken) {
+      return {
+        users: [],
+        pagination: { page, limit, total: 0, totalPages: 0 },
+      };
+    }
 
-      if (search) {
-        // Use search endpoint for text search
-        const params = new URLSearchParams({
-          searchTerm: search,
-          skip: skip.toString(),
-          take: limit.toString(),
-          includeDeleted: 'false',
-        });
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const skip = (page - 1) * limit;
 
-        const response = await fetch(`${apiUrl}/api/users/search?${params}`, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          next: {
-            revalidate: REVALIDATION_TIME,
-            tags: [CACHE_TAGS.USERS],
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to search users: ${response.status} ${response.statusText}`);
-        }
-
-        const data: PagedResult<User> = await response.json();
-        return {
-          users: data.items,
-          pagination: {
-            page,
-            limit,
-            total: data.totalCount,
-            totalPages: Math.ceil(data.totalCount / limit),
-          },
-        };
-      }
-
-      // Use regular users endpoint
+    if (search) {
+      // Use search endpoint for text search
       const params = new URLSearchParams({
+        searchTerm: search,
         skip: skip.toString(),
         take: limit.toString(),
         includeDeleted: 'false',
       });
 
-      const response = await fetch(`${apiUrl}/api/users?${params}`, {
+      const response = await fetch(`${apiUrl}/api/users/search?${params}`, {
         headers: {
+          'Authorization': `Bearer ${session.accessToken}`,
           'Content-Type': 'application/json',
         },
         next: {
@@ -104,57 +81,86 @@ const getCachedUsersData = unstable_cache(
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to search users: ${response.status} ${response.statusText}`);
       }
 
-      const users: User[] = await response.json();
-
+      const data: PagedResult<User> = await response.json();
       return {
-        users,
+        users: data.items,
         pagination: {
           page,
           limit,
-          total: users.length, // Note: This is the current page count, not total
-          totalPages: Math.ceil(users.length / limit),
+          total: data.totalCount,
+          totalPages: Math.ceil(data.totalCount / limit),
         },
       };
-    } catch (error) {
-      console.error('Error fetching users:', error);
-
-      // Return empty data for network errors
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        return {
-          users: [],
-          pagination: { page, limit, total: 0, totalPages: 0 },
-        };
-      }
-
-      throw new Error(error instanceof Error ? error.message : 'Failed to fetch users');
     }
-  },
-  ['users-data'],
-  {
-    revalidate: REVALIDATION_TIME,
-    tags: [CACHE_TAGS.USERS],
-  },
-);
 
-/**
- * Get paginated users data
- */
-export async function getUsersData(page: number = 1, limit: number = 20, search?: string): Promise<UserData> {
-  return getCachedUsersData(page, limit, search);
+    // Use regular users endpoint
+    const params = new URLSearchParams({
+      skip: skip.toString(),
+      take: limit.toString(),
+      includeDeleted: 'false',
+    });
+
+    const response = await fetch(`${apiUrl}/api/users?${params}`, {
+      headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      next: {
+        revalidate: REVALIDATION_TIME,
+        tags: [CACHE_TAGS.USERS],
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
+    }
+
+    const users: User[] = await response.json();
+
+    return {
+      users,
+      pagination: {
+        page,
+        limit,
+        total: users.length, // Note: This is the current page count, not total
+        totalPages: Math.ceil(users.length / limit),
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching users:', error);
+
+    // Return empty data for network errors
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      return {
+        users: [],
+        pagination: { page, limit, total: 0, totalPages: 0 },
+      };
+    }
+
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch users');
+  }
 }
 
 /**
- * Get user by ID with caching
+ * Get user by ID with authentication
  */
 export async function getUserById(id: string): Promise<User | null> {
   try {
+    // Get authenticated session
+    const session = await auth();
+    
+    if (!session?.accessToken) {
+      return null;
+    }
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
-    const response = await fetch(`${apiUrl}/users/${id}`, {
+    const response = await fetch(`${apiUrl}/api/users/${id}`, {
       headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       next: {
@@ -187,6 +193,13 @@ export async function getUserById(id: string): Promise<User | null> {
  */
 export async function createUser(prevState: ActionState, formData: FormData): Promise<UserActionState> {
   try {
+    // Get authenticated session
+    const session = await auth();
+    
+    if (!session?.accessToken) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const isActive = formData.get('isActive') === 'true';
@@ -205,6 +218,7 @@ export async function createUser(prevState: ActionState, formData: FormData): Pr
     const response = await fetch(`${apiUrl}/api/users`, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -240,6 +254,13 @@ export async function createUser(prevState: ActionState, formData: FormData): Pr
  */
 export async function updateUser(id: string, prevState: ActionState, formData: FormData): Promise<UserActionState> {
   try {
+    // Get authenticated session
+    const session = await auth();
+    
+    if (!session?.accessToken) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const isActive = formData.get('isActive') === 'true';
@@ -258,6 +279,7 @@ export async function updateUser(id: string, prevState: ActionState, formData: F
     const response = await fetch(`${apiUrl}/api/users/${id}`, {
       method: 'PUT',
       headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -293,10 +315,21 @@ export async function updateUser(id: string, prevState: ActionState, formData: F
  */
 export async function deleteUser(id: string): Promise<{ success: boolean; error?: string }> {
   try {
+    // Get authenticated session
+    const session = await auth();
+    
+    if (!session?.accessToken) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
     const response = await fetch(`${apiUrl}/api/users/${id}?softDelete=true`, {
       method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {
@@ -330,11 +363,19 @@ export async function toggleUserStatus(
   user?: User;
 }> {
   try {
+    // Get authenticated session
+    const session = await auth();
+    
+    if (!session?.accessToken) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
     const response = await fetch(`${apiUrl}/api/users/${id}`, {
       method: 'PUT',
       headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -418,11 +459,20 @@ export async function bulkUpdateUsers(
  */
 export async function searchUsers(query: string, limit: number = 10): Promise<User[]> {
   try {
+    // Get authenticated session
+    const session = await auth();
+    
+    if (!session?.accessToken) {
+      console.warn('Authentication required for user search');
+      return [];
+    }
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
     // Use the UserProfiles endpoint with searchTerm parameter
     const response = await fetch(`${apiUrl}/api/userprofiles?searchTerm=${encodeURIComponent(query)}&take=${limit}&includeDeleted=false`, {
       headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       next: {
