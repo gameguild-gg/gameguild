@@ -13,42 +13,26 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { getUserTenants } from '@/lib/tenants/tenants.actions';
 import { TenantResponse } from '@/lib/tenants/types';
 
-export function TenantSwitcher() {
+interface TenantSwitcherProps {
+  initialTenants?: TenantResponse[];
+}
+
+export function TenantSwitcher({ initialTenants = [] }: TenantSwitcherProps) {
   const { data: session } = useSession();
   const { isMobile } = useSidebar();
-  const [tenants, setTenants] = React.useState<TenantResponse[]>([]);
+  const [tenants] = React.useState<TenantResponse[]>(initialTenants);
   const [activeTenant, setActiveTenant] = React.useState<TenantResponse | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading] = React.useState(false);
 
-  // Load user's tenants
+  // Set the active tenant based on session and available tenants
   React.useEffect(() => {
-    const loadTenants = async () => {
-      if (!session?.accessToken) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const userTenants = await getUserTenants();
-        setTenants(userTenants);
-
-        // Set the first tenant as active, or the current tenant from session
-        if (userTenants.length > 0) {
-          const currentTenant = session.tenantId ? userTenants.find((t) => t.id === session.tenantId) || userTenants[0] : userTenants[0];
-          setActiveTenant(currentTenant);
-        }
-      } catch (error) {
-        console.error('Failed to load tenants:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadTenants();
-  }, [session]);
+    if (tenants.length > 0) {
+      const currentTenant = session?.tenantId ? tenants.find((t: TenantResponse) => t.id === session.tenantId) || tenants[0] : tenants[0];
+      setActiveTenant(currentTenant);
+    }
+  }, [session?.tenantId, tenants]);
 
   // Show loading state
   if (isLoading) {
