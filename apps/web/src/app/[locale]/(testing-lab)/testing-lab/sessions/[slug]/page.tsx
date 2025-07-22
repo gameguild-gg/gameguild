@@ -3,13 +3,14 @@ import { getTestSessionBySlug } from '@/lib/api/testing-lab/test-sessions';
 import { SessionDetail } from '@/components/testing-lab/session-detail';
 
 interface SessionPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function SessionPage({ params }: SessionPageProps) {
-  const session = await getTestSessionBySlug(params.slug);
+  const { slug } = await params;
+  const session = await getTestSessionBySlug(slug);
 
   if (!session) {
     notFound();

@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/sidebar';
 import { ArrowLeft, Calendar, Clock, GamepadIcon, Monitor, Target, Trophy, Users, Zap, Star, Info, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
-import Link from 'next/link';
+import { Link, useRouter } from '@/i18n/navigation';
 import { useState, useEffect, useCallback } from 'react';
 import Autoplay from 'embla-carousel-autoplay';
 import { JoinProcess } from './join-process';
@@ -32,6 +32,7 @@ interface SessionDetailProps {
 }
 
 export function SessionDetail({ session }: SessionDetailProps) {
+  const [mounted, setMounted] = useState(false);
   const [showGameDetails, setShowGameDetails] = useState(false);
   const [showRequirements, setShowRequirements] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -132,6 +133,11 @@ export function SessionDetail({ session }: SessionDetailProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showGameDetails, showRequirements, prevGame, nextGame]);
 
+  // Ensure component is mounted before rendering Sidebar
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const getSessionTypeIcon = (type: string) => {
     switch (type) {
       case 'gameplay':
@@ -157,6 +163,15 @@ export function SessionDetail({ session }: SessionDetailProps) {
         return 'bg-slate-900/20 text-slate-400 border-slate-700';
     }
   };
+
+  // Show loading state until component is mounted to prevent hydration issues
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950/30 to-purple-950/40 flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider defaultOpen={true}>
