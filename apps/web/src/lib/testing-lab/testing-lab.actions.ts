@@ -14,6 +14,22 @@ import {
   getTestingSessionsById,
   putTestingSessionsById,
   deleteTestingSessionsById,
+  getTestingRequestsByProjectVersionByProjectVersionId,
+  getTestingRequestsByCreatorByCreatorId,
+  getTestingRequestsByStatusByStatus,
+  getTestingRequestsSearch,
+  getTestingSessionsByRequestByTestingRequestId,
+  getTestingSessionsByLocationByLocationId,
+  getTestingSessionsByStatusByStatus,
+  getTestingSessionsByManagerByManagerId,
+  getTestingSessionsSearch,
+  getTestingRequestsByRequestIdParticipants,
+  postTestingRequestsByRequestIdParticipantsByUserId,
+  deleteTestingRequestsByRequestIdParticipantsByUserId,
+  getTestingRequestsByRequestIdParticipantsByUserIdCheck,
+  getTestingRequestsByRequestIdFeedback,
+  postTestingRequestsByRequestIdFeedback,
+  getTestingRequestsByRequestIdStatistics,
 } from '@/lib/api/generated/sdk.gen';
 import type {
   TestingRequest,
@@ -384,5 +400,362 @@ export async function deleteTestingSession(id: string) {
   } catch (error) {
     console.error('Error deleting testing session:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to delete testing session');
+  }
+}
+
+// Get testing requests by project version
+export async function getTestingRequestsByProjectVersion(projectVersionId: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    const response = await getTestingRequestsByProjectVersionByProjectVersionId({
+      baseUrl: environment.apiBaseUrl,
+      path: { projectVersionId },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to fetch testing requests');
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching testing requests by project version:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch testing requests');
+  }
+}
+
+// Get testing requests by creator
+export async function getTestingRequestsByCreator(creatorId: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    const response = await getTestingRequestsByCreatorByCreatorId({
+      baseUrl: environment.apiBaseUrl,
+      path: { creatorId },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to fetch testing requests');
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching testing requests by creator:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch testing requests');
+  }
+}
+
+// Get testing requests by status
+export async function getTestingRequestsByStatus(status: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    const response = await getTestingRequestsByStatusByStatus({
+      baseUrl: environment.apiBaseUrl,
+      path: { status },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to fetch testing requests');
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching testing requests by status:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch testing requests');
+  }
+}
+
+// Search testing requests
+export async function searchTestingRequests(searchTerm: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    const response = await getTestingRequestsSearch({
+      baseUrl: environment.apiBaseUrl,
+      query: { q: searchTerm },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to search testing requests');
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Error searching testing requests:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to search testing requests');
+  }
+}
+
+// Get testing sessions by request
+export async function getTestingSessionsByRequest(testingRequestId: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    const response = await getTestingSessionsByRequestByTestingRequestId({
+      baseUrl: environment.apiBaseUrl,
+      path: { testingRequestId },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to fetch testing sessions');
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching testing sessions by request:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch testing sessions');
+  }
+}
+
+// Get participants for a testing request
+export async function getTestingRequestParticipants(requestId: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    const response = await getTestingRequestsByRequestIdParticipants({
+      baseUrl: environment.apiBaseUrl,
+      path: { requestId },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to fetch participants');
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching testing request participants:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch participants');
+  }
+}
+
+// Join a testing request
+export async function joinTestingRequest(requestId: string, userId: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    const response = await postTestingRequestsByRequestIdParticipantsByUserId({
+      baseUrl: environment.apiBaseUrl,
+      path: { requestId, userId },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to join testing request');
+    }
+
+    // Revalidate cache
+    revalidateTag('testing-requests');
+
+    return response.data;
+  } catch (error) {
+    console.error('Error joining testing request:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to join testing request');
+  }
+}
+
+// Leave a testing request
+export async function leaveTestingRequest(requestId: string, userId: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    await deleteTestingRequestsByRequestIdParticipantsByUserId({
+      baseUrl: environment.apiBaseUrl,
+      path: { requestId, userId },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    });
+
+    // Revalidate cache
+    revalidateTag('testing-requests');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error leaving testing request:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to leave testing request');
+  }
+}
+
+// Check if user has joined a testing request
+export async function checkTestingRequestParticipation(requestId: string, userId: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    const response = await getTestingRequestsByRequestIdParticipantsByUserIdCheck({
+      baseUrl: environment.apiBaseUrl,
+      path: { requestId, userId },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return response.data || false;
+  } catch (error) {
+    console.error('Error checking testing request participation:', error);
+    return false;
+  }
+}
+
+// Get feedback for a testing request
+export async function getTestingRequestFeedback(requestId: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    const response = await getTestingRequestsByRequestIdFeedback({
+      baseUrl: environment.apiBaseUrl,
+      path: { requestId },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to fetch feedback');
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching testing request feedback:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch feedback');
+  }
+}
+
+// Submit feedback for a testing request
+export async function submitTestingRequestFeedback(
+  requestId: string,
+  feedbackData: {
+    rating: number;
+    comments: string;
+    wouldRecommend: boolean;
+    sessionId?: string;
+  }
+) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    const response = await postTestingRequestsByRequestIdFeedback({
+      baseUrl: environment.apiBaseUrl,
+      path: { requestId },
+      body: feedbackData as any,
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to submit feedback');
+    }
+
+    // Revalidate cache
+    revalidateTag('testing-requests');
+
+    return response.data;
+  } catch (error) {
+    console.error('Error submitting testing request feedback:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to submit feedback');
+  }
+}
+
+// Get testing request statistics
+export async function getTestingRequestStatistics(requestId: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    const response = await getTestingRequestsByRequestIdStatistics({
+      baseUrl: environment.apiBaseUrl,
+      path: { requestId },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to fetch statistics');
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching testing request statistics:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch statistics');
   }
 }

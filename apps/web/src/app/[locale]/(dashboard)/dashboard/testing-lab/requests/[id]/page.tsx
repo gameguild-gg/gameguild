@@ -1,18 +1,59 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { AlertTriangle, CheckCircle, Clock, Download, FileText, Send } from 'lucide-react';
+import { auth } from '@/auth';
+import { notFound } from 'next/navigation';
+import { TestingRequestDetails } from '@/components/testing-lab/testing-request-details';
+import { getTestingRequestsById, getTestingRequestParticipants, getTestingRequestFeedback, getTestingRequestStatistics } from '@/lib/testing-lab/testing-lab.actions';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { SubmitFeedbackDto, testingLabApi, TestingRequest } from '@/lib/api/testing-lab/testing-lab-api';
+
+interface TestingRequestPageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default async function TestingRequestPage({ params }: TestingRequestPageProps) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    return (
+      <div className="container mx-auto p-6">
+        <Alert variant="destructive">
+          <AlertDescription>Authentication required to view testing request details</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  try {
+    const [request, participants, feedback, statistics] = await Promise.all([
+      getTestingRequestsById(params.id),
+      getTestingRequestParticipants(params.id).catch(() => []),
+      getTestingRequestFeedback(params.id).catch(() => []),
+      getTestingRequestStatistics(params.id).catch(() => null),
+    ]);
+
+    if (!request) {
+      notFound();
+    }
+
+    return (
+      <TestingRequestDetails
+        request={request}
+        participants={participants}
+        feedback={feedback}
+        statistics={statistics}
+      />
+    );
+  } catch (error) {
+    console.error('Error loading testing request:', error);
+    return (
+      <div className="container mx-auto p-6">
+        <Alert variant="destructive">
+          <AlertDescription>Failed to load testing request details</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+}
 
 interface FeedbackSubmission {
   userId: string;

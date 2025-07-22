@@ -5,8 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, Monitor, Star, Trophy, Users } from 'lucide-react';
 import { format } from 'date-fns';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 
 interface TestSessionCompactGridProps {
   sessions: TestSession[];

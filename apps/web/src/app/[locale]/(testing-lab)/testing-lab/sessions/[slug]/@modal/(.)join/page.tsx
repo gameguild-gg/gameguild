@@ -1,21 +1,40 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useRouter } from '@/i18n/navigation';
+import { useEffect, useCallback } from 'react';
 
 export default function JoinModal() {
   const router = useRouter();
 
+  const handleClose = useCallback(() => {
+    // Proper way to close intercept modal - go back to the session page
+    router.back();
+  }, [router]);
+
   useEffect(() => {
     console.log('JoinModal intercepting route component mounted!');
-  }, []);
+    
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose();
+      }
+    };
 
-  const handleClose = () => {
-    router.back();
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => document.removeEventListener('keydown', handleEscapeKey);
+  }, [handleClose]);
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+      onClick={handleBackdropClick}
+    >
       <div className="bg-slate-900 rounded-lg border border-slate-700 p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-white">Join Testing Session (Modal)</h2>

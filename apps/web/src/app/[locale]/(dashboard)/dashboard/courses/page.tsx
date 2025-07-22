@@ -1,5 +1,6 @@
-import { EnhancedCoursesList } from '@/components/courses/enhanced-courses-list';
+import { redirect } from 'next/navigation';
 
-export default function CoursesPage() {
-  return <EnhancedCoursesList />;
+export default async function CoursesPage(): Promise<void> {
+  // Redirect to programs page since courses and programs are the same
+  redirect('/dashboard/programs');
 }
