@@ -21,6 +21,19 @@ export interface TestSession {
     type: 'credits' | 'certificate' | 'game-key' | 'feedback';
     value: string;
   };
+  featuredGames?: FeaturedGame[]; // Additional games being tested in this session
+}
+
+export interface FeaturedGame {
+  id: string;
+  title: string;
+  developer: string;
+  description: string;
+  genre: string[];
+  platform: string[];
+  bannerImage?: string;
+  status: 'primary' | 'secondary' | 'bonus';
+  testingFocus: string[];
 }
 
 // Mock data for now - in production this would fetch from your API
@@ -50,8 +63,40 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
       isOnline: true,
       rewards: {
         type: 'credits',
-        value: '50 testing credits',
+        value: '500 Testing Credits',
       },
+      featuredGames: [
+        {
+          id: 'stellar-1',
+          title: 'Stellar Odyssey',
+          developer: 'Team Alpha Studios',
+          description: 'Epic space exploration RPG with stunning visuals and immersive gameplay mechanics.',
+          genre: ['RPG', 'Space', 'Adventure'],
+          platform: ['PC', 'Steam'],
+          status: 'primary',
+          testingFocus: ['Combat System', 'Space Navigation', 'UI/UX']
+        },
+        {
+          id: 'cosmic-2',
+          title: 'Cosmic Raiders',
+          developer: 'Nebula Interactive',
+          description: 'Fast-paced space combat with procedural generation and multiplayer battles.',
+          genre: ['Action', 'Shooter', 'Multiplayer'],
+          platform: ['PC', 'Steam'],
+          status: 'secondary',
+          testingFocus: ['Multiplayer Balance', 'Performance', 'Matchmaking']
+        },
+        {
+          id: 'void-3',
+          title: 'Void Miners',
+          developer: 'Deep Space Games',
+          description: 'Resource management and base building in the depths of space.',
+          genre: ['Strategy', 'Simulation', 'Building'],
+          platform: ['PC'],
+          status: 'bonus',
+          testingFocus: ['Resource Systems', 'Building Mechanics', 'Tutorial']
+        }
+      ]
     },
     {
       id: '2',

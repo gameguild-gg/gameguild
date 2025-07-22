@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
+import { useSession, signOut } from 'next-auth/react';
 
 interface DashboardHeaderProps {
   title?: string;
@@ -24,6 +25,7 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const { theme, setTheme } = useTheme();
+  const { data: session } = useSession();
 
   const notifications = [
     { id: 1, message: 'New user registration', time: '2 min ago', unread: true },
@@ -40,10 +42,24 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
     console.log('Searching for:', searchQuery);
   };
 
-  const handleLogout = () => {
-    // Implement logout functionality
-    console.log('Logging out...');
+  const handleLogout = async () => {
+    try {
+      await signOut({ callbackUrl: '/sign-in' });
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
+
+  // Get user display information from session
+  const userDisplayName = session?.user?.name || 'Unknown User';
+  const userEmail = session?.user?.email || 'unknown@email.com';
+  const userImage = session?.user?.image;
+  const userInitials = userDisplayName
+    .split(' ')
+    .map(name => name[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm px-4 md:px-6">
@@ -136,16 +152,19 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-slate-800/50">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="/avatars/admin.jpg" alt="Admin" />
-                <AvatarFallback className="bg-slate-700 text-white">AD</AvatarFallback>
+                {userImage ? (
+                  <AvatarImage src={userImage} alt={userDisplayName} />
+                ) : (
+                  <AvatarFallback className="bg-slate-700 text-white">{userInitials}</AvatarFallback>
+                )}
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56 bg-slate-800 border-slate-700" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none text-white">Admin User</p>
-                <p className="text-xs leading-none text-slate-400">admin@gameguild.com</p>
+                <p className="text-sm font-medium leading-none text-white">{userDisplayName}</p>
+                <p className="text-xs leading-none text-slate-400">{userEmail}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-slate-700" />

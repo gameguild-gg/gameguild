@@ -98,20 +98,30 @@ export interface SessionAttendanceData {
 
 export const testingLabApi = {
   // Testing Requests
-  async getAvailableTestingRequests(): Promise<TestingRequest[]> {
+  async getAvailableTestingRequests(accessToken?: string): Promise<TestingRequest[]> {
     try {
-      const response = await apiClient.request<TestingRequest[]>('/testing/available-for-testing');
-      return response;
+      if (accessToken) {
+        const response = await apiClient.authenticatedRequest<TestingRequest[]>('/testing/available-for-testing', accessToken);
+        return response;
+      } else {
+        const response = await apiClient.request<TestingRequest[]>('/testing/available-for-testing');
+        return response;
+      }
     } catch (error) {
       console.error('Error fetching available testing requests:', error);
       throw error;
     }
   },
 
-  async getMyTestingRequests(): Promise<TestingRequest[]> {
+  async getMyTestingRequests(accessToken?: string): Promise<TestingRequest[]> {
     try {
-      const response = await apiClient.request<TestingRequest[]>('/testing/my-requests');
-      return response;
+      if (accessToken) {
+        const response = await apiClient.authenticatedRequest<TestingRequest[]>('/testing/my-requests', accessToken);
+        return response;
+      } else {
+        const response = await apiClient.request<TestingRequest[]>('/testing/my-requests');
+        return response;
+      }
     } catch (error) {
       console.error('Error fetching my testing requests:', error);
       throw error;
@@ -154,10 +164,15 @@ export const testingLabApi = {
   },
 
   // Testing Sessions
-  async getTestingSessions(): Promise<TestingSession[]> {
+  async getTestingSessions(accessToken?: string): Promise<TestingSession[]> {
     try {
-      const response = await apiClient.request<TestingSession[]>('/testing/sessions');
-      return response;
+      if (accessToken) {
+        const response = await apiClient.authenticatedRequest<TestingSession[]>('/testing/sessions', accessToken);
+        return response;
+      } else {
+        const response = await apiClient.request<TestingSession[]>('/testing/sessions');
+        return response;
+      }
     } catch (error) {
       console.error('Error fetching testing sessions:', error);
       throw error;
