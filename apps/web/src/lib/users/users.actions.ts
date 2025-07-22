@@ -1,4 +1,5 @@
 import { revalidateTag, unstable_cache } from 'next/cache';
+import { auth } from '@/auth';
 import { PagedResult, UpdateUserRequest, User } from '@/components/legacy/types/user';
 
 export interface UserData {
@@ -20,10 +21,23 @@ export interface UserActionState extends ActionState {
   user?: User;
 }
 
+export interface UserStatistics {
+  totalUsers: number;
+  activeUsers: number;
+  inactiveUsers: number;
+  deletedUsers: number;
+  totalBalance: number;
+  averageBalance: number;
+  usersCreatedToday: number;
+  usersCreatedThisWeek: number;
+  usersCreatedThisMonth: number;
+}
+
 // Cache configuration
 const CACHE_TAGS = {
   USERS: 'users',
   USER_DETAIL: 'user-detail',
+  USER_STATISTICS: 'user-statistics',
 } as const;
 
 const REVALIDATION_TIME = 300; // 5 minutes
@@ -452,47 +466,6 @@ export async function searchUsers(query: string, limit: number = 10): Promise<Us
 }
 
 /**
- * Get user statistics (Server Action)
- */
-export async function getUserStatistics(
-  fromDate?: string,
-  toDate?: string,
-  includeDeleted: boolean = false,
-): Promise<{ success: boolean; error?: string; statistics?: any }> {
-  try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-    const params = new URLSearchParams({
-      ...(fromDate && { fromDate }),
-      ...(toDate && { toDate }),
-      includeDeleted: includeDeleted.toString(),
-    });
-
-    const response = await fetch(`${apiUrl}/api/users/statistics?${params}`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      next: {
-        revalidate: REVALIDATION_TIME,
-        tags: [CACHE_TAGS.USERS],
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch user statistics: ${response.status} ${response.statusText}`);
-    }
-
-    const statistics = await response.json();
-    return { success: true, statistics };
-  } catch (error) {
-    console.error('Error fetching user statistics:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch user statistics',
-    };
-  }
-}
-
-/**
  * Bulk activate users (Server Action)
  */
 export async function bulkActivateUsers(
@@ -677,5 +650,85 @@ export async function getCurrentUser(): Promise<User | null> {
   } catch (error) {
     console.error('❌ [USER DEBUG] Error getting current user:', error);
     return null;
+  }
+}
+
+/**
+ * Server action to fetch user statistics with caching
+ * Uses Next.js 15+ caching and revalidation features
+ */
+export async function getUserStatistics(
+  fromDate?: string,
+  toDate?: string,
+  includeDeleted: boolean = false
+): Promise<{ success: boolean; data?: UserStatistics; error?: string }> {
+  try {
+    // Get authenticated session
+    const session = await auth();
+
+    if (!session?.accessToken) {
+      return {
+        success: false,
+        error: 'Authentication required'
+      };
+    }
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const params = new URLSearchParams();
+    
+    if (fromDate) params.append('fromDate', fromDate);
+    if (toDate) params.append('toDate', toDate);
+    if (includeDeleted) params.append('includeDeleted', 'true');
+
+    const response = await fetch(`${apiUrl}/api/users/statistics?${params.toString()}`, {
+      headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      next: {
+        revalidate: 60, // Cache for 1 minute
+        tags: [CACHE_TAGS.USER_STATISTICS],
+      },
+    });
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: `Failed to fetch user statistics: ${response.statusText}`
+      };
+    }
+
+    const userStatistics = await response.json();
+    
+    return {
+      success: true,
+      data: userStatistics
+    };
+  } catch (error) {
+    console.error('Error fetching user statistics:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+}
+
+/**
+ * Note: This function is called from server-side refresh actions only
+ * Do not import this directly in client components
+ */
+export async function refreshUserStatistics(): Promise<{ success: boolean; error?: string }> {
+  try {
+    revalidateTag(CACHE_TAGS.USER_STATISTICS);
+    
+    return {
+      success: true
+    };
+  } catch (error) {
+    console.error('Error refreshing user statistics:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to refresh statistics'
+    };
   }
 }

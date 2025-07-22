@@ -26,3 +26,14 @@ export const numberToAbbreviation = (number: number): string => {
 
   return `${sign}${absoluteNumber}`;
 };
+
+export const formatNumber = (number: number): string => {
+  return new Intl.NumberFormat('en-US').format(number);
+};
+
+export const formatCurrency = (amount: number, currency: string = 'USD'): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+  }).format(amount);
+};
