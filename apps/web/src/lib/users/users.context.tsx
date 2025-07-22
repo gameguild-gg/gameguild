@@ -515,14 +515,17 @@ const UsersContext = createContext<UserContextType | undefined>(undefined);
 interface UserProviderProps {
   children: ReactNode;
   initialUsers?: User[];
+  initialPagination?: UserPagination;
 }
 
 // Enhanced Provider component
-export function UserProvider({ children, initialUsers = [] }: UserProviderProps) {
+export function UserProvider({ children, initialUsers = [], initialPagination }: UserProviderProps) {
   const [state, dispatch] = useReducer(userReducer, {
     ...initialUserState,
     users: initialUsers,
     filteredUsers: applyFilters(initialUsers, initialUserState.filters),
+    // Use server-side pagination if provided to prevent hydration mismatch
+    pagination: initialPagination || initialUserState.pagination,
   });
 
   // Computed values with memoization for performance
@@ -671,19 +674,20 @@ export function UserProvider({ children, initialUsers = [] }: UserProviderProps)
     });
   }, []);
 
-  // Update pagination total when filtered users change
-  useEffect(() => {
-    const totalPages = Math.ceil(state.filteredUsers.length / state.pagination.limit);
-    dispatch({
-      type: 'SET_PAGINATION',
-      payload: {
-        total: state.filteredUsers.length,
-        totalPages,
-        // Reset to page 1 if current page is beyond the new total pages
-        ...(state.pagination.page > totalPages && totalPages > 0 ? { page: 1 } : {}),
-      },
-    });
-  }, [state.filteredUsers.length, state.pagination.limit, state.pagination.page]);
+  // Update pagination total when filtered users change (disabled to prevent hydration mismatch)
+  // TODO: Differentiate between server-side and client-side pagination
+  // useEffect(() => {
+  //   const totalPages = Math.ceil(state.filteredUsers.length / state.pagination.limit);
+  //   dispatch({
+  //     type: 'SET_PAGINATION',
+  //     payload: {
+  //       total: state.filteredUsers.length,
+  //       totalPages,
+  //       // Reset to page 1 if current page is beyond the new total pages
+  //       ...(state.pagination.page > totalPages && totalPages > 0 ? { page: 1 } : {}),
+  //     },
+  //   });
+  // }, [state.filteredUsers.length, state.pagination.limit, state.pagination.page]);
 
   // Auto-clear operation status after success
   useEffect(() => {
