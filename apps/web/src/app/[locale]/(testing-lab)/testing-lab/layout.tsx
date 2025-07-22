@@ -2,10 +2,10 @@ import { ReactNode } from 'react';
 
 interface LayoutProps {
   children: ReactNode;
-  modal: ReactNode;
+  modal?: ReactNode;
 }
 
-export default function SessionLayout({ children, modal }: LayoutProps) {
+export default function TestingLabLayout({ children, modal }: LayoutProps) {
   return (
     <>
       {children}
