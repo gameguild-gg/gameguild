@@ -1362,8 +1362,8 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
           textContent = (
             <sub key={`subscript-${node.version || Math.random()}`} style={inlineStyles}>
               {textContent}
-            </s>
-          );
+            </sub>
+          )
         }
         if (node.format & 16) {
           // Superscript (format flag 16)
@@ -1410,14 +1410,20 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
     if (node.children) {
       const children = node.children.map((child: any) => renderNode(child));
       switch (node.type) {
-        case 'paragraph':
-          // Only render paragraph if children are text nodes
-          if (node.children.every((child: any) => child.type === 'text')) {
-            return <p key={node.version}>{children}</p>;
-          }
-          // Otherwise render a div to avoid nesting block elements in paragraphs
-          return <div key={node.version}>{children}</div>;
-        case 'quote':
+        case "paragraph":
+          const paragraphClasses = ["my-4"]
+          if (node.format === "left") paragraphClasses.push("text-left")
+          else if (node.format === "center") paragraphClasses.push("text-center")
+          else if (node.format === "right") paragraphClasses.push("text-right")
+          else if (node.format === "justify") paragraphClasses.push("text-justify")
+
+          // Always use <p> tag for paragraphs
+          return (
+            <p key={node.version} className={paragraphClasses.join(" ")}>
+              {children}
+            </p>
+          )
+        case "quote":
           return (
             <blockquote key={node.version} className="border-l-4 border-muted pl-4 italic my-4">
               {children}
@@ -1430,8 +1436,13 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
             <ListTag key={node.version} className={`${listClass} my-4`}>
               {children}
             </ListTag>
-          );
-        case 'listitem':
+          )
+        case "listitem":
+          const listItemClasses = ["my-1"]
+          if (node.format === "left") listItemClasses.push("text-left")
+          else if (node.format === "center") listItemClasses.push("text-center")
+          else if (node.format === "right") listItemClasses.push("text-right")
+          else if (node.format === "justify") listItemClasses.push("text-justify")
           return (
             <li key={node.version} className={listItemClasses.join(" ")}>
               {children}
@@ -1442,8 +1453,14 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
             <a key={node.version} href={node.url} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
               {children}
             </a>
-          );
-        case 'heading':
+          )
+        case "heading":
+          const headingClasses = ["font-bold my-4"]
+          if (node.format === "left") headingClasses.push("text-left")
+          else if (node.format === "center") headingClasses.push("text-center")
+          else if (node.format === "right") headingClasses.push("text-right")
+          else if (node.format === "justify") headingClasses.push("text-justify")
+
           // Get inline styles from the node if they exist
           const headingStyles: React.CSSProperties = {};
           if (node.style) {

@@ -149,6 +149,20 @@ export function FloatingTextFormatToolbarPlugin() {
     if (nodes.length > 0) {
       const firstNode = nodes[0]
       const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+      const fontSizeMatch = style.match(/font-size:\s*([^;]+)/)
+      if (fontSizeMatch) {
+        setCurrentFontSize(fontSizeMatch[1].replace(/['']/g, ""))
+      } else {
+        setCurrentTextColor("")
+      }
+    } else {
+      setCurrentTextColor("")
+    }
+
+    // Get current text color
+    if (nodes.length > 0) {
+      const firstNode = nodes[0]
+      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
       const colorMatch = style.match(/(?<!background-)color:\s*([^;]+)/)
       if (colorMatch) {
         setCurrentTextColor(colorMatch[1].replace(/['']/g, "").trim())
