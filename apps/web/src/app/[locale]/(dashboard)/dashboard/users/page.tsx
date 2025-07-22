@@ -37,7 +37,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
         </div>
 
         <ErrorBoundary fallback={<div className="text-red-500">Failed to load user management interface</div>}>
-          <UserProvider initialUsers={userData.users}>
+          <UserProvider initialUsers={userData.users} initialPagination={userData.pagination}>
             <Suspense
               fallback={
                 <div className="flex items-center justify-center p-4">

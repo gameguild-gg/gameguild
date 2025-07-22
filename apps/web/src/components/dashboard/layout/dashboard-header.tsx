@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, LogOut, Moon, Search, Settings, Sun, User } from 'lucide-react';
+import { LogOut, Moon, Search, Settings, Sun, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import { useSession, signOut } from 'next-auth/react';
+import { NotificationDropdown } from '@/components/legacy/notifications';
 
 interface DashboardHeaderProps {
   title?: string;
@@ -26,15 +26,6 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
-
-  const notifications = [
-    { id: 1, message: 'New user registration', time: '2 min ago', unread: true },
-    { id: 2, message: 'Course completed by John Doe', time: '1 hour ago', unread: true },
-    { id: 3, message: 'Payment received', time: '3 hours ago', unread: false },
-    { id: 4, message: 'System maintenance scheduled', time: '1 day ago', unread: false },
-  ];
-
-  const unreadCount = notifications.filter((n) => n.unread).length;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +47,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
   const userImage = session?.user?.image;
   const userInitials = userDisplayName
     .split(' ')
-    .map(name => name[0])
+    .map((name) => name[0])
     .join('')
     .toUpperCase()
     .slice(0, 2);
@@ -103,43 +94,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
         </Button>
 
         {/* Notifications */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 relative text-slate-400 hover:text-white hover:bg-slate-800/50">
-              <Bell className="h-4 w-4" />
-              {unreadCount > 0 && (
-                <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 text-xs flex items-center justify-center p-0">
-                  {unreadCount}
-                </Badge>
-              )}
-              <span className="sr-only">View notifications</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 bg-slate-800 border-slate-700">
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none text-white">Notifications</p>
-                <p className="text-xs leading-none text-slate-400">You have {unreadCount} unread notifications</p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-slate-700" />
-            <div className="max-h-[300px] overflow-y-auto">
-              {notifications.map((notification) => (
-                <DropdownMenuItem key={notification.id} className="flex flex-col items-start gap-1 p-3 text-white hover:bg-slate-700/50">
-                  <div className="flex w-full items-start justify-between">
-                    <p className={`text-sm ${notification.unread ? 'font-medium' : ''}`}>{notification.message}</p>
-                    {notification.unread && <div className="h-2 w-2 rounded-full bg-blue-500 mt-1" />}
-                  </div>
-                  <p className="text-xs text-slate-400">{notification.time}</p>
-                </DropdownMenuItem>
-              ))}
-            </div>
-            <DropdownMenuSeparator className="bg-slate-700" />
-            <DropdownMenuItem className="w-full justify-center text-white hover:bg-slate-700/50">
-              <span className="text-sm">View all notifications</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <NotificationDropdown className="text-slate-400 hover:text-white hover:bg-slate-800/50" />
 
         {/* Settings */}
         <Button variant="ghost" size="sm" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800/50">
