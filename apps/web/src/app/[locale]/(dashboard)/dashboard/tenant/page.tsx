@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { TenantManagementContent } from '@/components/tenants/tenant-management-content';
-import { getTenantsData, getUserTenants } from '@/lib/tenants/tenants.actions';
+import { getTenantsData } from '@/lib/tenants/tenants.actions';
 import { TenantResponse } from '@/lib/tenants/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
@@ -26,17 +26,12 @@ export default async function TenantManagementPage() {
   let isAdminMode = false;
 
   try {
-    // Check if this is an admin session
+    // Check if this is an admin session for UI purposes
     isAdminMode = session.user?.email === 'admin@gameguild.local';
 
-    if (isAdminMode) {
-      // Admin gets all tenants
-      const tenantsData = await getTenantsData();
-      tenants = tenantsData.tenants;
-    } else {
-      // Regular user gets only their tenant memberships
-      tenants = await getUserTenants();
-    }
+    // All users can manage tenants - fetch all tenants from the system
+    const tenantsData = await getTenantsData();
+    tenants = tenantsData.tenants;
   } catch (err) {
     error = err instanceof Error ? err.message : 'Failed to load tenants';
   }
@@ -47,7 +42,7 @@ export default async function TenantManagementPage() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tenant Management</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            {isAdminMode ? 'Manage tenants, organizations, and access control across the platform.' : 'View and manage your tenant memberships.'}
+            Manage tenants, organizations, and access control across the platform.
           </p>
         </div>
 
@@ -63,7 +58,7 @@ export default async function TenantManagementPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tenant Management</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-2">
-          {isAdminMode ? 'Manage tenants, organizations, and access control across the platform.' : 'View and manage your tenant memberships.'}
+          Manage tenants, organizations, and access control across the platform.
         </p>
       </div>
 
