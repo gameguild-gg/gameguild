@@ -83,7 +83,7 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
           <Building className="h-6 w-6 text-blue-600" />
           <div>
             <h2 className="text-xl font-semibold">Tenants ({tenants.length})</h2>
-            <p className="text-sm text-gray-600">{isAdmin ? 'Manage all tenants in the system' : 'Your tenant memberships'}</p>
+            <p className="text-sm text-gray-600">Manage all tenants and organizations in the system</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
