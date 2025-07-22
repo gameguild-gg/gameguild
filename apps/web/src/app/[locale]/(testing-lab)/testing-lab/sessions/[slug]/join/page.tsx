@@ -1,15 +1,9 @@
-import { JoinProcess } from '@/components/testing-lab/join-process';
+import { JoinProcessModal } from '@/components/testing-lab/join-process-modal';
 
-interface JoinPageProps {
-  params: {
-    slug: string;
-  };
-}
-
-export default function JoinPage({ params }: JoinPageProps) {
+export default function JoinPage() {
   return (
-    <div className="flex flex-col flex-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-      <JoinProcess sessionSlug={params.slug} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      <JoinProcessModal />
     </div>
   );
 }
