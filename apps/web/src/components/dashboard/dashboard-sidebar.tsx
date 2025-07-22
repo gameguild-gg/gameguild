@@ -5,20 +5,14 @@ import {
   AudioWaveform,
   BarChart3,
   BookOpen,
-  Bot,
   Building2,
   Command,
   FileText,
-  Frame,
   GalleryVerticalEnd,
   LayoutDashboard,
-  Map,
   Package,
-  PieChart,
   Send,
   Settings,
-  Settings2,
-  SquareTerminal,
   TestTube,
   Users,
 } from 'lucide-react';
@@ -34,7 +28,8 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import { TeamSwitcher } from '@/components/dashboard/team-switcher';
+import { TenantSwitcher } from '@/components/dashboard/tenant-switcher';
+import { TenantResponse } from '@/lib/tenants/types';
 
 const navigationData = {
   tenants: [
@@ -109,140 +104,12 @@ const navigationData = {
     },
   ],
 };
-const data = {
-  user: {
-    name: 'shadcn',
-    email: 'm@example.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
-  teams: [
-    {
-      name: 'Acme Inc',
-      logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
-    },
-    {
-      name: 'Acme Corp.',
-      logo: AudioWaveform,
-      plan: 'Startup',
-    },
-    {
-      name: 'Evil Corp.',
-      logo: Command,
-      plan: 'Free',
-    },
-  ],
-  navMain: [
-    {
-      title: 'Playground',
-      url: '#',
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: 'History',
-          url: '#',
-        },
-        {
-          title: 'Starred',
-          url: '#',
-        },
-        {
-          title: 'Settings',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Models',
-      url: '#',
-      icon: Bot,
-      items: [
-        {
-          title: 'Genesis',
-          url: '#',
-        },
-        {
-          title: 'Explorer',
-          url: '#',
-        },
-        {
-          title: 'Quantum',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Documentation',
-      url: '#',
-      icon: BookOpen,
-      items: [
-        {
-          title: 'Introduction',
-          url: '#',
-        },
-        {
-          title: 'Get Started',
-          url: '#',
-        },
-        {
-          title: 'Tutorials',
-          url: '#',
-        },
-        {
-          title: 'Changelog',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Settings',
-      url: '#',
-      icon: Settings2,
-      items: [
-        {
-          title: 'General',
-          url: '#',
-        },
-        {
-          title: 'Team',
-          url: '#',
-        },
-        {
-          title: 'Billing',
-          url: '#',
-        },
-        {
-          title: 'Limits',
-          url: '#',
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: 'Design Engineering',
-      url: '#',
-      icon: Frame,
-    },
-    {
-      name: 'Sales & Marketing',
-      url: '#',
-      icon: PieChart,
-    },
-    {
-      name: 'Travel',
-      url: '#',
-      icon: Map,
-    },
-  ],
-};
 
-export const DashboardSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
+export const DashboardSidebar = ({ tenants = [], ...props }: React.ComponentProps<typeof Sidebar> & { tenants?: TenantResponse[] }) => {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TenantSwitcher initialTenants={tenants} />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -282,12 +149,4 @@ export const DashboardSidebar = (props: React.ComponentProps<typeof Sidebar>) =>
       <SidebarRail />
     </Sidebar>
   );
-};
-
-export const DashboardSidebarMainNavigation = (): Promise<React.JSX.Element> => {
-  return <></>;
-};
-
-export const DashboardSidebarFooterNavigation = (): Promise<React.JSX.Element> => {
-  return <></>;
 };

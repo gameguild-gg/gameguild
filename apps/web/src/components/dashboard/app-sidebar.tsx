@@ -7,6 +7,7 @@ import { NavMain } from '@/components/nav-main';
 import { NavProjects } from '@/components/nav-projects';
 import { NavUser } from '@/components/nav-user';
 import { TenantSwitcher } from '@/components/dashboard/tenant-switcher';
+import { TenantResponse } from '@/lib/tenants/types';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
 
 // This is sample data.
@@ -139,11 +140,11 @@ const data = {
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ tenants = [], ...props }: React.ComponentProps<typeof Sidebar> & { tenants?: TenantResponse[] }) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TenantSwitcher />
+        <TenantSwitcher initialTenants={tenants} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
