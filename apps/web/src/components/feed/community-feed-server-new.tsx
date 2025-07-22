@@ -62,11 +62,7 @@ export async function CommunityFeedServer({ searchParams }: CommunityFeedServerP
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Feed Header with Stats */}
-        <FeedHeader 
-          totalPosts={postsPage.totalCount || 0}
-          activeUsers={1200}
-          engagementRate={75.5}
-        />
+        <FeedHeader totalPosts={postsPage.totalCount || 0} activeUsers={1200} engagementRate={75.5} />
 
         {/* Create Post Form */}
         <div className="mb-8">
@@ -77,11 +73,7 @@ export async function CommunityFeedServer({ searchParams }: CommunityFeedServerP
 
         {/* Filters */}
         <div className="mb-8">
-          <PostFilters 
-            filters={filters}
-            onFiltersChange={() => {}} // No-op for server rendering
-            postTypes={POST_TYPES}
-          />
+          <PostFilters filters={filters} onFiltersChange={() => {}} postTypes={POST_TYPES} />
         </div>
 
         {/* Posts List */}
@@ -90,10 +82,10 @@ export async function CommunityFeedServer({ searchParams }: CommunityFeedServerP
             posts={postsPage.posts || []}
             loading={false}
             hasMore={postsPage.hasNextPage || false}
-            onLoadMore={() => {}} // No-op for server rendering
-            onLike={() => {}} // No-op for server rendering
-            onComment={() => {}} // No-op for server rendering
-            onShare={() => {}} // No-op for server rendering
+            onLoadMore={() => {}}
+            onLike={() => {}}
+            onComment={() => {}}
+            onShare={() => {}}
             emptyMessage="No posts found. Try adjusting your filters."
           />
         </div>
