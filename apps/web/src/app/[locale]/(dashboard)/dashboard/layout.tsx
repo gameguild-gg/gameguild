@@ -15,6 +15,7 @@ export default async function Layout({ children }: PropsWithChildren): Promise<R
     tenants = await getUserTenants();
   } catch (error) {
     console.error('Failed to load tenants for sidebar:', error);
+    // Don't throw error, let TenantSwitcher handle the empty case with default tenant
   }
 
   return (
