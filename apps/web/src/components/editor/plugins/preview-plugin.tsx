@@ -150,7 +150,7 @@ function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
             variant="outline"
             size="sm"
             onClick={resetQuiz}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors bg-transparent"
           >
             <RotateCcw className="h-4 w-4" />
             Try Again
@@ -1350,21 +1350,50 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
           );
         }
         if (node.format & 4) {
-          // Underline
+          // Underline (format flag 4)
           textContent = (
             <u key={`underline-${node.version || Math.random()}`} style={inlineStyles}>
               {textContent}
             </u>
           );
         }
-        if (node.format & 8) {
-          // Strikethrough
+        if (node.format & 32) {
+          // Subscript (format flag 32)
           textContent = (
-            <s key={`strikethrough-${node.version || Math.random()}`} style={inlineStyles}>
+            <sub key={`subscript-${node.version || Math.random()}`} style={inlineStyles}>
               {textContent}
             </s>
           );
         }
+        if (node.format & 16) {
+          // Superscript (format flag 16)
+          textContent = (
+            <sup key={`superscript-${node.version || Math.random()}`} style={inlineStyles}>
+              {textContent}
+            </sup>
+          )
+        }
+        if (node.format & 64) {
+          // Code
+          textContent = (
+            <code
+              key={`code-${node.version || Math.random()}`}
+              style={inlineStyles}
+              className="bg-muted px-1 py-0.5 rounded text-sm"
+            >
+              {textContent}
+            </code>
+          )
+        }
+        if (node.format & 128) {
+          // Assuming format flag 128 for short quote
+          textContent = (
+            <q key={`quote-${node.version || Math.random()}`} style={inlineStyles}>
+              {textContent}
+            </q>
+          )
+        }
+        // Remove the following lines from the `if (node.format)` block:
       } else if (Object.keys(inlineStyles).length > 0) {
         // Apply inline styles even if no formatting flags are set
         textContent = (
@@ -1404,7 +1433,7 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
           );
         case 'listitem':
           return (
-            <li key={node.version} className="my-1">
+            <li key={node.version} className={listItemClasses.join(" ")}>
               {children}
             </li>
           );
@@ -1438,53 +1467,52 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
             );
           }
 
-          // Use switch statement for better reliability
           switch (node.tag) {
             case 'h1':
             case 1:
               return (
-                <h1 key={node.version} className="text-4xl font-bold my-4" style={headingStyles}>
+                <h1 key={node.version} className={`text-4xl ${headingClasses.join(" ")}`} style={headingStyles}>
                   {children}
                 </h1>
               );
             case 'h2':
             case 2:
               return (
-                <h2 key={node.version} className="text-3xl font-bold my-4" style={headingStyles}>
+                <h2 key={node.version} className={`text-3xl ${headingClasses.join(" ")}`} style={headingStyles}>
                   {children}
                 </h2>
               );
             case 'h3':
             case 3:
               return (
-                <h3 key={node.version} className="text-2xl font-bold my-4" style={headingStyles}>
+                <h3 key={node.version} className={`text-2xl ${headingClasses.join(" ")}`} style={headingStyles}>
                   {children}
                 </h3>
               );
             case 'h4':
             case 4:
               return (
-                <h4 key={node.version} className="text-xl font-bold my-4" style={headingStyles}>
+                <h4 key={node.version} className={`text-xl ${headingClasses.join(" ")}`} style={headingStyles}>
                   {children}
                 </h4>
               );
             case 'h5':
             case 5:
               return (
-                <h5 key={node.version} className="text-lg font-bold my-4" style={headingStyles}>
+                <h5 key={node.version} className={`text-lg ${headingClasses.join(" ")}`} style={headingStyles}>
                   {children}
                 </h5>
               );
             case 'h6':
             case 6:
               return (
-                <h6 key={node.version} className="text-base font-bold my-4" style={headingStyles}>
+                <h6 key={node.version} className={`text-base ${headingClasses.join(" ")}`} style={headingStyles}>
                   {children}
                 </h6>
               );
             default:
               return (
-                <h2 key={node.version} className="text-3xl font-bold my-4" style={headingStyles}>
+                <h2 key={node.version} className={`text-3xl ${headingClasses.join(" ")}`} style={headingStyles}>
                   {children}
                 </h2>
               );
@@ -1514,7 +1542,7 @@ export function PreviewPlugin() {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={onClick} className="flex items-center gap-2">
+      <Button variant="outline" size="sm" onClick={onClick} className="flex items-center gap-2 bg-transparent">
         <Eye className="h-4 w-4" />
         Preview
       </Button>
