@@ -70,12 +70,21 @@ export function TestingLabOverview() {
     const loadStats = async () => {
       setLoading(true);
       try {
+        const accessToken = session?.accessToken as string;
+        
+        // Check if we have an access token before making authenticated requests
+        if (!accessToken) {
+          console.warn('No access token available - skipping API calls');
+          setLoading(false);
+          return;
+        }
+        
         if (userRole.isStudent) {
           // Load actual data from API for students
           const [myRequests, availableRequests, sessions] = await Promise.all([
-            testingLabApi.getMyTestingRequests(),
-            testingLabApi.getAvailableTestingRequests(),
-            testingLabApi.getTestingSessions(),
+            testingLabApi.getMyTestingRequests(accessToken),
+            testingLabApi.getAvailableTestingRequests(accessToken),
+            testingLabApi.getTestingSessions(accessToken),
           ]);
 
           setStats({
@@ -90,7 +99,7 @@ export function TestingLabOverview() {
           });
         } else if (userRole.isProfessor) {
           // Load actual data from API for professors/admins
-          const sessions = await testingLabApi.getTestingSessions();
+          const sessions = await testingLabApi.getTestingSessions(accessToken);
 
           // Mock some additional data that would come from other endpoints
           setStats({
