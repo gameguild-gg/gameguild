@@ -89,8 +89,28 @@ export function FloatingTextFormatToolbarPlugin() {
       return
     }
 
-    setIsBold(selection.hasFormat("bold"))
-    setIsItalic(selection.hasFormat("italic"))
+    const nodes = selection.getNodes()
+
+    // Check for bold - both via Lexical format and CSS style
+    const isBoldFromFormat = selection.hasFormat("bold")
+    let isBoldFromStyle = false
+    if (nodes.length > 0) {
+      const firstNode = nodes[0]
+      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+      isBoldFromStyle = style.includes("font-weight: 700") || style.includes("font-weight:700")
+    }
+    setIsBold(isBoldFromFormat || isBoldFromStyle)
+
+    // Check for italic - both via Lexical format and CSS style
+    const isItalicFromFormat = selection.hasFormat("italic")
+    let isItalicFromStyle = false
+    if (nodes.length > 0) {
+      const firstNode = nodes[0]
+      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+      isItalicFromStyle = style.includes("font-style: italic") || style.includes("font-style:italic")
+    }
+    setIsItalic(isItalicFromFormat || isItalicFromStyle)
+
     setIsUnderline(selection.hasFormat("underline"))
     setIsSubscript(selection.hasFormat("subscript"))
     setIsSuperscript(selection.hasFormat("superscript"))
@@ -116,7 +136,7 @@ export function FloatingTextFormatToolbarPlugin() {
     }
 
     // Get current font family
-    const nodes = selection.getNodes()
+   
     if (nodes.length > 0) {
       const firstNode = nodes[0]
       // Ensure the node has getStyle and explicitly convert its result to string
@@ -278,8 +298,38 @@ export function FloatingTextFormatToolbarPlugin() {
               <DropdownMenuItem
                 onSelect={(e) => e.preventDefault()}
                 onClick={() => {
-                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")
-                  editor.getEditorState().read(() => updateToolbar())
+                  editor.update(() => {
+                    const selection = $getSelection()
+                    if ($isRangeSelection(selection)) {
+                      const nodes = selection.getNodes()
+                      nodes.forEach((node) => {
+                        if (node.getTextContent()) {
+                          const currentStyle = node.getStyle() || ""
+                          let newStyle = currentStyle
+
+                          // Check if bold is currently applied
+                          const isBoldApplied =
+                            currentStyle.includes("font-weight: 700") || currentStyle.includes("font-weight:700")
+
+                          // Remove existing font-weight
+                          newStyle = newStyle.replace(/font-weight:\s*[^;]+;?/g, "")
+
+                          // Apply or remove bold
+                          if (isBoldApplied) {
+                            newStyle += "font-weight: 400;" // Remove bold
+                          } else {
+                            newStyle += "font-weight: 700;" // Apply bold
+                          }
+
+                          node.setStyle(newStyle.trim())
+                        }
+                      })
+                    }
+                  })
+                  // Force immediate update
+                  setTimeout(() => {
+                    editor.getEditorState().read(() => updateToolbar())
+                  }, 0)
                 }}
               >
                 <Bold className="mr-2 h-5 w-5" />
@@ -289,7 +339,34 @@ export function FloatingTextFormatToolbarPlugin() {
               <DropdownMenuItem
                 onSelect={(e) => e.preventDefault()}
                 onClick={() => {
-                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic")
+                  editor.update(() => {
+                    const selection = $getSelection()
+                    if ($isRangeSelection(selection)) {
+                      const nodes = selection.getNodes()
+                      nodes.forEach((node) => {
+                        if (node.getTextContent()) {
+                          const currentStyle = node.getStyle() || ""
+                          let newStyle = currentStyle
+
+                          // Check if italic is currently applied
+                          const isItalicApplied =
+                            currentStyle.includes("font-style: italic") || currentStyle.includes("font-style:italic")
+
+                          // Remove existing font-style
+                          newStyle = newStyle.replace(/font-style:\s*[^;]+;?/g, "")
+
+                          // Apply or remove italic
+                          if (isItalicApplied) {
+                            newStyle += "font-style: normal;" // Remove italic
+                          } else {
+                            newStyle += "font-style: italic;" // Apply italic
+                          }
+
+                          node.setStyle(newStyle.trim())
+                        }
+                      })
+                    }
+                  })
                   // Force immediate update
                   setTimeout(() => {
                     editor.getEditorState().read(() => updateToolbar())
