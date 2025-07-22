@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +25,7 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import Autoplay from 'embla-carousel-autoplay';
+import { JoinProcess } from './join-process';
 
 interface SessionDetailProps {
   session: TestSession;
@@ -32,6 +34,7 @@ interface SessionDetailProps {
 export function SessionDetail({ session }: SessionDetailProps) {
   const [showGameDetails, setShowGameDetails] = useState(false);
   const [showRequirements, setShowRequirements] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentGameIndex, setCurrentGameIndex] = useState(0);
   const [autoplayPlugin] = useState(() =>
