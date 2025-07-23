@@ -1,6 +1,6 @@
 type Directory = { [key: string]: string | Directory };
 
-class MemFS {
+export class MemFS {
   private root: Directory;
 
   constructor() {

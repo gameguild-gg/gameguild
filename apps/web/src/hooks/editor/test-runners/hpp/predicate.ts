@@ -134,13 +134,23 @@ int main() {
     const resultsJson = resultsMatch[1].trim();
     const results = JSON.parse(resultsJson);
 
-    return results.map((result: any, index: number) => ({
-      passed: result.passed,
-      expected: result.expected,
-      actual: result.actual,
-      error: result.error,
-      output: formatTestOutput(tests[index], result),
-    }));
+    return results.map(
+      (
+        result: {
+          passed: boolean;
+          expected: unknown;
+          actual: unknown;
+          error: string;
+        },
+        index: number,
+      ) => ({
+        passed: result.passed,
+        expected: result.expected,
+        actual: result.actual,
+        error: result.error,
+        output: formatTestOutput(tests[index], result),
+      }),
+    );
   } catch (error) {
     return tests.map(() => ({
       passed: false,

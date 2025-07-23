@@ -52,43 +52,51 @@ int main() {
     
     ${tests
       .map((test, index) => {
-        const { args, expected } = test;
+        const { args, expectedReturn } = test;
 
         // Handle different argument types
         const argsStr = args
-          .map((arg) => {
-            if (Array.isArray(arg)) {
-              return `std::vector<int>{${arg.join(', ')}}`;
-            } else if (typeof arg === 'string') {
-              return `"${arg}"`;
-            } else {
-              return arg;
-            }
-          })
-          .join(', ');
+          ? args
+              .map((arg) => {
+                if (Array.isArray(arg)) {
+                  return `std::vector<int>{${arg.join(', ')}}`;
+                } else if (typeof arg === 'string') {
+                  return `"${arg}"`;
+                } else {
+                  return arg;
+                }
+              })
+              .join(', ')
+          : '';
 
         // Handle different expected return types
         let expectedStr;
         let comparisonCode;
 
-        if (Array.isArray(expected)) {
-          expectedStr = `std::vector<int>{${expected.join(', ')}}`;
+        if (Array.isArray(expectedReturn)) {
+          expectedStr = `std::vector<int>{${expectedReturn.join(', ')}}`;
           comparisonCode = `
         bool passed = compareVectors(result, ${expectedStr});
         std::string resultStr = vectorToString(result);
         std::string expectedStr = vectorToString(${expectedStr});`;
-        } else if (typeof expected === 'string') {
-          expectedStr = `"${expected}"`;
+        } else if (typeof expectedReturn === 'string') {
+          expectedStr = `"${expectedReturn}"`;
           comparisonCode = `
         bool passed = (result == ${expectedStr});
         std::string resultStr = result;
         std::string expectedStr = ${expectedStr};`;
-        } else {
-          expectedStr = expected;
+        } else if (expectedReturn !== undefined) {
+          expectedStr = String(expectedReturn);
           comparisonCode = `
         bool passed = (result == ${expectedStr});
         std::string resultStr = std::to_string(result);
         std::string expectedStr = std::to_string(${expectedStr});`;
+        } else {
+          expectedStr = 'undefined';
+          comparisonCode = `
+        bool passed = false;
+        std::string resultStr = "undefined";
+        std::string expectedStr = "undefined";`;
         }
 
         return `
@@ -120,6 +128,13 @@ int main() {
 }
 `;
 
+  interface TestResultData {
+    passed: boolean;
+    expected: string;
+    actual: string;
+    error?: string;
+  }
+
   try {
     // Execute the test harness
     const output = await executeCpp(testHarness);
@@ -129,14 +144,16 @@ int main() {
     if (!resultsMatch) {
       return tests.map(() => ({
         passed: false,
+        expected: 'Test execution',
+        actual: 'Failed to parse test results',
         error: 'Failed to parse test results',
       }));
     }
 
     const resultsJson = resultsMatch[1].trim();
-    const results = JSON.parse(resultsJson);
+    const results = JSON.parse(resultsJson) as TestResultData[];
 
-    return results.map((result: any, index: number) => ({
+    return results.map((result, index) => ({
       passed: result.passed,
       expected: result.expected,
       actual: result.actual,
@@ -146,6 +163,8 @@ int main() {
   } catch (error) {
     return tests.map(() => ({
       passed: false,
+      expected: 'Test execution',
+      actual: 'Error occurred',
       error: error instanceof Error ? error.message : String(error),
     }));
   }

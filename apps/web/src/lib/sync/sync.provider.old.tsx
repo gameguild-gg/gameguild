@@ -5,6 +5,7 @@ import React, { createContext, FunctionComponent, PropsWithChildren, useCallback
 import { ConflictResolution, SyncOperation, SyncStatus } from './sync.types';
 
 import { debounce } from '@/lib/sync/utils/debunce';
+import { useCacheManager } from '@/lib/sync/hooks/cache-manager';
 
 interface SyncContextType {
   // Sync Status

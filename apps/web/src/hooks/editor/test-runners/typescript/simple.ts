@@ -6,7 +6,7 @@ import type { ExecutionContext } from '../../executors/types';
  * Run simple output-based tests for TypeScript
  */
 export const runSimpleTestsTypeScript: TestRunner = async (options: TestRunnerOptions) => {
-  const { fileId, file, fileCases, files, selectedLanguage, addOutput, clearTerminal, setIsExecuting, setTestResults, normalizeOutput } = options;
+  const { fileId, fileCases, files, selectedLanguage, addOutput, setIsExecuting, setTestResults, normalizeOutput } = options;
 
   for (let i = 0; i < fileCases.length; i++) {
     const testCase = fileCases[i];
@@ -32,7 +32,6 @@ export const runSimpleTestsTypeScript: TestRunner = async (options: TestRunnerOp
         // Also show in the terminal
         addOutput(output);
       },
-      clearTerminal,
       setIsExecuting,
     };
 

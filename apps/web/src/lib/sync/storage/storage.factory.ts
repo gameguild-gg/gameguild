@@ -84,7 +84,7 @@ export class StorageRepository<T extends { id?: string; slug?: string }> impleme
   // O(1) - For adapters that support slug lookup
   async findBySlug(slug: string): Promise<T | null> {
     if ('findBySlug' in this.adapter) {
-      return (this.adapter as any).findBySlug(slug);
+      return (this.adapter as { findBySlug: (slug: string) => Promise<T | null> }).findBySlug(slug);
     }
 
     const all = await this.findAll();
@@ -128,7 +128,7 @@ export class StorageRepository<T extends { id?: string; slug?: string }> impleme
   // O(n) but optimized with the date index
   async findByDateRange(start: Date, end: Date): Promise<T[]> {
     if ('findByDateRange' in this.adapter) {
-      const ids = await (this.adapter as any).findByDateRange(start, end);
+      const ids = await (this.adapter as { findByDateRange: (start: Date, end: Date) => Promise<string[]> }).findByDateRange(start, end);
 
       if (this.adapter.batchRead) {
         const results = await this.adapter.batchRead(ids);
@@ -141,7 +141,7 @@ export class StorageRepository<T extends { id?: string; slug?: string }> impleme
 
     const all = await this.findAll();
     return all.filter((item) => {
-      const date = new Date((item as any).createdAt);
+      const date = new Date((item as { createdAt?: string }).createdAt || '');
       return date >= start && date <= end;
     });
   }

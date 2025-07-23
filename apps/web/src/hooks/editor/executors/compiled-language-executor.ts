@@ -1,6 +1,6 @@
-import type { ProgrammingLanguage } from '@/components/ui/source-code/types';
+import type { ProgrammingLanguage } from '@/components/editor/ui/source-code/types';
 import type { ExecutionContext, ExecutionResult, LanguageExecutor } from './types';
-import { getFileContent } from '@/components/ui/source-code/utils';
+import { getFileContent } from '@/components/editor/ui/source-code/utils';
 
 export abstract class CompiledLanguageExecutor implements LanguageExecutor {
   handleCommand?: ((command: string, context: ExecutionContext) => boolean) | undefined;
@@ -141,5 +141,5 @@ export abstract class CompiledLanguageExecutor implements LanguageExecutor {
     output: string[];
   }>;
 
-  protected abstract executeCompiled(compiledCode: any): Promise<{ success: boolean; output: string[] }>;
+  protected abstract executeCompiled(compiledCode: unknown): Promise<{ success: boolean; output: string[] }>;
 }

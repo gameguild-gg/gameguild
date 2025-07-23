@@ -47,7 +47,7 @@ The notification system is already integrated into your header component:
 import { NotificationDropdown } from '@/components/common/notifications';
 
 // In your header component
-<NotificationDropdown/>;
+<NotificationDropdown />;
 ```
 
 ### With Context Provider (Optional)

@@ -3,7 +3,15 @@ import type { TestCase } from './types';
 /**
  * Format test output for display
  */
-export function formatTestOutput(test: TestCase, result: any): string {
+export function formatTestOutput(
+  test: TestCase,
+  result: {
+    passed: boolean;
+    error?: string;
+    expected: unknown;
+    actual: unknown;
+  },
+): string {
   if (result.passed) {
     return `✅ Test passed`;
   } else if (result.error) {
@@ -16,7 +24,7 @@ export function formatTestOutput(test: TestCase, result: any): string {
 /**
  * Deep equality comparison for objects and arrays
  */
-export function deepEqual(a: any, b: any): boolean {
+export function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
 
   if (Array.isArray(a) && Array.isArray(b)) {
@@ -35,7 +43,7 @@ export function deepEqual(a: any, b: any): boolean {
 
     for (const key of keysA) {
       if (!keysB.includes(key)) return false;
-      if (!deepEqual(a[key], b[key])) return false;
+      if (!deepEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])) return false;
     }
 
     return true;

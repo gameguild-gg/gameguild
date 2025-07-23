@@ -134,7 +134,7 @@ int main() {
     addOutput('Compiling and running C tests...');
 
     // Get the C executor
-    const executor = getExecutor('c');
+    const executor = getExecutor();
 
     // Create execution context
     const context = {
@@ -149,6 +149,10 @@ int main() {
     const output = await executor.executeCode(testHarness, context);
 
     // Parse the test results
+    if (!output) {
+      throw new Error('Failed to execute C code');
+    }
+
     const results = parseTestResults(output);
 
     // Update the test results
@@ -159,6 +163,10 @@ int main() {
     }
 
     // Add the output to the terminal
+    if (!output) {
+      throw new Error('Failed to execute C code');
+    }
+
     addOutput(output);
   } catch (error) {
     addOutput(`Error running C tests: ${error}`);
@@ -194,7 +202,7 @@ function parseTestResults(output: string): { passed: boolean; actual: string; ex
         actual: result.actual,
         expected: result.expected,
       });
-    } catch (e) {
+    } catch {
       // Skip lines that aren't valid JSON
     }
   }
@@ -202,13 +210,17 @@ function parseTestResults(output: string): { passed: boolean; actual: string; ex
   return results;
 }
 
+interface Executor {
+  executeCode: (code: string, context: unknown) => Promise<string | null>;
+}
+
 /**
  * Get the C executor
  */
-function getExecutor(language: string) {
+function getExecutor(): Executor {
   // This is a placeholder - in a real implementation, this would use the actual executor factory
   return {
-    executeCode: async (code: string, context: any) => {
+    executeCode: async () => {
       // Simulate C execution with sample output
       return `
 Compiling C code...
