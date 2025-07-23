@@ -356,7 +356,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
   // DELETE: testing/sessions/{sessionId}/register
   [HttpDelete("sessions/{sessionId}/register")]
-  [RequireResourcePermission<SessionRegistration>(PermissionType.Delete)]
+  [RequireResourcePermission<SessionRegistration>(PermissionType.Delete, "sessionId")]
   public async Task<ActionResult> UnregisterFromSession(Guid sessionId) {
     // Get the current authenticated user's ID
     var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -372,7 +372,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
   // GET: testing/sessions/{sessionId}/registrations
   [HttpGet("sessions/{sessionId}/registrations")]
-  [RequireResourcePermission<SessionRegistration>(PermissionType.Read)]
+  [RequireResourcePermission<SessionRegistration>(PermissionType.Read, "sessionId")]
   public async Task<ActionResult<IEnumerable<SessionRegistration>>> GetSessionRegistrations(Guid sessionId) {
     var registrations = await testService.GetSessionRegistrationsAsync(sessionId);
 
@@ -381,7 +381,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
   // POST: testing/sessions/{sessionId}/waitlist
   [HttpPost("sessions/{sessionId}/waitlist")]
-  [RequireResourcePermission<SessionWaitlist>(PermissionType.Create)]
+  [RequireResourcePermission<SessionWaitlist>(PermissionType.Create, "sessionId")]
   public async Task<ActionResult<SessionWaitlist>> AddToWaitlist(
     Guid sessionId,
     [FromBody] SessionRegistrationRequest request
@@ -402,7 +402,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
   // DELETE: testing/sessions/{sessionId}/waitlist
   [HttpDelete("sessions/{sessionId}/waitlist")]
-  [RequireResourcePermission<SessionWaitlist>(PermissionType.Delete)]
+  [RequireResourcePermission<SessionWaitlist>(PermissionType.Delete, "sessionId")]
   public async Task<ActionResult> RemoveFromWaitlist(Guid sessionId) {
     // Get the current authenticated user's ID
     var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -418,7 +418,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
   // GET: testing/sessions/{sessionId}/waitlist
   [HttpGet("sessions/{sessionId}/waitlist")]
-  [RequireResourcePermission<SessionWaitlist>(PermissionType.Read)]
+  [RequireResourcePermission<SessionWaitlist>(PermissionType.Read, "sessionId")]
   public async Task<ActionResult<IEnumerable<SessionWaitlist>>> GetSessionWaitlist(Guid sessionId) {
     var waitlist = await testService.GetSessionWaitlistAsync(sessionId);
 
@@ -487,7 +487,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
   // GET: testing/sessions/{sessionId}/statistics
   [HttpGet("sessions/{sessionId}/statistics")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Read)]
+  [RequireResourcePermission<TestingSession>(PermissionType.Read, "sessionId")]
   public async Task<ActionResult<object>> GetTestingSessionStatistics(Guid sessionId) {
     var statistics = await testService.GetTestingSessionStatisticsAsync(sessionId);
 
@@ -496,7 +496,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
   // GET: testing/users/{userId}/activity
   [HttpGet("users/{userId}/activity")]
-  [RequireResourcePermission<TestingParticipant>(PermissionType.Read)]
+  [RequireResourcePermission<TestingParticipant>(PermissionType.Read, "userId")]
   public async Task<ActionResult<object>> GetUserTestingActivity(Guid userId) {
     var activity = await testService.GetUserTestingActivityAsync(userId);
 
