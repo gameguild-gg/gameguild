@@ -359,7 +359,7 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
   };
 };
 
-export default async function TrackDetailPage({ params }: { params: { slug: string } }) {
+export default async function TrackDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const track = await getTrackBySlug(slug);
 

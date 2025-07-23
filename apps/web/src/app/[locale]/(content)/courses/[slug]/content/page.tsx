@@ -78,14 +78,14 @@ const contentTypeIcons = {
   exercise: Award,
 };
 
-export default async function CourseContentPage({ params }: { params: { slug: string } }) {
+export default async function CourseContentPage({ params }: { params: Promise<{ slug: string }> }) {
   // Check authentication
   const session = await auth();
-  if (!session?.user) {
-    redirect(`/connect?returnUrl=/course/${params.slug}/content`);
-  }
-
   const { slug } = await params;
+  
+  if (!session?.user) {
+    redirect(`/connect?returnUrl=/course/${slug}/content`);
+  }
 
   let course;
   try {
