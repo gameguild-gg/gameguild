@@ -22,7 +22,7 @@ interface TenantSwitcherProps {
 export function TenantSwitcher({ initialTenants = [] }: TenantSwitcherProps) {
   const { data: session } = useSession();
   const { isMobile } = useSidebar();
-  
+
   // Create default "Game Guild" tenant if no tenants available
   const defaultTenant: TenantResponse = {
     id: 'game-guild-default',
@@ -32,7 +32,7 @@ export function TenantSwitcher({ initialTenants = [] }: TenantSwitcherProps) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  
+
   const [tenants] = React.useState<TenantResponse[]>(initialTenants.length > 0 ? initialTenants : [defaultTenant]);
   const [activeTenant, setActiveTenant] = React.useState<TenantResponse | null>(null);
   const [isLoading] = React.useState(false);

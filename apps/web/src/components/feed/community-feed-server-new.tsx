@@ -78,7 +78,7 @@ export async function CommunityFeedServer({ searchParams }: CommunityFeedServerP
 
         {/* Posts List */}
         <div className="space-y-6">
-          <PostsList 
+          <PostsList
             posts={postsPage.posts || []}
             loading={false}
             hasMore={postsPage.hasNextPage || false}

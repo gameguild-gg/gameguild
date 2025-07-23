@@ -20,13 +20,13 @@ export function RefreshButton({ className }: RefreshButtonProps) {
       try {
         // Refresh dashboard data using server action
         const result = await refreshDashboardData();
-        
+
         if (result.success) {
           setMessage(result.message);
         } else {
           setMessage(result.message);
         }
-        
+
         // Refresh the page to show updated data
         router.refresh();
 
@@ -51,7 +51,7 @@ export function RefreshButton({ className }: RefreshButtonProps) {
         <RefreshCw className={`mr-2 h-4 w-4 ${isPending ? 'animate-spin' : ''}`} />
         {isPending ? 'Refreshing...' : 'Refresh Data'}
       </Button>
-      
+
       {message && <span className="text-xs text-slate-400 animate-in fade-in-0 duration-300">{message}</span>}
     </div>
   );

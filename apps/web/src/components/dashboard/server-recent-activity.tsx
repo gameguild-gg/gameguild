@@ -56,7 +56,7 @@ function ActivityIcon({ type, className }: { type: ActivityItem['type']; classNa
 function ActivityBadge({ type }: { type: ActivityItem['type'] }) {
   const colorClass = activityBadgeColors[type];
   const label = type.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-  
+
   return (
     <Badge variant="outline" className={`${colorClass} text-xs`}>
       {label}
@@ -70,7 +70,7 @@ interface ServerRecentActivityProps {
 
 export async function ServerRecentActivity({ limit = 10 }: ServerRecentActivityProps) {
   const result = await getRecentActivity(limit);
-  
+
   if (!result.success) {
     return (
       <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
@@ -136,9 +136,9 @@ export async function ServerRecentActivity({ limit = 10 }: ServerRecentActivityP
                       <h4 className="text-sm font-medium text-white truncate">{activity.title}</h4>
                       <ActivityBadge type={activity.type} />
                     </div>
-                    
+
                     <p className="text-xs text-slate-400 mb-2 line-clamp-2">{activity.description}</p>
-                    
+
                     {activity.metadata && (
                       <div className="flex items-center gap-3 text-xs text-slate-500 mb-1">
                         {activity.metadata.postTitle && (
@@ -161,7 +161,7 @@ export async function ServerRecentActivity({ limit = 10 }: ServerRecentActivityP
                         )}
                       </div>
                     )}
-                    
+
                     <span className="text-xs text-slate-500">{activity.timestamp}</span>
                   </div>
                 </div>

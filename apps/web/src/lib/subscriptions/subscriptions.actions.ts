@@ -84,11 +84,7 @@ const REVALIDATION_TIME = 300; // 5 minutes
 /**
  * Get user's subscriptions
  */
-export async function getUserSubscriptions(
-  userId?: string,
-  page: number = 1,
-  limit: number = 20
-): Promise<SubscriptionsResponse> {
+export async function getUserSubscriptions(userId?: string, page: number = 1, limit: number = 20): Promise<SubscriptionsResponse> {
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -96,9 +92,7 @@ export async function getUserSubscriptions(
     }
 
     const targetUserId = userId || session.userId;
-    const endpoint = targetUserId 
-      ? `/api/subscription/user/${targetUserId}` 
-      : '/api/subscription/me';
+    const endpoint = targetUserId ? `/api/subscription/user/${targetUserId}` : '/api/subscription/me';
 
     const queryParams = new URLSearchParams({
       page: page.toString(),
@@ -124,7 +118,7 @@ export async function getUserSubscriptions(
 
     const result = await response.json();
     const subscriptions = Array.isArray(result) ? result : result.data || [];
-    
+
     return {
       success: true,
       data: subscriptions,
@@ -137,8 +131,8 @@ export async function getUserSubscriptions(
     };
   } catch (error) {
     console.error('Error fetching user subscriptions:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -179,8 +173,8 @@ export async function getActiveSubscription(): Promise<{ success: boolean; data?
     return { success: true, data: subscription };
   } catch (error) {
     console.error('Error fetching active subscription:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -189,11 +183,7 @@ export async function getActiveSubscription(): Promise<{ success: boolean; data?
 /**
  * Get all subscriptions (admin only)
  */
-export async function getAllSubscriptions(
-  page: number = 1,
-  limit: number = 20,
-  status?: string
-): Promise<SubscriptionsResponse> {
+export async function getAllSubscriptions(page: number = 1, limit: number = 20, status?: string): Promise<SubscriptionsResponse> {
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -225,7 +215,7 @@ export async function getAllSubscriptions(
 
     const result = await response.json();
     const subscriptions = Array.isArray(result) ? result : result.data || [];
-    
+
     return {
       success: true,
       data: subscriptions,
@@ -238,8 +228,8 @@ export async function getAllSubscriptions(
     };
   } catch (error) {
     console.error('Error fetching all subscriptions:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -284,10 +274,10 @@ export async function getSubscriptionStatistics(): Promise<{ success: boolean; d
             newSubscriptionsToday: 0,
             newSubscriptionsThisWeek: 0,
             newSubscriptionsThisMonth: 0,
-          }
+          },
         };
       }
-      
+
       const errorText = await response.text();
       return { success: false, error: `API error: ${response.status} - ${errorText}` };
     }
@@ -296,8 +286,8 @@ export async function getSubscriptionStatistics(): Promise<{ success: boolean; d
     return { success: true, data: statistics };
   } catch (error) {
     console.error('Error fetching subscription statistics:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -308,7 +298,7 @@ export async function getSubscriptionStatistics(): Promise<{ success: boolean; d
  */
 export async function cancelSubscription(subscriptionId: string): Promise<{ success: boolean; error?: string }> {
   'use server';
-  
+
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -333,12 +323,12 @@ export async function cancelSubscription(subscriptionId: string): Promise<{ succ
     revalidateTag(CACHE_TAGS.SUBSCRIPTIONS);
     revalidateTag(CACHE_TAGS.USER_SUBSCRIPTION);
     revalidateTag(CACHE_TAGS.SUBSCRIPTION_STATISTICS);
-    
+
     return { success: true };
   } catch (error) {
     console.error('Error cancelling subscription:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -349,7 +339,7 @@ export async function cancelSubscription(subscriptionId: string): Promise<{ succ
  */
 export async function reactivateSubscription(subscriptionId: string): Promise<{ success: boolean; error?: string }> {
   'use server';
-  
+
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -374,12 +364,12 @@ export async function reactivateSubscription(subscriptionId: string): Promise<{ 
     revalidateTag(CACHE_TAGS.SUBSCRIPTIONS);
     revalidateTag(CACHE_TAGS.USER_SUBSCRIPTION);
     revalidateTag(CACHE_TAGS.SUBSCRIPTION_STATISTICS);
-    
+
     return { success: true };
   } catch (error) {
     console.error('Error reactivating subscription:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -407,5 +397,5 @@ export const getCachedUserSubscriptions = unstable_cache(
   {
     tags: [CACHE_TAGS.SUBSCRIPTIONS],
     revalidate: REVALIDATION_TIME,
-  }
+  },
 );

@@ -19,7 +19,7 @@ function ProductsLoading() {
         <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
         <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
       </div>
-      
+
       {/* Statistics skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -88,7 +88,7 @@ function ProductsError({ error }: { error: string }) {
 // Main products content component
 async function ProductsContent({ searchParams }: ProductsPageProps) {
   const params = await searchParams;
-  
+
   // Extract search parameters
   const page = typeof params.page === 'string' ? parseInt(params.page) : 1;
   const limit = typeof params.limit === 'string' ? parseInt(params.limit) : 20;

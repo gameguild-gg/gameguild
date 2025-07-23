@@ -24,7 +24,7 @@ export default function JoinModal({ params }: JoinModalProps) {
 
   useEffect(() => {
     console.log('JoinModal (intercept from testing-lab) mounted for slug:', resolvedParams.slug);
-    
+
     const fetchSession = async () => {
       try {
         const sessionData = await getTestSessionBySlug(resolvedParams.slug);

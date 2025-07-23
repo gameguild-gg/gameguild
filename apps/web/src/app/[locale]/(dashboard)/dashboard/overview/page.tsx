@@ -15,7 +15,7 @@ interface DashboardContentProps {
 
 async function DashboardContent({ searchParams }: DashboardContentProps) {
   const params = await searchParams;
-  
+
   // Extract search parameters for filtering
   const fromDate = typeof params.fromDate === 'string' ? params.fromDate : undefined;
   const toDate = typeof params.toDate === 'string' ? params.toDate : undefined;
@@ -128,11 +128,7 @@ async function DashboardContent({ searchParams }: DashboardContentProps) {
   );
 }
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   return (
     <Suspense fallback={<DashboardPageLoading />}>
       <DashboardContent searchParams={searchParams} />
@@ -157,7 +153,7 @@ function DashboardPageLoading() {
           <DashboardStatsLoading />
         </div>
       </section>
-      
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <RecentActivityLoading />

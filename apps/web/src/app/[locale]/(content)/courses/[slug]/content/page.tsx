@@ -82,7 +82,7 @@ export default async function CourseContentPage({ params }: { params: Promise<{ 
   // Check authentication
   const session = await auth();
   const { slug } = await params;
-  
+
   if (!session?.user) {
     redirect(`/connect?returnUrl=/course/${slug}/content`);
   }

@@ -9,11 +9,7 @@ export const metadata = {
   description: 'Modern gaming community platform',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.className}>
       <body className="min-h-screen bg-background font-sans antialiased">
@@ -21,7 +17,7 @@ export default function RootLayout({
           onError={(error, errorInfo) => {
             // Global error reporting
             console.error('Application Error:', error, errorInfo);
-            
+
             // Send to error monitoring service
             if (typeof window !== 'undefined' && window.Sentry) {
               window.Sentry.captureException(error, {

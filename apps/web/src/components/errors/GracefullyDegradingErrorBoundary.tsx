@@ -33,13 +33,10 @@ export interface ErrorBoundaryState {
 }
 
 // Default fallback component with improved accessibility and design
-const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
-  error,
-  resetError,
-}) => {
+const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError }) => {
   // SSR-safe check for window availability
   const isClient = typeof window !== 'undefined';
-  
+
   return (
     <div
       className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 p-4"
@@ -49,13 +46,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
     >
       <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-red-200 dark:border-red-800 p-8">
         <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 bg-red-100 dark:bg-red-900 rounded-full">
-          <svg
-            className="w-8 h-8 text-red-600 dark:text-red-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
+          <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -65,25 +56,17 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
           </svg>
         </div>
 
-        <h2
-          id="error-title"
-          className="text-xl font-bold text-center text-gray-900 dark:text-white mb-4"
-        >
+        <h2 id="error-title" className="text-xl font-bold text-center text-gray-900 dark:text-white mb-4">
           Something went wrong
         </h2>
 
-        <p
-          id="error-description"
-          className="text-gray-600 dark:text-gray-300 text-center mb-6 leading-relaxed"
-        >
+        <p id="error-description" className="text-gray-600 dark:text-gray-300 text-center mb-6 leading-relaxed">
           We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.
         </p>
 
         {process.env.NODE_ENV === 'development' && (
           <details className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
-            <summary className="cursor-pointer font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Error Details (Development)
-            </summary>
+            <summary className="cursor-pointer font-medium text-gray-700 dark:text-gray-300 mb-2">Error Details (Development)</summary>
             <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
               <div>
                 <strong>Error:</strong> {error.message}
@@ -91,9 +74,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
               {error.stack && (
                 <div>
                   <strong>Stack:</strong>
-                  <pre className="mt-1 whitespace-pre-wrap text-xs bg-gray-100 dark:bg-gray-900 p-2 rounded">
-                    {error.stack}
-                  </pre>
+                  <pre className="mt-1 whitespace-pre-wrap text-xs bg-gray-100 dark:bg-gray-900 p-2 rounded">{error.stack}</pre>
                 </div>
               )}
             </div>
@@ -128,9 +109,9 @@ export class GracefullyDegradingErrorBoundary extends Component<ErrorBoundaryPro
 
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { 
-      hasError: false, 
-      error: null, 
+    this.state = {
+      hasError: false,
+      error: null,
       errorInfo: null,
       eventId: null,
       retryCount: 0,
@@ -139,10 +120,10 @@ export class GracefullyDegradingErrorBoundary extends Component<ErrorBoundaryPro
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    return { 
-      hasError: true, 
+    return {
+      hasError: true,
       error,
-      eventId: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      eventId: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     };
   }
 
@@ -188,9 +169,7 @@ export class GracefullyDegradingErrorBoundary extends Component<ErrorBoundaryPro
     const { hasError } = this.state;
 
     if (hasError && prevProps.resetKeys !== resetKeys) {
-      if (resetKeys?.some((resetKey, idx) => 
-        prevProps.resetKeys?.[idx] !== resetKey
-      )) {
+      if (resetKeys?.some((resetKey, idx) => prevProps.resetKeys?.[idx] !== resetKey)) {
         this.resetErrorBoundary();
       }
     }
@@ -228,21 +207,11 @@ export class GracefullyDegradingErrorBoundary extends Component<ErrorBoundaryPro
     const { children, fallback: Fallback = DefaultErrorFallback, isolate } = this.props;
 
     if (hasError && error) {
-      const errorFallback = (
-        <Fallback 
-          error={error} 
-          resetError={this.resetErrorBoundary}
-          errorInfo={errorInfo || undefined}
-        />
-      );
+      const errorFallback = <Fallback error={error} resetError={this.resetErrorBoundary} errorInfo={errorInfo || undefined} />;
 
       // Isolate error boundary to prevent error propagation
       if (isolate) {
-        return (
-          <div className="error-boundary-isolation">
-            {errorFallback}
-          </div>
-        );
+        return <div className="error-boundary-isolation">{errorFallback}</div>;
       }
 
       return errorFallback;

@@ -102,7 +102,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
       filtered = filtered.filter(
         (request) =>
           (request.title && request.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (request.description && request.description.toLowerCase().includes(searchTerm.toLowerCase()))
+          (request.description && request.description.toLowerCase().includes(searchTerm.toLowerCase())),
       );
     }
 
@@ -117,9 +117,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
     let filtered = sessions;
 
     if (searchTerm) {
-      filtered = filtered.filter((session) =>
-        session.sessionName && session.sessionName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter((session) => session.sessionName && session.sessionName.toLowerCase().includes(searchTerm.toLowerCase()));
     }
 
     setFilteredSessions(filtered);
@@ -190,7 +188,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
 
   const getSessionStatusBadge = (status: string | number) => {
     const statusStr = typeof status === 'number' ? status.toString() : status.toLowerCase();
-    
+
     switch (statusStr) {
       case 'scheduled':
       case '0':
@@ -215,9 +213,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Testing Lab Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Manage game testing requests and sessions
-          </p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Manage game testing requests and sessions</p>
         </div>
         <div className="flex gap-2">
           {(userRole.isProfessor || userRole.isAdmin) && (
@@ -232,9 +228,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>Create Testing Request</DialogTitle>
-                    <DialogDescription>
-                      Create a new testing request for your game project
-                    </DialogDescription>
+                    <DialogDescription>Create a new testing request for your game project</DialogDescription>
                   </DialogHeader>
                   {/* Create request form will go here */}
                 </DialogContent>
@@ -249,9 +243,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>Create Testing Session</DialogTitle>
-                    <DialogDescription>
-                      Schedule a new testing session
-                    </DialogDescription>
+                    <DialogDescription>Schedule a new testing session</DialogDescription>
                   </DialogHeader>
                   {/* Create session form will go here */}
                 </DialogContent>
@@ -315,9 +307,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
                     <CardTitle className="text-lg">{request.title || 'Untitled Request'}</CardTitle>
                     {getStatusBadge(request.status)}
                   </div>
-                  <CardDescription className="line-clamp-2">
-                    {request.description || 'No description available'}
-                  </CardDescription>
+                  <CardDescription className="line-clamp-2">{request.description || 'No description available'}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {request.projectVersion && request.projectVersion.project && (
@@ -352,9 +342,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
                     )}
                     {request.id && (
                       <Button size="sm" variant="outline" asChild>
-                        <Link href={`/dashboard/testing-lab/requests/${request.id}`}>
-                          View Details
-                        </Link>
+                        <Link href={`/dashboard/testing-lab/requests/${request.id}`}>View Details</Link>
                       </Button>
                     )}
                   </div>
@@ -398,9 +386,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" asChild>
-                      <Link href={`/dashboard/testing-lab/sessions/${session.id}`}>
-                        View Details
-                      </Link>
+                      <Link href={`/dashboard/testing-lab/sessions/${session.id}`}>View Details</Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -428,9 +414,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
                   <PlayCircle className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {requests.filter((r) => r.status === 1 || r.status === 2).length}
-                  </div>
+                  <div className="text-2xl font-bold">{requests.filter((r) => r.status === 1 || r.status === 2).length}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -448,9 +432,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
                   <Clock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {sessions.filter((s) => new Date(s.sessionDate) > new Date()).length}
-                  </div>
+                  <div className="text-2xl font-bold">{sessions.filter((s) => new Date(s.sessionDate) > new Date()).length}</div>
                 </CardContent>
               </Card>
             </div>

@@ -136,7 +136,7 @@ describe('GracefullyDegradingErrorBoundary', () => {
 
   it('shows error details in development mode', () => {
     const originalEnv = process.env.NODE_ENV;
-    
+
     // Mock NODE_ENV for this test
     Object.defineProperty(process.env, 'NODE_ENV', {
       value: 'development',
@@ -178,7 +178,7 @@ describe('GracefullyDegradingErrorBoundary', () => {
     const errorContainer = screen.getByRole('alert');
     expect(errorContainer).toHaveAttribute('aria-labelledby', 'error-title');
     expect(errorContainer).toHaveAttribute('aria-describedby', 'error-description');
-    
+
     expect(screen.getByLabelText('Try again')).toBeInTheDocument();
     expect(screen.getByLabelText('Reload page')).toBeInTheDocument();
   });

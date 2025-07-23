@@ -174,7 +174,7 @@ export function EnumField<TEnum extends object>(
   getEnum: () => TEnum,
   options: Omit<ApiPropertyOptions, 'type' | 'enum' | 'enumName' | 'isArray'> & IEnumFieldOptions = {},
 ): PropertyDecorator {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/ban-types
+  // eslint-disable-next-line @typescript-eslint/ban-types
   const enumValue = getEnum();
   const decorators = [IsEnum(enumValue, { each: options.each })];
 
@@ -200,7 +200,6 @@ export function ClassField<TClass extends Constructor>(
   getClass: () => TClass,
   options: Omit<ApiPropertyOptions, 'type'> & IClassFieldOptions = {},
 ): PropertyDecorator {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const classValue = getClass();
 
   const decorators = [Type(() => classValue), ValidateNested({ each: options.each })];

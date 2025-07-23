@@ -62,7 +62,7 @@ export function ServerDashboardStats({ data, className }: ServerDashboardStatsPr
       subtitle: `${userStatistics.usersCreatedThisMonth} this month`,
     },
     {
-      title: 'Inactive Users', 
+      title: 'Inactive Users',
       value: formatNumber(userStatistics.inactiveUsers),
       change: `${userStatistics.deletedUsers} deleted`,
       trend: 'down' as const,

@@ -1,28 +1,22 @@
-"use client"
+'use client';
 
-import { useCallback } from "react"
-import { REMOVE_LIST_COMMAND } from "@lexical/list"
-import { List } from "lucide-react"
-import {
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import { UnorderedListMenu } from "./unordered-list-menu"
-import { OrderedListMenu } from "./ordered-list-menu"
+import { useCallback } from 'react';
+import { REMOVE_LIST_COMMAND } from '@lexical/list';
+import { List } from 'lucide-react';
+import { DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { UnorderedListMenu } from './unordered-list-menu';
+import { OrderedListMenu } from './ordered-list-menu';
 
 interface ListMenuComponentProps {
-  editor: any
-  currentListType: string
-  updateToolbar: () => void
+  editor: any;
+  currentListType: string;
+  updateToolbar: () => void;
 }
 
 export function ListMenuComponent({ editor, currentListType, updateToolbar }: ListMenuComponentProps) {
   const handleRemoveList = useCallback(() => {
-    editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined)
-  }, [editor])
+    editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+  }, [editor]);
 
   return (
     <DropdownMenuSub>
@@ -44,5 +38,5 @@ export function ListMenuComponent({ editor, currentListType, updateToolbar }: Li
         </DropdownMenuItem>
       </DropdownMenuSubContent>
     </DropdownMenuSub>
-  )
+  );
 }

@@ -39,9 +39,7 @@ export default async function ProjectsPage() {
       <div className="container mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Project Management</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Manage game projects, tools, and libraries across the platform.
-          </p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Manage game projects, tools, and libraries across the platform.</p>
         </div>
 
         <Alert variant="destructive">
@@ -55,9 +53,7 @@ export default async function ProjectsPage() {
     <div className="container mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Project Management</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Manage game projects, tools, and libraries across the platform.
-        </p>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">Manage game projects, tools, and libraries across the platform.</p>
       </div>
 
       <ProjectManagementContent initialProjects={projects} />

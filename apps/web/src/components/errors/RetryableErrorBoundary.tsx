@@ -34,15 +34,7 @@ interface RetryableErrorBoundaryState {
   errorReport: ErrorReport | null;
 }
 
-const DefaultRetryableFallback: React.FC<RetryableErrorFallbackProps> = ({
-  error,
-  resetError,
-  retry,
-  retryCount,
-  maxRetries,
-  isRetrying,
-  canRetry,
-}) => {
+const DefaultRetryableFallback: React.FC<RetryableErrorFallbackProps> = ({ error, resetError, retry, retryCount, maxRetries, isRetrying, canRetry }) => {
   const isClient = typeof window !== 'undefined';
 
   return (
@@ -54,43 +46,29 @@ const DefaultRetryableFallback: React.FC<RetryableErrorFallbackProps> = ({
     >
       <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-yellow-200 dark:border-yellow-800 p-6">
         <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-yellow-100 dark:bg-yellow-900 rounded-full">
-          <svg
-            className="w-6 h-6 text-yellow-600 dark:text-yellow-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
+          <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
 
-        <h3
-          id="retry-error-title"
-          className="text-lg font-semibold text-center text-gray-900 dark:text-white mb-3"
-        >
+        <h3 id="retry-error-title" className="text-lg font-semibold text-center text-gray-900 dark:text-white mb-3">
           Component Error
         </h3>
 
-        <p
-          id="retry-error-description"
-          className="text-gray-600 dark:text-gray-300 text-center mb-4 text-sm"
-        >
+        <p id="retry-error-description" className="text-gray-600 dark:text-gray-300 text-center mb-4 text-sm">
           This component encountered an error. {canRetry ? 'You can try again.' : 'Maximum retries reached.'}
         </p>
 
         {process.env.NODE_ENV === 'development' && (
           <details className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-xs">
-            <summary className="cursor-pointer font-medium text-gray-700 dark:text-gray-300">
-              Error Details
-            </summary>
+            <summary className="cursor-pointer font-medium text-gray-700 dark:text-gray-300">Error Details</summary>
             <div className="mt-2 text-gray-600 dark:text-gray-400">
-              <div><strong>Error:</strong> {error.message}</div>
-              <div><strong>Retry Count:</strong> {retryCount}/{maxRetries}</div>
+              <div>
+                <strong>Error:</strong> {error.message}
+              </div>
+              <div>
+                <strong>Retry Count:</strong> {retryCount}/{maxRetries}
+              </div>
             </div>
           </details>
         )}
@@ -105,7 +83,7 @@ const DefaultRetryableFallback: React.FC<RetryableErrorFallbackProps> = ({
               {isRetrying ? 'Retrying...' : `Retry (${maxRetries - retryCount} left)`}
             </button>
           )}
-          
+
           <div className="flex gap-2">
             <button
               onClick={resetError}
@@ -128,10 +106,7 @@ const DefaultRetryableFallback: React.FC<RetryableErrorFallbackProps> = ({
   );
 };
 
-export class RetryableErrorBoundary extends Component<
-  RetryableErrorBoundaryProps,
-  RetryableErrorBoundaryState
-> {
+export class RetryableErrorBoundary extends Component<RetryableErrorBoundaryProps, RetryableErrorBoundaryState> {
   private retryTimeoutId: number | null = null;
 
   constructor(props: RetryableErrorBoundaryProps) {
@@ -155,15 +130,11 @@ export class RetryableErrorBoundary extends Component<
 
   async componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     const { level = 'component', onError, reportToAnalytics = true } = this.props;
-    
+
     // Create error report
-    const errorReport = errorReporter.createErrorReport(
-      error, 
-      { componentStack: errorInfo.componentStack || undefined }, 
-      level
-    );
-    
-    this.setState({ 
+    const errorReport = errorReporter.createErrorReport(error, { componentStack: errorInfo.componentStack || undefined }, level);
+
+    this.setState({
       errorInfo,
       errorReport,
     });
@@ -241,11 +212,7 @@ export class RetryableErrorBoundary extends Component<
 
   render() {
     const { hasError, error, retryCount, isRetrying } = this.state;
-    const { 
-      children, 
-      fallback: Fallback = DefaultRetryableFallback, 
-      maxRetries = 3 
-    } = this.props;
+    const { children, fallback: Fallback = DefaultRetryableFallback, maxRetries = 3 } = this.props;
 
     if (hasError && error) {
       const canRetry = retryCount < maxRetries;

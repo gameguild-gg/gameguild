@@ -13,7 +13,7 @@ export default function JoinModal() {
 
   useEffect(() => {
     console.log('JoinModal intercepting route component mounted!');
-    
+
     const handleEscapeKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         handleClose();
@@ -31,10 +31,7 @@ export default function JoinModal() {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
-      onClick={handleBackdropClick}
-    >
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={handleBackdropClick}>
       <div className="bg-slate-900 rounded-lg border border-slate-700 p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-white">Join Testing Session (Modal)</h2>

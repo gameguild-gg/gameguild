@@ -5,7 +5,7 @@ export default function TestingLabSettingsPage() {
         <h1 className="text-3xl font-bold">Testing Lab Settings</h1>
         <p className="text-muted-foreground">Configure your testing lab preferences and notifications</p>
       </div>
-      
+
       <div className="max-w-2xl space-y-6">
         {/* Feature content will be added here */}
         <div className="text-center text-muted-foreground">Settings functionality coming soon...</div>

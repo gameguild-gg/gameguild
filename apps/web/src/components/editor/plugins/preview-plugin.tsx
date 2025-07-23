@@ -3,20 +3,7 @@
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import {
-  AlertCircle,
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  Copy,
-  Download,
-  ExternalLink,
-  Eye,
-  ImageIcon,
-  LayoutGrid,
-  Mail,
-  RotateCcw,
-} from 'lucide-react';
+import { AlertCircle, ArrowRight, ChevronLeft, ChevronRight, Copy, Download, ExternalLink, Eye, ImageIcon, LayoutGrid, Mail, RotateCcw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { SerializedEditorState } from 'lexical';
 import type { SerializedQuizNode } from '../nodes/quiz-node';
@@ -1363,7 +1350,7 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
             <sub key={`subscript-${node.version || Math.random()}`} style={inlineStyles}>
               {textContent}
             </sub>
-          )
+          );
         }
         if (node.format & 32) {
           // Subscript (format flag 32)
@@ -1371,7 +1358,7 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
             <sub key={`subscript-${node.version || Math.random()}`} style={inlineStyles}>
               {textContent}
             </sub>
-          )
+          );
         }
         if (node.format & 16) {
           // Superscript (format flag 16)
@@ -1379,19 +1366,15 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
             <sup key={`superscript-${node.version || Math.random()}`} style={inlineStyles}>
               {textContent}
             </sup>
-          )
+          );
         }
         if (node.format & 64) {
           // Code
           textContent = (
-            <code
-              key={`code-${node.version || Math.random()}`}
-              style={inlineStyles}
-              className="bg-muted px-1 py-0.5 rounded text-sm"
-            >
+            <code key={`code-${node.version || Math.random()}`} style={inlineStyles} className="bg-muted px-1 py-0.5 rounded text-sm">
               {textContent}
             </code>
-          )
+          );
         }
         if (node.format & 128) {
           // Assuming format flag 128 for short quote
@@ -1399,7 +1382,7 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
             <q key={`quote-${node.version || Math.random()}`} style={inlineStyles}>
               {textContent}
             </q>
-          )
+          );
         }
         // Remove the following lines from the `if (node.format)` block:
       } else if (Object.keys(inlineStyles).length > 0) {
@@ -1418,20 +1401,20 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
     if (node.children) {
       const children = node.children.map((child: any) => renderNode(child));
       switch (node.type) {
-        case "paragraph":
-          const paragraphClasses = ["my-4"]
-          if (node.format === "left") paragraphClasses.push("text-left")
-          else if (node.format === "center") paragraphClasses.push("text-center")
-          else if (node.format === "right") paragraphClasses.push("text-right")
-          else if (node.format === "justify") paragraphClasses.push("text-justify")
+        case 'paragraph':
+          const paragraphClasses = ['my-4'];
+          if (node.format === 'left') paragraphClasses.push('text-left');
+          else if (node.format === 'center') paragraphClasses.push('text-center');
+          else if (node.format === 'right') paragraphClasses.push('text-right');
+          else if (node.format === 'justify') paragraphClasses.push('text-justify');
 
           // Always use <p> tag for paragraphs
           return (
-            <p key={node.version} className={paragraphClasses.join(" ")}>
+            <p key={node.version} className={paragraphClasses.join(' ')}>
               {children}
             </p>
-          )
-        case "quote":
+          );
+        case 'quote':
           return (
             <blockquote key={node.version} className="border-l-4 border-muted pl-4 italic my-4">
               {children}
@@ -1444,15 +1427,15 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
             <ListTag key={node.version} className={`${listClass} my-4`}>
               {children}
             </ListTag>
-          )
-        case "listitem":
-          const listItemClasses = ["my-1"]
-          if (node.format === "left") listItemClasses.push("text-left")
-          else if (node.format === "center") listItemClasses.push("text-center")
-          else if (node.format === "right") listItemClasses.push("text-right")
-          else if (node.format === "justify") listItemClasses.push("text-justify")
+          );
+        case 'listitem':
+          const listItemClasses = ['my-1'];
+          if (node.format === 'left') listItemClasses.push('text-left');
+          else if (node.format === 'center') listItemClasses.push('text-center');
+          else if (node.format === 'right') listItemClasses.push('text-right');
+          else if (node.format === 'justify') listItemClasses.push('text-justify');
           return (
-            <li key={node.version} className={listItemClasses.join(" ")}>
+            <li key={node.version} className={listItemClasses.join(' ')}>
               {children}
             </li>
           );
@@ -1461,13 +1444,13 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
             <a key={node.version} href={node.url} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
               {children}
             </a>
-          )
-        case "heading":
-          const headingClasses = ["font-bold my-4"]
-          if (node.format === "left") headingClasses.push("text-left")
-          else if (node.format === "center") headingClasses.push("text-center")
-          else if (node.format === "right") headingClasses.push("text-right")
-          else if (node.format === "justify") headingClasses.push("text-justify")
+          );
+        case 'heading':
+          const headingClasses = ['font-bold my-4'];
+          if (node.format === 'left') headingClasses.push('text-left');
+          else if (node.format === 'center') headingClasses.push('text-center');
+          else if (node.format === 'right') headingClasses.push('text-right');
+          else if (node.format === 'justify') headingClasses.push('text-justify');
 
           // Get inline styles from the node if they exist
           const headingStyles: React.CSSProperties = {};
@@ -1496,48 +1479,48 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
             case 'h1':
             case 1:
               return (
-                <h1 key={node.version} className={`text-4xl ${headingClasses.join(" ")}`} style={headingStyles}>
+                <h1 key={node.version} className={`text-4xl ${headingClasses.join(' ')}`} style={headingStyles}>
                   {children}
                 </h1>
               );
             case 'h2':
             case 2:
               return (
-                <h2 key={node.version} className={`text-3xl ${headingClasses.join(" ")}`} style={headingStyles}>
+                <h2 key={node.version} className={`text-3xl ${headingClasses.join(' ')}`} style={headingStyles}>
                   {children}
                 </h2>
               );
             case 'h3':
             case 3:
               return (
-                <h3 key={node.version} className={`text-2xl ${headingClasses.join(" ")}`} style={headingStyles}>
+                <h3 key={node.version} className={`text-2xl ${headingClasses.join(' ')}`} style={headingStyles}>
                   {children}
                 </h3>
               );
             case 'h4':
             case 4:
               return (
-                <h4 key={node.version} className={`text-xl ${headingClasses.join(" ")}`} style={headingStyles}>
+                <h4 key={node.version} className={`text-xl ${headingClasses.join(' ')}`} style={headingStyles}>
                   {children}
                 </h4>
               );
             case 'h5':
             case 5:
               return (
-                <h5 key={node.version} className={`text-lg ${headingClasses.join(" ")}`} style={headingStyles}>
+                <h5 key={node.version} className={`text-lg ${headingClasses.join(' ')}`} style={headingStyles}>
                   {children}
                 </h5>
               );
             case 'h6':
             case 6:
               return (
-                <h6 key={node.version} className={`text-base ${headingClasses.join(" ")}`} style={headingStyles}>
+                <h6 key={node.version} className={`text-base ${headingClasses.join(' ')}`} style={headingStyles}>
                   {children}
                 </h6>
               );
             default:
               return (
-                <h2 key={node.version} className={`text-3xl ${headingClasses.join(" ")}`} style={headingStyles}>
+                <h2 key={node.version} className={`text-3xl ${headingClasses.join(' ')}`} style={headingStyles}>
                   {children}
                 </h2>
               );

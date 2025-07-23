@@ -86,7 +86,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
           setBannerImage({ url: response.data.imageUrl, name: 'banner' });
         }
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error.status === 401) {
         router.push(`/disconnect`);

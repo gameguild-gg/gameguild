@@ -82,7 +82,7 @@ export async function getAchievements(
   limit: number = 20,
   category?: string,
   type?: string,
-  isActive?: boolean
+  isActive?: boolean,
 ): Promise<AchievementsResponse> {
   try {
     const session = await auth();
@@ -117,7 +117,7 @@ export async function getAchievements(
 
     const result = await response.json();
     const achievements = result.achievements || result.data || result;
-    
+
     return {
       success: true,
       data: Array.isArray(achievements) ? achievements : [],
@@ -130,8 +130,8 @@ export async function getAchievements(
     };
   } catch (error) {
     console.error('Error fetching achievements:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -140,11 +140,7 @@ export async function getAchievements(
 /**
  * Get user achievements
  */
-export async function getUserAchievements(
-  userId?: string,
-  page: number = 1,
-  limit: number = 20
-): Promise<UserAchievementsResponse> {
+export async function getUserAchievements(userId?: string, page: number = 1, limit: number = 20): Promise<UserAchievementsResponse> {
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -180,7 +176,7 @@ export async function getUserAchievements(
 
     const result = await response.json();
     const userAchievements = result.userAchievements || result.data || result;
-    
+
     return {
       success: true,
       data: Array.isArray(userAchievements) ? userAchievements : [],
@@ -193,8 +189,8 @@ export async function getUserAchievements(
     };
   } catch (error) {
     console.error('Error fetching user achievements:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -236,10 +232,10 @@ export async function getAchievementStatistics(): Promise<{ success: boolean; da
             averagePoints: 0,
             topCategories: [],
             recentAchievements: 0,
-          }
+          },
         };
       }
-      
+
       const errorText = await response.text();
       return { success: false, error: `API error: ${response.status} - ${errorText}` };
     }
@@ -248,8 +244,8 @@ export async function getAchievementStatistics(): Promise<{ success: boolean; da
     return { success: true, data: statistics };
   } catch (error) {
     console.error('Error fetching achievement statistics:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -258,12 +254,9 @@ export async function getAchievementStatistics(): Promise<{ success: boolean; da
 /**
  * Award achievement to user
  */
-export async function awardAchievement(
-  userId: string,
-  achievementId: string
-): Promise<{ success: boolean; data?: UserAchievement; error?: string }> {
+export async function awardAchievement(userId: string, achievementId: string): Promise<{ success: boolean; data?: UserAchievement; error?: string }> {
   'use server';
-  
+
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -289,17 +282,17 @@ export async function awardAchievement(
     }
 
     const userAchievement: UserAchievement = await response.json();
-    
+
     // Revalidate cache
     revalidateTag(CACHE_TAGS.USER_ACHIEVEMENTS);
     revalidateTag(`user-achievements-${userId}`);
     revalidateTag(CACHE_TAGS.ACHIEVEMENT_STATISTICS);
-    
+
     return { success: true, data: userAchievement };
   } catch (error) {
     console.error('Error awarding achievement:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -308,9 +301,11 @@ export async function awardAchievement(
 /**
  * Create a new achievement (admin only)
  */
-export async function createAchievement(achievementData: Omit<Achievement, 'id' | 'createdAt' | 'updatedAt' | 'tenantId'>): Promise<{ success: boolean; data?: Achievement; error?: string }> {
+export async function createAchievement(
+  achievementData: Omit<Achievement, 'id' | 'createdAt' | 'updatedAt' | 'tenantId'>,
+): Promise<{ success: boolean; data?: Achievement; error?: string }> {
   'use server';
-  
+
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -333,16 +328,16 @@ export async function createAchievement(achievementData: Omit<Achievement, 'id' 
     }
 
     const achievement: Achievement = await response.json();
-    
+
     // Revalidate cache
     revalidateTag(CACHE_TAGS.ACHIEVEMENTS);
     revalidateTag(CACHE_TAGS.ACHIEVEMENT_STATISTICS);
-    
+
     return { success: true, data: achievement };
   } catch (error) {
     console.error('Error creating achievement:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -369,5 +364,5 @@ export const getCachedAchievements = unstable_cache(
   {
     tags: [CACHE_TAGS.ACHIEVEMENTS],
     revalidate: REVALIDATION_TIME,
-  }
+  },
 );

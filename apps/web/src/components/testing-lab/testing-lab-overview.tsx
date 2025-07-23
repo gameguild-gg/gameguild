@@ -720,50 +720,32 @@ export function TestingLabOverview() {
                   New Session
                 </Button>
               </div>
-              
+
               <div className="grid gap-4">
                 {sessions.map((session) => (
                   <Card key={session.id} className="p-4">
                     <div className="space-y-2">
                       <div className="flex items-start justify-between">
                         <h4 className="font-semibold">{session.title || 'Untitled Session'}</h4>
-                        <Badge variant={
-                          session.status === 1 ? 'default' :
-                          session.status === 2 ? 'secondary' :
-                          session.status === 3 ? 'default' : 'destructive'
-                        }>
-                          {session.status === 1 ? 'Scheduled' :
-                           session.status === 2 ? 'In Progress' :
-                           session.status === 3 ? 'Completed' : 'Cancelled'}
+                        <Badge
+                          variant={session.status === 1 ? 'default' : session.status === 2 ? 'secondary' : session.status === 3 ? 'default' : 'destructive'}
+                        >
+                          {session.status === 1 ? 'Scheduled' : session.status === 2 ? 'In Progress' : session.status === 3 ? 'Completed' : 'Cancelled'}
                         </Badge>
                       </div>
-                      
-                      {session.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {session.description}
-                        </p>
-                      )}
-                      
+
+                      {session.description && <p className="text-sm text-muted-foreground">{session.description}</p>}
+
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        {session.sessionDate && (
-                          <span>Date: {new Date(session.sessionDate).toLocaleString()}</span>
-                        )}
-                        {session.location && (
-                          <span>Location: {session.location}</span>
-                        )}
-                        {session.maxParticipants && (
-                          <span>Max Participants: {session.maxParticipants}</span>
-                        )}
+                        {session.sessionDate && <span>Date: {new Date(session.sessionDate).toLocaleString()}</span>}
+                        {session.location && <span>Location: {session.location}</span>}
+                        {session.maxParticipants && <span>Max Participants: {session.maxParticipants}</span>}
                       </div>
                     </div>
                   </Card>
                 ))}
-                
-                {sessions.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No testing sessions found.
-                  </div>
-                )}
+
+                {sessions.length === 0 && <div className="text-center py-8 text-muted-foreground">No testing sessions found.</div>}
               </div>
             </div>
           </TabsContent>

@@ -186,11 +186,13 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
   // Set initial sessions when props change
   useEffect(() => {
     // Map API sessions to frontend format if they come from server
-    const mappedSessions = initialSessions.map((apiSession: any): TestingSession => ({
-      ...apiSession,
-      status: mapSessionStatus(apiSession.status),
-      id: apiSession.id || '',
-    }));
+    const mappedSessions = initialSessions.map(
+      (apiSession: any): TestingSession => ({
+        ...apiSession,
+        status: mapSessionStatus(apiSession.status),
+        id: apiSession.id || '',
+      }),
+    );
     setSessions(mappedSessions);
   }, [initialSessions]);
 
@@ -202,11 +204,13 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
       const sessionsData = await getTestingSessionsData();
       const apiSessions = sessionsData?.testingSessions || [];
       // Map API sessions to frontend format
-      const newSessions = apiSessions.map((apiSession: any): TestingSession => ({
-        ...apiSession,
-        status: mapSessionStatus(apiSession.status),
-        id: apiSession.id || '',
-      }));
+      const newSessions = apiSessions.map(
+        (apiSession: any): TestingSession => ({
+          ...apiSession,
+          status: mapSessionStatus(apiSession.status),
+          id: apiSession.id || '',
+        }),
+      );
       setSessions(newSessions);
     } catch (error) {
       console.error('Error refreshing sessions:', error);
@@ -272,14 +276,16 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
   };
 
   // Filter sessions based on search and status
-  const filteredSessions = Array.isArray(sessions) ? sessions.filter((session) => {
-    const matchesSearch =
-      session.sessionName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.location?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.manager?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  }) : [];
+  const filteredSessions = Array.isArray(sessions)
+    ? sessions.filter((session) => {
+        const matchesSearch =
+          session.sessionName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          session.location?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          session.manager?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      })
+    : [];
 
   const getStatusColor = (status: string | null | undefined) => {
     switch (status) {
@@ -388,12 +394,15 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
 
             <div className="flex flex-col sm:flex-row gap-4">
               {userRole.isProfessor && (
-                <Dialog open={showCreateDialog} onOpenChange={(open) => {
-                  console.log('Dialog state changing:', open);
-                  setShowCreateDialog(open);
-                }}>
+                <Dialog
+                  open={showCreateDialog}
+                  onOpenChange={(open) => {
+                    console.log('Dialog state changing:', open);
+                    setShowCreateDialog(open);
+                  }}
+                >
                   <DialogTrigger asChild>
-                    <Button 
+                    <Button
                       className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0 shadow-lg"
                       onClick={() => {
                         console.log('Schedule Session button clicked');
@@ -409,12 +418,15 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
 
               {/* Always show button in development for testing */}
               {process.env.NODE_ENV === 'development' && !userRole.isProfessor && (
-                <Dialog open={showCreateDialog} onOpenChange={(open) => {
-                  console.log('Test Dialog state changing:', open);
-                  setShowCreateDialog(open);
-                }}>
+                <Dialog
+                  open={showCreateDialog}
+                  onOpenChange={(open) => {
+                    console.log('Test Dialog state changing:', open);
+                    setShowCreateDialog(open);
+                  }}
+                >
                   <DialogTrigger asChild>
-                    <Button 
+                    <Button
                       className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white border-0 shadow-lg"
                       onClick={() => {
                         console.log('Test Schedule Session button clicked');
@@ -464,7 +476,9 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-green-300 text-sm font-medium">Active Participants</p>
-                    <p className="text-3xl font-bold text-white">{Array.isArray(sessions) ? sessions.reduce((acc, s) => acc + s.registeredTesterCount, 0) : 0}</p>
+                    <p className="text-3xl font-bold text-white">
+                      {Array.isArray(sessions) ? sessions.reduce((acc, s) => acc + s.registeredTesterCount, 0) : 0}
+                    </p>
                   </div>
                   <Users className="h-8 w-8 text-green-400" />
                 </div>
@@ -477,7 +491,9 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-300 text-sm font-medium">Projects Testing</p>
-                    <p className="text-3xl font-bold text-white">{Array.isArray(sessions) ? sessions.reduce((acc, s) => acc + (s.testingRequests?.length || 0), 0) : 0}</p>
+                    <p className="text-3xl font-bold text-white">
+                      {Array.isArray(sessions) ? sessions.reduce((acc, s) => acc + (s.testingRequests?.length || 0), 0) : 0}
+                    </p>
                   </div>
                   <Gamepad2 className="h-8 w-8 text-purple-400" />
                 </div>
@@ -491,9 +507,10 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                   <div>
                     <p className="text-orange-300 text-sm font-medium">Avg Attendance</p>
                     <p className="text-3xl font-bold text-white">
-                      {Array.isArray(sessions) && sessions.length > 0 
+                      {Array.isArray(sessions) && sessions.length > 0
                         ? Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length)
-                        : 0}%
+                        : 0}
+                      %
                     </p>
                   </div>
                   <TrendingUp className="h-8 w-8 text-orange-400" />
@@ -997,7 +1014,7 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.sessionName.trim()) {
       newErrors.sessionName = 'Session name is required';
     }
@@ -1016,12 +1033,12 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
     if (!formData.testingRequestId) {
       newErrors.testingRequestId = 'Testing request is required';
     }
-    
+
     // Validate that end time is after start time
     if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime) {
       newErrors.endTime = 'End time must be after start time';
     }
-    
+
     // Validate that session date is not in the past
     if (formData.sessionDate && new Date(formData.sessionDate) < new Date()) {
       newErrors.sessionDate = 'Session date cannot be in the past';
@@ -1040,7 +1057,7 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
     try {
       // Import the createTestingSession function dynamically to avoid build issues
       const { createTestingSession } = await import('@/lib/testing-lab/testing-lab.actions');
-      
+
       await createTestingSession({
         testingRequestId: formData.testingRequestId,
         locationId: formData.locationId || undefined,

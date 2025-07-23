@@ -21,7 +21,7 @@ const AsyncErrorComponent = ({ shouldFail = false }) => {
       throw new Error('Async error');
     }
   }, [shouldFail]);
-  
+
   return <div>Async component</div>;
 };
 
@@ -31,7 +31,7 @@ describe('Error Boundary Components', () => {
   beforeAll(() => {
     console.error = jest.fn();
   });
-  
+
   afterAll(() => {
     console.error = originalError;
   });
@@ -41,9 +41,9 @@ describe('Error Boundary Components', () => {
       render(
         <GracefullyDegradingErrorBoundary>
           <div>Test content</div>
-        </GracefullyDegradingErrorBoundary>
+        </GracefullyDegradingErrorBoundary>,
       );
-      
+
       expect(screen.getByText('Test content')).toBeInTheDocument();
     });
 
@@ -51,9 +51,9 @@ describe('Error Boundary Components', () => {
       render(
         <GracefullyDegradingErrorBoundary>
           <ThrowError shouldThrow />
-        </GracefullyDegradingErrorBoundary>
+        </GracefullyDegradingErrorBoundary>,
       );
-      
+
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
     });
@@ -62,36 +62,33 @@ describe('Error Boundary Components', () => {
       const { rerender } = render(
         <GracefullyDegradingErrorBoundary>
           <ThrowError shouldThrow />
-        </GracefullyDegradingErrorBoundary>
+        </GracefullyDegradingErrorBoundary>,
       );
-      
+
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-      
+
       fireEvent.click(screen.getByRole('button', { name: /try again/i }));
-      
+
       // Re-render with non-throwing component
       rerender(
         <GracefullyDegradingErrorBoundary>
           <ThrowError shouldThrow={false} />
-        </GracefullyDegradingErrorBoundary>
+        </GracefullyDegradingErrorBoundary>,
       );
-      
+
       expect(screen.getByText('No error')).toBeInTheDocument();
     });
 
     it('calls onError callback when error occurs', () => {
       const onError = jest.fn();
-      
+
       render(
         <GracefullyDegradingErrorBoundary onError={onError}>
           <ThrowError shouldThrow message="Custom error" />
-        </GracefullyDegradingErrorBoundary>
+        </GracefullyDegradingErrorBoundary>,
       );
-      
-      expect(onError).toHaveBeenCalledWith(
-        expect.objectContaining({ message: 'Custom error' }),
-        expect.any(Object)
-      );
+
+      expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Custom error' }), expect.any(Object));
     });
   });
 
@@ -100,9 +97,9 @@ describe('Error Boundary Components', () => {
       render(
         <RetryableErrorBoundary maxRetries={3}>
           <ThrowError shouldThrow />
-        </RetryableErrorBoundary>
+        </RetryableErrorBoundary>,
       );
-      
+
       expect(screen.getByText('Component Error')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
     });
@@ -111,19 +108,19 @@ describe('Error Boundary Components', () => {
       const { rerender } = render(
         <RetryableErrorBoundary maxRetries={1}>
           <ThrowError shouldThrow />
-        </RetryableErrorBoundary>
+        </RetryableErrorBoundary>,
       );
-      
+
       // First retry
       fireEvent.click(screen.getByRole('button', { name: /retry/i }));
-      
+
       // Should still show retry button with 0 retries left
       rerender(
         <RetryableErrorBoundary maxRetries={1}>
           <ThrowError shouldThrow />
-        </RetryableErrorBoundary>
+        </RetryableErrorBoundary>,
       );
-      
+
       // After max retries, retry button should be disabled or hidden
       expect(screen.queryByRole('button', { name: /retry/i })).toBeNull();
     });
@@ -134,9 +131,9 @@ describe('Error Boundary Components', () => {
       render(
         <SmartErrorBoundary>
           <ThrowError shouldThrow />
-        </SmartErrorBoundary>
+        </SmartErrorBoundary>,
       );
-      
+
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     });
 
@@ -144,9 +141,9 @@ describe('Error Boundary Components', () => {
       render(
         <SmartErrorBoundary enableRetry>
           <ThrowError shouldThrow />
-        </SmartErrorBoundary>
+        </SmartErrorBoundary>,
       );
-      
+
       expect(screen.getByText('Component Error')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
     });
@@ -155,13 +152,13 @@ describe('Error Boundary Components', () => {
   describe('Error Boundary Integration', () => {
     it('handles different error levels appropriately', () => {
       const onError = jest.fn();
-      
+
       render(
         <GracefullyDegradingErrorBoundary level="critical" onError={onError}>
           <ThrowError shouldThrow message="Critical error" />
-        </GracefullyDegradingErrorBoundary>
+        </GracefullyDegradingErrorBoundary>,
       );
-      
+
       expect(onError).toHaveBeenCalled();
     });
 
@@ -169,18 +166,18 @@ describe('Error Boundary Components', () => {
       const { rerender } = render(
         <GracefullyDegradingErrorBoundary resetKeys={['key1']}>
           <ThrowError shouldThrow />
-        </GracefullyDegradingErrorBoundary>
+        </GracefullyDegradingErrorBoundary>,
       );
-      
+
       expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-      
+
       // Change reset keys to trigger reset
       rerender(
         <GracefullyDegradingErrorBoundary resetKeys={['key2']}>
           <ThrowError shouldThrow={false} />
-        </GracefullyDegradingErrorBoundary>
+        </GracefullyDegradingErrorBoundary>,
       );
-      
+
       expect(screen.getByText('No error')).toBeInTheDocument();
     });
   });
@@ -190,15 +187,15 @@ describe('Error Boundary Components', () => {
       // Mock window to simulate SSR environment
       const originalWindow = global.window;
       delete (global as any).window;
-      
+
       expect(() => {
         render(
           <GracefullyDegradingErrorBoundary>
             <div>SSR content</div>
-          </GracefullyDegradingErrorBoundary>
+          </GracefullyDegradingErrorBoundary>,
         );
       }).not.toThrow();
-      
+
       global.window = originalWindow;
     });
   });

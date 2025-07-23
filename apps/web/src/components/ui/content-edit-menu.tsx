@@ -3,12 +3,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Edit, Trash2, Copy } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export interface EditMenuOption {
   label: string;
@@ -25,15 +20,9 @@ export interface ContentEditMenuProps {
   className?: string;
 }
 
-export function ContentEditMenu({ 
-  options = [], 
-  onEdit, 
-  onDelete, 
-  onDuplicate, 
-  className 
-}: ContentEditMenuProps) {
+export function ContentEditMenu({ options = [], onEdit, onDelete, onDuplicate, className }: ContentEditMenuProps) {
   const defaultOptions: EditMenuOption[] = [];
-  
+
   if (onEdit) {
     defaultOptions.push({
       label: 'Edit',
@@ -74,11 +63,7 @@ export function ContentEditMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {allOptions.map((option, index) => (
-          <DropdownMenuItem
-            key={index}
-            onClick={option.onClick}
-            className={option.variant === 'destructive' ? 'text-destructive' : ''}
-          >
+          <DropdownMenuItem key={index} onClick={option.onClick} className={option.variant === 'destructive' ? 'text-destructive' : ''}>
             {option.icon && <span className="mr-2">{option.icon}</span>}
             {option.label}
           </DropdownMenuItem>

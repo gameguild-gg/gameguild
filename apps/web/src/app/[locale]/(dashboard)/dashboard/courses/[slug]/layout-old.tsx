@@ -21,14 +21,15 @@ function CourseLayoutContent({ children, slug }: PropsWithChildren & { slug: str
 
         // First try to get course by slug, then by ID
         const courseId = slug;
-        
+
         // If slug is not a GUID, search for course by slug
         if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug)) {
           // Try to find course by slug - this would need a backend endpoint
           // For now, we'll assume the slug is actually an ID
           // TODO: Implement getCourseBySlug in the API
           console.warn('Course lookup by slug not yet implemented, assuming slug is ID');
-        }        await loadCourseFromAPI(courseId);
+        }
+        await loadCourseFromAPI(courseId);
       } catch (err) {
         console.error('Error fetching course:', err);
         setError('Failed to load course');

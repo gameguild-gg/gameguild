@@ -12,11 +12,7 @@ export const metadata = {
   description: 'Gaming community platform',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={inter.className}>
@@ -53,18 +49,13 @@ export default function DashboardPage() {
 
       <div className="flex">
         {/* Sidebar with retry capability */}
-        <SmartErrorBoundary 
-          enableRetry 
-          maxRetries={2} 
-          level="component"
-          isolate
-        >
+        <SmartErrorBoundary enableRetry maxRetries={2} level="component" isolate>
           <DashboardSidebar />
         </SmartErrorBoundary>
 
         {/* Main content area */}
         <main className="flex-1">
-          <SmartErrorBoundary 
+          <SmartErrorBoundary
             level="page"
             onError={(error, errorInfo) => {
               // Custom logging for main content errors
@@ -82,7 +73,7 @@ export default function DashboardPage() {
 // Example: Component with async error handling
 // components/UserProfile.tsx
 
-'use client';
+('use client');
 
 import { useState, useEffect } from 'react';
 import { useErrorBoundary, SmartErrorBoundary } from '@/components/errors';
@@ -103,11 +94,11 @@ function UserProfileContent({ userId }: { userId: string }) {
       try {
         setLoading(true);
         const response = await fetch(`/api/users/${userId}`);
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch user: ${response.statusText}`);
         }
-        
+
         const userData = await response.json();
         setUser(userData);
       } catch (error) {
@@ -167,7 +158,7 @@ import type { ErrorFallbackProps } from '@/components/errors';
 
 export function GameListErrorFallback({ error, resetError }: ErrorFallbackProps) {
   const isNetworkError = error.message.includes('fetch') || error.message.includes('network');
-  
+
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-900 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
       <div className="flex items-center mb-4">
@@ -176,23 +167,17 @@ export function GameListErrorFallback({ error, resetError }: ErrorFallbackProps)
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
-          Unable to Load Games
-        </h3>
+        <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Unable to Load Games</h3>
       </div>
-      
+
       <p className="text-blue-700 dark:text-blue-300 mb-4">
-        {isNetworkError 
+        {isNetworkError
           ? "We're having trouble connecting to our servers. Please check your internet connection and try again."
-          : "Something went wrong while loading the game list. Our team has been notified."
-        }
+          : 'Something went wrong while loading the game list. Our team has been notified.'}
       </p>
-      
+
       <div className="flex gap-3">
-        <button
-          onClick={resetError}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-        >
+        <button onClick={resetError} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
           Try Again
         </button>
         <button

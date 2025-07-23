@@ -20,7 +20,7 @@ function AchievementsLoading() {
         <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
         <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
       </div>
-      
+
       {/* Statistics skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -196,13 +196,7 @@ async function AchievementsContent({ searchParams }: AchievementsPageProps) {
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center space-x-3">
                             {achievement.badgeUrl ? (
-                              <Image
-                                src={achievement.badgeUrl}
-                                alt={achievement.name}
-                                width={40}
-                                height={40}
-                                className="rounded-full"
-                              />
+                              <Image src={achievement.badgeUrl} alt={achievement.name} width={40} height={40} className="rounded-full" />
                             ) : (
                               <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
                                 <Trophy className="h-5 w-5 text-yellow-600" />
@@ -228,20 +222,10 @@ async function AchievementsContent({ searchParams }: AchievementsPageProps) {
                         </div>
                         <p className="text-sm text-gray-600 mb-3">{achievement.description}</p>
                         <div className="flex flex-wrap gap-2">
-                          <Badge variant={achievement.isActive ? 'default' : 'secondary'}>
-                            {achievement.isActive ? 'Active' : 'Inactive'}
-                          </Badge>
-                          {achievement.isSecret && (
-                            <Badge variant="outline">Secret</Badge>
-                          )}
-                          {achievement.category && (
-                            <Badge variant="secondary">{achievement.category}</Badge>
-                          )}
-                          {achievement.type && (
-                            <Badge variant={getAchievementTypeColor(achievement.type)}>
-                              {achievement.type}
-                            </Badge>
-                          )}
+                          <Badge variant={achievement.isActive ? 'default' : 'secondary'}>{achievement.isActive ? 'Active' : 'Inactive'}</Badge>
+                          {achievement.isSecret && <Badge variant="outline">Secret</Badge>}
+                          {achievement.category && <Badge variant="secondary">{achievement.category}</Badge>}
+                          {achievement.type && <Badge variant={getAchievementTypeColor(achievement.type)}>{achievement.type}</Badge>}
                         </div>
                       </CardContent>
                     </Card>
@@ -284,31 +268,19 @@ async function AchievementsContent({ searchParams }: AchievementsPageProps) {
                           </div>
                         )}
                         <div>
-                          <h3 className="font-semibold text-gray-900">
-                            {userAchievement.achievement?.name || 'Unknown Achievement'}
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            {userAchievement.achievement?.description}
-                          </p>
+                          <h3 className="font-semibold text-gray-900">{userAchievement.achievement?.name || 'Unknown Achievement'}</h3>
+                          <p className="text-sm text-gray-600">{userAchievement.achievement?.description}</p>
                           <div className="flex items-center space-x-2 mt-1">
                             <Badge variant={userAchievement.isCompleted ? 'default' : 'secondary'}>
                               {userAchievement.isCompleted ? 'Completed' : `${userAchievement.progress}% Progress`}
                             </Badge>
-                            {userAchievement.achievement?.points && (
-                              <span className="text-xs text-gray-500">
-                                {userAchievement.achievement.points} points
-                              </span>
-                            )}
+                            {userAchievement.achievement?.points && <span className="text-xs text-gray-500">{userAchievement.achievement.points} points</span>}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-600">
-                          Earned {new Date(userAchievement.earnedAt).toLocaleDateString()}
-                        </p>
-                        {userAchievement.isCompleted && (
-                          <Star className="h-5 w-5 text-yellow-500 ml-auto mt-1" />
-                        )}
+                        <p className="text-sm text-gray-600">Earned {new Date(userAchievement.earnedAt).toLocaleDateString()}</p>
+                        {userAchievement.isCompleted && <Star className="h-5 w-5 text-yellow-500 ml-auto mt-1" />}
                       </div>
                     </div>
                   ))}

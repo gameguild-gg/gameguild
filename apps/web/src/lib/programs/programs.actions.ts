@@ -79,12 +79,7 @@ const REVALIDATION_TIME = 300; // 5 minutes
 /**
  * Get programs with authentication
  */
-export async function getPrograms(
-  page: number = 1,
-  limit: number = 20,
-  status?: string,
-  visibility?: string
-): Promise<ProgramsResponse> {
+export async function getPrograms(page: number = 1, limit: number = 20, status?: string, visibility?: string): Promise<ProgramsResponse> {
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -116,7 +111,7 @@ export async function getPrograms(
     }
 
     const programs: Program[] = await response.json();
-    
+
     return {
       success: true,
       data: programs,
@@ -129,9 +124,9 @@ export async function getPrograms(
     };
   } catch (error) {
     console.error('Error fetching programs:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -139,10 +134,7 @@ export async function getPrograms(
 /**
  * Get published programs (public access)
  */
-export async function getPublishedPrograms(
-  page: number = 1,
-  limit: number = 20
-): Promise<ProgramsResponse> {
+export async function getPublishedPrograms(page: number = 1, limit: number = 20): Promise<ProgramsResponse> {
   try {
     const queryParams = new URLSearchParams({
       skip: ((page - 1) * limit).toString(),
@@ -165,7 +157,7 @@ export async function getPublishedPrograms(
     }
 
     const programs: Program[] = await response.json();
-    
+
     return {
       success: true,
       data: programs,
@@ -178,9 +170,9 @@ export async function getPublishedPrograms(
     };
   } catch (error) {
     console.error('Error fetching published programs:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -216,9 +208,9 @@ export async function getProgram(id: string): Promise<{ success: boolean; data?:
     return { success: true, data: program };
   } catch (error) {
     console.error('Error fetching program:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -254,9 +246,9 @@ export async function getProgramBySlug(slug: string): Promise<{ success: boolean
     return { success: true, data: program };
   } catch (error) {
     console.error('Error fetching program by slug:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -299,10 +291,10 @@ export async function getProgramStatistics(): Promise<{ success: boolean; data?:
             programsCreatedToday: 0,
             programsCreatedThisWeek: 0,
             programsCreatedThisMonth: 0,
-          }
+          },
         };
       }
-      
+
       const errorText = await response.text();
       return { success: false, error: `API error: ${response.status} - ${errorText}` };
     }
@@ -311,9 +303,9 @@ export async function getProgramStatistics(): Promise<{ success: boolean; data?:
     return { success: true, data: statistics };
   } catch (error) {
     console.error('Error fetching program statistics:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -323,7 +315,7 @@ export async function getProgramStatistics(): Promise<{ success: boolean; data?:
  */
 export async function createProgram(formData: ProgramFormData): Promise<{ success: boolean; data?: Program; error?: string }> {
   'use server';
-  
+
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -333,7 +325,7 @@ export async function createProgram(formData: ProgramFormData): Promise<{ succes
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/programs`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
         ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
       },
@@ -346,17 +338,17 @@ export async function createProgram(formData: ProgramFormData): Promise<{ succes
     }
 
     const program: Program = await response.json();
-    
+
     // Revalidate cache
     revalidateTag(CACHE_TAGS.PROGRAMS);
     revalidateTag(CACHE_TAGS.PROGRAM_STATISTICS);
-    
+
     return { success: true, data: program };
   } catch (error) {
     console.error('Error creating program:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -366,7 +358,7 @@ export async function createProgram(formData: ProgramFormData): Promise<{ succes
  */
 export async function updateProgram(id: string, formData: ProgramFormData): Promise<{ success: boolean; data?: Program; error?: string }> {
   'use server';
-  
+
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -376,7 +368,7 @@ export async function updateProgram(id: string, formData: ProgramFormData): Prom
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/programs/${id}`, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
         ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
       },
@@ -389,19 +381,19 @@ export async function updateProgram(id: string, formData: ProgramFormData): Prom
     }
 
     const program: Program = await response.json();
-    
+
     // Revalidate cache
     revalidateTag(CACHE_TAGS.PROGRAMS);
     revalidateTag(CACHE_TAGS.PROGRAM_DETAIL);
     revalidateTag(`program-${id}`);
     revalidateTag(CACHE_TAGS.PROGRAM_STATISTICS);
-    
+
     return { success: true, data: program };
   } catch (error) {
     console.error('Error updating program:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -411,7 +403,7 @@ export async function updateProgram(id: string, formData: ProgramFormData): Prom
  */
 export async function deleteProgram(id: string): Promise<{ success: boolean; error?: string }> {
   'use server';
-  
+
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -421,7 +413,7 @@ export async function deleteProgram(id: string): Promise<{ success: boolean; err
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/programs/${id}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
         ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
       },
@@ -437,13 +429,13 @@ export async function deleteProgram(id: string): Promise<{ success: boolean; err
     revalidateTag(CACHE_TAGS.PROGRAM_DETAIL);
     revalidateTag(`program-${id}`);
     revalidateTag(CACHE_TAGS.PROGRAM_STATISTICS);
-    
+
     return { success: true };
   } catch (error) {
     console.error('Error deleting program:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -468,5 +460,5 @@ export const getCachedPrograms = unstable_cache(
   {
     tags: [CACHE_TAGS.PROGRAMS],
     revalidate: REVALIDATION_TIME,
-  }
+  },
 );

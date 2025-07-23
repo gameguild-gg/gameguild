@@ -49,11 +49,7 @@ export function ErrorBoundaryProvider({ children, config = {} }: ErrorBoundaryPr
     reportError,
   };
 
-  return (
-    <ErrorBoundaryContext.Provider value={contextValue}>
-      {children}
-    </ErrorBoundaryContext.Provider>
-  );
+  return <ErrorBoundaryContext.Provider value={contextValue}>{children}</ErrorBoundaryContext.Provider>;
 }
 
 /**
@@ -83,13 +79,7 @@ export interface SmartErrorBoundaryProps {
 /**
  * Smart error boundary that chooses between retryable and graceful error handling
  */
-export function SmartErrorBoundary({
-  children,
-  enableRetry,
-  gracefulFallback,
-  retryableFallback,
-  ...props
-}: SmartErrorBoundaryProps) {
+export function SmartErrorBoundary({ children, enableRetry, gracefulFallback, retryableFallback, ...props }: SmartErrorBoundaryProps) {
   const context = useContext(ErrorBoundaryContext);
   const shouldEnableRetry = enableRetry ?? context?.config.enableRetry ?? false;
 

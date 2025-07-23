@@ -64,7 +64,7 @@ export function TestingLabSidebar() {
           {sidebarItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
-            
+
             return (
               <li key={item.href}>
                 <Link

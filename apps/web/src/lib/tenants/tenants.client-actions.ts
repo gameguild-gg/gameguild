@@ -14,7 +14,7 @@ interface ActionState {
 export async function getTenantsDataClient(page: number = 1, limit: number = 20, search?: string) {
   try {
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return {
         tenants: [],
@@ -69,7 +69,7 @@ export async function getTenantsDataClient(page: number = 1, limit: number = 20,
 export async function getUserTenantsClient() {
   try {
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return [];
     }
@@ -101,7 +101,7 @@ export async function getUserTenantsClient() {
 export async function createTenantClient(prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
@@ -151,7 +151,7 @@ export async function createTenantClient(prevState: ActionState, formData: FormD
 export async function updateTenantClient(id: string, prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
@@ -201,7 +201,7 @@ export async function updateTenantClient(id: string, prevState: ActionState, for
 export async function deleteTenantClient(id: string) {
   try {
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return { success: false, error: 'Authentication required' };
     }

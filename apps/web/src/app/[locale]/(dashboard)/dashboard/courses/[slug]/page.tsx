@@ -70,7 +70,7 @@ export default function CourseOverviewPage() {
   // Calculate completion progress
   const getCompletionProgress = () => {
     let completed = 0;
-    let total = 5;
+    const total = 5;
 
     if (state.title && state.description) completed++;
     if (state.media.thumbnail || state.media.showcaseVideo) completed++;

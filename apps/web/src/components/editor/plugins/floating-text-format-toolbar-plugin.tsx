@@ -1,16 +1,10 @@
 'use client';
 
-import { DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import {
-  $getSelection,
-  $isRangeSelection,
-  FORMAT_TEXT_COMMAND,
-  SELECTION_CHANGE_COMMAND,
-  FORMAT_ELEMENT_COMMAND,
-} from "lexical"
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { $getSelection, $isRangeSelection, FORMAT_TEXT_COMMAND, SELECTION_CHANGE_COMMAND, FORMAT_ELEMENT_COMMAND } from 'lexical';
 import {
   Bold,
   Italic,
@@ -27,9 +21,9 @@ import {
   TextCursorInput,
   Check,
   Underline,
-} from "lucide-react"
-import { $createHeadingNode, $isHeadingNode, type HeadingTagType, $createQuoteNode } from "@lexical/rich-text"
-import { $setBlocksType } from "@lexical/selection"
+} from 'lucide-react';
+import { $createHeadingNode, $isHeadingNode, type HeadingTagType, $createQuoteNode } from '@lexical/rich-text';
+import { $setBlocksType } from '@lexical/selection';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,41 +32,41 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from "@/components/ui/dropdown-menu"
-import { TOGGLE_LINK_COMMAND } from "@lexical/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { ListMenuComponent } from "./floating-text-components/list-menu-component"
-import { FontFamilyMenuComponent } from "./floating-text-components/font-family-menu-component"
-import { FontSizeMenuComponent } from "./floating-text-components/font-size-menu-component"
-import { TextColorMenuComponent } from "./floating-text-components/text-color-menu-component"
-import { BackgroundColorMenuComponent } from "./floating-text-components/background-color-menu-component"
-import { $createParagraphNode } from "lexical"
+} from '@/components/ui/dropdown-menu';
+import { TOGGLE_LINK_COMMAND } from '@lexical/link';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { ListMenuComponent } from './floating-text-components/list-menu-component';
+import { FontFamilyMenuComponent } from './floating-text-components/font-family-menu-component';
+import { FontSizeMenuComponent } from './floating-text-components/font-size-menu-component';
+import { TextColorMenuComponent } from './floating-text-components/text-color-menu-component';
+import { BackgroundColorMenuComponent } from './floating-text-components/background-color-menu-component';
+import { $createParagraphNode } from 'lexical';
 
 export function FloatingTextFormatToolbarPlugin() {
-  const [editor] = useLexicalComposerContext()
-  const toolbarRef = useRef<HTMLDivElement>(null)
-  const [isText, setIsText] = useState(false)
-  const [isLink, setIsLink] = useState(false)
-  const [isBold, setIsBold] = useState(false)
-  const [isItalic, setIsItalic] = useState(false)
-  const [isUnderline, setIsUnderline] = useState(false)
-  const [isSubscript, setIsSubscript] = useState(false)
-  const [isSuperscript, setIsSuperscript] = useState(false)
-  const [isCode, setIsCode] = useState(false)
-  const [selectedElementKey, setSelectedElementKey] = useState<string | null>(null)
-  const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
-  const [currentHeadingLevel, setCurrentHeadingLevel] = useState<HeadingTagType | null>(null)
-  const [isQuote, setIsQuote] = useState(false)
-  const [currentFontFamily, setCurrentFontFamily] = useState<string>("")
-  const [currentFontSize, setCurrentFontSize] = useState<string>("")
-  const [showFontSizeInput, setShowFontSizeInput] = useState(false)
-  const [currentTextColor, setCurrentTextColor] = useState<string>("")
-  const [currentBackgroundColor, setCurrentBackgroundColor] = useState<string>("")
-  const [currentAlignment, setCurrentAlignment] = useState<string>("")
-  const [currentListType, setCurrentListType] = useState<string>("")
+  const [editor] = useLexicalComposerContext();
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [isText, setIsText] = useState(false);
+  const [isLink, setIsLink] = useState(false);
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isUnderline, setIsUnderline] = useState(false);
+  const [isSubscript, setIsSubscript] = useState(false);
+  const [isSuperscript, setIsSuperscript] = useState(false);
+  const [isCode, setIsCode] = useState(false);
+  const [selectedElementKey, setSelectedElementKey] = useState<string | null>(null);
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const [currentHeadingLevel, setCurrentHeadingLevel] = useState<HeadingTagType | null>(null);
+  const [isQuote, setIsQuote] = useState(false);
+  const [currentFontFamily, setCurrentFontFamily] = useState<string>('');
+  const [currentFontSize, setCurrentFontSize] = useState<string>('');
+  const [showFontSizeInput, setShowFontSizeInput] = useState(false);
+  const [currentTextColor, setCurrentTextColor] = useState<string>('');
+  const [currentBackgroundColor, setCurrentBackgroundColor] = useState<string>('');
+  const [currentAlignment, setCurrentAlignment] = useState<string>('');
+  const [currentListType, setCurrentListType] = useState<string>('');
 
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
@@ -81,40 +75,40 @@ export function FloatingTextFormatToolbarPlugin() {
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
     if (!$isRangeSelection(selection)) {
-      setIsText(false)
-      setIsSubscript(false)
-      setIsSuperscript(false)
-      setIsCode(false)
-      setIsUnderline(false)
-      return
+      setIsText(false);
+      setIsSubscript(false);
+      setIsSuperscript(false);
+      setIsCode(false);
+      setIsUnderline(false);
+      return;
     }
 
-    const nodes = selection.getNodes()
+    const nodes = selection.getNodes();
 
     // Check for bold - both via Lexical format and CSS style
-    const isBoldFromFormat = selection.hasFormat("bold")
-    let isBoldFromStyle = false
+    const isBoldFromFormat = selection.hasFormat('bold');
+    let isBoldFromStyle = false;
     if (nodes.length > 0) {
-      const firstNode = nodes[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
-      isBoldFromStyle = style.includes("font-weight: 700") || style.includes("font-weight:700")
+      const firstNode = nodes[0];
+      const style = firstNode.getStyle ? String(firstNode.getStyle()) : '';
+      isBoldFromStyle = style.includes('font-weight: 700') || style.includes('font-weight:700');
     }
-    setIsBold(isBoldFromFormat || isBoldFromStyle)
+    setIsBold(isBoldFromFormat || isBoldFromStyle);
 
     // Check for italic - both via Lexical format and CSS style
-    const isItalicFromFormat = selection.hasFormat("italic")
-    let isItalicFromStyle = false
+    const isItalicFromFormat = selection.hasFormat('italic');
+    let isItalicFromStyle = false;
     if (nodes.length > 0) {
-      const firstNode = nodes[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
-      isItalicFromStyle = style.includes("font-style: italic") || style.includes("font-style:italic")
+      const firstNode = nodes[0];
+      const style = firstNode.getStyle ? String(firstNode.getStyle()) : '';
+      isItalicFromStyle = style.includes('font-style: italic') || style.includes('font-style:italic');
     }
-    setIsItalic(isItalicFromFormat || isItalicFromStyle)
+    setIsItalic(isItalicFromFormat || isItalicFromStyle);
 
-    setIsUnderline(selection.hasFormat("underline"))
-    setIsSubscript(selection.hasFormat("subscript"))
-    setIsSuperscript(selection.hasFormat("superscript"))
-    setIsCode(selection.hasFormat("code"))
+    setIsUnderline(selection.hasFormat('underline'));
+    setIsSubscript(selection.hasFormat('subscript'));
+    setIsSuperscript(selection.hasFormat('superscript'));
+    setIsCode(selection.hasFormat('code'));
 
     setIsText(selection.getTextContent().length > 0);
 
@@ -136,7 +130,7 @@ export function FloatingTextFormatToolbarPlugin() {
     }
 
     // Get current font family
-   
+
     if (nodes.length > 0) {
       const firstNode = nodes[0];
       // Ensure the node has getStyle and explicitly convert its result to string
@@ -157,7 +151,7 @@ export function FloatingTextFormatToolbarPlugin() {
       const style = firstNode.getStyle ? String(firstNode.getStyle()) : '';
       const fontSizeMatch = style.match(/font-size:\s*([^;]+)/);
       if (fontSizeMatch) {
-        setCurrentFontSize(fontSizeMatch[1].replace(/['']/g, ""))
+        setCurrentFontSize(fontSizeMatch[1].replace(/['']/g, ''));
       } else {
         setCurrentFontSize('');
       }
@@ -167,77 +161,77 @@ export function FloatingTextFormatToolbarPlugin() {
 
     // Get current text color
     if (nodes.length > 0) {
-      const firstNode = nodes[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
-      const fontSizeMatch = style.match(/font-size:\s*([^;]+)/)
+      const firstNode = nodes[0];
+      const style = firstNode.getStyle ? String(firstNode.getStyle()) : '';
+      const fontSizeMatch = style.match(/font-size:\s*([^;]+)/);
       if (fontSizeMatch) {
-        setCurrentFontSize(fontSizeMatch[1].replace(/['']/g, ""))
+        setCurrentFontSize(fontSizeMatch[1].replace(/['']/g, ''));
       } else {
-        setCurrentTextColor("")
+        setCurrentTextColor('');
       }
     } else {
-      setCurrentTextColor("")
+      setCurrentTextColor('');
     }
 
     // Get current text color
     if (nodes.length > 0) {
-      const firstNode = nodes[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
-      const colorMatch = style.match(/(?<!background-)color:\s*([^;]+)/)
+      const firstNode = nodes[0];
+      const style = firstNode.getStyle ? String(firstNode.getStyle()) : '';
+      const colorMatch = style.match(/(?<!background-)color:\s*([^;]+)/);
       if (colorMatch) {
-        setCurrentTextColor(colorMatch[1].replace(/['']/g, "").trim())
+        setCurrentTextColor(colorMatch[1].replace(/['']/g, '').trim());
       } else {
-        setCurrentTextColor("")
+        setCurrentTextColor('');
       }
     } else {
-      setCurrentTextColor("")
+      setCurrentTextColor('');
     }
 
     // Get current background color
     if (nodes.length > 0) {
-      const firstNode = nodes[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
-      const backgroundColorMatch = style.match(/background-color:\s*([^;]+)/)
+      const firstNode = nodes[0];
+      const style = firstNode.getStyle ? String(firstNode.getStyle()) : '';
+      const backgroundColorMatch = style.match(/background-color:\s*([^;]+)/);
       if (backgroundColorMatch) {
-        setCurrentBackgroundColor(backgroundColorMatch[1].replace(/['']/g, "").trim())
+        setCurrentBackgroundColor(backgroundColorMatch[1].replace(/['']/g, '').trim());
       } else {
-        setCurrentBackgroundColor("")
+        setCurrentBackgroundColor('');
       }
     } else {
-      setCurrentBackgroundColor("")
+      setCurrentBackgroundColor('');
     }
 
     // Get current alignment using getFormat()
     if (selection) {
-      const element = anchorNode.getTopLevelElementOrThrow()
-      setCurrentAlignment(element.getFormat())
+      const element = anchorNode.getTopLevelElementOrThrow();
+      setCurrentAlignment(element.getFormat());
     } else {
-      setCurrentAlignment("")
+      setCurrentAlignment('');
     }
 
     // Get current list type
-    const parentElementList = anchorNode.getParent()
-    if (parentElementList && parentElementList.getType() === "list") {
-      setCurrentListType(parentElementList.getListType())
+    const parentElementList = anchorNode.getParent();
+    if (parentElementList && parentElementList.getType() === 'list') {
+      setCurrentListType(parentElementList.getListType());
     } else {
-      setCurrentListType("")
+      setCurrentListType('');
     }
 
-    const nativeSelection = window.getSelection()
-    const range = nativeSelection?.getRangeAt(0)
-    const rect = range?.getBoundingClientRect()
+    const nativeSelection = window.getSelection();
+    const range = nativeSelection?.getRangeAt(0);
+    const rect = range?.getBoundingClientRect();
 
     if (rect) {
       // Calculate position immediately, even without toolbarRef
-      const toolbarHeight = 60 // Updated toolbar height
-      const toolbarWidth = 240 // Updated toolbar width
+      const toolbarHeight = 60; // Updated toolbar height
+      const toolbarWidth = 240; // Updated toolbar width
 
       setPosition({
         top: rect.top - toolbarHeight - 12,
         left: Math.max(8, rect.left + (rect.width - toolbarWidth) / 2),
-      })
+      });
     } else {
-      setPosition(null)
+      setPosition(null);
     }
   }, []);
 
@@ -285,24 +279,20 @@ export function FloatingTextFormatToolbarPlugin() {
           style={{
             top: `${position.top}px`,
             left: `${position.left}px`,
-            minHeight: "60px",
-            minWidth: "240px",
+            minHeight: '60px',
+            minWidth: '240px',
           }}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault()
-              e.stopPropagation()
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              e.stopPropagation();
             }
           }}
         >
           {/* Dropdown: Formatação (Text Formatting) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
-              >
+              <Button variant="ghost" size="icon" className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150">
                 <Bold className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -313,37 +303,36 @@ export function FloatingTextFormatToolbarPlugin() {
                 onSelect={(e) => e.preventDefault()}
                 onClick={() => {
                   editor.update(() => {
-                    const selection = $getSelection()
+                    const selection = $getSelection();
                     if ($isRangeSelection(selection)) {
-                      const nodes = selection.getNodes()
+                      const nodes = selection.getNodes();
                       nodes.forEach((node) => {
                         if (node.getTextContent()) {
-                          const currentStyle = node.getStyle() || ""
-                          let newStyle = currentStyle
+                          const currentStyle = node.getStyle() || '';
+                          let newStyle = currentStyle;
 
                           // Check if bold is currently applied
-                          const isBoldApplied =
-                            currentStyle.includes("font-weight: 700") || currentStyle.includes("font-weight:700")
+                          const isBoldApplied = currentStyle.includes('font-weight: 700') || currentStyle.includes('font-weight:700');
 
                           // Remove existing font-weight
-                          newStyle = newStyle.replace(/font-weight:\s*[^;]+;?/g, "")
+                          newStyle = newStyle.replace(/font-weight:\s*[^;]+;?/g, '');
 
                           // Apply or remove bold
                           if (isBoldApplied) {
-                            newStyle += "font-weight: 400;" // Remove bold
+                            newStyle += 'font-weight: 400;'; // Remove bold
                           } else {
-                            newStyle += "font-weight: 700;" // Apply bold
+                            newStyle += 'font-weight: 700;'; // Apply bold
                           }
 
-                          node.setStyle(newStyle.trim())
+                          node.setStyle(newStyle.trim());
                         }
-                      })
+                      });
                     }
-                  })
+                  });
                   // Force immediate update
                   setTimeout(() => {
-                    editor.getEditorState().read(() => updateToolbar())
-                  }, 0)
+                    editor.getEditorState().read(() => updateToolbar());
+                  }, 0);
                 }}
               >
                 <Bold className="mr-2 h-5 w-5" />
@@ -354,37 +343,36 @@ export function FloatingTextFormatToolbarPlugin() {
                 onSelect={(e) => e.preventDefault()}
                 onClick={() => {
                   editor.update(() => {
-                    const selection = $getSelection()
+                    const selection = $getSelection();
                     if ($isRangeSelection(selection)) {
-                      const nodes = selection.getNodes()
+                      const nodes = selection.getNodes();
                       nodes.forEach((node) => {
                         if (node.getTextContent()) {
-                          const currentStyle = node.getStyle() || ""
-                          let newStyle = currentStyle
+                          const currentStyle = node.getStyle() || '';
+                          let newStyle = currentStyle;
 
                           // Check if italic is currently applied
-                          const isItalicApplied =
-                            currentStyle.includes("font-style: italic") || currentStyle.includes("font-style:italic")
+                          const isItalicApplied = currentStyle.includes('font-style: italic') || currentStyle.includes('font-style:italic');
 
                           // Remove existing font-style
-                          newStyle = newStyle.replace(/font-style:\s*[^;]+;?/g, "")
+                          newStyle = newStyle.replace(/font-style:\s*[^;]+;?/g, '');
 
                           // Apply or remove italic
                           if (isItalicApplied) {
-                            newStyle += "font-style: normal;" // Remove italic
+                            newStyle += 'font-style: normal;'; // Remove italic
                           } else {
-                            newStyle += "font-style: italic;" // Apply italic
+                            newStyle += 'font-style: italic;'; // Apply italic
                           }
 
-                          node.setStyle(newStyle.trim())
+                          node.setStyle(newStyle.trim());
                         }
-                      })
+                      });
                     }
-                  })
+                  });
                   // Force immediate update
                   setTimeout(() => {
-                    editor.getEditorState().read(() => updateToolbar())
-                  }, 0)
+                    editor.getEditorState().read(() => updateToolbar());
+                  }, 0);
                 }}
               >
                 <Italic className="mr-2 h-5 w-5" />
@@ -394,11 +382,11 @@ export function FloatingTextFormatToolbarPlugin() {
               <DropdownMenuItem
                 onSelect={(e) => e.preventDefault()}
                 onClick={() => {
-                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")
+                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
                   // Force immediate update
                   setTimeout(() => {
-                    editor.getEditorState().read(() => updateToolbar())
-                  }, 0)
+                    editor.getEditorState().read(() => updateToolbar());
+                  }, 0);
                 }}
               >
                 <Underline className="mr-2 h-5 w-5" />
@@ -408,8 +396,8 @@ export function FloatingTextFormatToolbarPlugin() {
               <DropdownMenuItem
                 onSelect={(e) => e.preventDefault()}
                 onClick={() => {
-                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, "subscript")
-                  editor.getEditorState().read(() => updateToolbar())
+                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'subscript');
+                  editor.getEditorState().read(() => updateToolbar());
                 }}
               >
                 <Subscript className="mr-2 h-5 w-5" />
@@ -419,8 +407,8 @@ export function FloatingTextFormatToolbarPlugin() {
               <DropdownMenuItem
                 onSelect={(e) => e.preventDefault()}
                 onClick={() => {
-                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, "superscript")
-                  editor.getEditorState().read(() => updateToolbar())
+                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'superscript');
+                  editor.getEditorState().read(() => updateToolbar());
                 }}
               >
                 <Superscript className="mr-2 h-5 w-5" />
@@ -430,8 +418,8 @@ export function FloatingTextFormatToolbarPlugin() {
               <DropdownMenuItem
                 onSelect={(e) => e.preventDefault()}
                 onClick={() => {
-                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code")
-                  editor.getEditorState().read(() => updateToolbar())
+                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
+                  editor.getEditorState().read(() => updateToolbar());
                 }}
               >
                 <Code className="mr-2 h-5 w-5" />
@@ -444,11 +432,7 @@ export function FloatingTextFormatToolbarPlugin() {
           {/* Dropdown: Estilo (Style) - Font Family, Font Size, Text Color */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
-              >
+              <Button variant="ghost" size="icon" className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150">
                 <Palette className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -458,17 +442,9 @@ export function FloatingTextFormatToolbarPlugin() {
 
               <FontFamilyMenuComponent editor={editor} currentFontFamily={currentFontFamily} />
 
-              <FontSizeMenuComponent
-                editor={editor}
-                currentFontSize={currentFontSize}
-                setCurrentFontSize={setCurrentFontSize}
-              />
+              <FontSizeMenuComponent editor={editor} currentFontSize={currentFontSize} setCurrentFontSize={setCurrentFontSize} />
 
-              <TextColorMenuComponent
-                editor={editor}
-                currentTextColor={currentTextColor}
-                setCurrentTextColor={setCurrentTextColor}
-              />
+              <TextColorMenuComponent editor={editor} currentTextColor={currentTextColor} setCurrentTextColor={setCurrentTextColor} />
 
               <BackgroundColorMenuComponent
                 editor={editor}
@@ -481,11 +457,7 @@ export function FloatingTextFormatToolbarPlugin() {
           {/* Dropdown: Estrutura (Structure) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
-              >
+              <Button variant="ghost" size="icon" className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150">
                 <AlignLeft className="h-5 w-5" /> {/* Using AlignLeft as a generic icon for structure */}
               </Button>
             </DropdownMenuTrigger>
@@ -495,7 +467,7 @@ export function FloatingTextFormatToolbarPlugin() {
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <AlignLeft className="mr-2 h-5 w-5" /> {/* Usando AlignLeft como ícone para Títulos */}
-                  <span>Headings {currentHeadingLevel ? `(${currentHeadingLevel.toUpperCase()})` : "(Paragraph)"}</span>
+                  <span>Headings {currentHeadingLevel ? `(${currentHeadingLevel.toUpperCase()})` : '(Paragraph)'}</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent side="right" align="start">
                   <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Heading Levels</div>
@@ -504,11 +476,11 @@ export function FloatingTextFormatToolbarPlugin() {
                     onSelect={(e) => e.preventDefault()} // Prevent closing
                     onClick={() => {
                       editor.update(() => {
-                        const selection = $getSelection()
+                        const selection = $getSelection();
                         if ($isRangeSelection(selection)) {
-                          $setBlocksType(selection, () => $createHeadingNode("h1"))
+                          $setBlocksType(selection, () => $createHeadingNode('h1'));
                         }
-                      })
+                      });
                     }}
                   >
                     <span className="text-2xl font-bold">H1 - Large Heading</span>
@@ -517,11 +489,11 @@ export function FloatingTextFormatToolbarPlugin() {
                     onSelect={(e) => e.preventDefault()} // Prevent closing
                     onClick={() => {
                       editor.update(() => {
-                        const selection = $getSelection()
+                        const selection = $getSelection();
                         if ($isRangeSelection(selection)) {
-                          $setBlocksType(selection, () => $createHeadingNode("h2"))
+                          $setBlocksType(selection, () => $createHeadingNode('h2'));
                         }
-                      })
+                      });
                     }}
                   >
                     <span className="text-xl font-bold">H2 - Medium Heading</span>
@@ -530,11 +502,11 @@ export function FloatingTextFormatToolbarPlugin() {
                     onSelect={(e) => e.preventDefault()} // Prevent closing
                     onClick={() => {
                       editor.update(() => {
-                        const selection = $getSelection()
+                        const selection = $getSelection();
                         if ($isRangeSelection(selection)) {
-                          $setBlocksType(selection, () => $createHeadingNode("h3"))
+                          $setBlocksType(selection, () => $createHeadingNode('h3'));
                         }
-                      })
+                      });
                     }}
                   >
                     <span className="text-lg font-bold">H3 - Small Heading</span>
@@ -543,11 +515,11 @@ export function FloatingTextFormatToolbarPlugin() {
                     onSelect={(e) => e.preventDefault()} // Prevent closing
                     onClick={() => {
                       editor.update(() => {
-                        const selection = $getSelection()
+                        const selection = $getSelection();
                         if ($isRangeSelection(selection)) {
-                          $setBlocksType(selection, () => $createHeadingNode("h4"))
+                          $setBlocksType(selection, () => $createHeadingNode('h4'));
                         }
-                      })
+                      });
                     }}
                   >
                     <span className="text-base font-bold">H4 - Extra Small</span>
@@ -556,11 +528,11 @@ export function FloatingTextFormatToolbarPlugin() {
                     onSelect={(e) => e.preventDefault()} // Prevent closing
                     onClick={() => {
                       editor.update(() => {
-                        const selection = $getSelection()
+                        const selection = $getSelection();
                         if ($isRangeSelection(selection)) {
-                          $setBlocksType(selection, () => $createHeadingNode("h5"))
+                          $setBlocksType(selection, () => $createHeadingNode('h5'));
                         }
-                      })
+                      });
                     }}
                   >
                     <span className="text-sm font-bold">H5 - Tiny</span>
@@ -569,11 +541,11 @@ export function FloatingTextFormatToolbarPlugin() {
                     onSelect={(e) => e.preventDefault()} // Prevent closing
                     onClick={() => {
                       editor.update(() => {
-                        const selection = $getSelection()
+                        const selection = $getSelection();
                         if ($isRangeSelection(selection)) {
-                          $setBlocksType(selection, () => $createHeadingNode("h6"))
+                          $setBlocksType(selection, () => $createHeadingNode('h6'));
                         }
-                      })
+                      });
                     }}
                   >
                     <span className="text-xs font-bold">H6 - Smallest</span>
@@ -583,12 +555,12 @@ export function FloatingTextFormatToolbarPlugin() {
                     onSelect={(e) => e.preventDefault()} // Prevent closing
                     onClick={() => {
                       editor.update(() => {
-                        const selection = $getSelection()
+                        const selection = $getSelection();
                         if ($isRangeSelection(selection)) {
                           // Convert to normal paragraph
-                          $setBlocksType(selection, () => $createParagraphNode())
+                          $setBlocksType(selection, () => $createParagraphNode());
                         }
-                      })
+                      });
                     }}
                   >
                     <span className="text-base">Paragraph - Normal Text</span>
@@ -597,16 +569,16 @@ export function FloatingTextFormatToolbarPlugin() {
                     onSelect={(e) => e.preventDefault()} // Prevent closing
                     onClick={() => {
                       editor.update(() => {
-                        const selection = $getSelection()
+                        const selection = $getSelection();
                         if ($isRangeSelection(selection)) {
-                          const selectedText = selection.getTextContent()
+                          const selectedText = selection.getTextContent();
                           if (selectedText) {
                             // Wrap selected text in <q> tags for short quote
-                            const quotedText = `"${selectedText}"`
-                            selection.insertText(quotedText)
+                            const quotedText = `"${selectedText}"`;
+                            selection.insertText(quotedText);
                           }
                         }
-                      })
+                      });
                     }}
                   >
                     <span className="text-base italic">Short Quote - Inline Citation</span>
@@ -615,39 +587,37 @@ export function FloatingTextFormatToolbarPlugin() {
                     onSelect={(e) => e.preventDefault()} // Prevent closing
                     onClick={() => {
                       editor.update(() => {
-                        const selection = $getSelection()
+                        const selection = $getSelection();
                         if ($isRangeSelection(selection)) {
                           // Convert to blockquote
-                          $setBlocksType(selection, () => $createQuoteNode())
+                          $setBlocksType(selection, () => $createQuoteNode());
                         }
-                      })
+                      });
                     }}
                   >
-                    <span className="text-base italic border-l-2 border-gray-400 pl-2">
-                      Long Quote - Block Citation
-                    </span>
+                    <span className="text-base italic border-l-2 border-gray-400 pl-2">Long Quote - Block Citation</span>
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
               <DropdownMenuSeparator />
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
-                  {currentAlignment === "left" && <AlignLeft className="mr-2 h-5 w-5" />}
-                  {currentAlignment === "center" && <AlignCenter className="mr-2 h-5 w-5" />}
-                  {currentAlignment === "right" && <AlignRight className="mr-2 h-5 w-5" />}
-                  {currentAlignment === "justify" && <AlignJustify className="mr-2 h-5 w-5" />}
-                  {currentAlignment === "" && <AlignLeft className="mr-2 h-5 w-5" />}
+                  {currentAlignment === 'left' && <AlignLeft className="mr-2 h-5 w-5" />}
+                  {currentAlignment === 'center' && <AlignCenter className="mr-2 h-5 w-5" />}
+                  {currentAlignment === 'right' && <AlignRight className="mr-2 h-5 w-5" />}
+                  {currentAlignment === 'justify' && <AlignJustify className="mr-2 h-5 w-5" />}
+                  {currentAlignment === '' && <AlignLeft className="mr-2 h-5 w-5" />}
                   <span>
                     Alignment (
-                    {currentAlignment === "left"
-                      ? "Left"
-                      : currentAlignment === "center"
-                        ? "Center"
-                        : currentAlignment === "right"
-                          ? "Right"
-                          : currentAlignment === "justify"
-                            ? "Justify"
-                            : "Left"}
+                    {currentAlignment === 'left'
+                      ? 'Left'
+                      : currentAlignment === 'center'
+                        ? 'Center'
+                        : currentAlignment === 'right'
+                          ? 'Right'
+                          : currentAlignment === 'justify'
+                            ? 'Justify'
+                            : 'Left'}
                     )
                   </span>
                 </DropdownMenuSubTrigger>
@@ -657,77 +627,72 @@ export function FloatingTextFormatToolbarPlugin() {
                   <DropdownMenuItem
                     onSelect={(e) => e.preventDefault()}
                     onClick={() => {
-                      editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left")
+                      editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left');
                       setTimeout(() => {
-                        editor.getEditorState().read(() => updateToolbar())
-                      }, 0)
+                        editor.getEditorState().read(() => updateToolbar());
+                      }, 0);
                     }}
                   >
                     <AlignLeft className="mr-2 h-5 w-5" />
                     <span>Align Left</span>
-                    {currentAlignment === "left" && <Check className="ml-auto h-5 w-5" />}
+                    {currentAlignment === 'left' && <Check className="ml-auto h-5 w-5" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onSelect={(e) => e.preventDefault()}
                     onClick={() => {
-                      editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center")
+                      editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'center');
                       setTimeout(() => {
-                        editor.getEditorState().read(() => updateToolbar())
-                      }, 0)
+                        editor.getEditorState().read(() => updateToolbar());
+                      }, 0);
                     }}
                   >
                     <AlignCenter className="mr-2 h-5 w-5" />
                     <span>Align Center</span>
-                    {currentAlignment === "center" && <Check className="ml-auto h-5 w-5" />}
+                    {currentAlignment === 'center' && <Check className="ml-auto h-5 w-5" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onSelect={(e) => e.preventDefault()}
                     onClick={() => {
-                      editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")
+                      editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'right');
                       setTimeout(() => {
-                        editor.getEditorState().read(() => updateToolbar())
-                      }, 0)
+                        editor.getEditorState().read(() => updateToolbar());
+                      }, 0);
                     }}
                   >
                     <AlignRight className="mr-2 h-5 w-5" />
                     <span>Align Right</span>
-                    {currentAlignment === "right" && <Check className="ml-auto h-5 w-5" />}
+                    {currentAlignment === 'right' && <Check className="ml-auto h-5 w-5" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onSelect={(e) => e.preventDefault()}
                     onClick={() => {
-                      editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")
+                      editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'justify');
                       setTimeout(() => {
-                        editor.getEditorState().read(() => updateToolbar())
-                      }, 0)
+                        editor.getEditorState().read(() => updateToolbar());
+                      }, 0);
                     }}
                   >
                     <AlignJustify className="mr-2 h-5 w-5" />
                     <span>Justify</span>
-                    {currentAlignment === "justify" && <Check className="ml-auto h-5 w-5" />}
+                    {currentAlignment === 'justify' && <Check className="ml-auto h-5 w-5" />}
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
               <DropdownMenuSeparator />
-              <ListMenuComponent
-                editor={editor}
-                currentListType={currentListType}
-                updateToolbar={updateToolbar}
-                showCurrentType={true}
-              />
+              <ListMenuComponent editor={editor} currentListType={currentListType} updateToolbar={updateToolbar} showCurrentType={true} />
               <DropdownMenuSeparator /> {/* Mantenha este separador se houver outras opções após o alinhamento */}
               <DropdownMenuItem
                 onClick={() => {
                   editor.update(() => {
-                    const selection = $getSelection()
+                    const selection = $getSelection();
                     if ($isRangeSelection(selection)) {
-                      const selectedText = selection.getTextContent()
+                      const selectedText = selection.getTextContent();
                       if (selectedText) {
-                        const quotedText = `"${selectedText}"`
-                        selection.insertText(quotedText)
+                        const quotedText = `"${selectedText}"`;
+                        selection.insertText(quotedText);
                       }
                     }
-                  })
+                  });
                 }}
               >
                 <Quote className="mr-2 h-5 w-5" />
@@ -739,11 +704,7 @@ export function FloatingTextFormatToolbarPlugin() {
           {/* Dropdown: Inserir (Insert) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
-              >
+              <Button variant="ghost" size="icon" className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150">
                 <TextCursorInput className="h-5 w-5" /> {/* Using TextCursorInput as a generic icon for insert */}
               </Button>
             </DropdownMenuTrigger>

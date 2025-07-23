@@ -74,7 +74,7 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
           genre: ['RPG', 'Space', 'Adventure'],
           platform: ['PC', 'Steam'],
           status: 'primary',
-          testingFocus: ['Combat System', 'Space Navigation', 'UI/UX']
+          testingFocus: ['Combat System', 'Space Navigation', 'UI/UX'],
         },
         {
           id: 'cosmic-2',
@@ -84,7 +84,7 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
           genre: ['Action', 'Shooter', 'Multiplayer'],
           platform: ['PC', 'Steam'],
           status: 'secondary',
-          testingFocus: ['Multiplayer Balance', 'Performance', 'Matchmaking']
+          testingFocus: ['Multiplayer Balance', 'Performance', 'Matchmaking'],
         },
         {
           id: 'void-3',
@@ -94,9 +94,9 @@ export async function getAvailableTestSessions(): Promise<TestSession[]> {
           genre: ['Strategy', 'Simulation', 'Building'],
           platform: ['PC'],
           status: 'bonus',
-          testingFocus: ['Resource Systems', 'Building Mechanics', 'Tutorial']
-        }
-      ]
+          testingFocus: ['Resource Systems', 'Building Mechanics', 'Tutorial'],
+        },
+      ],
     },
     {
       id: '2',

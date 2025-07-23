@@ -49,7 +49,6 @@ export type QuestionSubmissionv1_0_0 =
   | MultipleChoiceQuestionSubmissionv1_0_0
   | EssayQuestionSubmissionv1_0_0;
 
-
 /*
  import { QuestionTypev1_0_0, CodeQuestionv1_0_0, AnswerQuestionv1_0_0, MultipleChoiceQuestionv1_0_0 } from './question.base.v1.0.0'
 
