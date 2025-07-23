@@ -740,7 +740,10 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     Assert.Contains("Feedback quality rated successfully", responseContent);
 
     // Verify feedback quality was updated
-    var updatedFeedback = await _context.TestingFeedback.FindAsync(feedback.Id);
+    // Detach the entity to ensure we get fresh data from the database
+    _context.Entry(feedback).State = EntityState.Detached;
+    var updatedFeedback = await _context.TestingFeedback
+        .FirstOrDefaultAsync(f => f.Id == feedback.Id);
     Assert.NotNull(updatedFeedback);
     Assert.Equal(FeedbackQuality.Positive, updatedFeedback.QualityRating);
   }
