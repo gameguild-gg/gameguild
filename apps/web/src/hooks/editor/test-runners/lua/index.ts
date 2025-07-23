@@ -34,7 +34,7 @@ export const luaTestRunners = {
       const results = await runInOutTests(file.content, inoutTests, executeLua);
 
       // Update the test results
-      setTestResults((prev: any) => ({
+      setTestResults((prev: Record<string, { passed: boolean; actual: string; expected: string }[]>) => ({
         ...prev,
         [fileId]: results,
       }));
@@ -44,7 +44,7 @@ export const luaTestRunners = {
       addOutput(`Tests completed: ${passedCount}/${results.length} passed`);
     } catch (error) {
       console.error('Error running Lua inout tests:', error);
-      addOutput(`Error running tests: ${error.message}`);
+      addOutput(`Error running tests: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsExecuting(false);
     }
@@ -81,7 +81,7 @@ export const luaTestRunners = {
       const results = await runPredicateTests(file.content, predicateTests, executeLua);
 
       // Update the test results
-      setTestResults((prev: any) => ({
+      setTestResults((prev: Record<string, { passed: boolean; actual: string; expected: string }[]>) => ({
         ...prev,
         [fileId]: results,
       }));
@@ -91,7 +91,7 @@ export const luaTestRunners = {
       addOutput(`Tests completed: ${passedCount}/${results.length} passed`);
     } catch (error) {
       console.error('Error running Lua predicate tests:', error);
-      addOutput(`Error running tests: ${error.message}`);
+      addOutput(`Error running tests: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsExecuting(false);
     }

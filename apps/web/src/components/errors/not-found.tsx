@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-export const PageNotFound = (): React.JSX.Element => (
+export const NotFound = (): React.JSX.Element => (
   <div>
     <h2>Not Found</h2>
     <p>The page you're looking for doesn't exist or has been moved.</p>

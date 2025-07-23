@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useCallback, useState } from 'react';
-import type { CodeFile, ProgrammingLanguage } from '@/components/ui/source-code/types';
+import type { CodeFile, ProgrammingLanguage } from '../../components/editor/ui/source-code/types';
 import { getExecutor } from './executors/executor-factory';
 import type { ExecutionContext } from './executors/types';
 import { getTestRunner } from './test-runners';
@@ -21,11 +21,6 @@ interface UseCodeExecutionOptions {
 export function useCodeExecution(options: UseCodeExecutionOptions) {
   const { files, selectedLanguage, clearTerminalOnRun, addOutput, clearTerminal, testCases, setTestResults } = options;
   const [isExecuting, setIsExecuting] = useState(false);
-  const [capturedOutput, setCapturedOutput] = useState<string[]>([]);
-  const [isCapturingOutput, setIsCapturingOutput] = useState(false);
-  const [currentTestFileId, setCurrentTestFileId] = useState<string | null>(null);
-  const [currentTestIndex, setCurrentTestIndex] = useState<number>(-1);
-  const [output, setOutput] = useState<string[]>([]);
   const [input, setInput] = useState<string>('');
 
   // Function to capture output for test cases
@@ -38,7 +33,7 @@ export function useCodeExecution(options: UseCodeExecutionOptions) {
   }, []);
 
   // Function to normalize output for comparison
-  const normalizeOutput = useCallback((output: any): string => {
+  const normalizeOutput = useCallback((output: unknown): string => {
     // Convert output to string if it's not already
     const outputStr = typeof output === 'string' ? output : String(output || '');
 

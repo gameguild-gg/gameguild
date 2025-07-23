@@ -86,19 +86,19 @@ class UltraFastMemoryCache {
 
 // Non-blocking streaming storage for localStorage
 class NonBlockingStreamingStorage {
-  private changeQueue: Array<{ slug: string; data: any; timestamp: number }> = [];
+  private changeQueue: Array<{ slug: string; data: unknown; timestamp: number }> = [];
   private processTimeoutId: NodeJS.Timeout | null = null;
   private isProcessing = false;
 
   // O(1): Add to queue without blocking
-  queueChange(slug: string, data: any): void {
+  queueChange(slug: string, data: unknown): void {
     this.changeQueue.push({ slug, data, timestamp: Date.now() });
     this.scheduleProcessing();
   }
 
   // O(1): Get current state without iteration
-  getAllPendingChanges(): Map<string, any> {
-    const result = new Map<string, any>();
+  getAllPendingChanges(): Map<string, unknown> {
+    const result = new Map<string, unknown>();
 
     try {
       // O(n) but only called during sync, not during user interaction
@@ -158,7 +158,7 @@ class NonBlockingStreamingStorage {
         const key = localStorage.key(i);
         if (key && key.startsWith('sync_change_')) count++;
       }
-    } catch (error) {
+    } catch {
       // Ignore errors in stats
     }
 
@@ -243,7 +243,7 @@ class NonBlockingStreamingStorage {
   }
 }
 
-export const useCacheManager = (currentContent: Content[], maxCacheSize: number = 1000) => {
+export const useCacheManager = (currentContent: Content[]) => {
   const memoryCache = useRef<UltraFastMemoryCache>(new UltraFastMemoryCache(currentContent));
   const streamingStorage = useRef<NonBlockingStreamingStorage>(new NonBlockingStreamingStorage());
   const lastSyncTimeRef = useRef<number>(Date.now());
@@ -276,11 +276,12 @@ export const useCacheManager = (currentContent: Content[], maxCacheSize: number 
       }
     };
 
-    if (currentContent.length > 0) {
+    const hasContent = currentContent.length > 0;
+    if (hasContent) {
       const cleanupTimeout = setTimeout(initialCleanup, 500);
       return () => clearTimeout(cleanupTimeout);
     }
-  }, [currentContent.length > 0]);
+  }, [currentContent]);
 
   // Rebuild when content changes
   useEffect(() => {
@@ -325,7 +326,7 @@ export const useCacheManager = (currentContent: Content[], maxCacheSize: number 
 
   // O(1): Instant memory + non-blocking localStorage
   const setDirtyChange = useCallback(
-    (slug: string, change: any) => {
+    (slug: string, change: unknown) => {
       // Validate slug format
       if (slug.includes('_') && /\d{13}$/.test(slug)) {
         const cleanSlug = slug.replace(/_\d{13}$/, '');

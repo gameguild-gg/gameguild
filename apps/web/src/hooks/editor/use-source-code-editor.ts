@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Pencil, Play, Settings } from 'lucide-react';
 import type { EditMenuOption } from '@/components/ui/content-edit-menu';
-import type { CodeFile, ProgrammingLanguage, SourceCodeData } from '@/components/ui/source-code/types';
+import type { CodeFile, ProgrammingLanguage, SourceCodeData } from '@/components/editor/ui/source-code/types';
 import { useCodeExecution } from './use-code-execution';
 
 interface UseSourceCodeEditorProps {
@@ -38,8 +38,8 @@ interface UseSourceCodeEditorProps {
       type: 'simple' | 'inout';
       input?: string;
       expectedOutput?: string;
-      args?: any[];
-      expectedReturn?: any[];
+      args?: unknown[];
+      expectedReturn?: unknown[];
     }[]
   >;
   setTestResults: (results: Record<string, { passed: boolean; actual: string; expected: string }[]>) => void;
@@ -186,7 +186,18 @@ export function useSourceCodeEditor({
   });
 
   // Editor mount handler
-  const handleEditorMount = (editor: any, monaco: any) => {
+  interface MonacoEditor {
+    focus: () => void;
+    updateOptions: (options: unknown) => void;
+    addCommand: (keybinding: number, handler: () => void) => void;
+  }
+
+  interface Monaco {
+    KeyMod: { CtrlCmd: number };
+    KeyCode: { KeyS: number };
+  }
+
+  const handleEditorMount = (editor: MonacoEditor, monaco: Monaco) => {
     editor.focus();
     editor.updateOptions({
       theme: isDarkTheme ? 'vs-dark' : 'vs-light',

@@ -498,19 +498,31 @@ export async function searchUsers(query: string, limit: number = 10): Promise<Us
 
     // Transform UserProfile data to User format
     if (Array.isArray(data)) {
-      const users = data.map((profile: any) => ({
-        id: profile.id,
-        version: profile.version,
-        name: profile.displayName || profile.givenName + ' ' + profile.familyName,
-        email: profile.email || `${profile.displayName}@unknown.com`, // UserProfile doesn't have email
-        isActive: !profile.isDeleted,
-        balance: 0, // UserProfile doesn't have balance
-        availableBalance: 0,
-        createdAt: profile.createdAt,
-        updatedAt: profile.updatedAt,
-        deletedAt: profile.deletedAt,
-        isDeleted: profile.isDeleted,
-      }));
+      const users = data.map(
+        (profile: {
+          id: string;
+          version: number;
+          displayName?: string;
+          givenName?: string;
+          familyName?: string;
+          email?: string;
+          isDeleted?: boolean;
+          createdAt: string;
+          updatedAt: string;
+        }) => ({
+          id: profile.id,
+          version: profile.version,
+          name: profile.displayName || profile.givenName + ' ' + profile.familyName,
+          email: profile.email || `${profile.displayName}@unknown.com`, // UserProfile doesn't have email
+          isActive: !profile.isDeleted,
+          balance: 0, // UserProfile doesn't have balance
+          availableBalance: 0,
+          createdAt: profile.createdAt,
+          updatedAt: profile.updatedAt,
+          deletedAt: profile.deletedAt,
+          isDeleted: profile.isDeleted,
+        }),
+      );
 
       console.log('✅ [SEARCH DEBUG] Transformed users:', users.length);
       return users;
@@ -532,7 +544,7 @@ export async function bulkActivateUsers(
 ): Promise<{
   success: boolean;
   error?: string;
-  result?: any;
+  result?: unknown;
 }> {
   try {
     // Get authenticated session
@@ -584,7 +596,7 @@ export async function bulkDeactivateUsers(
 ): Promise<{
   success: boolean;
   error?: string;
-  result?: any;
+  result?: unknown;
 }> {
   try {
     // Get authenticated session

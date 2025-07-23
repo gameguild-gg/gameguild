@@ -45,18 +45,18 @@ class JavaScriptExecutor implements LanguageExecutor {
       // Create a safe execution environment
       const consoleOutput: string[] = [];
       const mockConsole = {
-        log: (...args: any) => {
-          const output = args.map((arg: any) => String(arg)).join(' ');
+        log: (...args: unknown[]) => {
+          const output = args.map((arg: unknown) => String(arg)).join(' ');
           consoleOutput.push(output);
           addOutput(output);
         },
-        error: (...args: any) => {
-          const output = `Error: ${args.map((arg: any) => String(arg)).join(' ')}`;
+        error: (...args: unknown[]) => {
+          const output = `Error: ${args.map((arg: unknown) => String(arg)).join(' ')}`;
           consoleOutput.push(output);
           addOutput(output);
         },
-        warn: (...args: any) => {
-          const output = `Warning: ${args.map((arg: any) => String(arg)).join(' ')}`;
+        warn: (...args: unknown[]) => {
+          const output = `Warning: ${args.map((arg: unknown) => String(arg)).join(' ')}`;
           consoleOutput.push(output);
           addOutput(output);
         },
@@ -317,7 +317,7 @@ class JavaScriptExecutor implements LanguageExecutor {
 
       // Process active imports first
       for (const match of activeImports) {
-        const [fullMatch, defaultImport, namedImports, namespaceImport, importPath] = match;
+        const [, defaultImport, namedImports, namespaceImport, importPath] = match;
         const resolvedPath = this.resolveRelativePath(fileName, importPath, vfs);
 
         if (resolvedPath) {

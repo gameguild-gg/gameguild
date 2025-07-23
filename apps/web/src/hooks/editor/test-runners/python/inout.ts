@@ -1,10 +1,22 @@
 import type { TestRunnerOptions } from '../types';
 
+interface LocalExecutionContext {
+  files: Array<{
+    id: string;
+    name: string;
+    content: string;
+  }>;
+  selectedLanguage: string;
+  addOutput: (output: string | string[]) => void;
+  clearTerminal: () => void;
+  setIsExecuting: (isExecuting: boolean) => void;
+}
+
 /**
  * Run In/Out tests for Python code
  */
 export async function runInOutTestsPython(options: TestRunnerOptions): Promise<void> {
-  const { fileId, file, fileCases, files, selectedLanguage, addOutput, setIsExecuting, setTestResults, normalizeOutput } = options;
+  const { fileId, file, fileCases, files, addOutput, setIsExecuting, setTestResults } = options;
 
   try {
     addOutput(`Running In/Out tests for Python...`);
@@ -109,7 +121,7 @@ print("TEST_RESULTS_END")
 
     // Execute the Python script
     const executor = getExecutor('python');
-    let testResults: { passed: boolean; actual: string; expected: string }[] = fileCases.map(() => ({
+    const testResults: { passed: boolean; actual: string; expected: string }[] = fileCases.map(() => ({
       passed: false,
       actual: '',
       expected: '',
@@ -124,25 +136,8 @@ print("TEST_RESULTS_END")
       isEdited: false,
     };
 
-    // Function to process output
-    const processOutput = (output: string) => {
-      // Extract the JSON results
-      const resultsMatch = output.match(/TEST_RESULTS_START\n([\s\S]*?)\nTEST_RESULTS_END/);
-      if (resultsMatch) {
-        try {
-          const parsedResults = JSON.parse(resultsMatch[1]);
-          testResults = parsedResults;
-          setTestResults({ [fileId]: testResults });
-        } catch (error) {
-          addOutput(`Error parsing test results: ${error}`);
-        }
-      } else {
-        addOutput(`Error: Could not find test results in output`);
-      }
-    };
-
     // Create an execution context
-    const context: ExecutionContext = {
+    const context: LocalExecutionContext = {
       files: [...files, testFile],
       selectedLanguage: 'python',
       addOutput,
@@ -151,11 +146,11 @@ print("TEST_RESULTS_END")
     };
 
     // Execute the test script
-    await executor.execute('temp-test-file', context, { processOutput });
+    await executor.execute('temp-test-file', context as ExecutionContext);
 
     setTestResults({ [fileId]: testResults });
   } catch (error) {
-    addOutput(`Error running tests: ${error.message}`);
+    addOutput(`Error running tests: ${error instanceof Error ? error.message : String(error)}`);
   } finally {
     setIsExecuting(false);
   }
@@ -165,7 +160,7 @@ print("TEST_RESULTS_END")
 function getExecutor(language: string) {
   // This is a simplified version - in a real implementation, you would import the actual executor
   return {
-    execute: async (fileId: string, context: ExecutionContext, options?: { processOutput: (output: string) => void }) => {
+    execute: async (fileId: string, context: ExecutionContext) => {
       // Mock implementation
       context.addOutput(`Executing ${language} code...`);
       // In a real implementation, this would execute the code

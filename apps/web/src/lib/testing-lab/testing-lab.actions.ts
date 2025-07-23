@@ -19,10 +19,6 @@ import {
   getTestingRequestsByStatusByStatus,
   getTestingRequestsSearch,
   getTestingSessionsByRequestByTestingRequestId,
-  getTestingSessionsByLocationByLocationId,
-  getTestingSessionsByStatusByStatus,
-  getTestingSessionsByManagerByManagerId,
-  getTestingSessionsSearch,
   getTestingRequestsByRequestIdParticipants,
   postTestingRequestsByRequestIdParticipantsByUserId,
   deleteTestingRequestsByRequestIdParticipantsByUserId,
@@ -31,15 +27,7 @@ import {
   postTestingRequestsByRequestIdFeedback,
   getTestingRequestsByRequestIdStatistics,
 } from '@/lib/api/generated/sdk.gen';
-import type {
-  TestingRequest,
-  TestingSession,
-  SessionStatus,
-  PostTestingRequestsData,
-  PutTestingRequestsByIdData,
-  PostTestingSessionsData,
-  PutTestingSessionsByIdData,
-} from '@/lib/api/generated/types.gen';
+import type { TestingRequest, TestingSession, SessionStatus, PutTestingSessionsByIdData } from '@/lib/api/generated/types.gen';
 
 // Get all testing requests
 export async function getTestingRequestsData(params?: { status?: string; projectVersionId?: string; creatorId?: string; skip?: number; take?: number }) {
@@ -52,7 +40,7 @@ export async function getTestingRequestsData(params?: { status?: string; project
   try {
     const response = await getTestingRequests({
       baseUrl: environment.apiBaseUrl,
-      query: params as any,
+      query: params,
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
         'Cache-Control': 'no-store',
@@ -124,7 +112,8 @@ export async function createTestingRequest(requestData: {
   try {
     const response = await postTestingRequests({
       baseUrl: environment.apiBaseUrl,
-      body: requestData as PostTestingRequestsData['body'],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      body: requestData as any,
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
@@ -172,7 +161,8 @@ export async function updateTestingRequest(
     const response = await putTestingRequestsById({
       baseUrl: environment.apiBaseUrl,
       path: { id },
-      body: requestData as PutTestingRequestsByIdData['body'],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      body: requestData as any,
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
@@ -238,7 +228,7 @@ export async function getTestingSessionsData(params?: {
   try {
     const response = await getTestingSessions({
       baseUrl: environment.apiBaseUrl,
-      query: params as any,
+      query: params,
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
         'Cache-Control': 'no-store',
@@ -501,7 +491,8 @@ export async function getTestingRequestsByStatus(status: string) {
   try {
     const response = await getTestingRequestsByStatusByStatus({
       baseUrl: environment.apiBaseUrl,
-      path: { status },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      path: { status } as any,
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
         'Cache-Control': 'no-store',
@@ -530,7 +521,7 @@ export async function searchTestingRequests(searchTerm: string) {
   try {
     const response = await getTestingRequestsSearch({
       baseUrl: environment.apiBaseUrl,
-      query: { q: searchTerm },
+      query: { searchTerm },
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
         'Cache-Control': 'no-store',
@@ -739,7 +730,7 @@ export async function submitTestingRequestFeedback(
     const response = await postTestingRequestsByRequestIdFeedback({
       baseUrl: environment.apiBaseUrl,
       path: { requestId },
-      body: feedbackData as any,
+      body: feedbackData,
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',

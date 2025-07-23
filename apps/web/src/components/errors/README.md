@@ -126,22 +126,22 @@ export default function RootLayout({ children }) {
 
 #### GracefullyDegradingErrorBoundary
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `children` | `ReactNode` | - | Child components to wrap |
-| `fallback` | `ComponentType<ErrorFallbackProps>` | `DefaultErrorFallback` | Custom error UI component |
-| `onError` | `(error: Error, errorInfo: ErrorInfo) => void` | - | Error event handler |
-| `resetOnPropsChange` | `boolean` | `false` | Reset when props change |
-| `resetKeys` | `Array<string \| number>` | - | Reset when these values change |
-| `isolate` | `boolean` | `false` | Prevent error propagation |
+| Prop                 | Type                                           | Default                | Description                    |
+| -------------------- | ---------------------------------------------- | ---------------------- | ------------------------------ |
+| `children`           | `ReactNode`                                    | -                      | Child components to wrap       |
+| `fallback`           | `ComponentType<ErrorFallbackProps>`            | `DefaultErrorFallback` | Custom error UI component      |
+| `onError`            | `(error: Error, errorInfo: ErrorInfo) => void` | -                      | Error event handler            |
+| `resetOnPropsChange` | `boolean`                                      | `false`                | Reset when props change        |
+| `resetKeys`          | `Array<string \| number>`                      | -                      | Reset when these values change |
+| `isolate`            | `boolean`                                      | `false`                | Prevent error propagation      |
 
 #### ErrorFallbackProps
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `error` | `Error` | The caught error object |
+| Prop         | Type         | Description                          |
+| ------------ | ------------ | ------------------------------------ |
+| `error`      | `Error`      | The caught error object              |
 | `resetError` | `() => void` | Function to reset the error boundary |
-| `errorInfo` | `ErrorInfo` | React error info (optional) |
+| `errorInfo`  | `ErrorInfo`  | React error info (optional)          |
 
 ### Best Practices
 
@@ -169,7 +169,7 @@ import * as Sentry from '@sentry/nextjs';
   }}
 >
   <App />
-</GracefullyDegradingErrorBoundary>
+</GracefullyDegradingErrorBoundary>;
 ```
 
 ### Testing
@@ -187,7 +187,7 @@ test('catches and displays error', () => {
   render(
     <GracefullyDegradingErrorBoundary>
       <ThrowError />
-    </GracefullyDegradingErrorBoundary>
+    </GracefullyDegradingErrorBoundary>,
   );
 
   expect(screen.getByText('Something went wrong')).toBeInTheDocument();
