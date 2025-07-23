@@ -34,6 +34,7 @@ import {
 import type {
   TestingRequest,
   TestingSession,
+  SessionStatus,
   PostTestingRequestsData,
   PutTestingRequestsByIdData,
   PostTestingSessionsData,
@@ -321,7 +322,8 @@ export async function createTestingSession(sessionData: {
     const endDateTime = new Date(sessionDateTime);
     endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0, 0);
 
-    const testingSessionPayload: TestingSession = {
+    // Create a minimal payload with only required fields
+    const testingSessionPayload = {
       testingRequestId: sessionData.testingRequestId,
       locationId: sessionData.locationId || undefined,
       sessionName: sessionData.sessionName,
@@ -329,13 +331,14 @@ export async function createTestingSession(sessionData: {
       startTime: startDateTime.toISOString(),
       endTime: endDateTime.toISOString(),
       maxTesters: sessionData.maxTesters,
-      status: 0, // SessionStatus.Scheduled
+      status: 0 as SessionStatus, // SessionStatus.Scheduled
       managerId: sessionData.managerId || undefined,
       managerUserId: sessionData.managerId || undefined,
-      registeredTesterCount: 0,
-      registeredProjectMemberCount: 0,
-      registeredProjectCount: 0,
-    };
+    } as TestingSession;
+
+    console.log('Creating testing session with payload:', JSON.stringify(testingSessionPayload, null, 2));
+    console.log('API Base URL:', environment.apiBaseUrl);
+    console.log('Auth token available:', !!session.accessToken);
 
     const response = await postTestingSessions({
       baseUrl: environment.apiBaseUrl,
@@ -346,8 +349,13 @@ export async function createTestingSession(sessionData: {
       },
     });
 
+    console.log('API Response status:', response.response?.status);
+    console.log('API Response data:', response.data);
+    console.log('API Response error:', response.error);
+
     if (!response.data) {
-      throw new Error('Failed to create testing session');
+      const errorMessage = response.error ? JSON.stringify(response.error) : 'No data in response';
+      throw new Error(`Failed to create testing session - ${errorMessage}`);
     }
 
     // Revalidate testing sessions cache

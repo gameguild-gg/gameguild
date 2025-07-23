@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
   BarChart3,
   Calendar,
@@ -34,7 +35,6 @@ import {
   Users,
   XCircle,
 } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface TestingSession {
   id: string;
@@ -155,12 +155,31 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
       const isProfessor = email.endsWith('@champlain.edu') && !email.endsWith('@mymail.champlain.edu');
       const isAdmin = isProfessor; // For now, professors are also admins
 
-      setUserRole({
-        type: isAdmin ? 'admin' : isProfessor ? 'professor' : 'student',
-        isStudent,
-        isProfessor,
-        isAdmin,
-      });
+      // Override for development/testing - remove this in production
+      const isDev = process.env.NODE_ENV === 'development';
+      const devOverride = isDev; // Set to true to test as professor in dev
+
+      const newUserRole = {
+        type: isAdmin || devOverride ? 'admin' : isProfessor || devOverride ? 'professor' : 'student',
+        isStudent: isStudent && !devOverride,
+        isProfessor: isProfessor || devOverride,
+        isAdmin: isAdmin || devOverride,
+      };
+
+      console.log('User role determined:', { email, newUserRole, isDev, devOverride });
+      setUserRole(newUserRole);
+    } else {
+      // If no session, default to professor for testing
+      if (process.env.NODE_ENV === 'development') {
+        const testUserRole = {
+          type: 'professor' as const,
+          isStudent: false,
+          isProfessor: true,
+          isAdmin: true,
+        };
+        console.log('No session - using test user role:', testUserRole);
+        setUserRole(testUserRole);
+      }
     }
   }, [session]);
 
@@ -191,8 +210,8 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
       setSessions(newSessions);
     } catch (error) {
       console.error('Error refreshing sessions:', error);
-      // Fall back to page reload if API call fails
-      window.location.reload();
+      // Don't reload the page, just keep the current sessions
+      // window.location.reload();
     } finally {
       setLoading(false);
     }
@@ -369,15 +388,51 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
 
             <div className="flex flex-col sm:flex-row gap-4">
               {userRole.isProfessor && (
-                <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                <Dialog open={showCreateDialog} onOpenChange={(open) => {
+                  console.log('Dialog state changing:', open);
+                  setShowCreateDialog(open);
+                }}>
                   <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0 shadow-lg">
+                    <Button 
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0 shadow-lg"
+                      onClick={() => {
+                        console.log('Schedule Session button clicked');
+                      }}
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Schedule Session
                     </Button>
                   </DialogTrigger>
                   <CreateSessionDialog onClose={() => setShowCreateDialog(false)} onSave={refreshSessions} />
                 </Dialog>
+              )}
+
+              {/* Always show button in development for testing */}
+              {process.env.NODE_ENV === 'development' && !userRole.isProfessor && (
+                <Dialog open={showCreateDialog} onOpenChange={(open) => {
+                  console.log('Test Dialog state changing:', open);
+                  setShowCreateDialog(open);
+                }}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white border-0 shadow-lg"
+                      onClick={() => {
+                        console.log('Test Schedule Session button clicked');
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Test Create Session
+                    </Button>
+                  </DialogTrigger>
+                  <CreateSessionDialog onClose={() => setShowCreateDialog(false)} onSave={refreshSessions} />
+                </Dialog>
+              )}
+
+              {/* Debug info */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="text-xs text-slate-400 bg-slate-800 p-2 rounded">
+                  User: {session?.user?.email || 'No session'} | Role: {userRole.type} | isProfessor: {userRole.isProfessor.toString()}
+                </div>
               )}
 
               <Button variant="outline" onClick={() => refreshSessions()} className="border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
@@ -996,8 +1051,15 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
         maxTesters: parseInt(formData.maxTesters),
       });
 
-      onSave();
+      // Close dialog first
       onClose();
+      // Then refresh sessions
+      try {
+        await onSave();
+      } catch (refreshError) {
+        console.error('Error refreshing sessions after creation:', refreshError);
+        // Session was created successfully, just refresh failed
+      }
     } catch (error) {
       console.error('Error creating session:', error);
       setErrors({ general: error instanceof Error ? error.message : 'Failed to create session' });
@@ -1013,11 +1075,7 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
         <DialogDescription className="text-slate-400">Create a new testing session for students to participate in game testing</DialogDescription>
       </DialogHeader>
 
-      {errors.general && (
-        <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-300 text-sm">
-          {errors.general}
-        </div>
-      )}
+      {errors.general && <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-300 text-sm">{errors.general}</div>}
 
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-4">
@@ -1025,9 +1083,9 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
             <Label htmlFor="sessionName" className="text-slate-300">
               Session Name <span className="text-red-400">*</span>
             </Label>
-            <Input 
-              id="sessionName" 
-              placeholder="e.g., Block 3 Final Testing" 
+            <Input
+              id="sessionName"
+              placeholder="e.g., Block 3 Final Testing"
               className="bg-slate-700/50 border-slate-600 text-white"
               value={formData.sessionName}
               onChange={(e) => setFormData({ ...formData, sessionName: e.target.value })}
@@ -1082,9 +1140,9 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
             <Label htmlFor="sessionDate" className="text-slate-300">
               Date <span className="text-red-400">*</span>
             </Label>
-            <Input 
-              id="sessionDate" 
-              type="date" 
+            <Input
+              id="sessionDate"
+              type="date"
               className="bg-slate-700/50 border-slate-600 text-white"
               value={formData.sessionDate}
               onChange={(e) => setFormData({ ...formData, sessionDate: e.target.value })}
@@ -1095,9 +1153,9 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
             <Label htmlFor="startTime" className="text-slate-300">
               Start Time <span className="text-red-400">*</span>
             </Label>
-            <Input 
-              id="startTime" 
-              type="time" 
+            <Input
+              id="startTime"
+              type="time"
               className="bg-slate-700/50 border-slate-600 text-white"
               value={formData.startTime}
               onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
@@ -1108,9 +1166,9 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
             <Label htmlFor="endTime" className="text-slate-300">
               End Time <span className="text-red-400">*</span>
             </Label>
-            <Input 
-              id="endTime" 
-              type="time" 
+            <Input
+              id="endTime"
+              type="time"
               className="bg-slate-700/50 border-slate-600 text-white"
               value={formData.endTime}
               onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
@@ -1173,10 +1231,11 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
       </div>
 
       <DialogFooter className="gap-2">
-        <Button variant="outline" onClick={onClose} className="border-slate-600" disabled={isSubmitting}>
+        <Button type="button" variant="outline" onClick={onClose} className="border-slate-600" disabled={isSubmitting}>
           Cancel
         </Button>
         <Button
+          type="button"
           onClick={handleSubmit}
           disabled={isSubmitting}
           className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
