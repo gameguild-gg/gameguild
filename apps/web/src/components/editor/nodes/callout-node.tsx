@@ -15,10 +15,10 @@ import { ContentEditMenu } from '@/components/ui/content-edit-menu';
 import { EditorLoadingContext } from '../lexical-editor';
 
 export interface CalloutData {
-  title: string;
-  content: string;
-  type: CalloutType;
-  isNew?: boolean;
+  calloutTitle: string
+  content: string
+  type: CalloutType
+  isNew?: boolean
 }
 
 export interface SerializedCalloutNode extends SerializedLexicalNode {
@@ -48,8 +48,14 @@ export class CalloutNode extends DecoratorNode<JSX.Element> {
     return new CalloutNode(node.__data, node.__key);
   }
 
-  static importJSON(serializedNode: SerializedCalloutNode): CalloutNode {
-    return new CalloutNode(serializedNode.data);
+  constructor(data: CalloutData, key?: string) {
+    super(key)
+    this.__data = {
+      calloutTitle: data.calloutTitle || "",
+      content: data.content || "",
+      type: data.type || "note",
+      isNew: data.isNew,
+    }
   }
 
   createDOM(): HTMLElement {
@@ -84,12 +90,12 @@ interface CalloutComponentProps {
 }
 
 function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
-  const [editor] = useLexicalComposerContext();
-  const isLoading = useContext(EditorLoadingContext);
-  const [isEditing, setIsEditing] = useState((data.isNew || false) && !isLoading);
-  const [title, setTitle] = useState(data.title || '');
-  const [content, setContent] = useState(data.content || '');
-  const [type, setType] = useState<CalloutType>(data.type || 'note');
+  const [editor] = useLexicalComposerContext()
+  const isLoading = useContext(EditorLoadingContext)
+  const [isEditing, setIsEditing] = useState((data.isNew || false) && !isLoading)
+  const [calloutTitle, setcalloutTitle] = useState(data.calloutTitle || "")
+  const [content, setContent] = useState(data.content || "")
+  const [type, setType] = useState<CalloutType>(data.type || "note")
 
   useEffect(() => {
     if (data.isNew) {
@@ -118,10 +124,10 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
     });
   };
 
-  const handleTitleChange = (newTitle: string) => {
-    setTitle(newTitle);
-    updateCallout({ title: newTitle });
-  };
+  const handlecalloutTitleChange = (newcalloutTitle: string) => {
+    setcalloutTitle(newcalloutTitle)
+    updateCallout({ calloutTitle: newcalloutTitle })
+  }
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent);
@@ -137,7 +143,7 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
     return (
       <div className="my-4 relative">
         <UICallout type={type}>
-          {title && <div className="font-semibold mb-1">{title}</div>}
+          {calloutTitle && <div className="font-semibold mb-1">{calloutTitle}</div>}
           <div>{content}</div>
         </UICallout>
         <ContentEditMenu
@@ -196,10 +202,15 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
             </div>
 
             <div className="grid gap-2">
-              <label htmlFor="callout-title" className="text-sm font-medium">
-                Title (optional)
+              <label htmlFor="callout-calloutTitle" className="text-sm font-medium">
+                calloutTitle (optional)
               </label>
-              <Input id="callout-title" value={title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="Callout title" />
+              <Input
+                id="callout-calloutTitle"
+                value={calloutTitle}
+                onChange={(e) => handlecalloutTitleChange(e.target.value)}
+                placeholder="Callout calloutTitle"
+              />
             </div>
 
             <div className="grid gap-2">
@@ -212,7 +223,7 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
             <div className="mt-4">
               <h4 className="text-sm font-medium mb-2">Preview</h4>
               <UICallout type={type}>
-                {title && <div className="font-semibold mb-1">{title}</div>}
+                {calloutTitle && <div className="font-semibold mb-1">{calloutTitle}</div>}
                 <div>{content}</div>
               </UICallout>
             </div>
@@ -225,9 +236,9 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
 
 export function $createCalloutNode(data: Partial<CalloutData> = {}): CalloutNode {
   return new CalloutNode({
-    title: data.title || '',
-    content: data.content || '',
-    type: data.type || 'note',
+    calloutTitle: data.calloutTitle || "",
+    content: data.content || "",
+    type: data.type || "note",
     isNew: true,
   });
 }
