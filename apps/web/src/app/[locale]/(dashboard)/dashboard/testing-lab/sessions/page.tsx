@@ -25,7 +25,7 @@ export default async function TestingSessionsPage() {
 
   try {
     const sessionsData = await getTestingSessionsData();
-    sessions = sessionsData;
+    sessions = sessionsData?.testingSessions || [];
   } catch (err) {
     error = err instanceof Error ? err.message : 'Failed to load testing sessions';
   }
