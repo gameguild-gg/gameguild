@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 
 import { useAuthError } from '@/lib/hooks/useAuthError';
 import { Link } from '@/i18n/navigation';
-import { signIn } from '@/auth';
+import { googleSignInAction } from '@/lib/auth/auth-actions';
 
 export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'div'>) => {
   const { hasError, error } = useAuthError();
@@ -23,7 +23,7 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await signIn('google');
+      await googleSignInAction();
     } catch (error) {
       console.error('Sign-in error:', error);
     } finally {

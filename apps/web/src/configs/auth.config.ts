@@ -1,8 +1,8 @@
+import { NextAuthConfig } from 'next-auth';
 import Google from 'next-auth/providers/google';
 import { environment } from '@/configs/environment';
-import { NextAuthConfig } from 'next-auth';
-import { apiClient } from '@/lib/api/api-client';
 import { SignInResponse } from '@/components/legacy/types/auth';
+import { apiClient } from '@/lib/api/api-client';
 import { getJwtExpiryDate } from '@/lib/utils/jwt-utils';
 import { refreshAccessToken } from '@/lib/auth/token-refresh';
 
@@ -184,7 +184,7 @@ export const authConfig: NextAuthConfig = {
 
       // Try to get expiry from JWT token itself (most reliable)
       if (token.accessToken) {
-        expiresAt = getJwtExpiryDate(token.accessToken as string);
+        expiresAt = await getJwtExpiryDate(token.accessToken as string);
       }
 
       // Fallback to stored expires value if JWT decode fails
