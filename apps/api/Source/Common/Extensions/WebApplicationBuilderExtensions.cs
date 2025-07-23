@@ -77,7 +77,9 @@ public static class WebApplicationBuilderExtensions {
                       new CorsOptions();
 
     return new DependencyInjection.PresentationOptions {
-      AllowedOrigins = corsOptions.AllowedOrigins,
+      AllowedOrigins = corsOptions.AllowedOrigins?.Length > 0 
+        ? corsOptions.AllowedOrigins 
+        : ["http://localhost:3000", "https://localhost:3001"],
       EnableSwagger = builder.Environment.IsDevelopment(),
       EnableHealthChecks = true,
       EnableResponseCompression = !builder.Environment.IsDevelopment(),
