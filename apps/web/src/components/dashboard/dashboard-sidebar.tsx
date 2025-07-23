@@ -6,7 +6,6 @@ import {
   BarChart3,
   BookOpen,
   Building2,
-  ChevronRight,
   Command,
   FileText,
   GalleryVerticalEnd,
@@ -18,11 +17,6 @@ import {
   Users,
 } from 'lucide-react';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -32,29 +26,15 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import { NavMainDashboard } from '@/components/dashboard/nav-main-dashboard';
-import { NavProjectsDashboard } from '@/components/dashboard/nav-projects-dashboard';
-import { NavUserDashboard } from '@/components/dashboard/nav-user-dashboard';
-import { TeamSwitcher } from '@/components/dashboard/team-switcher';
+import { TenantSwitcher } from '@/components/dashboard/tenant-switcher';
 import { TenantResponse } from '@/lib/tenants/types';
 
-// This is sample data.
-const data = {
-  user: {
-    name: 'shadcn',
-    email: 'm@example.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
-
 const navigationData = {
-  teams: [
+  tenants: [
     {
-      name: 'Game Guild',
+      name: 'Acme Inc',
       logo: GalleryVerticalEnd,
       plan: 'Enterprise',
     },
@@ -69,88 +49,58 @@ const navigationData = {
       plan: 'Free',
     },
   ],
-  navMain: [
+  primary: [
     {
-      title: 'Dashboard',
+      title: 'Overview',
       url: '/dashboard/overview',
       icon: LayoutDashboard,
-      isActive: true,
-      items: [
-        {
-          title: 'Overview',
-          url: '/dashboard/overview',
-        },
-        {
-          title: 'Analytics',
-          url: '/dashboard/analytics',
-        },
-        {
-          title: 'Reports',
-          url: '/dashboard/reports',
-        },
-      ],
     },
     {
-      title: 'Users & Access',
+      title: 'Users',
       url: '/dashboard/users',
       icon: Users,
-      items: [
-        {
-          title: 'Users',
-          url: '/dashboard/users',
-        },
-        {
-          title: 'Tenant Management',
-          url: '/dashboard/tenant',
-        },
-      ],
     },
     {
-      title: 'Content',
+      title: 'Courses',
       url: '/dashboard/courses',
       icon: BookOpen,
-      items: [
-        {
-          title: 'Courses',
-          url: '/dashboard/courses',
-        },
-        {
-          title: 'Projects',
-          url: '/dashboard/projects',
-        },
-      ],
+    },
+    {
+      title: 'Analytics',
+      url: '/dashboard/analytics',
+      icon: BarChart3,
+    },
+    {
+      title: 'Reports',
+      url: '/dashboard/reports',
+      icon: FileText,
+    },
+    {
+      title: 'Projects',
+      url: '/dashboard/projects',
+      icon: Package,
     },
     {
       title: 'Testing Lab',
       url: '/dashboard/testing-lab',
       icon: TestTube,
-      items: [
-        {
-          title: 'Test Sessions',
-          url: '/dashboard/testing-lab',
-        },
-        {
-          title: 'Results',
-          url: '/dashboard/testing-lab/results',
-        },
-      ],
+    },
+    {
+      title: 'Tenant Management',
+      url: '/dashboard/tenant',
+      icon: Building2,
     },
   ],
-  projects: [
+  secondary: [
     {
-      name: 'Analytics Dashboard',
-      url: '/dashboard/analytics',
-      icon: BarChart3,
-    },
-    {
-      name: 'Reports',
-      url: '/dashboard/reports',
-      icon: FileText,
-    },
-    {
-      name: 'Settings',
+      title: 'Settings',
       url: '/dashboard/settings',
       icon: Settings,
+    },
+    {
+      title: 'Feedback',
+      url: '#',
+      icon: Send,
     },
   ],
 };
