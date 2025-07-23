@@ -1,106 +1,114 @@
 'use client';
 
-import React from 'react';
-import {
-  AudioWaveform,
-  BarChart3,
-  BookOpen,
-  Building2,
-  Command,
-  FileText,
-  GalleryVerticalEnd,
-  LayoutDashboard,
-  Package,
-  Send,
-  Settings,
-  TestTube,
-  Users,
-} from 'lucide-react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarRail,
-} from '@/components/ui/sidebar';
+import * as React from 'react';
+import { BarChart3, BookOpen, Building2, FileText, LayoutDashboard, Package, Settings, TestTube, Users } from 'lucide-react';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
+import { NavMain } from '@/components/dashboard/nav-main';
+import { NavProjects } from '@/components/dashboard/nav-projects';
+import { NavUser } from '@/components/dashboard/nav-user';
 import { TenantSwitcher } from '@/components/dashboard/tenant-switcher';
 import { TenantResponse } from '@/lib/tenants/types';
 
+// This is sample data structured for the collapsible sidebar
 const navigationData = {
-  tenants: [
+  user: {
+    name: 'User',
+    email: 'user@example.com',
+    avatar: '/avatars/user.jpg',
+  },
+  navMain: [
     {
-      name: 'Acme Inc',
-      logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
-    },
-    {
-      name: 'Acme Corp.',
-      logo: AudioWaveform,
-      plan: 'Startup',
-    },
-    {
-      name: 'Evil Corp.',
-      logo: Command,
-      plan: 'Free',
-    },
-  ],
-  primary: [
-    {
-      title: 'Overview',
+      title: 'Dashboard',
       url: '/dashboard/overview',
       icon: LayoutDashboard,
+      isActive: true,
+      items: [
+        {
+          title: 'Overview',
+          url: '/dashboard/overview',
+        },
+        {
+          title: 'Analytics',
+          url: '/dashboard/analytics',
+        },
+      ],
     },
     {
-      title: 'Users',
+      title: 'User Management',
       url: '/dashboard/users',
       icon: Users,
+      items: [
+        {
+          title: 'All Users',
+          url: '/dashboard/users',
+        },
+        {
+          title: 'User Roles',
+          url: '/dashboard/users/roles',
+        },
+      ],
     },
     {
-      title: 'Courses',
+      title: 'Content',
       url: '/dashboard/courses',
       icon: BookOpen,
-    },
-    {
-      title: 'Analytics',
-      url: '/dashboard/analytics',
-      icon: BarChart3,
+      items: [
+        {
+          title: 'Courses',
+          url: '/dashboard/courses',
+        },
+        {
+          title: 'Testing Lab',
+          url: '/dashboard/testing-lab',
+        },
+      ],
     },
     {
       title: 'Reports',
       url: '/dashboard/reports',
       icon: FileText,
+      items: [
+        {
+          title: 'Analytics',
+          url: '/dashboard/analytics',
+        },
+        {
+          title: 'Reports',
+          url: '/dashboard/reports',
+        },
+      ],
     },
-    {
-      title: 'Projects',
-      url: '/dashboard/projects',
-      icon: Package,
-    },
-    {
-      title: 'Testing Lab',
-      url: '/dashboard/testing-lab',
-      icon: TestTube,
-    },
-    {
-      title: 'Tenant Management',
-      url: '/dashboard/tenant',
-      icon: Building2,
-    },
-  ],
-  secondary: [
     {
       title: 'Settings',
       url: '/dashboard/settings',
       icon: Settings,
+      items: [
+        {
+          title: 'General',
+          url: '/dashboard/settings',
+        },
+        {
+          title: 'Tenant Management',
+          url: '/dashboard/tenant',
+        },
+      ],
+    },
+  ],
+  projects: [
+    {
+      name: 'Projects',
+      url: '/dashboard/projects',
+      icon: Package,
     },
     {
-      title: 'Feedback',
-      url: '#',
-      icon: Send,
+      name: 'Testing Lab',
+      url: '/dashboard/testing-lab',
+      icon: TestTube,
+    },
+    {
+      name: 'Tenant Management',
+      url: '/dashboard/tenant',
+      icon: Building2,
     },
   ],
 };
@@ -112,39 +120,11 @@ export const DashboardSidebar = ({ tenants = [], ...props }: React.ComponentProp
         <TenantSwitcher initialTenants={tenants} />
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Platform</SidebarGroupLabel>
-          <SidebarMenu>
-            {navigationData.primary.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  size="default"
-                  tooltip={item.title}
-                  className="text-slate-300 hover:text-white hover:bg-gradient-to-r hover:from-slate-800/60 hover:to-slate-700/40 data-[active=true]:bg-gradient-to-r data-[active=true]:from-blue-600/20 data-[active=true]:to-purple-600/20 data-[active=true]:text-blue-400 data-[active=true]:border-l-2 data-[active=true]:border-blue-400 data-[active=true]:shadow-lg data-[active=true]:shadow-blue-500/10 rounded-lg mx-1 transition-all duration-200 backdrop-blur-sm"
-                >
-                  <a href={item.url}>
-                    <item.icon className="h-4 w-4" />
-                    <span className="font-medium">{item.title}</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
+        <NavMain items={navigationData.navMain} />
+        <NavProjects projects={navigationData.projects} />
       </SidebarContent>
       <SidebarFooter>
-        <SidebarMenu>
-          {navigationData.secondary.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-                <a href={item.url}>
-                  <item.icon />
-                  <span>{item.title}</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+        <NavUser user={navigationData.user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
