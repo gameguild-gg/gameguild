@@ -105,7 +105,7 @@ interface EnhancedTestingSessionsListProps {
 
 export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTestingSessionsListProps) {
   const { data: session } = useSession();
-  const [sessions, setSessions] = useState<TestingSession[]>(initialSessions);
+  const [sessions, setSessions] = useState<TestingSession[]>(Array.isArray(initialSessions) ? initialSessions : []);
   const [selectedSession, setSelectedSession] = useState<TestingSession | null>(null);
   const [registrations, setRegistrations] = useState<SessionRegistration[]>([]);
   const [loading, setLoading] = useState(false);
