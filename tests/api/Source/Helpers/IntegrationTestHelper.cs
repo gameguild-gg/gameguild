@@ -27,7 +27,7 @@ namespace GameGuild.Tests.Helpers {
       // Use InMemory connection string instead of SQLite to avoid provider conflicts
       Environment.SetEnvironmentVariable("DB_CONNECTION_STRING", "InMemory");
       Environment.SetEnvironmentVariable("USE_IN_MEMORY_DB", "true");
-      Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+      Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Test");
 
       // Add JWT environment variables - must match development API configuration
       Environment.SetEnvironmentVariable(
@@ -50,20 +50,20 @@ namespace GameGuild.Tests.Helpers {
       var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder => {
           builder.UseContentRoot(Directory.GetCurrentDirectory());
 
-          // Override configuration settings for testing
+                    // Override configuration settings for testing
           builder.ConfigureAppConfiguration((context, config) => {
               // Add test-specific configuration settings - must match development API configuration
               config.AddInMemoryCollection(
                 new Dictionary<string, string?> {
-                  { "Jwt:Key", "game-guild-super-secret-key-for-development-only-minimum-32-characters" },
                   { "Jwt:SecretKey", "game-guild-super-secret-key-for-development-only-minimum-32-characters" },
                   { "Jwt:Issuer", "GameGuild.CMS" },
                   { "Jwt:Audience", "GameGuild.Users" },
-                  { "Jwt:AccessTokenExpiryMinutes", "15" },
-                  { "Jwt:ExpiryInMinutes", "15" },
+                  { "Jwt:ExpiryInMinutes", "60" },
                   { "Jwt:RefreshTokenExpiryInDays", "7" },
                   { "OAuth:GitHub:ClientId", "test-github-client-id" },
-                  { "OAuth:GitHub:ClientSecret", "test-github-client-secret" }
+                  { "OAuth:GitHub:ClientSecret", "test-github-client-secret" },
+                  { "Cors:AllowedOrigins:0", "http://localhost:3000" },
+                  { "Cors:AllowedOrigins:1", "https://localhost:3000" }
                 }
               );
             }

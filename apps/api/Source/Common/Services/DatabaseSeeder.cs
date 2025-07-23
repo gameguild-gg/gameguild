@@ -20,6 +20,7 @@ public class DatabaseSeeder(
   ApplicationDbContext context,
   IPermissionService permissionService,
   IUserService userService,
+  IWebHostEnvironment environment,
   ILogger<DatabaseSeeder> logger
 ) : IDatabaseSeeder {
   public async Task SeedAsync() {
@@ -32,13 +33,21 @@ public class DatabaseSeeder(
       await SeedGlobalProjectDefaultPermissionsAsync();
       await SeedTenantDomainDefaultPermissionsAsync();
       await SeedTestingLabDefaultPermissionsAsync();
-      await SeedSampleCoursesAsync();
-      await SeedSampleTracksAsync();
-      await SeedMockUsersAsync();
-      await SeedMockProjectsAsync();
-      await SeedMockTestingLocationsAsync();
-      await SeedMockTestingRequestsAsync();
-      await SeedMockTestingSessionsAsync();
+      
+      // Only seed sample data and mock data in development/production environments
+      // Skip in test environments to avoid interfering with unit tests
+      if (!environment.IsEnvironment("Test")) {
+        await SeedSampleCoursesAsync();
+        await SeedSampleTracksAsync();
+        await SeedMockUsersAsync();
+        await SeedMockProjectsAsync();
+        await SeedMockTestingLocationsAsync();
+        await SeedMockTestingRequestsAsync();
+        await SeedMockTestingSessionsAsync();
+      }
+      else {
+        logger.LogInformation("Skipping sample/mock data seeding in test environment");
+      }
 
       await context.SaveChangesAsync();
 
