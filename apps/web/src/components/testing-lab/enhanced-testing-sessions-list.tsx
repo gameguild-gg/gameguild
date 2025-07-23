@@ -203,14 +203,14 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
   };
 
   // Filter sessions based on search and status
-  const filteredSessions = sessions.filter((session) => {
+  const filteredSessions = Array.isArray(sessions) ? sessions.filter((session) => {
     const matchesSearch =
       session.sessionName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       session.location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       session.manager.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }) : [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -344,11 +344,11 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-blue-300 text-sm font-medium">Total Sessions</p>
-                    <p className="text-3xl font-bold text-white">{sessions.length}</p>
+                    <p className="text-3xl font-bold text-white">{Array.isArray(sessions) ? sessions.length : 0}</p>
                   </div>
                   <Calendar className="h-8 w-8 text-blue-400" />
                 </div>
-                <p className="text-blue-300/60 text-xs mt-2">{sessions.filter((s) => s.status === 'scheduled').length} scheduled</p>
+                <p className="text-blue-300/60 text-xs mt-2">{Array.isArray(sessions) ? sessions.filter((s) => s.status === 'scheduled').length : 0} scheduled</p>
               </CardContent>
             </Card>
 
@@ -357,7 +357,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-green-300 text-sm font-medium">Active Participants</p>
-                    <p className="text-3xl font-bold text-white">{sessions.reduce((acc, s) => acc + s.registeredTesterCount, 0)}</p>
+                    <p className="text-3xl font-bold text-white">{Array.isArray(sessions) ? sessions.reduce((acc, s) => acc + s.registeredTesterCount, 0) : 0}</p>
                   </div>
                   <Users className="h-8 w-8 text-green-400" />
                 </div>
@@ -370,7 +370,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-300 text-sm font-medium">Projects Testing</p>
-                    <p className="text-3xl font-bold text-white">{sessions.reduce((acc, s) => acc + s.testingRequests.length, 0)}</p>
+                    <p className="text-3xl font-bold text-white">{Array.isArray(sessions) ? sessions.reduce((acc, s) => acc + (s.testingRequests?.length || 0), 0) : 0}</p>
                   </div>
                   <Gamepad2 className="h-8 w-8 text-purple-400" />
                 </div>
@@ -384,7 +384,9 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                   <div>
                     <p className="text-orange-300 text-sm font-medium">Avg Attendance</p>
                     <p className="text-3xl font-bold text-white">
-                      {Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length)}%
+                      {Array.isArray(sessions) && sessions.length > 0 
+                        ? Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length)
+                        : 0}%
                     </p>
                   </div>
                   <TrendingUp className="h-8 w-8 text-orange-400" />
