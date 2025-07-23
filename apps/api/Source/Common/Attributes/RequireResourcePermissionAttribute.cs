@@ -196,6 +196,70 @@ public class RequireResourcePermissionAttribute<TResource>(PermissionType requir
 
               break;
 
+            case "TestingSession":
+              var hasTestingSessionPermission =
+                await permissionService
+                  .HasResourcePermissionAsync<GameGuild.Modules.TestingLab.TestingSessionPermission, GameGuild.Modules.TestingLab.TestingSession>(
+                    userId,
+                    tenantId,
+                    resourceId,
+                    requiredPermission
+                  );
+
+              if (hasTestingSessionPermission) {
+                return; // Permission granted at resource level
+              }
+
+              break;
+
+            case "TestingRequest":
+              var hasTestingRequestPermission =
+                await permissionService
+                  .HasResourcePermissionAsync<GameGuild.Modules.TestingLab.TestingRequestPermission, GameGuild.Modules.TestingLab.TestingRequest>(
+                    userId,
+                    tenantId,
+                    resourceId,
+                    requiredPermission
+                  );
+
+              if (hasTestingRequestPermission) {
+                return; // Permission granted at resource level
+              }
+
+              break;
+
+            case "TestingFeedback":
+              var hasTestingFeedbackPermission =
+                await permissionService
+                  .HasResourcePermissionAsync<GameGuild.Modules.TestingLab.TestingFeedbackPermission, GameGuild.Modules.TestingLab.TestingFeedback>(
+                    userId,
+                    tenantId,
+                    resourceId,
+                    requiredPermission
+                  );
+
+              if (hasTestingFeedbackPermission) {
+                return; // Permission granted at resource level
+              }
+
+              break;
+
+            case "SessionRegistration":
+              var hasSessionRegistrationPermission =
+                await permissionService
+                  .HasResourcePermissionAsync<GameGuild.Modules.TestingLab.SessionRegistrationPermission, GameGuild.Modules.TestingLab.SessionRegistration>(
+                    userId,
+                    tenantId,
+                    resourceId,
+                    requiredPermission
+                  );
+
+              if (hasSessionRegistrationPermission) {
+                return; // Permission granted at resource level
+              }
+
+              break;
+
             default:
               // For unknown resource types, skip resource-level check and go to content-type fallback
               break;
