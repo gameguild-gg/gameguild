@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { UserProfile } from '@/components/user';
-import { getUserByUsername, userExists } from '@/lib/users/actions/users.actions';
+import { getUserByUsername, userExists } from '@/lib/users/users.actions';
 
 interface PageProps {
   params: {
