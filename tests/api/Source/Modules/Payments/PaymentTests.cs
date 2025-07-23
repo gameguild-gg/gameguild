@@ -77,7 +77,7 @@ public class PaymentTests : IDisposable
             Status = PaymentStatus.Pending,
             Method = PaymentMethod.CreditCard,
             ProviderTransactionId = "pi_test123",
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         // Act
@@ -111,7 +111,7 @@ public class PaymentTests : IDisposable
             ProductId = productId,
             Amount = 49.99m,
             Currency = "USD",
-            Method = PaymentMethod.CreditCard
+            Method = PaymentMethod.CreditCard,
         };
 
         // Act
@@ -145,7 +145,7 @@ public class PaymentTests : IDisposable
             ProductId = productId,
             Amount = 49.99m,
             Currency = "USD",
-            Method = PaymentMethod.CreditCard
+            Method = PaymentMethod.CreditCard,
         };
 
         var createResult = await _mediator.Send(createCommand);
@@ -155,7 +155,7 @@ public class PaymentTests : IDisposable
         var processCommand = new ProcessPaymentCommand
         {
             PaymentId = createResult.Payment!.Id,
-            ProviderTransactionId = "pi_success123"
+            ProviderTransactionId = "pi_success123",
         };
 
         var processResult = await _mediator.Send(processCommand);
@@ -188,7 +188,7 @@ public class PaymentTests : IDisposable
             ProductId = productId,
             Amount = 49.99m,
             Currency = "USD",
-            Method = PaymentMethod.CreditCard
+            Method = PaymentMethod.CreditCard,
         };
 
         var createResult = await _mediator.Send(createCommand);
@@ -198,7 +198,7 @@ public class PaymentTests : IDisposable
         var processCommand = new ProcessPaymentCommand
         {
             PaymentId = createResult.Payment!.Id,
-            ProviderTransactionId = "pi_failed123"
+            ProviderTransactionId = "pi_failed123",
         };
 
         var processResult = await _mediator.Send(processCommand);
@@ -232,7 +232,7 @@ public class PaymentTests : IDisposable
         {
             PaymentId = completedPayment.Id,
             RefundAmount = 49.99m,
-            Reason = "Customer request"
+            Reason = "Customer request",
         };
 
         var refundResult = await _mediator.Send(refundCommand);
@@ -268,7 +268,7 @@ public class PaymentTests : IDisposable
         {
             UserId = userId,
             Skip = 0,
-            Take = 10
+            Take = 10,
         };
 
         var payments = await _mediator.Send(query);
@@ -302,7 +302,7 @@ public class PaymentTests : IDisposable
         var query = new GetPaymentStatsQuery
         {
             FromDate = DateTime.UtcNow.AddDays(-30),
-            ToDate = DateTime.UtcNow
+            ToDate = DateTime.UtcNow,
         };
 
         var stats = await _mediator.Send(query);
@@ -326,7 +326,7 @@ public class PaymentTests : IDisposable
         {
             Id = userId,
             Name = name,
-            Email = $"{name.ToLower().Replace(" ", "")}@test.com"
+            Email = $"{name.ToLower().Replace(" ", "")}@test.com",
         };
 
         _context.Users.Add(user);
@@ -339,7 +339,7 @@ public class PaymentTests : IDisposable
         {
             Id = productId,
             Name = name,
-            ShortDescription = $"Description for {name}"
+            ShortDescription = $"Description for {name}",
         };
 
         _context.Products.Add(product);
@@ -359,7 +359,7 @@ public class PaymentTests : IDisposable
             Method = PaymentMethod.CreditCard,
             ProviderTransactionId = $"pi_test_{Guid.NewGuid()}",
             CreatedAt = DateTime.UtcNow,
-            ProcessedAt = DateTime.UtcNow
+            ProcessedAt = DateTime.UtcNow,
         };
 
         _context.Payments.Add(payment);

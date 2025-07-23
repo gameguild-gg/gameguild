@@ -326,9 +326,9 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
           tenantId = tenant.Id,
           resourceId = comment.Id,
           resourceType = "Comment",
-          permissions = new[] { "Edit", "Delete" }
-        }
-      }
+          permissions = new[] { "Edit", "Delete" },
+        },
+      },
     };
 
     // Act
@@ -389,7 +389,7 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
       targetUserId = targetUser.Id,
       tenantId = tenant.Id,
       permissions = new[] { "Read", "Comment" },
-      expiresAt = DateTime.UtcNow.AddDays(30)
+      expiresAt = DateTime.UtcNow.AddDays(30),
     };
 
     var json = JsonSerializer.Serialize(shareResourceDto);
@@ -549,7 +549,7 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
 
   private async Task<Comment> CreateTestCommentAsync() {
     var comment = new Comment {
-      Id = Guid.NewGuid(), Content = "Test comment content"
+      Id = Guid.NewGuid(), Content = "Test comment content",
       // Note: Comment entity doesn't have IsEdited property
     };
 

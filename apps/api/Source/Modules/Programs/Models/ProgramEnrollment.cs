@@ -138,7 +138,7 @@ public enum EnrollmentStatus {
   Paused = 2,
   Cancelled = 3,
   Expired = 4,
-  Completed = 5
+  Completed = 5,
 }
 
 /// <summary>
@@ -150,7 +150,7 @@ public enum EnrollmentSource {
   FreeAccess = 2,
   AdminAction = 3,
   BulkEnrollment = 4,
-  Invitation = 5
+  Invitation = 5,
 }
 
 /// <summary>
@@ -162,5 +162,5 @@ public enum CompletionStatus {
   Completed = 2,
   CompletedWithCertificate = 3,
   Failed = 4,
-  Dropped = 5
+  Dropped = 5,
 }

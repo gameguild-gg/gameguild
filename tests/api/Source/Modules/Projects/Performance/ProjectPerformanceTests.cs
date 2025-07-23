@@ -59,7 +59,7 @@ public class ProjectPerformanceTests : IDisposable {
           Description = $"Description for project {i}",
           Type = ProjectType.Game,
           Status = ContentStatus.Published,
-          Visibility = AccessLevel.Public
+          Visibility = AccessLevel.Public,
         }
       );
     }
@@ -95,7 +95,7 @@ public class ProjectPerformanceTests : IDisposable {
           ShortDescription = $"Project {i} summary",
           Type = i % 2 == 0 ? ProjectType.Game : ProjectType.Tool,
           Status = ContentStatus.Published,
-          Visibility = AccessLevel.Public
+          Visibility = AccessLevel.Public,
         }
       );
     }
@@ -171,7 +171,7 @@ public class ProjectPerformanceTests : IDisposable {
           Description = $"Project {i} for status testing",
           Status = statuses[i % statuses.Length],
           Type = ProjectType.Game,
-          Visibility = AccessLevel.Public
+          Visibility = AccessLevel.Public,
         }
       );
     }
@@ -208,7 +208,7 @@ public class ProjectPerformanceTests : IDisposable {
           Description = $"Project {i} for type testing",
           Type = types[i % types.Length],
           Status = ContentStatus.Published,
-          Visibility = AccessLevel.Public
+          Visibility = AccessLevel.Public,
         }
       );
     }
@@ -265,7 +265,7 @@ public class ProjectPerformanceTests : IDisposable {
           Description = $"Project {i} for pagination testing",
           Type = ProjectType.Game,
           Status = ContentStatus.Published,
-          Visibility = AccessLevel.Public
+          Visibility = AccessLevel.Public,
         }
       );
     }
@@ -303,7 +303,7 @@ public class ProjectPerformanceTests : IDisposable {
           Description = $"Project {i} for bulk testing",
           Type = ProjectType.Game,
           Status = ContentStatus.Published,
-          Visibility = AccessLevel.Public
+          Visibility = AccessLevel.Public,
         }
       );
     }
@@ -354,7 +354,7 @@ public class ProjectPerformanceTests : IDisposable {
           Description = $"Project {i} for concurrent testing",
           Type = ProjectType.Game,
           Status = ContentStatus.Published,
-          Visibility = AccessLevel.Public
+          Visibility = AccessLevel.Public,
         }
       );
     }

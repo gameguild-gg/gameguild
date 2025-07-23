@@ -101,7 +101,7 @@ public class ProductQueryHandlers :
       query = request.SortBy?.ToLower() switch {
         "name" => request.SortDirection?.ToUpper() == "DESC" ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name),
         "createdat" => request.SortDirection?.ToUpper() == "DESC" ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt),
-        _ => query.OrderByDescending(p => p.CreatedAt)
+        _ => query.OrderByDescending(p => p.CreatedAt),
       };
 
       // Apply pagination
@@ -287,7 +287,7 @@ public class ProductQueryHandlers :
         TotalUsers = totalUsers,
         ProductsByType = productsByType,
         RevenueByType = revenueByType,
-        AcquisitionsByType = acquisitionsByType
+        AcquisitionsByType = acquisitionsByType,
       };
 
       _logger.LogDebug("Retrieved product statistics: {TotalProducts} products, {PublishedProducts} published", 
@@ -310,7 +310,7 @@ public class ProductQueryHandlers :
         TotalUsers = 0,
         ProductsByType = new Dictionary<string, int>(),
         RevenueByType = new Dictionary<string, decimal>(),
-        AcquisitionsByType = new Dictionary<string, int>()
+        AcquisitionsByType = new Dictionary<string, int>(),
       };
     }
   }

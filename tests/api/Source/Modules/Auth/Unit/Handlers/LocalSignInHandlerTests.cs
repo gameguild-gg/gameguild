@@ -24,7 +24,7 @@ public class LocalSignInHandlerTests
         {
             Email = "test@example.com",
             Password = "password123",
-            TenantId = tenantId
+            TenantId = tenantId,
         };
 
         var expectedResponse = new SignInResponseDto
@@ -35,9 +35,9 @@ public class LocalSignInHandlerTests
             {
                 Id = Guid.NewGuid(),
                 Email = "test@example.com",
-                Username = "testuser"
+                Username = "testuser",
             },
-            TenantId = tenantId
+            TenantId = tenantId,
         };
 
         _mockAuthService.Setup(x => x.LocalSignInAsync(
@@ -69,7 +69,7 @@ public class LocalSignInHandlerTests
         var command = new LocalSignInCommand
         {
             Email = "test@example.com",
-            Password = "wrongpassword"
+            Password = "wrongpassword",
         };
 
         _mockAuthService.Setup(x => x.LocalSignInAsync(It.IsAny<LocalSignInRequestDto>()))
@@ -89,7 +89,7 @@ public class LocalSignInHandlerTests
         var command = new LocalSignInCommand
         {
             Email = "",
-            Password = "password123"
+            Password = "password123",
         };
 
         _mockAuthService.Setup(x => x.LocalSignInAsync(It.IsAny<LocalSignInRequestDto>()))

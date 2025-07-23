@@ -88,7 +88,7 @@ public class PaymentServiceTests : IDisposable
                 Success = true, 
                 TransactionId = "txn_success_123",
                 PaymentIntentId = "pi_success_123",
-                ProcessedAt = DateTime.UtcNow 
+                ProcessedAt = DateTime.UtcNow,
             });
 
         // Step 1: Create Payment Intent
@@ -99,7 +99,7 @@ public class PaymentServiceTests : IDisposable
             Amount = 99.99m,
             Currency = "USD",
             Method = PaymentMethod.CreditCard,
-            Description = "Test Product Purchase"
+            Description = "Test Product Purchase",
         };
 
         var createResult = await _mediator.Send(createCommand);
@@ -113,7 +113,7 @@ public class PaymentServiceTests : IDisposable
         var processCommand = new ProcessPaymentCommand
         {
             PaymentId = createResult.Payment.Id,
-            ProviderTransactionId = "txn_success_123"
+            ProviderTransactionId = "txn_success_123",
         };
 
         var processResult = await _mediator.Send(processCommand);
@@ -152,7 +152,7 @@ public class PaymentServiceTests : IDisposable
             { 
                 Success = false, 
                 Error = "Insufficient funds",
-                ProcessedAt = DateTime.UtcNow 
+                ProcessedAt = DateTime.UtcNow,
             });
 
         // Create and process payment
@@ -162,7 +162,7 @@ public class PaymentServiceTests : IDisposable
             ProductId = productId,
             Amount = 99.99m,
             Currency = "USD",
-            Method = PaymentMethod.CreditCard
+            Method = PaymentMethod.CreditCard,
         };
 
         var createResult = await _mediator.Send(createCommand);
@@ -170,7 +170,7 @@ public class PaymentServiceTests : IDisposable
         var processCommand = new ProcessPaymentCommand
         {
             PaymentId = createResult.Payment!.Id,
-            ProviderTransactionId = "pi_failed_123" // Must start with "pi_failed" to be marked as failed
+            ProviderTransactionId = "pi_failed_123", // Must start with "pi_failed" to be marked as failed
         };
 
         var processResult = await _mediator.Send(processCommand);
@@ -211,7 +211,7 @@ public class PaymentServiceTests : IDisposable
             { 
                 Success = true, 
                 RefundId = "refund_123",
-                ProcessedAt = DateTime.UtcNow 
+                ProcessedAt = DateTime.UtcNow,
             });
 
         var refundCommand = new RefundPaymentCommand
@@ -219,7 +219,7 @@ public class PaymentServiceTests : IDisposable
             PaymentId = payment.Id,
             RefundAmount = 50.00m,
             Reason = "Customer request",
-            RefundedBy = userId
+            RefundedBy = userId,
         };
 
         // Act
@@ -260,7 +260,7 @@ public class PaymentServiceTests : IDisposable
         {
             UserId = userId,
             FromDate = DateTime.UtcNow.AddDays(-30),
-            ToDate = DateTime.UtcNow
+            ToDate = DateTime.UtcNow,
         };
 
         // Act
@@ -281,7 +281,7 @@ public class PaymentServiceTests : IDisposable
             Id = userId, 
             Name = userName,
             Email = $"{userName.ToLowerInvariant().Replace(" ", "")}@test.com",
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         
         _context.Users.Add(user);
@@ -299,7 +299,7 @@ public class PaymentServiceTests : IDisposable
             CreatorId = creatorId,
             Status = ContentStatus.Published,
             Visibility = AccessLevel.Public,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         
         _context.Products.Add(product);
@@ -316,7 +316,7 @@ public class PaymentServiceTests : IDisposable
             Status = ContentStatus.Published,
             Visibility = AccessLevel.Public,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
         };
 
         _context.Programs.Add(program);
@@ -328,7 +328,7 @@ public class PaymentServiceTests : IDisposable
         var productProgram = new ProductProgram
         {
             ProductId = productId,
-            ProgramId = programId
+            ProgramId = programId,
         };
 
         _context.ProductPrograms.Add(productProgram);
@@ -349,7 +349,7 @@ public class PaymentServiceTests : IDisposable
             Gateway = PaymentGateway.Stripe,
             CreatedAt = DateTime.UtcNow,
             FinalAmount = 99.99m,
-            NetAmount = 95.99m
+            NetAmount = 95.99m,
         };
 
         if (status == PaymentStatus.Completed)

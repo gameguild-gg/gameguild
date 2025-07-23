@@ -49,7 +49,7 @@ public class MockModuleTestServerFixture : IDisposable
                 ["JwtSettings:SecretKey"] = _testSecret,
                 ["JwtSettings:Issuer"] = "GameGuild.Tests",
                 ["JwtSettings:Audience"] = "GameGuild.Tests",
-                ["JwtSettings:ExpiryMinutes"] = "60"
+                ["JwtSettings:ExpiryMinutes"] = "60",
             })
             .Build();
 
@@ -112,14 +112,14 @@ public class MockModuleTestServerFixture : IDisposable
                 new Claim(ClaimTypes.NameIdentifier, userId),
                 new Claim(ClaimTypes.Email, email),
                 new Claim(ClaimTypes.Name, "Test User"),
-                new Claim("tenant", "test-tenant")
+                new Claim("tenant", "test-tenant"),
             }),
             Expires = DateTime.UtcNow.AddHours(1),
             Issuer = "GameGuild.Tests",
             Audience = "GameGuild.Tests",
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha256Signature)
+                SecurityAlgorithms.HmacSha256Signature),
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);

@@ -51,7 +51,7 @@ public class MinimalTestServerFixture : IDisposable
             { "Jwt:SecretKey", _testSecret },
             { "Jwt:Issuer", "GameGuild.Test" },
             { "Jwt:Audience", "GameGuild.Test.Users" },
-            { "Jwt:ExpiryInMinutes", "15" }
+            { "Jwt:ExpiryInMinutes", "15" },
         };
 
         var configuration = new ConfigurationBuilder()
@@ -89,7 +89,7 @@ public class MinimalTestServerFixture : IDisposable
         {
             new Claim(ClaimTypes.NameIdentifier, userId),
             new Claim(ClaimTypes.Name, "Test User"),
-            new Claim(ClaimTypes.Email, "test@example.com")
+            new Claim(ClaimTypes.Email, "test@example.com"),
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_testSecret));

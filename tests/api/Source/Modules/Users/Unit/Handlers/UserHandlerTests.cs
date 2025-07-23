@@ -32,7 +32,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
       var command = new CreateUserCommand { 
         Name = "Test User", 
         Email = "test@example.com",
-        InitialBalance = 100m
+        InitialBalance = 100m,
       };
 
       var handler = new CreateUserHandler(_context, _createLogger.Object, _mediator.Object);
@@ -61,7 +61,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
         Id = userId, 
         Name = "Original Name", 
         Email = "original@example.com", 
-        IsActive = true 
+        IsActive = true,
       };
       
       _context.Users.Add(existingUser);
@@ -70,7 +70,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
       var command = new UpdateUserCommand { 
         UserId = userId, 
         Name = "Updated Name",
-        Email = "updated@example.com"
+        Email = "updated@example.com",
       };
 
       var handler = new UpdateUserHandler(_context, _updateLogger.Object, _mediator.Object);
@@ -93,7 +93,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
         Id = userId, 
         Name = "Test User", 
         Email = "test@example.com", 
-        IsActive = true 
+        IsActive = true,
       };
       
       _context.Users.Add(existingUser);

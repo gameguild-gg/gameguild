@@ -40,7 +40,7 @@ public class ProductMutations {
       Type = input.Type,
       IsBundle = input.IsBundle,
       Status = input.Status,
-      Visibility = input.Visibility
+      Visibility = input.Visibility,
     };
 
     var result = await mediator.Send(command);
@@ -150,7 +150,7 @@ public class ProductMutations {
     var command = new AddProductPricingCommand {
       ProductId = Guid.Empty, // Would need to get this from PricingId
       Price = input.BasePrice ?? 0,
-      CreatedBy = Guid.Empty
+      CreatedBy = Guid.Empty,
     };
     var result = await mediator.Send(command);
 
@@ -171,7 +171,7 @@ public class ProductMutations {
       PurchasePrice = input.PurchasePrice,
       Currency = input.Currency ?? "USD",
       ExpiresAt = input.ExpiresAt,
-      GrantedBy = Guid.Empty
+      GrantedBy = Guid.Empty,
     };
     var result = await mediator.Send(command);
 

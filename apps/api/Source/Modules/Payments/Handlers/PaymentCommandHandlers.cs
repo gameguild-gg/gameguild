@@ -49,7 +49,7 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
         Currency = request.Currency,
         Method = request.Method,
         Status = PaymentStatus.Pending,
-        Metadata = System.Text.Json.JsonSerializer.Serialize(request.Metadata ?? new Dictionary<string, object>())
+        Metadata = System.Text.Json.JsonSerializer.Serialize(request.Metadata ?? new Dictionary<string, object>()),
       };
 
       _context.Payments.Add(payment);
@@ -58,7 +58,7 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
       _logger.LogInformation("Payment intent created: {PaymentId} for user {UserId}", payment.Id, request.UserId);
 
       return new CreatePaymentResult {
-        Success = true, Payment = payment, ClientSecret = $"pi_{payment.Id}_secret" // Placeholder for actual payment provider integration
+        Success = true, Payment = payment, ClientSecret = $"pi_{payment.Id}_secret", // Placeholder for actual payment provider integration
       };
     }
     catch (Exception ex) {
@@ -137,7 +137,7 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
                 UserId = payment.UserId, // Fixed: UserId is not nullable, no .Value needed
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
               };
 
               _context.ProgramUsers.Add(enrollment);
@@ -211,7 +211,7 @@ public class RefundPaymentCommandHandler : IRequestHandler<RefundPaymentCommand,
         RefundAmount = refundAmount,
         Reason = request.Reason,
         Status = RefundStatus.Succeeded,
-        ProcessedAt = DateTime.UtcNow
+        ProcessedAt = DateTime.UtcNow,
       };
 
       _context.PaymentRefunds.Add(refund);

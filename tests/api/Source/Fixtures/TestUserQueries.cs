@@ -22,7 +22,7 @@ public class TestUserQueries {
       Email = "test@example.com",
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
   }
 
@@ -38,7 +38,7 @@ public class TestUserQueries {
         Email = "test1@example.com",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new User {
         Id = Guid.NewGuid(),
@@ -46,7 +46,7 @@ public class TestUserQueries {
         Email = "test2@example.com",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new User {
         Id = Guid.NewGuid(),
@@ -54,8 +54,8 @@ public class TestUserQueries {
         Email = "test3@example.com",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
-      }
+        UpdatedAt = DateTime.UtcNow,
+      },
     };
   }
 }

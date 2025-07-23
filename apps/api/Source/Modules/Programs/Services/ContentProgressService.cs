@@ -215,7 +215,7 @@ public class ContentProgressService : IContentProgressService {
       AverageCompletionRate = totalContent > 0 ? (decimal)completed / totalContent * 100 : 0,
       AverageScore = allProgress.Where(cp => cp.Score.HasValue).Any() ? allProgress.Where(cp => cp.Score.HasValue).Average(cp => cp.Score!.Value) : 0,
       TotalTimeSpentHours = allProgress.Sum(cp => cp.TimeSpentSeconds) / 3600,
-      CompletionByContentType = completionByType
+      CompletionByContentType = completionByType,
     };
   }
 

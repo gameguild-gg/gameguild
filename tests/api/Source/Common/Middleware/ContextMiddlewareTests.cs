@@ -106,7 +106,7 @@ public class ContextMiddlewareTests
             new Claim(ClaimTypes.Name, "Test User"),
             new Claim(ClaimTypes.Role, "Admin"),
             new Claim("tenant_name", tenantName),
-            new Claim("tenant_active", "true")
+            new Claim("tenant_active", "true"),
         };
 
         var identity = new ClaimsIdentity(claims, "Test");
@@ -114,7 +114,7 @@ public class ContextMiddlewareTests
 
         var httpContext = new DefaultHttpContext
         {
-            User = principal
+            User = principal,
         };
 
         return httpContext;

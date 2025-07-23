@@ -16,7 +16,7 @@ public class TestingLabModelsTests {
       MaxTesters = 5,
       StartDate = DateTime.UtcNow,
       EndDate = DateTime.UtcNow.AddDays(7),
-      Status = TestingRequestStatus.Open
+      Status = TestingRequestStatus.Open,
     };
 
     // Assert
@@ -39,7 +39,7 @@ public class TestingLabModelsTests {
       StartTime = DateTime.UtcNow.AddHours(9),
       EndTime = DateTime.UtcNow.AddHours(17),
       MaxTesters = 10,
-      Status = SessionStatus.Scheduled
+      Status = SessionStatus.Scheduled,
     };
 
     // Assert
@@ -58,7 +58,7 @@ public class TestingLabModelsTests {
       TestingRequestId = Guid.NewGuid(),
       UserId = Guid.NewGuid(),
       InstructionsAcknowledged = true,
-      StartedAt = DateTime.UtcNow
+      StartedAt = DateTime.UtcNow,
     };
 
     // Assert
@@ -76,7 +76,7 @@ public class TestingLabModelsTests {
       SessionId = Guid.NewGuid(),
       UserId = Guid.NewGuid(),
       RegistrationType = RegistrationType.Tester,
-      RegistrationNotes = "Test notes"
+      RegistrationNotes = "Test notes",
     };
 
     // Assert
@@ -95,7 +95,7 @@ public class TestingLabModelsTests {
       SessionId = Guid.NewGuid(),
       UserId = Guid.NewGuid(),
       RegistrationType = RegistrationType.Tester,
-      Position = 1
+      Position = 1,
     };
 
     // Assert
@@ -116,7 +116,7 @@ public class TestingLabModelsTests {
       FeedbackFormId = Guid.NewGuid(),
       FeedbackData = "Test feedback data",
       TestingContext = TestingContext.Online,
-      AdditionalNotes = "Additional notes"
+      AdditionalNotes = "Additional notes",
     };
 
     // Assert
@@ -140,7 +140,7 @@ public class TestingLabModelsTests {
       MaxTestersCapacity = 20,
       MaxProjectsCapacity = 5,
       EquipmentAvailable = "Computers, VR headsets",
-      Status = LocationStatus.Active
+      Status = LocationStatus.Active,
     };
 
     // Assert

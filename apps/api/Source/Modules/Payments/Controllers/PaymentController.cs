@@ -42,7 +42,7 @@ public class PaymentController(IMediator mediator) : ControllerBase
     var command = new ProcessPaymentCommand { 
       PaymentId = id, 
       ProviderTransactionId = request.ProviderTransactionId, 
-      ProviderMetadata = request.ProviderMetadata 
+      ProviderMetadata = request.ProviderMetadata,
     };
     var result = await mediator.Send(command);
     if (!result.Success) return BadRequest(result.Error);
@@ -62,7 +62,7 @@ public class PaymentController(IMediator mediator) : ControllerBase
       PaymentId = id, 
       RefundAmount = request.RefundAmount, 
       Reason = request.Reason ?? "Refund requested", 
-      RefundedBy = currentUserId 
+      RefundedBy = currentUserId,
     };
     var result = await mediator.Send(command);
     if (!result.Success) return BadRequest(result.Error);

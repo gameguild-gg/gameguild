@@ -10,5 +10,5 @@ public enum PaymentGateway
     Square = 2,
     Authorize = 3,
     Braintree = 4,
-    Mock = 99  // For testing
+    Mock = 99, // For testing
 }

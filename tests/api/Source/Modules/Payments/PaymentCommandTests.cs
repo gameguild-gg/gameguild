@@ -82,7 +82,7 @@ public class PaymentCommandTests : IDisposable
             Amount = 99.99m,
             Currency = "USD",
             Method = PaymentMethod.CreditCard,
-            Description = "Test Product Purchase"
+            Description = "Test Product Purchase",
         };
 
         // Act
@@ -122,7 +122,7 @@ public class PaymentCommandTests : IDisposable
             { 
                 Success = true, 
                 TransactionId = "txn_success_123",
-                ProcessedAt = DateTime.UtcNow 
+                ProcessedAt = DateTime.UtcNow,
             });
 
         // Step 1: Create Payment Intent
@@ -132,7 +132,7 @@ public class PaymentCommandTests : IDisposable
             ProductId = productId,
             Amount = 99.99m,
             Currency = "USD",
-            Method = PaymentMethod.CreditCard
+            Method = PaymentMethod.CreditCard,
         };
 
         var createResult = await _mediator.Send(createCommand);
@@ -143,7 +143,7 @@ public class PaymentCommandTests : IDisposable
         var processCommand = new ProcessPaymentCommand
         {
             PaymentId = createResult.Payment.Id,
-            ProviderTransactionId = "txn_success_123"
+            ProviderTransactionId = "txn_success_123",
         };
 
         // Act
@@ -180,7 +180,7 @@ public class PaymentCommandTests : IDisposable
             { 
                 Success = false, 
                 Error = "Payment failed",
-                ProcessedAt = DateTime.UtcNow 
+                ProcessedAt = DateTime.UtcNow,
             });
 
         // Step 1: Create Payment Intent
@@ -190,7 +190,7 @@ public class PaymentCommandTests : IDisposable
             ProductId = productId,
             Amount = 99.99m,
             Currency = "USD",
-            Method = PaymentMethod.CreditCard
+            Method = PaymentMethod.CreditCard,
         };
 
         var createResult = await _mediator.Send(createCommand);
@@ -201,7 +201,7 @@ public class PaymentCommandTests : IDisposable
         var processCommand = new ProcessPaymentCommand
         {
             PaymentId = createResult.Payment.Id,
-            ProviderTransactionId = "pi_failed_456"
+            ProviderTransactionId = "pi_failed_456",
         };
 
         // Act
@@ -240,7 +240,7 @@ public class PaymentCommandTests : IDisposable
             { 
                 Success = true, 
                 RefundId = "refund_123",
-                ProcessedAt = DateTime.UtcNow 
+                ProcessedAt = DateTime.UtcNow,
             });
 
         var command = new RefundPaymentCommand
@@ -248,7 +248,7 @@ public class PaymentCommandTests : IDisposable
             PaymentId = payment.Id,
             RefundAmount = 50.00m,
             Reason = "Customer request",
-            RefundedBy = userId
+            RefundedBy = userId,
         };
 
         // Act
@@ -280,7 +280,7 @@ public class PaymentCommandTests : IDisposable
         {
             PaymentId = payment.Id,
             Reason = "User cancellation",
-            CancelledBy = userId
+            CancelledBy = userId,
         };
 
         // Act
@@ -300,7 +300,7 @@ public class PaymentCommandTests : IDisposable
             Id = userId, 
             Name = userName,
             Email = $"{userName.ToLowerInvariant()}@test.com",
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         
         _context.Users.Add(user);
@@ -318,7 +318,7 @@ public class PaymentCommandTests : IDisposable
             CreatorId = creatorId,
             Status = ContentStatus.Published,
             Visibility = AccessLevel.Public,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         
         _context.Products.Add(product);
@@ -339,7 +339,7 @@ public class PaymentCommandTests : IDisposable
             Gateway = PaymentGateway.Stripe,
             CreatedAt = DateTime.UtcNow,
             FinalAmount = 99.99m,
-            NetAmount = 95.99m
+            NetAmount = 95.99m,
         };
 
         if (status == PaymentStatus.Completed)

@@ -85,7 +85,7 @@ public static class InfrastructureConfiguration {
   /// </summary>
   public static DatabaseOptions CreateDatabaseOptions(IConfiguration configuration) {
     var options = new DatabaseOptions {
-      ConnectionString = GetDatabaseConnectionString(configuration), UseInMemoryDatabase = ShouldUseInMemoryDatabase(), EnableSensitiveDataLogging = IsEnvironment("Development"), EnableDetailedErrors = IsEnvironment("Development")
+      ConnectionString = GetDatabaseConnectionString(configuration), UseInMemoryDatabase = ShouldUseInMemoryDatabase(), EnableSensitiveDataLogging = IsEnvironment("Development"), EnableDetailedErrors = IsEnvironment("Development"),
     };
 
     options.Validate();
