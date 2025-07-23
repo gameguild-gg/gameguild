@@ -5,11 +5,7 @@ import type React from "react"
 import { useCallback, useRef, useState, useEffect } from "react"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import {
-  ArrowRight,
-  Copy,
-  Download,
   ExternalLink,
-  Mail,
   ImageIcon,
   LayoutGrid,
   ChevronLeft,
@@ -34,12 +30,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 // Adicione o import para o SerializedHeaderNode
 import type { SerializedHeaderNode } from "../nodes/header-node"
 import type { SerializedDividerNode } from "../nodes/divider-node"
-// Add this import at the top with the other imports
-import type { SerializedButtonNode } from "../nodes/button-node"
+
 import { cn } from "@/lib/utils"
-// Add this import at the top with the other imports
-import type { SerializedCalloutNode } from "../nodes/callout-node"
-import { Callout as UICallout } from "@/components/editor/ui/callout"
 
 // Add the import for SerializedGalleryNode
 import type { SerializedGalleryNode } from "../nodes/gallery-node"
@@ -64,6 +56,9 @@ import { QuizDisplay } from "../ui/quiz/quiz-display"
 
 // Import the SourceCodeCore at the top with other imports
 import { SourceCodeCore } from "../nodes/source-code-core"
+
+import { PreviewCallout } from "./preview-components/preview-callout"
+import { PreviewButton } from "./preview-components/preview-button"
 
 // Função para detectar e extrair IDs de vídeos de diferentes plataformas
 function getVideoEmbedInfo(url: string): { type: string; id: string } | null {
@@ -533,82 +528,6 @@ function PreviewAudio({ node }: { node: SerializedAudioNode }) {
         </div>
       </div>
       {caption && <div className="mt-2 text-sm text-muted-foreground text-center">{caption}</div>}
-    </div>
-  )
-}
-
-// Add this function to the PreviewContent component, alongside the other node renderers
-// Find the PreviewCallout function and update it to use the type name as default title
-// and add the getTypeLabel function
-
-function PreviewCallout({ node }: { node: SerializedCalloutNode }) {
-  if (!node?.data) {
-    console.error("Invalid callout node structure:", node)
-    return null
-  }
-
-  const { title, content, type } = node.data
-
-  return <UICallout type={type}>{title && <div className="font-bold mb-1">{title}</div>}{content}</UICallout>
-}
-
-// Add this function to the PreviewContent component, alongside the other node renderers
-function PreviewButton({ node }: { node: SerializedButtonNode }) {
-  if (!node?.data) {
-    console.error("Invalid button node structure:", node)
-    return null
-  }
-
-  const { text, url, actionType, variant, size, showIcon } = node.data
-
-  const getActionIcon = () => {
-    switch (actionType) {
-      case "url":
-        return <ExternalLink className="h-4 w-4" />
-      case "download":
-        return <Download className="h-4 w-4" />
-      case "copy":
-        return <Copy className="h-4 w-4" />
-      case "email":
-        return <Mail className="h-4 w-4" />
-      default:
-        return <ArrowRight className="h-4 w-4" />
-    }
-  }
-
-  const handleButtonAction = () => {
-    switch (actionType) {
-      case "url":
-        window.open(url, "_blank")
-        break
-      case "download":
-        const link = document.createElement("a")
-        link.href = url
-        link.download = ""
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        break
-      case "copy":
-        navigator.clipboard.writeText(url)
-        break
-      case "email":
-        window.location.href = `mailto:${url}`
-        break
-    }
-  }
-
-  return (
-    <div className="my-4 flex justify-center">
-      <Button
-        variant={variant}
-        size={size}
-        className={cn(size === "icon" && "p-0 w-10 h-10 rounded-full")}
-        onClick={handleButtonAction}
-      >
-        {size !== "icon" ? text : ""}
-        {showIcon && <span className={size !== "icon" ? "ml-2" : ""}>{getActionIcon()}</span>}
-      </Button>
     </div>
   )
 }
