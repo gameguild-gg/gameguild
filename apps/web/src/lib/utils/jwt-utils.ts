@@ -1,3 +1,5 @@
+'use server';
+
 /**
  * JWT Utilities for token handling
  */
@@ -6,7 +8,7 @@
  * Decode a JWT token without verification (for reading claims)
  * Note: This is only for reading token payload, not for verification
  */
-export function decodeJwt(token: string): any {
+export async function decodeJwt(token: string): Promise<unknown> {
   try {
     // Handle non-JWT tokens (like admin placeholders)
     if (!token || typeof token !== 'string' || !token.includes('.')) {
@@ -38,7 +40,7 @@ export function decodeJwt(token: string): any {
 /**
  * Get the expiry date from a JWT token
  */
-export function getJwtExpiryDate(token: string): Date | null {
+export async function getJwtExpiryDate(token: string): Promise<Date | null> {
   try {
     // Handle non-JWT tokens gracefully
     if (!token || typeof token !== 'string' || !token.includes('.')) {
@@ -62,7 +64,7 @@ export function getJwtExpiryDate(token: string): Date | null {
 /**
  * Check if a JWT token is expired
  */
-export function isJwtExpired(token: string): boolean {
+export const isJwtExpired = async (token: string): Promise<boolean> => {
   const expiryDate = getJwtExpiryDate(token);
   // Assume expired if we can't read the expiry
   if (!expiryDate) {
@@ -70,11 +72,9 @@ export function isJwtExpired(token: string): boolean {
   }
 
   return new Date() > expiryDate;
-}
+};
 
 /**
  * Get all claims from a JWT token
  */
-export function getJwtClaims(token: string): any {
-  return decodeJwt(token);
-}
+export const getJwtClaims = async (token: string): Promise<unknown> => decodeJwt(token);

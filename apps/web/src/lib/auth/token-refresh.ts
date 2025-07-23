@@ -1,3 +1,5 @@
+'use server';
+
 /**
  * Token refresh utilities for NextAuth.js
  */
@@ -18,7 +20,7 @@ export interface TokenRefreshResult {
  * @param refreshBuffer - Buffer time in milliseconds before expiry (default: 30 seconds)
  * @returns true if token should be refreshed
  */
-export function shouldRefreshToken(accessToken: string | undefined, refreshBuffer = 30 * 1000): boolean {
+export async function shouldRefreshToken(accessToken: string | undefined, refreshBuffer = 30 * 1000): Promise<boolean> {
   if (!accessToken) {
     return false;
   }
@@ -90,6 +92,6 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRef
 /**
  * Validate that a token response has all required fields
  */
-export function validateTokenResponse(response: any): response is RefreshTokenResponse {
+export async function validateTokenResponse(response: RefreshTokenResponse): Promise<boolean> {
   return response && typeof response.accessToken === 'string' && typeof response.refreshToken === 'string' && typeof response.expires === 'string';
 }
