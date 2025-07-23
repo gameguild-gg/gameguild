@@ -10,7 +10,12 @@ namespace GameGuild.Modules.Authentication {
     public string GenerateAccessToken(UserDto user, string[] roles) { return GenerateAccessToken(user, roles, null); }
 
     public string GenerateAccessToken(UserDto user, string[] roles, IEnumerable<Claim>? additionalClaims = null) {
-      var claims = new List<Claim> { new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), new Claim(JwtRegisteredClaimNames.Email, user.Email), new Claim("username", user.Username) };
+      var claims = new List<Claim> { 
+        new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), 
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), // Add for compatibility
+        new Claim(JwtRegisteredClaimNames.Email, user.Email), 
+        new Claim("username", user.Username) 
+      };
 
       foreach (var role in roles) claims.Add(new Claim(ClaimTypes.Role, role));
 
