@@ -2,7 +2,7 @@ import { fetchCourses } from '@/components/courses/actions';
 import CourseList from '@/components/courses/course-list';
 import Link from 'next/link';
 
-export default async function CategoryCatalogPage({ params }: { params: { category: string } }) {
+export default async function CategoryCatalogPage({ params }: { params: Promise<{ category: string }> }) {
   const allCourses = await fetchCourses();
   const { category: categoryParam } = await params;
   const category = decodeURIComponent(categoryParam);

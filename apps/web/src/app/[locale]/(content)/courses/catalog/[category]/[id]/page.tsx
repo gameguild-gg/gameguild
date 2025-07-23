@@ -2,7 +2,7 @@ import { getCourse } from '@/components/courses/actions';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export default async function CourseDetailPage({ params }: { params: { category: string; id: string } }) {
+export default async function CourseDetailPage({ params }: { params: Promise<{ category: string; id: string }> }) {
   const { id } = await params;
   const course = await getCourse(Number(id));
   if (!course) {
