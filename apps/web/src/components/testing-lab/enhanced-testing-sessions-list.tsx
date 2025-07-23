@@ -35,6 +35,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import type { TestingRequest } from '@/lib/api/generated/types.gen';
 
 interface TestingSession {
   id: string;
@@ -859,6 +860,101 @@ interface CreateSessionDialogProps {
 }
 
 function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
+  const [formData, setFormData] = useState({
+    sessionName: '',
+    locationId: '',
+    sessionDate: '',
+    startTime: '',
+    endTime: '',
+    description: '',
+    maxTesters: '',
+    sessionType: '',
+    testingRequestId: '', // This should be selected from available testing requests
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [testingRequests, setTestingRequests] = useState<TestingRequest[]>([]);
+
+  // Fetch testing requests when component mounts
+  useEffect(() => {
+    const fetchTestingRequests = async () => {
+      try {
+        const { getTestingRequestsData } = await import('@/lib/testing-lab/testing-lab.actions');
+        const data = await getTestingRequestsData();
+        setTestingRequests(data?.testingRequests || []);
+      } catch (error) {
+        console.error('Error fetching testing requests:', error);
+      }
+    };
+    fetchTestingRequests();
+  }, []);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.sessionName.trim()) {
+      newErrors.sessionName = 'Session name is required';
+    }
+    if (!formData.sessionDate) {
+      newErrors.sessionDate = 'Session date is required';
+    }
+    if (!formData.startTime) {
+      newErrors.startTime = 'Start time is required';
+    }
+    if (!formData.endTime) {
+      newErrors.endTime = 'End time is required';
+    }
+    if (!formData.maxTesters) {
+      newErrors.maxTesters = 'Maximum testers is required';
+    }
+    if (!formData.testingRequestId) {
+      newErrors.testingRequestId = 'Testing request is required';
+    }
+    
+    // Validate that end time is after start time
+    if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime) {
+      newErrors.endTime = 'End time must be after start time';
+    }
+    
+    // Validate that session date is not in the past
+    if (formData.sessionDate && new Date(formData.sessionDate) < new Date()) {
+      newErrors.sessionDate = 'Session date cannot be in the past';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Import the createTestingSession function dynamically to avoid build issues
+      const { createTestingSession } = await import('@/lib/testing-lab/testing-lab.actions');
+      
+      await createTestingSession({
+        testingRequestId: formData.testingRequestId,
+        locationId: formData.locationId || undefined,
+        sessionName: formData.sessionName,
+        sessionDate: formData.sessionDate,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        maxTesters: parseInt(formData.maxTesters),
+      });
+
+      onSave();
+      onClose();
+    } catch (error) {
+      console.error('Error creating session:', error);
+      setErrors({ general: error instanceof Error ? error.message : 'Failed to create session' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
@@ -866,50 +962,109 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
         <DialogDescription className="text-slate-400">Create a new testing session for students to participate in game testing</DialogDescription>
       </DialogHeader>
 
+      {errors.general && (
+        <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-300 text-sm">
+          {errors.general}
+        </div>
+      )}
+
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="sessionName" className="text-slate-300">
-              Session Name
+              Session Name <span className="text-red-400">*</span>
             </Label>
-            <Input id="sessionName" placeholder="e.g., Block 3 Final Testing" className="bg-slate-700/50 border-slate-600 text-white" />
+            <Input 
+              id="sessionName" 
+              placeholder="e.g., Block 3 Final Testing" 
+              className="bg-slate-700/50 border-slate-600 text-white"
+              value={formData.sessionName}
+              onChange={(e) => setFormData({ ...formData, sessionName: e.target.value })}
+            />
+            {errors.sessionName && <p className="text-red-400 text-sm">{errors.sessionName}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="location" className="text-slate-300">
-              Location
+            <Label htmlFor="testingRequest" className="text-slate-300">
+              Testing Request <span className="text-red-400">*</span>
             </Label>
-            <Select>
+            <Select value={formData.testingRequestId} onValueChange={(value) => setFormData({ ...formData, testingRequestId: value })}>
               <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                <SelectValue placeholder="Select room" />
+                <SelectValue placeholder="Select testing request" />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
-                <SelectItem value="room-a204">Room A-204 (40 capacity)</SelectItem>
-                <SelectItem value="room-b105">Room B-105 (32 capacity)</SelectItem>
-                <SelectItem value="room-c301">Room C-301 (25 capacity)</SelectItem>
-                <SelectItem value="online">Online Session (50 capacity)</SelectItem>
+                {testingRequests.length > 0 ? (
+                  testingRequests.map((request) => (
+                    <SelectItem key={request.id} value={request.id}>
+                      {request.title} - {request.projectVersion?.project?.title}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-requests" disabled>
+                    No testing requests available
+                  </SelectItem>
+                )}
               </SelectContent>
             </Select>
+            {errors.testingRequestId && <p className="text-red-400 text-sm">{errors.testingRequestId}</p>}
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="location" className="text-slate-300">
+            Location
+          </Label>
+          <Select value={formData.locationId} onValueChange={(value) => setFormData({ ...formData, locationId: value })}>
+            <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+              <SelectValue placeholder="Select room" />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-800 border-slate-700">
+              <SelectItem value="room-a204">Room A-204 (40 capacity)</SelectItem>
+              <SelectItem value="room-b105">Room B-105 (32 capacity)</SelectItem>
+              <SelectItem value="room-c301">Room C-301 (25 capacity)</SelectItem>
+              <SelectItem value="online">Online Session (50 capacity)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="sessionDate" className="text-slate-300">
-              Date
+              Date <span className="text-red-400">*</span>
             </Label>
-            <Input id="sessionDate" type="date" className="bg-slate-700/50 border-slate-600 text-white" />
+            <Input 
+              id="sessionDate" 
+              type="date" 
+              className="bg-slate-700/50 border-slate-600 text-white"
+              value={formData.sessionDate}
+              onChange={(e) => setFormData({ ...formData, sessionDate: e.target.value })}
+            />
+            {errors.sessionDate && <p className="text-red-400 text-sm">{errors.sessionDate}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="startTime" className="text-slate-300">
-              Start Time
+              Start Time <span className="text-red-400">*</span>
             </Label>
-            <Input id="startTime" type="time" className="bg-slate-700/50 border-slate-600 text-white" />
+            <Input 
+              id="startTime" 
+              type="time" 
+              className="bg-slate-700/50 border-slate-600 text-white"
+              value={formData.startTime}
+              onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+            />
+            {errors.startTime && <p className="text-red-400 text-sm">{errors.startTime}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="endTime" className="text-slate-300">
-              End Time
+              End Time <span className="text-red-400">*</span>
             </Label>
-            <Input id="endTime" type="time" className="bg-slate-700/50 border-slate-600 text-white" />
+            <Input 
+              id="endTime" 
+              type="time" 
+              className="bg-slate-700/50 border-slate-600 text-white"
+              value={formData.endTime}
+              onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+            />
+            {errors.endTime && <p className="text-red-400 text-sm">{errors.endTime}</p>}
           </div>
         </div>
 
@@ -922,15 +1077,17 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
             placeholder="Provide details about this testing session..."
             className="bg-slate-700/50 border-slate-600 text-white"
             rows={3}
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="maxTesters" className="text-slate-300">
-              Maximum Testers
+              Maximum Testers <span className="text-red-400">*</span>
             </Label>
-            <Select>
+            <Select value={formData.maxTesters} onValueChange={(value) => setFormData({ ...formData, maxTesters: value })}>
               <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
                 <SelectValue placeholder="Select capacity" />
               </SelectTrigger>
@@ -943,12 +1100,13 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
                 <SelectItem value="50">50 testers (online)</SelectItem>
               </SelectContent>
             </Select>
+            {errors.maxTesters && <p className="text-red-400 text-sm">{errors.maxTesters}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="sessionType" className="text-slate-300">
               Session Type
             </Label>
-            <Select>
+            <Select value={formData.sessionType} onValueChange={(value) => setFormData({ ...formData, sessionType: value })}>
               <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
@@ -964,17 +1122,22 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
       </div>
 
       <DialogFooter className="gap-2">
-        <Button variant="outline" onClick={onClose} className="border-slate-600">
+        <Button variant="outline" onClick={onClose} className="border-slate-600" disabled={isSubmitting}>
           Cancel
         </Button>
         <Button
-          onClick={() => {
-            onSave();
-            onClose();
-          }}
+          onClick={handleSubmit}
+          disabled={isSubmitting}
           className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
         >
-          Schedule Session
+          {isSubmitting ? (
+            <>
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              Creating...
+            </>
+          ) : (
+            'Schedule Session'
+          )}
         </Button>
       </DialogFooter>
     </DialogContent>

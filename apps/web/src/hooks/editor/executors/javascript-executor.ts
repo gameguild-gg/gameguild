@@ -1,6 +1,6 @@
-import type { ProgrammingLanguage } from '@/components/ui/source-code/types';
+import type { ProgrammingLanguage } from '@/components/editor/ui/source-code/types';
 import type { ExecutionContext, ExecutionResult, LanguageExecutor } from './types';
-import { getFileContent } from '@/components/ui/source-code/utils';
+import { getFileContent } from '@/components/editor/ui/source-code/utils';
 
 class JavaScriptExecutor implements LanguageExecutor {
   public isCompiled = false; // Set the isCompiled flag to false

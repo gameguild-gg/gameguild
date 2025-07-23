@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { LexicalEditor } from 'lexical';
-import Editor from '@monaco-editor/react';
+import { Editor } from '@/components/editor/lexical-editor';
 
 // Função para comprimir dados usando LZ-based compression
 function compressData(data: string): string {
@@ -40,7 +40,7 @@ function decompressData(data: string): string {
         if (decoded.includes('"root"') && decoded.includes('"children"')) {
           return decodeURIComponent(decoded);
         }
-      } catch (e) {
+      } catch {
         // Se falhar, não é base64 válido, retornar original
       }
     }
@@ -65,7 +65,7 @@ function isValidBase64(str: string): boolean {
     // Tentar decodificar para verificar se é válido
     atob(str);
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -258,14 +258,14 @@ export default function Page() {
         localStorage.setItem(`gg-editor-${key}`, storageData);
         console.log('✅ Saved to localStorage successfully');
         updateStorageInfo();
-      } catch (localStorageError: any) {
-        console.warn('⚠️ localStorage failed, using memory cache:', localStorageError.message);
+      } catch (localStorageError: unknown) {
+        console.warn('⚠️ localStorage failed, using memory cache:', localStorageError);
 
         // Salvar no cache de memória como fallback
         memoryCache.current.set(key, data);
 
         // Mostrar aviso discreto mas não bloquear
-        if (localStorageError.toString().includes('quota') || localStorageError.toString().includes('storage')) {
+        if (localStorageError instanceof Error && (localStorageError.message.includes('quota') || localStorageError.message.includes('storage'))) {
           console.log('📝 Project saved in memory (localStorage full)');
         }
 
@@ -403,7 +403,7 @@ export default function Page() {
           icon: '✅',
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Isso nunca deveria acontecer agora, mas por segurança
       console.error('Unexpected save error:', error);
       toast.success(`Project "${currentProjectName}" saved (with warnings)`);
@@ -517,7 +517,7 @@ export default function Page() {
           icon: '✨',
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Isso nunca deveria acontecer agora, mas por segurança
       console.error('Unexpected save error:', error);
       toast.success(`Project "${newProjectName}" saved (with warnings)`);

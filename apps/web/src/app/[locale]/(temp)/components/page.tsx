@@ -1,9 +1,9 @@
-import { ComponentShowcase } from '@/components/showcase';
-
 export default function ComponentsPage() {
   return (
-    // TODO: Implement NotificationProvider or remove this wrapper
-    <ComponentShowcase />
+    <div className="p-8">
+      <h1 className="text-2xl font-bold">Component Showcase</h1>
+      <p>This is a temporary page for showcasing components.</p>
+    </div>
   );
 }
 

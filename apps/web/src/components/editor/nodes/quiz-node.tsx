@@ -11,9 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { QuizDisplay } from '@/components/ui/quiz/quiz-display';
-import { QuizWrapper } from '@/components/ui/quiz/quiz-wrapper';
-import { QuizAnswerItem } from '@/components/ui/quiz/quiz-answer-item';
+import { QuizDisplay } from '@/components/editor/ui/quiz/quiz-display';
+import { QuizWrapper } from '@/components/editor/ui/quiz/quiz-wrapper';
+import { QuizAnswerItem } from '@/components/editor/ui/quiz/quiz-answer-item';
 import { useQuizLogic } from '@/hooks/editor/use-quiz-logic';
 import { ContentEditMenu } from '@/components/ui/content-edit-menu';
 

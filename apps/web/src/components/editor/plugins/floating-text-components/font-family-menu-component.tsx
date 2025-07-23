@@ -9,7 +9,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "@/components/editor/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu"
 
 interface FontFamilyMenuComponentProps {
   editor: any

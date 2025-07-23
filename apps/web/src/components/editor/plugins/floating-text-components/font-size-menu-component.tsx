@@ -8,9 +8,9 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "@/components/editor/ui/dropdown-menu"
-import { Input } from "@/components/editor/ui/input"
-import { Label } from "@/components/editor/ui/label"
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface FontSizeMenuComponentProps {
   editor: any

@@ -310,9 +310,36 @@ export async function createTestingSession(sessionData: {
   }
 
   try {
+    // Convert time format to ISO datetime strings
+    const sessionDateTime = new Date(sessionData.sessionDate);
+    const [startHours, startMinutes] = sessionData.startTime.split(':');
+    const [endHours, endMinutes] = sessionData.endTime.split(':');
+    
+    const startDateTime = new Date(sessionDateTime);
+    startDateTime.setHours(parseInt(startHours), parseInt(startMinutes), 0, 0);
+    
+    const endDateTime = new Date(sessionDateTime);
+    endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0, 0);
+
+    const testingSessionPayload: TestingSession = {
+      testingRequestId: sessionData.testingRequestId,
+      locationId: sessionData.locationId || undefined,
+      sessionName: sessionData.sessionName,
+      sessionDate: sessionDateTime.toISOString(),
+      startTime: startDateTime.toISOString(),
+      endTime: endDateTime.toISOString(),
+      maxTesters: sessionData.maxTesters,
+      status: 0, // SessionStatus.Scheduled
+      managerId: sessionData.managerId || undefined,
+      managerUserId: sessionData.managerId || undefined,
+      registeredTesterCount: 0,
+      registeredProjectMemberCount: 0,
+      registeredProjectCount: 0,
+    };
+
     const response = await postTestingSessions({
       baseUrl: environment.apiBaseUrl,
-      body: sessionData as PostTestingSessionsData['body'],
+      body: testingSessionPayload,
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
