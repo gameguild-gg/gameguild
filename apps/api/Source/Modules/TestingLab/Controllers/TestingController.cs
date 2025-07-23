@@ -335,7 +335,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
   // POST: testing/sessions/{sessionId}/register
   [HttpPost("sessions/{sessionId}/register")]
-  [RequireResourcePermission<SessionRegistration>(PermissionType.Create)]
+  [RequireResourcePermission<SessionRegistration>(PermissionType.Create, "sessionId")]
   public async Task<ActionResult<SessionRegistration>> RegisterForSession(
     Guid sessionId,
     [FromBody] SessionRegistrationRequest request
@@ -598,7 +598,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
   // POST: testing/sessions/{id}/attendance
   [HttpPost("sessions/{sessionId}/attendance")]
-  [RequireResourcePermission<SessionRegistration>(PermissionType.Edit)]
+  [RequireResourcePermission<SessionRegistration>(PermissionType.Edit, "sessionId")]
   public async Task<ActionResult> UpdateAttendance(Guid sessionId, UpdateAttendanceDto attendanceDto) {
     try {
       // Get the current authenticated user's ID
