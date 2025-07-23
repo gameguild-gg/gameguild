@@ -284,7 +284,7 @@ export function TestingLabOverview() {
       return (
         <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Professor Tools</CardTitle>
+            <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Testing Lab Admin</CardTitle>
             <CardDescription className="text-slate-400">Manage testing lab operations</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
