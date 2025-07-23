@@ -94,26 +94,36 @@ print("TEST_RESULTS_END")
         const results = JSON.parse(resultsMatch[1]);
 
         // Convert the results to the expected format
-        return results.map((result: any, index: number) => {
-          if (result.error) {
-            return {
-              passed: false,
-              actual: `Error: ${result.error}`,
-              expected: `Expected: ${JSON.stringify(tests[index].expectedReturn)}`,
-            };
-          }
+        return results.map(
+          (
+            result: {
+              error?: string;
+              actual: unknown;
+              expected: unknown;
+              passed: boolean;
+            },
+            index: number,
+          ) => {
+            if (result.error) {
+              return {
+                passed: false,
+                actual: `Error: ${result.error}`,
+                expected: `Expected: ${JSON.stringify(tests[index].expectedReturn)}`,
+              };
+            }
 
-          return {
-            passed: result.passed,
-            actual: `Test #${index + 1} returned: ${JSON.stringify(result.actual)}`,
-            expected: `Expected: ${JSON.stringify(result.expected)}`,
-          };
-        });
+            return {
+              passed: result.passed,
+              actual: `Test #${index + 1} returned: ${JSON.stringify(result.actual)}`,
+              expected: `Expected: ${JSON.stringify(result.expected)}`,
+            };
+          },
+        );
       } catch (error) {
         return [
           {
             passed: false,
-            actual: `Error parsing test results: ${error.message}`,
+            actual: `Error parsing test results: ${error instanceof Error ? error.message : String(error)}`,
             expected: 'Valid test results',
           },
         ];
@@ -131,7 +141,7 @@ print("TEST_RESULTS_END")
     return [
       {
         passed: false,
-        actual: `Error executing tests: ${error.message}`,
+        actual: `Error executing tests: ${error instanceof Error ? error.message : String(error)}`,
         expected: 'Successful test execution',
       },
     ];

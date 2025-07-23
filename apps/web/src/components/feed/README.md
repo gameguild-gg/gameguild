@@ -119,7 +119,7 @@ const posts = await fetchPosts({
   orderBy: 'createdAt',
   descending: true,
   pageNumber: 1,
-  pageSize: 20
+  pageSize: 20,
 });
 
 // Fetch pinned posts

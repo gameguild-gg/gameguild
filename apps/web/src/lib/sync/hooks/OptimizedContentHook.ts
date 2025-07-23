@@ -30,8 +30,8 @@ interface OptimizedContentHook {
 }
 
 export const useOptimizedContent = (): OptimizedContentHook => {
-  const { state: contentState, update } = useContent();
-  const { forceSyncNow, enableOptimisticUpdates, setEnableOptimisticUpdates } = useSync();
+  const { state: contentState } = useContent();
+  const { forceSyncNow } = useSync();
 
   const { addUpdateOperation, getQueueStats } = useSyncQueue();
 

@@ -4,20 +4,20 @@ import { revalidateTag } from 'next/cache';
 import { auth } from '@/auth';
 import { environment } from '@/configs/environment';
 import {
-  getApiProjects,
-  postApiProjects,
-  getApiProjectsById,
-  putApiProjectsById,
   deleteApiProjectsById,
-  postApiProjectsByIdPublish,
-  postApiProjectsByIdUnpublish,
-  postApiProjectsByIdArchive,
-  getApiProjectsSearch,
+  getApiProjects,
+  getApiProjectsById,
+  getApiProjectsFeatured,
   getApiProjectsPopular,
   getApiProjectsRecent,
-  getApiProjectsFeatured,
+  getApiProjectsSearch,
+  postApiProjects,
+  postApiProjectsByIdArchive,
+  postApiProjectsByIdPublish,
+  postApiProjectsByIdUnpublish,
+  putApiProjectsById,
 } from '@/lib/api/generated/sdk.gen';
-import type { Project, PostApiProjectsData, PutApiProjectsByIdData } from '@/lib/api/generated/types.gen';
+import type { PostApiProjectsData, Project, PutApiProjectsByIdData } from '@/lib/api/generated/types.gen';
 
 // Get all projects with optional filtering
 export async function getProjectsData(params?: {
@@ -39,7 +39,7 @@ export async function getProjectsData(params?: {
   try {
     const response = await getApiProjects({
       baseUrl: environment.apiBaseUrl,
-      query: params as any,
+      query: params,
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
         'Cache-Control': 'no-store',
@@ -338,7 +338,7 @@ export async function getPopularProjects(limit = 10) {
       },
     });
 
-    return response.data as { projects: Project[] };
+    return response.data as unknown as { projects: Project[] };
   } catch (error) {
     console.error('Error fetching popular projects:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch popular projects');

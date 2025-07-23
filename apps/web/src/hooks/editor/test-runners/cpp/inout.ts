@@ -32,7 +32,7 @@ export async function runCppInoutTests(code: string, tests: TestCase[], executeC
     return tests.map(() => ({
       passed: false,
       expected: 'Test execution',
-      actual: `Error: ${error}`,
+      actual: `Error: ${error instanceof Error ? error.message : String(error)}`,
     }));
   }
 }
@@ -134,8 +134,8 @@ int main() {
       expectedReturnCode = `std::vector<${typeof expectedReturn[0] === 'string' ? 'std::string' : 'int'}>{${elements}}`;
     } else if (typeof expectedReturn === 'string') {
       expectedReturnCode = `"${expectedReturn}"`;
-    } else {
-      expectedReturnCode = expectedReturn;
+    } else if (expectedReturn !== undefined) {
+      expectedReturnCode = String(expectedReturn);
     }
 
     // Add test case
@@ -233,8 +233,8 @@ function parseCppTestResults(output: string): TestResult[] {
         actual: actual || 'No output',
       };
     });
-  } catch (error) {
-    console.error('Error parsing C++ test results:', error);
+  } catch {
+    // Skip lines that aren't valid JSON
     return [];
   }
 }

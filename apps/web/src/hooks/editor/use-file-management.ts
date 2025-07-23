@@ -60,7 +60,6 @@ export function useFileManagement({ files, setFiles, activeFileId, setActiveFile
   const [showFileDialog, setShowFileDialog] = useState(false);
   const [newFileName, setNewFileName] = useState('');
   const [newFileLanguage, setNewFileLanguage] = useState<LanguageType>('javascript');
-  const [newFileHasStates, setNewFileHasStates] = useState(false);
 
   // Import dialog states
   const [showImportDialog, setShowImportDialog] = useState(false);
@@ -109,7 +108,6 @@ export function useFileManagement({ files, setFiles, activeFileId, setActiveFile
     setFiles((prev) => [...prev, newFile]);
     setActiveFileId(newFile.id);
     setNewFileName('');
-    setNewFileHasStates(false);
     setShowFileDialog(false);
   };
 

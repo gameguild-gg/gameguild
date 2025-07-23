@@ -2,9 +2,9 @@
 'use client';
 
 import React from 'react';
-import { ErrorMessage } from '@/components/errors/error-message';
+import { Error } from '@/components/errors/error';
 import { ErrorProps } from '@/types';
 
-export default function Error({ error, reset }: ErrorProps): React.JSX.Element {
-  return <ErrorMessage error={error} reset={reset} />;
+export default function Page({ error, reset }: ErrorProps): React.JSX.Element {
+  return <Error error={error} reset={reset} />;
 }

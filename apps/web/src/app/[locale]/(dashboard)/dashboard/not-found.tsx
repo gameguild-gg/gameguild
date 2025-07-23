@@ -1,6 +1,6 @@
 import React from 'react';
-import { PageNotFound } from '@/components/errors/page-not-found';
+import { NotFound } from '@/components/errors/not-found';
 
-export default function NotFound(): React.JSX.Element {
-  return <PageNotFound />;
+export default function Page(): React.JSX.Element {
+  return <NotFound />;
 }

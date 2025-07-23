@@ -6,6 +6,28 @@ import { apiClient } from '@/lib/api/api-client';
 import { getJwtExpiryDate } from '@/lib/utils/jwt-utils';
 import { refreshAccessToken } from '@/lib/auth/token-refresh';
 
+interface ExtendedUser {
+  cmsData?: unknown;
+  accessToken?: string;
+  refreshToken?: string;
+  tenantId?: string;
+  availableTenants?: unknown[];
+}
+
+interface ExtendedSession {
+  refreshToken?: string;
+  tenantId?: string;
+  availableTenants?: unknown[];
+  currentTenant?: unknown;
+  user?: unknown;
+}
+
+interface ErrorWithCause {
+  cause?: {
+    code?: string;
+  };
+}
+
 export const authConfig: NextAuthConfig = {
   pages: {
     signIn: '/sign-in',
@@ -70,11 +92,11 @@ export const authConfig: NextAuthConfig = {
           });
 
           // Store the backend response in the user object
-          (user as any).cmsData = response;
-          (user as any).accessToken = response.accessToken;
-          (user as any).refreshToken = response.refreshToken;
-          (user as any).tenantId = response.tenantId;
-          (user as any).availableTenants = response.availableTenants;
+          (user as ExtendedUser).cmsData = response;
+          (user as ExtendedUser).accessToken = response.accessToken;
+          (user as ExtendedUser).refreshToken = response.refreshToken;
+          (user as ExtendedUser).tenantId = response.tenantId;
+          (user as ExtendedUser).availableTenants = response.availableTenants;
 
           return true;
         } catch (error) {
@@ -82,13 +104,13 @@ export const authConfig: NextAuthConfig = {
             error: error instanceof Error ? error.message : error,
             apiBaseUrl: environment.apiBaseUrl,
             endpoint: '/auth/google/id-token',
-            cause: (error as any)?.cause?.code || 'Unknown',
+            cause: (error as ErrorWithCause)?.cause?.code || 'Unknown',
             stack: error instanceof Error ? error.stack : 'No stack trace',
             fullError: error,
           });
 
           // Check if it's a connection error
-          if ((error as any)?.cause?.code === 'ECONNREFUSED') {
+          if ((error as ErrorWithCause)?.cause?.code === 'ECONNREFUSED') {
             console.error('🚨 [AUTH DEBUG] CMS Backend is not running on:', environment.apiBaseUrl);
             console.error('💡 [AUTH DEBUG] Please start the CMS backend with: cd apps/api && dotnet run');
           } else {
@@ -117,9 +139,9 @@ export const authConfig: NextAuthConfig = {
       });
 
       // If this is a new sign-in, store the CMS data
-      if (user && (user as any).cmsData) {
+      if (user && (user as ExtendedUser).cmsData) {
         console.log('📦 [AUTH DEBUG] Storing CMS data in JWT token...');
-        const cmsData = (user as any).cmsData as SignInResponse;
+        const cmsData = (user as ExtendedUser).cmsData as SignInResponse;
 
         token.id = cmsData.user.id;
         token.accessToken = cmsData.accessToken;
@@ -298,7 +320,7 @@ export const authConfig: NextAuthConfig = {
 
       // DEBUG ONLY: Expose refresh token for debugging (remove in production)
       if (token.refreshToken) {
-        (session as any).refreshToken = token.refreshToken as string;
+        (session as ExtendedSession).refreshToken = token.refreshToken as string;
       }
 
       session.user.id = token.id as string;
@@ -306,20 +328,20 @@ export const authConfig: NextAuthConfig = {
       if (token.user) {
         session.user = {
           ...session.user,
-          ...(token.user as any),
+          ...(token.user as Record<string, unknown>),
         };
       }
 
       if (token.tenantId) {
-        (session as any).tenantId = token.tenantId;
+        (session as ExtendedSession).tenantId = token.tenantId;
       }
 
       if (token.availableTenants) {
-        (session as any).availableTenants = token.availableTenants;
+        (session as ExtendedSession).availableTenants = token.availableTenants;
       }
 
       if (token.currentTenant) {
-        (session as any).currentTenant = token.currentTenant;
+        (session as ExtendedSession).currentTenant = token.currentTenant;
       }
 
       return session;
