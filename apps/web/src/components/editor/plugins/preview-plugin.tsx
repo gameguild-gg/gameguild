@@ -1365,6 +1365,14 @@ function PreviewContent({ serializedState }: { serializedState: SerializedEditor
             </sub>
           )
         }
+        if (node.format & 32) {
+          // Subscript (format flag 32)
+          textContent = (
+            <sub key={`subscript-${node.version || Math.random()}`} style={inlineStyles}>
+              {textContent}
+            </sub>
+          )
+        }
         if (node.format & 16) {
           // Superscript (format flag 16)
           textContent = (

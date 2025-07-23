@@ -33,30 +33,32 @@ const GROUPED_FONT_FAMILIES: { [key: string]: FontFamily[] } = {
     {
       name: "Pacifico",
       family: "'Pacifico', cursive",
-      variations: [{ name: "Regular", style: "normal", weight: "400" }],
+      variations: [
+        { name: "Regular", style: "normal", weight: "400" }, 
+        { name: "Bold", style: "normal", weight: "700" }
+      ],
     },
     {
       name: "Dancing Script",
       family: "'Dancing Script', cursive",
       variations: [
         { name: "Regular", style: "normal", weight: "400" },
-        { name: "Medium", style: "normal", weight: "500" },
-        { name: "Semi Bold", style: "normal", weight: "600" },
         { name: "Bold", style: "normal", weight: "700" },
       ],
     },
     {
       name: "Great Vibes",
       family: "'Great Vibes', cursive",
-      variations: [{ name: "Regular", style: "normal", weight: "400" }],
+      variations: [
+        { name: "Regular", style: "normal", weight: "400" },
+        { name: "Bold", style: "normal", weight: "700" },
+      ],
     },
     {
       name: "Caveat",
       family: "'Caveat', cursive",
       variations: [
         { name: "Regular", style: "normal", weight: "400" },
-        { name: "Medium", style: "normal", weight: "500" },
-        { name: "Semi Bold", style: "normal", weight: "600" },
         { name: "Bold", style: "normal", weight: "700" },
       ],
     },
@@ -65,22 +67,34 @@ const GROUPED_FONT_FAMILIES: { [key: string]: FontFamily[] } = {
     {
       name: "Creepster",
       family: "'Creepster', cursive", // Often categorized as fantasy due to its style
-      variations: [{ name: "Regular", style: "normal", weight: "400" }],
+      variations: [
+        { name: "Regular", style: "normal", weight: "400" },
+        { name: "Bold", style: "normal", weight: "700" },
+      ],
     },
     {
       name: "Metal Mania",
       family: "'Metal Mania', cursive", // Similar to Creepster, often used for fantasy/horror
-      variations: [{ name: "Regular", style: "normal", weight: "400" }],
+      variations: [
+        { name: "Regular", style: "normal", weight: "400" },
+        { name: "Bold", style: "normal", weight: "700" },
+      ],
     },
     {
       name: "Nosifier",
       family: "'Nosifier', cursive", // Another unique, fantasy-like font
-      variations: [{ name: "Regular", style: "normal", weight: "400" }],
+      variations: [
+        { name: "Regular", style: "normal", weight: "400" },
+        { name: "Bold", style: "normal", weight: "700" },
+      ],
     },
     {
       name: "Permanent Marker",
       family: "'Permanent Marker', cursive", // Hand-drawn, can fit fantasy/casual
-      variations: [{ name: "Regular", style: "normal", weight: "400" }],
+      variations: [
+        { name: "Regular", style: "normal", weight: "400" },
+        { name: "Bold", style: "normal", weight: "700" },
+      ],
     },
   ],
   "Humanist Sans": [
@@ -398,7 +412,7 @@ const GROUPED_FONT_FAMILIES: { [key: string]: FontFamily[] } = {
       ],
     },
   ],
-  "Monospace (Programming)": [
+  "Monospace": [
     {
       name: "Courier New",
       family: "Courier New, monospace",
