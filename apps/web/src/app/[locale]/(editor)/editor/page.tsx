@@ -1,72 +1,361 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { DialogContent } from '@radix-ui/react-dialog';
-import { FolderOpen, HardDrive, Moon, Save, SaveAll, Sun, Trash2 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { LexicalEditor } from 'lexical';
-import { Editor } from '@/components/editor/lexical-editor';
+import { Editor } from "@/components/editor/lexical-editor"
+import { Button } from "@/components/editor/ui/button"
+import { Input } from "@/components/editor/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/editor/ui/dialog"
+import { Label } from "@/components/editor/ui/label"
+import { Save, SaveAll, HardDrive, Settings } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { toast } from "sonner"
+import { Sun, Moon } from "lucide-react"
+import type { LexicalEditor } from "lexical"
+import { OpenProjectDialog } from "@/components/editor/ui/editor/open-project-dialog"
+import { CreateProjectDialog } from "@/components/editor/ui/editor/create-project-dialog"
+import { EnhancedStorageAdapter } from "@/lib/storage/enhanced-storage-adapter"
+import { SyncSettingsDialog } from "@/components/editor/ui/editor/sync-settings-dialog"
+import { syncConfig } from "@/lib/sync/sync-config"
 
-// Função para comprimir dados usando LZ-based compression
-function compressData(data: string): string {
-  try {
-    // Adicionar prefixo para identificar dados comprimidos
-    const compressed = btoa(encodeURIComponent(data));
-    return `COMPRESSED:${compressed}`;
-  } catch (error) {
-    console.error('Compression error:', error);
-    return data; // Fallback para dados não comprimidos
-  }
+interface ProjectData {
+  id: string
+  name: string
+  data: string
+  tags: string[]
+  size: number
+  createdAt: string
+  updatedAt: string
 }
 
-// Função para descomprimir dados
-function decompressData(data: string): string {
-  try {
-    // Verificar se os dados têm o prefixo de compressão
-    if (data.startsWith('COMPRESSED:')) {
-      const compressedData = data.substring(11); // Remove o prefixo "COMPRESSED:"
-      return decodeURIComponent(atob(compressedData));
-    }
+// Generate unique ID for projects
+function generateProjectId(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  // Fallback for environments without crypto.randomUUID
+  return "proj_" + Date.now().toString(36) + "_" + Math.random().toString(36).substr(2, 9)
+}
 
-    // Se não tem prefixo, tentar detectar se é base64 válido
-    if (isValidBase64(data)) {
-      try {
-        const decoded = atob(data);
-        // Verificar se o resultado parece ser JSON válido
-        if (decoded.includes('"root"') && decoded.includes('"children"')) {
-          return decodeURIComponent(decoded);
-        }
-      } catch {
-        // Se falhar, não é base64 válido, retornar original
+// IndexedDB configuration
+const DB_NAME = "GGEditorDB"
+const DB_VERSION = 1
+const STORE_NAME = "projects"
+const TAGS_STORE_NAME = "tags"
+
+// IndexedDB utility functions
+class IndexedDBStorage {
+  private db: IDBDatabase | null = null
+
+  async init(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION)
+
+      request.onerror = () => {
+        console.error("Failed to open IndexedDB:", request.error)
+        reject(request.error)
       }
-    }
 
-    // Retornar dados originais se não conseguir descomprimir
-    return data;
-  } catch (error) {
-    console.error('Decompression error:', error);
-    return data; // Retorna os dados originais se falhar
+      request.onsuccess = () => {
+        this.db = request.result
+        console.log("IndexedDB initialized successfully")
+        resolve()
+      }
+
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result
+
+        // Create projects object store if it doesn't exist
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          const store = db.createObjectStore(STORE_NAME, { keyPath: "id" })
+          store.createIndex("name", "name", { unique: false })
+          store.createIndex("tags", "tags", { unique: false, multiEntry: true })
+          store.createIndex("createdAt", "createdAt", { unique: false })
+          store.createIndex("updatedAt", "updatedAt", { unique: false })
+          console.log("Created IndexedDB projects object store")
+        }
+
+        // Create tags object store if it doesn't exist
+        if (!db.objectStoreNames.contains(TAGS_STORE_NAME)) {
+          const tagsStore = db.createObjectStore(TAGS_STORE_NAME, { keyPath: "name" })
+          tagsStore.createIndex("usageCount", "usageCount", { unique: false })
+          tagsStore.createIndex("createdAt", "createdAt", { unique: false })
+          console.log("Created IndexedDB tags object store")
+        }
+      }
+    })
   }
-}
 
-// Função auxiliar para verificar se uma string é base64 válida
-function isValidBase64(str: string): boolean {
-  try {
-    // Verificar se a string tem caracteres válidos de base64
-    const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
-    if (!base64Regex.test(str)) {
-      return false;
+  async saveTags(tags: string[]): Promise<void> {
+    if (!this.db) throw new Error("IndexedDB not initialized")
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([TAGS_STORE_NAME], "readwrite")
+      const store = transaction.objectStore(TAGS_STORE_NAME)
+
+      const promises = tags.map((tag) => {
+        return new Promise<void>((tagResolve, tagReject) => {
+          const getRequest = store.get(tag)
+          getRequest.onsuccess = () => {
+            const existingTag = getRequest.result
+            const tagData = {
+              name: tag,
+              usageCount: existingTag ? existingTag.usageCount + 1 : 1,
+              createdAt: existingTag ? existingTag.createdAt : new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }
+
+            const putRequest = store.put(tagData)
+            putRequest.onsuccess = () => tagResolve()
+            putRequest.onerror = () => tagReject(putRequest.error)
+          }
+          getRequest.onerror = () => tagReject(getRequest.error)
+        })
+      })
+
+      Promise.all(promises)
+        .then(() => resolve())
+        .catch(reject)
+    })
+  }
+
+  async getAllTags(): Promise<Array<{ name: string; usageCount: number }>> {
+    if (!this.db) throw new Error("IndexedDB not initialized")
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([TAGS_STORE_NAME], "readonly")
+      const store = transaction.objectStore(TAGS_STORE_NAME)
+      const request = store.getAll()
+
+      request.onsuccess = () => {
+        const tags = request.result.sort((a, b) => b.usageCount - a.usageCount)
+        resolve(tags)
+      }
+      request.onerror = () => reject(request.error)
+    })
+  }
+
+  async searchProjects(searchTerm: string, tags: string[], filterMode: "all" | "any" = "any"): Promise<ProjectData[]> {
+    if (!this.db) throw new Error("IndexedDB not initialized")
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME], "readonly")
+      const store = transaction.objectStore(STORE_NAME)
+      const request = store.getAll()
+
+      request.onsuccess = () => {
+        let projects = request.result as ProjectData[]
+
+        // Filter by search term (name)
+        if (searchTerm) {
+          projects = projects.filter((project) => project.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        }
+
+        // Filter by tags
+        if (tags.length > 0) {
+          projects = projects.filter((project) => {
+            if (!project.tags || project.tags.length === 0) return false
+
+            if (filterMode === "all") {
+              // Project must have ALL selected tags
+              return tags.every((tag) => project.tags.includes(tag))
+            } else {
+              // Project must have ANY of the selected tags
+              return tags.some((tag) => project.tags.includes(tag))
+            }
+          })
+        }
+
+        // Sort by updatedAt descending (most recent first)
+        projects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        resolve(projects)
+      }
+      request.onerror = () => reject(request.error)
+    })
+  }
+
+  async save(id: string, name: string, data: string, tags: string[] = []): Promise<void> {
+    if (!this.db) {
+      throw new Error("IndexedDB not initialized")
     }
 
-    // Tentar decodificar para verificar se é válido
-    atob(str);
-    return true;
-  } catch {
-    return false;
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME], "readwrite")
+      const store = transaction.objectStore(STORE_NAME)
+
+      const projectData = {
+        id: id,
+        name: name,
+        data: data,
+        tags: tags,
+        size: estimateSize(data),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+
+      // Check if project already exists to preserve createdAt
+      const getRequest = store.get(id)
+      getRequest.onsuccess = () => {
+        if (getRequest.result) {
+          projectData.createdAt = getRequest.result.createdAt
+        }
+
+        const putRequest = store.put(projectData)
+
+        putRequest.onsuccess = async () => {
+          // Save tags to tags store
+          if (tags.length > 0) {
+            try {
+              await this.saveTags(tags)
+            } catch (error) {
+              console.error("Failed to save tags:", error)
+            }
+          }
+          console.log(`Saved project "${name}" (${id}) to IndexedDB`)
+          resolve()
+        }
+
+        putRequest.onerror = () => {
+          console.error("Failed to save to IndexedDB:", putRequest.error)
+          reject(putRequest.error)
+        }
+      }
+
+      getRequest.onerror = () => {
+        console.error("Failed to check existing project:", getRequest.error)
+        reject(getRequest.error)
+      }
+    })
+  }
+
+  async load(id: string): Promise<ProjectData | null> {
+    if (!this.db) {
+      throw new Error("IndexedDB not initialized")
+    }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME], "readonly")
+      const store = transaction.objectStore(STORE_NAME)
+      const request = store.get(id)
+
+      request.onsuccess = () => {
+        if (request.result) {
+          console.log(`Loaded project "${request.result.name}" (${id}) from IndexedDB`)
+          resolve(request.result)
+        } else {
+          resolve(null)
+        }
+      }
+
+      request.onerror = () => {
+        console.error("Failed to load from IndexedDB:", request.error)
+        reject(request.error)
+      }
+    })
+  }
+
+  async delete(key: string): Promise<void> {
+    if (!this.db) {
+      throw new Error("IndexedDB not initialized")
+    }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME], "readwrite")
+      const store = transaction.objectStore(STORE_NAME)
+      const request = store.delete(key)
+
+      request.onsuccess = () => {
+        console.log(`Deleted project "${key}" from IndexedDB`)
+        resolve()
+      }
+
+      request.onerror = () => {
+        console.error("Failed to delete from IndexedDB:", request.error)
+        reject(request.error)
+      }
+    })
+  }
+
+  async list(): Promise<ProjectData[]> {
+    if (!this.db) {
+      throw new Error("IndexedDB not initialized")
+    }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME], "readonly")
+      const store = transaction.objectStore(STORE_NAME)
+      const request = store.getAll()
+
+      request.onsuccess = () => {
+        const projects = request.result as ProjectData[]
+        // Sort by updatedAt descending (most recent first)
+        projects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        resolve(projects)
+      }
+
+      request.onerror = () => {
+        console.error("Failed to list projects from IndexedDB:", request.error)
+        reject(request.error)
+      }
+    })
+  }
+
+  async getStorageInfo(): Promise<{ totalSize: number; projectCount: number }> {
+    if (!this.db) {
+      throw new Error("IndexedDB not initialized")
+    }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME], "readonly")
+      const store = transaction.objectStore(STORE_NAME)
+      const request = store.getAll()
+
+      request.onsuccess = () => {
+        const projects = request.result
+        let totalSize = 0
+
+        projects.forEach((project) => {
+          totalSize += project.size || estimateSize(project.data)
+        })
+
+        resolve({
+          totalSize,
+          projectCount: projects.length,
+        })
+      }
+
+      request.onerror = () => {
+        console.error("Failed to get storage info from IndexedDB:", request.error)
+        reject(request.error)
+      }
+    })
+  }
+
+  async getProjectInfo(id: string): Promise<{ size: number; createdAt: string; updatedAt: string } | null> {
+    if (!this.db) {
+      throw new Error("IndexedDB not initialized")
+    }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([STORE_NAME], "readonly")
+      const store = transaction.objectStore(STORE_NAME)
+      const request = store.get(id)
+
+      request.onsuccess = () => {
+        if (request.result) {
+          resolve({
+            size: request.result.size || estimateSize(request.result.data),
+            createdAt: request.result.createdAt || new Date().toISOString(),
+            updatedAt: request.result.updatedAt || new Date().toISOString(),
+          })
+        } else {
+          resolve(null)
+        }
+      }
+
+      request.onerror = () => {
+        console.error("Failed to get project info from IndexedDB:", request.error)
+        reject(request.error)
+      }
+    })
   }
 }
 
@@ -85,22 +374,25 @@ function formatSize(sizeInKB: number): string {
 }
 
 export default function Page() {
-  const [editorState, setEditorState] = useState<string>('');
-  const [currentProjectName, setCurrentProjectName] = useState<string>('');
-  const [saveAsDialogOpen, setSaveAsDialogOpen] = useState(false);
-  const [openDialogOpen, setOpenDialogOpen] = useState(false);
-  const [newProjectName, setNewProjectName] = useState('');
-  const [savedProjects, setSavedProjects] = useState<string[]>([]);
-  const [isLoadingProject, setIsLoadingProject] = useState(false);
-  const [currentProjectSize, setCurrentProjectSize] = useState<number>(0);
-  const [totalStorageUsed, setTotalStorageUsed] = useState<number>(0);
-  const setLoadingRef = useRef<((loading: boolean) => void) | null>(null);
+  const [editorState, setEditorState] = useState<string>("")
+  const [currentProjectId, setCurrentProjectId] = useState<string>("")
+  const [currentProjectName, setCurrentProjectName] = useState<string>("")
+  const [saveAsDialogOpen, setSaveAsDialogOpen] = useState(false)
+  const [openDialogOpen, setOpenDialogOpen] = useState(false)
+  const [newProjectName, setNewProjectName] = useState("")
+  const [savedProjects, setSavedProjects] = useState<ProjectData[]>([])
+  const [isLoadingProject, setIsLoadingProject] = useState(false)
+  const [currentProjectSize, setCurrentProjectSize] = useState<number>(0)
+  const [totalStorageUsed, setTotalStorageUsed] = useState<number>(0)
+  const setLoadingRef = useRef<((loading: boolean) => void) | null>(null)
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null)
 
   // Estado para modo escuro
-  const [isDark, setIsDark] = useState(typeof window !== 'undefined' ? document.documentElement.classList.contains('dark') : false);
+  const [isDark, setIsDark] = useState(
+    typeof window !== "undefined" ? document.documentElement.classList.contains("dark") : false,
+  )
 
   // Alternar tema
   const toggleTheme = () => {
@@ -172,24 +464,69 @@ export default function Page() {
     return `${storageLimit}MB`;
   };
 
-  // Cache em memória para projetos que não puderam ser salvos no localStorage
-  const memoryCache = useRef<Map<string, string>>(new Map());
+  // Replace this line:
+  // const dbStorage = useRef<IndexedDBStorage>(new IndexedDBStorage())
+  // With this:
+  const dbStorage = useRef<EnhancedStorageAdapter>(new EnhancedStorageAdapter())
+  const [isDbInitialized, setIsDbInitialized] = useState(false)
 
-  const editorRef = useRef<LexicalEditor | null>(null);
+  // Add these state variables after the existing ones:
+  const [syncStats, setSyncStats] = useState<any>(null)
+  const [showSyncStatus, setShowSyncStatus] = useState(false)
+  const [showSyncSettingsDialog, setShowSyncSettingsDialog] = useState(false)
+
+  const editorRef = useRef<LexicalEditor | null>(null)
 
   // Tamanho recomendado em KB (500KB)
   const RECOMMENDED_SIZE_KB = 500;
 
   const [isFirstTime, setIsFirstTime] = useState(true);
 
-  // Load saved projects list on component mount
+  const [projectTags, setProjectTags] = useState<string[]>([])
+  const [availableTags, setAvailableTags] = useState<Array<{ name: string; usageCount: number }>>([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
+  const [totalProjects, setTotalProjects] = useState(0)
+
+  const [tagInput, setTagInput] = useState("")
+  const [showTagDropdown, setShowTagDropdown] = useState(false)
+
+  // Add new state for tag search
+  const [tagSearchInput, setTagSearchInput] = useState("")
+
+  const [tagFilterMode, setTagFilterMode] = useState<"all" | "any">("any")
+
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+
+  // Initialize IndexedDB and load projects
   useEffect(() => {
-    loadSavedProjectsList();
-    updateStorageInfo();
-  }, []);
+    const initDB = async () => {
+      try {
+        await dbStorage.current.init()
+        setIsDbInitialized(true)
+        await loadSavedProjectsList()
+        await loadAvailableTags()
+        await updateStorageInfo()
+      } catch (error) {
+        console.error("Failed to initialize IndexedDB:", error)
+        toast.error("Erro de armazenamento", {
+          description: "Não foi possível inicializar o banco de dados. Alguns recursos podem não funcionar.",
+          duration: 5000,
+          icon: "⚠️",
+        })
+      }
+    }
+
+    initDB()
+  }, [])
 
   // Force open dialog on first visit
   useEffect(() => {
+    if (!isDbInitialized) return
+
     // Check if it's the first time (no current project and no saved projects)
     if (isFirstTime && !currentProjectName && savedProjects.length === 0) {
       setOpenDialogOpen(true);
@@ -197,8 +534,8 @@ export default function Page() {
       // If there are saved projects but no current project, also show dialog
       setOpenDialogOpen(true);
     }
-    setIsFirstTime(false);
-  }, [savedProjects, currentProjectName, isFirstTime]);
+    setIsFirstTime(false)
+  }, [savedProjects, currentProjectName, isFirstTime, isDbInitialized])
 
   // Atualizar informações de armazenamento sempre que o editor mudar
   useEffect(() => {
@@ -209,126 +546,210 @@ export default function Page() {
   }, [editorState]);
 
   // Atualizar informações de armazenamento
-  const updateStorageInfo = () => {
+  const updateStorageInfo = async () => {
+    if (!isDbInitialized) return
+
     try {
-      let totalSize = 0;
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('gg-editor-')) {
-          const value = localStorage.getItem(key) || '';
-          totalSize += estimateSize(value);
-        }
-      }
-      setTotalStorageUsed(totalSize);
+      const storageInfo = await dbStorage.current.getStorageInfo()
+      setTotalStorageUsed(storageInfo.totalSize)
     } catch (error) {
       console.error('Error updating storage info:', error);
     }
   };
 
-  // Storage interface - sempre "funciona" do ponto de vista do usuário
   const storageAdapter = {
-    save: (key: string, data: string) => {
-      if (!key || !data) {
-        console.warn('Invalid key or data, but continuing...');
-        return; // Não lança erro, apenas retorna
-      }
-      const vVar = false; // Simula uma variável de controle para o exemplo
-      // Só bloquear se false for true (nunca vai acontecer)
-      if (vVar) {
-        throw new Error('Impossible condition met - save blocked');
+    save: async (id: string, name: string, data: string, tags: string[] = []) => {
+      if (!id || !name || !data) {
+        console.warn("Invalid id, name or data")
+        return
       }
 
-      const dataSize = estimateSize(data);
-      console.log(`Project size: ${formatSize(dataSize)}`);
+      if (!isDbInitialized) {
+        throw new Error("Database not initialized")
+      }
 
-      // Tentar salvar no localStorage
+      const originalSize = estimateSize(data)
+      console.log(`Saving project "${name}" (${id}) - Size: ${formatSize(originalSize)}`)
+
       try {
-        let storageData = data;
+        await dbStorage.current.save(id, name, data, tags)
+        await updateStorageInfo()
+        console.log(`Saved project "${name}" (${id}) successfully`)
+      } catch (error) {
+        console.error("Failed to save project:", error)
+        throw error
+      }
+    },
 
-        // Comprimir dados se forem grandes
-        if (dataSize > 500) {
-          storageData = compressData(data);
-          const compressedSize = estimateSize(storageData);
-          console.log(`Compressed from ${formatSize(dataSize)} to ${formatSize(compressedSize)}`);
+    load: async (id: string): Promise<ProjectData | null> => {
+      if (!isDbInitialized) {
+        throw new Error("Database not initialized")
+      }
+
+      try {
+        const projectData = await dbStorage.current.load(id)
+        return projectData
+      } catch (error) {
+        console.error("Failed to load project:", error)
+        return null
+      }
+    },
+
+    delete: async (id: string) => {
+      if (!isDbInitialized) {
+        throw new Error("Database not initialized")
+      }
+
+      try {
+        await dbStorage.current.delete(id)
+        await updateStorageInfo()
+      } catch (error) {
+        console.error("Failed to delete project:", error)
+        throw error
+      }
+    },
+
+    list: async (): Promise<ProjectData[]> => {
+      if (!isDbInitialized) {
+        return []
+      }
+
+      try {
+        const projects = await dbStorage.current.list()
+        return projects
+      } catch (error) {
+        console.error("Failed to list projects:", error)
+        return []
+      }
+    },
+
+    getProjectInfo: async (id: string) => {
+      if (!isDbInitialized) {
+        return null
+      }
+
+      try {
+        return await dbStorage.current.getProjectInfo(id)
+      } catch (error) {
+        console.error("Failed to get project info:", error)
+        return null
+      }
+    },
+
+    searchProjects: async (
+      searchTerm: string,
+      tags: string[],
+      filterMode: "all" | "any" = "any",
+    ): Promise<ProjectData[]> => {
+      if (!isDbInitialized) {
+        return []
+      }
+
+      try {
+        return await dbStorage.current.searchProjects(searchTerm, tags, filterMode)
+      } catch (error) {
+        console.error("Failed to search projects:", error)
+        return []
+      }
+    },
+  }
+
+  const loadSavedProjectsList = async () => {
+    try {
+      const projects = await storageAdapter.list()
+      setSavedProjects(projects)
+    } catch (error) {
+      console.error("Failed to load projects list:", error)
+    }
+  }
+
+  const loadAvailableTags = async () => {
+    try {
+      const tags = await dbStorage.current.getAllTags()
+      setAvailableTags(tags)
+    } catch (error) {
+      console.error("Failed to load tags:", error)
+    }
+  }
+
+  useEffect(() => {
+    const filterProjects = async () => {
+      if (!isDbInitialized) return
+
+      try {
+        let projects: ProjectData[]
+
+        if (searchTerm || selectedTags.length > 0) {
+          projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode)
         } else {
-          // Para dados pequenos, adicionar um prefixo para identificar que não estão comprimidos
-          storageData = `UNCOMPRESSED:${data}`;
+          projects = await storageAdapter.list()
         }
 
-        localStorage.setItem(`gg-editor-${key}`, storageData);
-        console.log('✅ Saved to localStorage successfully');
-        updateStorageInfo();
-      } catch (localStorageError: unknown) {
-        console.warn('⚠️ localStorage failed, using memory cache:', localStorageError);
-
-        // Salvar no cache de memória como fallback
-        memoryCache.current.set(key, data);
-
-        // Mostrar aviso discreto mas não bloquear
-        if (localStorageError instanceof Error && (localStorageError.message.includes('quota') || localStorageError.message.includes('storage'))) {
-          console.log('📝 Project saved in memory (localStorage full)');
-        }
-
-        // NUNCA lançar erro - sempre "funciona"
-      }
-    },
-
-    load: (key: string): string | null => {
-      try {
-        const data = localStorage.getItem(`gg-editor-${key}`);
-        if (!data) return null;
-
-        // Verificar se tem prefixo de não-comprimido
-        if (data.startsWith('UNCOMPRESSED:')) {
-          return data.substring(13); // Remove o prefixo "UNCOMPRESSED:"
-        }
-
-        // Tentar descomprimir (inclui verificação de prefixo COMPRESSED:)
-        return decompressData(data);
+        setTotalProjects(projects.length)
+        setFilteredProjects(projects)
+        setCurrentPage(1) // Reset to first page when filtering
       } catch (error) {
-        console.error('Storage load error:', error);
-        return null;
+        console.error("Failed to filter projects:", error)
       }
-    },
+    }
 
-    delete: (key: string) => {
+    filterProjects()
+  }, [searchTerm, selectedTags, savedProjects, isDbInitialized, tagFilterMode])
+
+  // Add this useEffect after the existing ones:
+  useEffect(() => {
+    if (!isDbInitialized) return
+
+    const updateSyncStats = async () => {
       try {
-        localStorage.removeItem(`gg-editor-${key}`);
-        memoryCache.current.delete(key);
-        updateStorageInfo();
+        const stats = await dbStorage.current.getSyncStats()
+        setSyncStats(stats)
       } catch (error) {
-        console.error('Storage delete error:', error);
-        // Não lançar erro, apenas continuar
+        console.error("Failed to get sync stats:", error)
       }
-    },
+    }
 
-    list: (): string[] => {
-      try {
-        const localStorageKeys = Object.keys(localStorage)
-          .filter((key) => key.startsWith('gg-editor-'))
-          .map((key) => key.replace('gg-editor-', ''));
+    // Update sync stats every 5 seconds
+    const interval = setInterval(updateSyncStats, 5000)
+    updateSyncStats() // Initial update
 
-        const memoryCacheKeys = Array.from(memoryCache.current.keys());
+    // Setup sync event listeners
+    dbStorage.current.onSyncStart(() => {
+      console.log("Sync started")
+      updateSyncStats()
+    })
 
-        // Combinar e remover duplicatas
-        const allKeys = [...new Set([...localStorageKeys, ...memoryCacheKeys])];
-        return allKeys;
-      } catch (error) {
-        console.error('Storage list error:', error);
-        return Array.from(memoryCache.current.keys());
+    dbStorage.current.onSyncComplete((stats) => {
+      console.log("Sync completed:", stats)
+      updateSyncStats()
+      if (stats.processed > 0) {
+        toast.success("Sincronização concluída", {
+          description: `${stats.processed} projetos sincronizados`,
+          duration: 3000,
+          icon: "🔄",
+        })
       }
-    },
-  };
+    })
 
-  const loadSavedProjectsList = () => {
-    const projects = storageAdapter.list();
-    setSavedProjects(projects);
-  };
+    dbStorage.current.onSyncError((error) => {
+      console.error("Sync error:", error)
+      updateSyncStats()
+      toast.error("Erro na sincronização", {
+        description: "Alguns projetos podem não estar sincronizados",
+        duration: 4000,
+        icon: "⚠️",
+      })
+    })
 
-  const handleSave = () => {
-    if (!currentProjectName) {
-      setSaveAsDialogOpen(true);
-      return;
+    return () => {
+      clearInterval(interval)
+    }
+  }, [isDbInitialized])
+
+  const handleSave = async () => {
+    if (!currentProjectId) {
+      setSaveAsDialogOpen(true)
+      return
     }
 
     // Check storage limit before saving
@@ -367,50 +788,36 @@ export default function Page() {
       return;
     }
 
-    // SEMPRE funciona - nunca falha
     try {
-      storageAdapter.save(currentProjectName, stateToSave);
+      await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags)
 
       // Check storage usage after save and show appropriate notification
-      const usagePercentage = getStorageUsagePercentage();
-      const wasInLocalStorage = localStorage.getItem(`gg-editor-${currentProjectName}`) !== null;
-      const wasInMemoryCache = memoryCache.current.has(currentProjectName);
+      const usagePercentage = getStorageUsagePercentage()
 
-      if (wasInLocalStorage) {
-        if (storageLimit && usagePercentage >= 90) {
-          toast.warning('Projeto salvo - Pouco espaço', {
-            description: `"${currentProjectName}" salvo. Espaço restante: ${(100 - usagePercentage).toFixed(1)}%`,
-            duration: 4000,
-            icon: '⚠️',
-          });
-        } else {
-          toast.success('Projeto salvo com sucesso', {
-            description: `"${currentProjectName}" foi salvo no armazenamento local`,
-            duration: 3000,
-            icon: '💾',
-          });
-        }
-      } else if (wasInMemoryCache) {
-        toast.warning('Projeto salvo temporariamente', {
-          description: `"${currentProjectName}" foi salvo na sessão atual`,
+      if (storageLimit && usagePercentage >= 90) {
+        toast.warning("Projeto salvo - Pouco espaço", {
+          description: `"${currentProjectName}" salvo. Espaço restante: ${(100 - usagePercentage).toFixed(1)}%`,
           duration: 4000,
           icon: '⚠️',
         });
       } else {
-        toast.success('Projeto salvo', {
-          description: `"${currentProjectName}" foi salvo com sucesso`,
+        toast.success("Projeto salvo com sucesso", {
+          description: `"${currentProjectName}" foi salvo no banco de dados`,
           duration: 3000,
-          icon: '✅',
-        });
+          icon: "💾",
+        })
       }
-    } catch (error: unknown) {
-      // Isso nunca deveria acontecer agora, mas por segurança
-      console.error('Unexpected save error:', error);
-      toast.success(`Project "${currentProjectName}" saved (with warnings)`);
+    } catch (error: any) {
+      console.error("Save error:", error)
+      toast.error("Erro ao salvar", {
+        description: "Não foi possível salvar o projeto. Tente novamente.",
+        duration: 4000,
+        icon: "❌",
+      })
     }
   };
 
-  const handleSaveAs = () => {
+  const handleSaveAs = async () => {
     if (!newProjectName.trim()) {
       toast.error('Nome obrigatório', {
         description: 'Por favor, digite um nome para o projeto',
@@ -431,16 +838,16 @@ export default function Page() {
     }
 
     // Check if project with same name already exists
-    const existingProjects = storageAdapter.list();
-    if (existingProjects.includes(newProjectName.trim())) {
+    const existingProjects = await storageAdapter.list()
+    if (existingProjects.some((p) => p.name === newProjectName.trim())) {
       // Generate suggested name with version number
       let suggestedName = `${newProjectName.trim()}-v2`;
       let counter = 2;
 
       // Keep incrementing until we find an available name
-      while (existingProjects.includes(suggestedName)) {
-        counter++;
-        suggestedName = `${newProjectName.trim()}-v${counter}`;
+      while (existingProjects.some((p) => p.name === suggestedName)) {
+        counter++
+        suggestedName = `${newProjectName.trim()}-v${counter}`
       }
 
       toast.error('Nome já existe', {
@@ -477,121 +884,139 @@ export default function Page() {
       return;
     }
 
-    // SEMPRE funciona - nunca falha
     try {
-      storageAdapter.save(newProjectName, stateToSave);
-      setCurrentProjectName(newProjectName);
-      setNewProjectName('');
-      setSaveAsDialogOpen(false);
-      loadSavedProjectsList();
+      const newProjectId = generateProjectId()
+      await storageAdapter.save(newProjectId, newProjectName, stateToSave, projectTags)
+      setCurrentProjectId(newProjectId)
+      setCurrentProjectName(newProjectName)
+      setNewProjectName("")
+      setSaveAsDialogOpen(false)
+      await loadSavedProjectsList()
 
       // Check storage usage after save
-      const usagePercentage = getStorageUsagePercentage();
-      const wasInLocalStorage = localStorage.getItem(`gg-editor-${newProjectName}`) !== null;
-      const wasInMemoryCache = memoryCache.current.has(newProjectName);
+      const usagePercentage = getStorageUsagePercentage()
 
-      if (wasInLocalStorage) {
-        if (storageLimit && usagePercentage >= 90) {
-          toast.warning('Projeto criado - Pouco espaço', {
-            description: `"${newProjectName}" criado. Espaço restante: ${(100 - usagePercentage).toFixed(1)}%`,
-            duration: 4000,
-            icon: '⚠️',
-          });
-        } else {
-          toast.success('Novo projeto criado', {
-            description: `"${newProjectName}" foi criado e salvo com sucesso`,
-            duration: 3000,
-            icon: '🎉',
-          });
-        }
-      } else if (wasInMemoryCache) {
-        toast.warning('Projeto criado temporariamente', {
-          description: `"${newProjectName}" foi criado na sessão atual`,
+      if (storageLimit && usagePercentage >= 90) {
+        toast.warning("Projeto criado - Pouco espaço", {
+          description: `"${newProjectName}" criado. Espaço restante: ${(100 - usagePercentage).toFixed(1)}%`,
           duration: 4000,
           icon: '⚠️',
         });
       } else {
-        toast.success('Projeto criado', {
-          description: `"${newProjectName}" foi criado com sucesso`,
+        toast.success("Novo projeto criado", {
+          description: `"${newProjectName}" foi criado e salvo com sucesso`,
           duration: 3000,
-          icon: '✨',
-        });
+          icon: "🎉",
+        })
       }
-    } catch (error: unknown) {
-      // Isso nunca deveria acontecer agora, mas por segurança
-      console.error('Unexpected save error:', error);
-      toast.success(`Project "${newProjectName}" saved (with warnings)`);
+    } catch (error: any) {
+      console.error("Save as error:", error)
+      toast.error("Erro ao criar projeto", {
+        description: "Não foi possível criar o projeto. Tente novamente.",
+        duration: 4000,
+        icon: "❌",
+      })
     }
   };
 
-  const handleOpen = async (projectName: string) => {
-    const projectData = storageAdapter.load(projectName);
-    if (projectData && editorRef.current) {
-      try {
-        // Ativar o estado de carregamento
-        if (setLoadingRef.current) {
-          setLoadingRef.current(true);
-        }
-
-        const editorState = editorRef.current.parseEditorState(projectData);
-        editorRef.current.setEditorState(editorState);
-
-        // Aguardar um pouco para que os nós sejam renderizados
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // Desativar o estado de carregamento
-        if (setLoadingRef.current) {
-          setLoadingRef.current(false);
-        }
-
-        setCurrentProjectName(projectName);
-        setOpenDialogOpen(false);
-        setIsFirstTime(false); // Mark as no longer first time
-        toast.success('Projeto carregado', {
-          description: `"${projectName}" foi aberto com sucesso`,
-          duration: 2500,
-          icon: '📂',
-        });
-      } catch (error) {
-        // Desativar o estado de carregamento em caso de erro
-        if (setLoadingRef.current) {
-          setLoadingRef.current(false);
-        }
-        toast.error('Erro ao carregar projeto', {
-          description: 'O arquivo do projeto está corrompido ou em formato inválido',
-          duration: 4000,
-          icon: '❌',
-        });
-      }
-    } else {
-      toast.error('Projeto não encontrado', {
-        description: 'Não foi possível localizar o arquivo do projeto',
-        duration: 3000,
-        icon: '🔍',
-      });
-    }
-  };
-
-  const handleConfirmDelete = (projectName: string) => {
-    setProjectToDelete(projectName);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDelete = (projectName: string) => {
+  const handleOpen = async (projectId: string) => {
     try {
-      storageAdapter.delete(projectName);
-      loadSavedProjectsList();
-      if (currentProjectName === projectName) {
-        setCurrentProjectName('');
+      const projectData = await storageAdapter.load(projectId)
+      if (projectData && editorRef.current) {
+        try {
+          // Ativar o estado de carregamento
+          if (setLoadingRef.current) {
+            setLoadingRef.current(true)
+          }
+
+          const editorState = editorRef.current.parseEditorState(projectData.data)
+          editorRef.current.setEditorState(editorState)
+
+          // Aguardar um pouco para que os nós sejam renderizados
+          await new Promise((resolve) => setTimeout(resolve, 100))
+
+          // Desativar o estado de carregamento
+          if (setLoadingRef.current) {
+            setLoadingRef.current(false)
+          }
+
+          setCurrentProjectId(projectData.id)
+          setCurrentProjectName(projectData.name)
+          setProjectTags(projectData.tags || [])
+          setOpenDialogOpen(false)
+          setIsFirstTime(false) // Mark as no longer first time
+          toast.success("Projeto carregado", {
+            description: `"${projectData.name}" foi aberto com sucesso`,
+            duration: 2500,
+            icon: "📂",
+          })
+        } catch (error) {
+          // Desativar o estado de carregamento em caso de erro
+          if (setLoadingRef.current) {
+            setLoadingRef.current(false)
+          }
+          toast.error("Erro ao carregar projeto", {
+            description: "O arquivo do projeto está corrompido ou em formato inválido",
+            duration: 4000,
+            icon: "❌",
+          })
+        }
+      } else {
+        toast.error("Projeto não encontrado", {
+          description: "Não foi possível localizar o arquivo do projeto",
+          duration: 3000,
+          icon: "🔍",
+        })
       }
-      toast.success('Projeto excluído', {
+    } catch (error) {
+      console.error("Open error:", error)
+      toast.error("Erro ao abrir projeto", {
+        description: "Não foi possível abrir o projeto. Tente novamente.",
+        duration: 4000,
+        icon: "❌",
+      })
+    }
+  };
+
+  const handleConfirmDelete = (projectId: string, projectName: string) => {
+    setProjectToDelete({ id: projectId, name: projectName })
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDelete = async (projectId: string, projectName: string) => {
+    try {
+      await storageAdapter.delete(projectId)
+      await loadSavedProjectsList()
+
+      // If we're deleting the currently active project, reset the editor
+      if (currentProjectId === projectId) {
+        setCurrentProjectId("")
+        setCurrentProjectName("")
+        setProjectTags([])
+        setEditorState("")
+
+        // Reset the editor to empty state
+        if (editorRef.current) {
+          editorRef.current.setEditorState(
+            editorRef.current.parseEditorState(
+              '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
+            ),
+          )
+        }
+      }
+
+      toast.success("Projeto excluído", {
         description: `"${projectName}" foi removido permanentemente`,
         duration: 3000,
         icon: '🗑️',
       });
     } catch (error) {
-      // Mesmo se falhar, mostrar sucesso
-      toast.success(`Project "${projectName}" removed`);
+      console.error("Delete error:", error)
+      toast.error("Erro ao excluir projeto", {
+        description: "Não foi possível excluir o projeto. Tente novamente.",
+        duration: 4000,
+        icon: "❌",
+      })
     }
   };
 
@@ -601,12 +1026,14 @@ export default function Page() {
         editorRef.current.parseEditorState(
           '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
         ),
-      );
-      setCurrentProjectName('');
-      setOpenDialogOpen(false);
-      setIsFirstTime(false); // Mark as no longer first time
-      toast.success('Novo projeto iniciado', {
-        description: 'Editor limpo e pronto para criar conteúdo',
+      )
+      setCurrentProjectId("")
+      setCurrentProjectName("")
+      setProjectTags([])
+      setOpenDialogOpen(false)
+      setIsFirstTime(false) // Mark as no longer first time
+      toast.success("Novo projeto iniciado", {
+        description: "Editor limpo e pronto para criar conteúdo",
         duration: 2500,
         icon: '📝',
       });
@@ -624,11 +1051,11 @@ export default function Page() {
 
   // Auto-save functionality
   useEffect(() => {
-    if (!autoSaveEnabled || !currentProjectName || !editorState) return;
+    if (!autoSaveEnabled || !currentProjectId || !editorState || !isDbInitialized) return
 
-    const autoSaveTimer = setTimeout(() => {
+    const autoSaveTimer = setTimeout(async () => {
       try {
-        storageAdapter.save(currentProjectName, editorState);
+        await storageAdapter.save(currentProjectId, currentProjectName, editorState, projectTags)
         // Show a very subtle auto-save notification
         toast.success('Auto-salvo', {
           description: 'Alterações salvas automaticamente',
@@ -650,8 +1077,8 @@ export default function Page() {
       }
     }, 2000); // Auto-save after 2 seconds of inactivity
 
-    return () => clearTimeout(autoSaveTimer);
-  }, [editorState, autoSaveEnabled, currentProjectName]);
+    return () => clearTimeout(autoSaveTimer)
+  }, [editorState, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized])
 
   const handleSetStorageLimit = () => {
     const limitValue = newStorageLimit.trim();
@@ -700,6 +1127,21 @@ export default function Page() {
     });
   };
 
+  // Close tag dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showTagDropdown) {
+        const target = event.target as Element
+        if (!target.closest(".relative")) {
+          setShowTagDropdown(false)
+        }
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [showTagDropdown])
+
   return (
     <>
       {/* Botão de alternância no topo direito */}
@@ -742,27 +1184,44 @@ export default function Page() {
                     <button
                       onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
                       className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                      disabled={!isDbInitialized}
                     >
-                      <div className={`w-3 h-3 rounded-full ${autoSaveEnabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400 dark:bg-gray-600'}`}></div>
-                      <span className={`text-sm font-medium ${autoSaveEnabled ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-300'}`}>
-                        {autoSaveEnabled ? 'Auto-save' : 'Manual'}
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          autoSaveEnabled && isDbInitialized
+                            ? "bg-green-500 animate-pulse"
+                            : "bg-gray-400 dark:bg-gray-600"
+                        }`}
+                      ></div>
+                      <span
+                        className={`text-sm font-medium ${
+                          autoSaveEnabled && isDbInitialized
+                            ? "text-green-700 dark:text-green-400"
+                            : "text-gray-500 dark:text-gray-300"
+                        }`}
+                      >
+                        {autoSaveEnabled && isDbInitialized ? "Auto-save" : "Manual"}
                       </span>
                     </button>
                     <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{currentProjectName || 'Untitled Project'}</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      {currentProjectName || "Untitled Project"}
+                    </h2>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-300">
                     <div className="flex items-center gap-2">
                       <HardDrive className="w-4 h-4" />
                       <span className={getSizeIndicatorColor()}>{formatSize(currentProjectSize)}</span>
                       <span className="text-gray-400 dark:text-gray-500">/</span>
-                      <span className="text-gray-400 dark:text-gray-500">{formatSize(RECOMMENDED_SIZE_KB)} recommended</span>
+                      <span className="text-gray-400 dark:text-gray-500">
+                        {formatSize(RECOMMENDED_SIZE_KB)} recommended
+                      </span>
                     </div>
-                    {memoryCache.current.size > 0 && (
+                    {!isDbInitialized && (
                       <>
                         <div className="h-3 w-px bg-gray-300 dark:bg-gray-700"></div>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100">
-                          {memoryCache.current.size} in memory
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-100">
+                          Initializing DB...
                         </span>
                       </>
                     )}
@@ -774,7 +1233,9 @@ export default function Page() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <span className="text-xs text-gray-500 dark:text-gray-300">Storage:</span>
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-100">{formatStorageSize(totalStorageUsed)}</span>
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-100">
+                    {formatStorageSize(totalStorageUsed)}
+                  </span>
                   <span className="text-xs text-gray-400 dark:text-gray-500">/</span>
                   <button
                     onClick={() => setShowStorageLimitDialog(true)}
@@ -795,16 +1256,64 @@ export default function Page() {
                     </>
                   )}
                 </div>
+                {syncStats && (
+                  <>
+                    <div className="h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
+                    <button
+                      onClick={() => setShowSyncStatus(!showSyncStatus)}
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <div
+                        className={`w-2 h-2 rounded-full ${
+                          syncStats.isOnline
+                            ? syncStats.isSyncing
+                              ? "bg-blue-500 animate-pulse"
+                              : "bg-green-500"
+                            : syncConfig.isEnabled()
+                              ? "bg-red-500"
+                              : "bg-gray-400"
+                        }`}
+                      ></div>
+                      <span className="text-xs text-gray-500 dark:text-gray-300">
+                        {!syncConfig.isEnabled()
+                          ? "Sync Off"
+                          : syncStats.isOnline
+                            ? syncStats.isSyncing
+                              ? "Syncing..."
+                              : "Online"
+                            : "Offline"}
+                      </span>
+                      {syncStats.queue.pending > 0 && (
+                        <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-1.5 py-0.5 rounded-full">
+                          {syncStats.queue.pending}
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setShowSyncSettingsDialog(true)}
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                      title="Configurações de Sincronização"
+                    >
+                      <Settings className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                    </button>
+                  </>
+                )}
                 <div className="h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
 
-                <Button variant="outline" size="sm" onClick={handleSave} className="gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSave}
+                  className="gap-2 bg-transparent"
+                  disabled={!isDbInitialized}
+                >
                   <Save className="w-4 h-4" />
                   Save
                 </Button>
 
                 <Dialog open={saveAsDialogOpen} onOpenChange={setSaveAsDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2">
+                    <Button variant="outline" size="sm" className="gap-2 bg-transparent" disabled={!isDbInitialized}>
                       <SaveAll className="w-4 h-4" />
                       Save As
                     </Button>
@@ -839,153 +1348,30 @@ export default function Page() {
                   </DialogContent>
                 </Dialog>
 
-                <Dialog
+                <OpenProjectDialog
                   open={openDialogOpen}
-                  onOpenChange={(open) => {
-                    setOpenDialogOpen(open);
+                  onOpenChange={setOpenDialogOpen}
+                  isFirstTime={isFirstTime}
+                  isDbInitialized={isDbInitialized}
+                  storageAdapter={storageAdapter}
+                  availableTags={availableTags}
+                  editorRef={editorRef}
+                  setLoadingRef={setLoadingRef}
+                  onProjectLoad={(projectData) => {
+                    setCurrentProjectId(projectData.id)
+                    setCurrentProjectName(projectData.name)
+                    setProjectTags(projectData.tags || [])
+                    setIsFirstTime(false)
                   }}
-                >
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <FolderOpen className="w-4 h-4" />
-                      Open
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-lg" onInteractOutside={(e) => e.preventDefault()}>
-                    <DialogHeader>
-                      <DialogTitle>{isFirstTime ? 'Welcome! Choose an Option' : 'Open Project'}</DialogTitle>
-                      {isFirstTime && <p className="text-sm text-muted-foreground">To get started, please open an existing project or create a new one.</p>}
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      {isStorageNearLimit() && (
-                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
-                          <div className="flex items-center gap-2 mb-1">
-                            <svg className="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                              <path
-                                fillRule="evenodd"
-                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            <span className="text-sm font-medium text-amber-800">Armazenamento quase cheio</span>
-                          </div>
-                          <p className="text-xs text-amber-700">
-                            Uso: {getStorageUsagePercentage().toFixed(1)}% ({formatStorageSize(totalStorageUsed)} de {storageLimit}MB). Criação de novos
-                            projetos bloqueada para preservar margem de salvamento.
-                          </p>
-                        </div>
-                      )}
-                      {savedProjects.length === 0 ? (
-                        <div className="text-center py-8">
-                          <FolderOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                          <p className="text-sm text-gray-500">No saved projects found</p>
-                          <p className="text-xs text-gray-400 mt-1">Create your first project to get started</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2 max-h-80 overflow-y-auto">
-                          {savedProjects.map((projectName) => {
-                            const projectData = storageAdapter.load(projectName);
-                            const projectSize = projectData ? estimateSize(projectData) : 0;
-                            const isInMemory = memoryCache.current.has(projectName);
-
-                            return (
-                              <div key={projectName} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                                <div className="flex flex-col flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-sm font-medium text-gray-900 truncate">{projectName}</span>
-                                    {isInMemory && (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-800 flex-shrink-0">
-                                        Memory
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                                    <span>{formatSize(projectSize)}</span>
-                                    <span>•</span>
-                                    <span>Last modified recently</span>
-                                  </div>
-                                </div>
-                                <div className="flex gap-1 ml-3">
-                                  <Button variant="ghost" size="sm" onClick={() => handleOpen(projectName)} className="text-blue-600 hover:text-blue-700">
-                                    Open
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleConfirmDelete(projectName)}
-                                    className="text-red-600 hover:text-red-700"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                      <div className="flex justify-between items-center pt-4 border-t">
-                        {isStorageNearLimit() ? (
-                          <div className="flex flex-col">
-                            <Button variant="ghost" disabled className="gap-2 opacity-50 cursor-not-allowed">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
-                              Novo Projeto
-                            </Button>
-                            <span className="text-xs text-red-600 mt-1">Armazenamento quase cheio ({getStorageUsagePercentage().toFixed(1)}%)</span>
-                          </div>
-                        ) : (
-                          <Button variant="ghost" onClick={() => setSaveAsDialogOpen(true)} className="gap-2">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            Novo Projeto
-                          </Button>
-                        )}
-                        <Button variant="outline" onClick={() => setOpenDialogOpen(false)} disabled={!currentProjectName}>
-                          Fechar
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-
-                <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                  <DialogContent className="max-w-sm">
-                    <DialogHeader>
-                      <DialogTitle className="text-center">Confirmar Exclusão</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-3">
-                      <div className="flex flex-col items-center justify-center text-center">
-                        <div className="p-3 bg-red-100 rounded-full mb-3">
-                          <Trash2 className="w-6 h-6 text-red-600" />
-                        </div>
-                        <h3 className="text-lg font-medium">Excluir projeto?</h3>
-                        <p className="text-sm text-gray-500 mt-2 mb-3">
-                          Você está prestes a excluir <span className="font-semibold">{projectToDelete}</span>. Esta ação não pode ser desfeita.
-                        </p>
-                      </div>
-                      <div className="flex justify-between gap-3 pt-2">
-                        <Button variant="outline" className="flex-1" onClick={() => setDeleteDialogOpen(false)}>
-                          Cancelar
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          className="flex-1"
-                          onClick={() => {
-                            if (projectToDelete) {
-                              handleDelete(projectToDelete);
-                              setDeleteDialogOpen(false);
-                              setProjectToDelete(null);
-                            }
-                          }}
-                        >
-                          Excluir
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                  onProjectsListUpdate={loadSavedProjectsList}
+                  onCreateNew={() => setCreateDialogOpen(true)}
+                  currentProjectName={currentProjectName}
+                  isStorageNearLimit={isStorageNearLimit}
+                  getStorageUsagePercentage={getStorageUsagePercentage}
+                  storageLimit={storageLimit}
+                  totalStorageUsed={totalStorageUsed}
+                  formatStorageSize={formatStorageSize}
+                />
 
                 <Dialog open={showStorageLimitDialog} onOpenChange={setShowStorageLimitDialog}>
                   <DialogContent className="max-w-md">
@@ -1045,6 +1431,34 @@ export default function Page() {
                     </div>
                   </DialogContent>
                 </Dialog>
+
+                <CreateProjectDialog
+                  open={createDialogOpen}
+                  onOpenChange={setCreateDialogOpen}
+                  isDbInitialized={isDbInitialized}
+                  storageAdapter={storageAdapter}
+                  availableTags={availableTags}
+                  onProjectCreate={(projectData) => {
+                    // Reset editor to empty state
+                    if (editorRef.current) {
+                      const emptyState =
+                        '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
+                      editorRef.current.setEditorState(editorRef.current.parseEditorState(emptyState))
+                    }
+
+                    setCurrentProjectId(projectData.id)
+                    setCurrentProjectName(projectData.name)
+                    setProjectTags(projectData.tags)
+                    setEditorState(
+                      '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
+                    )
+                    setIsFirstTime(false)
+                  }}
+                  onProjectsListUpdate={loadSavedProjectsList}
+                  onAvailableTagsUpdate={loadAvailableTags}
+                  isStorageAtLimit={isStorageAtLimit}
+                  generateProjectId={generateProjectId}
+                />
               </div>
             </div>
           </div>
@@ -1067,7 +1481,9 @@ export default function Page() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
             <div className="p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
               <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Rich Formatting</h3>
-              <p className="text-sm text-blue-700 dark:text-blue-200">Add headings, lists, links, and text formatting</p>
+              <p className="text-sm text-blue-700 dark:text-blue-200">
+                Add headings, lists, links, and text formatting
+              </p>
             </div>
             <div className="p-4 bg-green-50 dark:bg-green-900 rounded-lg">
               <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">Media & Content</h3>
@@ -1075,11 +1491,94 @@ export default function Page() {
             </div>
             <div className="p-4 bg-purple-50 dark:bg-purple-900 rounded-lg">
               <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Interactive Elements</h3>
-              <p className="text-sm text-purple-700 dark:text-purple-200">Create quizzes, callouts, and interactive content</p>
+              <p className="text-sm text-purple-700 dark:text-purple-200">
+                Create quizzes, callouts, and interactive content
+              </p>
             </div>
           </div>
         </div>
       </div>
+      {/* Sync Status Dialog */}
+      <Dialog open={showSyncStatus} onOpenChange={setShowSyncStatus}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Status de Sincronização</DialogTitle>
+          </DialogHeader>
+          {syncStats && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-sm text-gray-600 dark:text-gray-300">Conexão:</span>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${syncStats.isOnline ? "bg-green-500" : "bg-red-500"}`}></div>
+                  <span className="text-sm font-medium">{syncStats.isOnline ? "Online" : "Offline"}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Fila de Sincronização</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2 bg-blue-50 dark:bg-blue-900 rounded">
+                    <div className="font-medium text-blue-800 dark:text-blue-200">Pendente</div>
+                    <div className="text-blue-600 dark:text-blue-300">{syncStats.queue.pending}</div>
+                  </div>
+                  <div className="p-2 bg-yellow-50 dark:bg-yellow-900 rounded">
+                    <div className="font-medium text-yellow-800 dark:text-yellow-200">Processando</div>
+                    <div className="text-yellow-600 dark:text-yellow-300">{syncStats.queue.processing}</div>
+                  </div>
+                  <div className="p-2 bg-green-50 dark:bg-green-900 rounded">
+                    <div className="font-medium text-green-800 dark:text-green-200">Concluído</div>
+                    <div className="text-green-600 dark:text-green-300">{syncStats.queue.completed}</div>
+                  </div>
+                  <div className="p-2 bg-red-50 dark:bg-red-900 rounded">
+                    <div className="font-medium text-red-800 dark:text-red-200">Falhou</div>
+                    <div className="text-red-600 dark:text-red-300">{syncStats.queue.failed}</div>
+                  </div>
+                </div>
+              </div>
+
+              {syncStats.lastSync && (
+                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Última sincronização:</span>
+                  <div className="text-sm font-medium">{new Date(syncStats.lastSync).toLocaleString()}</div>
+                </div>
+              )}
+
+              {syncStats.queue.failed > 0 && (
+                <Button
+                  onClick={async () => {
+                    try {
+                      await dbStorage.current.retryFailedSync()
+                      toast.success("Tentando novamente", {
+                        description: "Itens falhados foram recolocados na fila",
+                        duration: 3000,
+                        icon: "🔄",
+                      })
+                    } catch (error) {
+                      toast.error("Erro ao tentar novamente", {
+                        description: "Não foi possível reprocessar os itens",
+                        duration: 4000,
+                        icon: "❌",
+                      })
+                    }
+                  }}
+                  className="w-full"
+                  variant="outline"
+                >
+                  Tentar Novamente Itens Falhados
+                </Button>
+              )}
+
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => setShowSyncStatus(false)}>
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      {/* Sync Settings Dialog */}
+      <SyncSettingsDialog open={showSyncSettingsDialog} onOpenChange={setShowSyncSettingsDialog} />
     </>
   );
 }
