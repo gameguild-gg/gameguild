@@ -644,7 +644,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
       MaxTesters = requestDto.MaxTesters,
       StartDate = requestDto.StartDate ?? DateTime.UtcNow,
       EndDate = requestDto.EndDate ?? DateTime.UtcNow.AddDays(30), // Default 30 days
-      Status = TestingRequestStatus.Open,
+      Status = TestingRequestStatus.Draft,
       CreatedById = userId,
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow,
