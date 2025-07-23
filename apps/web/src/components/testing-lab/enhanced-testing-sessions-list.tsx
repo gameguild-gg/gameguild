@@ -804,18 +804,18 @@ function SessionCard({
         </div>
 
         {/* Testing Requests */}
-        {session.testingRequests.length > 0 && (
+        {(session.testingRequests?.length || 0) > 0 && (
           <div className="space-y-2">
             <p className="text-sm text-slate-300 font-medium">Testing Projects:</p>
             <div className="flex flex-wrap gap-1">
-              {session.testingRequests.slice(0, 2).map((request) => (
+              {session.testingRequests?.slice(0, 2).map((request) => (
                 <Badge key={request.id} variant="outline" className="text-xs text-slate-300 border-slate-600">
                   {request.title}
                 </Badge>
-              ))}
-              {session.testingRequests.length > 2 && (
+              )) || []}
+              {(session.testingRequests?.length || 0) > 2 && (
                 <Badge variant="outline" className="text-xs text-slate-400 border-slate-600">
-                  +{session.testingRequests.length - 2} more
+                  +{(session.testingRequests?.length || 0) - 2} more
                 </Badge>
               )}
             </div>
@@ -1044,7 +1044,7 @@ function SessionDetailDialog({
               <Card className="bg-slate-700/30 border-slate-600">
                 <CardContent className="p-4 text-center">
                   <BarChart3 className="h-8 w-8 text-purple-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-white">{session.testingRequests.length}</div>
+                  <div className="text-2xl font-bold text-white">{session.testingRequests?.length || 0}</div>
                   <div className="text-sm text-slate-400">Projects</div>
                 </CardContent>
               </Card>
@@ -1214,9 +1214,9 @@ function SessionDetailDialog({
                 <CardDescription>Games and projects being tested in this session</CardDescription>
               </CardHeader>
               <CardContent>
-                {session.testingRequests.length > 0 ? (
+                {(session.testingRequests?.length || 0) > 0 ? (
                   <div className="grid gap-4">
-                    {session.testingRequests.map((request) => (
+                    {session.testingRequests?.map((request) => (
                       <div key={request.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-600">
                         <div className="flex items-center gap-4">
                           <div className="h-12 w-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
