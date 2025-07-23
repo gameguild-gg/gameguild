@@ -1,13 +1,13 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { UserProfile } from '@/components/user';
+import UserProfile from '@/components/legacy/user-profile';
 import { getUserByUsername, userExists } from '@/lib/users/users.actions';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     username: string;
     locale: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
