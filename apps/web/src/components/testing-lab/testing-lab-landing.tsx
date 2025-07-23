@@ -54,7 +54,7 @@ export function TestingLabLanding({ testSessions }: TestingLabLandingProps) {
               variant="outline"
               className="bg-slate-900/20 backdrop-blur-md border border-slate-700/50 text-slate-200 hover:text-white hover:bg-slate-800/30 hover:border-slate-600/50 px-8 py-4 text-lg transition-all duration-200"
             >
-              <a href="#le¶rn-more">Learn More</a>
+              <a href="#learn-more">Learn More</a>
             </Button>
           </div>
 
