@@ -31,6 +31,7 @@ public class DatabaseSeeder(
       await SeedGlobalDefaultPermissionsAsync();
       await SeedGlobalProjectDefaultPermissionsAsync();
       await SeedTenantDomainDefaultPermissionsAsync();
+      await SeedTestingLabDefaultPermissionsAsync();
       await SeedSampleCoursesAsync();
       await SeedSampleTracksAsync();
       await SeedMockUsersAsync();
@@ -127,6 +128,29 @@ public class DatabaseSeeder(
     );
   }
 
+  public async Task SeedTestingLabDefaultPermissionsAsync() {
+    logger.LogInformation("Seeding testing lab content-type default permissions...");
+
+    // Grant default permissions for TestingSession, TestingRequest, TestingFeedback, and SessionRegistration
+    var testingLabResourceTypes = new[] { "TestingSession", "TestingRequest", "TestingFeedback", "SessionRegistration" };
+
+    foreach (var resourceType in testingLabResourceTypes) {
+      var permissions = new[] { 
+        PermissionType.Read,    // Allow users to view testing sessions and requests
+        PermissionType.Create,  // Allow users to create testing requests
+        PermissionType.Edit,    // Allow users to edit their own testing content
+        PermissionType.Delete   // Allow users to delete their own testing content
+      };
+
+      await permissionService.GrantContentTypePermissionAsync(null, null, resourceType, permissions);
+      logger.LogInformation(
+        "Content-type default permissions seeded for {ResourceType} with {PermissionsLength} permissions",
+        resourceType,
+        permissions.Length
+      );
+    }
+  }
+
   public async Task SeedSuperAdminUserAsync() {
     logger.LogInformation("Seeding super admin user...");
 
@@ -200,7 +224,7 @@ public class DatabaseSeeder(
     logger.LogInformation("Granted {PermissionCount} global tenant permissions to super admin", globalPermissions.Length);
 
     // Grant essential content type permissions
-    var contentTypes = new[] { "Project", "TenantDomain", "TenantUserGroup", "TenantUserGroupMembership", "User", "Tenant", "Comment", "Product", "Program" };
+    var contentTypes = new[] { "Project", "TenantDomain", "TenantUserGroup", "TenantUserGroupMembership", "User", "Tenant", "Comment", "Product", "Program", "TestingSession", "TestingRequest", "TestingFeedback", "SessionRegistration" };
 
     var contentPermissions = new PermissionType[] { PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete };
 
