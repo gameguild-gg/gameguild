@@ -8,7 +8,6 @@ import { AuthApi, ProjectApi, TicketApi } from '@game-guild/apiclient/api';
 import { getSession } from 'next-auth/react';
 import { Api } from '@game-guild/apiclient/models';
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const GameCard = ({ title, description }) => (
   <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg">
     <div className="h-48 bg-gray-700 flex items-center justify-center">
@@ -25,7 +24,7 @@ const GameCard = ({ title, description }) => (
 );
 
 // GameGrid component
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+
 const GameGrid = ({ games }) => (
   <ScrollArea className="h-[calc(100vh-300px)]">
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
@@ -36,7 +35,7 @@ const GameGrid = ({ games }) => (
   </ScrollArea>
 );
 // TicketBox component
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+
 const TicketBox = ({ ticket, onClick }) => (
   <div
     onClick={() => onClick(ticket)}
@@ -51,7 +50,7 @@ const TicketBox = ({ ticket, onClick }) => (
 );
 
 // TicketGrid component
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+
 const TicketGrid = ({ tickets, onTicketClick }) => (
   <ScrollArea className="h-[calc(100vh-300px)]">
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 p-6">
@@ -67,7 +66,7 @@ const TicketGrid = ({ tickets, onTicketClick }) => (
 );
 
 // VideoBox component
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+
 const VideoBox = ({ videoStatus, videoTitle, submitter, linkedToTicket }) => (
   <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg p-4">
     <div className="flex justify-between items-center mb-2">
@@ -80,7 +79,7 @@ const VideoBox = ({ videoStatus, videoTitle, submitter, linkedToTicket }) => (
 );
 
 // VideoGrid component
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+
 const VideoGrid = ({ videos }) => (
   <ScrollArea className="h-[calc(100vh-300px)]">
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 p-6">
@@ -103,7 +102,6 @@ const apiUser = new AuthApi({
   basePath: process.env.NEXT_PUBLIC_API_URL,
 });
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export default function Page() {
   const initialVideos = [
     {
@@ -152,13 +150,12 @@ export default function Page() {
   const router = useRouter();
 
   // Define the handleTicketClick function once
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+
   const handleTicketClick = (ticket) => {
     localStorage.setItem('selectedTicket', JSON.stringify(ticket));
     router.push(`/gtl/owner/Tickets/`);
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   const fetchData = async () => {
     const session = await getSession();
     if (Boolean(session) && Boolean(session?.user)) {
@@ -214,7 +211,6 @@ export default function Page() {
   // Filter videos based on the selected filter status
   const filteredVideos = videos.filter((video) => videoFilter === 'All' || video.videoStatus === videoFilter);
 
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   const renderContent = () => {
     switch (activeTab) {
       case 'Projects':

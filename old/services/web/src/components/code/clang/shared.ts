@@ -20,7 +20,7 @@ export function getInstance(module: WebAssembly.Module, imports: WebAssembly.Imp
 
 export function getImportObject(obj: any, names: string[] = []): { [key: string]: Function } {
   const result: { [key: string]: Function } = {};
-  for (let name of names) {
+  for (const name of names) {
     result[name] = obj[name].bind(obj);
   }
   return result;

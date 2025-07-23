@@ -8,11 +8,7 @@ export {
   type ErrorBoundaryState,
 } from './GracefullyDegradingErrorBoundary';
 
-export {
-  RetryableErrorBoundary,
-  type RetryableErrorBoundaryProps,
-  type RetryableErrorFallbackProps,
-} from './RetryableErrorBoundary';
+export { RetryableErrorBoundary, type RetryableErrorBoundaryProps, type RetryableErrorFallbackProps } from './RetryableErrorBoundary';
 
 export {
   ErrorBoundaryProvider,

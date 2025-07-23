@@ -21,19 +21,19 @@ export function DashboardFilters() {
   const handleApplyFilters = () => {
     startTransition(() => {
       const params = new URLSearchParams(searchParams);
-      
+
       if (fromDate) {
         params.set('fromDate', fromDate);
       } else {
         params.delete('fromDate');
       }
-      
+
       if (toDate) {
         params.set('toDate', toDate);
       } else {
         params.delete('toDate');
       }
-      
+
       if (includeDeleted) {
         params.set('includeDeleted', 'true');
       } else {
@@ -75,18 +75,12 @@ export function DashboardFilters() {
               className="bg-slate-700/50 border-slate-600 text-white"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="toDate" className="text-sm text-slate-300">
               To Date
             </Label>
-            <Input
-              id="toDate"
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="bg-slate-700/50 border-slate-600 text-white"
-            />
+            <Input id="toDate" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="bg-slate-700/50 border-slate-600 text-white" />
           </div>
         </div>
 
@@ -97,30 +91,18 @@ export function DashboardFilters() {
             onCheckedChange={(checked) => setIncludeDeleted(checked === true)}
             className="border-slate-600"
           />
-          <Label
-            htmlFor="includeDeleted"
-            className="text-sm text-slate-300 cursor-pointer"
-          >
+          <Label htmlFor="includeDeleted" className="text-sm text-slate-300 cursor-pointer">
             Include deleted users in statistics
           </Label>
         </div>
 
         <div className="flex gap-2 pt-2">
-          <Button
-            onClick={handleApplyFilters}
-            disabled={isPending}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-          >
+          <Button onClick={handleApplyFilters} disabled={isPending} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
             <Calendar className="mr-2 h-4 w-4" />
             {isPending ? 'Applying...' : 'Apply Filters'}
           </Button>
-          
-          <Button
-            onClick={handleClearFilters}
-            disabled={isPending}
-            variant="outline"
-            className="border-slate-600 text-white hover:bg-slate-800/50"
-          >
+
+          <Button onClick={handleClearFilters} disabled={isPending} variant="outline" className="border-slate-600 text-white hover:bg-slate-800/50">
             Clear
           </Button>
         </div>

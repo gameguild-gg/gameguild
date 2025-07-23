@@ -26,9 +26,8 @@ import { ChessLeaderboardResponseDto } from '../dtos/competition/chess-leaderboa
 import { ChessMatchRequestDto } from '../dtos/competition/chess-match-request.dto';
 import { ChessAgentsResponseDto } from '../dtos/competition/chess-agents-response.dto';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const execShPromise = require('exec-sh').promise;
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const exec = util.promisify(require('child_process').exec);
 
 class Point2D {

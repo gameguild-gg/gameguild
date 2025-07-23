@@ -18,7 +18,6 @@ interface Ticket {
   description: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export default function TicketDetail() {
   //const apiTicket = new TicketApi({
   //   basePath: process.env.NEXT_PUBLIC_API_URL,

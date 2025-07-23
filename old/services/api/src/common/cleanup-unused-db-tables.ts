@@ -22,7 +22,7 @@ export class CleanupService {
       this.logger.warn('Unused Tables:', unusedTables);
     }
 
-    let unusedColumns: { table_name: string; column_name: string }[] = [];
+    const unusedColumns: { table_name: string; column_name: string }[] = [];
     // Step 4: Log all columns in existing tables that do not match the entity columns
 
     for (const entityMetadata of this.dataSource.entityMetadatas) {

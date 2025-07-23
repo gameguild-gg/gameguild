@@ -46,7 +46,7 @@ export function storeBackendTokensSync(tokens: {
 }): boolean {
   try {
     const cookieStore = cookies();
-    
+
     const tokenData = JSON.stringify({
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
@@ -87,18 +87,18 @@ export function getBackendTokensSync(): BackendTokenData | null {
   try {
     const cookieStore = cookies();
     const tokenCookie = cookieStore.get(BACKEND_TOKENS_COOKIE);
-    
+
     if (!tokenCookie?.value) {
       console.log('[Auth Cookie] No backend tokens found in cookie');
       return null;
     }
 
     const tokenData = JSON.parse(tokenCookie.value);
-    
+
     // Check if tokens are still valid (not expired)
     const expiresAt = new Date(tokenData.expires);
     const now = new Date();
-    
+
     if (now >= expiresAt) {
       console.log('[Auth Cookie] Backend tokens in cookie are expired');
       // Clear expired cookie
@@ -119,15 +119,11 @@ export function getBackendTokensSync(): BackendTokenData | null {
 /**
  * Update backend tokens in HTTP-only cookie (for NextAuth callbacks)
  */
-export function updateBackendTokensSync(tokens: {
-  accessToken: string;
-  refreshToken: string;
-  expires: string;
-}): boolean {
+export function updateBackendTokensSync(tokens: { accessToken: string; refreshToken: string; expires: string }): boolean {
   try {
     // Get existing token data
     const existingTokens = getBackendTokensSync();
-    
+
     if (!existingTokens) {
       console.error('[Auth Cookie] Cannot update tokens - no existing tokens found');
       return false;

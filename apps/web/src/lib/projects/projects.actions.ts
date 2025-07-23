@@ -104,7 +104,7 @@ export async function createProject(projectData: {
   imageUrl?: string;
 }) {
   const session = await auth();
-  
+
   if (!session?.accessToken) {
     throw new Error('Authentication required');
   }
@@ -113,12 +113,12 @@ export async function createProject(projectData: {
     const response = await postApiProjects({
       body: {
         ...projectData,
-        tags: projectData.tags?.join(',')
+        tags: projectData.tags?.join(','),
       } as PostApiProjectsData['body'],
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json'
-      }
+        Authorization: `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.data) {
@@ -127,7 +127,7 @@ export async function createProject(projectData: {
 
     // Revalidate projects cache
     revalidateTag('projects');
-    
+
     return response.data as Project;
   } catch (error) {
     console.error('Error creating project:', error);
@@ -136,22 +136,25 @@ export async function createProject(projectData: {
 }
 
 // Update an existing project
-export async function updateProject(id: string, projectData: {
-  title?: string;
-  description?: string;
-  shortDescription?: string;
-  visibility?: number;
-  category?: string;
-  type?: string;
-  developmentStatus?: string;
-  websiteUrl?: string;
-  repositoryUrl?: string;
-  downloadUrl?: string;
-  tags?: string[];
-  imageUrl?: string;
-}) {
+export async function updateProject(
+  id: string,
+  projectData: {
+    title?: string;
+    description?: string;
+    shortDescription?: string;
+    visibility?: number;
+    category?: string;
+    type?: string;
+    developmentStatus?: string;
+    websiteUrl?: string;
+    repositoryUrl?: string;
+    downloadUrl?: string;
+    tags?: string[];
+    imageUrl?: string;
+  },
+) {
   const session = await auth();
-  
+
   if (!session?.accessToken) {
     throw new Error('Authentication required');
   }
@@ -161,12 +164,12 @@ export async function updateProject(id: string, projectData: {
       path: { id },
       body: {
         ...projectData,
-        tags: projectData.tags?.join(',')
+        tags: projectData.tags?.join(','),
       } as PutApiProjectsByIdData['body'],
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json'
-      }
+        Authorization: `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.data) {
@@ -175,7 +178,7 @@ export async function updateProject(id: string, projectData: {
 
     // Revalidate projects cache
     revalidateTag('projects');
-    
+
     return response.data as Project;
   } catch (error) {
     console.error('Error updating project:', error);
@@ -186,7 +189,7 @@ export async function updateProject(id: string, projectData: {
 // Delete a project
 export async function deleteProject(id: string) {
   const session = await auth();
-  
+
   if (!session?.accessToken) {
     throw new Error('Authentication required');
   }
@@ -195,13 +198,13 @@ export async function deleteProject(id: string) {
     await deleteApiProjectsById({
       path: { id },
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`
-      }
+        Authorization: `Bearer ${session.accessToken}`,
+      },
     });
 
     // Revalidate projects cache
     revalidateTag('projects');
-    
+
     return { success: true };
   } catch (error) {
     console.error('Error deleting project:', error);
@@ -212,7 +215,7 @@ export async function deleteProject(id: string) {
 // Publish a project
 export async function publishProject(id: string) {
   const session = await auth();
-  
+
   if (!session?.accessToken) {
     throw new Error('Authentication required');
   }
@@ -221,13 +224,13 @@ export async function publishProject(id: string) {
     const response = await postApiProjectsByIdPublish({
       path: { id },
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`
-      }
+        Authorization: `Bearer ${session.accessToken}`,
+      },
     });
 
     // Revalidate projects cache
     revalidateTag('projects');
-    
+
     return response.data;
   } catch (error) {
     console.error('Error publishing project:', error);
@@ -238,7 +241,7 @@ export async function publishProject(id: string) {
 // Unpublish a project
 export async function unpublishProject(id: string) {
   const session = await auth();
-  
+
   if (!session?.accessToken) {
     throw new Error('Authentication required');
   }
@@ -247,13 +250,13 @@ export async function unpublishProject(id: string) {
     const response = await postApiProjectsByIdUnpublish({
       path: { id },
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`
-      }
+        Authorization: `Bearer ${session.accessToken}`,
+      },
     });
 
     // Revalidate projects cache
     revalidateTag('projects');
-    
+
     return response.data;
   } catch (error) {
     console.error('Error unpublishing project:', error);
@@ -264,7 +267,7 @@ export async function unpublishProject(id: string) {
 // Archive a project
 export async function archiveProject(id: string) {
   const session = await auth();
-  
+
   if (!session?.accessToken) {
     throw new Error('Authentication required');
   }
@@ -273,13 +276,13 @@ export async function archiveProject(id: string) {
     const response = await postApiProjectsByIdArchive({
       path: { id },
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`
-      }
+        Authorization: `Bearer ${session.accessToken}`,
+      },
     });
 
     // Revalidate projects cache
     revalidateTag('projects');
-    
+
     return response.data;
   } catch (error) {
     console.error('Error archiving project:', error);
@@ -288,13 +291,16 @@ export async function archiveProject(id: string) {
 }
 
 // Search projects
-export async function searchProjects(query: string, filters?: {
-  category?: string;
-  type?: string;
-  status?: string;
-}) {
+export async function searchProjects(
+  query: string,
+  filters?: {
+    category?: string;
+    type?: string;
+    status?: string;
+  },
+) {
   const session = await auth();
-  
+
   if (!session?.accessToken) {
     throw new Error('Authentication required');
   }
@@ -303,12 +309,12 @@ export async function searchProjects(query: string, filters?: {
     const response = await getApiProjectsSearch({
       query: { q: query, ...filters },
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
-        'Cache-Control': 'no-store'
-      }
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
     });
 
-    return response.data as { projects: Project[]; total: number; };
+    return response.data as { projects: Project[]; total: number };
   } catch (error) {
     console.error('Error searching projects:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to search projects');
@@ -318,7 +324,7 @@ export async function searchProjects(query: string, filters?: {
 // Get popular projects
 export async function getPopularProjects(limit = 10) {
   const session = await auth();
-  
+
   if (!session?.accessToken) {
     throw new Error('Authentication required');
   }
@@ -327,12 +333,12 @@ export async function getPopularProjects(limit = 10) {
     const response = await getApiProjectsPopular({
       query: { limit },
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
-        'Cache-Control': 'no-store'
-      }
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
     });
 
-    return response.data as { projects: Project[]; };
+    return response.data as { projects: Project[] };
   } catch (error) {
     console.error('Error fetching popular projects:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch popular projects');
@@ -342,7 +348,7 @@ export async function getPopularProjects(limit = 10) {
 // Get recent projects
 export async function getRecentProjects(limit = 10) {
   const session = await auth();
-  
+
   if (!session?.accessToken) {
     throw new Error('Authentication required');
   }
@@ -351,12 +357,12 @@ export async function getRecentProjects(limit = 10) {
     const response = await getApiProjectsRecent({
       query: { limit },
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
-        'Cache-Control': 'no-store'
-      }
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
     });
 
-    return response.data as { projects: Project[]; };
+    return response.data as { projects: Project[] };
   } catch (error) {
     console.error('Error fetching recent projects:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch recent projects');
@@ -366,7 +372,7 @@ export async function getRecentProjects(limit = 10) {
 // Get featured projects
 export async function getFeaturedProjects(limit = 10) {
   const session = await auth();
-  
+
   if (!session?.accessToken) {
     throw new Error('Authentication required');
   }
@@ -375,12 +381,12 @@ export async function getFeaturedProjects(limit = 10) {
     const response = await getApiProjectsFeatured({
       query: { limit },
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
-        'Cache-Control': 'no-store'
-      }
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
     });
 
-    return response.data as { projects: Project[]; };
+    return response.data as { projects: Project[] };
   } catch (error) {
     console.error('Error fetching featured projects:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch featured projects');

@@ -13,29 +13,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import {
-  Calendar,
-  Clock,
-  Download,
-  FileText,
-  Send,
-  Users,
-  Star,
-  MessageSquare,
-  BarChart3,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  TestTube,
-} from 'lucide-react';
+import { Calendar, Clock, Download, FileText, Send, Users, Star, MessageSquare, BarChart3, CheckCircle, XCircle, AlertTriangle, TestTube } from 'lucide-react';
 import Link from 'next/link';
 import type { TestingRequest } from '@/lib/api/generated/types.gen';
-import {
-  joinTestingRequest,
-  leaveTestingRequest,
-  checkTestingRequestParticipation,
-  submitTestingRequestFeedback,
-} from '@/lib/testing-lab/testing-lab.actions';
+import { joinTestingRequest, leaveTestingRequest, checkTestingRequestParticipation, submitTestingRequestFeedback } from '@/lib/testing-lab/testing-lab.actions';
 
 interface TestingRequestDetailsProps {
   request: TestingRequest;
@@ -180,9 +161,7 @@ export function TestingRequestDetails({ request, participants, feedback, statist
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Submit Testing Feedback</DialogTitle>
-                  <DialogDescription>
-                    Share your experience testing {request.title}
-                  </DialogDescription>
+                  <DialogDescription>Share your experience testing {request.title}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
@@ -400,9 +379,7 @@ export function TestingRequestDetails({ request, participants, feedback, statist
                       </div>
                     </div>
                   ))}
-                  {participants.length > 5 && (
-                    <p className="text-sm text-gray-500">+{participants.length - 5} more</p>
-                  )}
+                  {participants.length > 5 && <p className="text-sm text-gray-500">+{participants.length - 5} more</p>}
                 </div>
               </CardContent>
             </Card>
@@ -420,18 +397,11 @@ export function TestingRequestDetails({ request, participants, feedback, statist
                     <div key={item.id} className="border-l-2 border-blue-500 pl-3">
                       <div className="flex items-center gap-1 mb-1">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-3 w-3 ${
-                              i < (item.rating || 0) ? 'text-yellow-500 fill-current' : 'text-gray-300'
-                            }`}
-                          />
+                          <Star key={i} className={`h-3 w-3 ${i < (item.rating || 0) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} />
                         ))}
                       </div>
                       <p className="text-sm text-gray-600 line-clamp-2">{item.comments}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        by {item.user?.name || 'Anonymous'}
-                      </p>
+                      <p className="text-xs text-gray-500 mt-1">by {item.user?.name || 'Anonymous'}</p>
                     </div>
                   ))}
                 </div>

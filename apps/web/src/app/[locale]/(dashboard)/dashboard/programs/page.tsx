@@ -19,7 +19,7 @@ function ProgramsLoading() {
         <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
         <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
       </div>
-      
+
       {/* Statistics skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -117,7 +117,7 @@ function getVisibilityColor(visibility: string) {
 // Main programs content component
 async function ProgramsContent({ searchParams }: ProgramsPageProps) {
   const params = await searchParams;
-  
+
   // Extract search parameters
   const page = typeof params.page === 'string' ? parseInt(params.page) : 1;
   const limit = typeof params.limit === 'string' ? parseInt(params.limit) : 20;
@@ -125,10 +125,7 @@ async function ProgramsContent({ searchParams }: ProgramsPageProps) {
   const visibility = typeof params.visibility === 'string' ? params.visibility : undefined;
 
   // Fetch data
-  const [programsResult, statisticsResult] = await Promise.all([
-    getPrograms(page, limit, status, visibility),
-    getProgramStatistics(),
-  ]);
+  const [programsResult, statisticsResult] = await Promise.all([getPrograms(page, limit, status, visibility), getProgramStatistics()]);
 
   if (!programsResult.success) {
     return <ProgramsError error={programsResult.error || 'Unknown error'} />;
@@ -267,11 +264,11 @@ async function ProgramsContent({ searchParams }: ProgramsPageProps) {
                         <Badge variant={getStatusColor(program.status)}>{program.status}</Badge>
                         <Badge variant={getVisibilityColor(program.visibility)}>{program.visibility}</Badge>
                         {program.difficulty && (
-                          <Badge variant="outline" className="text-xs">{program.difficulty}</Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {program.difficulty}
+                          </Badge>
                         )}
-                        {program.duration && (
-                          <span className="text-xs text-gray-500">{program.duration}h</span>
-                        )}
+                        {program.duration && <span className="text-xs text-gray-500">{program.duration}h</span>}
                       </div>
                     </div>
                   </div>

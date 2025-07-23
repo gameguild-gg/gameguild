@@ -54,13 +54,13 @@ const config = [
     settings: { react: { version: 'detect' } },
     rules: {
       ...reactHooksPlugin.configs.recommended.rules,
-      // React scope no longer necessary with new JSX transform.
+      // React scope no longer necessary with the new JSX transform.
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
     },
   },
   {
-    ignores: ['dist/**'],
+    ignores: ['dist/**', 'build/**', 'coverage/**', 'node_modules/**'],
   },
 ];
 

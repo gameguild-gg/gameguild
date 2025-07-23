@@ -49,7 +49,7 @@ export async function getUsersData(page: number = 1, limit: number = 20, search?
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return {
         users: [],
@@ -71,7 +71,7 @@ export async function getUsersData(page: number = 1, limit: number = 20, search?
 
       const response = await fetch(`${apiUrl}/api/users/search?${params}`, {
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.accessToken}`,
           'Content-Type': 'application/json',
         },
         next: {
@@ -105,7 +105,7 @@ export async function getUsersData(page: number = 1, limit: number = 20, search?
 
     const response = await fetch(`${apiUrl}/api/users?${params}`, {
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       next: {
@@ -151,7 +151,7 @@ export async function getUserById(id: string): Promise<User | null> {
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return null;
     }
@@ -160,7 +160,7 @@ export async function getUserById(id: string): Promise<User | null> {
 
     const response = await fetch(`${apiUrl}/api/users/${id}`, {
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       next: {
@@ -195,7 +195,7 @@ export async function createUser(prevState: ActionState, formData: FormData): Pr
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
@@ -218,7 +218,7 @@ export async function createUser(prevState: ActionState, formData: FormData): Pr
     const response = await fetch(`${apiUrl}/api/users`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -256,7 +256,7 @@ export async function updateUser(id: string, prevState: ActionState, formData: F
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
@@ -279,7 +279,7 @@ export async function updateUser(id: string, prevState: ActionState, formData: F
     const response = await fetch(`${apiUrl}/api/users/${id}`, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -317,7 +317,7 @@ export async function deleteUser(id: string): Promise<{ success: boolean; error?
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
@@ -327,7 +327,7 @@ export async function deleteUser(id: string): Promise<{ success: boolean; error?
     const response = await fetch(`${apiUrl}/api/users/${id}?softDelete=true`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
     });
@@ -365,7 +365,7 @@ export async function toggleUserStatus(
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
@@ -375,7 +375,7 @@ export async function toggleUserStatus(
     const response = await fetch(`${apiUrl}/api/users/${id}`, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -422,7 +422,7 @@ export async function bulkUpdateUsers(
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
@@ -432,7 +432,7 @@ export async function bulkUpdateUsers(
     const response = await fetch(`${apiUrl}/users/bulk`, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -469,7 +469,7 @@ export async function searchUsers(query: string, limit: number = 10): Promise<Us
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       console.warn('Authentication required for user search');
       return [];
@@ -480,7 +480,7 @@ export async function searchUsers(query: string, limit: number = 10): Promise<Us
     // Use the UserProfiles endpoint with searchTerm parameter
     const response = await fetch(`${apiUrl}/api/userprofiles?searchTerm=${encodeURIComponent(query)}&take=${limit}&includeDeleted=false`, {
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       next: {
@@ -537,7 +537,7 @@ export async function bulkActivateUsers(
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
@@ -549,7 +549,7 @@ export async function bulkActivateUsers(
     const response = await fetch(`${apiUrl}/api/users/bulk/activate?${params}`, {
       method: 'PATCH',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(userIds),
@@ -589,7 +589,7 @@ export async function bulkDeactivateUsers(
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
@@ -601,7 +601,7 @@ export async function bulkDeactivateUsers(
     const response = await fetch(`${apiUrl}/api/users/bulk/deactivate?${params}`, {
       method: 'PATCH',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(userIds),
@@ -734,7 +734,7 @@ export async function getCurrentUser(): Promise<User | null> {
 export async function getUserStatistics(
   fromDate?: string,
   toDate?: string,
-  includeDeleted: boolean = false
+  includeDeleted: boolean = false,
 ): Promise<{ success: boolean; data?: UserStatistics; error?: string }> {
   try {
     // Get authenticated session
@@ -743,20 +743,20 @@ export async function getUserStatistics(
     if (!session?.accessToken) {
       return {
         success: false,
-        error: 'Authentication required'
+        error: 'Authentication required',
       };
     }
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
     const params = new URLSearchParams();
-    
+
     if (fromDate) params.append('fromDate', fromDate);
     if (toDate) params.append('toDate', toDate);
     if (includeDeleted) params.append('includeDeleted', 'true');
 
     const response = await fetch(`${apiUrl}/api/users/statistics?${params.toString()}`, {
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
       next: {
@@ -768,21 +768,21 @@ export async function getUserStatistics(
     if (!response.ok) {
       return {
         success: false,
-        error: `Failed to fetch user statistics: ${response.statusText}`
+        error: `Failed to fetch user statistics: ${response.statusText}`,
       };
     }
 
     const userStatistics = await response.json();
-    
+
     return {
       success: true,
-      data: userStatistics
+      data: userStatistics,
     };
   } catch (error) {
     console.error('Error fetching user statistics:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
     };
   }
 }
@@ -794,15 +794,15 @@ export async function getUserStatistics(
 export async function refreshUserStatistics(): Promise<{ success: boolean; error?: string }> {
   try {
     revalidateTag(CACHE_TAGS.USER_STATISTICS);
-    
+
     return {
-      success: true
+      success: true,
     };
   } catch (error) {
     console.error('Error refreshing user statistics:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to refresh statistics'
+      error: error instanceof Error ? error.message : 'Failed to refresh statistics',
     };
   }
 }

@@ -63,12 +63,7 @@ const REVALIDATION_TIME = 300; // 5 minutes
 /**
  * Get products with authentication
  */
-export async function getProducts(
-  page: number = 1,
-  limit: number = 20,
-  category?: string,
-  isActive?: boolean
-): Promise<ProductsResponse> {
+export async function getProducts(page: number = 1, limit: number = 20, category?: string, isActive?: boolean): Promise<ProductsResponse> {
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -84,7 +79,7 @@ export async function getProducts(
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products?${queryParams}`, {
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
         ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
       },
@@ -100,7 +95,7 @@ export async function getProducts(
     }
 
     const products: Product[] = await response.json();
-    
+
     return {
       success: true,
       data: products,
@@ -113,9 +108,9 @@ export async function getProducts(
     };
   } catch (error) {
     console.error('Error fetching products:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -132,7 +127,7 @@ export async function getProduct(id: string): Promise<{ success: boolean; data?:
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${id}`, {
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
         ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
       },
@@ -151,9 +146,9 @@ export async function getProduct(id: string): Promise<{ success: boolean; data?:
     return { success: true, data: product };
   } catch (error) {
     console.error('Error fetching product:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -161,10 +156,7 @@ export async function getProduct(id: string): Promise<{ success: boolean; data?:
 /**
  * Get product statistics
  */
-export async function getProductStatistics(
-  fromDate?: string,
-  toDate?: string
-): Promise<{ success: boolean; data?: ProductStatistics; error?: string }> {
+export async function getProductStatistics(fromDate?: string, toDate?: string): Promise<{ success: boolean; data?: ProductStatistics; error?: string }> {
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -178,7 +170,7 @@ export async function getProductStatistics(
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/statistics?${queryParams}`, {
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
         ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
       },
@@ -202,10 +194,10 @@ export async function getProductStatistics(
             productsCreatedToday: 0,
             productsCreatedThisWeek: 0,
             productsCreatedThisMonth: 0,
-          }
+          },
         };
       }
-      
+
       const errorText = await response.text();
       return { success: false, error: `API error: ${response.status} - ${errorText}` };
     }
@@ -214,9 +206,9 @@ export async function getProductStatistics(
     return { success: true, data: statistics };
   } catch (error) {
     console.error('Error fetching product statistics:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -226,7 +218,7 @@ export async function getProductStatistics(
  */
 export async function createProduct(formData: ProductFormData): Promise<{ success: boolean; data?: Product; error?: string }> {
   'use server';
-  
+
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -236,7 +228,7 @@ export async function createProduct(formData: ProductFormData): Promise<{ succes
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
         ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
       },
@@ -249,17 +241,17 @@ export async function createProduct(formData: ProductFormData): Promise<{ succes
     }
 
     const product: Product = await response.json();
-    
+
     // Revalidate cache
     revalidateTag(CACHE_TAGS.PRODUCTS);
     revalidateTag(CACHE_TAGS.PRODUCT_STATISTICS);
-    
+
     return { success: true, data: product };
   } catch (error) {
     console.error('Error creating product:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -269,7 +261,7 @@ export async function createProduct(formData: ProductFormData): Promise<{ succes
  */
 export async function updateProduct(id: string, formData: ProductFormData): Promise<{ success: boolean; data?: Product; error?: string }> {
   'use server';
-  
+
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -279,7 +271,7 @@ export async function updateProduct(id: string, formData: ProductFormData): Prom
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${id}`, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
         ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
       },
@@ -292,19 +284,19 @@ export async function updateProduct(id: string, formData: ProductFormData): Prom
     }
 
     const product: Product = await response.json();
-    
+
     // Revalidate cache
     revalidateTag(CACHE_TAGS.PRODUCTS);
     revalidateTag(CACHE_TAGS.PRODUCT_DETAIL);
     revalidateTag(`product-${id}`);
     revalidateTag(CACHE_TAGS.PRODUCT_STATISTICS);
-    
+
     return { success: true, data: product };
   } catch (error) {
     console.error('Error updating product:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -314,7 +306,7 @@ export async function updateProduct(id: string, formData: ProductFormData): Prom
  */
 export async function deleteProduct(id: string): Promise<{ success: boolean; error?: string }> {
   'use server';
-  
+
   try {
     const session = await auth();
     if (!session?.accessToken) {
@@ -324,7 +316,7 @@ export async function deleteProduct(id: string): Promise<{ success: boolean; err
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${id}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
         ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
       },
@@ -340,13 +332,13 @@ export async function deleteProduct(id: string): Promise<{ success: boolean; err
     revalidateTag(CACHE_TAGS.PRODUCT_DETAIL);
     revalidateTag(`product-${id}`);
     revalidateTag(CACHE_TAGS.PRODUCT_STATISTICS);
-    
+
     return { success: true };
   } catch (error) {
     console.error('Error deleting product:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -371,5 +363,5 @@ export const getCachedProducts = unstable_cache(
   {
     tags: [CACHE_TAGS.PRODUCTS],
     revalidate: REVALIDATION_TIME,
-  }
+  },
 );

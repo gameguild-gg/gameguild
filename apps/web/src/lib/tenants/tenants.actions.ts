@@ -34,7 +34,7 @@ export async function getTenantsData(page: number = 1, limit: number = 20): Prom
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return {
         tenants: [],
@@ -98,7 +98,7 @@ export async function getUserTenants(): Promise<TenantResponse[]> {
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return [];
     }
@@ -139,7 +139,7 @@ export async function getTenantById(id: string): Promise<TenantResponse | null> 
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return null;
     }
@@ -183,7 +183,7 @@ export async function createTenant(prevState: TenantActionState, formData: FormD
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
@@ -241,7 +241,7 @@ export async function updateTenant(id: string, prevState: TenantActionState, for
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
@@ -300,7 +300,7 @@ export async function deleteTenant(id: string): Promise<{ success: boolean; erro
   try {
     // Get authenticated session
     const session = await auth();
-    
+
     if (!session?.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
