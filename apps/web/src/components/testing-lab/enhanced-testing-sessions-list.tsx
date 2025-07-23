@@ -475,7 +475,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                           <div>
                             <div className="font-semibold">{session.sessionName}</div>
                             <div className="text-sm text-slate-400">
-                              {session.testingRequests.length} project{session.testingRequests.length !== 1 ? 's' : ''}
+                              {session.testingRequests?.length || 0} project{(session.testingRequests?.length || 0) !== 1 ? 's' : ''}
                             </div>
                           </div>
                         </TableCell>
