@@ -23,16 +23,16 @@ export default async function Layout({ children }: PropsWithChildren): Promise<R
     <div className="flex flex-1">
       <SidebarProvider defaultOpen={defaultOpen} className="flex flex-col flex-0">
         <DashboardSidebar tenants={tenants} />
-      </SidebarProvider>
-      <SidebarInset className="flex flex-col flex-1">
-        <div className="flex flex-col flex-1 ">
-          <DashboardHeader />
-          <div className="flex flex-col flex-1 overflow-auto">
-            {/* This is the main content area where children components will be rendered */}
-            {children}
+        <SidebarInset className="flex flex-col flex-1">
+          <div className="flex flex-col flex-1 ">
+            <DashboardHeader />
+            <div className="flex flex-col flex-1 overflow-auto">
+              {/* This is the main content area where children components will be rendered */}
+              {children}
+            </div>
           </div>
-        </div>
-      </SidebarInset>
+        </SidebarInset>
+      </SidebarProvider>
     </div>
   );
 }

@@ -9,7 +9,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "@/components/editor/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu"
 import { UnorderedListMenu } from "./unordered-list-menu"
 import { OrderedListMenu } from "./ordered-list-menu"
 

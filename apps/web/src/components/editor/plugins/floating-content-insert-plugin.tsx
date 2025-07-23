@@ -38,7 +38,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-import { MediaUploadDialog, type MediaUploadResult } from '@/components/ui/media-upload-dialog';
+import { MediaUploadDialog, type MediaUploadResult } from '@/components/editor/ui/media-upload-dialog';
 import type { ImageData } from '../nodes/image-node';
 import type { VideoData } from '../nodes/video-node';
 import type { AudioData } from '../nodes/audio-node'; // Import type for AudioData
