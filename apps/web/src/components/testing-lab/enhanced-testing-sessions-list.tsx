@@ -35,7 +35,6 @@ import {
   XCircle,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { TestingRequest } from '@/lib/api/generated/types.gen';
 
 interface TestingSession {
   id: string;
@@ -52,7 +51,7 @@ interface TestingSession {
   registeredTesterCount: number;
   registeredProjectMemberCount: number;
   registeredProjectCount: number;
-  status: 'scheduled' | 'inProgress' | 'completed' | 'cancelled';
+  status?: 'scheduled' | 'active' | 'completed' | 'cancelled';
   manager?: {
     id: string;
     name: string;
@@ -74,6 +73,32 @@ interface TestingSession {
   averageRating?: number;
   feedbackCount?: number;
 }
+
+interface TestingRequest {
+  id?: string;
+  title?: string;
+  projectVersion?: {
+    project?: {
+      title?: string;
+    };
+  };
+}
+
+// Helper function to convert API SessionStatus (0,1,2,3) to frontend status strings
+const mapSessionStatus = (apiStatus?: number): 'scheduled' | 'active' | 'completed' | 'cancelled' => {
+  switch (apiStatus) {
+    case 0:
+      return 'scheduled';
+    case 1:
+      return 'active';
+    case 2:
+      return 'completed';
+    case 3:
+      return 'cancelled';
+    default:
+      return 'scheduled';
+  }
+};
 
 interface SessionRegistration {
   id: string;
@@ -141,12 +166,36 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
 
   // Set initial sessions when props change
   useEffect(() => {
-    setSessions(initialSessions);
+    // Map API sessions to frontend format if they come from server
+    const mappedSessions = initialSessions.map((apiSession: any): TestingSession => ({
+      ...apiSession,
+      status: mapSessionStatus(apiSession.status),
+      id: apiSession.id || '',
+    }));
+    setSessions(mappedSessions);
   }, [initialSessions]);
 
-  const refreshSessions = () => {
-    // For server-side data, we'll need to refresh the page or use a different approach
-    window.location.reload();
+  const refreshSessions = async () => {
+    setLoading(true);
+    try {
+      // Import the function dynamically to avoid build issues
+      const { getTestingSessionsData } = await import('@/lib/testing-lab/testing-lab.actions');
+      const sessionsData = await getTestingSessionsData();
+      const apiSessions = sessionsData?.testingSessions || [];
+      // Map API sessions to frontend format
+      const newSessions = apiSessions.map((apiSession: any): TestingSession => ({
+        ...apiSession,
+        status: mapSessionStatus(apiSession.status),
+        id: apiSession.id || '',
+      }));
+      setSessions(newSessions);
+    } catch (error) {
+      console.error('Error refreshing sessions:', error);
+      // Fall back to page reload if API call fails
+      window.location.reload();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchSessionRegistrations = async () => {
@@ -213,11 +262,11 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
     return matchesSearch && matchesStatus;
   }) : [];
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null | undefined) => {
     switch (status) {
       case 'scheduled':
         return 'bg-blue-900/30 text-blue-300 border-blue-500/30';
-      case 'inProgress':
+      case 'active':
         return 'bg-green-900/30 text-green-300 border-green-500/30';
       case 'completed':
         return 'bg-gray-900/30 text-gray-300 border-gray-500/30';
@@ -349,7 +398,9 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                   </div>
                   <Calendar className="h-8 w-8 text-blue-400" />
                 </div>
-                <p className="text-blue-300/60 text-xs mt-2">{Array.isArray(sessions) ? sessions.filter((s) => s.status === 'scheduled').length : 0} scheduled</p>
+                <p className="text-blue-300/60 text-xs mt-2">
+                  {Array.isArray(sessions) ? sessions.filter((s) => s.status === 'scheduled').length : 0} scheduled
+                </p>
               </CardContent>
             </Card>
 
@@ -505,7 +556,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                         </TableCell>
                         <TableCell className="text-white">
                           <Badge variant="outline" className={getStatusColor(session.status)}>
-                            {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+                            {session.status ? session.status.charAt(0).toUpperCase() + session.status.slice(1) : 'Unknown'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-white">
@@ -622,7 +673,7 @@ interface SessionCardProps {
   userRole: UserRole;
   onViewDetails: (session: TestingSession) => void;
   onEdit: (session: TestingSession) => void;
-  getStatusColor: (status: string) => string;
+  getStatusColor: (status: string | null | undefined) => string;
   formatDate: (date: string) => string;
   formatTime: (time: string) => string;
   getSessionProgress: (session: TestingSession) => number;
@@ -681,7 +732,7 @@ function SessionCard({
 
             <div className="flex items-center gap-3">
               <Badge variant="outline" className={getStatusColor(session.status)}>
-                {session.status}
+                {session.status || 'Unknown'}
               </Badge>
 
               <DropdownMenu>
@@ -767,7 +818,7 @@ function SessionCard({
             <CalendarDays className="h-4 w-4 text-blue-400" />
             <span>{formatDate(session.sessionDate)}</span>
             <Badge variant="outline" className={getStatusColor(session.status)}>
-              {session.status}
+              {session.status || 'Unknown'}
             </Badge>
           </div>
 
@@ -994,7 +1045,7 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
               <SelectContent className="bg-slate-800 border-slate-700">
                 {testingRequests.length > 0 ? (
                   testingRequests.map((request) => (
-                    <SelectItem key={request.id} value={request.id}>
+                    <SelectItem key={request.id || `request-${Math.random()}`} value={request.id || ''}>
                       {request.title} - {request.projectVersion?.project?.title}
                     </SelectItem>
                   ))
