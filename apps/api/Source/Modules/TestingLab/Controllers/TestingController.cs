@@ -618,7 +618,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
   // POST: testing/feedback/{id}/report
   [HttpPost("feedback/{feedbackId}/report")]
-  [RequireResourcePermission<TestingFeedback>(PermissionType.Report)]
+  [RequireResourcePermission<TestingFeedback>(PermissionType.Report, "feedbackId")]
   public async Task<ActionResult> ReportFeedback(Guid feedbackId, ReportFeedbackDto reportDto) {
     try {
       // Get the current authenticated user's ID
@@ -638,7 +638,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
   // POST: testing/feedback/{id}/quality
   [HttpPost("feedback/{feedbackId}/quality")]
-  [RequireResourcePermission<TestingFeedback>(PermissionType.Edit)]
+  [RequireResourcePermission<TestingFeedback>(PermissionType.Edit, "feedbackId")]
   public async Task<ActionResult> RateFeedbackQuality(Guid feedbackId, RateFeedbackQualityDto qualityDto) {
     try {
       // Get the current authenticated user's ID
