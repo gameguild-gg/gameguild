@@ -51,7 +51,7 @@ public class CreatePostHandlerTests : IDisposable
             PostType = "general",
             AuthorId = Guid.NewGuid(),
             IsSystemGenerated = false,
-            Visibility = AccessLevel.Public
+            Visibility = AccessLevel.Public,
         };
 
         // Act
@@ -81,14 +81,14 @@ public class CreatePostHandlerTests : IDisposable
         {
             Title = "Duplicate Title",
             AuthorId = Guid.NewGuid(),
-            Visibility = AccessLevel.Public
+            Visibility = AccessLevel.Public,
         };
         
         var command2 = new CreatePostCommand
         {
             Title = "Duplicate Title",
             AuthorId = Guid.NewGuid(),
-            Visibility = AccessLevel.Public
+            Visibility = AccessLevel.Public,
         };
 
         // Act
@@ -111,7 +111,7 @@ public class CreatePostHandlerTests : IDisposable
         {
             Title = "Published Post",
             AuthorId = Guid.NewGuid(),
-            Visibility = AccessLevel.Public
+            Visibility = AccessLevel.Public,
         };
 
         // Act

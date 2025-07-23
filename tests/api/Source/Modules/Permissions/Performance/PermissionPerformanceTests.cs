@@ -420,7 +420,7 @@ public class PermissionPerformanceTests : IDisposable {
 
   private async Task<Comment> CreateTestCommentAsync(string content = "Test comment content") {
     var comment = new Comment {
-      Id = Guid.NewGuid(), Content = content
+      Id = Guid.NewGuid(), Content = content,
       // Note: Comment entity doesn't have IsEdited property
     };
 

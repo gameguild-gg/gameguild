@@ -176,7 +176,7 @@ public class BootstrapComponentTests
             EnableResponseCompression = false,
             EnableRateLimiting = false,
             ApiTitle = "Test API",
-            ApiVersion = "v1"
+            ApiVersion = "v1",
         };
 
         // Act
@@ -261,7 +261,7 @@ public class BootstrapComponentTests
             EnableResponseCompression = false,
             EnableRateLimiting = false,
             ApiTitle = "Test API",
-            ApiVersion = "v1"
+            ApiVersion = "v1",
         };
         services.AddPresentation(presentationOptions);
 
@@ -329,7 +329,7 @@ public class BootstrapComponentTests
                         EnableResponseCompression = false,
                         EnableRateLimiting = false,
                         ApiTitle = "Test API",
-                        ApiVersion = "v1"
+                        ApiVersion = "v1",
                     };
                     services.AddPresentation(presentationOptions);
                 });
@@ -455,7 +455,7 @@ public class BootstrapComponentTests
             ["Jwt:ExpiryInMinutes"] = "60",
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
             ["Cors:AllowedOrigins:0"] = "https://gameguild.gg",
-            ["Cors:AllowedOrigins:1"] = "http://localhost:3000"
+            ["Cors:AllowedOrigins:1"] = "http://localhost:3000",
         };
 
         return new ConfigurationBuilder()
@@ -469,7 +469,7 @@ public class BootstrapComponentTests
         {
             ["Jwt:SecretKey"] = "too-short", // Invalid - too short
             ["Jwt:Issuer"] = "", // Invalid - empty
-            ["ConnectionStrings:DefaultConnection"] = "invalid-connection-string"
+            ["ConnectionStrings:DefaultConnection"] = "invalid-connection-string",
         };
 
         return new ConfigurationBuilder()

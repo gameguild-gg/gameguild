@@ -44,7 +44,7 @@ public class PaymentsController : ControllerBase {
       Method = request.Method,
       Description = request.Description,
       TenantId = request.TenantId ?? _tenantContext.TenantId,
-      Metadata = request.Metadata
+      Metadata = request.Metadata,
     };
 
     var result = await _mediator.Send(command);
@@ -87,7 +87,7 @@ public class PaymentsController : ControllerBase {
       FromDate = fromDate,
       ToDate = toDate,
       Skip = skip,
-      Take = Math.Min(take, 100)
+      Take = Math.Min(take, 100),
     };
 
     var payments = await _mediator.Send(query);
@@ -114,7 +114,7 @@ public class PaymentsController : ControllerBase {
       FromDate = fromDate,
       ToDate = toDate,
       Skip = skip,
-      Take = Math.Min(take, 100)
+      Take = Math.Min(take, 100),
     };
 
     var payments = await _mediator.Send(query);
@@ -141,7 +141,7 @@ public class PaymentsController : ControllerBase {
       FromDate = fromDate,
       ToDate = toDate,
       Skip = skip,
-      Take = Math.Min(take, 100)
+      Take = Math.Min(take, 100),
     };
 
     var payments = await _mediator.Send(query);
@@ -218,7 +218,7 @@ public class PaymentsController : ControllerBase {
       ProductId = productId,
       FromDate = fromDate,
       ToDate = toDate,
-      TenantId = _tenantContext.TenantId
+      TenantId = _tenantContext.TenantId,
     };
 
     var stats = await _mediator.Send(query);
@@ -242,7 +242,7 @@ public class PaymentsController : ControllerBase {
       ToDate = toDate,
       GroupBy = groupBy,
       ProductId = productId,
-      TenantId = _tenantContext.TenantId
+      TenantId = _tenantContext.TenantId,
     };
 
     var report = await _mediator.Send(query);

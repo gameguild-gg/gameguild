@@ -42,7 +42,7 @@ public class CreateCredentialCommandHandler : IRequestHandler<CreateCredentialCo
         ExpiresAt = request.ExpiresAt,
         IsActive = request.IsActive,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       };
 
       var createdCredential = await _credentialService.CreateCredentialAsync(credential);

@@ -56,7 +56,7 @@ public class TenantUserGroupMembershipDto {
       JoinedAt = membership.JoinedAt,
       IsAutoAssigned = membership.IsAutoAssigned,
       CreatedAt = membership.CreatedAt,
-      UpdatedAt = membership.UpdatedAt
+      UpdatedAt = membership.UpdatedAt,
     };
   }
 }

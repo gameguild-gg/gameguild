@@ -22,14 +22,14 @@ public class GenerateWeb3ChallengeHandlerTests
         var command = new GenerateWeb3ChallengeCommand
         {
             WalletAddress = "0x1234567890123456789012345678901234567890",
-            ChainId = "1"
+            ChainId = "1",
         };
 
         var expectedResponse = new Web3ChallengeResponseDto
         {
             Challenge = "Sign this message to authenticate with GameGuild",
             Nonce = "random-nonce-123",
-            ExpiresAt = DateTime.UtcNow.AddMinutes(5)
+            ExpiresAt = DateTime.UtcNow.AddMinutes(5),
         };
 
         _mockAuthService.Setup(x => x.GenerateWeb3ChallengeAsync(
@@ -59,7 +59,7 @@ public class GenerateWeb3ChallengeHandlerTests
         var command = new GenerateWeb3ChallengeCommand
         {
             WalletAddress = "invalid-address",
-            ChainId = "1"
+            ChainId = "1",
         };
 
         _mockAuthService.Setup(x => x.GenerateWeb3ChallengeAsync(It.IsAny<Web3ChallengeRequestDto>()))
@@ -80,7 +80,7 @@ public class GenerateWeb3ChallengeHandlerTests
         var command = new GenerateWeb3ChallengeCommand
         {
             WalletAddress = "",
-            ChainId = "1"
+            ChainId = "1",
         };
 
         _mockAuthService.Setup(x => x.GenerateWeb3ChallengeAsync(It.IsAny<Web3ChallengeRequestDto>()))
@@ -101,7 +101,7 @@ public class GenerateWeb3ChallengeHandlerTests
         var command = new GenerateWeb3ChallengeCommand
         {
             WalletAddress = "0x1234567890123456789012345678901234567890",
-            ChainId = "-1"
+            ChainId = "-1",
         };
 
         _mockAuthService.Setup(x => x.GenerateWeb3ChallengeAsync(It.IsAny<Web3ChallengeRequestDto>()))
@@ -122,7 +122,7 @@ public class GenerateWeb3ChallengeHandlerTests
         var command = new GenerateWeb3ChallengeCommand
         {
             WalletAddress = "0x1234567890123456789012345678901234567890",
-            ChainId = "1"
+            ChainId = "1",
         };
 
         var expectedException = new InvalidOperationException("Service error");

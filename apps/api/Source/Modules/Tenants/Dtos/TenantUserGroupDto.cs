@@ -62,7 +62,7 @@ public class TenantUserGroupDto {
       IsActive = userGroup.IsActive,
       IsDefault = userGroup.IsDefault,
       CreatedAt = userGroup.CreatedAt,
-      UpdatedAt = userGroup.UpdatedAt
+      UpdatedAt = userGroup.UpdatedAt,
     };
   }
 }

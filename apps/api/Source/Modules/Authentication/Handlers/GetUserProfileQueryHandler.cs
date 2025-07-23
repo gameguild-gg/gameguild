@@ -41,7 +41,7 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, U
         CreatedAt = user.CreatedAt,
         UpdatedAt = user.UpdatedAt,
         CurrentTenant = null, // Would need separate service to get tenant info
-        AvailableTenants = new List<TenantInfoDto>()
+        AvailableTenants = new List<TenantInfoDto>(),
       };
 
       _logger.LogInformation("User profile retrieved successfully for user {UserId}", request.UserId);

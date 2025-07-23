@@ -76,7 +76,7 @@ public class ProgramQueryHandlers(
       "updatedat" => request.SortDescending ? query.OrderByDescending(p => p.UpdatedAt) : query.OrderBy(p => p.UpdatedAt),
       "category" => request.SortDescending ? query.OrderByDescending(p => p.Category) : query.OrderBy(p => p.Category),
       "difficulty" => request.SortDescending ? query.OrderByDescending(p => p.Difficulty) : query.OrderBy(p => p.Difficulty),
-      _ => request.SortDescending ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt)
+      _ => request.SortDescending ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt),
     };
 
     var programs = await query

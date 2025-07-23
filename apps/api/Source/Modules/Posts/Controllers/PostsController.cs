@@ -36,7 +36,7 @@ public class PostsController : ControllerBase {
       SearchTerm = searchTerm,
       OrderBy = orderBy,
       Descending = descending,
-      TenantId = tenantId ?? GetCurrentTenantId()
+      TenantId = tenantId ?? GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(query);
@@ -70,7 +70,7 @@ public class PostsController : ControllerBase {
       SharesCount = post.SharesCount,
       RichContent = post.RichContent,
       CreatedAt = post.CreatedAt,
-      UpdatedAt = post.UpdatedAt
+      UpdatedAt = post.UpdatedAt,
     };
 
     return Ok(postDto);
@@ -87,7 +87,7 @@ public class PostsController : ControllerBase {
       Visibility = dto.Visibility,
       RichContent = dto.RichContent,
       ContentReferences = dto.ContentReferences,
-      TenantId = GetCurrentTenantId()
+      TenantId = GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(command);
@@ -112,7 +112,7 @@ public class PostsController : ControllerBase {
       SharesCount = post.SharesCount,
       RichContent = post.RichContent,
       CreatedAt = post.CreatedAt,
-      UpdatedAt = post.UpdatedAt
+      UpdatedAt = post.UpdatedAt,
     };
 
     return CreatedAtAction(nameof(GetPost), new { postId = post.Id }, postDto);

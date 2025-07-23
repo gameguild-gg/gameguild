@@ -32,7 +32,7 @@ public class ProjectMutations {
       CategoryId = input.CategoryId,
       Visibility = input.Visibility ?? AccessLevel.Public,
       Status = input.Status ?? ContentStatus.Draft,
-      Tags = input.Tags
+      Tags = input.Tags,
     };
 
     return await mediator.Send(command, cancellationToken);
@@ -61,7 +61,7 @@ public class ProjectMutations {
       Visibility = input.Visibility,
       Status = input.Status,
       Tags = input.Tags,
-      UpdatedBy = userContext.UserId ?? Guid.Empty
+      UpdatedBy = userContext.UserId ?? Guid.Empty,
     };
 
     return await mediator.Send(command, cancellationToken);

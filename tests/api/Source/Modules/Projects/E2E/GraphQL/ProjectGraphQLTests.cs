@@ -409,7 +409,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
       Email = "test@example.com",
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.Users.Add(user);
@@ -428,7 +428,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
       Slug = "test-tenant",
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.Tenants.Add(tenant);

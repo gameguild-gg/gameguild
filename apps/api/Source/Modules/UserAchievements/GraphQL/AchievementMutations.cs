@@ -38,9 +38,9 @@ public class AchievementMutations {
         RequiredProgress = l.RequiredProgress,
         Points = l.Points,
         IconUrl = l.IconUrl,
-        Color = l.Color
+        Color = l.Color,
       }).ToList(),
-      PrerequisiteAchievementIds = input.PrerequisiteAchievementIds
+      PrerequisiteAchievementIds = input.PrerequisiteAchievementIds,
     };
 
     var result = await mediator.Send(command);
@@ -69,7 +69,7 @@ public class AchievementMutations {
       IsRepeatable = input.IsRepeatable,
       Conditions = input.Conditions,
       DisplayOrder = input.DisplayOrder,
-      UserId = userContext.UserId ?? Guid.Empty
+      UserId = userContext.UserId ?? Guid.Empty,
     };
 
     var result = await mediator.Send(command);
@@ -86,7 +86,7 @@ public class AchievementMutations {
     Guid achievementId) {
     var command = new DeleteAchievementCommand {
       AchievementId = achievementId,
-      UserId = userContext.UserId ?? Guid.Empty
+      UserId = userContext.UserId ?? Guid.Empty,
     };
 
     var result = await mediator.Send(command);
@@ -111,7 +111,7 @@ public class AchievementMutations {
       Context = input.Context,
       NotifyUser = input.NotifyUser,
       TenantId = tenantContext.TenantId,
-      AwardedByUserId = userContext.UserId
+      AwardedByUserId = userContext.UserId,
     };
 
     var result = await mediator.Send(command);
@@ -140,7 +140,7 @@ public class AchievementMutations {
       ProgressIncrement = input.ProgressIncrement,
       Context = input.Context,
       AutoAward = input.AutoAward,
-      TenantId = tenantContext.TenantId
+      TenantId = tenantContext.TenantId,
     };
 
     var result = await mediator.Send(command);
@@ -158,7 +158,7 @@ public class AchievementMutations {
     var command = new RevokeAchievementCommand {
       UserAchievementId = input.UserAchievementId,
       Reason = input.Reason,
-      RevokedByUserId = userContext.UserId ?? Guid.Empty
+      RevokedByUserId = userContext.UserId ?? Guid.Empty,
     };
 
     var result = await mediator.Send(command);
@@ -181,7 +181,7 @@ public class AchievementMutations {
       Context = input.Context,
       NotifyUsers = input.NotifyUsers,
       TenantId = tenantContext.TenantId,
-      AwardedByUserId = userContext.UserId ?? Guid.Empty
+      AwardedByUserId = userContext.UserId ?? Guid.Empty,
     };
 
     var result = await mediator.Send(command);
@@ -198,7 +198,7 @@ public class AchievementMutations {
     Guid userAchievementId) {
     var command = new MarkAchievementNotifiedCommand {
       UserAchievementId = userAchievementId,
-      UserId = userContext.UserId ?? Guid.Empty
+      UserId = userContext.UserId ?? Guid.Empty,
     };
 
     var result = await mediator.Send(command);

@@ -26,7 +26,7 @@ public class GoogleIdTokenSignInHandler(
           Email = result.User.Email,
           Username = result.User.Username ?? result.User.Email,
           TenantId = request.TenantId,
-          SignUpTime = DateTime.UtcNow
+          SignUpTime = DateTime.UtcNow,
         };
 
         await mediator.Publish(notification, cancellationToken);

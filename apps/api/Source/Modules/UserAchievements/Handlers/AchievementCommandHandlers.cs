@@ -47,7 +47,7 @@ public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievement
         IsRepeatable = request.IsRepeatable,
         Conditions = request.Conditions,
         DisplayOrder = request.DisplayOrder,
-        TenantId = request.TenantId
+        TenantId = request.TenantId,
       };
 
       _context.Achievements.Add(achievement);
@@ -63,7 +63,7 @@ public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievement
             RequiredProgress = levelRequest.RequiredProgress,
             Points = levelRequest.Points,
             IconUrl = levelRequest.IconUrl,
-            Color = levelRequest.Color
+            Color = levelRequest.Color,
           };
           _context.AchievementLevels.Add(level);
         }
@@ -75,7 +75,7 @@ public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievement
           var prerequisite = new AchievementPrerequisite {
             AchievementId = achievement.Id,
             PrerequisiteAchievementId = prerequisiteId,
-            RequiresCompletion = true
+            RequiresCompletion = true,
           };
           _context.AchievementPrerequisites.Add(prerequisite);
         }
@@ -91,7 +91,7 @@ public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievement
         Type = achievement.Type,
         Points = achievement.Points,
         TenantId = achievement.TenantId,
-        CreatedByUserId = Guid.Empty // This should come from user context
+        CreatedByUserId = Guid.Empty, // This should come from user context
       }, cancellationToken);
 
       _logger.LogInformation("Created achievement {AchievementName} with ID {AchievementId}", achievement.Name, achievement.Id);
@@ -155,7 +155,7 @@ public class UpdateAchievementCommandHandler : IRequestHandler<UpdateAchievement
         Name = achievement.Name,
         IsActive = achievement.IsActive,
         TenantId = achievement.TenantId,
-        UpdatedByUserId = request.UserId
+        UpdatedByUserId = request.UserId,
       }, cancellationToken);
 
       _logger.LogInformation("Updated achievement {AchievementName} with ID {AchievementId}", achievement.Name, achievement.Id);
@@ -216,7 +216,7 @@ public class DeleteAchievementCommandHandler : IRequestHandler<DeleteAchievement
         AchievementId = achievement.Id,
         Name = achievement.Name,
         TenantId = achievement.TenantId,
-        DeletedByUserId = request.UserId
+        DeletedByUserId = request.UserId,
       }, cancellationToken);
 
       _logger.LogInformation("Deleted achievement {AchievementName} with ID {AchievementId}", achievement.Name, achievement.Id);

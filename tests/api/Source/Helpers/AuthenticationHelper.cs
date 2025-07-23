@@ -50,7 +50,7 @@ namespace GameGuild.Tests.Helpers
                     Email = email ?? $"test.user.{Guid.NewGuid()}@example.com",
                     IsActive = true,
                     Balance = 100m,
-                    AvailableBalance = 100m
+                    AvailableBalance = 100m,
                 };
                 
                 context.Users.Add(user);
@@ -63,7 +63,7 @@ namespace GameGuild.Tests.Helpers
                 new(ClaimTypes.Name, user.Name),
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(ClaimTypes.Email, user.Email),
-                new("UserId", user.Id.ToString())
+                new("UserId", user.Id.ToString()),
             };
 
             // Add roles if provided
@@ -80,7 +80,7 @@ namespace GameGuild.Tests.Helpers
             {
                 Id = user.Id,
                 Username = user.Name,
-                Email = user.Email
+                Email = user.Email,
             };
             
             var rolesArray = roles ?? new[] { "User" };
@@ -107,7 +107,7 @@ namespace GameGuild.Tests.Helpers
                 new(ClaimTypes.Name, user.Name),
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(ClaimTypes.Email, user.Email),
-                new("UserId", user.Id.ToString())
+                new("UserId", user.Id.ToString()),
             };
 
             if (roles != null)
@@ -199,7 +199,7 @@ namespace GameGuild.Tests.Helpers
             // Grant global tenant permissions like the super admin gets
             var globalPermissions = new PermissionType[] { 
                 PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete, 
-                PermissionType.Publish, PermissionType.Approve, PermissionType.Review 
+                PermissionType.Publish, PermissionType.Approve, PermissionType.Review,
             };
             
             await permissionService.GrantTenantPermissionAsync(user.Id, null, globalPermissions);
@@ -248,7 +248,7 @@ namespace GameGuild.Tests.Helpers
                 Email = email ?? $"test.user.{Guid.NewGuid()}@example.com",
                 IsActive = true,
                 Balance = 100m,
-                AvailableBalance = 100m
+                AvailableBalance = 100m,
             };
             
             dbContext.Users.Add(user);

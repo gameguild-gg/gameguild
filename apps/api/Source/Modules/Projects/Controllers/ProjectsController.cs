@@ -60,7 +60,7 @@ public class ProjectsController : ControllerBase {
       Skip = skip,
       Take = Math.Min(take, 100), // Limit max items
       SortBy = sortBy,
-      SortDirection = sortDirection
+      SortDirection = sortDirection,
     };
 
     var projects = await _mediator.Send(query);
@@ -85,7 +85,7 @@ public class ProjectsController : ControllerBase {
       IncludeTeam = includeTeam,
       IncludeReleases = includeReleases,
       IncludeCollaborators = includeCollaborators,
-      IncludeStatistics = includeStatistics
+      IncludeStatistics = includeStatistics,
     };
 
     var project = await _mediator.Send(query);
@@ -138,7 +138,7 @@ public class ProjectsController : ControllerBase {
       Visibility = request.Visibility,
       Status = request.Status,
       Tags = request.Tags,
-      TenantId = _tenantContext.TenantId
+      TenantId = _tenantContext.TenantId,
     };
 
     var result = await _mediator.Send(command);
@@ -167,7 +167,7 @@ public class ProjectsController : ControllerBase {
       Visibility = request.Visibility,
       Status = request.Status,
       Tags = request.Tags,
-      UpdatedBy = _userContext.UserId ?? Guid.Empty
+      UpdatedBy = _userContext.UserId ?? Guid.Empty,
     };
 
     var result = await _mediator.Send(command);
@@ -262,7 +262,7 @@ public class ProjectsController : ControllerBase {
       Skip = skip,
       Take = Math.Min(take, 100),
       SortBy = sortBy,
-      SortDirection = sortDirection
+      SortDirection = sortDirection,
     };
 
     var projects = await _mediator.Send(query);

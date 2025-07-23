@@ -378,7 +378,7 @@ public class PostService(ApplicationDbContext context, ILogger<PostService> logg
       "edit" or "delete" => post.AuthorId == userId, // Only author can edit/delete
       "like" or "comment" or "share" => true, // Anyone can interact (for now)
       "pin" => post.AuthorId == userId, // Only author can pin (TODO: add admin check)
-      _ => false
+      _ => false,
     };
   }
 

@@ -51,7 +51,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Description = "A technology university",
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.Tenants.Add(tenant);
@@ -62,7 +62,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Name = "John Student",
       Email = "john@university.edu",
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var csStudentUser = new UserModel {
@@ -70,7 +70,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Name = "Jane CS Student",
       Email = "jane@cs.university.edu",
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var professorUser = new UserModel {
@@ -78,7 +78,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Name = "Dr. Professor",
       Email = "prof@faculty.university.edu",
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var outsideUser = new UserModel {
@@ -86,7 +86,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Name = "Outside User",
       Email = "outside@external.com",
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.Users.AddRange(studentUser, csStudentUser, professorUser, outsideUser);
@@ -106,7 +106,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       TopLevelDomain = "university.edu",
       Subdomain = null,
       IsMainDomain = true,
-      IsSecondaryDomain = false
+      IsSecondaryDomain = false,
     };
 
     var json = JsonSerializer.Serialize(createMainDomainDto);
@@ -132,7 +132,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       TopLevelDomain = "university.edu",
       Subdomain = "cs",
       IsMainDomain = false,
-      IsSecondaryDomain = true
+      IsSecondaryDomain = true,
     };
 
     json = JsonSerializer.Serialize(createCSDomainDto);
@@ -152,7 +152,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       TopLevelDomain = "university.edu",
       Subdomain = "faculty",
       IsMainDomain = false,
-      IsSecondaryDomain = true
+      IsSecondaryDomain = true,
     };
 
     json = JsonSerializer.Serialize(createFacultyDomainDto);
@@ -173,7 +173,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Name = "Students",
       Description = "General student body",
       IsDefault = true,
-      ParentGroupId = null
+      ParentGroupId = null,
     };
 
     json = JsonSerializer.Serialize(createStudentsGroupDto);
@@ -193,7 +193,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Name = "CS Students",
       Description = "Computer Science students",
       IsDefault = false,
-      ParentGroupId = studentsGroupResult.Id
+      ParentGroupId = studentsGroupResult.Id,
     };
 
     json = JsonSerializer.Serialize(createCSGroupDto);
@@ -213,7 +213,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Name = "Faculty",
       Description = "Faculty members",
       IsDefault = false,
-      ParentGroupId = null
+      ParentGroupId = null,
     };
 
     json = JsonSerializer.Serialize(createFacultyGroupDto);
@@ -430,7 +430,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Description = "A technology corporation",
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.Tenants.Add(tenant);
@@ -441,7 +441,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Name = "Dev User",
       Email = "dev@techcorp.com",
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var hrUser = new UserModel {
@@ -449,7 +449,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Name = "HR User",
       Email = "hr@techcorp.com",
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     var contractorUser = new UserModel {
@@ -457,7 +457,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Name = "Contractor User",
       Email = "contractor@partners.techcorp.com",
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     db.Users.AddRange(devUser, hrUser, contractorUser);
@@ -472,7 +472,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       TopLevelDomain = "techcorp.com",
       Subdomain = null,
       IsMainDomain = true,
-      IsSecondaryDomain = false
+      IsSecondaryDomain = false,
     };
 
     var json = JsonSerializer.Serialize(createMainDomainDto);
@@ -487,7 +487,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       TopLevelDomain = "techcorp.com",
       Subdomain = "partners",
       IsMainDomain = false,
-      IsSecondaryDomain = true
+      IsSecondaryDomain = true,
     };
 
     json = JsonSerializer.Serialize(createPartnersDomainDto);
@@ -502,7 +502,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Name = "Employees",
       Description = "All employees",
       IsDefault = true,
-      ParentGroupId = null
+      ParentGroupId = null,
     };
 
     json = JsonSerializer.Serialize(createEmployeesGroupDto);
@@ -520,7 +520,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
       Name = "Contractors",
       Description = "External contractors",
       IsDefault = false,
-      ParentGroupId = null
+      ParentGroupId = null,
     };
 
     json = JsonSerializer.Serialize(createContractorsGroupDto);

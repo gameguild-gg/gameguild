@@ -44,7 +44,7 @@ public class GetPostsHandler(
         "likescount" => request.Descending ? query.OrderByDescending(p => p.LikesCount) : query.OrderBy(p => p.LikesCount),
         "commentscount" => request.Descending ? query.OrderByDescending(p => p.CommentsCount) : query.OrderBy(p => p.CommentsCount),
         "sharecount" => request.Descending ? query.OrderByDescending(p => p.SharesCount) : query.OrderBy(p => p.SharesCount),
-        _ => request.Descending ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt)
+        _ => request.Descending ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt),
       };
 
       // Handle pinned posts (always show first if not filtering by pin status)
@@ -72,8 +72,8 @@ public class GetPostsHandler(
                                   SharesCount = p.SharesCount,
                                   RichContent = p.RichContent,
                                   CreatedAt = p.CreatedAt,
-                                  UpdatedAt = p.UpdatedAt
-                                }
+                                  UpdatedAt = p.UpdatedAt,
+                          }
                         )
                         .ToListAsync(cancellationToken);
 
@@ -83,7 +83,7 @@ public class GetPostsHandler(
         PageNumber = request.PageNumber,
         PageSize = request.PageSize,
         HasNextPage = request.PageNumber * request.PageSize < totalCount,
-        HasPreviousPage = request.PageNumber > 1
+        HasPreviousPage = request.PageNumber > 1,
       };
 
       logger.LogInformation(

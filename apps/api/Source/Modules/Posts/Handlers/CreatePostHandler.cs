@@ -38,7 +38,7 @@ public class CreatePostHandler(
         IsSystemGenerated = request.IsSystemGenerated,
         Visibility = request.Visibility,
         Status = ContentStatus.Published, // Posts are typically published immediately
-        RichContent = request.RichContent
+        RichContent = request.RichContent,
       };
 
       // Set tenant if provided

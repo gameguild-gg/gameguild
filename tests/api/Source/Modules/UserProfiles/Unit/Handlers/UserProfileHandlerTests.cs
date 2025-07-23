@@ -43,7 +43,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
         FamilyName = "User",
         DisplayName = "Test User",
         Title = "Developer",
-        Description = "Test description"
+        Description = "Test description",
       };
 
       // Act
@@ -72,7 +72,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
         FamilyName = "User",
         DisplayName = "Original User",
         Title = "Developer",
-        Description = "Original description"
+        Description = "Original description",
       };
       
       await _createHandler.Handle(createCommand, CancellationToken.None);
@@ -84,7 +84,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
         FamilyName = "User",
         DisplayName = "Updated User",
         Title = "Senior Developer",
-        Description = "Updated description"
+        Description = "Updated description",
       };
 
       // Act
@@ -111,7 +111,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
         FamilyName = "User",
         DisplayName = "Test User",
         Title = "Developer",
-        Description = "Test description"
+        Description = "Test description",
       };
       
       await _createHandler.Handle(createCommand, CancellationToken.None);
@@ -119,7 +119,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
       // Then delete it
       var deleteCommand = new DeleteUserProfileCommand {
         UserProfileId = userId,
-        SoftDelete = true
+        SoftDelete = true,
       };
 
       // Act

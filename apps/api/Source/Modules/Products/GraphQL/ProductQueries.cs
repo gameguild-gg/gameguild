@@ -32,7 +32,7 @@ public class ProductQueries {
       Status = status,
       Visibility = visibility,
       SearchTerm = searchTerm,
-      IsBundle = isBundle
+      IsBundle = isBundle,
     };
 
     return await mediator.Send(query);

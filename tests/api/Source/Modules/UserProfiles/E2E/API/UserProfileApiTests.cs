@@ -35,7 +35,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
         familyName = "User", 
         displayName = "Test User", 
         title = "Developer",
-        description = "My test bio"
+        description = "My test bio",
       };
 
       // Act - Create profile
@@ -65,7 +65,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
         givenName = "Updated", 
         familyName = "User", 
         displayName = "Updated User",
-        description = "Updated bio" 
+        description = "Updated bio",
       };
 
       // Act - Update

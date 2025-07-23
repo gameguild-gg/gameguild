@@ -54,7 +54,7 @@ public class PostsCrudHandlersTests : IDisposable
         var query = new GetPostByIdQuery
         {
             PostId = post.Id,
-            TenantId = null
+            TenantId = null,
         };
 
         // Act
@@ -74,7 +74,7 @@ public class PostsCrudHandlersTests : IDisposable
         var query = new GetPostByIdQuery
         {
             PostId = Guid.NewGuid(),
-            TenantId = null
+            TenantId = null,
         };
 
         // Act
@@ -101,7 +101,7 @@ public class PostsCrudHandlersTests : IDisposable
         var query = new GetPostByIdQuery
         {
             PostId = post.Id,
-            TenantId = null
+            TenantId = null,
         };
 
         // Act
@@ -131,7 +131,7 @@ public class PostsCrudHandlersTests : IDisposable
             Title = "Updated Title",
             Description = "Updated Description",
             Visibility = AccessLevel.Private,
-            IsPinned = true
+            IsPinned = true,
         };
 
         // Act
@@ -153,7 +153,7 @@ public class PostsCrudHandlersTests : IDisposable
         {
             PostId = Guid.NewGuid(),
             UserId = Guid.NewGuid(),
-            Title = "Updated Title"
+            Title = "Updated Title",
         };
 
         // Act
@@ -178,7 +178,7 @@ public class PostsCrudHandlersTests : IDisposable
         {
             PostId = post.Id,
             UserId = otherUserId, // Different user
-            Title = "Updated Title"
+            Title = "Updated Title",
         };
 
         // Act
@@ -200,7 +200,7 @@ public class PostsCrudHandlersTests : IDisposable
         var command = new UpdatePostCommand
         {
             PostId = post.Id,
-            UserId = userId
+            UserId = userId,
             // No changes provided
         };
 
@@ -227,7 +227,7 @@ public class PostsCrudHandlersTests : IDisposable
         var command = new DeletePostCommand
         {
             PostId = post.Id,
-            UserId = userId
+            UserId = userId,
         };
 
         // Act
@@ -250,7 +250,7 @@ public class PostsCrudHandlersTests : IDisposable
         var command = new DeletePostCommand
         {
             PostId = Guid.NewGuid(),
-            UserId = Guid.NewGuid()
+            UserId = Guid.NewGuid(),
         };
 
         // Act
@@ -274,7 +274,7 @@ public class PostsCrudHandlersTests : IDisposable
         var command = new DeletePostCommand
         {
             PostId = post.Id,
-            UserId = otherUserId // Different user
+            UserId = otherUserId, // Different user
         };
 
         // Act
@@ -302,7 +302,7 @@ public class PostsCrudHandlersTests : IDisposable
         var command = new TogglePostLikeCommand
         {
             PostId = post.Id,
-            UserId = likerId
+            UserId = likerId,
         };
 
         // Act
@@ -334,7 +334,7 @@ public class PostsCrudHandlersTests : IDisposable
         var command = new TogglePostLikeCommand
         {
             PostId = post.Id,
-            UserId = likerId
+            UserId = likerId,
         };
 
         // Act
@@ -356,7 +356,7 @@ public class PostsCrudHandlersTests : IDisposable
         var command = new TogglePostLikeCommand
         {
             PostId = Guid.NewGuid(),
-            UserId = Guid.NewGuid()
+            UserId = Guid.NewGuid(),
         };
 
         // Act
@@ -378,7 +378,7 @@ public class PostsCrudHandlersTests : IDisposable
             Id = userId,
             Name = $"Test User {userId:N}",
             Email = $"test_{userId:N}@example.com",
-            IsActive = true
+            IsActive = true,
         };
 
         _context.Users.Add(user);
@@ -395,7 +395,7 @@ public class PostsCrudHandlersTests : IDisposable
             PostType = "general",
             AuthorId = authorId,
             Visibility = AccessLevel.Public,
-            Status = ContentStatus.Published
+            Status = ContentStatus.Published,
         };
 
         _context.Posts.Add(post);

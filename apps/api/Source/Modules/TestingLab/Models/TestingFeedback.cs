@@ -96,6 +96,6 @@ namespace GameGuild.Modules.TestingLab {
   public enum FeedbackQuality {
     Positive = 1,
     Negative = 2,
-    Neutral = 3
+    Neutral = 3,
   }
 }

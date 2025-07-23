@@ -32,7 +32,7 @@ public class GetPureTestItemsHandler : IRequestHandler<GetPureTestItemsQuery, IE
             .Select(i => new PureTestItem 
             { 
                 Id = $"test-{i}",
-                Name = $"Pure Test Item {i}"
+                Name = $"Pure Test Item {i}",
             });
 
         return Task.FromResult(items);

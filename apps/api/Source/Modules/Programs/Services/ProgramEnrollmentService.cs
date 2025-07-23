@@ -48,7 +48,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
       ProgramId = programId,
       EnrollmentSource = source,
       EnrolledAt = DateTime.UtcNow,
-      StartDate = DateTime.UtcNow
+      StartDate = DateTime.UtcNow,
     };
 
     _context.ProgramEnrollments.Add(enrollment);
@@ -197,7 +197,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
       AverageProgressPercentage = totalEnrollments > 0 ? enrollments.Average(e => e.ProgressPercentage) : 0,
       CompletionRate = totalEnrollments > 0 ? (decimal)completedEnrollments / totalEnrollments * 100 : 0,
       AverageFinalGrade = enrollments.Where(e => e.FinalGrade.HasValue).Any() ? enrollments.Where(e => e.FinalGrade.HasValue).Average(e => e.FinalGrade!.Value) : null,
-      CertificatesIssued = enrollments.Count(e => e.CertificateIssued)
+      CertificatesIssued = enrollments.Count(e => e.CertificateIssued),
     };
   }
 

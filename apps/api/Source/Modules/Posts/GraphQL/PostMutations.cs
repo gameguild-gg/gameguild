@@ -29,7 +29,7 @@ public class PostMutations {
       Visibility = input.Visibility ?? AccessLevel.Public,
       IsSystemGenerated = input.IsPinned ?? false,
       RichContent = input.RichContent,
-      ContentReferences = input.Tags?.Select(Guid.Parse).ToList() // Convert tags to GUIDs if needed
+      ContentReferences = input.Tags?.Select(Guid.Parse).ToList(), // Convert tags to GUIDs if needed
     };
 
     var result = await mediator.Send(command, cancellationToken);
@@ -52,7 +52,7 @@ public class PostMutations {
       Title = input.Title,
       Description = input.Description,
       Visibility = input.Visibility,
-      RichContent = input.RichContent
+      RichContent = input.RichContent,
     };
 
     var result = await mediator.Send(command, cancellationToken);
@@ -180,7 +180,7 @@ public class PostMutations {
         NotifyOnComments = true,
         NotifyOnLikes = false,
         NotifyOnShares = false,
-        NotifyOnUpdates = true
+        NotifyOnUpdates = true,
       };
 
       context.PostFollowers.Add(follow);
@@ -210,7 +210,7 @@ public class PostMutations {
       Description = input.Description,
       Category = input.Category ?? "general",
       Color = input.Color,
-      IsFeatured = input.IsFeatured ?? false
+      IsFeatured = input.IsFeatured ?? false,
     };
 
     context.PostTags.Add(tag);
@@ -277,7 +277,7 @@ public class PostMutations {
       ViewedAt = DateTime.UtcNow,
       IpAddress = ipAddress,
       UserAgent = userAgent,
-      Referrer = referrer
+      Referrer = referrer,
     };
 
     context.PostViews.Add(view);

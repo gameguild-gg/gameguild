@@ -55,14 +55,14 @@ public class AuthControllerTests
         {
             Email = "test@example.com",
             Password = "TestPassword123!",
-            Username = "testuser"
+            Username = "testuser",
         };
 
         var expectedResponse = new SignInResponseDto
         {
             AccessToken = "access-token",
             RefreshToken = "refresh-token",
-            Expires = DateTime.UtcNow.AddHours(1)
+            Expires = DateTime.UtcNow.AddHours(1),
         };
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<LocalSignUpCommand>(), default))
@@ -104,14 +104,14 @@ public class AuthControllerTests
         var request = new LocalSignInRequestDto
         {
             Email = "test@example.com",
-            Password = "TestPassword123!"
+            Password = "TestPassword123!",
         };
 
         var expectedResponse = new SignInResponseDto
         {
             AccessToken = "access-token",
             RefreshToken = "refresh-token",
-            Expires = DateTime.UtcNow.AddHours(1)
+            Expires = DateTime.UtcNow.AddHours(1),
         };
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<LocalSignInCommand>(), default))
@@ -133,7 +133,7 @@ public class AuthControllerTests
         var request = new LocalSignInRequestDto
         {
             Email = "test@example.com",
-            Password = "wrong-password"
+            Password = "wrong-password",
         };
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<LocalSignInCommand>(), default))
@@ -155,14 +155,14 @@ public class AuthControllerTests
         // Arrange
         var request = new RefreshTokenRequestDto
         {
-            RefreshToken = "valid-refresh-token"
+            RefreshToken = "valid-refresh-token",
         };
 
         var expectedResponse = new SignInResponseDto
         {
             AccessToken = "new-access-token",
             RefreshToken = "new-refresh-token",
-            Expires = DateTime.UtcNow.AddHours(1)
+            Expires = DateTime.UtcNow.AddHours(1),
         };
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<RefreshTokenCommand>(), default))
@@ -183,7 +183,7 @@ public class AuthControllerTests
         // Arrange
         var request = new RefreshTokenRequestDto
         {
-            RefreshToken = "invalid-refresh-token"
+            RefreshToken = "invalid-refresh-token",
         };
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<RefreshTokenCommand>(), default))
@@ -205,7 +205,7 @@ public class AuthControllerTests
         // Arrange
         var request = new RevokeTokenRequestDto
         {
-            RefreshToken = "valid-refresh-token"
+            RefreshToken = "valid-refresh-token",
         };
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<RevokeTokenCommand>(), default))
@@ -214,7 +214,7 @@ public class AuthControllerTests
         // Setup HttpContext for IP address
         _controller.ControllerContext = new ControllerContext
         {
-            HttpContext = new DefaultHttpContext()
+            HttpContext = new DefaultHttpContext(),
         };
 
         // Act
@@ -231,13 +231,13 @@ public class AuthControllerTests
         // Arrange
         var request = new RevokeTokenRequestDto
         {
-            RefreshToken = ""
+            RefreshToken = "",
         };
 
         // Setup HttpContext for IP address
         _controller.ControllerContext = new ControllerContext
         {
-            HttpContext = new DefaultHttpContext()
+            HttpContext = new DefaultHttpContext(),
         };
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<RevokeTokenCommand>(), default))
@@ -262,7 +262,7 @@ public class AuthControllerTests
         {
             Id = userId,
             Email = "test@example.com",
-            Username = "testuser"
+            Username = "testuser",
         };
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<GetUserProfileQuery>(), default))
@@ -271,14 +271,14 @@ public class AuthControllerTests
         // Setup user claims
         var claims = new List<Claim>
         {
-            new Claim("sub", userId.ToString())
+            new Claim("sub", userId.ToString()),
         };
         var identity = new ClaimsIdentity(claims, "test");
         var principal = new ClaimsPrincipal(identity);
 
         _controller.ControllerContext = new ControllerContext
         {
-            HttpContext = new DefaultHttpContext { User = principal }
+            HttpContext = new DefaultHttpContext { User = principal },
         };
 
         // Act
@@ -300,7 +300,7 @@ public class AuthControllerTests
 
         _controller.ControllerContext = new ControllerContext
         {
-            HttpContext = new DefaultHttpContext { User = principal }
+            HttpContext = new DefaultHttpContext { User = principal },
         };
 
         // Act

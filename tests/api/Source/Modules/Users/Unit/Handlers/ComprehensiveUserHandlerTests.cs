@@ -61,7 +61,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
         {
             Name = "John Doe",
             Email = "john.doe@example.com",
-            InitialBalance = 100.50m
+            InitialBalance = 100.50m,
         };
 
         var handler = new CreateUserHandler(_context, _createLogger.Object, _mediator.Object);
@@ -92,7 +92,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
         {
             Name = "Test User",
             Email = "test@example.com",
-            InitialBalance = -50.00m
+            InitialBalance = -50.00m,
         };
 
         var handler = new CreateUserHandler(_context, _createLogger.Object, _mediator.Object);
@@ -115,7 +115,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "existing@example.com",
             IsActive = true,
             Balance = 0,
-            AvailableBalance = 0
+            AvailableBalance = 0,
         };
         _context.Users.Add(existingUser);
         await _context.SaveChangesAsync();
@@ -124,7 +124,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
         {
             Name = "New User",
             Email = "existing@example.com",
-            InitialBalance = 100m
+            InitialBalance = 100m,
         };
 
         var handler = new CreateUserHandler(_context, _createLogger.Object, _mediator.Object);
@@ -148,7 +148,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "original@example.com",
             IsActive = true,
             Balance = 100m,
-            AvailableBalance = 100m
+            AvailableBalance = 100m,
         };
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
@@ -157,7 +157,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
         {
             UserId = user.Id,
             Name = "Updated Name",
-            Email = "updated@example.com"
+            Email = "updated@example.com",
         };
 
         var handler = new UpdateUserHandler(_context, _updateLogger.Object, _mediator.Object);
@@ -185,7 +185,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
         {
             UserId = Guid.NewGuid(),
             Name = "Updated Name",
-            Email = "updated@example.com"
+            Email = "updated@example.com",
         };
 
         var handler = new UpdateUserHandler(_context, _updateLogger.Object, _mediator.Object);
@@ -209,7 +209,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "delete@example.com",
             IsActive = true,
             Balance = 50m,
-            AvailableBalance = 50m
+            AvailableBalance = 50m,
         };
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
@@ -252,7 +252,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "inactive@example.com",
             IsActive = false,
             Balance = 0,
-            AvailableBalance = 0
+            AvailableBalance = 0,
         };
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
@@ -280,7 +280,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "active@example.com",
             IsActive = true,
             Balance = 100m,
-            AvailableBalance = 100m
+            AvailableBalance = 100m,
         };
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
@@ -312,7 +312,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "balance@example.com",
             IsActive = true,
             Balance = 100m,
-            AvailableBalance = 100m
+            AvailableBalance = 100m,
         };
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
@@ -322,7 +322,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             UserId = user.Id,
             Balance = 150m,
             AvailableBalance = 150m,
-            Reason = "Test credit"
+            Reason = "Test credit",
         };
 
         var handler = new UpdateUserBalanceHandler(_context, _balanceLogger.Object, _mediator.Object);
@@ -349,7 +349,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "balance@example.com",
             IsActive = true,
             Balance = 100m,
-            AvailableBalance = 100m
+            AvailableBalance = 100m,
         };
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
@@ -359,7 +359,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             UserId = user.Id,
             Balance = 70m,
             AvailableBalance = 70m,
-            Reason = "Test debit"
+            Reason = "Test debit",
         };
 
         var handler = new UpdateUserBalanceHandler(_context, _balanceLogger.Object, _mediator.Object);
@@ -382,7 +382,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "poor@example.com",
             IsActive = true,
             Balance = 10m,
-            AvailableBalance = 10m
+            AvailableBalance = 10m,
         };
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
@@ -392,7 +392,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             UserId = user.Id,
             Balance = -50m, // This should trigger validation error  
             AvailableBalance = -50m,
-            Reason = "Invalid negative balance"
+            Reason = "Invalid negative balance",
         };
 
         var handler = new UpdateUserBalanceHandler(_context, _balanceLogger.Object, _mediator.Object);
@@ -419,7 +419,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "deleted@example.com",
             IsActive = false,
             Balance = 0,
-            AvailableBalance = 0
+            AvailableBalance = 0,
         };
         user.SoftDelete(); // Actually soft delete the user
         _context.Users.Add(user);
@@ -453,7 +453,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "query@example.com",
             IsActive = true,
             Balance = 75m,
-            AvailableBalance = 75m
+            AvailableBalance = 75m,
         };
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
@@ -495,7 +495,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "active1@example.com",
             IsActive = true,
             Balance = 100m,
-            AvailableBalance = 100m
+            AvailableBalance = 100m,
         };
 
         var inactiveUser = new User
@@ -504,7 +504,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "inactive1@example.com",
             IsActive = false,
             Balance = 0,
-            AvailableBalance = 0
+            AvailableBalance = 0,
         };
 
         _context.Users.AddRange(activeUser, inactiveUser);
@@ -536,7 +536,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "emailtest@example.com",
             IsActive = true,
             Balance = 75m,
-            AvailableBalance = 75m
+            AvailableBalance = 75m,
         };
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
@@ -576,7 +576,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
         {
             new User { Name = "John Smith", Email = "john@example.com", IsActive = true, Balance = 100m, AvailableBalance = 100m },
             new User { Name = "Jane Doe", Email = "jane@example.com", IsActive = true, Balance = 200m, AvailableBalance = 200m },
-            new User { Name = "John Williams", Email = "johnw@example.com", IsActive = true, Balance = 150m, AvailableBalance = 150m }
+            new User { Name = "John Williams", Email = "johnw@example.com", IsActive = true, Balance = 150m, AvailableBalance = 150m },
         };
         _context.Users.AddRange(users);
         await _context.SaveChangesAsync();
@@ -585,7 +585,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
         {
             SearchTerm = "John",
             Take = 10,
-            Skip = 0
+            Skip = 0,
         };
         var handler = new SearchUsersHandler(_context);
 
@@ -606,7 +606,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
         {
             new User { Name = "Low Balance User 1", Email = "low1@example.com", IsActive = true, Balance = 5m, AvailableBalance = 5m },
             new User { Name = "High Balance User", Email = "high@example.com", IsActive = true, Balance = 1000m, AvailableBalance = 1000m },
-            new User { Name = "Low Balance User 2", Email = "low2@example.com", IsActive = true, Balance = 2m, AvailableBalance = 2m }
+            new User { Name = "Low Balance User 2", Email = "low2@example.com", IsActive = true, Balance = 2m, AvailableBalance = 2m },
         };
         _context.Users.AddRange(users);
         await _context.SaveChangesAsync();
@@ -631,7 +631,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
         {
             new User { Name = "Active User 1", Email = "active1@example.com", IsActive = true, Balance = 100m, AvailableBalance = 100m },
             new User { Name = "Active User 2", Email = "active2@example.com", IsActive = true, Balance = 200m, AvailableBalance = 200m },
-            new User { Name = "Inactive User", Email = "inactive@example.com", IsActive = false, Balance = 50m, AvailableBalance = 50m }
+            new User { Name = "Inactive User", Email = "inactive@example.com", IsActive = false, Balance = 50m, AvailableBalance = 50m },
         };
         _context.Users.AddRange(users);
         await _context.SaveChangesAsync();
@@ -662,7 +662,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
         {
             new User { Name = "Inactive User 1", Email = "inactive1@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
             new User { Name = "Inactive User 2", Email = "inactive2@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
-            new User { Name = "Inactive User 3", Email = "inactive3@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 }
+            new User { Name = "Inactive User 3", Email = "inactive3@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
         };
 
         _context.Users.AddRange(users);
@@ -670,7 +670,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
 
         var command = new BulkActivateUsersCommand
         {
-            UserIds = users.Select(u => u.Id).ToList()
+            UserIds = users.Select(u => u.Id).ToList(),
         };
 
         var handler = new BulkActivateUsersHandler(_context, _bulkActivateLogger.Object, _mediator.Object);
@@ -696,7 +696,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
         {
             new User { Name = "Deleted User 1", Email = "deleted1@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
             new User { Name = "Deleted User 2", Email = "deleted2@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
-            new User { Name = "Deleted User 3", Email = "deleted3@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 }
+            new User { Name = "Deleted User 3", Email = "deleted3@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
         };
 
         // Mark them as soft deleted
@@ -710,7 +710,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
 
         var command = new BulkRestoreUsersCommand
         {
-            UserIds = users.Select(u => u.Id).ToList()
+            UserIds = users.Select(u => u.Id).ToList(),
         };
 
         var handler = new BulkRestoreUsersHandler(_context, _bulkRestoreLogger.Object, _mediator.Object);
@@ -738,7 +738,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
         {
             new User { Name = "To Delete User 1", Email = "todelete1@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
             new User { Name = "To Delete User 2", Email = "todelete2@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
-            new User { Name = "To Delete User 3", Email = "todelete3@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 }
+            new User { Name = "To Delete User 3", Email = "todelete3@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
         };
 
         _context.Users.AddRange(users);
@@ -746,7 +746,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
 
         var command = new BulkDeleteUsersCommand
         {
-            UserIds = users.Select(u => u.Id).ToList()
+            UserIds = users.Select(u => u.Id).ToList(),
         };
 
         var handler = new BulkDeleteUsersHandler(_context, _bulkDeleteLogger.Object, _mediator.Object);
@@ -777,7 +777,7 @@ public class ComprehensiveUserHandlerTests : IDisposable
             Email = "duplicate@example.com",
             IsActive = true,
             Balance = 0,
-            AvailableBalance = 0
+            AvailableBalance = 0,
         };
         _context.Users.Add(existingUser);
         await _context.SaveChangesAsync();
@@ -788,8 +788,8 @@ public class ComprehensiveUserHandlerTests : IDisposable
             {
                 new CreateUserDto { Name = "Valid User", Email = "valid@example.com", InitialBalance = 100m },
                 new CreateUserDto { Name = "Duplicate User", Email = "duplicate@example.com", InitialBalance = 200m }, // This should fail
-                new CreateUserDto { Name = "Another Valid User", Email = "anothervalid@example.com", InitialBalance = 300m }
-            }
+                new CreateUserDto { Name = "Another Valid User", Email = "anothervalid@example.com", InitialBalance = 300m },
+            },
         };
 
         var handler = new BulkCreateUsersHandler(_context, _bulkCreateLogger.Object, _mediator.Object);

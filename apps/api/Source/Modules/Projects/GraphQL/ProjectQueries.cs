@@ -103,7 +103,7 @@ public class ProjectQueries {
       CategoryId = categoryId,
       Status = status,
       Skip = skip,
-      Take = take
+      Take = take,
     };
 
     return await mediator.Send(query);
