@@ -1,17 +1,25 @@
-'use server';
-
 /**
  * JWT Utilities for token handling
  */
 
 /**
+ * JWT payload interface for type safety
+ */
+interface JwtPayload {
+  exp?: number;
+  iat?: number;
+  sub?: string;
+  [key: string]: unknown;
+}
+
+/**
  * Decode a JWT token without verification (for reading claims)
  * Note: This is only for reading token payload, not for verification
  */
-export async function decodeJwt(token: string): Promise<unknown> {
+export function decodeJwt(token: string): JwtPayload | null {
   try {
     // Handle non-JWT tokens (like admin placeholders)
-    if (!token || typeof token !== 'string' || !token.includes('.')) {
+    if (!token || !token.includes('.')) {
       return null;
     }
 
@@ -30,8 +38,8 @@ export async function decodeJwt(token: string): Promise<unknown> {
     // Decode from base64url
     const decoded = atob(paddedPayload.replace(/-/g, '+').replace(/_/g, '/'));
 
-    return JSON.parse(decoded);
-  } catch (error) {
+    return JSON.parse(decoded) as JwtPayload;
+  } catch {
     // Silent fail for invalid tokens
     return null;
   }
@@ -40,10 +48,10 @@ export async function decodeJwt(token: string): Promise<unknown> {
 /**
  * Get the expiry date from a JWT token
  */
-export async function getJwtExpiryDate(token: string): Promise<Date | null> {
+export function getJwtExpiryDate(token: string): Date | null {
   try {
     // Handle non-JWT tokens gracefully
-    if (!token || typeof token !== 'string' || !token.includes('.')) {
+    if (!token || !token.includes('.')) {
       console.warn('Token is not a valid JWT format, skipping expiry check');
       return null;
     }
@@ -64,7 +72,7 @@ export async function getJwtExpiryDate(token: string): Promise<Date | null> {
 /**
  * Check if a JWT token is expired
  */
-export const isJwtExpired = async (token: string): Promise<boolean> => {
+export function isJwtExpired(token: string): boolean {
   const expiryDate = getJwtExpiryDate(token);
   // Assume expired if we can't read the expiry
   if (!expiryDate) {
@@ -72,9 +80,32 @@ export const isJwtExpired = async (token: string): Promise<boolean> => {
   }
 
   return new Date() > expiryDate;
-};
+}
 
 /**
  * Get all claims from a JWT token
  */
-export const getJwtClaims = async (token: string): Promise<unknown> => decodeJwt(token);
+export function getJwtClaims(token: string): JwtPayload | null {
+  return decodeJwt(token);
+}
+
+/**
+ * Get a specific claim from a JWT token
+ */
+export function getJwtClaim(token: string, claimName: string): unknown {
+  const payload = decodeJwt(token);
+  return payload?.[claimName] ?? null;
+}
+
+/**
+ * Check if a JWT token is valid (not expired and properly formatted)
+ */
+export function isJwtValid(token: string): boolean {
+  const payload = decodeJwt(token);
+  if (!payload) {
+    return false;
+  }
+
+  // Check if token is expired
+  return !isJwtExpired(token);
+}

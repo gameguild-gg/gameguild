@@ -22,9 +22,10 @@ import { getApiProjectsSlugBySlug, postApiProjects } from '@/lib/api/generated';
 
 // Define a simple error response type for generic error handling
 interface ApiErrorResponse {
+  status?: number;
   msg?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   message?: string | { [key: string]: any };
-  statusCode?: number;
 }
 
 export const dynamic = 'force-dynamic';
@@ -49,6 +50,7 @@ const imageOrFileToUrl = (imageOrFile: ImageOrFile) => {
 
 // receive params to specify if the form is for creating or updating a project
 export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [project, setProject] = React.useState<any | null>();
   const router = useRouter();
   // Remove this line - we'll use toast directly
@@ -73,7 +75,8 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
     try {
       const session = await getSession();
       const response = await getApiProjectsSlugBySlug({
-        path: { slug: slug },
+        path: { slug },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         headers: { Authorization: `Bearer ${(session?.user as any)?.accessToken}` },
       });
 
@@ -83,6 +86,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
           setBannerImage({ url: response.data.imageUrl, name: 'banner' });
         }
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error.status === 401) {
         router.push(`/disconnect`);
@@ -101,10 +105,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
           }
         }
 
-        toast.toast({
-          title: 'Error',
-          description: message,
-        });
+        toast.error(message);
       }
     }
   };
@@ -410,7 +411,9 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
                     </label>
                   )}
                 </div>
-                <p className="text-sm text-gray-500 mt-1">Upload up to 5 screenshots. They will appear on your game's page. Optional but highly recommended.</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Upload up to 5 screenshots. They will appear on your game&apos;s page. Optional but highly recommended.
+                </p>
               </div>
               {/*<div>*/}
               {/*  <Label htmlFor="gameplay-video">*/}
