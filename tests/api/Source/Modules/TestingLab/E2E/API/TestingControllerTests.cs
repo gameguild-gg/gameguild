@@ -404,7 +404,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       userId,
       tenantId,
       "TestingFeedback",
-      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete, PermissionType.Report]
+      [PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete, PermissionType.Report, PermissionType.Review]
     );
 
     // Grant content type permissions for SessionRegistration

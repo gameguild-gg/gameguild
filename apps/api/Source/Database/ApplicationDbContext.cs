@@ -74,6 +74,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<ProjectPermission> ProjectPermissions { get; set; }
 
+  public DbSet<TestingSessionPermission> TestingSessionPermissions { get; set; }
+
+  public DbSet<TestingRequestPermission> TestingRequestPermissions { get; set; }
+
+  public DbSet<TestingFeedbackPermission> TestingFeedbackPermissions { get; set; }
+
+  public DbSet<SessionRegistrationPermission> SessionRegistrationPermissions { get; set; }
+
   // Reputation Management DbSets
   public DbSet<UserReputation> UserReputations { get; set; }
 
