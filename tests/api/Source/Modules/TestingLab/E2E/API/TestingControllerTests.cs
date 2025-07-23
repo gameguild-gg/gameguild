@@ -630,6 +630,18 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     // Create a testing session
     var session = await SeedTestingSessionAsync(_context, user, tenant);
 
+    // Create a session registration for the user
+    var registration = new SessionRegistration {
+      Id = Guid.NewGuid(),
+      SessionId = session.Id,
+      UserId = user.Id,
+      RegistrationType = RegistrationType.Tester,
+      AttendanceStatus = AttendanceStatus.Registered,
+      CreatedAt = DateTime.UtcNow
+    };
+    _context.SessionRegistrations.Add(registration);
+    await _context.SaveChangesAsync();
+
     var token = await CreateJwtTokenForUserAsync(user, tenant);
     SetAuthorizationHeader(token);
 
@@ -683,7 +695,10 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     Assert.Contains("Feedback reported successfully", responseContent);
 
     // Verify feedback was marked as reported
-    var updatedFeedback = await _context.TestingFeedback.FindAsync(feedback.Id);
+    // Detach the entity to ensure we get fresh data from the database
+    _context.Entry(feedback).State = EntityState.Detached;
+    var updatedFeedback = await _context.TestingFeedback
+        .FirstOrDefaultAsync(f => f.Id == feedback.Id);
     Assert.NotNull(updatedFeedback);
     Assert.True(updatedFeedback.IsReported);
     Assert.Equal(reportDto.Reason, updatedFeedback.ReportReason);
