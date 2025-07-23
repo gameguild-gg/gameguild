@@ -89,7 +89,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
         LikesCount = 0,
         CommentsCount = 0,
         SharesCount = 0,
-        IsPinned = true // System announcements are typically pinned
+        IsPinned = true, // System announcements are typically pinned
       };
 
       // Set tenant
@@ -157,7 +157,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
         LikesCount = 0,
         CommentsCount = 0,
         SharesCount = 0,
-        IsPinned = false
+        IsPinned = false,
       };
 
       // Set tenant
@@ -234,7 +234,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
         LikesCount = 0,
         CommentsCount = 0,
         SharesCount = 0,
-        IsPinned = true
+        IsPinned = true,
       };
 
       // Set tenant

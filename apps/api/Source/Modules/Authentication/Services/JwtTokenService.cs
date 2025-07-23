@@ -14,7 +14,7 @@ namespace GameGuild.Modules.Authentication {
         new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), 
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), // Add for compatibility
         new Claim(JwtRegisteredClaimNames.Email, user.Email), 
-        new Claim("username", user.Username) 
+        new Claim("username", user.Username),
       };
 
       foreach (var role in roles) claims.Add(new Claim(ClaimTypes.Role, role));

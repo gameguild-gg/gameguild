@@ -37,7 +37,7 @@ public class SimpleUserProfileQueries
             IncludeDeleted = false, 
             Skip = 0, 
             Take = 50, 
-            SearchTerm = searchTerm 
+            SearchTerm = searchTerm,
         };
         
         var result = await mediator.Send(query);

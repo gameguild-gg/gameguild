@@ -75,7 +75,7 @@ public class AwardAchievementCommandHandler : IRequestHandler<AwardAchievementCo
         Context = request.Context,
         PointsEarned = pointsEarned,
         TenantId = request.TenantId,
-        EarnCount = earnCount
+        EarnCount = earnCount,
       };
 
       _context.UserAchievements.Add(userAchievement);
@@ -97,7 +97,7 @@ public class AwardAchievementCommandHandler : IRequestHandler<AwardAchievementCo
           CurrentProgress = request.Progress,
           TargetProgress = request.MaxProgress,
           IsCompleted = userAchievement.IsCompleted,
-          TenantId = request.TenantId
+          TenantId = request.TenantId,
         };
         _context.AchievementProgress.Add(progress);
       }
@@ -118,7 +118,7 @@ public class AwardAchievementCommandHandler : IRequestHandler<AwardAchievementCo
         EarnCount = earnCount,
         Context = request.Context,
         TenantId = request.TenantId,
-        AwardedByUserId = request.AwardedByUserId
+        AwardedByUserId = request.AwardedByUserId,
       }, cancellationToken);
 
       _logger.LogInformation("Awarded achievement {AchievementName} to user {UserId}", achievement.Name, request.UserId);
@@ -175,7 +175,7 @@ public class UpdateAchievementProgressCommandHandler : IRequestHandler<UpdateAch
           AchievementId = request.AchievementId,
           CurrentProgress = 0,
           TargetProgress = 1, // Default target
-          TenantId = request.TenantId
+          TenantId = request.TenantId,
         };
         _context.AchievementProgress.Add(progress);
       }
@@ -201,7 +201,7 @@ public class UpdateAchievementProgressCommandHandler : IRequestHandler<UpdateAch
         ProgressPercentage = progress.TargetProgress > 0 ? (double)progress.CurrentProgress / progress.TargetProgress * 100 : 0,
         IsCompleted = isNowCompleted,
         Context = request.Context,
-        TenantId = request.TenantId
+        TenantId = request.TenantId,
       }, cancellationToken);
 
       // Auto-award if completed and not already awarded
@@ -212,7 +212,7 @@ public class UpdateAchievementProgressCommandHandler : IRequestHandler<UpdateAch
           Progress = progress.CurrentProgress,
           MaxProgress = progress.TargetProgress,
           Context = request.Context,
-          TenantId = request.TenantId
+          TenantId = request.TenantId,
         };
 
         await _mediator.Send(awardCommand, cancellationToken);
@@ -284,7 +284,7 @@ public class RevokeAchievementCommandHandler : IRequestHandler<RevokeAchievement
         PointsLost = pointsLost,
         Reason = request.Reason,
         TenantId = userAchievement.TenantId,
-        RevokedByUserId = request.RevokedByUserId
+        RevokedByUserId = request.RevokedByUserId,
       }, cancellationToken);
 
       _logger.LogInformation("Revoked achievement {AchievementName} from user {UserId}. Reason: {Reason}",

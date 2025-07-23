@@ -63,7 +63,7 @@ public static class JwtAuthenticationExtensions {
       RequireExpirationTime = true,
 
       // Algorithm validation
-      ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 }
+      ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 },
     };
   }
 

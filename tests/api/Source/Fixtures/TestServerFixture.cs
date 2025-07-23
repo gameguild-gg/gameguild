@@ -63,7 +63,7 @@ namespace GameGuild.Tests.Fixtures {
         { "OAuth:GitHub:ClientId", "test-github-client" },
         { "OAuth:GitHub:ClientSecret", "test-github-secret" },
         { "OAuth:Google:ClientId", "test-google-client" },
-        { "OAuth:Google:ClientSecret", "test-google-secret" }
+        { "OAuth:Google:ClientSecret", "test-google-secret" },
       };
 
       var configuration = new ConfigurationBuilder()
@@ -144,12 +144,12 @@ namespace GameGuild.Tests.Fixtures {
           new Claim(ClaimTypes.NameIdentifier, userId), 
           new Claim(ClaimTypes.Email, "test@example.com"),
           new Claim("sub", userId),
-          new Claim("email", "test@example.com")
+          new Claim("email", "test@example.com"),
         ]),
         Issuer = "GameGuild.Test",
         Audience = "GameGuild.Test.Users",
         Expires = DateTime.UtcNow.AddDays(1),
-        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
       };
       var token = tokenHandler.CreateToken(tokenDescriptor);
 
@@ -170,7 +170,7 @@ namespace GameGuild.Tests.Fixtures {
         Name = name,
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       };
 
       dbContext.Users.Add(user);
@@ -191,7 +191,7 @@ namespace GameGuild.Tests.Fixtures {
         Name = name,
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       };
 
       dbContext.Users.Add(user);
@@ -206,7 +206,7 @@ namespace GameGuild.Tests.Fixtures {
         Description = bio,
         Title = "Test Profile",
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       };
 
       dbContext.Resources.Add(userProfile);

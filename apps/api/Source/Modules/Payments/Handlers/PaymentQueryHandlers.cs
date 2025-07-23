@@ -159,7 +159,7 @@ public class GetPaymentStatsQueryHandler : IRequestHandler<GetPaymentStatsQuery,
       TotalRefunded = totalRefunded,
       NetRevenue = successfulPayments.Sum(p => p.Amount) - totalRefunded,
       PaymentsByMethod = payments.GroupBy(p => p.Method.ToString()).ToDictionary(g => g.Key, g => g.Count()),
-      RevenueByMethod = successfulPayments.GroupBy(p => p.Method.ToString()).ToDictionary(g => g.Key, g => g.Sum(p => p.Amount))
+      RevenueByMethod = successfulPayments.GroupBy(p => p.Method.ToString()).ToDictionary(g => g.Key, g => g.Sum(p => p.Amount)),
     };
   }
 }
@@ -190,7 +190,7 @@ public class GetRevenueReportQueryHandler : IRequestHandler<GetRevenueReportQuer
         ToDate = request.ToDate,
         TotalRevenue = 0,
         NetRevenue = 0,
-        TotalTransactions = 0
+        TotalTransactions = 0,
       };
     }
 
@@ -219,7 +219,7 @@ public class GetRevenueReportQueryHandler : IRequestHandler<GetRevenueReportQuer
       TotalRevenue = totalRevenue,
       NetRevenue = totalRevenue - totalRefunded,
       TotalTransactions = payments.Count,
-      DataPoints = dataPoints
+      DataPoints = dataPoints,
     };
   }
 
@@ -238,7 +238,7 @@ public class GetRevenueReportQueryHandler : IRequestHandler<GetRevenueReportQuer
       "week" => payments.GroupBy(p => p.CreatedAt.Date.AddDays(-(int)p.CreatedAt.DayOfWeek)),
       "month" => payments.GroupBy(p => new DateTime(p.CreatedAt.Year, p.CreatedAt.Month, 1)),
       "year" => payments.GroupBy(p => new DateTime(p.CreatedAt.Year, 1, 1)),
-      _ => payments.GroupBy(p => p.CreatedAt.Date)
+      _ => payments.GroupBy(p => p.CreatedAt.Date),
     };
 
     return groupedPayments
@@ -251,7 +251,7 @@ public class GetRevenueReportQueryHandler : IRequestHandler<GetRevenueReportQuer
                  Revenue = revenue,
                  NetRevenue = revenue - refunded,
                  TransactionCount = g.Count(),
-                 AverageTransactionValue = g.Average(p => p.Amount)
+                 AverageTransactionValue = g.Average(p => p.Amount),
                };
              }
            )

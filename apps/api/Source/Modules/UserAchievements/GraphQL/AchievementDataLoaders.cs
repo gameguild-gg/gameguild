@@ -169,10 +169,10 @@ public class AchievementStatisticsDataLoader : BatchDataLoader<Guid, Achievement
             AchievementId = achievementId,
             Name = "", // Will be populated elsewhere if needed
             TimesEarned = earnCount,
-            EarnRate = earnRate
-          }
+            EarnRate = earnRate,
+          },
         },
-        RarestAchievements = new List<AchievementPopularityDto>()
+        RarestAchievements = new List<AchievementPopularityDto>(),
       };
     }
 

@@ -252,7 +252,7 @@ public class PureGraphQLInfrastructureTests
             EnableSwagger = true,
             EnableHealthChecks = true,
             ApiTitle = "Test API",
-            ApiVersion = "v1"
+            ApiVersion = "v1",
         };
 
         services.AddPresentation(presentationOptions);
@@ -297,7 +297,7 @@ public class PureGraphQLInfrastructureTests
             ["Jwt:Issuer"] = "GameGuild.Test",
             ["Jwt:Audience"] = "GameGuild.Test.Users",
             ["Jwt:ExpiryInMinutes"] = "15",
-            ["ASPNETCORE_ENVIRONMENT"] = "Testing"
+            ["ASPNETCORE_ENVIRONMENT"] = "Testing",
         };
 
         return new ConfigurationBuilder()

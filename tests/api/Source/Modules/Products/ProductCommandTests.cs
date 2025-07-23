@@ -78,7 +78,7 @@ public class ProductCommandTests : IDisposable
             IsBundle = false,
             CreatorId = userId,
             Visibility = AccessLevel.Public,
-            Status = ContentStatus.Published
+            Status = ContentStatus.Published,
         };
 
         // Act
@@ -117,7 +117,7 @@ public class ProductCommandTests : IDisposable
           Type = ProductType.Bundle,
           IsBundle = true,
           CreatorId = userId,
-          BundleItems = new List<Guid> { product1.Id, product2.Id }
+          BundleItems = new List<Guid> { product1.Id, product2.Id },
         };
         // Act
         var result = await _mediator.Send(command);
@@ -148,7 +148,7 @@ public class ProductCommandTests : IDisposable
             Name = "Updated Product",
             Description = "Updated description",
             ShortDescription = "Updated short description",
-            Status = ContentStatus.Published
+            Status = ContentStatus.Published,
         };
 
         // Act
@@ -176,7 +176,7 @@ public class ProductCommandTests : IDisposable
         var command = new UpdateProductCommand
         {
             ProductId = Guid.NewGuid(), // Non-existent product
-            Name = "Updated Product"
+            Name = "Updated Product",
         };
 
         // Act
@@ -201,7 +201,7 @@ public class ProductCommandTests : IDisposable
 
         var command = new DeleteProductCommand
         {
-            ProductId = product.Id
+            ProductId = product.Id,
         };
 
         // Act
@@ -233,7 +233,7 @@ public class ProductCommandTests : IDisposable
 
         var command = new PublishProductCommand
         {
-            ProductId = product.Id
+            ProductId = product.Id,
         };
 
         // Act
@@ -259,7 +259,7 @@ public class ProductCommandTests : IDisposable
 
         var command = new UnpublishProductCommand
         {
-            ProductId = product.Id
+            ProductId = product.Id,
         };
 
         // Act
@@ -284,7 +284,7 @@ public class ProductCommandTests : IDisposable
         var command = new CreateProductCommand
         {
             Name = "", // Empty name should fail
-            CreatorId = userId
+            CreatorId = userId,
         };
 
         // Act
@@ -308,7 +308,7 @@ public class ProductCommandTests : IDisposable
         var command = new CreateProductCommand
         {
             Name = "Test Product",
-            CreatorId = userId
+            CreatorId = userId,
         };
 
         // Act
@@ -326,7 +326,7 @@ public class ProductCommandTests : IDisposable
         {
             Id = userId,
             Name = name,
-            Email = $"{name.ToLower().Replace(" ", "")}@test.com"
+            Email = $"{name.ToLower().Replace(" ", "")}@test.com",
         };
 
         _context.Users.Add(user);
@@ -344,7 +344,7 @@ public class ProductCommandTests : IDisposable
             Type = ProductType.Program,
             Status = status,
             Visibility = AccessLevel.Public,
-            CreatorId = creatorId
+            CreatorId = creatorId,
         };
 
         _context.Products.Add(product);

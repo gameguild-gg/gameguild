@@ -64,7 +64,7 @@ public class ProductCommandHandlers :
         Visibility = request.Visibility,
         Status = request.Status,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       };
 
       // Set bundle items if provided

@@ -49,7 +49,7 @@ public class PostsQueryHandlersTests : IDisposable
         var query = new GetPostsQuery
         {
             PageNumber = 1,
-            PageSize = 10
+            PageSize = 10,
         };
 
         // Act
@@ -79,7 +79,7 @@ public class PostsQueryHandlersTests : IDisposable
         var query = new GetPostsQuery
         {
             PostType = "general",
-            PageSize = 50
+            PageSize = 50,
         };
 
         // Act
@@ -107,7 +107,7 @@ public class PostsQueryHandlersTests : IDisposable
         var query = new GetPostsQuery
         {
             UserId = user1Id,
-            PageSize = 50
+            PageSize = 50,
         };
 
         // Act
@@ -135,7 +135,7 @@ public class PostsQueryHandlersTests : IDisposable
         var query = new GetPostsQuery
         {
             IsPinned = true,
-            PageSize = 50
+            PageSize = 50,
         };
 
         // Act
@@ -161,7 +161,7 @@ public class PostsQueryHandlersTests : IDisposable
         var query = new GetPostsQuery
         {
             SearchTerm = "React",
-            PageSize = 50
+            PageSize = 50,
         };
 
         // Act
@@ -196,7 +196,7 @@ public class PostsQueryHandlersTests : IDisposable
             OrderBy = "likescount",
             Descending = true,
             PageSize = 50,
-            IsPinned = false // This prevents the pin status override in the handler
+            IsPinned = false, // This prevents the pin status override in the handler
         };
 
         // Act
@@ -232,7 +232,7 @@ public class PostsQueryHandlersTests : IDisposable
             OrderBy = "commentscount",
             Descending = true,
             PageSize = 50,
-            IsPinned = false // This prevents the pin status override in the handler
+            IsPinned = false, // This prevents the pin status override in the handler
         };
 
         // Act
@@ -261,7 +261,7 @@ public class PostsQueryHandlersTests : IDisposable
 
         var query = new GetPostsQuery
         {
-            PageSize = 50
+            PageSize = 50,
         };
 
         // Act
@@ -280,7 +280,7 @@ public class PostsQueryHandlersTests : IDisposable
         var query = new GetPostsQuery
         {
             PostType = "nonexistent",
-            PageSize = 50
+            PageSize = 50,
         };
 
         // Act
@@ -305,7 +305,7 @@ public class PostsQueryHandlersTests : IDisposable
         var query = new GetPostsQuery
         {
             PageNumber = 10, // Way beyond available data
-            PageSize = 10
+            PageSize = 10,
         };
 
         // Act
@@ -334,7 +334,7 @@ public class PostsQueryHandlersTests : IDisposable
 
         var query = new GetPostsQuery
         {
-            PageSize = 50
+            PageSize = 50,
         };
 
         // Act
@@ -376,7 +376,7 @@ public class PostsQueryHandlersTests : IDisposable
             UserId = user1Id,
             OrderBy = "likescount",
             Descending = true,
-            PageSize = 50
+            PageSize = 50,
         };
 
         // Act
@@ -401,7 +401,7 @@ public class PostsQueryHandlersTests : IDisposable
             Id = userId,
             Name = $"Test User {userId:N}",
             Email = $"test_{userId:N}@example.com",
-            IsActive = true
+            IsActive = true,
         };
 
         _context.Users.Add(user);
@@ -418,7 +418,7 @@ public class PostsQueryHandlersTests : IDisposable
             PostType = postType,
             AuthorId = authorId,
             Visibility = AccessLevel.Public,
-            Status = ContentStatus.Published
+            Status = ContentStatus.Published,
         };
 
         _context.Posts.Add(post);
@@ -435,7 +435,7 @@ public class PostsQueryHandlersTests : IDisposable
             PostType = "general",
             AuthorId = authorId,
             Visibility = AccessLevel.Public,
-            Status = ContentStatus.Published
+            Status = ContentStatus.Published,
         };
 
         _context.Posts.Add(post);
@@ -455,7 +455,7 @@ public class PostsQueryHandlersTests : IDisposable
                 AuthorId = authorId,
                 Visibility = AccessLevel.Public,
                 Status = ContentStatus.Published,
-                CreatedAt = DateTime.UtcNow.AddMinutes(-i) // Spread creation times
+                CreatedAt = DateTime.UtcNow.AddMinutes(-i), // Spread creation times
             };
 
             _context.Posts.Add(post);

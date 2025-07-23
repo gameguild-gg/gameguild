@@ -55,7 +55,7 @@ public class GetUserProfileQueryHandlerTests
             Email = "test@example.com",
             Name = "Test User",
             CreatedAt = DateTime.UtcNow.AddDays(-30),
-            UpdatedAt = DateTime.UtcNow.AddDays(-1)
+            UpdatedAt = DateTime.UtcNow.AddDays(-1),
         };
 
         _mockUserService.Setup(x => x.GetUserByIdAsync(userId))
@@ -161,7 +161,7 @@ public class GetUserProfileQueryHandlerTests
             Email = "test@example.com",
             Name = null!, // Null name
             CreatedAt = DateTime.UtcNow.AddDays(-30),
-            UpdatedAt = DateTime.UtcNow.AddDays(-1)
+            UpdatedAt = DateTime.UtcNow.AddDays(-1),
         };
 
         _mockUserService.Setup(x => x.GetUserByIdAsync(userId))

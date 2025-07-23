@@ -363,7 +363,7 @@ public class DatabaseInfrastructureTests
         {
             ["ConnectionStrings:DefaultConnection"] = "Data Source=:memory:",
             ["Database:Provider"] = "SQLite",
-            ["ASPNETCORE_ENVIRONMENT"] = "Testing"
+            ["ASPNETCORE_ENVIRONMENT"] = "Testing",
         };
 
         return new ConfigurationBuilder()
@@ -377,7 +377,7 @@ public class DatabaseInfrastructureTests
         {
             ["ConnectionStrings:DefaultConnection"] = "Host=localhost;Database=testdb;Username=test;Password=test",
             ["Database:Provider"] = "PostgreSQL",
-            ["ASPNETCORE_ENVIRONMENT"] = "Testing"
+            ["ASPNETCORE_ENVIRONMENT"] = "Testing",
         };
 
         return new ConfigurationBuilder()

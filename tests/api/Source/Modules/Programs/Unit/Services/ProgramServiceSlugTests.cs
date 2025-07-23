@@ -38,7 +38,7 @@ public class ProgramServiceSlugTests : IDisposable {
       Category = ProgramCategory.Programming,
       Difficulty = ProgramDifficulty.Beginner,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.Programs.Add(program);
@@ -67,7 +67,7 @@ public class ProgramServiceSlugTests : IDisposable {
       Category = ProgramCategory.Programming,
       Difficulty = ProgramDifficulty.Beginner,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.Programs.Add(program);
@@ -94,7 +94,7 @@ public class ProgramServiceSlugTests : IDisposable {
       Difficulty = ProgramDifficulty.Beginner,
       DeletedAt = DateTime.UtcNow, // Mark as deleted
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.Programs.Add(program);
@@ -120,7 +120,7 @@ public class ProgramServiceSlugTests : IDisposable {
       Category = ProgramCategory.Programming,
       Difficulty = ProgramDifficulty.Beginner,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.Programs.Add(program);
@@ -148,7 +148,7 @@ public class ProgramServiceSlugTests : IDisposable {
       Category = ProgramCategory.Programming,
       Difficulty = ProgramDifficulty.Intermediate,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.Programs.Add(program);
@@ -176,7 +176,7 @@ public class ProgramServiceSlugTests : IDisposable {
         Category = ProgramCategory.Programming,
         Difficulty = ProgramDifficulty.Beginner,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new ProgramEntity {
         Id = Guid.NewGuid(),
@@ -188,7 +188,7 @@ public class ProgramServiceSlugTests : IDisposable {
         Category = ProgramCategory.Programming,
         Difficulty = ProgramDifficulty.Advanced,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       },
       new ProgramEntity {
         Id = Guid.NewGuid(),
@@ -200,8 +200,8 @@ public class ProgramServiceSlugTests : IDisposable {
         Category = ProgramCategory.CreativeArts,
         Difficulty = ProgramDifficulty.Beginner,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
-      }
+        UpdatedAt = DateTime.UtcNow,
+      },
     };
 
     _context.Programs.AddRange(programs);
@@ -249,7 +249,7 @@ public class ProgramServiceSlugTests : IDisposable {
       Category = ProgramCategory.Programming,
       Difficulty = ProgramDifficulty.Beginner,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     _context.Programs.Add(program);

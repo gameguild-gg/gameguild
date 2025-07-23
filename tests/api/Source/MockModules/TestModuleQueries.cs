@@ -29,7 +29,7 @@ public class TestModuleQueries : ObjectTypeExtension<Query>
                 var query = new GetTestItemsQuery 
                 { 
                     Take = take, 
-                    IncludeInactive = includeInactive 
+                    IncludeInactive = includeInactive,
                 };
                 
                 return await mediator.Send(query);

@@ -386,7 +386,7 @@ public class ProjectQueryHandlers :
       "name" => descending ? query.OrderByDescending(p => p.Title) : query.OrderBy(p => p.Title),
       "createdat" => descending ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt),
       "updatedat" => descending ? query.OrderByDescending(p => p.UpdatedAt) : query.OrderBy(p => p.UpdatedAt),
-      _ => query.OrderByDescending(p => p.CreatedAt)
+      _ => query.OrderByDescending(p => p.CreatedAt),
     };
   }
 
@@ -405,7 +405,7 @@ public class ProjectQueryHandlers :
       CollaboratorCount = 0,
       ReleaseCount = 0,
       JamSubmissionCount = 0,
-      AwardCount = 0
+      AwardCount = 0,
     });
   }
 }

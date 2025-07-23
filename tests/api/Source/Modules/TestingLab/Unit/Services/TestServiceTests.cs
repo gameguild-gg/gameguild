@@ -37,7 +37,7 @@ public class TestServiceTests : IDisposable {
       StartDate = DateTime.UtcNow.AddDays(1),
       EndDate = DateTime.UtcNow.AddDays(7),
       Status = TestingRequestStatus.Open,
-      CreatedById = user.Id
+      CreatedById = user.Id,
     };
 
     // Act
@@ -129,7 +129,7 @@ public class TestServiceTests : IDisposable {
       MaxTesters = 5,
       Status = SessionStatus.Scheduled,
       ManagerUserId = testingRequest.CreatedById,
-      CreatedById = testingRequest.CreatedById
+      CreatedById = testingRequest.CreatedById,
     };
 
     // Act
@@ -253,7 +253,7 @@ public class TestServiceTests : IDisposable {
       ProjectId = project.Id,
       VersionNumber = "1.0.0",
       CreatedById = createdById,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     // ProjectVersion is accessed through Project.Versions, not a separate DbSet
@@ -279,7 +279,7 @@ public class TestServiceTests : IDisposable {
       EndDate = DateTime.UtcNow.AddDays(7),
       Status = TestingRequestStatus.Open,
       CreatedById = user.Id,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     _context.TestingRequests.Add(testingRequest);
@@ -295,7 +295,7 @@ public class TestServiceTests : IDisposable {
       MaxTestersCapacity = 10,
       MaxProjectsCapacity = 5,
       Status = LocationStatus.Active,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     _context.TestingLocations.Add(location);
@@ -320,7 +320,7 @@ public class TestServiceTests : IDisposable {
       Status = SessionStatus.Scheduled,
       ManagerUserId = testingRequest.CreatedById,
       CreatedById = testingRequest.CreatedById,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     _context.TestingSessions.Add(testingSession);
@@ -338,7 +338,7 @@ public class TestServiceTests : IDisposable {
       FormSchema = "{}",
       IsForOnline = true,
       IsForSessions = true,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     _context.TestingFeedbackForms.Add(feedbackForm);

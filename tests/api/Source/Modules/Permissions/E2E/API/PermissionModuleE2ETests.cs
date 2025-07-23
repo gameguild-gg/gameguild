@@ -373,7 +373,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
 
   private async Task<Comment> CreateTestCommentAsync() {
     var comment = new Comment {
-      Id = Guid.NewGuid(), Content = "Test comment content"
+      Id = Guid.NewGuid(), Content = "Test comment content",
       // Note: Comment entity doesn't have IsEdited property
     };
 
@@ -398,7 +398,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     PermissionType[] permissions
   ) {
     var contentTypePermission = new ContentTypePermission {
-      UserId = userId, TenantId = tenantId, ContentType = contentTypeName // The correct property name is ContentType, not ContentTypeName
+      UserId = userId, TenantId = tenantId, ContentType = contentTypeName, // The correct property name is ContentType, not ContentTypeName
     };
 
     foreach (var permission in permissions) contentTypePermission.AddPermission(permission);
@@ -429,7 +429,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     var roles = new[] { "User" };
 
     var additionalClaims = new List<System.Security.Claims.Claim> { 
-      new System.Security.Claims.Claim("tenant_id", tenant.Id.ToString())
+      new System.Security.Claims.Claim("tenant_id", tenant.Id.ToString()),
     };
     
     // Add custom permissions if provided

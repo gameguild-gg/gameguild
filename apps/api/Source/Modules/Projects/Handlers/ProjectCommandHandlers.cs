@@ -67,7 +67,7 @@ public class ProjectCommandHandlers :
         Status = request.Status,
         TenantId = request.TenantId ?? _tenantContext.TenantId,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       };
 
       // Generate slug from name
@@ -95,7 +95,7 @@ public class ProjectCommandHandlers :
         Description = "Original creator of the project",
         Visibility = AccessLevel.Private,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       };
       _context.Set<ProjectCollaborator>().Add(creatorCollaborator);
 
@@ -299,7 +299,7 @@ public class ProjectCommandHandlers :
   /// </summary>
   private static string FormatOwnerPermissions() {
     var ownerPermissions = new[] {
-      PermissionType.Read, PermissionType.Edit, PermissionType.Delete, PermissionType.Publish, PermissionType.Unpublish, PermissionType.Archive, PermissionType.Create, PermissionType.Approve, PermissionType.Monetize
+      PermissionType.Read, PermissionType.Edit, PermissionType.Delete, PermissionType.Publish, PermissionType.Unpublish, PermissionType.Archive, PermissionType.Create, PermissionType.Approve, PermissionType.Monetize,
     };
 
     return string.Join(",", ownerPermissions.Select(p => p.ToString()));

@@ -55,7 +55,7 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, G
         "name" => request.Descending ? query.OrderByDescending(a => a.Name) : query.OrderBy(a => a.Name),
         "points" => request.Descending ? query.OrderByDescending(a => a.Points) : query.OrderBy(a => a.Points),
         "createdat" => request.Descending ? query.OrderByDescending(a => a.CreatedAt) : query.OrderBy(a => a.CreatedAt),
-        _ => request.Descending ? query.OrderByDescending(a => a.DisplayOrder) : query.OrderBy(a => a.DisplayOrder)
+        _ => request.Descending ? query.OrderByDescending(a => a.DisplayOrder) : query.OrderBy(a => a.DisplayOrder),
       };
 
       var totalCount = await query.CountAsync(cancellationToken);
@@ -89,7 +89,7 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, G
           RequiredProgress = l.RequiredProgress,
           Points = l.Points,
           IconUrl = l.IconUrl,
-          Color = l.Color
+          Color = l.Color,
         }).ToList(),
         Prerequisites = a.Prerequisites?.Select(p => new AchievementDto {
           Id = p.PrerequisiteAchievement!.Id,
@@ -106,8 +106,8 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, G
           Conditions = p.PrerequisiteAchievement.Conditions,
           DisplayOrder = p.PrerequisiteAchievement.DisplayOrder,
           CreatedAt = p.PrerequisiteAchievement.CreatedAt,
-          UpdatedAt = p.PrerequisiteAchievement.UpdatedAt
-        }).ToList()
+          UpdatedAt = p.PrerequisiteAchievement.UpdatedAt,
+        }).ToList(),
       }).ToList();
 
       var result = new AchievementsPageDto(achievementDtos, totalCount, request.PageNumber, request.PageSize);
@@ -206,7 +206,7 @@ public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievements
       query = request.OrderBy.ToLower() switch {
         "points" => request.Descending ? query.OrderByDescending(ua => ua.PointsEarned) : query.OrderBy(ua => ua.PointsEarned),
         "achievementname" => request.Descending ? query.OrderByDescending(ua => ua.Achievement!.Name) : query.OrderBy(ua => ua.Achievement!.Name),
-        _ => request.Descending ? query.OrderByDescending(ua => ua.EarnedAt) : query.OrderBy(ua => ua.EarnedAt)
+        _ => request.Descending ? query.OrderByDescending(ua => ua.EarnedAt) : query.OrderBy(ua => ua.EarnedAt),
       };
 
       var totalCount = await query.CountAsync(cancellationToken);
@@ -244,8 +244,8 @@ public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievements
             RequiredProgress = l.RequiredProgress,
             Points = l.Points,
             IconUrl = l.IconUrl,
-            Color = l.Color
-          }).ToList()
+            Color = l.Color,
+          }).ToList(),
         } : null,
         EarnedAt = ua.EarnedAt,
         Level = ua.Level,
@@ -255,7 +255,7 @@ public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievements
         IsNotified = ua.IsNotified,
         Context = ua.Context,
         PointsEarned = ua.PointsEarned,
-        EarnCount = ua.EarnCount
+        EarnCount = ua.EarnCount,
       }).ToList();
 
       var result = new UserAchievementsPageDto(userAchievementDtos, totalCount, request.PageNumber, request.PageSize);
@@ -317,13 +317,13 @@ public class GetUserAchievementProgressQueryHandler : IQueryHandler<GetUserAchie
           Conditions = ap.Achievement.Conditions,
           DisplayOrder = ap.Achievement.DisplayOrder,
           CreatedAt = ap.Achievement.CreatedAt,
-          UpdatedAt = ap.Achievement.UpdatedAt
+          UpdatedAt = ap.Achievement.UpdatedAt,
         } : null,
         CurrentProgress = ap.CurrentProgress,
         TargetProgress = ap.TargetProgress,
         LastUpdated = ap.LastUpdated,
         IsCompleted = ap.IsCompleted,
-        Context = ap.Context
+        Context = ap.Context,
       }).ToList();
 
       return GameGuild.Common.Result.Success(progressDtos);
@@ -388,7 +388,7 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
             Conditions = ua.Achievement.Conditions,
             DisplayOrder = ua.Achievement.DisplayOrder,
             CreatedAt = ua.Achievement.CreatedAt,
-            UpdatedAt = ua.Achievement.UpdatedAt
+            UpdatedAt = ua.Achievement.UpdatedAt,
           } : null,
           EarnedAt = ua.EarnedAt,
           Level = ua.Level,
@@ -398,7 +398,7 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
           IsNotified = ua.IsNotified,
           Context = ua.Context,
           PointsEarned = ua.PointsEarned,
-          EarnCount = ua.EarnCount
+          EarnCount = ua.EarnCount,
         }).ToList();
 
       // Near completion achievements
@@ -424,13 +424,13 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
             Conditions = ap.Achievement.Conditions,
             DisplayOrder = ap.Achievement.DisplayOrder,
             CreatedAt = ap.Achievement.CreatedAt,
-            UpdatedAt = ap.Achievement.UpdatedAt
+            UpdatedAt = ap.Achievement.UpdatedAt,
           } : null,
           CurrentProgress = ap.CurrentProgress,
           TargetProgress = ap.TargetProgress,
           LastUpdated = ap.LastUpdated,
           IsCompleted = ap.IsCompleted,
-          Context = ap.Context
+          Context = ap.Context,
         }).ToList();
 
       // Achievements by category
@@ -447,7 +447,7 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
         InProgressAchievements = inProgressAchievements,
         RecentAchievements = recentAchievements,
         NearCompletion = nearCompletion,
-        AchievementsByCategory = achievementsByCategory
+        AchievementsByCategory = achievementsByCategory,
       };
 
       return GameGuild.Common.Result.Success(summary);
@@ -517,7 +517,7 @@ public class GetAvailableAchievementsQueryHandler : IQueryHandler<GetAvailableAc
         Conditions = a.Conditions,
         DisplayOrder = a.DisplayOrder,
         CreatedAt = a.CreatedAt,
-        UpdatedAt = a.UpdatedAt
+        UpdatedAt = a.UpdatedAt,
       }).ToList();
 
       var result = new AchievementsPageDto(achievementDtos, totalCount, request.PageNumber, request.PageSize);
@@ -560,7 +560,7 @@ public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievemen
           UserId = g.Key,
           TotalAchievements = g.Count(),
           TotalPoints = g.Sum(ua => ua.PointsEarned),
-          User = g.First().User
+          User = g.First().User,
         })
         .OrderByDescending(s => s.TotalPoints)
         .ThenByDescending(s => s.TotalAchievements)
@@ -572,7 +572,7 @@ public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievemen
         UserId = stats.UserId,
         UserDisplayName = stats.User?.Name ?? "Unknown User",
         TotalAchievements = stats.TotalAchievements,
-        TotalPoints = stats.TotalPoints
+        TotalPoints = stats.TotalPoints,
       }).ToList();
 
       return GameGuild.Common.Result.Success(leaderboard);
@@ -635,7 +635,7 @@ public class GetAchievementStatisticsQueryHandler : IQueryHandler<GetAchievement
         InProgress = inProgress,
         CompletionRate = completionRate,
         FirstEarned = firstEarned,
-        LastEarned = lastEarned
+        LastEarned = lastEarned,
       };
 
       return GameGuild.Common.Result.Success(statistics);
@@ -691,14 +691,14 @@ public class CheckAchievementPrerequisitesQueryHandler : IQueryHandler<CheckAchi
         prerequisiteStatuses.Add(new PrerequisiteStatusDto {
           PrerequisiteAchievementId = prerequisite.PrerequisiteAchievementId,
           Name = prerequisite.PrerequisiteAchievement?.Name ?? "Unknown",
-          IsMet = isMet
+          IsMet = isMet,
         });
       }
 
       var result = new AchievementPrerequisiteCheckDto {
         AchievementId = request.AchievementId,
         CanEarn = canEarn,
-        Prerequisites = prerequisiteStatuses
+        Prerequisites = prerequisiteStatuses,
       };
 
       return GameGuild.Common.Result.Success(result);

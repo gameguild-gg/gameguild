@@ -59,7 +59,7 @@ public class RevokeTokenHandlerTests
         var command = new RevokeTokenCommand
         {
             RefreshToken = "valid-refresh-token",
-            IpAddress = "192.168.1.1"
+            IpAddress = "192.168.1.1",
         };
 
         _mockAuthService.Setup(x => x.RevokeRefreshTokenAsync(
@@ -95,7 +95,7 @@ public class RevokeTokenHandlerTests
         var command = new RevokeTokenCommand
         {
             RefreshToken = "valid-refresh-token",
-            IpAddress = null
+            IpAddress = null,
         };
 
         _mockAuthService.Setup(x => x.RevokeRefreshTokenAsync(
@@ -125,7 +125,7 @@ public class RevokeTokenHandlerTests
         var command = new RevokeTokenCommand
         {
             RefreshToken = "invalid-refresh-token",
-            IpAddress = "192.168.1.1"
+            IpAddress = "192.168.1.1",
         };
 
         _mockAuthService.Setup(x => x.RevokeRefreshTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
@@ -151,7 +151,7 @@ public class RevokeTokenHandlerTests
         var command = new RevokeTokenCommand
         {
             RefreshToken = "",
-            IpAddress = "192.168.1.1"
+            IpAddress = "192.168.1.1",
         };
 
         _mockAuthService.Setup(x => x.RevokeRefreshTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
@@ -171,7 +171,7 @@ public class RevokeTokenHandlerTests
         var command = new RevokeTokenCommand
         {
             RefreshToken = "valid-refresh-token",
-            IpAddress = "192.168.1.1"
+            IpAddress = "192.168.1.1",
         };
 
         var expectedException = new InvalidOperationException("Database error");

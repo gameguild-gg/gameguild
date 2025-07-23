@@ -53,7 +53,7 @@ namespace GameGuild.Tests.Helpers
                     new Claim(ClaimTypes.Name, "Test User"),
                     new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
                     new Claim(ClaimTypes.Email, "test@example.com"),
-                    new Claim("UserId", Guid.NewGuid().ToString())
+                    new Claim("UserId", Guid.NewGuid().ToString()),
                 });
             }
 
