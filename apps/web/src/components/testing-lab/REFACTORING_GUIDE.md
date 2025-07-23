@@ -88,13 +88,10 @@ import { FilterProvider, useFilterContext } from '@/components/common/filters';
 
 function MyComponent() {
   const { state, setSearchTerm, toggleStatus, clearFilters } = useFilterContext();
-  
+
   return (
     <div>
-      <SearchBar 
-        searchTerm={state.searchTerm} 
-        onSearchChange={setSearchTerm} 
-      />
+      <SearchBar searchTerm={state.searchTerm} onSearchChange={setSearchTerm} />
       <button onClick={clearFilters}>Clear All</button>
     </div>
   );
@@ -112,12 +109,7 @@ function App() {
 ### Testing Lab Specific Usage
 
 ```tsx
-import { 
-  TestingLabFilterProvider, 
-  useTestingLabFilters,
-  TestingLabFilterControls,
-  TestingLabActiveFilters 
-} from '@/components/testing-lab/filters';
+import { TestingLabFilterProvider, useTestingLabFilters, TestingLabFilterControls, TestingLabActiveFilters } from '@/components/testing-lab/filters';
 
 function SessionsPage({ sessions }) {
   return (
@@ -131,13 +123,8 @@ function SessionsPage({ sessions }) {
 
 function SessionsContent() {
   const { filteredSessions, state } = useTestingLabFilters();
-  
-  return (
-    <SessionContent 
-      sessions={filteredSessions} 
-      viewMode={state.viewMode} 
-    />
-  );
+
+  return <SessionContent sessions={filteredSessions} viewMode={state.viewMode} />;
 }
 ```
 
@@ -169,17 +156,7 @@ interface BaseFilterState {
 ### Helper Methods
 
 ```typescript
-const {
-  state,
-  setSearchTerm,
-  toggleStatus,
-  toggleType,
-  setPeriod,
-  setViewMode,
-  clearSearch,
-  clearFilters,
-  hasActiveFilters,
-} = useFilterContext();
+const { state, setSearchTerm, toggleStatus, toggleType, setPeriod, setViewMode, clearSearch, clearFilters, hasActiveFilters } = useFilterContext();
 ```
 
 ## 📱 Responsive Design
@@ -268,9 +245,9 @@ test('SearchBar updates search term', () => {
   render(
     <FilterProvider>
       <SearchBar searchTerm="" onSearchChange={handleChange} />
-    </FilterProvider>
+    </FilterProvider>,
   );
-  
+
   // Test implementation
 });
 ```

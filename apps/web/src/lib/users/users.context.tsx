@@ -602,7 +602,7 @@ export function UserProvider({ children, initialUsers = [], initialPagination }:
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
       dispatch({ type: 'BULK_DELETE_USERS', payload: state.selectedUsers });
-    } catch (error) {
+    } catch {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete users' });
     }
   }, [state.selectedUsers]);
@@ -629,7 +629,7 @@ export function UserProvider({ children, initialUsers = [], initialPagination }:
             updates,
           },
         });
-      } catch (error) {
+      } catch {
         dispatch({ type: 'SET_ERROR', payload: 'Failed to update users' });
       }
     },
@@ -793,7 +793,15 @@ export function useUserFilters() {
 }
 
 export function useUserSelection() {
-  const { state, dispatch, hasSelection, allSelected, selectAll, clearSelection } = useUserContext();
+  const { state, dispatch, hasSelection, allSelected, selectAll, clearSelection, paginatedUsers } = useUserContext();
+
+  const selectByFilter = useCallback(
+    (predicate: (user: User) => boolean) => {
+      const filtered = paginatedUsers.filter(predicate);
+      dispatch({ type: 'SET_SELECTED_USERS', payload: filtered.map((u) => u.id) });
+    },
+    [paginatedUsers, dispatch],
+  );
 
   return {
     selectedUsers: state.selectedUsers,
@@ -804,11 +812,7 @@ export function useUserSelection() {
     clearSelection,
     toggleUser: (id: string) => dispatch({ type: 'TOGGLE_USER_SELECTION', payload: id }),
     setSelected: (ids: string[]) => dispatch({ type: 'SET_SELECTED_USERS', payload: ids }),
-    selectByFilter: (predicate: (user: User) => boolean) => {
-      const { paginatedUsers } = useUserContext();
-      const filtered = paginatedUsers.filter(predicate);
-      dispatch({ type: 'SET_SELECTED_USERS', payload: filtered.map((u) => u.id) });
-    },
+    selectByFilter,
   };
 }
 

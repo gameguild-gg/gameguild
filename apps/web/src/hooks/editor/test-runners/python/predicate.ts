@@ -1,10 +1,22 @@
 import type { TestRunnerOptions } from '../types';
 
+interface LocalExecutionContext {
+  files: Array<{
+    id: string;
+    name: string;
+    content: string;
+  }>;
+  selectedLanguage: string;
+  addOutput: (output: string | string[]) => void;
+  clearTerminal: () => void;
+  setIsExecuting: (isExecuting: boolean) => void;
+}
+
 /**
  * Run Predicate tests for Python code
  */
 export async function runPredicateTestsPython(options: TestRunnerOptions): Promise<void> {
-  const { fileId, file, fileCases, files, selectedLanguage, addOutput, setIsExecuting, setTestResults, normalizeOutput } = options;
+  const { fileId, file, fileCases, files, addOutput, setIsExecuting, setTestResults } = options;
 
   try {
     addOutput(`Running Predicate tests for Python...`);
@@ -35,7 +47,7 @@ def serialize(obj):
 # Convert JavaScript predicate to Python
 def convert_js_predicate(predicate):
     # Handle arrow functions: result => result > 0
-    arrow_match = re.match(r'^\s*(\w+)\s*=>\s*(.+)$', predicate)
+    arrow_match = re.match(r'^\\s*(\\w+)\\s*=>\\s*(.+)$', predicate)
     if arrow_match:
         param, body = arrow_match.groups()
         # Convert JavaScript operators to Python syntax
@@ -53,11 +65,11 @@ def convert_js_predicate(predicate):
         return f"lambda {param}: {body}"
     
     # Handle function expressions: function(result) { return result > 0; }
-    func_match = re.match(r'function\s*$$([^)]*)$$\s*\{([\s\S]*)\}', predicate)
+    func_match = re.match(r'function\\s*\\$\\$([^)]*)\\$\\$\\s*\\{([\\s\\S]*)\\}', predicate)
     if func_match:
         param, body = func_match.groups()
         # Extract return statement
-        return_match = re.search(r'return\s+([^;]+)', body)
+        return_match = re.search(r'return\\s+([^;]+)', body)
         if return_match:
             return_expr = return_match.group(1)
             # Convert JavaScript operators to Python syntax
@@ -149,7 +161,7 @@ print("TEST_RESULTS_END")
 
     // Execute the Python script
     const executor = getExecutor('python');
-    let testResults: { passed: boolean; actual: string; expected: string }[] = fileCases.map(() => ({
+    const testResults: { passed: boolean; actual: string; expected: string }[] = fileCases.map(() => ({
       passed: false,
       actual: '',
       expected: '',
@@ -164,25 +176,8 @@ print("TEST_RESULTS_END")
       isEdited: false,
     };
 
-    // Function to process output
-    const processOutput = (output: string) => {
-      // Extract the JSON results
-      const resultsMatch = output.match(/TEST_RESULTS_START\n([\s\S]*?)\nTEST_RESULTS_END/);
-      if (resultsMatch) {
-        try {
-          const parsedResults = JSON.parse(resultsMatch[1]);
-          testResults = parsedResults;
-          setTestResults({ [fileId]: testResults });
-        } catch (error) {
-          addOutput(`Error parsing test results: ${error}`);
-        }
-      } else {
-        addOutput(`Error: Could not find test results in output`);
-      }
-    };
-
     // Create an execution context
-    const context: ExecutionContext = {
+    const context: LocalExecutionContext = {
       files: [...files, testFile],
       selectedLanguage: 'python',
       addOutput,
@@ -191,11 +186,11 @@ print("TEST_RESULTS_END")
     };
 
     // Execute the test script
-    await executor.execute('temp-test-file', context, { processOutput });
+    await executor.execute('temp-test-file', context as ExecutionContext);
 
     setTestResults({ [fileId]: testResults });
   } catch (error) {
-    addOutput(`Error running tests: ${error.message}`);
+    addOutput(`Error running tests: ${error instanceof Error ? error.message : String(error)}`);
   } finally {
     setIsExecuting(false);
   }
@@ -205,7 +200,7 @@ print("TEST_RESULTS_END")
 function getExecutor(language: string) {
   // This is a simplified version - in a real implementation, you would import the actual executor
   return {
-    execute: async (fileId: string, context: ExecutionContext, options?: { processOutput: (output: string) => void }) => {
+    execute: async (fileId: string, context: ExecutionContext) => {
       // Mock implementation
       context.addOutput(`Executing ${language} code...`);
       // In a real implementation, this would execute the code

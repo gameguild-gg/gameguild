@@ -2,13 +2,10 @@ import { createReadStream, createWriteStream } from 'fs';
 import fs from 'fs/promises';
 import { basename, join } from 'path';
 import { pipeline, Readable, Transform, Writable } from 'stream';
-import { promisify } from 'util';
 import crypto from 'crypto';
 import sharp from 'sharp'; // For image processing
 import { BaseStorageAdapter } from './base-storage.adapter';
 import { ImageStorage, StorageMetadata, StorageResult } from './storage.types';
-
-const pipelineAsync = promisify(pipeline);
 
 interface ImageBucketConfig {
   basePath: string;
@@ -181,7 +178,7 @@ export class ImageStorageAdapter extends BaseStorageAdapter<ImageStorage> {
   }
 
   // Implement required abstract methods
-  protected async persistWrite(id: string, data: ImageStorage, metadata: StorageMetadata): Promise<void> {
+  protected async persistWrite(id: string, data: ImageStorage): Promise<void> {
     // Save metadata
     const metadataPath = join(this.config.basePath, 'metadata', `${id}.json`);
     await fs.writeFile(metadataPath, JSON.stringify(data, null, 2));

@@ -4,7 +4,7 @@ import { getFileContent } from '@/components/editor/ui/source-code/utils';
 
 class TypeScriptExecutor implements LanguageExecutor {
   public isCompiled = false; // Set the isCompiled flag to false
-  resolveFile: any;
+  resolveFile: (id: string) => unknown = () => null;
   private isExecutionCancelled = false;
   private transpileCache: Record<string, string> = {};
 
@@ -55,9 +55,15 @@ class TypeScriptExecutor implements LanguageExecutor {
         addOutput('Transpiling TypeScript to JavaScript...');
         const { transpiledCode, diagnostics } = this.transpileTypeScript(ts, bundledTypeScript, 'bundle.ts');
 
+        interface Diagnostic {
+          file?: { fileName: string };
+          start?: number;
+          messageText: string;
+        }
+
         // If there are compilation errors, display them and abort execution
         if (diagnostics.length > 0) {
-          const errorMessages = diagnostics.map((diag) => `Error ${diag.file?.fileName}(${diag.start}): ${diag.messageText}`);
+          const errorMessages = (diagnostics as Diagnostic[]).map((diag) => `Error ${diag.file?.fileName}(${diag.start}): ${diag.messageText}`);
           addOutput(['TypeScript compilation failed with errors:', ...errorMessages]);
           setIsExecuting(false);
           return { success: false, output: errorMessages };
@@ -66,18 +72,18 @@ class TypeScriptExecutor implements LanguageExecutor {
         // Create a safe execution environment
         const consoleOutput: string[] = [];
         const mockConsole = {
-          log: (...args: any) => {
-            const output = args.map((arg: any) => String(arg)).join(' ');
+          log: (...args: unknown[]) => {
+            const output = args.map((arg: unknown) => String(arg)).join(' ');
             consoleOutput.push(output);
             addOutput(output);
           },
-          error: (...args: any) => {
-            const output = `Error: ${args.map((arg: any) => String(arg)).join(' ')}`;
+          error: (...args: unknown[]) => {
+            const output = `Error: ${args.map((arg: unknown) => String(arg)).join(' ')}`;
             consoleOutput.push(output);
             addOutput(output);
           },
-          warn: (...args: any) => {
-            const output = `Warning: ${args.map((arg: any) => String(arg)).join(' ')}`;
+          warn: (...args: unknown[]) => {
+            const output = `Warning: ${args.map((arg: unknown) => String(arg)).join(' ')}`;
             consoleOutput.push(output);
           },
         };
@@ -208,7 +214,7 @@ class TypeScriptExecutor implements LanguageExecutor {
 
       // Process imports first
       for (const match of imports) {
-        const [fullMatch, defaultImport, namedImports, namespaceImport, importPath] = match;
+        const [, , namedImports, , importPath] = match;
         const resolvedPath = this.resolveRelativePath(fileName, importPath, vfs);
 
         if (resolvedPath) {
@@ -277,11 +283,14 @@ ${namedList.map((name) => `if (typeof ${name} !== 'undefined') { window.${name} 
     return null;
   }
 
-  private async loadTypeScriptCompiler(): Promise<any> {
+  private async loadTypeScriptCompiler(): Promise<{
+    transpileModule: (input: string) => { outputText: string; diagnostics: unknown[] };
+    createDiagnosticCollection: () => unknown[];
+  }> {
     // In a real implementation, you would dynamically load the TypeScript compiler
     // For this example, we'll simulate the TypeScript compiler API
     return {
-      transpileModule: (input: string, options: any) => {
+      transpileModule: (input: string) => {
         // Simple TypeScript transpilation simulation
         // In a real implementation, this would use the actual TypeScript compiler
 
@@ -312,7 +321,11 @@ ${namedList.map((name) => `if (typeof ${name} !== 'undefined') { window.${name} 
     };
   }
 
-  private transpileTypeScript(ts: any, code: string, fileName: string): { transpiledCode: string; diagnostics: any[] } {
+  private transpileTypeScript(
+    ts: { transpileModule: (input: string) => { outputText: string; diagnostics: unknown[] } },
+    code: string,
+    fileName: string,
+  ): { transpiledCode: string; diagnostics: unknown[] } {
     // Check if we have this in cache
     const cacheKey = `${fileName}:${code}`;
     if (this.transpileCache[cacheKey]) {
@@ -323,18 +336,7 @@ ${namedList.map((name) => `if (typeof ${name} !== 'undefined') { window.${name} 
     }
 
     // Transpile the TypeScript code to JavaScript
-    const output = ts.transpileModule(code, {
-      compilerOptions: {
-        module: 1, // CommonJS
-        target: 2, // ES2015
-        strict: false,
-        esModuleInterop: true,
-        skipLibCheck: true,
-        forceConsistentCasingInFileNames: true,
-      },
-      fileName,
-      reportDiagnostics: true,
-    });
+    const output = ts.transpileModule(code);
 
     // Cache the result
     this.transpileCache[cacheKey] = output.outputText;

@@ -8,9 +8,9 @@ import type { CodeFile, ProgrammingLanguage } from '@/components/ui/source-code/
 // Add this near the top of the file, after any imports:
 
 export interface Executor {
-  isCompiled: any;
-  stop: any;
-  handleCommand: any;
+  isCompiled: boolean;
+  stop: () => void;
+  handleCommand: (command: string) => void;
 
   execute(fileId: string, context: ExecutionContext): Promise<ExecutionResult>;
 }

@@ -35,7 +35,7 @@ export class MarkdownStorageAdapter extends BaseStorageAdapter<ContentStorage> {
   }
 
   // O(1) - Enhanced write with slug indexing
-  async write(id: string, data: ContentStorage, metadata?: Partial<StorageMetadata>): Promise<any> {
+  async write(id: string, data: ContentStorage, metadata?: Partial<StorageMetadata>): Promise<ContentStorage> {
     // Ensure slug
     if (!data.slug && data.title) {
       data.slug = slugify(data.title, { lower: true, strict: true });
@@ -102,7 +102,7 @@ export class MarkdownStorageAdapter extends BaseStorageAdapter<ContentStorage> {
   }
 
   // Implement persistence methods
-  protected async persistWrite(id: string, data: ContentStorage, metadata: StorageMetadata): Promise<void> {
+  protected async persistWrite(id: string, data: ContentStorage): Promise<void> {
     const filePath = this.getFilePath(id);
 
     // Separate content from metadata
@@ -172,7 +172,7 @@ export class MarkdownStorageAdapter extends BaseStorageAdapter<ContentStorage> {
           this.index.metadata.set(item.id, metadata);
         }
       }
-    } catch (error) {
+    } catch {
       // Index doesn't exist yet
       console.log('No existing index found, starting fresh');
     }

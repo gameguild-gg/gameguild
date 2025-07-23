@@ -108,7 +108,7 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
       setLoading(false);
       return availableTenants;
     },
-    [dispatch],
+    [dispatch, setLoading],
   );
 
   const setCurrentTenant: SetCurrentTenant = useCallback(
@@ -118,7 +118,7 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
       setLoading(false);
       return tenant;
     },
-    [dispatch],
+    [dispatch, setLoading],
   );
 
   const switchCurrentTenant: SwitchCurrentTenant = useCallback(
@@ -133,7 +133,7 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
       try {
         // Find tenant by ID from available tenants
         const tenantArray = Array.from(state.availableTenants);
-        const tenant = tenantArray.find((t: any) => t?.id === tenantId);
+        const tenant = (tenantArray as Array<{ id?: string }>).find((t) => t?.id === tenantId);
 
         if (!tenant) throw new Error('Tenant not found in available tenants');
 
@@ -151,11 +151,12 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
         setLoading(false);
       }
     },
-    [state.availableTenants, session, updateSession, setLoading],
+    [state.availableTenants, session, updateSession, setLoading, dispatch],
   );
 
   const onSessionUpdate: OnSessionUpdate = useCallback(
-    async (session: any): Promise<void> => {
+    async (sessionData: unknown): Promise<void> => {
+      const session = sessionData as { user?: unknown; availableTenants?: unknown[]; currentTenant?: unknown };
       setLoading(true);
       if (!session?.user) {
         await updateAvailableTenants(new Set());
@@ -171,7 +172,7 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
 
   useEffect(() => {
     if (session !== undefined) void onSessionUpdate(session);
-  }, [session]);
+  }, [session, onSessionUpdate]);
 
   const value = {
     currentTenant: state.currentTenant,
@@ -208,7 +209,7 @@ export function useAuthenticatedApi() {
         Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
         ...(currentTenant && typeof currentTenant === 'object' && currentTenant !== null && 'id' in currentTenant
-          ? { 'X-Tenant-Id': (currentTenant as any).id }
+          ? { 'X-Tenant-Id': (currentTenant as { id: string }).id }
           : {}),
         ...options.headers,
       };

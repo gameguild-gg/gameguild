@@ -150,7 +150,7 @@ export function Web3Provider({ children }: Web3ProviderProps) {
         payload: { error: 'No Ethereum provider found. Please install MetaMask.' },
       });
     }
-  }, []);
+  }, [state.accountAddress]);
 
   const connect = useCallback(async () => {
     if (!window.ethereum) {
@@ -200,9 +200,9 @@ export function Web3Provider({ children }: Web3ProviderProps) {
 declare global {
   interface Window {
     ethereum?: {
-      request: (args: { method: string; params?: any[] }) => Promise<any>;
-      on: (event: string, listener: any) => void;
-      removeListener: (event: string, listener: any) => void;
+      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+      on: (event: string, listener: (...args: unknown[]) => void) => void;
+      removeListener: (event: string, listener: (...args: unknown[]) => void) => void;
     };
   }
 }

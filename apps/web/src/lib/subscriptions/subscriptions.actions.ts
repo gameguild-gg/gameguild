@@ -16,7 +16,7 @@ export interface Subscription {
   interval: 'monthly' | 'yearly' | 'lifetime';
   trialEndDate?: string;
   isActive: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   tenantId: string;
@@ -33,7 +33,7 @@ export interface SubscriptionPlan {
   isActive: boolean;
   isPopular?: boolean;
   trialDays?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   tenantId: string;

@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useCallback, useMemo } from 'react';
-import type { CodeFile } from '@/components/ui/source-code/types';
+import type { CodeFile } from '../../components/editor/ui/source-code/types';
 
 interface UseFileContentProps {
   files: CodeFile[];
@@ -48,7 +48,7 @@ function solution(a) {
     case 'typescript':
       template = `
 // Write your solution function here
-function solution(value: any): any[] {
+function solution(value: unknown): unknown[] {
   // Your solution here
   return [];
 }
@@ -201,9 +201,12 @@ int solution(int value) {
 
 export function useFileContent({ files, setFiles, activeFileId }: UseFileContentProps): UseFileContentReturn {
   // Get visible files based on editing mode
-  const getVisibleFiles = (isEditing: boolean) => {
-    return isEditing ? files : files.filter((file) => file.isVisible);
-  };
+  const getVisibleFiles = useCallback(
+    (isEditing: boolean) => {
+      return isEditing ? files : files.filter((file) => file.isVisible);
+    },
+    [files],
+  );
 
   // Get active file
   const activeFile = useMemo(() => {
@@ -214,7 +217,7 @@ export function useFileContent({ files, setFiles, activeFileId }: UseFileContent
 
     // If active file is not found, select the first file
     return visibleFiles[0] || files[0];
-  }, [files, activeFileId]);
+  }, [files, activeFileId, getVisibleFiles]);
 
   // Get active file content based on selected language
   const activeFileContent = useMemo(() => {

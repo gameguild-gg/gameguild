@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { ErrorProps } from '@/types';
 
-export const ErrorMessage = ({ error, reset }: ErrorProps): React.JSX.Element => {
+export const Error = ({ error, reset }: ErrorProps): React.JSX.Element => {
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   useEffect(() => {

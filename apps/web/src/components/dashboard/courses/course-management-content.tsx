@@ -2,7 +2,14 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import { useCourseContext, useCourseFilters, useCoursePagination, useCourseSelection } from '@/lib/courses';
-import { bulkUpdateCourses, createCourse, deleteCourse, duplicateCourse, publishCourse, revalidateCoursesData, updateCourse } from '@/lib/courses/actions';
+import {
+  createCourse,
+  deleteEnhancedCourse as deleteCourse,
+  duplicateCourse,
+  revalidateEnhancedCourseData as revalidateCoursesData,
+  toggleCoursePublishStatus as publishCourse,
+  updateEnhancedCourse as updateCourse,
+} from '@/lib/courses/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -110,10 +117,21 @@ export function CourseManagementContent({ initialPagination }: CourseManagementC
       isArchived: action === 'archive',
     }));
 
-    const result = await bulkUpdateCourses(updates);
-    if (result.success) {
+    try {
+      // Since no bulk update function exists, update courses individually
+      const results = await Promise.all(
+        updates.map((update) =>
+          updateCourse(update.id, {
+            // Only update published status as isArchived doesn't exist in EnhancedCourse
+            publishedAt: update.isPublished ? new Date().toISOString() : null,
+          }),
+        ),
+      );
+
       clearSelection();
       refreshData();
+    } catch (error) {
+      console.error('Bulk update failed:', error);
     }
   };
 

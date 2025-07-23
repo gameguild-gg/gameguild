@@ -435,7 +435,7 @@ export async function getUserStatistics(
   fromDate?: string,
   toDate?: string,
   includeDeleted: boolean = false,
-): Promise<{ success: boolean; error?: string; statistics?: any }> {
+): Promise<{ success: boolean; error?: string; statistics?: unknown }> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
     const params = new URLSearchParams({
@@ -478,7 +478,7 @@ export async function bulkActivateUsers(
 ): Promise<{
   success: boolean;
   error?: string;
-  result?: any;
+  result?: unknown;
 }> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
@@ -522,7 +522,7 @@ export async function bulkDeactivateUsers(
 ): Promise<{
   success: boolean;
   error?: string;
-  result?: any;
+  result?: unknown;
 }> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';

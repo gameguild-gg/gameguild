@@ -7,7 +7,7 @@ const intlMiddleware = createMiddleware(routing);
 
 export default auth((request) => {
   // Get tenant ID from auth session
-  const tenantId = request.auth?.tenantId || (request.auth as any)?.currentTenant?.id;
+  const tenantId = request.auth?.tenantId || (request.auth as { currentTenant?: { id: string } })?.currentTenant?.id;
 
   // Add tenant ID to request headers if available
   if (tenantId) {

@@ -1,5 +1,4 @@
 import { Content, ContentType } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
 import slugify from 'slugify';
 import { ContentRepository, ContentStorage, ImageRepository, ImageStorage, StorageFactory } from '@/lib/storage';
 // Streaming support for large content
@@ -155,13 +154,11 @@ export const uploadImage = async (
     mimeType?: string;
   },
 ): Promise<ImageStorage> => {
-  const id = `img-${uuidv4()}`;
-
   // Stream or buffer upload
   const result = await imageRepo.create({
     ...metadata,
     type: 'image',
-  } as any);
+  } as ImageStorage);
 
   return result;
 };
@@ -211,7 +208,7 @@ export const searchContent = async (query: {
 // Performance monitoring
 export const getStorageStats = async () => {
   const contentStats = await contentRepo.findAll();
-  const imageAdapter = StorageFactory.get('images') as any;
+  const imageAdapter = StorageFactory.get('images') as ImageRepository;
 
   const imageStats = imageAdapter ? await imageAdapter.getImageStats() : null;
 
@@ -237,7 +234,7 @@ export async function contentExists(type: ContentType, id: string): Promise<bool
 }
 
 export const createContentReadStream = (type: ContentType, id: string): Readable => {
-  const adapter = StorageFactory.get('content') as any;
+  const adapter = StorageFactory.get('content') as ContentRepository;
 
   if (!adapter || !adapter.createReadStream) {
     throw new Error('Streaming not supported for content');
@@ -247,7 +244,7 @@ export const createContentReadStream = (type: ContentType, id: string): Readable
 };
 
 export const createContentWriteStream = (type: ContentType, id: string, metadata?: Partial<Content>): Writable => {
-  const adapter = StorageFactory.get('content') as any;
+  const adapter = StorageFactory.get('content') as ContentRepository;
 
   if (!adapter || !adapter.createWriteStream) {
     throw new Error('Streaming not supported for content');
@@ -257,7 +254,7 @@ export const createContentWriteStream = (type: ContentType, id: string, metadata
 };
 
 export const createImageReadStream = (id: string, options?: { size?: 'small' | 'medium' | 'large' }): Readable => {
-  const adapter = StorageFactory.get('images') as any;
+  const adapter = StorageFactory.get('images') as ImageRepository;
 
   if (!adapter || !adapter.createReadStream) {
     throw new Error('Streaming not supported for images');
@@ -267,7 +264,7 @@ export const createImageReadStream = (id: string, options?: { size?: 'small' | '
 };
 
 // Migration helper for existing data
-export const migrateFromOldIndex = async (oldIndexPath: string): Promise<void> => {
+export const migrateFromOldIndex = async (): Promise<void> => {
   // Implementation for migrating from old index.json format
   // This would read the old format and create entries using the new system
   console.log('Migration helper - implement based on your old format');
