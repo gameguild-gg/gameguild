@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+
 import { TrackCard } from './track-card';
 import { useFilteredTracks } from '@/lib/tracks/use-tracks';
 
@@ -11,11 +11,7 @@ export function TrackGrid() {
   const filteredTracks = useFilteredTracks();
 
   if (filteredTracks.length === 0) {
-    return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="text-center py-10 text-muted-foreground">
-        No tracks found matching your criteria. Try adjusting your filters.
-      </motion.div>
-    );
+    return <div className="text-center py-10 text-muted-foreground">No tracks found matching your criteria. Try adjusting your filters.</div>;
   }
 
   return (

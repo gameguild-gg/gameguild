@@ -2,23 +2,23 @@
 
 import React, { useState } from 'react';
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import slugify from 'slugify';
-import { useToast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 import { getSession } from 'next-auth/react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, X } from 'lucide-react';
-import { FileUploader } from '@/components/custom/file-uploader';
+import { FileUploader } from '@/components/legacy/custom/file-uploader';
 
 // Import types from the generated API
-import type { ProjectReadable, ProjectWritable } from '@/lib/api/generated';
-import { getProjectsSlugBySlug, postProjects } from '@/lib/api/generated';
+// import type { ProjectReadable, ProjectWritable } from '@/lib/api/generated';
+import { getApiProjectsSlugBySlug, postApiProjects } from '@/lib/api/generated';
 
 // Define a simple error response type for generic error handling
 interface ApiErrorResponse {
@@ -49,19 +49,12 @@ const imageOrFileToUrl = (imageOrFile: ImageOrFile) => {
 
 // receive params to specify if the form is for creating or updating a project
 export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>) {
-  const [project, setProject] = React.useState<ProjectReadable | null>();
-  const [errorApi, setErrorApi] = React.useState<ApiErrorResponse | null>();
+  const [project, setProject] = React.useState<any | null>();
   const router = useRouter();
-  const toast = useToast();
+  // Remove this line - we'll use toast directly
 
   const [bannerImage, setBannerImage] = useState<ImageOrFile | null>(null);
-  const [videoUrl, setVideoUrl] = useState('');
   const [screenshots, setScreenshots] = useState<ImageOrFile[]>([]);
-
-  const getYouTubeId = (url: string) => {
-    const match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(.+)/);
-    return match ? match[1] : '';
-  };
 
   const removeScreenshot = (index: number) => {
     setScreenshots(screenshots.filter((_, i) => i !== index));
@@ -79,7 +72,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
     }
     try {
       const session = await getSession();
-      const response = await getProjectsSlugBySlug({
+      const response = await getApiProjectsSlugBySlug({
         path: { slug: slug },
         headers: { Authorization: `Bearer ${(session?.user as any)?.accessToken}` },
       });
@@ -123,21 +116,21 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
   });
 
   const createProject = async () => {
-    toast.toast({ title: 'Creating project' });
+    toast('Creating project');
     try {
       const session = await getSession();
-      const response = await postProjects({
-        body: project as ProjectWritable,
+      const response = await postApiProjects({
+        body: project,
         headers: { Authorization: `Bearer ${(session?.user as any)?.accessToken}` },
       });
 
       if (response.data) {
         setProject(response.data);
-        toast.toast({ title: 'Success', description: 'Project created successfully' });
+        toast.success('Project created successfully');
       }
     } catch (error: any) {
       if (error.status === 401) {
-        toast.toast({ title: 'Error', description: 'Unauthorized' });
+        toast.error('Unauthorized');
         await new Promise((resolve) => setTimeout(resolve, 1000));
         router.push(`/disconnect`);
       } else {
@@ -154,22 +147,15 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
             message += `${key}: ${errorResponse.message[key]};\n`;
           }
         }
-        toast.toast({
-          title: 'Error',
-          description: message,
-        });
+        toast.error(message);
       }
     }
   };
   const updateProject = async () => {};
-  const updateImages = async () => {};
 
   const submit = async () => {
     if (!project) {
-      toast.toast({
-        title: 'Error',
-        description: 'Empty project, please fill it',
-      });
+      toast.error('Empty project, please fill it');
       return;
     }
 
@@ -334,7 +320,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
                           locale: 'en',
                           trim: true,
                         }),
-                      } as ProjectReadable);
+                      });
                     }}
                     required
                   />
@@ -360,7 +346,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
                           strict: true,
                           locale: 'en',
                         }),
-                      } as ProjectReadable)
+                      })
                     }
                     required
                   />
@@ -463,7 +449,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
                       setProject({
                         ...project,
                         shortDescription: shortDescription,
-                      } as ProjectReadable);
+                      });
                     }}
                   />
                   <span>{project?.shortDescription?.length || 0}/140</span>
@@ -553,7 +539,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
                     setProject({
                       ...project,
                       description: e.target.value,
-                    } as ProjectReadable)
+                    })
                   }
                 />
                 <p className="text-sm text-gray-500 mt-1">This will make up the content of your game page.</p>

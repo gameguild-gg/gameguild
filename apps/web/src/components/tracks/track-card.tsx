@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -83,7 +82,7 @@ export function TrackCard({ track, onClick }: TrackCardProps) {
           {getBannerText(track.obtained)}
         </div>
       )}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <div>
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center mb-2">
             <TooltipProvider>
@@ -127,7 +126,7 @@ export function TrackCard({ track, onClick }: TrackCardProps) {
             </div>
           )}
         </CardContent>
-      </motion.div>
+      </div>
     </Card>
   );
 }
