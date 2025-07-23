@@ -23,7 +23,7 @@ export async function fetchPostsAction(
 ): Promise<{ success: boolean; data?: PostsPageDto; error?: string }> {
   try {
     // const session = await auth(); // TODO: Use for tenantId when available
-    
+
     const response = await getApiPosts({
       query: {
         pageNumber: page,
@@ -66,7 +66,7 @@ export async function fetchPostsAction(
 export async function createPostAction(formData: FormData): Promise<{ success: boolean; data?: PostDto; error?: string }> {
   try {
     const session = await auth();
-    
+
     if (!session?.user) {
       return { success: false, error: 'Authentication required' };
     }
@@ -156,14 +156,14 @@ export async function fetchPostAction(postId: string): Promise<{ success: boolea
 export async function togglePostLikeAction(postId: string, _isLiked: boolean): Promise<{ success: boolean; error?: string }> {
   try {
     const session = await auth();
-    
+
     if (!session?.user) {
       return { success: false, error: 'Authentication required' };
     }
 
     // TODO: Implement like/unlike API endpoint when available
     // For now, we'll just revalidate the cache
-    
+
     // Revalidate the specific post
     revalidateTag(CACHE_TAGS.POST_DETAIL(postId));
     revalidateTag(CACHE_TAGS.POSTS);
@@ -181,13 +181,13 @@ export async function togglePostLikeAction(postId: string, _isLiked: boolean): P
 export async function sharePostAction(postId: string): Promise<{ success: boolean; error?: string }> {
   try {
     const session = await auth();
-    
+
     if (!session?.user) {
       return { success: false, error: 'Authentication required' };
     }
 
     // TODO: Implement share API endpoint when available
-    
+
     // Revalidate the specific post
     revalidateTag(CACHE_TAGS.POST_DETAIL(postId));
     revalidateTag(CACHE_TAGS.POSTS);
@@ -205,7 +205,7 @@ export async function sharePostAction(postId: string): Promise<{ success: boolea
 export async function togglePostPinAction(_postId: string, _isPinned: boolean): Promise<{ success: boolean; error?: string }> {
   try {
     const session = await auth();
-    
+
     if (!session?.user) {
       return { success: false, error: 'Authentication required' };
     }
@@ -216,7 +216,7 @@ export async function togglePostPinAction(_postId: string, _isPinned: boolean): 
     // }
 
     // TODO: Implement pin/unpin API endpoint when available
-    
+
     // Revalidate all posts since pinned posts might affect order
     revalidateTag(CACHE_TAGS.POSTS);
 

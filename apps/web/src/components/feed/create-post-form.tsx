@@ -14,7 +14,7 @@ export function CreatePostForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!content.trim()) return;
 
     const formData = new FormData();
@@ -23,7 +23,7 @@ export function CreatePostForm() {
 
     startTransition(async () => {
       const result = await createPostAction(formData);
-      
+
       if (result.success) {
         setContent('');
         setPostType('general');

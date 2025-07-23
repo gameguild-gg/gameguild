@@ -26,12 +26,8 @@ export default async function ProjectsPage() {
       <div className="container mx-auto py-6">
         <div className="text-center py-8">
           <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Projects</h2>
-          <p className="text-gray-600 mb-4">
-            Failed to load projects data. Please check your connection and try again.
-          </p>
-          <p className="text-sm text-gray-500">
-            Error: {error instanceof Error ? error.message : 'Unknown error'}
-          </p>
+          <p className="text-gray-600 mb-4">Failed to load projects data. Please check your connection and try again.</p>
+          <p className="text-sm text-gray-500">Error: {error instanceof Error ? error.message : 'Unknown error'}</p>
         </div>
       </div>
     );

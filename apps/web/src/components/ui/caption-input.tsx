@@ -11,16 +11,11 @@ export interface CaptionInputProps {
   className?: string;
 }
 
-export function CaptionInput({ caption, onCaptionChange, placeholder = "Enter caption...", className }: CaptionInputProps) {
+export function CaptionInput({ caption, onCaptionChange, placeholder = 'Enter caption...', className }: CaptionInputProps) {
   return (
     <div className={className}>
       <Label className="text-sm font-medium">Caption</Label>
-      <Input
-        value={caption}
-        onChange={(e) => onCaptionChange(e.target.value)}
-        placeholder={placeholder}
-        className="mt-1"
-      />
+      <Input value={caption} onChange={(e) => onCaptionChange(e.target.value)} placeholder={placeholder} className="mt-1" />
     </div>
   );
 }

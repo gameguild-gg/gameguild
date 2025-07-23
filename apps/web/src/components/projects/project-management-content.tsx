@@ -13,7 +13,15 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { getProjectsData, createProject, updateProject, deleteProject, publishProject, unpublishProject, archiveProject } from '@/lib/projects/projects.actions';
+import {
+  getProjectsData,
+  createProject,
+  updateProject,
+  deleteProject,
+  publishProject,
+  unpublishProject,
+  archiveProject,
+} from '@/lib/projects/projects.actions';
 import type { Project } from '@/lib/api/generated/types.gen';
 
 interface ProjectManagementContentProps {
@@ -83,13 +91,13 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
   const handleCreate = async () => {
     try {
       setLoading(true);
-      const tagsArray = formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [];
-      
+      const tagsArray = formData.tags ? formData.tags.split(',').map((tag) => tag.trim()) : [];
+
       await createProject({
         ...formData,
         tags: tagsArray,
       });
-      
+
       toast.success('Project created successfully');
       setIsCreateDialogOpen(false);
       resetForm();
@@ -103,16 +111,16 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
 
   const handleEdit = async () => {
     if (!selectedProject) return;
-    
+
     try {
       setLoading(true);
-      const tagsArray = formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [];
-      
+      const tagsArray = formData.tags ? formData.tags.split(',').map((tag) => tag.trim()) : [];
+
       await updateProject(selectedProject.id!, {
         ...formData,
         tags: tagsArray,
       });
-      
+
       toast.success('Project updated successfully');
       setIsEditDialogOpen(false);
       setSelectedProject(null);
@@ -200,16 +208,13 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
     setIsEditDialogOpen(true);
   };
 
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = !searchTerm || 
-      project.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || 
-      project.status?.toString() === statusFilter;
-    
-    const matchesType = typeFilter === 'all' || 
-      project.type?.toString() === typeFilter;
+  const filteredProjects = projects.filter((project) => {
+    const matchesSearch =
+      !searchTerm || project.title?.toLowerCase().includes(searchTerm.toLowerCase()) || project.description?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = statusFilter === 'all' || project.status?.toString() === statusFilter;
+
+    const matchesType = typeFilter === 'all' || project.type?.toString() === typeFilter;
 
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -221,7 +226,7 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
       '2': { label: 'Archived', variant: 'secondary' },
       '3': { label: 'Deleted', variant: 'destructive' },
     };
-    
+
     const statusInfo = statusMap[status?.toString()] || { label: 'Unknown', variant: 'outline' as const };
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
   };
@@ -256,24 +261,24 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
                 <DialogTitle>Create New Project</DialogTitle>
                 <DialogDescription>Add a new project to the system</DialogDescription>
               </DialogHeader>
-              
+
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="title">Title *</Label>
                   <Input
                     id="title"
                     value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                     placeholder="Project title"
                   />
                 </div>
-                
+
                 <div className="grid gap-2">
                   <Label htmlFor="shortDescription">Short Description</Label>
                   <Input
                     id="shortDescription"
                     value={formData.shortDescription}
-                    onChange={(e) => setFormData(prev => ({ ...prev, shortDescription: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, shortDescription: e.target.value }))}
                     placeholder="Brief description"
                   />
                 </div>
@@ -283,7 +288,7 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                     placeholder="Detailed description"
                     rows={4}
                   />
@@ -295,17 +300,17 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
                     <Input
                       id="websiteUrl"
                       value={formData.websiteUrl}
-                      onChange={(e) => setFormData(prev => ({ ...prev, websiteUrl: e.target.value }))}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, websiteUrl: e.target.value }))}
                       placeholder="https://example.com"
                     />
                   </div>
-                  
+
                   <div className="grid gap-2">
                     <Label htmlFor="repositoryUrl">Repository URL</Label>
                     <Input
                       id="repositoryUrl"
                       value={formData.repositoryUrl}
-                      onChange={(e) => setFormData(prev => ({ ...prev, repositoryUrl: e.target.value }))}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, repositoryUrl: e.target.value }))}
                       placeholder="https://github.com/user/repo"
                     />
                   </div>
@@ -316,14 +321,20 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
                   <Input
                     id="tags"
                     value={formData.tags}
-                    onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, tags: e.target.value }))}
                     placeholder="game, unity, indie"
                   />
                 </div>
               </div>
 
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => { setIsCreateDialogOpen(false); resetForm(); }}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsCreateDialogOpen(false);
+                    resetForm();
+                  }}
+                >
                   Cancel
                 </Button>
                 <Button onClick={handleCreate} disabled={loading || !formData.title}>
@@ -341,14 +352,9 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search projects..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+              <Input placeholder="Search projects..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
-            
+
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Filter by status" />
@@ -380,9 +386,7 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
       <Card>
         <CardHeader>
           <CardTitle>Projects List</CardTitle>
-          <CardDescription>
-            {filteredProjects.length} projects found
-          </CardDescription>
+          <CardDescription>{filteredProjects.length} projects found</CardDescription>
         </CardHeader>
         <CardContent>
           {filteredProjects.length === 0 ? (
@@ -412,18 +416,14 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
                     <TableCell>
                       <div>
                         <div className="font-medium">{project.title}</div>
-                        {project.shortDescription && (
-                          <div className="text-sm text-gray-600">{project.shortDescription}</div>
-                        )}
+                        {project.shortDescription && <div className="text-sm text-gray-600">{project.shortDescription}</div>}
                       </div>
                     </TableCell>
                     <TableCell>{getStatusBadge(project.status)}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{project.type?.toString() || 'Unknown'}</Badge>
                     </TableCell>
-                    <TableCell>
-                      {project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'Unknown'}
-                    </TableCell>
+                    <TableCell>{project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'Unknown'}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <Button variant="ghost" size="sm" onClick={() => openEditDialog(project)}>
@@ -459,24 +459,24 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
             <DialogTitle>Edit Project</DialogTitle>
             <DialogDescription>Update project information</DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="edit-title">Title *</Label>
               <Input
                 id="edit-title"
                 value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                 placeholder="Project title"
               />
             </div>
-            
+
             <div className="grid gap-2">
               <Label htmlFor="edit-shortDescription">Short Description</Label>
               <Input
                 id="edit-shortDescription"
                 value={formData.shortDescription}
-                onChange={(e) => setFormData(prev => ({ ...prev, shortDescription: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, shortDescription: e.target.value }))}
                 placeholder="Brief description"
               />
             </div>
@@ -486,7 +486,7 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
               <Textarea
                 id="edit-description"
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                 placeholder="Detailed description"
                 rows={4}
               />
@@ -498,17 +498,17 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
                 <Input
                   id="edit-websiteUrl"
                   value={formData.websiteUrl}
-                  onChange={(e) => setFormData(prev => ({ ...prev, websiteUrl: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, websiteUrl: e.target.value }))}
                   placeholder="https://example.com"
                 />
               </div>
-              
+
               <div className="grid gap-2">
                 <Label htmlFor="edit-repositoryUrl">Repository URL</Label>
                 <Input
                   id="edit-repositoryUrl"
                   value={formData.repositoryUrl}
-                  onChange={(e) => setFormData(prev => ({ ...prev, repositoryUrl: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, repositoryUrl: e.target.value }))}
                   placeholder="https://github.com/user/repo"
                 />
               </div>
@@ -519,14 +519,21 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
               <Input
                 id="edit-tags"
                 value={formData.tags}
-                onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, tags: e.target.value }))}
                 placeholder="game, unity, indie"
               />
             </div>
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => { setIsEditDialogOpen(false); setSelectedProject(null); resetForm(); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditDialogOpen(false);
+                setSelectedProject(null);
+                resetForm();
+              }}
+            >
               Cancel
             </Button>
             <Button onClick={handleEdit} disabled={loading || !formData.title}>

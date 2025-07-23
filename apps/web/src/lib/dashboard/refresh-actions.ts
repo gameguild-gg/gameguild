@@ -10,22 +10,17 @@ import { refreshRecentActivity } from '@/lib/feed/feed.actions';
 export async function refreshDashboardData(): Promise<{ success: boolean; message: string }> {
   try {
     // Call individual refresh functions
-    const [userStatsResult, activityResult] = await Promise.all([
-      refreshUserStatistics(),
-      refreshRecentActivity(),
-    ]);
-    
+    const [userStatsResult, activityResult] = await Promise.all([refreshUserStatistics(), refreshRecentActivity()]);
+
     // Also revalidate general cache tags
     revalidateTag('users');
     revalidateTag('posts');
-    
+
     const allSuccessful = userStatsResult.success && activityResult.success;
-    
+
     return {
       success: allSuccessful,
-      message: allSuccessful 
-        ? 'Dashboard data refreshed successfully'
-        : 'Partial refresh completed',
+      message: allSuccessful ? 'Dashboard data refreshed successfully' : 'Partial refresh completed',
     };
   } catch (error) {
     console.error('Error refreshing dashboard data:', error);

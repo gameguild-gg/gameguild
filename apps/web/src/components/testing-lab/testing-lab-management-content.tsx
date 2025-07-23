@@ -29,10 +29,7 @@ interface TestingLabManagementContentProps {
   initialTestingSessions: TestingSession[];
 }
 
-export function TestingLabManagementContent({
-  initialTestingRequests,
-  initialTestingSessions,
-}: TestingLabManagementContentProps) {
+export function TestingLabManagementContent({ initialTestingRequests, initialTestingSessions }: TestingLabManagementContentProps) {
   const [testingRequests, setTestingRequests] = useState<TestingRequest[]>(initialTestingRequests);
   const [testingSessions, setTestingSessions] = useState<TestingSession[]>(initialTestingSessions);
   const [loading, setLoading] = useState(false);
@@ -101,10 +98,7 @@ export function TestingLabManagementContent({
   const refreshData = async () => {
     setLoading(true);
     try {
-      const [requestsResult, sessionsResult] = await Promise.all([
-        getTestingRequestsData({ take: 100 }),
-        getTestingSessionsData({ take: 100 }),
-      ]);
+      const [requestsResult, sessionsResult] = await Promise.all([getTestingRequestsData({ take: 100 }), getTestingSessionsData({ take: 100 })]);
       setTestingRequests(requestsResult.testingRequests);
       setTestingSessions(sessionsResult.testingSessions);
     } catch (error) {
@@ -194,9 +188,7 @@ export function TestingLabManagementContent({
 
   const filteredRequests = testingRequests.filter((request) => {
     const matchesSearch =
-      !searchTerm ||
-      request.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      !searchTerm || request.title?.toLowerCase().includes(searchTerm.toLowerCase()) || request.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || request.status?.toString() === statusFilter;
 
@@ -223,9 +215,7 @@ export function TestingLabManagementContent({
             <Users className="h-6 w-6 text-green-600" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold">
-              Testing Lab ({activeTab === 'requests' ? testingRequests.length : testingSessions.length})
-            </h2>
+            <h2 className="text-xl font-semibold">Testing Lab ({activeTab === 'requests' ? testingRequests.length : testingSessions.length})</h2>
             <p className="text-sm text-gray-600">Manage testing requests and sessions</p>
           </div>
         </div>
@@ -287,9 +277,7 @@ export function TestingLabManagementContent({
                         id="maxTesters"
                         type="number"
                         value={requestFormData.maxTesters}
-                        onChange={(e) =>
-                          setRequestFormData((prev) => ({ ...prev, maxTesters: parseInt(e.target.value) || 10 }))
-                        }
+                        onChange={(e) => setRequestFormData((prev) => ({ ...prev, maxTesters: parseInt(e.target.value) || 10 }))}
                       />
                     </div>
                   </div>
@@ -327,10 +315,7 @@ export function TestingLabManagementContent({
                   >
                     Cancel
                   </Button>
-                  <Button
-                    onClick={handleCreateRequest}
-                    disabled={loading || !requestFormData.title || !requestFormData.projectVersionId}
-                  >
+                  <Button onClick={handleCreateRequest} disabled={loading || !requestFormData.title || !requestFormData.projectVersionId}>
                     {loading ? 'Creating...' : 'Create Request'}
                   </Button>
                 </div>
@@ -409,9 +394,7 @@ export function TestingLabManagementContent({
                       id="sessionMaxTesters"
                       type="number"
                       value={sessionFormData.maxTesters}
-                      onChange={(e) =>
-                        setSessionFormData((prev) => ({ ...prev, maxTesters: parseInt(e.target.value) || 5 }))
-                      }
+                      onChange={(e) => setSessionFormData((prev) => ({ ...prev, maxTesters: parseInt(e.target.value) || 5 }))}
                     />
                   </div>
                 </div>
@@ -428,12 +411,7 @@ export function TestingLabManagementContent({
                   </Button>
                   <Button
                     onClick={handleCreateSession}
-                    disabled={
-                      loading ||
-                      !sessionFormData.sessionName ||
-                      !sessionFormData.testingRequestId ||
-                      !sessionFormData.sessionDate
-                    }
+                    disabled={loading || !sessionFormData.sessionName || !sessionFormData.testingRequestId || !sessionFormData.sessionDate}
                   >
                     {loading ? 'Creating...' : 'Create Session'}
                   </Button>
@@ -448,16 +426,10 @@ export function TestingLabManagementContent({
       <Card>
         <CardContent className="pt-6">
           <div className="flex space-x-4 mb-4">
-            <Button
-              variant={activeTab === 'requests' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('requests')}
-            >
+            <Button variant={activeTab === 'requests' ? 'default' : 'outline'} onClick={() => setActiveTab('requests')}>
               Testing Requests ({testingRequests.length})
             </Button>
-            <Button
-              variant={activeTab === 'sessions' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('sessions')}
-            >
+            <Button variant={activeTab === 'sessions' ? 'default' : 'outline'} onClick={() => setActiveTab('sessions')}>
               Testing Sessions ({testingSessions.length})
             </Button>
           </div>
@@ -466,12 +438,7 @@ export function TestingLabManagementContent({
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder={`Search ${activeTab}...`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+              <Input placeholder={`Search ${activeTab}...`} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -495,9 +462,7 @@ export function TestingLabManagementContent({
       <Card>
         <CardHeader>
           <CardTitle>{activeTab === 'requests' ? 'Testing Requests' : 'Testing Sessions'}</CardTitle>
-          <CardDescription>
-            {activeTab === 'requests' ? filteredRequests.length : filteredSessions.length} items found
-          </CardDescription>
+          <CardDescription>{activeTab === 'requests' ? filteredRequests.length : filteredSessions.length} items found</CardDescription>
         </CardHeader>
         <CardContent>
           {activeTab === 'requests' ? (
@@ -528,18 +493,14 @@ export function TestingLabManagementContent({
                       <TableCell>
                         <div>
                           <div className="font-medium">{request.title}</div>
-                          {request.description && (
-                            <div className="text-sm text-gray-600 truncate">{request.description}</div>
-                          )}
+                          {request.description && <div className="text-sm text-gray-600 truncate">{request.description}</div>}
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(request.status)}</TableCell>
                       <TableCell>
                         {request.currentTesterCount || 0} / {request.maxTesters || 'N/A'}
                       </TableCell>
-                      <TableCell>
-                        {request.startDate ? new Date(request.startDate).toLocaleDateString() : 'Not set'}
-                      </TableCell>
+                      <TableCell>{request.startDate ? new Date(request.startDate).toLocaleDateString() : 'Not set'}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
                           <Button variant="ghost" size="sm">
@@ -586,9 +547,7 @@ export function TestingLabManagementContent({
                       <div className="font-medium">{session.sessionName}</div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">
-                        {session.testingRequest?.title || session.testingRequestId || 'Unknown'}
-                      </div>
+                      <div className="text-sm">{session.testingRequest?.title || session.testingRequestId || 'Unknown'}</div>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">

@@ -39,10 +39,7 @@ const CACHE_TAGS = {
 export async function getRecentActivity(limit: number = 10): Promise<{ success: boolean; data?: RecentActivityData; error?: string }> {
   try {
     // Fetch recent users and posts in parallel
-    const [usersResult, postsResult] = await Promise.all([
-      getUsersData(1, Math.ceil(limit / 2)),
-      getRecentPosts(Math.ceil(limit / 2)),
-    ]);
+    const [usersResult, postsResult] = await Promise.all([getUsersData(1, Math.ceil(limit / 2)), getRecentPosts(Math.ceil(limit / 2))]);
 
     const activities: ActivityItem[] = [];
 
@@ -63,7 +60,7 @@ export async function getRecentActivity(limit: number = 10): Promise<{ success: 
         },
         timestamp: user.createdAt,
       }));
-      
+
       activities.push(...userActivities);
     }
 
@@ -85,14 +82,12 @@ export async function getRecentActivity(limit: number = 10): Promise<{ success: 
         },
         timestamp: post.createdAt,
       }));
-      
+
       activities.push(...postActivities);
     }
 
     // Sort by timestamp (most recent first) and limit
-    const sortedActivities = activities
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, limit);
+    const sortedActivities = activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, limit);
 
     return {
       success: true,
@@ -119,7 +114,7 @@ export async function getRecentActivity(limit: number = 10): Promise<{ success: 
 export async function refreshRecentActivity(): Promise<{ success: boolean; error?: string }> {
   try {
     revalidateTag(CACHE_TAGS.RECENT_ACTIVITY);
-    
+
     return {
       success: true,
     };

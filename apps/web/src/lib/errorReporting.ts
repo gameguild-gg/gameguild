@@ -39,11 +39,7 @@ export class ErrorReporter {
   /**
    * Create a standardized error report
    */
-  createErrorReport(
-    error: Error,
-    errorInfo?: { componentStack?: string },
-    level: 'page' | 'component' | 'critical' = 'component'
-  ): ErrorReport {
+  createErrorReport(error: Error, errorInfo?: { componentStack?: string }, level: 'page' | 'component' | 'critical' = 'component'): ErrorReport {
     return {
       error: {
         name: error.name,
@@ -127,10 +123,7 @@ export class ErrorReporter {
   /**
    * Report error with simplified interface
    */
-  async reportSimpleError(
-    error: Error,
-    level: 'page' | 'component' | 'critical' = 'component'
-  ): Promise<void> {
+  async reportSimpleError(error: Error, level: 'page' | 'component' | 'critical' = 'component'): Promise<void> {
     const errorReport = this.createErrorReport(error, undefined, level);
     await this.reportError(errorReport);
   }
@@ -142,17 +135,11 @@ export const errorReporter = new ErrorReporter();
 // Global error handler for unhandled promise rejections
 if (typeof window !== 'undefined') {
   window.addEventListener('unhandledrejection', (event) => {
-    errorReporter.reportSimpleError(
-      new Error(`Unhandled Promise Rejection: ${event.reason}`),
-      'critical'
-    );
+    errorReporter.reportSimpleError(new Error(`Unhandled Promise Rejection: ${event.reason}`), 'critical');
   });
 
   // Global error handler for uncaught exceptions
   window.addEventListener('error', (event) => {
-    errorReporter.reportSimpleError(
-      new Error(`Uncaught Error: ${event.message} at ${event.filename}:${event.lineno}`),
-      'critical'
-    );
+    errorReporter.reportSimpleError(new Error(`Uncaught Error: ${event.message} at ${event.filename}:${event.lineno}`), 'critical');
   });
 }

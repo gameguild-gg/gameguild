@@ -42,13 +42,7 @@ import type {
 } from '@/lib/api/generated/types.gen';
 
 // Get all testing requests
-export async function getTestingRequestsData(params?: {
-  status?: string;
-  projectVersionId?: string;
-  creatorId?: string;
-  skip?: number;
-  take?: number;
-}) {
+export async function getTestingRequestsData(params?: { status?: string; projectVersionId?: string; creatorId?: string; skip?: number; take?: number }) {
   const session = await auth();
 
   if (!session?.accessToken) {
@@ -315,10 +309,10 @@ export async function createTestingSession(sessionData: {
     const sessionDateTime = new Date(sessionData.sessionDate);
     const [startHours, startMinutes] = sessionData.startTime.split(':');
     const [endHours, endMinutes] = sessionData.endTime.split(':');
-    
+
     const startDateTime = new Date(sessionDateTime);
     startDateTime.setHours(parseInt(startHours), parseInt(startMinutes), 0, 0);
-    
+
     const endDateTime = new Date(sessionDateTime);
     endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0, 0);
 
@@ -733,7 +727,7 @@ export async function submitTestingRequestFeedback(
     comments: string;
     wouldRecommend: boolean;
     sessionId?: string;
-  }
+  },
 ) {
   const session = await auth();
 
