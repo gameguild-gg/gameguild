@@ -358,11 +358,11 @@ public static class AdvancedWebApplicationBuilderExtensions {
           context.Response.ContentType = "application/json";
           var result = System.Text.Json.JsonSerializer.Serialize(
             new {
-              status = report.Status.ToString(), checks = report.Entries.Select(entry => new { name = entry.Key, status = entry.Value.Status.ToString(), duration = entry.Value.Duration.ToString(), description = entry.Value.Description })
+              status = report.Status.ToString(), checks = report.Entries.Select(entry => new { name = entry.Key, status = entry.Value.Status.ToString(), duration = entry.Value.Duration.ToString(), description = entry.Value.Description }),
             }
           );
           await context.Response.WriteAsync(result);
-        }
+        },
       }
     );
 

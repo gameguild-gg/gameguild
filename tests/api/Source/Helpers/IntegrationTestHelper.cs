@@ -64,7 +64,7 @@ namespace GameGuild.Tests.Helpers {
                   { "OAuth:GitHub:ClientId", "test-github-client-id" },
                   { "OAuth:GitHub:ClientSecret", "test-github-client-secret" },
                   { "Cors:AllowedOrigins:0", "http://localhost:3000" },
-                  { "Cors:AllowedOrigins:1", "https://localhost:3000" }
+                  { "Cors:AllowedOrigins:1", "https://localhost:3000" },
                 }
               );
             }
@@ -161,7 +161,7 @@ namespace GameGuild.Tests.Helpers {
       var userDto = new UserDto {
         Id = userId,
         Username = user?.Name ?? $"testuser-{userId}",
-        Email = user?.Email ?? $"test-{userId}@example.com"
+        Email = user?.Email ?? $"test-{userId}@example.com",
       };
       
       var claims = new List<Claim> {
@@ -170,7 +170,7 @@ namespace GameGuild.Tests.Helpers {
         new(ClaimTypes.Name, userDto.Username),
         new(JwtRegisteredClaimNames.Sub, userId.ToString()),
         new(JwtRegisteredClaimNames.Email, userDto.Email),
-        new("username", userDto.Username)
+        new("username", userDto.Username),
       };
       
       // Add roles
@@ -232,7 +232,7 @@ namespace GameGuild.Tests.Helpers {
           Email = $"test-{actualUserId}@example.com",
           IsActive = true,
           CreatedAt = DateTime.UtcNow,
-          UpdatedAt = DateTime.UtcNow
+          UpdatedAt = DateTime.UtcNow,
         };
         context.Users.Add(user);
       }
@@ -244,7 +244,7 @@ namespace GameGuild.Tests.Helpers {
           Name = $"Test Tenant {actualTenantId}",
           IsActive = true,
           CreatedAt = DateTime.UtcNow,
-          UpdatedAt = DateTime.UtcNow
+          UpdatedAt = DateTime.UtcNow,
         };
         context.Tenants.Add(tenant);
       }
@@ -258,7 +258,7 @@ namespace GameGuild.Tests.Helpers {
           PermissionFlags1 = permissionFlags1,
           PermissionFlags2 = permissionFlags2,
           CreatedAt = DateTime.UtcNow,
-          UpdatedAt = DateTime.UtcNow
+          UpdatedAt = DateTime.UtcNow,
         };
         context.TenantPermissions.Add(tenantPermission);
       }

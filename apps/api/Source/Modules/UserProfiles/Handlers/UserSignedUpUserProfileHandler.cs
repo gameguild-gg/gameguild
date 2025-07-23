@@ -24,7 +24,7 @@ public class UserSignedUpUserProfileHandler(
         DisplayName = notification.Username,
         Title = "", // Default empty title
         Description = null, // No default description
-        TenantId = notification.TenantId
+        TenantId = notification.TenantId,
       };
 
       var result = await mediator.Send(createProfileCommand, cancellationToken);

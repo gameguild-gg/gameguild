@@ -354,7 +354,7 @@ public class MiddlewareInfrastructureTests
             "Middleware2-Before", 
             "Endpoint-Executed",
             "Middleware2-After",
-            "Middleware1-After"
+            "Middleware1-After",
         };
 
         Assert.Equal(expectedOrder, executionOrder);
@@ -370,7 +370,7 @@ public class MiddlewareInfrastructureTests
     {
         var configData = new Dictionary<string, string?>
         {
-            ["ASPNETCORE_ENVIRONMENT"] = "Testing"
+            ["ASPNETCORE_ENVIRONMENT"] = "Testing",
         };
 
         return new ConfigurationBuilder()

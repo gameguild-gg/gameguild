@@ -48,7 +48,7 @@ public class AchievementsController : ControllerBase {
       SearchTerm = searchTerm,
       OrderBy = orderBy,
       Descending = descending,
-      TenantId = tenantId ?? GetCurrentTenantId()
+      TenantId = tenantId ?? GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(query);
@@ -68,7 +68,7 @@ public class AchievementsController : ControllerBase {
       AchievementId = achievementId,
       IncludeLevels = includeLevels,
       IncludePrerequisites = includePrerequisites,
-      TenantId = GetCurrentTenantId()
+      TenantId = GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(query);
@@ -111,7 +111,7 @@ public class AchievementsController : ControllerBase {
   public async Task<ActionResult> DeleteAchievement(Guid achievementId) {
     var command = new DeleteAchievementCommand {
       AchievementId = achievementId,
-      UserId = GetCurrentUserId()
+      UserId = GetCurrentUserId(),
     };
 
     var result = await _mediator.Send(command);
@@ -136,7 +136,7 @@ public class AchievementsController : ControllerBase {
       Context = request.Context,
       NotifyUser = request.NotifyUser,
       TenantId = GetCurrentTenantId(),
-      AwardedByUserId = GetCurrentUserId()
+      AwardedByUserId = GetCurrentUserId(),
     };
 
     var result = await _mediator.Send(command);
@@ -159,7 +159,7 @@ public class AchievementsController : ControllerBase {
       Context = request.Context,
       NotifyUsers = request.NotifyUsers,
       TenantId = GetCurrentTenantId(),
-      AwardedByUserId = GetCurrentUserId()
+      AwardedByUserId = GetCurrentUserId(),
     };
 
     var result = await _mediator.Send(command);
@@ -174,7 +174,7 @@ public class AchievementsController : ControllerBase {
   public async Task<ActionResult<AchievementStatisticsDto>> GetAchievementStatistics(Guid achievementId) {
     var query = new GetAchievementStatisticsQuery {
       AchievementId = achievementId,
-      TenantId = GetCurrentTenantId()
+      TenantId = GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(query);
@@ -188,7 +188,7 @@ public class AchievementsController : ControllerBase {
   [HttpGet("statistics")]
   public async Task<ActionResult<AchievementStatisticsDto>> GetOverallStatistics() {
     var query = new GetAchievementStatisticsQuery {
-      TenantId = GetCurrentTenantId()
+      TenantId = GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(query);

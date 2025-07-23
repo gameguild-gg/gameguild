@@ -166,5 +166,5 @@ public enum PeerReviewStatus {
   Rejected = 4,
   Disputed = 5,
   Expired = 6,
-  Cancelled = 7
+  Cancelled = 7,
 }

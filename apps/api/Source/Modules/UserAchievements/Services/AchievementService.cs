@@ -48,7 +48,7 @@ public class AchievementService : IAchievementService {
         UserId = userId,
         AchievementId = achievementId,
         Context = context,
-        TenantId = tenantId
+        TenantId = tenantId,
       };
 
       return await _mediator.Send(command);
@@ -74,7 +74,7 @@ public class AchievementService : IAchievementService {
         AchievementId = achievementId,
         ProgressIncrement = progressIncrement,
         Context = context,
-        TenantId = tenantId
+        TenantId = tenantId,
       };
 
       return await _mediator.Send(command);
@@ -175,7 +175,7 @@ public class AchievementService : IAchievementService {
     try {
       var command = new MarkAchievementNotifiedCommand {
         UserAchievementId = userAchievementId,
-        UserId = Guid.Empty // This should be set from user context
+        UserId = Guid.Empty, // This should be set from user context
       };
 
       return await _mediator.Send(command);

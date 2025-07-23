@@ -115,7 +115,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       maxTesters = 10,
       startDate = DateTime.UtcNow.AddDays(1).ToString("O"),
       endDate = DateTime.UtcNow.AddDays(7).ToString("O"),
-      status = 1 // TestingRequestStatus.Open = 1
+      status = 1, // TestingRequestStatus.Open = 1
     };
 
     var json = JsonSerializer.Serialize(newRequest);
@@ -143,7 +143,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
 
     var invalidRequest = new {
       // Missing required fields like projectVersionId, title, etc.
-      description = "Description without required fields"
+      description = "Description without required fields",
     };
 
     var json = JsonSerializer.Serialize(invalidRequest);
@@ -276,7 +276,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       EndDate = DateTime.UtcNow.AddDays(7),
       Status = TestingRequestStatus.Open,
       CreatedById = user.Id,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.TestingRequests.Add(testingRequest);
@@ -294,7 +294,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       MaxTestersCapacity = 10,
       MaxProjectsCapacity = 5,
       Status = LocationStatus.Active,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.TestingLocations.Add(location);
@@ -311,7 +311,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       Status = SessionStatus.Scheduled,
       ManagerUserId = user.Id,
       CreatedById = user.Id,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.TestingSessions.Add(testingSession);
@@ -326,7 +326,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       Name = "Test Tenant",
       Slug = "test-tenant",
       IsActive = true,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.Tenants.Add(tenant);
@@ -336,7 +336,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       Name = "testuser",
       Email = "test@example.com",
       IsActive = true,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.Users.Add(user);
@@ -352,7 +352,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       Title = "Test Project",
       Description = "Test project for testing lab",
       CreatedById = userId,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.Projects.Add(project);
@@ -370,7 +370,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       ProjectId = projectId,
       VersionNumber = "1.0.0",
       CreatedById = userId,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.Set<ProjectVersionModel>().Add(version);
@@ -461,7 +461,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       InstructionsType = InstructionType.Text,
       InstructionsContent = "Test the core gameplay mechanics",
       FeedbackFormContent = "Please rate the game on a scale of 1-5",
-      TeamIdentifier = "fa23-capstone-2023-24-t01"
+      TeamIdentifier = "fa23-capstone-2023-24-t01",
     };
 
     var json = JsonSerializer.Serialize(requestDto);
@@ -494,7 +494,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       // Missing required fields
       Title = "",
       VersionNumber = "",
-      DownloadUrl = "invalid-url"
+      DownloadUrl = "invalid-url",
     };
 
     var json = JsonSerializer.Serialize(requestDto);
@@ -524,7 +524,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       FeedbackResponses = "{\"rating\": 5, \"comments\": \"Great game!\"}",
       OverallRating = 5,
       WouldRecommend = true,
-      AdditionalNotes = "Really enjoyed the gameplay"
+      AdditionalNotes = "Really enjoyed the gameplay",
     };
 
     var json = JsonSerializer.Serialize(feedbackDto);
@@ -637,7 +637,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       UserId = user.Id,
       RegistrationType = RegistrationType.Tester,
       AttendanceStatus = AttendanceStatus.Registered,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
     _context.SessionRegistrations.Add(registration);
     await _context.SaveChangesAsync();
@@ -647,7 +647,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
 
     var attendanceDto = new UpdateAttendanceDto {
       UserId = user.Id,
-      AttendanceStatus = AttendanceStatus.Completed
+      AttendanceStatus = AttendanceStatus.Completed,
     };
 
     var json = JsonSerializer.Serialize(attendanceDto);
@@ -680,7 +680,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     SetAuthorizationHeader(token);
 
     var reportDto = new ReportFeedbackDto {
-      Reason = "Inappropriate content"
+      Reason = "Inappropriate content",
     };
 
     var json = JsonSerializer.Serialize(reportDto);
@@ -718,7 +718,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     SetAuthorizationHeader(token);
 
     var qualityDto = new RateFeedbackQualityDto {
-      Quality = FeedbackQuality.Positive
+      Quality = FeedbackQuality.Positive,
     };
 
     var json = JsonSerializer.Serialize(qualityDto);
@@ -758,7 +758,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     SetAuthorizationHeader(token);
 
     var reportDto = new ReportFeedbackDto {
-      Reason = "Test reason"
+      Reason = "Test reason",
     };
 
     var json = JsonSerializer.Serialize(reportDto);
@@ -796,7 +796,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       EndDate = DateTime.UtcNow.AddDays(7),
       Status = status,
       CreatedById = user.Id,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.TestingRequests.Add(testingRequest);
@@ -814,7 +814,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       MaxTestersCapacity = 10,
       MaxProjectsCapacity = 5,
       Status = LocationStatus.Active,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.TestingLocations.Add(location);
@@ -831,7 +831,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       Status = SessionStatus.Scheduled,
       ManagerUserId = user.Id,
       CreatedById = user.Id,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.TestingSessions.Add(session);
@@ -846,7 +846,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       Id = Guid.NewGuid(),
       TestingRequestId = testingRequest.Id,
       FormSchema = "{}",
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.TestingFeedbackForms.Add(feedbackForm);
@@ -863,7 +863,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
       AdditionalNotes = "Test feedback",
       IsReported = false,
       QualityRating = FeedbackQuality.Neutral,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.TestingFeedback.Add(feedback);

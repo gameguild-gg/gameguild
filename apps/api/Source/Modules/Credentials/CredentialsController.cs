@@ -133,7 +133,7 @@ public class CredentialsController : ControllerBase {
         Value = createDto.Value,
         Metadata = createDto.Metadata,
         ExpiresAt = createDto.ExpiresAt,
-        IsActive = createDto.IsActive
+        IsActive = createDto.IsActive,
       };
 
       var createdCredential = await _mediator.Send(command);
@@ -170,7 +170,7 @@ public class CredentialsController : ControllerBase {
         Value = updateDto.Value,
         Metadata = updateDto.Metadata,
         ExpiresAt = updateDto.ExpiresAt,
-        IsActive = updateDto.IsActive
+        IsActive = updateDto.IsActive,
       };
 
       var updatedCredential = await _mediator.Send(command);

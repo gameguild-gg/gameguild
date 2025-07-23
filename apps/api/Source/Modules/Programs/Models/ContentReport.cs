@@ -165,7 +165,7 @@ public enum ReportType {
   Behavior = 1,
   PeerReview = 2,
   Technical = 3,
-  Other = 4
+  Other = 4,
 }
 
 /// <summary>
@@ -175,7 +175,7 @@ public enum ReportSubject {
   Content = 0,
   User = 1,
   PeerReview = 2,
-  System = 3
+  System = 3,
 }
 
 /// <summary>
@@ -186,7 +186,7 @@ public enum ReportStatus {
   InReview = 1,
   Resolved = 2,
   Dismissed = 3,
-  Escalated = 4
+  Escalated = 4,
 }
 
 /// <summary>
@@ -196,5 +196,5 @@ public enum ReportPriority {
   Low = 0,
   Medium = 1,
   High = 2,
-  Critical = 3
+  Critical = 3,
 }

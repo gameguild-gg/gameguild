@@ -70,5 +70,5 @@ public enum ReviewStatus {
   Approved = 3,
   Rejected = 4,
   RequiresRevision = 5,
-  Escalated = 6
+  Escalated = 6,
 }

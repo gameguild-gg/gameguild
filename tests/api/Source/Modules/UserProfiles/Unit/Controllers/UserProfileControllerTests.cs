@@ -24,7 +24,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
         GivenName = "Test",
         FamilyName = "User",
         DisplayName = "Test User",
-        Description = "Test bio"
+        Description = "Test bio",
       };
 
       _mockMediator.Setup(m => m.Send(It.IsAny<GetUserProfileByIdQuery>(), It.IsAny<CancellationToken>()))
@@ -63,7 +63,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
         GivenName = "Test",
         FamilyName = "User",
         DisplayName = "Test User",
-        Description = "Test bio"
+        Description = "Test bio",
       };
 
       _mockMediator.Setup(m => m.Send(It.IsAny<GetUserProfileByUserIdQuery>(), It.IsAny<CancellationToken>()))
@@ -86,7 +86,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
         FamilyName = "User",
         DisplayName = "Test User",
         Title = "Developer",
-        Description = "Test bio"
+        Description = "Test bio",
       };
 
       var createdProfile = new UserProfile { 
@@ -95,7 +95,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
         FamilyName = "User",
         DisplayName = "Test User",
         Title = "Developer",
-        Description = "Test bio"
+        Description = "Test bio",
       };
 
       _mockMediator.Setup(m => m.Send(It.IsAny<CreateUserProfileCommand>(), It.IsAny<CancellationToken>()))
@@ -117,7 +117,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
         GivenName = "Test",
         FamilyName = "User",
         DisplayName = "Test User",
-        Description = "Test bio"
+        Description = "Test bio",
       };
 
       var error = Error.Conflict("UserProfile.AlreadyExists", "User profile already exists");
@@ -141,7 +141,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
         FamilyName = "User",
         DisplayName = "Updated User",
         Title = "Senior Developer",
-        Description = "Updated bio"
+        Description = "Updated bio",
       };
 
       var updatedProfile = new UserProfile { 
@@ -149,7 +149,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
         GivenName = "Updated",
         FamilyName = "User",
         DisplayName = "Updated User",
-        Description = "Updated bio"
+        Description = "Updated bio",
       };
 
       _mockMediator.Setup(m => m.Send(It.IsAny<UpdateUserProfileCommand>(), It.IsAny<CancellationToken>()))

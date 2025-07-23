@@ -383,7 +383,7 @@ public class InfrastructureArchitectureTests
             EnableResponseCompression = false,
             EnableRateLimiting = false,
             ApiTitle = "Test API",
-            ApiVersion = "v1"
+            ApiVersion = "v1",
         };
 
         // Act
@@ -442,7 +442,7 @@ public class InfrastructureArchitectureTests
             ["Jwt:Issuer"] = "GameGuild.Test",
             ["Jwt:Audience"] = "GameGuild.Test.Users",
             ["Jwt:ExpiryInMinutes"] = "15",
-            ["ASPNETCORE_ENVIRONMENT"] = "Testing"
+            ["ASPNETCORE_ENVIRONMENT"] = "Testing",
         };
 
         return new ConfigurationBuilder()
@@ -468,7 +468,7 @@ public class TestAuthenticationHandler : Microsoft.AspNetCore.Authentication.Aut
         var claims = new[]
         {
             new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, "TestUser"),
-            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "test-user-id")
+            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "test-user-id"),
         };
 
         var identity = new System.Security.Claims.ClaimsIdentity(claims, "Test");

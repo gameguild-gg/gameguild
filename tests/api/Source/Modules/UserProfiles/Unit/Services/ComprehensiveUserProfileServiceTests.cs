@@ -39,7 +39,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                     FamilyName = "Doe",
                     DisplayName = "johndoe",
                     Title = "Developer",
-                    Description = "Software developer"
+                    Description = "Software developer",
                 },
                 new UserProfile
                 {
@@ -48,8 +48,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                     FamilyName = "Smith",
                     DisplayName = "janesmith",
                     Title = "Designer",
-                    Description = "UI/UX designer"
-                }
+                    Description = "UI/UX designer",
+                },
             };
 
             var deletedProfile = new UserProfile
@@ -59,7 +59,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Johnson",
                 DisplayName = "bobjohnson",
                 Title = "Manager",
-                Description = "Project manager"
+                Description = "Project manager",
             };
             deletedProfile.SoftDelete();
 
@@ -101,7 +101,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                     FamilyName = "User",
                     DisplayName = "deleted1",
                     Title = "",
-                    Description = "Deleted user"
+                    Description = "Deleted user",
                 },
                 new UserProfile
                 {
@@ -110,8 +110,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                     FamilyName = "User",
                     DisplayName = "deleted2",
                     Title = "",
-                    Description = "Deleted user"
-                }
+                    Description = "Deleted user",
+                },
             };
 
             deletedProfiles.ForEach(p => p.SoftDelete());
@@ -140,7 +140,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
 
             _context.Resources.Add(userProfile);
@@ -178,7 +178,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
             userProfile.SoftDelete();
 
@@ -208,7 +208,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
 
             _context.Resources.Add(userProfile);
@@ -246,7 +246,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
             userProfile.SoftDelete();
 
@@ -275,7 +275,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
 
             // Act
@@ -304,7 +304,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "D",
                 DisplayName = "jd",
                 Title = "",
-                Description = null
+                Description = null,
             };
 
             // Act
@@ -328,7 +328,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = new string('B', 100),
                 DisplayName = new string('C', 100),
                 Title = new string('D', 200),
-                Description = new string('E', 1000)
+                Description = new string('E', 1000),
             };
 
             // Act
@@ -358,7 +358,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
 
             _context.Resources.Add(userProfile);
@@ -371,7 +371,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe Updated",
                 DisplayName = "johndoe_updated",
                 Title = "Senior Developer",
-                Description = "Senior software developer"
+                Description = "Senior software developer",
             };
 
             // Act
@@ -400,7 +400,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
 
             // Act
@@ -421,7 +421,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
             userProfile.SoftDelete();
 
@@ -434,7 +434,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe Updated",
                 DisplayName = "johndoe_updated",
                 Title = "Senior Developer",
-                Description = "Senior software developer"
+                Description = "Senior software developer",
             };
 
             // Act
@@ -455,7 +455,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
 
             _context.Resources.Add(userProfile);
@@ -467,7 +467,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = userProfile.FamilyName, // Keep original
                 DisplayName = userProfile.DisplayName, // Keep original
                 Title = "Senior Developer", // Update
-                Description = userProfile.Description // Keep original
+                Description = userProfile.Description, // Keep original
             };
 
             // Act
@@ -497,7 +497,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
 
             _context.Resources.Add(userProfile);
@@ -535,7 +535,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
             userProfile.SoftDelete();
 
@@ -569,7 +569,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
 
             _context.Resources.Add(userProfile);
@@ -615,7 +615,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
             userProfile.SoftDelete();
 
@@ -644,7 +644,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
             userProfile.SoftDelete();
 
@@ -675,7 +675,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
 
             _context.Resources.Add(userProfile);
@@ -715,7 +715,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                     FamilyName = "User",
                     DisplayName = "active1",
                     Title = "",
-                    Description = "Active user"
+                    Description = "Active user",
                 },
                 new UserProfile
                 {
@@ -724,8 +724,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                     FamilyName = "User",
                     DisplayName = "active2",
                     Title = "",
-                    Description = "Active user"
-                }
+                    Description = "Active user",
+                },
             };
 
             var deletedProfiles = new List<UserProfile>
@@ -737,7 +737,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                     FamilyName = "User",
                     DisplayName = "deleted1",
                     Title = "",
-                    Description = "Deleted user"
+                    Description = "Deleted user",
                 },
                 new UserProfile
                 {
@@ -746,8 +746,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                     FamilyName = "User",
                     DisplayName = "deleted2",
                     Title = "",
-                    Description = "Deleted user"
-                }
+                    Description = "Deleted user",
+                },
             };
 
             deletedProfiles.ForEach(p => p.SoftDelete());
@@ -781,8 +781,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                     FamilyName = "User",
                     DisplayName = "active1",
                     Title = "",
-                    Description = "Active user"
-                }
+                    Description = "Active user",
+                },
             };
 
             _context.Resources.AddRange(activeProfiles);
@@ -820,7 +820,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
 
             var created = await _service.CreateUserProfileAsync(userProfile);
@@ -833,7 +833,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe Updated",
                 DisplayName = "johndoe_updated",
                 Title = "Senior Developer",
-                Description = "Senior software developer"
+                Description = "Senior software developer",
             };
 
             var updated = await _service.UpdateUserProfileAsync(created.Id, updatedProfile);
@@ -878,7 +878,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Developer",
-                Description = "Software developer"
+                Description = "Software developer",
             };
 
             await _service.CreateUserProfileAsync(userProfile);
@@ -890,7 +890,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = userProfile.FamilyName,
                 DisplayName = userProfile.DisplayName,
                 Title = userProfile.Title,
-                Description = userProfile.Description
+                Description = userProfile.Description,
             };
 
             var update2 = new UserProfile
@@ -899,7 +899,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services
                 FamilyName = userProfile.FamilyName,
                 DisplayName = userProfile.DisplayName,
                 Title = userProfile.Title,
-                Description = userProfile.Description
+                Description = userProfile.Description,
             };
 
             var result1 = await _service.UpdateUserProfileAsync(userProfile.Id, update1);

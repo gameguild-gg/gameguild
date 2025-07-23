@@ -18,7 +18,7 @@ public class GetTestItemsHandler : IRequestHandler<GetTestItemsQuery, IEnumerabl
                 Name = "Test Item 1",
                 Description = "First test item for infrastructure testing",
                 CreatedAt = DateTime.UtcNow.AddDays(-1),
-                IsActive = true
+                IsActive = true,
             },
             new TestItem
             {
@@ -26,7 +26,7 @@ public class GetTestItemsHandler : IRequestHandler<GetTestItemsQuery, IEnumerabl
                 Name = "Test Item 2", 
                 Description = "Second test item for infrastructure testing",
                 CreatedAt = DateTime.UtcNow.AddHours(-12),
-                IsActive = true
+                IsActive = true,
             },
             new TestItem
             {
@@ -34,8 +34,8 @@ public class GetTestItemsHandler : IRequestHandler<GetTestItemsQuery, IEnumerabl
                 Name = "Inactive Test Item",
                 Description = "Inactive test item",
                 CreatedAt = DateTime.UtcNow.AddDays(-2),
-                IsActive = false
-            }
+                IsActive = false,
+            },
         };
 
         // Apply filtering based on request
@@ -66,7 +66,7 @@ public class GetTestItemByIdHandler : IRequestHandler<GetTestItemByIdQuery, Test
                 Name = $"Test Item {request.Id.ToString()[..8]}",
                 Description = $"Mock test item with ID {request.Id}",
                 CreatedAt = DateTime.UtcNow.AddHours(-6),
-                IsActive = true
+                IsActive = true,
             });
         }
 

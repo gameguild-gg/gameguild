@@ -603,7 +603,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
         Type = Common.ProjectType.Game,
         CreatedById = userId,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       };
       
       context.Projects.Add(newProject);
@@ -624,7 +624,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
       ReleaseType = "testing",
       ReleasedAt = DateTime.UtcNow,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     context.ProjectReleases.Add(projectRelease);
@@ -647,7 +647,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
       Status = TestingRequestStatus.Open,
       CreatedById = userId,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     context.TestingRequests.Add(testingRequest);
@@ -670,7 +670,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
         IsForOnline = true,
         IsForSessions = true,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        UpdatedAt = DateTime.UtcNow,
       };
 
       context.TestingFeedbackForms.Add(feedbackForm);
@@ -693,7 +693,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
       WouldRecommend = feedbackDto.WouldRecommend,
       AdditionalNotes = feedbackDto.AdditionalNotes,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     context.TestingFeedback.Add(feedback);
@@ -737,7 +737,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
         Block4Sessions = 0,
         TotalSessions = 3,
         GamesTested = 8,
-        Status = "onTrack"
+        Status = "onTrack",
       },
       new {
         Id = "2",
@@ -750,8 +750,8 @@ public class TestService(ApplicationDbContext context) : ITestService {
         Block4Sessions = 0,
         TotalSessions = 2,
         GamesTested = 4,
-        Status = "atRisk"
-      }
+        Status = "atRisk",
+      },
     };
 
     return Task.FromResult<object>(mockData);
@@ -771,7 +771,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
             StudentsAttended = ts.RegisteredTesterCount, // Placeholder - would need actual attendance tracking
             AttendanceRate = ts.RegisteredTesterCount > 0 ? 
                 (double)ts.RegisteredTesterCount / ts.RegisteredTesterCount * 100 : 0,
-            GamesTested = 1 // Placeholder - would need actual count
+            GamesTested = 1, // Placeholder - would need actual count
         })
         .ToListAsync();
 

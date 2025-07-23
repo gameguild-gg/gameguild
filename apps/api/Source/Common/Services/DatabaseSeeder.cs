@@ -148,7 +148,7 @@ public class DatabaseSeeder(
         PermissionType.Read,    // Allow users to view testing sessions and requests
         PermissionType.Create,  // Allow users to create testing requests
         PermissionType.Edit,    // Allow users to edit their own testing content
-        PermissionType.Delete   // Allow users to delete their own testing content
+        PermissionType.Delete, // Allow users to delete their own testing content
       };
 
       await permissionService.GrantContentTypePermissionAsync(null, null, resourceType, permissions);
@@ -1079,7 +1079,7 @@ public class DatabaseSeeder(
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
-      }
+      },
     };
 
     foreach (var user in mockUsers) {
@@ -1194,7 +1194,7 @@ public class DatabaseSeeder(
         CreatedById = mockUsers[1].Id,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
-      }
+      },
     };
 
     await context.Set<Project>().AddRangeAsync(mockProjects);
@@ -1263,7 +1263,7 @@ public class DatabaseSeeder(
         Status = LocationStatus.Active,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
-      }
+      },
     };
 
     await context.Set<TestingLocation>().AddRangeAsync(mockLocations);
@@ -1366,7 +1366,7 @@ public class DatabaseSeeder(
         CreatedById = mockUsers[0].Id,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
-      }
+      },
     };
 
     await context.Set<TestingRequest>().AddRangeAsync(mockRequests);

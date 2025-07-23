@@ -60,7 +60,7 @@ public class RefreshTokenHandlerTests
         var command = new RefreshTokenCommand
         {
             RefreshToken = "valid-refresh-token",
-            TenantId = tenantId
+            TenantId = tenantId,
         };
 
         var refreshResponse = new RefreshTokenResponseDto
@@ -68,7 +68,7 @@ public class RefreshTokenHandlerTests
             AccessToken = "new-access-token",
             RefreshToken = "new-refresh-token",
             ExpiresAt = DateTime.UtcNow.AddHours(1),
-            TenantId = tenantId
+            TenantId = tenantId,
         };
 
         _mockAuthService.Setup(x => x.RefreshTokenAsync(
@@ -102,7 +102,7 @@ public class RefreshTokenHandlerTests
         // Arrange
         var command = new RefreshTokenCommand
         {
-            RefreshToken = "invalid-refresh-token"
+            RefreshToken = "invalid-refresh-token",
         };
 
         _mockAuthService.Setup(x => x.RefreshTokenAsync(It.IsAny<RefreshTokenRequestDto>()))
@@ -123,7 +123,7 @@ public class RefreshTokenHandlerTests
         // Arrange
         var command = new RefreshTokenCommand
         {
-            RefreshToken = ""
+            RefreshToken = "",
         };
 
         _mockAuthService.Setup(x => x.RefreshTokenAsync(It.IsAny<RefreshTokenRequestDto>()))
@@ -143,7 +143,7 @@ public class RefreshTokenHandlerTests
         // Arrange
         var command = new RefreshTokenCommand
         {
-            RefreshToken = "valid-refresh-token"
+            RefreshToken = "valid-refresh-token",
         };
 
         var expectedException = new InvalidOperationException("Database error");

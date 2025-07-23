@@ -27,5 +27,5 @@ public enum ProgramAccessLevel {
   /// <summary>
   /// Lifetime access - permanent access to all content
   /// </summary>
-  Lifetime = 4
+  Lifetime = 4,
 }

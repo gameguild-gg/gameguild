@@ -25,7 +25,7 @@ public class VerifyWeb3SignatureHandlerTests
             WalletAddress = "0x1234567890123456789012345678901234567890",
             Signature = "0xabcdef1234567890...",
             Nonce = "random-nonce-123",
-            ChainId = "1"
+            ChainId = "1",
         };
 
         var expectedResponse = new SignInResponseDto
@@ -36,9 +36,9 @@ public class VerifyWeb3SignatureHandlerTests
             {
                 Id = Guid.NewGuid(),
                 Email = "user@example.com",
-                Username = "web3user"
+                Username = "web3user",
             },
-            TenantId = tenantId
+            TenantId = tenantId,
         };
 
         _mockAuthService.Setup(x => x.VerifyWeb3SignatureAsync(
@@ -73,7 +73,7 @@ public class VerifyWeb3SignatureHandlerTests
             WalletAddress = "0x1234567890123456789012345678901234567890",
             Signature = "invalid-signature",
             Nonce = "random-nonce-123",
-            ChainId = "1"
+            ChainId = "1",
         };
 
         _mockAuthService.Setup(x => x.VerifyWeb3SignatureAsync(It.IsAny<Web3VerifyRequestDto>()))
@@ -96,7 +96,7 @@ public class VerifyWeb3SignatureHandlerTests
             WalletAddress = "invalid-address",
             Signature = "0xabcdef1234567890...",
             Nonce = "random-nonce-123",
-            ChainId = "1"
+            ChainId = "1",
         };
 
         _mockAuthService.Setup(x => x.VerifyWeb3SignatureAsync(It.IsAny<Web3VerifyRequestDto>()))
@@ -119,7 +119,7 @@ public class VerifyWeb3SignatureHandlerTests
             WalletAddress = "0x1234567890123456789012345678901234567890",
             Signature = "0xabcdef1234567890...",
             Nonce = "expired-nonce",
-            ChainId = "1"
+            ChainId = "1",
         };
 
         _mockAuthService.Setup(x => x.VerifyWeb3SignatureAsync(It.IsAny<Web3VerifyRequestDto>()))
@@ -142,7 +142,7 @@ public class VerifyWeb3SignatureHandlerTests
             WalletAddress = "",
             Signature = "",
             Nonce = "",
-            ChainId = ""
+            ChainId = "",
         };
 
         _mockAuthService.Setup(x => x.VerifyWeb3SignatureAsync(It.IsAny<Web3VerifyRequestDto>()))
@@ -169,7 +169,7 @@ public class VerifyWeb3SignatureHandlerTests
             WalletAddress = "0x1234567890123456789012345678901234567890",
             Signature = "0xabcdef1234567890...",
             Nonce = "random-nonce-123",
-            ChainId = "1"
+            ChainId = "1",
         };
 
         var expectedException = new InvalidOperationException("Service error");

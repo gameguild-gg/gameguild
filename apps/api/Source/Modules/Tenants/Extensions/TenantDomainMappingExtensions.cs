@@ -14,7 +14,7 @@ public static class TenantDomainMappingExtensions {
       Subdomain = dto.Subdomain,
       IsMainDomain = dto.IsMainDomain,
       IsSecondaryDomain = dto.IsSecondaryDomain,
-      UserGroupId = dto.UserGroupId
+      UserGroupId = dto.UserGroupId,
     };
   }
 
@@ -45,7 +45,7 @@ public static class TenantDomainMappingExtensions {
       TenantId = dto.TenantId,
       ParentGroupId = dto.ParentGroupId,
       IsActive = dto.IsActive,
-      IsDefault = dto.IsDefault
+      IsDefault = dto.IsDefault,
     };
   }
 

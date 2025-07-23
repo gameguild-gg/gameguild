@@ -33,7 +33,7 @@ public class UserSignUpPostHandler(
         IsSystemGenerated = true,
         Visibility = AccessLevel.Public, // Welcome posts are public
         RichContent = richContent,
-        TenantId = notification.TenantId
+        TenantId = notification.TenantId,
       };
 
       var result = await mediator.Send(createPostCommand, cancellationToken);
@@ -72,7 +72,7 @@ public class UserSignUpPostHandler(
       $"We're excited to have {displayName} join our Game Guild community! Let's give them a warm welcome.",
       $"Everyone please welcome {displayName} to our growing community of creators and learners.",
       $"{displayName} just started their Game Guild journey. Welcome aboard!",
-      $"The Game Guild family grows with {displayName}! Welcome to the community."
+      $"The Game Guild family grows with {displayName}! Welcome to the community.",
     };
 
     var random = new Random();
@@ -98,13 +98,13 @@ public class UserSignUpPostHandler(
         displayName = displayName,
         email = notification.Email,
         signUpMethod = signUpMethod,
-        signUpTime = notification.SignUpTime
+        signUpTime = notification.SignUpTime,
       },
       welcome = new {
         message = $"Welcome to Game Guild, {displayName}! 🎮",
-        tips = new[] { "Explore our community programs and projects", "Connect with other creators and learners", "Share your own projects and achievements", "Participate in community challenges and events" }
+        tips = new[] { "Explore our community programs and projects", "Connect with other creators and learners", "Share your own projects and achievements", "Participate in community challenges and events" },
       },
-      metadata = new { auto_generated = true, post_type = "user_signup", template_version = "1.0" }
+      metadata = new { auto_generated = true, post_type = "user_signup", template_version = "1.0" },
     };
 
     return System.Text.Json.JsonSerializer.Serialize(richContent, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });

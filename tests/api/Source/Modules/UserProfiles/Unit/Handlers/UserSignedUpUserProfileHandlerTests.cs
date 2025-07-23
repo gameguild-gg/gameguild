@@ -31,7 +31,7 @@ public class UserSignedUpUserProfileHandlerTests
             Email = "test@example.com",
             Username = "Test User",
             TenantId = tenantId,
-            SignUpTime = DateTime.UtcNow
+            SignUpTime = DateTime.UtcNow,
         };
 
         var mockResult = GameGuild.Common.Result.Success(new UserProfile
@@ -39,7 +39,7 @@ public class UserSignedUpUserProfileHandlerTests
             Id = userId,
             GivenName = "Test",
             FamilyName = "User",
-            DisplayName = "Test User"
+            DisplayName = "Test User",
         });
 
         _mediatorMock
@@ -75,7 +75,7 @@ public class UserSignedUpUserProfileHandlerTests
             UserId = userId,
             Email = "john.doe@example.com",
             Username = "john.doe@example.com", // Same as email
-            SignUpTime = DateTime.UtcNow
+            SignUpTime = DateTime.UtcNow,
         };
 
         var mockResult = GameGuild.Common.Result.Success(new UserProfile());
@@ -109,7 +109,7 @@ public class UserSignedUpUserProfileHandlerTests
             UserId = userId,
             Email = "test@example.com",
             Username = "Test User",
-            SignUpTime = DateTime.UtcNow
+            SignUpTime = DateTime.UtcNow,
         };
 
         var failureResult = GameGuild.Common.Result.Failure<UserProfile>(
@@ -140,7 +140,7 @@ public class UserSignedUpUserProfileHandlerTests
             UserId = userId,
             Email = "test@example.com",
             Username = "Test User",
-            SignUpTime = DateTime.UtcNow
+            SignUpTime = DateTime.UtcNow,
         };
 
         _mediatorMock

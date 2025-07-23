@@ -66,7 +66,7 @@ public class ProductTests : IDisposable
         {
             Id = Guid.NewGuid(),
             Name = "Test Course Bundle",
-            ShortDescription = "A comprehensive course bundle"
+            ShortDescription = "A comprehensive course bundle",
         };
 
         // Act
@@ -95,7 +95,7 @@ public class ProductTests : IDisposable
         {
             Name = "New Product",
             ShortDescription = "Created via CQRS command",
-            CreatorId = userId
+            CreatorId = userId,
         };
 
         // Act
@@ -124,7 +124,7 @@ public class ProductTests : IDisposable
         {
             Name = "Original Product",
             ShortDescription = "Original description",
-            CreatorId = userId
+            CreatorId = userId,
         };
 
         var createResult = await _mediator.Send(createCommand);
@@ -135,7 +135,7 @@ public class ProductTests : IDisposable
         {
             ProductId = createResult.Product!.Id,
             Name = "Updated Product",
-            ShortDescription = "Updated description"
+            ShortDescription = "Updated description",
         };
 
         var updateResult = await _mediator.Send(updateCommand);
@@ -163,7 +163,7 @@ public class ProductTests : IDisposable
         {
             Name = "Product to Delete",
             ShortDescription = "This will be deleted",
-            CreatorId = userId
+            CreatorId = userId,
         };
 
         var createResult = await _mediator.Send(createCommand);
@@ -172,7 +172,7 @@ public class ProductTests : IDisposable
         // Act - Delete product
         var deleteCommand = new DeleteProductCommand
         {
-            ProductId = createResult.Product!.Id
+            ProductId = createResult.Product!.Id,
         };
 
         var deleteResult = await _mediator.Send(deleteCommand);
@@ -216,7 +216,7 @@ public class ProductTests : IDisposable
         var query = new GetProductsQuery
         {
             Skip = 0,
-            Take = 10
+            Take = 10,
         };
 
         var products = await _mediator.Send(query);
@@ -242,7 +242,7 @@ public class ProductTests : IDisposable
         // Act
         var query = new GetProductByIdQuery
         {
-            ProductId = testProduct.Id
+            ProductId = testProduct.Id,
         };
 
         var product = await _mediator.Send(query);
@@ -262,7 +262,7 @@ public class ProductTests : IDisposable
         {
             Id = userId,
             Name = name,
-            Email = $"{name.ToLower().Replace(" ", "")}@test.com"
+            Email = $"{name.ToLower().Replace(" ", "")}@test.com",
         };
 
         _context.Users.Add(user);
@@ -278,7 +278,7 @@ public class ProductTests : IDisposable
             ShortDescription = description,
             CreatorId = creatorId ?? Guid.NewGuid(),
             Status = ContentStatus.Published,
-            Visibility = AccessLevel.Public
+            Visibility = AccessLevel.Public,
         };
 
         _context.Products.Add(product);

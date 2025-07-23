@@ -27,7 +27,7 @@ public class PaymentMutations {
         Method = input.Method,
         Description = input.Description,
         TenantId = input.TenantId,
-        Metadata = input.Metadata
+        Metadata = input.Metadata,
       };
 
       var result = await mediator.Send(command, cancellationToken);

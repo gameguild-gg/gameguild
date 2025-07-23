@@ -36,7 +36,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "test@example.com",
                 IsActive = true,
                 Balance = 100m,
-                AvailableBalance = 100m
+                AvailableBalance = 100m,
             };
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -77,7 +77,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "email.test@example.com",
                 IsActive = true,
                 Balance = 50m,
-                AvailableBalance = 50m
+                AvailableBalance = 50m,
             };
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -111,7 +111,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "Case.Test@Example.Com",
                 IsActive = true,
                 Balance = 25m,
-                AvailableBalance = 25m
+                AvailableBalance = 25m,
             };
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -136,7 +136,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
             {
                 new User { Name = "User 1", Email = "user1@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
                 new User { Name = "User 2", Email = "user2@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
-                new User { Name = "User 3", Email = "user3@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 }
+                new User { Name = "User 3", Email = "user3@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
             };
 
             _context.Users.AddRange(users);
@@ -175,7 +175,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "new@example.com",
                 IsActive = true,
                 Balance = 150m,
-                AvailableBalance = 150m
+                AvailableBalance = 150m,
             };
 
             // Act
@@ -204,7 +204,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "duplicate@example.com",
                 IsActive = true,
                 Balance = 0,
-                AvailableBalance = 0
+                AvailableBalance = 0,
             };
             _context.Users.Add(existingUser);
             await _context.SaveChangesAsync();
@@ -215,7 +215,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "duplicate@example.com",
                 IsActive = true,
                 Balance = 100m,
-                AvailableBalance = 100m
+                AvailableBalance = 100m,
             };
 
             // Act & Assert
@@ -237,7 +237,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "original@example.com",
                 IsActive = true,
                 Balance = 100m,
-                AvailableBalance = 100m
+                AvailableBalance = 100m,
             };
             _context.Users.Add(existingUser);
             await _context.SaveChangesAsync();
@@ -248,7 +248,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "updated@example.com",
                 IsActive = true,
                 Balance = 100m,
-                AvailableBalance = 100m
+                AvailableBalance = 100m,
             };
 
             // Act
@@ -271,7 +271,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "new@example.com",
                 IsActive = true,
                 Balance = 0,
-                AvailableBalance = 0
+                AvailableBalance = 0,
             };
 
             // Act
@@ -295,7 +295,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "delete@example.com",
                 IsActive = true,
                 Balance = 50m,
-                AvailableBalance = 50m
+                AvailableBalance = 50m,
             };
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -335,7 +335,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "softdelete@example.com",
                 IsActive = true,
                 Balance = 50m,
-                AvailableBalance = 50m
+                AvailableBalance = 50m,
             };
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -377,7 +377,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "restore@example.com",
                 IsActive = true,
                 Balance = 50m,
-                AvailableBalance = 50m
+                AvailableBalance = 50m,
             };
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -407,7 +407,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "active@example.com",
                 IsActive = true,
                 Balance = 50m,
-                AvailableBalance = 50m
+                AvailableBalance = 50m,
             };
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -440,7 +440,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
             var activeUsers = new[]
             {
                 new User { Name = "Active 1", Email = "active1@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
-                new User { Name = "Active 2", Email = "active2@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 }
+                new User { Name = "Active 2", Email = "active2@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
             };
 
             var userToDelete = new User
@@ -449,7 +449,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "todelete@example.com",
                 IsActive = true,
                 Balance = 0,
-                AvailableBalance = 0
+                AvailableBalance = 0,
             };
 
             _context.Users.AddRange(activeUsers);
@@ -476,7 +476,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
             var activeUsers = new[]
             {
                 new User { Name = "Active 1", Email = "active1@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
-                new User { Name = "Active 2", Email = "active2@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 }
+                new User { Name = "Active 2", Email = "active2@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
             };
 
             _context.Users.AddRange(activeUsers);
@@ -504,7 +504,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "lifecycle@example.com",
                 IsActive = true,
                 Balance = 100m,
-                AvailableBalance = 100m
+                AvailableBalance = 100m,
             };
 
             var createdUser = await _userService.CreateUserAsync(user);
@@ -517,7 +517,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services
                 Email = "updated.lifecycle@example.com",
                 IsActive = true,
                 Balance = 100m,
-                AvailableBalance = 100m
+                AvailableBalance = 100m,
             };
 
             var updatedUser = await _userService.UpdateUserAsync(createdUser.Id, updatedUserData);

@@ -67,7 +67,7 @@ public class ProgramCommandHandlers(
       Status = ContentStatus.Draft,
       Visibility = AccessLevel.Private,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     context.Programs.Add(program);
@@ -238,7 +238,7 @@ public class ProgramCommandHandlers(
       JoinedAt = request.EnrollmentDate ?? DateTime.UtcNow,
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     context.ProgramUsers.Add(enrollment);
@@ -301,7 +301,7 @@ public class ProgramCommandHandlers(
       IsRequired = request.IsRequired,
       // PointsReward = request.PointsReward,  // This property doesn't exist in the current model
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     context.ProgramContents.Add(programContent);
@@ -367,7 +367,7 @@ public class ProgramCommandHandlers(
       Rating = request.Rating,
       Review = request.Review,
       CreatedAt = DateTime.UtcNow,
-      UpdatedAt = DateTime.UtcNow
+      UpdatedAt = DateTime.UtcNow,
     };
 
     context.ProgramRatings.Add(rating);

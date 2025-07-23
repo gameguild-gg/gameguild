@@ -58,7 +58,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
             { "Jwt:ExpirationMinutes", "60" },
             { "Jwt:RefreshTokenExpirationDays", "7" },
             { "OAuth:GitHub:ClientId", "test-github-client-id" },
-            { "OAuth:GitHub:ClientSecret", "test-github-client-secret" }
+            { "OAuth:GitHub:ClientSecret", "test-github-client-secret" },
           }
         );
       }
@@ -143,7 +143,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
                                                           { "Jwt:SecretKey", "game-guild-super-secret-key-for-development-only-minimum-32-characters" },
                                                           { "Jwt:Issuer", "GameGuild.CMS" },
                                                           { "Jwt:Audience", "GameGuild.Users" },
-                                                          { "Jwt:ExpirationMinutes", "60" }
+                                                          { "Jwt:ExpirationMinutes", "60" },
                                                         }
                                                       )
                                                       .Build();

@@ -47,7 +47,7 @@ public class UserAchievementsController : ControllerBase {
       EarnedBefore = earnedBefore,
       OrderBy = orderBy,
       Descending = descending,
-      TenantId = GetCurrentTenantId()
+      TenantId = GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(query);
@@ -68,7 +68,7 @@ public class UserAchievementsController : ControllerBase {
       UserId = userId,
       Category = category,
       OnlyInProgress = onlyInProgress,
-      TenantId = GetCurrentTenantId()
+      TenantId = GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(query);
@@ -89,7 +89,7 @@ public class UserAchievementsController : ControllerBase {
       UserId = userId,
       RecentLimit = recentLimit,
       NearCompletionThreshold = nearCompletionThreshold,
-      TenantId = GetCurrentTenantId()
+      TenantId = GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(query);
@@ -114,7 +114,7 @@ public class UserAchievementsController : ControllerBase {
       PageSize = pageSize,
       Category = category,
       OnlyEligible = onlyEligible,
-      TenantId = GetCurrentTenantId()
+      TenantId = GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(query);
@@ -142,7 +142,7 @@ public class UserAchievementsController : ControllerBase {
       ProgressIncrement = request.ProgressIncrement,
       Context = request.Context,
       AutoAward = request.AutoAward,
-      TenantId = GetCurrentTenantId()
+      TenantId = GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(command);
@@ -161,7 +161,7 @@ public class UserAchievementsController : ControllerBase {
     var query = new CheckAchievementPrerequisitesQuery {
       UserId = userId,
       AchievementId = achievementId,
-      TenantId = GetCurrentTenantId()
+      TenantId = GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(query);
@@ -181,7 +181,7 @@ public class UserAchievementsController : ControllerBase {
 
     var command = new MarkAchievementNotifiedCommand {
       UserAchievementId = userAchievementId,
-      UserId = userId
+      UserId = userId,
     };
 
     var result = await _mediator.Send(command);
@@ -202,7 +202,7 @@ public class UserAchievementsController : ControllerBase {
     var command = new RevokeAchievementCommand {
       UserAchievementId = userAchievementId,
       Reason = request.Reason,
-      RevokedByUserId = GetCurrentUserId()
+      RevokedByUserId = GetCurrentUserId(),
     };
 
     var result = await _mediator.Send(command);
@@ -253,7 +253,7 @@ public class AchievementLeaderboardController : ControllerBase {
       Limit = limit,
       OrderBy = orderBy,
       TimeFrame = timeFrame,
-      TenantId = GetCurrentTenantId()
+      TenantId = GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(query);

@@ -27,7 +27,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
         GivenName = "Test",
         FamilyName = "User",
         DisplayName = "Test User",
-        Description = "Test bio" // From Resource base class
+        Description = "Test bio", // From Resource base class
       };
 
       // Act
@@ -69,7 +69,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
         GivenName = "Test",
         FamilyName = "Profile",
         DisplayName = "Test Profile",
-        Description = "Test description"
+        Description = "Test description",
       };
 
       await _service.CreateUserProfileAsync(profile);
@@ -93,7 +93,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
         GivenName = "Test",
         FamilyName = "Profile",
         DisplayName = "Test Profile",
-        Description = "Test description"
+        Description = "Test description",
       };
 
       await _service.CreateUserProfileAsync(profile);
@@ -117,7 +117,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
         GivenName = "Original",
         FamilyName = "Name",
         DisplayName = "Original Name",
-        Description = "Original description"
+        Description = "Original description",
       };
 
       await _service.CreateUserProfileAsync(originalProfile);
@@ -127,7 +127,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
         GivenName = "Updated",
         FamilyName = "Name",
         DisplayName = "Updated Name",
-        Description = "Updated description"
+        Description = "Updated description",
       };
 
       // Act
@@ -152,7 +152,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
         GivenName = "Test",
         FamilyName = "Profile",
         DisplayName = "Test Profile",
-        Description = "Test description"
+        Description = "Test description",
       };
 
       await _service.CreateUserProfileAsync(profile);

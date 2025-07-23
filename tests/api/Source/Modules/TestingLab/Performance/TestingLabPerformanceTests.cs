@@ -41,7 +41,7 @@ public class TestingLabPerformanceTests : IDisposable {
       StartDate = DateTime.UtcNow.AddDays(1),
       EndDate = DateTime.UtcNow.AddDays(7),
       Status = TestingRequestStatus.Open,
-      CreatedById = user.Id
+      CreatedById = user.Id,
     };
 
     var stopwatch = new Stopwatch();
@@ -78,7 +78,7 @@ public class TestingLabPerformanceTests : IDisposable {
         StartDate = DateTime.UtcNow.AddDays(1),
         EndDate = DateTime.UtcNow.AddDays(7),
         Status = TestingRequestStatus.Open,
-        CreatedById = user.Id
+        CreatedById = user.Id,
       };
 
       requests.Add(request);
@@ -123,7 +123,7 @@ public class TestingLabPerformanceTests : IDisposable {
         StartDate = DateTime.UtcNow.AddDays(1),
         EndDate = DateTime.UtcNow.AddDays(7),
         Status = TestingRequestStatus.Open,
-        CreatedById = user.Id
+        CreatedById = user.Id,
       };
 
       requests.Add(request);
@@ -162,7 +162,7 @@ public class TestingLabPerformanceTests : IDisposable {
       MaxTesters = 10,
       Status = SessionStatus.Scheduled,
       ManagerUserId = user.Id,
-      CreatedById = user.Id
+      CreatedById = user.Id,
     };
 
     var stopwatch = new Stopwatch();
@@ -193,7 +193,7 @@ public class TestingLabPerformanceTests : IDisposable {
         StartedAt = DateTime.UtcNow.AddDays(-i),
         InstructionsAcknowledged = true,
         InstructionsAcknowledgedAt = DateTime.UtcNow.AddDays(-i).AddMinutes(5),
-        CompletedAt = i % 3 == 0 ? DateTime.UtcNow.AddDays(-i).AddHours(2) : null
+        CompletedAt = i % 3 == 0 ? DateTime.UtcNow.AddDays(-i).AddHours(2) : null,
       };
 
       _context.TestingParticipants.Add(participant);
@@ -237,7 +237,7 @@ public class TestingLabPerformanceTests : IDisposable {
         StartDate = DateTime.UtcNow.AddDays(1),
         EndDate = DateTime.UtcNow.AddDays(7),
         Status = TestingRequestStatus.Open,
-        CreatedById = user.Id
+        CreatedById = user.Id,
       };
 
       requests.Add(request);
@@ -278,7 +278,7 @@ public class TestingLabPerformanceTests : IDisposable {
         StartDate = DateTime.UtcNow.AddDays(1),
         EndDate = DateTime.UtcNow.AddDays(7),
         Status = TestingRequestStatus.Open,
-        CreatedById = user.Id
+        CreatedById = user.Id,
       };
 
       _context.TestingRequests.Add(request);
@@ -328,7 +328,7 @@ public class TestingLabPerformanceTests : IDisposable {
       ProjectId = projectId,
       VersionNumber = "1.0.0",
       CreatedById = userId,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     _context.Set<ProjectVersionModel>().Add(version);
@@ -349,7 +349,7 @@ public class TestingLabPerformanceTests : IDisposable {
       StartDate = DateTime.UtcNow.AddDays(1),
       EndDate = DateTime.UtcNow.AddDays(7),
       Status = TestingRequestStatus.Open,
-      CreatedById = userId
+      CreatedById = userId,
     };
 
     _context.TestingRequests.Add(request);
@@ -365,7 +365,7 @@ public class TestingLabPerformanceTests : IDisposable {
       MaxTestersCapacity = 20,
       MaxProjectsCapacity = 10,
       Status = LocationStatus.Active,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     _context.TestingLocations.Add(location);
@@ -381,14 +381,14 @@ public class TestingLabPerformanceTests : IDisposable {
       Id = Guid.NewGuid(), 
       Name = "Performance Test User", 
       Email = "performance@test.com", 
-      CreatedAt = DateTime.UtcNow 
+      CreatedAt = DateTime.UtcNow,
     };
     
     var project = new ProjectModel { 
       Id = Guid.NewGuid(), 
       Title = "Performance Test Project", 
       CreatedById = user.Id, 
-      CreatedAt = DateTime.UtcNow 
+      CreatedAt = DateTime.UtcNow,
     };
     
     var projectVersion = new ProjectVersionModel {
@@ -396,7 +396,7 @@ public class TestingLabPerformanceTests : IDisposable {
       ProjectId = project.Id,
       VersionNumber = "1.0.0",
       CreatedById = user.Id,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
     
     var testingRequest = new TestingRequest {
@@ -410,7 +410,7 @@ public class TestingLabPerformanceTests : IDisposable {
       StartDate = DateTime.UtcNow.AddDays(1),
       EndDate = DateTime.UtcNow.AddDays(7),
       Status = TestingRequestStatus.Open,
-      CreatedById = user.Id
+      CreatedById = user.Id,
     };
     
     var location = new TestingLocation {
@@ -419,7 +419,7 @@ public class TestingLabPerformanceTests : IDisposable {
       MaxTestersCapacity = 20,
       MaxProjectsCapacity = 10,
       Status = LocationStatus.Active,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     // Add all entities in batch

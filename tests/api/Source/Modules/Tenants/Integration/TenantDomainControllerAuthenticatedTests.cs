@@ -34,7 +34,7 @@ public class TenantDomainControllerAuthenticatedTests : IClassFixture<WebApplica
             TopLevelDomain = "example.com",
             Subdomain = null,
             IsMainDomain = true,
-            IsSecondaryDomain = false
+            IsSecondaryDomain = false,
         };
 
         var json = JsonSerializer.Serialize(createDto);
@@ -68,7 +68,7 @@ public class TenantDomainControllerAuthenticatedTests : IClassFixture<WebApplica
             TopLevelDomain = "example.com",
             Subdomain = null,
             IsMainDomain = true,
-            IsSecondaryDomain = false
+            IsSecondaryDomain = false,
         };
 
         var json = JsonSerializer.Serialize(createDto);
@@ -99,7 +99,7 @@ public class TenantDomainControllerAuthenticatedTests : IClassFixture<WebApplica
             IsMainDomain = true,
             IsSecondaryDomain = false,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
         };
         
         _context.TenantDomains.Add(domain);

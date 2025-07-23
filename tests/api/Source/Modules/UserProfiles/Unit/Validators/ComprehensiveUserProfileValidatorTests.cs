@@ -42,7 +42,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Software Developer",
-                Description = "Passionate developer"
+                Description = "Passionate developer",
             };
 
             // Act
@@ -68,7 +68,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Software Developer",
-                Description = "Passionate developer"
+                Description = "Passionate developer",
             };
 
             // Act
@@ -89,7 +89,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserId = user.Id,
                 GivenName = new string('A', 101), // Exceeds 100 character limit
                 FamilyName = "Doe",
-                DisplayName = "johndoe"
+                DisplayName = "johndoe",
             };
 
             // Act
@@ -114,7 +114,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserId = user.Id,
                 GivenName = givenName,
                 FamilyName = "Doe",
-                DisplayName = "johndoe"
+                DisplayName = "johndoe",
             };
 
             // Act
@@ -140,7 +140,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserId = user.Id,
                 GivenName = givenName,
                 FamilyName = "Doe",
-                DisplayName = "johndoe"
+                DisplayName = "johndoe",
             };
 
             // Act
@@ -164,7 +164,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserId = user.Id,
                 GivenName = "John",
                 FamilyName = familyName,
-                DisplayName = "johndoe"
+                DisplayName = "johndoe",
             };
 
             // Act
@@ -185,7 +185,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserId = user.Id,
                 GivenName = "John",
                 FamilyName = new string('D', 101), // Exceeds 100 character limit
-                DisplayName = "johndoe"
+                DisplayName = "johndoe",
             };
 
             // Act
@@ -211,7 +211,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserId = user.Id,
                 GivenName = "John",
                 FamilyName = "Doe",
-                DisplayName = displayName
+                DisplayName = displayName,
             };
 
             // Act
@@ -232,7 +232,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserId = user.Id,
                 GivenName = "John",
                 FamilyName = "Doe",
-                DisplayName = new string('j', 101) // Exceeds 100 character limit
+                DisplayName = new string('j', 101), // Exceeds 100 character limit
             };
 
             // Act
@@ -258,7 +258,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 FamilyName = "Smith",
                 DisplayName = "uniquedisplay",
                 Title = "",
-                Description = "Existing user"
+                Description = "Existing user",
             };
             _context.Resources.Add(existingProfile);
             await _context.SaveChangesAsync();
@@ -268,7 +268,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserId = user2.Id,
                 GivenName = "John",
                 FamilyName = "Doe",
-                DisplayName = "uniquedisplay" // Same as existing profile
+                DisplayName = "uniquedisplay", // Same as existing profile
             };
 
             // Act
@@ -294,7 +294,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 FamilyName = "Smith",
                 DisplayName = "deleteddisplay",
                 Title = "",
-                Description = "Deleted user"
+                Description = "Deleted user",
             };
             deletedProfile.SoftDelete();
             _context.Resources.Add(deletedProfile);
@@ -305,7 +305,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserId = user2.Id,
                 GivenName = "John",
                 FamilyName = "Doe",
-                DisplayName = "deleteddisplay" // Same as deleted profile - should be allowed
+                DisplayName = "deleteddisplay", // Same as deleted profile - should be allowed
             };
 
             // Act
@@ -326,7 +326,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 GivenName = "John",
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
-                Title = new string('T', 201) // Exceeds 200 character limit
+                Title = new string('T', 201), // Exceeds 200 character limit
             };
 
             // Act
@@ -348,7 +348,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 GivenName = "John",
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
-                Description = new string('D', 1001) // Exceeds 1000 character limit
+                Description = new string('D', 1001), // Exceeds 1000 character limit
             };
 
             // Act
@@ -368,7 +368,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserId = Guid.Empty,
                 GivenName = "John",
                 FamilyName = "Doe",
-                DisplayName = "johndoe"
+                DisplayName = "johndoe",
             };
 
             // Act
@@ -388,7 +388,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserId = Guid.NewGuid(), // Non-existent user
                 GivenName = "John",
                 FamilyName = "Doe",
-                DisplayName = "johndoe"
+                DisplayName = "johndoe",
             };
 
             // Act
@@ -413,7 +413,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 FamilyName = "Smith",
                 DisplayName = "janesmith",
                 Title = "",
-                Description = "Existing profile"
+                Description = "Existing profile",
             };
             _context.Resources.Add(existingProfile);
             await _context.SaveChangesAsync();
@@ -423,7 +423,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserId = user.Id, // User already has a profile
                 GivenName = "John",
                 FamilyName = "Doe",
-                DisplayName = "johndoe"
+                DisplayName = "johndoe",
             };
 
             // Act
@@ -444,7 +444,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 Email = "deleted@example.com",
                 IsActive = false,
                 Balance = 0m,
-                AvailableBalance = 0m
+                AvailableBalance = 0m,
             };
             deletedUser.SoftDelete();
 
@@ -456,7 +456,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserId = deletedUser.Id,
                 GivenName = "John",
                 FamilyName = "Doe",
-                DisplayName = "johndoe"
+                DisplayName = "johndoe",
             };
 
             // Act
@@ -485,7 +485,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 FamilyName = "Doe Updated",
                 DisplayName = "johndoe_updated",
                 Title = "Senior Developer",
-                Description = "Senior software developer"
+                Description = "Senior software developer",
             };
 
             // Act
@@ -504,7 +504,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 UserProfileId = Guid.Empty,
                 GivenName = "John",
                 FamilyName = "Doe",
-                DisplayName = "johndoe"
+                DisplayName = "johndoe",
             };
 
             // Act
@@ -546,7 +546,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
             var command = new UpdateUserProfileCommand
             {
                 UserProfileId = profile.Id,
-                GivenName = new string('A', 101) // Exceeds 100 character limit
+                GivenName = new string('A', 101), // Exceeds 100 character limit
             };
 
             // Act
@@ -567,7 +567,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
             var command = new UpdateUserProfileCommand
             {
                 UserProfileId = profile.Id,
-                FamilyName = new string('D', 101) // Exceeds 100 character limit
+                FamilyName = new string('D', 101), // Exceeds 100 character limit
             };
 
             // Act
@@ -588,7 +588,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
             var command = new UpdateUserProfileCommand
             {
                 UserProfileId = profile.Id,
-                DisplayName = "a" // Too short (minimum 2 characters)
+                DisplayName = "a", // Too short (minimum 2 characters)
             };
 
             // Act
@@ -611,7 +611,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
             var command = new UpdateUserProfileCommand
             {
                 UserProfileId = profile2.Id,
-                DisplayName = "existing" // Same as profile1's display name
+                DisplayName = "existing", // Same as profile1's display name
             };
 
             // Act
@@ -633,7 +633,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
             {
                 UserProfileId = profile.Id,
                 DisplayName = "samedisplay", // Same as current display name - should be allowed
-                GivenName = "Updated Name"
+                GivenName = "Updated Name",
             };
 
             // Act
@@ -653,7 +653,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
             var command = new UpdateUserProfileCommand
             {
                 UserProfileId = profile.Id,
-                Title = new string('T', 201) // Exceeds 200 character limit
+                Title = new string('T', 201), // Exceeds 200 character limit
             };
 
             // Act
@@ -674,7 +674,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
             var command = new UpdateUserProfileCommand
             {
                 UserProfileId = profile.Id,
-                Description = new string('D', 1001) // Exceeds 1000 character limit
+                Description = new string('D', 1001), // Exceeds 1000 character limit
             };
 
             // Act
@@ -697,7 +697,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 Email = $"user{Guid.NewGuid():N}@example.com",
                 IsActive = true,
                 Balance = 100m,
-                AvailableBalance = 100m
+                AvailableBalance = 100m,
             };
 
             _context.Users.Add(user);
@@ -715,7 +715,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators
                 FamilyName = "User",
                 DisplayName = displayName,
                 Title = "Test Title",
-                Description = "Test Description"
+                Description = "Test Description",
             };
 
             _context.Resources.Add(profile);

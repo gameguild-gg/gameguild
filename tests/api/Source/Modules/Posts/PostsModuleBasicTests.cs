@@ -55,7 +55,7 @@ public class PostsModuleBasicTests : IDisposable
             PostType = "general",
             AuthorId = Guid.NewGuid(),
             IsSystemGenerated = false,
-            Visibility = AccessLevel.Public
+            Visibility = AccessLevel.Public,
         };
 
         // Act
@@ -85,7 +85,7 @@ public class PostsModuleBasicTests : IDisposable
             IsSystemGenerated = true,
             Visibility = AccessLevel.Private,
             RichContent = "{}",
-            TenantId = Guid.NewGuid()
+            TenantId = Guid.NewGuid(),
         };
 
         // Assert
@@ -136,7 +136,7 @@ public class PostsModuleBasicTests : IDisposable
             PostType = "general",
             AuthorId = userId,
             RichContent = "{}",
-            Visibility = AccessLevel.Public
+            Visibility = AccessLevel.Public,
         };
 
         // Act
@@ -161,7 +161,7 @@ public class PostsModuleBasicTests : IDisposable
             Description = "Test description",
             PostType = "general",
             AuthorId = userId,
-            Visibility = AccessLevel.Public
+            Visibility = AccessLevel.Public,
         };
 
         // Act
@@ -189,7 +189,7 @@ public class PostsModuleBasicTests : IDisposable
             Description = "Test",
             PostType = "general",
             AuthorId = userId,
-            Visibility = AccessLevel.Public
+            Visibility = AccessLevel.Public,
         };
 
         await _postService.CreatePostAsync(post);
@@ -217,7 +217,7 @@ public class PostsModuleBasicTests : IDisposable
             Description = "This will be deleted",
             PostType = "general",
             AuthorId = userId,
-            Visibility = AccessLevel.Public
+            Visibility = AccessLevel.Public,
         };
 
         var createdPost = await _postService.CreatePostAsync(post);
@@ -240,7 +240,7 @@ public class PostsModuleBasicTests : IDisposable
             Id = userId,
             Name = $"Test User {userId:N}",
             Email = $"test_{userId:N}@example.com",
-            IsActive = true
+            IsActive = true,
         };
 
         _context.Users.Add(user);
@@ -257,7 +257,7 @@ public class PostsModuleBasicTests : IDisposable
                 Description = $"Description for post {i + 1}",
                 PostType = "general",
                 AuthorId = authorId,
-                Visibility = AccessLevel.Public
+                Visibility = AccessLevel.Public,
             };
 
             await _postService.CreatePostAsync(post);

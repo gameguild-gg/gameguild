@@ -176,5 +176,5 @@ public enum ContentCompletionStatus {
   Completed = 2,
   Skipped = 3,
   Failed = 4,
-  RequiresReview = 5
+  RequiresReview = 5,
 }

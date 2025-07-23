@@ -273,7 +273,7 @@ public class PureGraphQLCQRSIntegrationTests
         {
             ["Database:Provider"] = "InMemory",
             ["Database:ConnectionString"] = "InMemory",
-            ["ASPNETCORE_ENVIRONMENT"] = "Testing"
+            ["ASPNETCORE_ENVIRONMENT"] = "Testing",
         };
 
         return new ConfigurationBuilder()

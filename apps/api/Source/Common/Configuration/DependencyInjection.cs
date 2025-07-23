@@ -385,7 +385,7 @@ public static class DependencyInjection {
             new[] {
               ("UserProfileQueries", typeof(Modules.UserProfiles.UserProfileQueries)),
               ("UserProfileMutations", typeof(Modules.UserProfiles.UserProfileMutations)),
-              ("UserProfileType", typeof(Modules.UserProfiles.UserProfileType))
+              ("UserProfileType", typeof(Modules.UserProfiles.UserProfileType)),
             },
             logger,
             isExtension: new[] { true, true, false }
@@ -398,7 +398,7 @@ public static class DependencyInjection {
             ("TenantQueries", typeof(Modules.Tenants.TenantQueries)),
             ("TenantMutations", typeof(Modules.Tenants.TenantMutations)),
             ("TenantType", typeof(Modules.Tenants.TenantType)),
-            ("TenantPermissionType", typeof(Modules.Tenants.TenantPermissionType))
+            ("TenantPermissionType", typeof(Modules.Tenants.TenantPermissionType)),
           },
           logger,
           isExtension: new[] { true, true, false, false }
@@ -411,7 +411,7 @@ public static class DependencyInjection {
           logger,
           isExtension: new[] { true, true, false }
         );
-      }
+      },
     };
 
     // Add test module for testing environments
@@ -489,7 +489,7 @@ public static class DependencyInjection {
               ("TestingRequestType", typeof(Modules.TestingLab.TestingRequestType)),
               ("TestingSessionType", typeof(Modules.TestingLab.TestingSessionType)),
               ("TestingParticipantType", typeof(Modules.TestingLab.TestingParticipantType)),
-              ("TestingLocationType", typeof(Modules.TestingLab.TestingLocationType))
+              ("TestingLocationType", typeof(Modules.TestingLab.TestingLocationType)),
             },
             logger,
             isExtension: new[] { true, true, false, false, false, false }
@@ -517,7 +517,7 @@ public static class DependencyInjection {
             ("ActivityGradeMutations", typeof(ActivityGradeMutations)),
             ("ProgramContentType", typeof(Modules.Programs.ProgramContentType)),
             ("ContentInteractionType", typeof(ContentInteractionType)),
-            ("ActivityGradeType", typeof(ActivityGradeType))
+            ("ActivityGradeType", typeof(ActivityGradeType)),
           },
           logger,
           isExtension: new[] { true, true, true, true, true, true, false, false, false }
@@ -540,7 +540,7 @@ public static class DependencyInjection {
           isExtension: new[] { true, true },
           isOptional: true
         );
-      }
+      },
     };
 
     foreach (var (moduleName, registration) in advancedModules) { TryRegisterModule(builder, moduleName, registration, logger); }
@@ -805,7 +805,7 @@ public static class DependencyInjection {
         EnableDirectiveIntrospection = false,
         EnableIntrospection = false, // Disabled for security in production
         IncludeExceptionDetails = false,
-        IsTestEnvironment = false
+        IsTestEnvironment = false,
       };
     }
 
@@ -828,7 +828,7 @@ public static class DependencyInjection {
         EnableDirectiveIntrospection = true,
         EnableIntrospection = true,
         IncludeExceptionDetails = true,
-        IsTestEnvironment = false
+        IsTestEnvironment = false,
       };
     }
 
@@ -851,7 +851,7 @@ public static class DependencyInjection {
         EnableDirectiveIntrospection = false,
         EnableIntrospection = true,
         IncludeExceptionDetails = true,
-        IsTestEnvironment = true
+        IsTestEnvironment = true,
       };
     }
 
@@ -874,7 +874,7 @@ public static class DependencyInjection {
         EnableDirectiveIntrospection = false,
         EnableIntrospection = true,
         IncludeExceptionDetails = false,
-        IsTestEnvironment = false
+        IsTestEnvironment = false,
       };
     }
   }

@@ -70,7 +70,7 @@ public class ProductQueryTests : IDisposable
         {
             ProductId = product.Id,
             IncludePricing = true,
-            IncludePrograms = true
+            IncludePrograms = true,
         };
 
         // Act
@@ -88,7 +88,7 @@ public class ProductQueryTests : IDisposable
         // Arrange
         var query = new GetProductByIdQuery
         {
-            ProductId = Guid.NewGuid() // Non-existent product
+            ProductId = Guid.NewGuid(), // Non-existent product
         };
 
         // Act
@@ -111,7 +111,7 @@ public class ProductQueryTests : IDisposable
 
         var query = new GetProductsQuery
         {
-            Take = 10
+            Take = 10,
         };
 
         // Act
@@ -136,7 +136,7 @@ public class ProductQueryTests : IDisposable
         var query = new GetProductsQuery
         {
             Status = ContentStatus.Published,
-            Take = 10
+            Take = 10,
         };
 
         // Act
@@ -162,7 +162,7 @@ public class ProductQueryTests : IDisposable
         var query = new GetProductsQuery
         {
             Type = GameGuild.Common.ProductType.Program,
-            Take = 10
+            Take = 10,
         };
 
         // Act
@@ -190,7 +190,7 @@ public class ProductQueryTests : IDisposable
         var query = new GetProductsQuery
         {
             CreatorId = user1Id,
-            Take = 10
+            Take = 10,
         };
 
         // Act
@@ -216,7 +216,7 @@ public class ProductQueryTests : IDisposable
         var query = new GetProductsQuery
         {
             SearchTerm = "Java",
-            Take = 10
+            Take = 10,
         };
 
         // Act
@@ -244,7 +244,7 @@ public class ProductQueryTests : IDisposable
         var query = new GetProductsQuery
         {
             Skip = 3,
-            Take = 4
+            Take = 4,
         };
 
         // Act
@@ -272,7 +272,7 @@ public class ProductQueryTests : IDisposable
         {
             SortBy = "CreatedAt",
             SortDirection = "DESC",
-            Take = 10
+            Take = 10,
         };
 
         // Act
@@ -306,7 +306,7 @@ public class ProductQueryTests : IDisposable
 
         var query = new GetUserProductsQuery
         {
-            UserId = userId
+            UserId = userId,
         };
 
         // Act
@@ -336,7 +336,7 @@ public class ProductQueryTests : IDisposable
         var query = new GetUserProductsQuery
         {
             UserId = userId,
-            AcquisitionType = ProductAcquisitionType.Purchase
+            AcquisitionType = ProductAcquisitionType.Purchase,
         };
 
         // Act
@@ -379,7 +379,7 @@ public class ProductQueryTests : IDisposable
         {
             Id = userId,
             Name = name,
-            Email = $"{name.ToLower().Replace(" ", "")}@test.com"
+            Email = $"{name.ToLower().Replace(" ", "")}@test.com",
         };
 
         _context.Users.Add(user);
@@ -403,7 +403,7 @@ public class ProductQueryTests : IDisposable
             Visibility = AccessLevel.Public,
             CreatorId = creatorId,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
         };
 
         _context.Products.Add(product);
@@ -424,7 +424,7 @@ public class ProductQueryTests : IDisposable
             AcquisitionType = acquisitionType,
             AccessStatus = ProductAccessStatus.Active,
             PricePaid = 0,
-            Currency = "USD"
+            Currency = "USD",
         };
 
         _context.UserProducts.Add(userProduct);

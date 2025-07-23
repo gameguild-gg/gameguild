@@ -57,7 +57,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 Email = $"test.user.{Guid.NewGuid()}@example.com",
                 IsActive = true,
                 Balance = 100m,
-                AvailableBalance = 100m
+                AvailableBalance = 100m,
             };
 
             _context.Users.Add(user);
@@ -82,7 +82,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 FamilyName = "Doe",
                 DisplayName = "johndoe",
                 Title = "Software Developer",
-                Description = "Passionate developer"
+                Description = "Passionate developer",
             };
 
             // Act
@@ -111,7 +111,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 FamilyName = "Smith",
                 DisplayName = "janesmith",
                 Title = "",
-                Description = "Existing user"
+                Description = "Existing user",
             };
             
             _context.Resources.Add(existingProfile);
@@ -123,7 +123,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 UserId = user.Id,
                 GivenName = "John",
                 FamilyName = "Doe",
-                DisplayName = "johndoe"
+                DisplayName = "johndoe",
             };
 
             // Act
@@ -150,7 +150,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 FamilyName = "Smith",
                 DisplayName = "janesmith",
                 Title = "Designer",
-                Description = "Creative designer"
+                Description = "Creative designer",
             };
             
             _context.Resources.Add(userProfile);
@@ -164,7 +164,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 FamilyName = "Smith Updated",
                 DisplayName = "janeupdated",
                 Title = "Senior Designer",
-                Description = "Senior creative designer"
+                Description = "Senior creative designer",
             };
 
             // Act
@@ -190,7 +190,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 UserProfileId = Guid.NewGuid(),
                 GivenName = "John",
                 FamilyName = "Doe",
-                DisplayName = "johndoe"
+                DisplayName = "johndoe",
             };
 
             // Act
@@ -217,7 +217,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 FamilyName = "Smith",
                 DisplayName = "janesmith",
                 Title = "",
-                Description = "Test user"
+                Description = "Test user",
             };
             
             _context.Resources.Add(userProfile);
@@ -226,7 +226,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
             var handler = new DeleteUserProfileHandler(_context, _deleteLogger.Object, _eventPublisher.Object);
             var command = new DeleteUserProfileCommand
             {
-                UserProfileId = userProfile.Id
+                UserProfileId = userProfile.Id,
             };
 
             // Act
@@ -249,7 +249,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
             var handler = new DeleteUserProfileHandler(_context, _deleteLogger.Object, _eventPublisher.Object);
             var command = new DeleteUserProfileCommand
             {
-                UserProfileId = Guid.NewGuid()
+                UserProfileId = Guid.NewGuid(),
             };
 
             // Act
@@ -276,7 +276,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 FamilyName = "User",
                 DisplayName = "queryuser",
                 Title = "Tester",
-                Description = "Test profile"
+                Description = "Test profile",
             };
             
             _context.Resources.Add(userProfile);
@@ -285,7 +285,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
             var handler = new GetUserProfileByIdHandler(_context, _getByIdLogger.Object);
             var query = new GetUserProfileByIdQuery
             {
-                UserProfileId = userProfile.Id
+                UserProfileId = userProfile.Id,
             };
 
             // Act
@@ -305,7 +305,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
             var handler = new GetUserProfileByIdHandler(_context, _getByIdLogger.Object);
             var query = new GetUserProfileByIdQuery
             {
-                UserProfileId = Guid.NewGuid()
+                UserProfileId = Guid.NewGuid(),
             };
 
             // Act
@@ -328,7 +328,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 FamilyName = "Profile",
                 DisplayName = "userprofile",
                 Title = "Test",
-                Description = "Test profile by user ID"
+                Description = "Test profile by user ID",
             };
             
             _context.Resources.Add(userProfile);
@@ -337,7 +337,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
             var handler = new GetUserProfileByUserIdHandler(_context, _getByUserIdLogger.Object);
             var query = new GetUserProfileByUserIdQuery
             {
-                UserId = user.Id
+                UserId = user.Id,
             };
 
             // Act
@@ -357,7 +357,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
             var handler = new GetUserProfileByUserIdHandler(_context, _getByUserIdLogger.Object);
             var query = new GetUserProfileByUserIdQuery
             {
-                UserId = Guid.NewGuid()
+                UserId = Guid.NewGuid(),
             };
 
             // Act
@@ -382,7 +382,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 FamilyName = "One",
                 DisplayName = "userone",
                 Title = "Developer",
-                Description = "First user profile"
+                Description = "First user profile",
             };
             
             var userProfile2 = new UserProfile
@@ -392,7 +392,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 FamilyName = "Two",
                 DisplayName = "usertwo",
                 Title = "Designer",
-                Description = "Second user profile"
+                Description = "Second user profile",
             };
             
             _context.Resources.AddRange(userProfile1, userProfile2);
@@ -424,7 +424,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 FamilyName = "Developer",
                 DisplayName = "johndeveloper",
                 Title = "Senior Developer",
-                Description = "Experienced developer"
+                Description = "Experienced developer",
             };
             
             var designerProfile = new UserProfile
@@ -434,7 +434,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 FamilyName = "Designer",
                 DisplayName = "janedesigner",
                 Title = "UX Designer",
-                Description = "Creative designer"
+                Description = "Creative designer",
             };
             
             _context.Resources.AddRange(developerProfile, designerProfile);
@@ -445,7 +445,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
             {
                 SearchTerm = "Developer",
                 Take = 10,
-                Skip = 0
+                Skip = 0,
             };
 
             // Act
@@ -473,7 +473,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 FamilyName = "User1",
                 DisplayName = "activeuser1",
                 Title = "Developer",
-                Description = "Active user profile"
+                Description = "Active user profile",
             };
             
             var activeProfile2 = new UserProfile
@@ -483,7 +483,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 FamilyName = "User2",
                 DisplayName = "activeuser2",
                 Title = "Designer",
-                Description = "Another active user profile"
+                Description = "Another active user profile",
             };
             
             var deletedProfile = new UserProfile
@@ -494,7 +494,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                 DisplayName = "deleteduser",
                 Title = "Tester",
                 Description = "Deleted user profile",
-                DeletedAt = DateTime.UtcNow
+                DeletedAt = DateTime.UtcNow,
             };
             
             _context.Resources.AddRange(activeProfile1, activeProfile2, deletedProfile);
@@ -531,7 +531,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                     FamilyName = "One",
                     DisplayName = "userone",
                     Title = "Developer",
-                    Description = "First profile to delete"
+                    Description = "First profile to delete",
                 },
                 new UserProfile
                 {
@@ -540,7 +540,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                     FamilyName = "Two",
                     DisplayName = "usertwo",
                     Title = "Designer",
-                    Description = "Second profile to delete"
+                    Description = "Second profile to delete",
                 },
                 new UserProfile
                 {
@@ -549,8 +549,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                     FamilyName = "Three",
                     DisplayName = "userthree",
                     Title = "Tester",
-                    Description = "Third profile to delete"
-                }
+                    Description = "Third profile to delete",
+                },
             };
             
             _context.Resources.AddRange(profiles);
@@ -559,7 +559,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
             var handler = new BulkDeleteUserProfilesHandler(_context, _bulkDeleteLogger.Object);
             var command = new BulkDeleteUserProfilesCommand
             {
-                UserProfileIds = profiles.Select(p => p.Id).ToList()
+                UserProfileIds = profiles.Select(p => p.Id).ToList(),
             };
 
             // Act
@@ -593,7 +593,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                     DisplayName = "deleteduser1",
                     Title = "Developer",
                     Description = "First deleted profile",
-                    DeletedAt = DateTime.UtcNow
+                    DeletedAt = DateTime.UtcNow,
                 },
                 new UserProfile
                 {
@@ -603,8 +603,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
                     DisplayName = "deleteduser2",
                     Title = "Designer",
                     Description = "Second deleted profile",
-                    DeletedAt = DateTime.UtcNow
-                }
+                    DeletedAt = DateTime.UtcNow,
+                },
             };
             
             _context.Resources.AddRange(profiles);
@@ -613,7 +613,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers
             var handler = new BulkRestoreUserProfilesHandler(_context, _bulkRestoreLogger.Object);
             var command = new BulkRestoreUserProfilesCommand
             {
-                UserProfileIds = profiles.Select(p => p.Id).ToList()
+                UserProfileIds = profiles.Select(p => p.Id).ToList(),
             };
 
             // Act

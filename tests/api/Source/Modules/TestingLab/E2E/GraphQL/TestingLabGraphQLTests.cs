@@ -352,7 +352,7 @@ public class TestingLabGraphQLTests : IClassFixture<TestWebApplicationFactory>, 
       EndDate = DateTime.UtcNow.AddDays(7),
       Status = TestingRequestStatus.Open,
       CreatedById = user.Id,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     _context.TestingRequests.Add(testingRequest);
@@ -377,7 +377,7 @@ public class TestingLabGraphQLTests : IClassFixture<TestWebApplicationFactory>, 
       Status = SessionStatus.Scheduled,
       ManagerUserId = user.Id,
       CreatedById = user.Id,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     _context.TestingSessions.Add(testingSession);
@@ -392,7 +392,7 @@ public class TestingLabGraphQLTests : IClassFixture<TestWebApplicationFactory>, 
       Name = "GraphQL Test Tenant",
       Slug = "graphql-test-tenant",
       IsActive = true,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     _context.Tenants.Add(tenant);
@@ -402,7 +402,7 @@ public class TestingLabGraphQLTests : IClassFixture<TestWebApplicationFactory>, 
       Name = "graphqluser",
       Email = "graphql@test.com",
       IsActive = true,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     _context.Users.Add(user);
@@ -418,7 +418,7 @@ public class TestingLabGraphQLTests : IClassFixture<TestWebApplicationFactory>, 
       Title = "GraphQL Test Project",
       Description = "Test project for GraphQL testing",
       CreatedById = userId,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     _context.Projects.Add(project);
@@ -433,7 +433,7 @@ public class TestingLabGraphQLTests : IClassFixture<TestWebApplicationFactory>, 
       ProjectId = projectId,
       VersionNumber = "1.0.0",
       CreatedById = userId,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     _context.Set<ProjectVersionModel>().Add(version);
@@ -449,7 +449,7 @@ public class TestingLabGraphQLTests : IClassFixture<TestWebApplicationFactory>, 
       MaxTestersCapacity = 20,
       MaxProjectsCapacity = 10,
       Status = LocationStatus.Active,
-      CreatedAt = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow,
     };
 
     _context.TestingLocations.Add(location);

@@ -17,7 +17,7 @@ public class MockAuthService : IAuthService
             RefreshToken = "mock-refresh-token",
             Expires = DateTime.UtcNow.AddMinutes(15),
             User = new UserDto { Id = Guid.NewGuid(), Email = request.Email ?? "test@example.com" },
-            TenantId = Guid.NewGuid()
+            TenantId = Guid.NewGuid(),
         });
     }
 
@@ -29,7 +29,7 @@ public class MockAuthService : IAuthService
             RefreshToken = "mock-refresh-token",
             Expires = DateTime.UtcNow.AddMinutes(15),
             User = new UserDto { Id = Guid.NewGuid(), Email = request.Email ?? "test@example.com" },
-            TenantId = Guid.NewGuid()
+            TenantId = Guid.NewGuid(),
         });
     }
 
@@ -39,7 +39,7 @@ public class MockAuthService : IAuthService
         {
             AccessToken = "mock-new-access-token",
             RefreshToken = "mock-new-refresh-token",
-            ExpiresAt = DateTime.UtcNow.AddMinutes(15)
+            ExpiresAt = DateTime.UtcNow.AddMinutes(15),
         });
     }
 
@@ -56,7 +56,7 @@ public class MockAuthService : IAuthService
             RefreshToken = "mock-github-refresh-token",
             Expires = DateTime.UtcNow.AddMinutes(15),
             User = new UserDto { Id = Guid.NewGuid(), Email = "github@example.com" },
-            TenantId = Guid.NewGuid()
+            TenantId = Guid.NewGuid(),
         });
     }
 
@@ -68,7 +68,7 @@ public class MockAuthService : IAuthService
             RefreshToken = "mock-google-refresh-token", 
             Expires = DateTime.UtcNow.AddMinutes(15),
             User = new UserDto { Id = Guid.NewGuid(), Email = "google@example.com" },
-            TenantId = Guid.NewGuid()
+            TenantId = Guid.NewGuid(),
         });
     }
 
@@ -80,7 +80,7 @@ public class MockAuthService : IAuthService
             RefreshToken = "mock-google-id-refresh-token",
             Expires = DateTime.UtcNow.AddMinutes(15),
             User = new UserDto { Id = Guid.NewGuid(), Email = "google-id@example.com" },
-            TenantId = Guid.NewGuid()
+            TenantId = Guid.NewGuid(),
         });
     }
 
@@ -100,7 +100,7 @@ public class MockAuthService : IAuthService
         {
             Challenge = "mock-web3-challenge-string",
             Nonce = Guid.NewGuid().ToString(),
-            ExpiresAt = DateTime.UtcNow.AddMinutes(5)
+            ExpiresAt = DateTime.UtcNow.AddMinutes(5),
         });
     }
 
@@ -112,7 +112,7 @@ public class MockAuthService : IAuthService
             RefreshToken = "mock-web3-refresh-token",
             Expires = DateTime.UtcNow.AddMinutes(15),
             User = new UserDto { Id = Guid.NewGuid(), Email = "web3@example.com" },
-            TenantId = Guid.NewGuid()
+            TenantId = Guid.NewGuid(),
         });
     }
 
@@ -121,7 +121,7 @@ public class MockAuthService : IAuthService
         return Task.FromResult(new EmailOperationResponseDto
         {
             Success = true,
-            Message = "Mock email verification sent"
+            Message = "Mock email verification sent",
         });
     }
 
@@ -130,7 +130,7 @@ public class MockAuthService : IAuthService
         return Task.FromResult(new EmailOperationResponseDto
         {
             Success = true,
-            Message = "Mock email verification successful"
+            Message = "Mock email verification successful",
         });
     }
 
@@ -139,7 +139,7 @@ public class MockAuthService : IAuthService
         return Task.FromResult(new EmailOperationResponseDto
         {
             Success = true,
-            Message = "Mock password reset email sent"
+            Message = "Mock password reset email sent",
         });
     }
 
@@ -148,7 +148,7 @@ public class MockAuthService : IAuthService
         return Task.FromResult(new EmailOperationResponseDto
         {
             Success = true,
-            Message = "Mock password reset successful"
+            Message = "Mock password reset successful",
         });
     }
 
@@ -157,7 +157,7 @@ public class MockAuthService : IAuthService
         return Task.FromResult(new EmailOperationResponseDto
         {
             Success = true,
-            Message = "Mock password change successful"
+            Message = "Mock password change successful",
         });
     }
 }

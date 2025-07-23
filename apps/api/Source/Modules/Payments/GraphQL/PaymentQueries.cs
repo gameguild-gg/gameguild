@@ -44,7 +44,7 @@ public class PaymentQueries {
       FromDate = fromDate,
       ToDate = toDate,
       Skip = skip,
-      Take = Math.Min(take, 100) // Limit to prevent abuse
+      Take = Math.Min(take, 100), // Limit to prevent abuse
     };
 
     return await mediator.Send(query, cancellationToken);
@@ -72,7 +72,7 @@ public class PaymentQueries {
       FromDate = fromDate,
       ToDate = toDate,
       Skip = skip,
-      Take = Math.Min(take, 100)
+      Take = Math.Min(take, 100),
     };
 
     return await mediator.Send(query, cancellationToken);
@@ -96,7 +96,7 @@ public class PaymentQueries {
       ProductId = productId,
       FromDate = fromDate,
       ToDate = toDate,
-      TenantId = tenantContext.TenantId
+      TenantId = tenantContext.TenantId,
     };
 
     return await mediator.Send(query, cancellationToken);
@@ -122,7 +122,7 @@ public class PaymentQueries {
       ToDate = toDate,
       GroupBy = groupBy,
       ProductId = productId,
-      TenantId = tenantContext.TenantId
+      TenantId = tenantContext.TenantId,
     };
 
     return await mediator.Send(query, cancellationToken);

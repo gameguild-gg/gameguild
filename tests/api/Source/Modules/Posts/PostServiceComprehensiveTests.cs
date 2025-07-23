@@ -48,7 +48,7 @@ public class PostServiceComprehensiveTests : IDisposable
             Description = "First post",
             PostType = "general",
             AuthorId = userId,
-            Visibility = AccessLevel.Public
+            Visibility = AccessLevel.Public,
         };
 
         var post2 = new Post
@@ -57,7 +57,7 @@ public class PostServiceComprehensiveTests : IDisposable
             Description = "Second post",
             PostType = "general",
             AuthorId = userId,
-            Visibility = AccessLevel.Public
+            Visibility = AccessLevel.Public,
         };
 
         // Act
@@ -562,7 +562,7 @@ public class PostServiceComprehensiveTests : IDisposable
             Slug = "test-title",
             AuthorId = userId,
             Description = "Test",
-            PostType = "general"
+            PostType = "general",
         };
         _context.Posts.Add(existingPost);
         await _context.SaveChangesAsync();
@@ -585,7 +585,7 @@ public class PostServiceComprehensiveTests : IDisposable
         var nonExistentPost = new Post
         {
             Id = Guid.NewGuid(),
-            Title = "Non-existent Post"
+            Title = "Non-existent Post",
         };
 
         // Act & Assert
@@ -631,7 +631,7 @@ public class PostServiceComprehensiveTests : IDisposable
             Id = userId,
             Name = $"Test User {userId:N}",
             Email = $"test_{userId:N}@example.com",
-            IsActive = true
+            IsActive = true,
         };
 
         _context.Users.Add(user);
@@ -648,7 +648,7 @@ public class PostServiceComprehensiveTests : IDisposable
             PostType = "general",
             AuthorId = authorId,
             Visibility = AccessLevel.Public,
-            Status = ContentStatus.Published
+            Status = ContentStatus.Published,
         };
 
         _context.Posts.Add(post);
@@ -665,7 +665,7 @@ public class PostServiceComprehensiveTests : IDisposable
             PostType = postType,
             AuthorId = authorId,
             Visibility = AccessLevel.Public,
-            Status = ContentStatus.Published
+            Status = ContentStatus.Published,
         };
 
         _context.Posts.Add(post);
@@ -682,7 +682,7 @@ public class PostServiceComprehensiveTests : IDisposable
             PostType = "general",
             AuthorId = authorId,
             Visibility = AccessLevel.Public,
-            Status = ContentStatus.Published
+            Status = ContentStatus.Published,
         };
 
         _context.Posts.Add(post);

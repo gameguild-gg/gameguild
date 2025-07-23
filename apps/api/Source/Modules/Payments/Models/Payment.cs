@@ -159,7 +159,7 @@ public enum PaymentStatus {
   Failed = 3,
   Cancelled = 4,
   Refunded = 5,
-  PartiallyRefunded = 6
+  PartiallyRefunded = 6,
 }
 
 /// <summary>
@@ -173,7 +173,7 @@ public enum PaymentMethod {
   Cryptocurrency = 4,
   DigitalWallet = 5,
   GiftCard = 6,
-  Credits = 7
+  Credits = 7,
 }
 
 /// <summary>
@@ -305,5 +305,5 @@ public enum RefundStatus {
   Processing = 1,
   Succeeded = 2,
   Failed = 3,
-  Cancelled = 4
+  Cancelled = 4,
 }

@@ -33,7 +33,7 @@ public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, SignInRe
         Expires = refreshResponse.ExpiresAt,
         TenantId = refreshResponse.TenantId,
         User = new UserDto(), // This would need to be populated from JWT claims or service
-        AvailableTenants = new List<TenantInfoDto>()
+        AvailableTenants = new List<TenantInfoDto>(),
       };
 
       // For now, we'll create a minimal notification without full user data
@@ -41,7 +41,7 @@ public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, SignInRe
         UserId = Guid.Empty, // Would need to extract from JWT or get from service
         Email = "",
         TenantId = signInResponse.TenantId,
-        RefreshedAt = DateTime.UtcNow
+        RefreshedAt = DateTime.UtcNow,
       };
 
       await _mediator.Publish(notification, cancellationToken);

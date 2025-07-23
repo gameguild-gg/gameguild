@@ -30,7 +30,7 @@ public class AuthMutations {
       Email = input.Email,
       Password = input.Password,
       Username = input.Username ?? input.Email, // Fallback to email if username not provided
-      TenantId = input.TenantId
+      TenantId = input.TenantId,
     };
 
     return await mediator.Send(command);
@@ -117,7 +117,7 @@ public class AuthMutations {
     [Service] IMediator mediator
   ) {
     var command = new GenerateWeb3ChallengeCommand {
-      WalletAddress = input.WalletAddress, ChainId = input.ChainId ?? "1" // Default to Ethereum mainnet
+      WalletAddress = input.WalletAddress, ChainId = input.ChainId ?? "1", // Default to Ethereum mainnet
     };
 
     return await mediator.Send(command);
@@ -138,7 +138,7 @@ public class AuthMutations {
     [Service] IMediator mediator
   ) {
     var command = new VerifyWeb3SignatureCommand {
-      WalletAddress = input.WalletAddress, Signature = input.Signature, Nonce = input.Nonce, ChainId = input.ChainId ?? "1" // Default to Ethereum mainnet
+      WalletAddress = input.WalletAddress, Signature = input.Signature, Nonce = input.Nonce, ChainId = input.ChainId ?? "1", // Default to Ethereum mainnet
     };
 
     return await mediator.Send(command);

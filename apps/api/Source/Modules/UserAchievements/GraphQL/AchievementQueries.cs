@@ -36,7 +36,7 @@ public class AchievementQueries {
       SearchTerm = searchTerm,
       OrderBy = orderBy,
       Descending = descending,
-      TenantId = tenantId
+      TenantId = tenantId,
     };
 
     var result = await mediator.Send(query);
@@ -56,7 +56,7 @@ public class AchievementQueries {
       AchievementId = achievementId,
       IncludeLevels = includeLevels,
       IncludePrerequisites = includePrerequisites,
-      TenantId = tenantId
+      TenantId = tenantId,
     };
 
     var result = await mediator.Send(query);
@@ -90,7 +90,7 @@ public class AchievementQueries {
       EarnedBefore = earnedBefore,
       OrderBy = orderBy,
       Descending = descending,
-      TenantId = tenantId
+      TenantId = tenantId,
     };
 
     var result = await mediator.Send(query);
@@ -110,7 +110,7 @@ public class AchievementQueries {
       UserId = userId,
       Category = category,
       OnlyInProgress = onlyInProgress,
-      TenantId = tenantId
+      TenantId = tenantId,
     };
 
     var result = await mediator.Send(query);
@@ -130,7 +130,7 @@ public class AchievementQueries {
       UserId = userId,
       RecentLimit = recentLimit,
       NearCompletionThreshold = nearCompletionThreshold,
-      TenantId = tenantId
+      TenantId = tenantId,
     };
 
     var result = await mediator.Send(query);
@@ -152,7 +152,7 @@ public class AchievementQueries {
       Limit = limit,
       OrderBy = orderBy,
       TimeFrame = timeFrame,
-      TenantId = tenantId
+      TenantId = tenantId,
     };
 
     var result = await mediator.Send(query);
@@ -176,7 +176,7 @@ public class AchievementQueries {
       PageSize = pageSize,
       Category = category,
       OnlyEligible = onlyEligible,
-      TenantId = tenantId
+      TenantId = tenantId,
     };
 
     var result = await mediator.Send(query);
@@ -194,7 +194,7 @@ public class AchievementQueries {
     var query = new CheckAchievementPrerequisitesQuery {
       UserId = userId,
       AchievementId = achievementId,
-      TenantId = tenantId
+      TenantId = tenantId,
     };
 
     var result = await mediator.Send(query);
@@ -210,7 +210,7 @@ public class AchievementQueries {
     Guid? tenantId = null) {
     var query = new GetAchievementStatisticsQuery {
       AchievementId = achievementId,
-      TenantId = tenantId
+      TenantId = tenantId,
     };
 
     var result = await mediator.Send(query);
