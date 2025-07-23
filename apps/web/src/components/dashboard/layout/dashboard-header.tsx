@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useTheme } from 'next-themes';
 import { useSession, signOut } from 'next-auth/react';
 import { NotificationDropdown } from '@/components/legacy/notifications';
@@ -55,11 +54,9 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm px-4 md:px-6">
-      {/* Sidebar Toggle */}
-      <SidebarTrigger className="text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all duration-200 backdrop-blur-sm" />
-      
       {/* Title Section */}
       <div className="flex-1">
+        {/*<SidebarTrigger className="text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all duration-200 backdrop-blur-sm" />*/}
         {title && (
           <div>
             <h1 className="text-lg font-semibold md:text-xl text-white">{title}</h1>

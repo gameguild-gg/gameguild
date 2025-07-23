@@ -43,7 +43,7 @@ interface TestingSession {
   sessionDate: string;
   startTime: string;
   endTime: string;
-  location: {
+  location?: {
     id: string;
     name: string;
     capacity: number;
@@ -53,12 +53,12 @@ interface TestingSession {
   registeredProjectMemberCount: number;
   registeredProjectCount: number;
   status: 'scheduled' | 'inProgress' | 'completed' | 'cancelled';
-  manager: {
+  manager?: {
     id: string;
     name: string;
     email: string;
   };
-  testingRequests: {
+  testingRequests?: {
     id: string;
     title: string;
     projectVersion: {
@@ -207,8 +207,8 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
   const filteredSessions = Array.isArray(sessions) ? sessions.filter((session) => {
     const matchesSearch =
       session.sessionName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.manager.name.toLowerCase().includes(searchTerm.toLowerCase());
+      session.location?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      session.manager?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
     return matchesSearch && matchesStatus;
   }) : [];
@@ -498,8 +498,8 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                           <div className="flex items-center gap-2">
                             <MapPin className="h-4 w-4 text-green-400" />
                             <div>
-                              <div className="font-medium">{session.location.name}</div>
-                              <div className="text-xs text-slate-400">Capacity: {session.location.capacity}</div>
+                              <div className="font-medium">{session.location?.name || 'Unknown Location'}</div>
+                              <div className="text-xs text-slate-400">Capacity: {session.location?.capacity || 0}</div>
                             </div>
                           </div>
                         </TableCell>
@@ -528,8 +528,8 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                         </TableCell>
                         <TableCell className="text-white">
                           <div>
-                            <div className="font-medium">{session.manager.name}</div>
-                            <div className="text-xs text-slate-400">{session.manager.email}</div>
+                            <div className="font-medium">{session.manager?.name || 'Unknown Manager'}</div>
+                            <div className="text-xs text-slate-400">{session.manager?.email || 'No email'}</div>
                           </div>
                         </TableCell>
                         <TableCell className="text-white">
@@ -655,7 +655,7 @@ function SessionCard({
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">{session.sessionName}</h3>
-                  <p className="text-slate-400 text-sm">{session.manager.name}</p>
+                  <p className="text-slate-400 text-sm">{session.manager?.name || 'Unknown Manager'}</p>
                 </div>
               </div>
 
@@ -670,7 +670,7 @@ function SessionCard({
                 </div>
                 <div className="flex items-center gap-2 text-slate-300">
                   <MapPin className="h-4 w-4" />
-                  {session.location.name}
+                  {session.location?.name || 'Unknown Location'}
                 </div>
                 <div className="flex items-center gap-2 text-slate-300">
                   <Users className="h-4 w-4" />
@@ -727,7 +727,7 @@ function SessionCard({
             </div>
             <div>
               <CardTitle className="text-white text-lg leading-tight">{session.sessionName}</CardTitle>
-              <CardDescription className="text-slate-400 text-sm">Managed by {session.manager.name}</CardDescription>
+              <CardDescription className="text-slate-400 text-sm">Managed by {session.manager?.name || 'Unknown Manager'}</CardDescription>
             </div>
           </div>
 
@@ -780,8 +780,8 @@ function SessionCard({
 
           <div className="flex items-center gap-2 text-slate-300 text-sm">
             <MapPin className="h-4 w-4 text-green-400" />
-            <span>{session.location.name}</span>
-            <span className="text-slate-500">({session.location.capacity} capacity)</span>
+            <span>{session.location?.name || 'Unknown Location'}</span>
+            <span className="text-slate-500">({session.location?.capacity || 0} capacity)</span>
           </div>
         </div>
 
@@ -1248,16 +1248,16 @@ function SessionDetailDialog({
                   <div className="flex items-center gap-3">
                     <MapPin className="h-5 w-5 text-green-400" />
                     <div>
-                      <p className="text-white font-medium">{session.location.name}</p>
-                      <p className="text-slate-400 text-sm">Capacity: {session.location.capacity}</p>
+                      <p className="text-white font-medium">{session.location?.name || 'Unknown Location'}</p>
+                      <p className="text-slate-400 text-sm">Capacity: {session.location?.capacity || 0}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <Users className="h-5 w-5 text-purple-400" />
                     <div>
-                      <p className="text-white font-medium">{session.manager.name}</p>
-                      <p className="text-slate-400 text-sm">{session.manager.email}</p>
+                      <p className="text-white font-medium">{session.manager?.name || 'Unknown Manager'}</p>
+                      <p className="text-slate-400 text-sm">{session.manager?.email || 'No email'}</p>
                     </div>
                   </div>
                 </CardContent>
