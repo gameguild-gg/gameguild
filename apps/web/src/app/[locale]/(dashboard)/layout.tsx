@@ -1,6 +1,7 @@
 import React, { PropsWithChildren } from 'react';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
+import { SyncProvider } from '@/lib/sync/sync-provider';
 import { ErrorBoundaryProvider } from '@/components/errors/error-boundary-provider';
 
 export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
@@ -15,7 +16,9 @@ export default async function Layout({ children }: PropsWithChildren): Promise<R
   return (
     <>
       <ErrorBoundaryProvider config={{ level: 'page', enableRetry: true, maxRetries: 3, reportToAnalytics: true, isolate: false }}>
-        {children}
+        {/* <SyncProvider> */}
+          {children}
+        {/* </SyncProvider> */}
       </ErrorBoundaryProvider>
     </>
   );
