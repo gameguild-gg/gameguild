@@ -6,8 +6,6 @@ import { useState, useCallback } from "react"
 import type { CodeFile, ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
 import { getExecutor } from "./executors/executor-factory"
 import type { ExecutionContext } from "./executors/types"
-import { getTestRunner } from "./test-runners"
-import type { TestCase } from "./test-runners/types"
 
 interface UseCodeExecutionOptions {
   files: CodeFile[]
@@ -15,41 +13,18 @@ interface UseCodeExecutionOptions {
   clearTerminalOnRun: boolean
   addOutput: (output: string | string[]) => void
   clearTerminal: () => void
-  testCases?: Record<string, TestCase[]>
   setTestResults?: (results: Record<string, { passed: boolean; actual: string; expected: string }[]>) => void
 }
 
 export function useCodeExecution(options: UseCodeExecutionOptions) {
-  const { files, selectedLanguage, clearTerminalOnRun, addOutput, clearTerminal, testCases, setTestResults } = options
+  const { files, selectedLanguage, clearTerminalOnRun, addOutput, clearTerminal } = options
   const [isExecuting, setIsExecuting] = useState(false)
-  const [capturedOutput, setCapturedOutput] = useState<string[]>([])
+  const [setCapturedOutput] = useState<string[]>([])
   const [isCapturingOutput, setIsCapturingOutput] = useState(false)
   const [currentTestFileId, setCurrentTestFileId] = useState<string | null>(null)
   const [currentTestIndex, setCurrentTestIndex] = useState<number>(-1)
   const [output, setOutput] = useState<string[]>([])
   const [input, setInput] = useState<string>("")
-
-  // Function to capture output for test cases
-  const captureOutput = useCallback((output: string | string[]) => {
-    if (Array.isArray(output)) {
-      setCapturedOutput((prev) => [...prev, ...output])
-    } else {
-      setCapturedOutput((prev) => [...prev, output])
-    }
-  }, [])
-
-  // Function to normalize output for comparison
-  const normalizeOutput = useCallback((output: any): string => {
-    // Convert output to string if it's not already
-    const outputStr = typeof output === "string" ? output : String(output || "")
-
-    // Remove trailing whitespace from each line and join with newlines
-    return outputStr
-      .split("\n")
-      .map((line) => line.trimRight())
-      .join("\n")
-      .trim()
-  }, [])
 
   // Handle terminal commands
   const handleTerminalCommand = useCallback(
@@ -160,93 +135,6 @@ export function useCodeExecution(options: UseCodeExecutionOptions) {
     [isExecuting, clearTerminalOnRun, clearTerminal, addOutput, files, selectedLanguage],
   )
 
-  // Run tests for a file
-  const runTests = useCallback(
-    async (fileId: string) => {
-      if (!testCases || !setTestResults) return
-
-      // Safely get file cases or empty array if not defined
-      const fileCases = testCases[fileId] || []
-      if (fileCases.length === 0) {
-        addOutput("No test cases defined for this file.")
-        return
-      }
-
-      // Set executing state
-      setIsExecuting(true)
-
-      // Get the test type from the first test case
-      const testType = fileCases[0]?.type || "simple"
-
-      // Clear previous test results
-      setTestResults({
-        ...testCases,
-        [fileId]: fileCases.map(() => ({ passed: false, actual: "", expected: "" })),
-      })
-
-      // Clear terminal if option is enabled
-      if (clearTerminalOnRun) {
-        clearTerminal()
-      }
-
-      // Find the file being tested
-      const file = files.find((f) => f.id === fileId)
-      if (!file) {
-        addOutput("Error: File not found")
-        setIsExecuting(false)
-        return
-      }
-
-      addOutput(`--- Running Tests for ${file.name} ---`)
-
-      // Check if the language is cpp/hpp and warn about lack of compiler
-      if (selectedLanguage === "cpp" || selectedLanguage === "hpp") {
-        addOutput("WARNING: C++ compiler not yet implemented. Tests will not be executed.")
-      }
-
-      // Get the appropriate test runner for the language and test type
-      const testRunner = getTestRunner(selectedLanguage, testType)
-
-      if (testRunner) {
-        try {
-          // Execute the test runner with all necessary options
-          await testRunner({
-            fileId,
-            file,
-            fileCases,
-            files,
-            selectedLanguage,
-            addOutput,
-            clearTerminal,
-            setIsExecuting,
-            setTestResults,
-            normalizeOutput,
-          })
-        } catch (error) {
-          console.error("Error running tests:", error)
-          addOutput(`Error running tests: ${error}`)
-
-          // Update test results with error
-          setTestResults({
-            ...testCases,
-            [fileId]: fileCases.map(() => ({
-              passed: false,
-              actual: `Error: ${error}`,
-              expected: "Successful test execution",
-            })),
-          })
-        }
-      } else {
-        addOutput(`${testType} tests not yet implemented for ${selectedLanguage}`)
-      }
-
-      // Reset execution state
-      setIsExecuting(false)
-      addOutput("--- Test execution complete ---")
-    },
-    [testCases, setTestResults, selectedLanguage, files, clearTerminal, addOutput, clearTerminalOnRun, normalizeOutput],
-  )
-
   const getExecutorForLanguage = (language: ProgrammingLanguage) => {
     return getExecutor(language)
   }
@@ -323,7 +211,6 @@ export function useCodeExecution(options: UseCodeExecutionOptions) {
     handleExecute,
     handleStopExecution,
     handleTerminalCommand,
-    runTests,
     handleTerminalInput,
     setInput,
   }
