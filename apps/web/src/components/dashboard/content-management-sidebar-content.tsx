@@ -46,7 +46,7 @@ export function ContentManagementSidebarContent({
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{item.name}</span>
-                  <span className="truncate text-xs">Content</span>
+                  {/* <span className="truncate text-xs">Content</span> */}
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -64,7 +64,7 @@ export function ContentManagementSidebarContent({
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">Testing Lab</span>
-                    <span className="truncate text-xs">Development</span>
+                    {/* <span className="truncate text-xs">Development</span> */}
                   </div>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
@@ -78,7 +78,7 @@ export function ContentManagementSidebarContent({
                       </div>
                       <div className="grid flex-1 text-left text-sm leading-tight">
                         <span className="truncate font-semibold">{subItem.name}</span>
-                        <span className="truncate text-xs">Testing Lab</span>
+                        {/* <span className="truncate text-xs">Testing Lab</span> */}
                       </div>
                     </Link>
                   </DropdownMenuItem>
@@ -96,7 +96,7 @@ export function ContentManagementSidebarContent({
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">Testing Lab</span>
-                    <span className="truncate text-xs">Development</span>
+                    {/* <span className="truncate text-xs">Development</span> */}
                   </div>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
@@ -110,7 +110,10 @@ export function ContentManagementSidebarContent({
                           <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
                             <subItem.icon className="size-4" />
                           </div>
-                          <span>{subItem.name}</span>
+                          <div className="grid flex-1 text-left text-sm leading-tight">
+                            <span className="truncate font-semibold">{subItem.name}</span>
+                            {/* <span className="truncate text-xs">Testing Lab</span> */}
+                          </div>
                         </Link>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>

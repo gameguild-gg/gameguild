@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useState } from 'react';
-import { useUserContext, useUserFilters, useUserPagination, useUserSelection } from '@/lib/users/users.context';
+import { useUserContext, useUserFilters as useContextUserFilters, useUserPagination, useUserSelection } from '@/lib/users/users.context';
 import { createUserAction, deleteUserAction, revalidateUsersDataAction, toggleUserStatusAction, updateUserAction } from '@/lib/users/user-management';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Edit, Filter, Loader2, MoreHorizontal, Plus, RefreshCw, Search, Trash2, UserCheck, Users, UserX } from 'lucide-react';
 
+// Import the new enhanced components
+import { User } from '@/components/legacy/types/user';
+import { UserFilterProvider, UserFilterControls, UserActiveFilters, useUserFilters } from './filters';
+import { UserNavigation } from './user-navigation';
+import { UserContent } from './user-content';
+import { UserEmptyState } from './user-empty-state';
+import { useResponsiveViewMode } from '../common/hooks/use-responsive-view-mode';
+
 interface UserManagementContentProps {
   initialPagination?: {
     page: number;
@@ -25,9 +33,183 @@ interface UserManagementContentProps {
   };
 }
 
+// Enhanced content component using new filter system
+function EnhancedUserManagementContent() {
+  const { state, filteredUsers, hasActiveFilters } = useUserFilters();
+  const { isSmallScreen } = useResponsiveViewMode();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+
+  // Server action states
+  const [createState, createFormAction, isCreatingUser] = useActionState(createUserAction, { success: false });
+  const [updateState, updateFormAction, isUpdatingUser] = useActionState(updateUserAction.bind(null, editingUser?.id || ''), { success: false });
+
+  const handleDelete = async (userId: string) => {
+    const result = await deleteUserAction(userId);
+    if (result.success) {
+      setUserToDelete(null);
+      setIsDeleteDialogOpen(false);
+      // TODO: Refresh data
+    }
+  };
+
+  const handleRefresh = async () => {
+    await revalidateUsersDataAction();
+    // TODO: Refresh data
+  };
+
+  return (
+    <>
+      {/* Simple Header with count and refresh */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-center gap-2">
+          <Users className="h-6 w-6 text-blue-600" />
+          <div>
+            <h2 className="text-xl font-semibold">Users ({filteredUsers.length})</h2>
+            <p className="text-sm text-gray-600">Manage user accounts and permissions</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
+      </div>
+
+      {/* Enhanced Filters, Search & View Toggle with Add User button */}
+      <div className="space-y-3 mb-8">
+        <UserFilterControls hideViewToggle={isSmallScreen} onAddUser={() => setIsCreateDialogOpen(true)} />
+        {hasActiveFilters() && <UserActiveFilters totalCount={filteredUsers.length} />}
+      </div>
+
+      {/* Enhanced Users Display */}
+      {filteredUsers.length > 0 ? (
+        <UserContent users={filteredUsers} viewMode={state.viewMode} />
+      ) : (
+        <UserEmptyState
+          hasFilters={hasActiveFilters()}
+          hasUsers={filteredUsers.length > 0}
+          onCreateUser={() => setIsCreateDialogOpen(true)}
+          onClearFilters={() => {
+            // Clear filters implementation
+          }}
+        />
+      )}
+
+      {/* Create User Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New User</DialogTitle>
+            <DialogDescription>Add a new user to the platform. They will receive an email invitation.</DialogDescription>
+          </DialogHeader>
+          <form action={createFormAction}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input id="name" name="name" placeholder="Enter user's full name" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input id="email" name="email" type="email" placeholder="user@example.com" required />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox id="isActive" name="isActive" defaultChecked />
+                <Label htmlFor="isActive">Active User</Label>
+              </div>
+            </div>
+            {createState.error && <div className="text-sm text-red-600 mb-4">{createState.error}</div>}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isCreatingUser}>
+                {isCreatingUser ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create User'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>Update user information and settings.</DialogDescription>
+          </DialogHeader>
+          {editingUser && (
+            <form action={updateFormAction}>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Full Name</Label>
+                  <Input id="edit-name" name="name" defaultValue={editingUser.name} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-email">Email Address</Label>
+                  <Input id="edit-email" name="email" type="email" defaultValue={editingUser.email} required />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="edit-isActive" name="isActive" defaultChecked={editingUser.isActive} />
+                  <Label htmlFor="edit-isActive">Active User</Label>
+                </div>
+              </div>
+              {updateState.error && <div className="text-sm text-red-600 mb-4">{updateState.error}</div>}
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditingUser(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isUpdatingUser}>
+                  {isUpdatingUser ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Updating...
+                    </>
+                  ) : (
+                    'Update User'
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>Are you sure you want to delete this user? This action cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={() => userToDelete && handleDelete(userToDelete)}>
+              Delete User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 export function UserManagementContent({ initialPagination }: UserManagementContentProps) {
   const { state, paginatedUsers, hasSelection, allSelected, selectAll, clearSelection, refreshData } = useUserContext();
-  const { filters, setSearch, setActiveFilter, resetFilters } = useUserFilters();
+  const { filters, setSearch, setActiveFilter, resetFilters } = useContextUserFilters();
   const { selectedUsers, toggleUser } = useUserSelection();
   const { pagination, setPage, nextPage, prevPage, hasNextPage, hasPrevPage } = useUserPagination();
 
@@ -39,6 +221,9 @@ export function UserManagementContent({ initialPagination }: UserManagementConte
   // Server action states
   const [createState, createFormAction, isCreatingUser] = useActionState(createUserAction, { success: false });
   const [updateState, updateFormAction, isUpdatingUser] = useActionState(updateUserAction.bind(null, editingUser?.id || ''), { success: false });
+
+  // Check if we should use the enhanced version
+  const useEnhancedVersion = true; // Set to true to enable the new enhanced UI
 
   // Update pagination from props
   useEffect(() => {
@@ -82,6 +267,17 @@ export function UserManagementContent({ initialPagination }: UserManagementConte
     await revalidateUsersDataAction();
     refreshData();
   };
+
+  if (useEnhancedVersion) {
+    return (
+      <UserFilterProvider users={state.users}>
+        <div className="space-y-6">
+          <UserNavigation />
+          <EnhancedUserManagementContent />
+        </div>
+      </UserFilterProvider>
+    );
+  }
 
   return (
     <div className="space-y-6">
