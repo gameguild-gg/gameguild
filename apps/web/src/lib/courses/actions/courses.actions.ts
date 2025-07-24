@@ -100,7 +100,7 @@ function transformProgramToCourse(program: {
 
 export async function getCourseData(): Promise<EnhancedCourseData> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     // Fetch courses from the public published programs API
     const response = await fetch(`${apiUrl}/api/program/published`, {
@@ -231,7 +231,7 @@ export interface CreateCourseRequest {
 
 export async function createCourse(courseData: CreateCourseRequest): Promise<EnhancedCourse> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/program`, {
       method: 'POST',

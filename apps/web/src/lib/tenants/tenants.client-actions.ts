@@ -22,7 +22,7 @@ export async function getTenantsDataClient(page: number = 1, limit: number = 20,
       };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const skip = (page - 1) * limit;
 
     const params = new URLSearchParams({
@@ -74,7 +74,7 @@ export async function getUserTenantsClient() {
       return [];
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/tenants/user`, {
       headers: {
@@ -114,7 +114,7 @@ export async function createTenantClient(prevState: ActionState, formData: FormD
       return { success: false, error: 'Name must be at least 2 characters long' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/tenants`, {
       method: 'POST',
@@ -164,7 +164,7 @@ export async function updateTenantClient(id: string, prevState: ActionState, for
       return { success: false, error: 'Name must be at least 2 characters long' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/tenants/${id}`, {
       method: 'PUT',
@@ -206,7 +206,7 @@ export async function deleteTenantClient(id: string) {
       return { success: false, error: 'Authentication required' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/tenants/${id}`, {
       method: 'DELETE',

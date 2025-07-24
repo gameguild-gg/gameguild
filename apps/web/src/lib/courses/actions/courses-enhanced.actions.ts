@@ -83,7 +83,7 @@ const REVALIDATION_TIME = 300; // 5 minutes
 const getCachedEnhancedCourseData = unstable_cache(
   async (filters?: CourseFilters): Promise<{ courses: EnhancedCourse[]; total: number }> => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
       // Build query parameters
       const params = new URLSearchParams();
@@ -215,7 +215,7 @@ export async function getEnhancedCourseData(filters?: CourseFilters): Promise<{
  */
 export async function getEnhancedCourseById(id: string): Promise<EnhancedCourse | null> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/program/${id}`, {
       headers: {
@@ -300,7 +300,7 @@ export async function createEnhancedCourse(
       return { success: false, error: 'Slug must contain only lowercase letters, numbers, and hyphens' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/program`, {
       method: 'POST',
@@ -390,7 +390,7 @@ export async function updateEnhancedCourse(
       return { success: false, error: 'Description must be at least 10 characters long' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const updateData: any = {};
     if (title) updateData.title = title.trim();
@@ -438,7 +438,7 @@ export async function updateEnhancedCourse(
  */
 export async function deleteEnhancedCourse(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/program/${id}`, {
       method: 'DELETE',
@@ -476,7 +476,7 @@ export async function toggleCoursePublishStatus(
 }> {
   try {
     const newStatus = currentStatus === 'published' ? 'draft' : 'published';
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/program/${id}/${newStatus === 'published' ? 'publish' : 'unpublish'}`, {
       method: 'POST',
@@ -511,7 +511,7 @@ export async function toggleCoursePublishStatus(
  */
 export async function getCourseAnalytics(id: string): Promise<CourseAnalytics | null> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/program/${id}/analytics`, {
       headers: {
@@ -556,7 +556,7 @@ export async function duplicateCourse(
   course?: EnhancedCourse;
 }> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/program/${id}/clone`, {
       method: 'POST',
