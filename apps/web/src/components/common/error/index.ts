@@ -9,9 +9,9 @@ export {
   type ErrorBoundaryProps,
   type ErrorFallbackProps,
   type ErrorBoundaryState,
-} from './GracefullyDegradingErrorBoundary';
+} from './gracefully-degrading-error-boundary';
 
-export { RetryableErrorBoundary, type RetryableErrorBoundaryProps, type RetryableErrorFallbackProps } from './RetryableErrorBoundary';
+export { RetryableErrorBoundary, type RetryableErrorBoundaryProps, type RetryableErrorFallbackProps } from './retryableErrorBoundary';
 
 export {
   ErrorBoundaryProvider,
@@ -20,7 +20,7 @@ export {
   type ErrorBoundaryConfig,
   type ErrorBoundaryProviderProps,
   type SmartErrorBoundaryProps,
-} from './ErrorBoundaryProvider';
+} from './types';
 
 // Re-export the hook for convenience
 export { useErrorBoundary } from '../../hooks/useErrorBoundary';
@@ -29,7 +29,7 @@ export { useErrorBoundary } from '../../hooks/useErrorBoundary';
 export { errorReporter, ErrorReporter, type ErrorReport } from '../../../lib/errorReporting';
 
 // Default export for convenience - use SmartErrorBoundary for most cases
-export { SmartErrorBoundary as default } from './ErrorBoundaryProvider';
+export { SmartErrorBoundary as default } from './error-boundary-provider';
 
 // Legacy exports for backward compatibility
-export { GracefullyDegradingErrorBoundary as ErrorBoundary } from './GracefullyDegradingErrorBoundary';
+export { GracefullyDegradingErrorBoundary as ErrorBoundary } from './gracefully-degrading-error-boundary';
