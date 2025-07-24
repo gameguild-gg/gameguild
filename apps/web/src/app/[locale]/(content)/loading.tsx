@@ -1,5 +1,5 @@
-import Loading from '@/components/legacy/loading';
+import React from 'react';
 
-export default function MainLoading() {
-  return <Loading type="page" message="Loading main content..." />;
+export default async function Loading(): Promise<React.JSX.Element> {
+  return <></>;
 }
