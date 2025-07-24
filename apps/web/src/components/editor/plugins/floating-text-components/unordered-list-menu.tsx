@@ -9,7 +9,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuItem,
-} from "@/components/editor/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu"
 
 interface UnorderedListMenuProps {
   editor: any

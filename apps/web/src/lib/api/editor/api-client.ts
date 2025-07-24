@@ -1,4 +1,4 @@
-import { syncConfig } from "../sync/sync-config"
+import { syncConfig } from "../../sync/editor/sync-config"
 
 interface ProjectMetadata {
   id: string

@@ -231,8 +231,7 @@ export function CppHeaderSyntaxHighlighter({ monaco, editor }: CppHeaderSyntaxHi
          ],
 
          whitespace: [
-           [/[ \t\r
-]+/, "white"],
+           [/[ \t\r]+/, "white"],
            [/\/\*/, "comment", "@comment"],
            [/\/\/.*$/, "comment"],
          ],

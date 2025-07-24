@@ -1,4 +1,4 @@
-import { ApiClient } from "../api/api-client"
+import { ApiClient } from "../../api/editor/api-client"
 import { SyncQueue } from "./sync-queue"
 import { HashManager } from "./hash-manager"
 import { syncConfig } from "./sync-config"

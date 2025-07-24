@@ -1,6 +1,6 @@
 import { getExecutor } from "../executors/executor-factory"
 import type { TestRunnerOptions } from "./types"
-import type { ProgrammingLanguage } from "../../components/ui/source-code/types"
+import type { ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
 
 export async function runCustomTests(options: TestRunnerOptions) {
   const {

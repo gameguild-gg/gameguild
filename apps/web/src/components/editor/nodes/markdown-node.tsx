@@ -7,8 +7,8 @@ import { DecoratorNode, type SerializedLexicalNode, $getNodeByKey } from "lexica
 import { FileText } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/editor/ui/button"
-import { Textarea } from "@/components/editor/ui/textarea"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import { EditorLoadingContext } from "../lexical-editor"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 

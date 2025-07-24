@@ -1,6 +1,6 @@
 "use client"
 
-import { Input } from "@/components/editor/ui/input"
+import { Input } from "@/components/ui/input"
 
 interface FillBlankQuestionProps {
   question: string

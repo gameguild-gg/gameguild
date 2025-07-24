@@ -1,10 +1,10 @@
 "use client"
 
 import { Editor } from "@/components/editor/lexical-editor"
-import { Button } from "@/components/editor/ui/button"
-import { Input } from "@/components/editor/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/editor/ui/dialog"
-import { Label } from "@/components/editor/ui/label"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 import { Save, SaveAll, HardDrive, Settings } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
@@ -14,7 +14,7 @@ import { OpenProjectDialog } from "@/components/editor/ui/editor/open-project-di
 import { CreateProjectDialog } from "@/components/editor/ui/editor/create-project-dialog"
 import { EnhancedStorageAdapter } from "@/lib/storage/enhanced-storage-adapter"
 import { SyncSettingsDialog } from "@/components/editor/ui/editor/sync-settings-dialog"
-import { syncConfig } from "@/lib/sync/sync-config"
+import { syncConfig } from "@/lib/sync/editor/sync-config"
 
 interface ProjectData {
   id: string
@@ -478,7 +478,7 @@ export default function Page() {
   const editorRef = useRef<LexicalEditor | null>(null)
 
   // Tamanho recomendado em KB (500KB)
-  const RECOMMENDED_SIZE_KB = 500
+  const RECOMMENDED_SIZE_KB = 1000
 
   const [isFirstTime, setIsFirstTime] = useState(true)
 

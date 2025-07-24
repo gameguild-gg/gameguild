@@ -1,4 +1,4 @@
-import type { ProgrammingLanguage } from "../../components/ui/source-code/types"
+import type { ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
 import type { TestCase, TestResult, TestRunner } from "./types"
 import { javascriptTestRunners } from "./javascript"
 import { pythonTestRunners } from "./python"

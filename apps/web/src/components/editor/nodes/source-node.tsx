@@ -7,11 +7,11 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { BookOpen, Edit, ExternalLink, Plus, Trash2, X, Check } from "lucide-react"
 import type { JSX } from "react/jsx-runtime"
 
-import { Button } from "@/components/editor/ui/button"
-import { Input } from "@/components/editor/ui/input"
-import { Label } from "@/components/editor/ui/label"
-import { Textarea } from "@/components/editor/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/editor/ui/select"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import {
   Dialog,
@@ -20,7 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/editor/ui/dialog"
+} from "@/components/ui/dialog"
 
 export type SourceType = "book" | "article" | "website" | "journal" | "paper" | "other"
 

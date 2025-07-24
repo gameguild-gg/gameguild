@@ -1,9 +1,9 @@
 "use client"
 
-import { Button } from "@/components/editor/ui/button"
-import { Input } from "@/components/editor/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/editor/ui/dialog"
-import { Label } from "@/components/editor/ui/label"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 

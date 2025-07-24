@@ -1,6 +1,6 @@
 "use client"
 
-import { DropdownMenuTrigger } from "@/components/editor/ui/dropdown-menu"
+import { DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
@@ -38,12 +38,12 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from "@/components/editor/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu"
 import { TOGGLE_LINK_COMMAND } from "@lexical/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/editor/ui/dialog"
-import { Input } from "@/components/editor/ui/input"
-import { Label } from "@/components/editor/ui/label"
-import { Button } from "@/components/editor/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
 import { ListMenuComponent } from "./floating-text-components/list-menu-component"
 import { FontFamilyMenuComponent } from "./floating-text-components/font-family-menu-component"
 import { FontSizeMenuComponent } from "./floating-text-components/font-size-menu-component"

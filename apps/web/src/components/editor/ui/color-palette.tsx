@@ -1,7 +1,7 @@
 "use client"
 
-import { Input } from "@/components/editor/ui/input"
-import { Label } from "@/components/editor/ui/label"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface ColorPaletteProps {
   selectedColor?: string

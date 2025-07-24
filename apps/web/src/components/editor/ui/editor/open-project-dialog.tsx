@@ -2,10 +2,10 @@
 
 import type React from "react"
 
-import { Button } from "@/components/editor/ui/button"
-import { Input } from "@/components/editor/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/editor/ui/dialog"
-import { Label } from "@/components/editor/ui/label"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 import { FolderOpen, Trash2 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"

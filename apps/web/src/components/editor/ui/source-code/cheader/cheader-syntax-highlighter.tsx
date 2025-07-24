@@ -203,8 +203,7 @@ export function CHeaderSyntaxHighlighter({ monaco, editor }: CHeaderSyntaxHighli
          ],
 
          whitespace: [
-           [/[ \t\r
-]+/, "white"],
+           [/[ \t\r]+/, "white"],
            [/\/\*/, "comment", "@comment"],
            [/\/\/.*$/, "comment"],
          ],

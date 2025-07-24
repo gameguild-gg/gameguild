@@ -35,9 +35,9 @@ import {
   Youtube,
 } from "lucide-react"
 
-import { Button } from "@/components/editor/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/editor/ui/popover"
-import { Separator } from "@/components/editor/ui/separator"
+import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Separator } from "@/components/ui/separator"
 import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/ui/media-upload-dialog"
 import type { ImageData } from "../nodes/image-node"
 import type { VideoData } from "../nodes/video-node"
@@ -54,10 +54,10 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from "@/components/editor/ui/dialog"
-import { Label } from "@/components/editor/ui/label"
-import { Input } from "@/components/editor/ui/input"
-import { Checkbox } from "@/components/editor/ui/checkbox"
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { extractYouTubeVideoId } from "../nodes/youtube-node"
 import type { SpotifyData } from "../nodes/spotify-node"
 import { extractSpotifyInfo } from "../nodes/spotify-node"
