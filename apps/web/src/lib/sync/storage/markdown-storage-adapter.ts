@@ -5,8 +5,8 @@ import { pipeline, Readable, Writable } from 'stream';
 import { promisify } from 'util';
 import matter from 'gray-matter';
 import slugify from 'slugify';
-import { BaseStorageAdapter } from './base-storage.adapter';
-import { ContentStorage, StorageMetadata, StreamOptions } from './storage.types';
+import { BaseStorageAdapter } from './base-storage-adapter';
+import { ContentStorage, StorageMetadata, StreamOptions } from './storage-types';
 
 const pipelineAsync = promisify(pipeline);
 

@@ -4,8 +4,8 @@ import { basename, join } from 'path';
 import { pipeline, Readable, Transform, Writable } from 'stream';
 import crypto from 'crypto';
 import sharp from 'sharp'; // For image processing
-import { BaseStorageAdapter } from './base-storage.adapter';
-import { ImageStorage, StorageMetadata, StorageResult } from './storage.types';
+import { BaseStorageAdapter } from './base-storage-adapter';
+import { ImageStorage, StorageMetadata, StorageResult } from './storage-types';
 
 interface ImageBucketConfig {
   basePath: string;
