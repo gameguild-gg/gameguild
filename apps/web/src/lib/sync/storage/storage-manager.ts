@@ -94,7 +94,7 @@ export class StorageManager extends EventEmitter {
     this.ensureInitialized();
 
     const adapters = this.getAvailableAdapters();
-    
+
     for (const adapter of adapters) {
       try {
         const result = await adapter.get<T>(key);
@@ -303,22 +303,22 @@ export class StorageManager extends EventEmitter {
     this.ensureInitialized();
 
     const primaryStats = this.primaryAdapter ? await this.primaryAdapter.stats() : null;
-    const fallbackStats = await Promise.all(
-      this.fallbackAdapters.map(async (adapter) => await adapter.stats())
-    );
+    const fallbackStats = await Promise.all(this.fallbackAdapters.map(async (adapter) => await adapter.stats()));
 
     return {
-      primary: primaryStats ? {
-        type: primaryStats.type,
-        available: primaryStats.available,
-        size: primaryStats.size,
-        itemCount: primaryStats.itemCount,
-      } : {
-        type: this.config.primaryAdapter,
-        available: false,
-        size: 0,
-        itemCount: 0,
-      },
+      primary: primaryStats
+        ? {
+            type: primaryStats.type,
+            available: primaryStats.available,
+            size: primaryStats.size,
+            itemCount: primaryStats.itemCount,
+          }
+        : {
+            type: this.config.primaryAdapter,
+            available: false,
+            size: 0,
+            itemCount: 0,
+          },
       fallbacks: fallbackStats.map((stats) => ({
         type: stats.type,
         available: stats.available,
@@ -427,20 +427,20 @@ export class StorageManager extends EventEmitter {
       try {
         const keys = await fallbackAdapter.keys();
         const data = await fallbackAdapter.getMany(keys);
-        
+
         if (data.size > 0) {
           await this.primaryAdapter.setMany(data);
-          this.emit('migration', { 
-            from: fallbackAdapter.type, 
-            to: this.primaryAdapter.type, 
-            itemCount: data.size 
+          this.emit('migration', {
+            from: fallbackAdapter.type,
+            to: this.primaryAdapter.type,
+            itemCount: data.size,
           });
         }
       } catch (error) {
-        this.emit('migration-failed', { 
-          from: fallbackAdapter.type, 
-          to: this.primaryAdapter.type, 
-          error 
+        this.emit('migration-failed', {
+          from: fallbackAdapter.type,
+          to: this.primaryAdapter.type,
+          error,
         });
       }
     }
@@ -448,13 +448,13 @@ export class StorageManager extends EventEmitter {
 
   private getAvailableAdapters(): ClientStorageAdapter[] {
     const adapters: ClientStorageAdapter[] = [];
-    
+
     if (this.primaryAdapter) {
       adapters.push(this.primaryAdapter);
     }
-    
+
     adapters.push(...this.fallbackAdapters);
-    
+
     return adapters;
   }
 

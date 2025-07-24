@@ -38,7 +38,7 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
 
   async init(): Promise<void> {
     if (this.initialized) return;
-    
+
     try {
       await this._init();
       this.initialized = true;
@@ -80,10 +80,10 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
 
   async get<T = unknown>(key: string): Promise<StorageAdapterResult<T>> {
     this.ensureInitialized();
-    
+
     try {
       const item = await this._get<T>(key);
-      
+
       if (!item) {
         return { success: false };
       }
@@ -108,7 +108,7 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
         timestamp: Date.now(),
         error: errorObj,
       });
-      
+
       return {
         success: false,
         error: errorObj,
@@ -118,7 +118,7 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
 
   async set<T = unknown>(key: string, value: T, ttl?: number): Promise<StorageAdapterResult<void>> {
     this.ensureInitialized();
-    
+
     try {
       const item: StorageItem<T> = {
         value,
@@ -147,7 +147,7 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
       return { success: true };
     } catch (error) {
       const errorObj = error instanceof Error ? error : new Error('Set operation failed');
-      
+
       // Handle quota exceeded error specifically
       if (this.isQuotaExceededError(error)) {
         this.emitEvent({
@@ -176,7 +176,7 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
 
   async delete(key: string): Promise<StorageAdapterResult<boolean>> {
     this.ensureInitialized();
-    
+
     try {
       const deleted = await this._delete(key);
 
@@ -212,7 +212,7 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
 
   async clear(): Promise<StorageAdapterResult<void>> {
     this.ensureInitialized();
-    
+
     try {
       await this._clear();
 
@@ -241,7 +241,7 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
 
   async has(key: string): Promise<boolean> {
     this.ensureInitialized();
-    
+
     try {
       return await this._has(key);
     } catch {
@@ -251,7 +251,7 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
 
   async keys(): Promise<string[]> {
     this.ensureInitialized();
-    
+
     try {
       return await this._keys();
     } catch {
@@ -261,7 +261,7 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
 
   async size(): Promise<number> {
     this.ensureInitialized();
-    
+
     try {
       return await this._size();
     } catch {
@@ -287,7 +287,7 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
   // Batch operations with default implementations
   async getMany<T = unknown>(keys: string[]): Promise<Map<string, T>> {
     const result = new Map<string, T>();
-    
+
     await Promise.allSettled(
       keys.map(async (key) => {
         const item = await this.get<T>(key);
@@ -302,7 +302,7 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
 
   async setMany<T = unknown>(items: Map<string, T>, ttl?: number): Promise<Map<string, boolean>> {
     const result = new Map<string, boolean>();
-    
+
     await Promise.allSettled(
       Array.from(items.entries()).map(async ([key, value]) => {
         const setResult = await this.set(key, value, ttl);
@@ -315,7 +315,7 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
 
   async deleteMany(keys: string[]): Promise<Map<string, boolean>> {
     const result = new Map<string, boolean>();
-    
+
     await Promise.allSettled(
       keys.map(async (key) => {
         const deleteResult = await this.delete(key);
@@ -358,13 +358,13 @@ export abstract class BaseClientStorageAdapter extends EventEmitter implements C
     const text = JSON.stringify(value);
     const encoder = new TextEncoder();
     const data = encoder.encode(text);
-    
+
     if (typeof crypto !== 'undefined' && crypto.subtle) {
       const hashBuffer = await crypto.subtle.digest('SHA-256', data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
     }
-    
+
     // Fallback simple hash for environments without crypto.subtle
     let hash = 0;
     for (let i = 0; i < text.length; i++) {

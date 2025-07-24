@@ -11,8 +11,8 @@ export function filterPrograms(programs: Program[], filters: ProgramFilterState)
           program.title.toLowerCase().includes(searchLower) ||
           (program.description && program.description.toLowerCase().includes(searchLower)) ||
           (program.shortDescription && program.shortDescription.toLowerCase().includes(searchLower)) ||
-          (program.tags && program.tags.some(tag => tag.toLowerCase().includes(searchLower)));
-        
+          (program.tags && program.tags.some((tag) => tag.toLowerCase().includes(searchLower)));
+
         if (!matchesSearch) return false;
       }
 

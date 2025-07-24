@@ -4,12 +4,7 @@ import React, { createContext, useContext, useEffect, useReducer, useCallback, R
 import { courseReducer, initialCourseState } from '../reducers/courses.reducer';
 import { CourseAction, CourseState, CourseData } from '@/components/legacy/types/courses';
 import { EnhancedCourse } from '../courses-enhanced.context';
-import { 
-  fetchCoursesWithCache, 
-  createCourseWithCache, 
-  updateCourseWithCache, 
-  deleteCourseWithCache 
-} from '../actions/courses.actions';
+import { fetchCoursesWithCache, createCourseWithCache, updateCourseWithCache, deleteCourseWithCache } from '../actions/courses.actions';
 
 // Extended state to include sync status while maintaining compatibility
 export interface CourseSyncState extends CourseState {
@@ -20,7 +15,7 @@ export interface CourseSyncState extends CourseState {
 }
 
 // Extended actions for sync operations
-export type CourseSyncAction = 
+export type CourseSyncAction =
   | CourseAction
   | { type: 'SET_SYNC_STATUS'; payload: 'idle' | 'syncing' | 'synced' | 'error' }
   | { type: 'SET_LAST_SYNC_TIME'; payload: Date }
@@ -110,10 +105,10 @@ function courseSyncReducer(state: CourseSyncState, action: CourseSyncAction): Co
           programming: [],
           art: [],
           design: [],
-          audio: []
-        }
+          audio: [],
+        },
       };
-      
+
       return {
         ...state,
         data: courseData,
@@ -132,9 +127,9 @@ function courseSyncReducer(state: CourseSyncState, action: CourseSyncAction): Co
         isLoading: state.isLoading,
         error: state.error,
       };
-      
+
       const newBaseState = courseReducer(baseState, action as CourseAction);
-      
+
       return {
         ...state,
         ...newBaseState,
@@ -182,7 +177,6 @@ export function CourseManagementProvider({ children }: CourseSyncProviderProps) 
       if (serverData) {
         dispatch({ type: 'SET_COURSES_FROM_ENHANCED', payload: serverData });
       }
-
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: (error as Error).message });
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
@@ -192,83 +186,89 @@ export function CourseManagementProvider({ children }: CourseSyncProviderProps) 
   }, []);
 
   // Create course with optimistic updates
-  const createCourse = useCallback(async (course: Omit<EnhancedCourse, 'id'>) => {
-    const tempId = `temp-${Date.now()}`;
-    const optimisticCourse: EnhancedCourse = {
-      ...course,
-      id: tempId,
-    };
+  const createCourse = useCallback(
+    async (course: Omit<EnhancedCourse, 'id'>) => {
+      const tempId = `temp-${Date.now()}`;
+      const optimisticCourse: EnhancedCourse = {
+        ...course,
+        id: tempId,
+      };
 
-    try {
-      // Add optimistic update
-      dispatch({ type: 'ADD_OPTIMISTIC_UPDATE', payload: { id: tempId, course: optimisticCourse } });
-      dispatch({ type: 'ADD_PENDING_CHANGE', payload: tempId });
+      try {
+        // Add optimistic update
+        dispatch({ type: 'ADD_OPTIMISTIC_UPDATE', payload: { id: tempId, course: optimisticCourse } });
+        dispatch({ type: 'ADD_PENDING_CHANGE', payload: tempId });
 
-      // Create on server
-      const createdCourse = await createCourseWithCache(course);
-      
-      // Remove optimistic update and add real course
-      dispatch({ type: 'REMOVE_OPTIMISTIC_UPDATE', payload: tempId });
-      dispatch({ type: 'REMOVE_PENDING_CHANGE', payload: tempId });
-      
-      // Reload courses to get updated data
-      await loadCourses();
+        // Create on server
+        const createdCourse = await createCourseWithCache(course);
 
-    } catch (error) {
-      dispatch({ type: 'REMOVE_OPTIMISTIC_UPDATE', payload: tempId });
-      dispatch({ type: 'REMOVE_PENDING_CHANGE', payload: tempId });
-      dispatch({ type: 'SET_ERROR', payload: (error as Error).message });
-    }
-  }, [loadCourses]);
+        // Remove optimistic update and add real course
+        dispatch({ type: 'REMOVE_OPTIMISTIC_UPDATE', payload: tempId });
+        dispatch({ type: 'REMOVE_PENDING_CHANGE', payload: tempId });
+
+        // Reload courses to get updated data
+        await loadCourses();
+      } catch (error) {
+        dispatch({ type: 'REMOVE_OPTIMISTIC_UPDATE', payload: tempId });
+        dispatch({ type: 'REMOVE_PENDING_CHANGE', payload: tempId });
+        dispatch({ type: 'SET_ERROR', payload: (error as Error).message });
+      }
+    },
+    [loadCourses],
+  );
 
   // Update course with optimistic updates
-  const updateCourse = useCallback(async (id: string, updates: Partial<EnhancedCourse>) => {
-    try {
-      // Get current course data for optimistic update
-      const currentCourses = getEnhancedCourses();
-      const currentCourse = currentCourses.find(c => c.id === id);
-      
-      if (currentCourse) {
-        const optimisticCourse = { ...currentCourse, ...updates };
-        dispatch({ type: 'ADD_OPTIMISTIC_UPDATE', payload: { id, course: optimisticCourse } });
+  const updateCourse = useCallback(
+    async (id: string, updates: Partial<EnhancedCourse>) => {
+      try {
+        // Get current course data for optimistic update
+        const currentCourses = getEnhancedCourses();
+        const currentCourse = currentCourses.find((c) => c.id === id);
+
+        if (currentCourse) {
+          const optimisticCourse = { ...currentCourse, ...updates };
+          dispatch({ type: 'ADD_OPTIMISTIC_UPDATE', payload: { id, course: optimisticCourse } });
+        }
+
+        dispatch({ type: 'ADD_PENDING_CHANGE', payload: id });
+
+        // Update on server
+        await updateCourseWithCache(id, updates);
+
+        // Remove optimistic update
+        dispatch({ type: 'REMOVE_OPTIMISTIC_UPDATE', payload: id });
+        dispatch({ type: 'REMOVE_PENDING_CHANGE', payload: id });
+
+        // Reload courses to get updated data
+        await loadCourses();
+      } catch (error) {
+        dispatch({ type: 'REMOVE_OPTIMISTIC_UPDATE', payload: id });
+        dispatch({ type: 'REMOVE_PENDING_CHANGE', payload: id });
+        dispatch({ type: 'SET_ERROR', payload: (error as Error).message });
       }
-      
-      dispatch({ type: 'ADD_PENDING_CHANGE', payload: id });
-
-      // Update on server
-      await updateCourseWithCache(id, updates);
-      
-      // Remove optimistic update
-      dispatch({ type: 'REMOVE_OPTIMISTIC_UPDATE', payload: id });
-      dispatch({ type: 'REMOVE_PENDING_CHANGE', payload: id });
-      
-      // Reload courses to get updated data
-      await loadCourses();
-
-    } catch (error) {
-      dispatch({ type: 'REMOVE_OPTIMISTIC_UPDATE', payload: id });
-      dispatch({ type: 'REMOVE_PENDING_CHANGE', payload: id });
-      dispatch({ type: 'SET_ERROR', payload: (error as Error).message });
-    }
-  }, [loadCourses]);
+    },
+    [loadCourses],
+  );
 
   // Delete course
-  const deleteCourse = useCallback(async (id: string) => {
-    try {
-      dispatch({ type: 'ADD_PENDING_CHANGE', payload: id });
+  const deleteCourse = useCallback(
+    async (id: string) => {
+      try {
+        dispatch({ type: 'ADD_PENDING_CHANGE', payload: id });
 
-      await deleteCourseWithCache(id);
-      
-      dispatch({ type: 'REMOVE_PENDING_CHANGE', payload: id });
-      
-      // Reload courses to get updated data
-      await loadCourses();
+        await deleteCourseWithCache(id);
 
-    } catch (error) {
-      dispatch({ type: 'REMOVE_PENDING_CHANGE', payload: id });
-      dispatch({ type: 'SET_ERROR', payload: (error as Error).message });
-    }
-  }, [loadCourses]);
+        dispatch({ type: 'REMOVE_PENDING_CHANGE', payload: id });
+
+        // Reload courses to get updated data
+        await loadCourses();
+      } catch (error) {
+        dispatch({ type: 'REMOVE_PENDING_CHANGE', payload: id });
+        dispatch({ type: 'SET_ERROR', payload: (error as Error).message });
+      }
+    },
+    [loadCourses],
+  );
 
   // Sync with server
   const syncWithServer = useCallback(async () => {
@@ -282,7 +282,7 @@ export function CourseManagementProvider({ children }: CourseSyncProviderProps) 
 
     // Apply optimistic updates
     state.optimisticUpdates.forEach((course, id) => {
-      const existingIndex = enhanced.findIndex(c => c.id === id);
+      const existingIndex = enhanced.findIndex((c) => c.id === id);
       if (existingIndex >= 0) {
         enhanced[existingIndex] = course;
       } else {
@@ -329,11 +329,7 @@ export function CourseManagementProvider({ children }: CourseSyncProviderProps) 
     getEnhancedCourses,
   };
 
-  return (
-    <CourseSyncContext.Provider value={contextValue}>
-      {children}
-    </CourseSyncContext.Provider>
-  );
+  return <CourseSyncContext.Provider value={contextValue}>{children}</CourseSyncContext.Provider>;
 }
 
 // Hook to use the context
