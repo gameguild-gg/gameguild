@@ -85,7 +85,10 @@ public static class InfrastructureConfiguration {
   /// </summary>
   public static DatabaseOptions CreateDatabaseOptions(IConfiguration configuration) {
     var options = new DatabaseOptions {
-      ConnectionString = GetDatabaseConnectionString(configuration), UseInMemoryDatabase = ShouldUseInMemoryDatabase(), EnableSensitiveDataLogging = IsEnvironment("Development"), EnableDetailedErrors = IsEnvironment("Development"),
+      ConnectionString = GetDatabaseConnectionString(configuration),
+      UseInMemoryDatabase = ShouldUseInMemoryDatabase(),
+      EnableSensitiveDataLogging = IsEnvironment("Development"),
+      EnableDetailedErrors = IsEnvironment("Development"),
     };
 
     options.Validate();
@@ -165,8 +168,13 @@ public static class InfrastructureConfiguration {
   /// Configures Entity Framework DbContext with the specified options.
   /// </summary>
   public static void ConfigureDbContext(DbContextOptionsBuilder options, DatabaseOptions dbOptions) {
-    if (dbOptions.UseInMemoryDatabase) { ConfigureInMemoryDatabase(options); }
-    else { ConfigureSqliteDatabase(options, dbOptions); }
+    if (dbOptions.UseInMemoryDatabase) {
+      ConfigureInMemoryDatabase(options);
+    }
+    else {
+      // Always use PostgreSQL for production database
+      ConfigurePostgreSqlDatabase(options, dbOptions);
+    }
 
     ConfigureDatabaseLogging(options, dbOptions);
   }
@@ -180,12 +188,12 @@ public static class InfrastructureConfiguration {
   }
 
   /// <summary>
-  /// Configures SQLite database for development and production.
+  /// Configures PostgreSQL database for production.
   /// </summary>
-  private static void ConfigureSqliteDatabase(DbContextOptionsBuilder options, DatabaseOptions dbOptions) {
-    options.UseSqlite(dbOptions.ConnectionString, sqliteOptions => { sqliteOptions.MigrationsHistoryTable(dbOptions.MigrationsHistoryTable, dbOptions.SchemaName); });
+  private static void ConfigurePostgreSqlDatabase(DbContextOptionsBuilder options, DatabaseOptions dbOptions) {
+    options.UseNpgsql(dbOptions.ConnectionString, npgsqlOptions => { npgsqlOptions.MigrationsHistoryTable(dbOptions.MigrationsHistoryTable, dbOptions.SchemaName); });
 
-    // Suppress SQLite pragma warnings that are not actionable
+    // Suppress model changes warnings for PostgreSQL in production deployment
     options.ConfigureWarnings(warnings =>
                                 warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
     );

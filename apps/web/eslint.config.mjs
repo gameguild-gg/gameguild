@@ -1,15 +1,56 @@
-import baseConfig from '@game-guild/eslint-config';
 import { FlatCompat } from '@eslint/eslintrc';
-
-// import nextConfig from 'eslint-config-next';
+import eslint from '@eslint/js';
+import eslintConfigPrettier from 'eslint-config-prettier';
+import prettierPlugin from 'eslint-plugin-prettier';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import reactPlugin from 'eslint-plugin-react';
+import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import globals from 'globals';
+import typescriptEslint from 'typescript-eslint';
 
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
 });
 
+// Prettier config inline
+const prettierConfig = {
+  printWidth: 160,
+  singleQuote: true,
+  tabWidth: 2,
+  trailingComma: 'all',
+  useTabs: false,
+};
+
 /** @type {import('eslint').Linter.Config[]} */
 const config = [
-  ...baseConfig,
+  { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
+  {
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        ...globals.jest,
+      },
+      sourceType: 'module',
+    },
+  },
+  eslint.configs.recommended,
+  eslintConfigPrettier,
+  eslintPluginPrettierRecommended,
+  ...typescriptEslint.configs.recommended,
+  {
+    ...reactPlugin.configs.flat.recommended,
+    languageOptions: {
+      ...reactPlugin.configs.flat.recommended.languageOptions,
+      globals: {
+        ...globals.serviceworker,
+      },
+    },
+  },
+  {
+    plugins: { prettier: prettierPlugin },
+    rules: { 'prettier/prettier': ['error', prettierConfig] },
+  },
   ...compat.config({
     extends: ['next', 'next/core-web-vitals'],
     settings: {
@@ -18,7 +59,17 @@ const config = [
       },
     },
   }),
-  // ...nextConfig,
+  {
+    plugins: {
+      'react-hooks': reactHooksPlugin,
+    },
+    settings: { react: { version: 'detect' } },
+    rules: {
+      ...reactHooksPlugin.configs.recommended.rules,
+      'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off',
+    },
+  },
   // Override rules for generated API code
   {
     files: ['src/lib/api/generated/**/*.{ts,js}'],
@@ -27,6 +78,9 @@ const config = [
       '@typescript-eslint/ban-ts-comment': 'off',
     },
   },
+  {
+    ignores: ['dist/**', 'build/**', 'coverage/**', 'node_modules/**', '.next/**'],
+  },
 ];
 
-export default config;
+export default config.flat();
