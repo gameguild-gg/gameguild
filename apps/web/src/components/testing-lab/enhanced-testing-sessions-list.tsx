@@ -23,18 +23,17 @@ import {
   Edit,
   ExternalLink,
   Eye,
-  Filter,
   Gamepad2,
   MapPin,
   MoreHorizontal,
   Plus,
   RefreshCw,
-  Search,
   Timer,
   TrendingUp,
   Users,
   XCircle,
 } from 'lucide-react';
+import { SessionFilterControls } from './session-filter-controls';
 
 interface TestingSession {
   id: string;
@@ -85,20 +84,6 @@ interface TestingRequest {
 }
 
 // Helper function to convert API SessionStatus (0,1,2,3) to frontend status strings
-const mapSessionStatus = (apiStatus?: number): 'scheduled' | 'active' | 'completed' | 'cancelled' => {
-  switch (apiStatus) {
-    case 0:
-      return 'scheduled';
-    case 1:
-      return 'active';
-    case 2:
-      return 'completed';
-    case 3:
-      return 'cancelled';
-    default:
-      return 'scheduled';
-  }
-};
 
 interface SessionRegistration {
   id: string;
@@ -138,7 +123,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>('grid');
   const [userRole, setUserRole] = useState<UserRole>({
     type: 'student',
@@ -160,7 +145,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
       const devOverride = isDev; // Set to true to test as professor in dev
 
       const newUserRole = {
-        type: isAdmin || devOverride ? 'admin' : isProfessor || devOverride ? 'professor' : 'student',
+        type: (isAdmin || devOverride ? 'admin' : isProfessor || devOverride ? 'professor' : 'student') as 'admin' | 'professor' | 'student',
         isStudent: isStudent && !devOverride,
         isProfessor: isProfessor || devOverride,
         isAdmin: isAdmin || devOverride,
@@ -185,15 +170,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
 
   // Set initial sessions when props change
   useEffect(() => {
-    // Map API sessions to frontend format if they come from server
-    const mappedSessions = initialSessions.map(
-      (apiSession: any): TestingSession => ({
-        ...apiSession,
-        status: mapSessionStatus(apiSession.status),
-        id: apiSession.id || '',
-      }),
-    );
-    setSessions(mappedSessions);
+    setSessions(initialSessions);
   }, [initialSessions]);
 
   const refreshSessions = async () => {
@@ -203,15 +180,38 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
       const { getTestingSessionsData } = await import('@/lib/testing-lab/testing-lab.actions');
       const sessionsData = await getTestingSessionsData();
       const apiSessions = sessionsData?.testingSessions || [];
-      // Map API sessions to frontend format
-      const newSessions = apiSessions.map(
-        (apiSession: any): TestingSession => ({
-          ...apiSession,
-          status: mapSessionStatus(apiSession.status),
-          id: apiSession.id || '',
-        }),
+      // Properly map the API response to match component interface
+      setSessions(
+        apiSessions.map((session) => ({
+          id: session.id || '',
+          sessionName: session.sessionName,
+          sessionDate: session.sessionDate,
+          startTime: session.startTime,
+          endTime: session.endTime,
+          location: session.location
+            ? {
+                id: session.location.id || '',
+                name: session.location.name,
+                capacity: session.location.capacity || 0,
+              }
+            : undefined,
+          maxTesters: session.maxTesters,
+          registeredTesterCount: session.registeredTesterCount || 0,
+          registeredProjectMemberCount: session.registeredProjectMemberCount || 0,
+          registeredProjectCount: session.registeredProjectCount || 0,
+          status: session.status as 'scheduled' | 'active' | 'completed' | 'cancelled',
+          manager: session.manager
+            ? {
+                id: session.manager.id || '',
+                name: session.manager.name,
+                email: session.manager.email || '',
+              }
+            : undefined,
+          testingRequests: session.testingRequests || [],
+          attendanceRate: session.attendanceRate,
+          averageRating: session.averageRating,
+        }))
       );
-      setSessions(newSessions);
     } catch (error) {
       console.error('Error refreshing sessions:', error);
       // Don't reload the page, just keep the current sessions
@@ -282,7 +282,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
           session.sessionName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           session.location?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           session.manager?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
+        const matchesStatus = statusFilter.length === 0 || (session.status && statusFilter.includes(session.status));
         return matchesSearch && matchesStatus;
       })
     : [];
@@ -521,49 +521,17 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
           </div>
 
           {/* Enhanced Filters and Search */}
-          <Card className="bg-slate-800/50 border-slate-600/70 backdrop-blur-sm shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-                <div className="flex flex-col sm:flex-row gap-4 flex-1">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-                    <Input
-                      placeholder="Search sessions, locations, or managers..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
-                    />
-                  </div>
-
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full sm:w-48 bg-slate-700/50 border-slate-600 text-white">
-                      <Filter className="h-4 w-4 mr-2" />
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-700">
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="scheduled">Scheduled</SelectItem>
-                      <SelectItem value="inProgress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('grid')} className="border-slate-600">
-                    Grid
-                  </Button>
-                  <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('list')} className="border-slate-600">
-                    List
-                  </Button>
-                  <Button variant={viewMode === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('table')} className="border-slate-600">
-                    Table
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <SessionFilterControls
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onRefresh={refreshSessions}
+            onAddSession={() => setShowCreateDialog(true)}
+            showAddButton={userRole.isProfessor || process.env.NODE_ENV === 'development'}
+          />
 
           {/* Sessions Display */}
           {filteredSessions.length === 0 ? (
@@ -572,7 +540,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                 <Calendar className="h-12 w-12 text-slate-500 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-slate-300 mb-2">No sessions found</h3>
                 <p className="text-slate-500">
-                  {searchTerm || statusFilter !== 'all' ? 'Try adjusting your search or filters' : 'No testing sessions have been scheduled yet'}
+                  {searchTerm || statusFilter.length > 0 ? 'Try adjusting your search or filters' : 'No testing sessions have been scheduled yet'}
                 </p>
               </CardContent>
             </Card>
