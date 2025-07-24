@@ -5,10 +5,10 @@ import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Calendar, Download, FileText, MessageSquare, Play, Search, Users } from 'lucide-react';
+import { Calendar, Download, FileText, MessageSquare, Play, Users } from 'lucide-react';
 import Link from 'next/link';
 import { testingLabApi, TestingRequest } from '@/lib/api/testing-lab/testing-lab-api';
+import { RequestFilterControls } from './request-filter-controls';
 
 interface UserRole {
   type: 'student' | 'professor' | 'admin';
@@ -23,7 +23,8 @@ export function TestingRequestsList() {
   const [filteredRequests, setFilteredRequests] = useState<TestingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>('grid');
   const [userRole, setUserRole] = useState<UserRole>({
     type: 'student',
     isStudent: true,
@@ -147,8 +148,8 @@ export function TestingRequestsList() {
       );
     }
 
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((request) => request.status === statusFilter);
+    if (statusFilter.length > 0) {
+      filtered = filtered.filter((request) => statusFilter.includes(request.status));
     }
 
     setFilteredRequests(filtered);
@@ -189,82 +190,33 @@ export function TestingRequestsList() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-      <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              {userRole.isStudent ? 'Available Testing Requests' : 'My Testing Requests'}
-            </h1>
-            <p className="text-slate-400 mt-2">
+            <h1 className="text-3xl font-bold">{userRole.isStudent ? 'Available Testing Requests' : 'My Testing Requests'}</h1>
+            <p className="text-muted-foreground mt-2">
               {userRole.isStudent ? 'Find games to test and provide valuable feedback' : 'Manage your submitted testing requests'}
             </p>
           </div>
           {!userRole.isStudent && (
-            <Button asChild className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+            <Button asChild>
               <Link href="/dashboard/testing-lab/submit">Submit New Version</Link>
             </Button>
           )}
         </div>
 
-        {/* Filters and Search */}
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-lg text-white">Filter & Search</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    placeholder="Search by title, description, or team..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={statusFilter === 'all' ? 'default' : 'outline'}
-                  onClick={() => setStatusFilter('all')}
-                  className={statusFilter === 'all' ? 'bg-blue-600 hover:bg-blue-700' : 'border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50'}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={statusFilter === 'open' ? 'default' : 'outline'}
-                  onClick={() => setStatusFilter('open')}
-                  className={
-                    statusFilter === 'open' ? 'bg-green-600 hover:bg-green-700' : 'border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50'
-                  }
-                >
-                  Open
-                </Button>
-                <Button
-                  variant={statusFilter === 'inProgress' ? 'default' : 'outline'}
-                  onClick={() => setStatusFilter('inProgress')}
-                  className={
-                    statusFilter === 'inProgress' ? 'bg-blue-600 hover:bg-blue-700' : 'border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50'
-                  }
-                >
-                  In Progress
-                </Button>
-                <Button
-                  variant={statusFilter === 'completed' ? 'default' : 'outline'}
-                  onClick={() => setStatusFilter('completed')}
-                  className={
-                    statusFilter === 'completed' ? 'bg-gray-600 hover:bg-gray-700' : 'border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50'
-                  }
-                >
-                  Completed
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Filter Controls */}
+        <RequestFilterControls
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onRefresh={() => window.location.reload()}
+        />
 
         {/* Requests Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -345,7 +297,7 @@ export function TestingRequestsList() {
               <FileText className="h-12 w-12 text-slate-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">No testing requests found</h3>
               <p className="text-slate-400 mb-4">
-                {searchTerm || statusFilter !== 'all'
+                {searchTerm || statusFilter.length > 0
                   ? 'Try adjusting your search or filter criteria'
                   : userRole.isStudent
                     ? 'There are no testing requests available at the moment'
