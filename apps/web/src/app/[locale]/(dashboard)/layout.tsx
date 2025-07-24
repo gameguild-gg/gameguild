@@ -17,7 +17,7 @@ export default async function Layout({ children }: PropsWithChildren): Promise<R
     <>
       <ErrorBoundaryProvider config={{ level: 'page', enableRetry: true, maxRetries: 3, reportToAnalytics: true, isolate: false }}>
         {/* <SyncProvider> */}
-          {children}
+        {children}
         {/* </SyncProvider> */}
       </ErrorBoundaryProvider>
     </>
