@@ -50,7 +50,7 @@ beforeAll(() => {
   }));
 
   // Mock environment variables
-  process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5001';
+  process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
   process.env.NEXTAUTH_SECRET = 'test-secret';
 
   // Mock window.matchMedia

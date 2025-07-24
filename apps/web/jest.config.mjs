@@ -42,6 +42,7 @@ const config = {
   coverageDirectory: 'coverage',
   testTimeout: 10000,
   verbose: true,
+  preset: 'ts-jest/presets/default-esm',
 };
 
 module.exports = config;

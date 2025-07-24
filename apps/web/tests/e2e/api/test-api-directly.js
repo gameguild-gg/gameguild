@@ -8,7 +8,7 @@
 const http = require('http');
 const https = require('https');
 
-const API_BASE_URL = 'http://localhost:5001';
+const API_BASE_URL = 'http://localhost:5000';
 
 function makeRequest(url) {
   return new Promise((resolve, reject) => {

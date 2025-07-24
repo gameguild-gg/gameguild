@@ -50,7 +50,7 @@ export async function getRecentPosts(limit: number = 10, includeUnpublished: boo
       };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const params = new URLSearchParams({
       skip: '0',
       take: limit.toString(),
@@ -109,7 +109,7 @@ export async function getPosts(page: number = 1, limit: number = 20, search?: st
       };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const skip = (page - 1) * limit;
     const params = new URLSearchParams({
       skip: skip.toString(),

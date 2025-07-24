@@ -21,22 +21,22 @@ echo Testing API endpoints...
 
 echo.
 echo Testing admin status endpoint:
-curl -s http://localhost:5001/api/admin/status
+curl -s http://localhost:5000/api/admin/status
 
 echo.
 echo.
 echo Testing projects endpoint (should return 401):
-curl -s http://localhost:5001/projects
+curl -s http://localhost:5000/projects
 
 echo.
 echo.
 echo Testing admin seed endpoint:
-curl -s -X POST http://localhost:5001/api/admin/seed
+curl -s -X POST http://localhost:5000/api/admin/seed
 
 echo.
 echo.
 echo Testing projects endpoint again (should work now with public access):
-curl -s http://localhost:5001/projects
+curl -s http://localhost:5000/projects
 
 echo.
 echo.

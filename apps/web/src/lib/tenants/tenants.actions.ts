@@ -42,7 +42,7 @@ export async function getTenantsData(page: number = 1, limit: number = 20): Prom
       };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const skip = (page - 1) * limit;
 
     const params = new URLSearchParams({
@@ -103,7 +103,7 @@ export async function getUserTenants(): Promise<TenantResponse[]> {
       return [];
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/tenants/user`, {
       headers: {
@@ -144,7 +144,7 @@ export async function getTenantById(id: string): Promise<TenantResponse | null> 
       return null;
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/tenants/${id}`, {
       headers: {
@@ -197,7 +197,7 @@ export async function createTenant(prevState: TenantActionState, formData: FormD
       return { success: false, error: 'Tenant name must be at least 2 characters long' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const tenantData: CreateTenantRequest = {
       name: name.trim(),
@@ -255,7 +255,7 @@ export async function updateTenant(id: string, prevState: TenantActionState, for
       return { success: false, error: 'Tenant name must be at least 2 characters long' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const tenantData: UpdateTenantRequest = {
       name: name.trim(),
@@ -305,7 +305,7 @@ export async function deleteTenant(id: string): Promise<{ success: boolean; erro
       return { success: false, error: 'Authentication required' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/tenants/${id}`, {
       method: 'DELETE',

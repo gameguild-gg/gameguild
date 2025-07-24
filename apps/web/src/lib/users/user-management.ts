@@ -22,7 +22,7 @@ export interface UserActionState extends ActionState {
  */
 export async function createUserAction(prevState: ActionState, formData: FormData): Promise<UserActionState> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const userData = {
       username: formData.get('username') as string,
@@ -64,7 +64,7 @@ export async function createUserAction(prevState: ActionState, formData: FormDat
  */
 export async function updateUserAction(id: string, prevState: ActionState, formData: FormData): Promise<UserActionState> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const userData: Partial<UpdateUserRequest> = {
       username: formData.get('username') as string,
@@ -107,7 +107,7 @@ export async function updateUserAction(id: string, prevState: ActionState, formD
  */
 export async function deleteUserAction(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/users/${id}`, {
       method: 'DELETE',
@@ -146,7 +146,7 @@ export async function toggleUserStatusAction(
   user?: User;
 }> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/users/${id}`, {
       method: 'PUT',
