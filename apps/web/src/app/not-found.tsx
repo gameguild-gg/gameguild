@@ -1,5 +1,5 @@
 import React from 'react';
-import { NotFound } from '@/components/errors/not-found';
+import { NotFound } from '@/components/common/error/not-found';
 
 export default async function Page(): Promise<React.JSX.Element> {
   return (

@@ -1,5 +1,4 @@
 import React, { PropsWithChildren } from 'react';
-import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
 import { SessionProvider } from 'next-auth/react';
@@ -9,24 +8,25 @@ import { WebVitals } from '@/components/analytics';
 import { ThemeProvider } from '@/components/theme';
 import { Web3Provider } from '@/components/web3/web3-context';
 import { TenantProvider } from '@/lib/tenants/tenant-provider';
-import { ErrorBoundaryProvider } from '@/components/errors/error-boundary-provider';
+import { ErrorBoundaryProvider } from '@/components/common/error/error-boundary-provider';
 import { environment } from '@/configs/environment';
 import { auth } from '@/auth';
 import { routing } from '@/i18n/routing';
 import { PropsWithLocaleParams } from '@/types';
 
-export async function generateMetadata({ params }: PropsWithLocaleParams): Promise<Metadata> {
-  const { locale } = await params;
-  // TODO: Use the locale to fetch metadata if needed.
-  // const metadata = getWebsiteMetadata(locale);
-
-  return {
-    title: {
-      template: ' %s | Game Guild',
-      default: 'Game Guild',
-    },
-  };
-}
+// TODO: Uncomment this when you have the metadata fetching logic ready.
+// export async function generateMetadata({ params }: PropsWithLocaleParams): Promise<Metadata> {
+//   const { locale } = await params;
+//   // TODO: Use the locale to fetch metadata if needed.
+//   // const metadata = getWebsiteMetadata(locale);
+//
+//   return {
+//     title: {
+//       template: ' %s | Game Guild',
+//       default: 'Game Guild',
+//     },
+//   };
+// }
 
 export default async function Layout({ children, params }: PropsWithChildren<PropsWithLocaleParams>): Promise<React.JSX.Element> {
   const session = await auth();

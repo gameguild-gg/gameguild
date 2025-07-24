@@ -1,24 +1,10 @@
-'use client'; // Error boundaries must be Client Components
+// Error boundaries must be Client Components.
+'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
+import { Error } from '@/components/common/error';
+import { ErrorProps } from '@/types';
 
-export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }): React.JSX.Element {
-  useEffect(() => {
-    // Log the error to an error reporting service
-    console.error(error);
-  }, [error]);
-
-  return (
-    <div>
-      <h2>Something went wrong!</h2>
-      <button
-        onClick={
-          // Attempt to recover by trying to re-render the segment
-          () => reset()
-        }
-      >
-        Try again
-      </button>
-    </div>
-  );
+export default function Page({ error, reset }: ErrorProps): React.JSX.Element {
+  return <Error error={error} reset={reset} />;
 }

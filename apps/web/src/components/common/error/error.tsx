@@ -87,7 +87,7 @@ export const Error = ({ error, reset, children }: PropsWithChildren<ErrorProps>)
           </button>
 
           <Link
-            href="/"
+            href="/apps/web/public"
             className="block w-full bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800 text-white font-medium rounded-lg px-6 py-3 text-center transition-all duration-200 focus:outline-none"
           >
             Go Home
