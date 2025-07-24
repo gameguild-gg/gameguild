@@ -33,7 +33,7 @@ const generatedDir: string = join(projectRoot, 'src', 'lib', 'api', 'generated')
 const metadataFile: string = join(generatedDir, '.api-metadata.json');
 
 // Configuration
-const API_URL: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+const API_URL: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const SWAGGER_ENDPOINT: string = `${API_URL}/swagger/v1/swagger.json`;
 const isDevelopment: boolean = process.env.NODE_ENV !== 'production';
 
