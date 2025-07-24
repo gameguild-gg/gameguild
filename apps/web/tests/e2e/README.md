@@ -132,7 +132,7 @@ npx playwright test e2e/integration/
 
 ### Prerequisites
 
-1. **API Server**: Must be running on `http://localhost:5001`
+1. **API Server**: Must be running on `http://localhost:5000`
 2. **Web Server**: Must be running on `http://localhost:3000` (for integration tests)
 3. **Dependencies**: Playwright installed (`npm install @playwright/test`)
 

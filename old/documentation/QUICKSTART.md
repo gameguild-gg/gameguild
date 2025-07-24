@@ -23,7 +23,7 @@ That's it! The application will:
 - ✅ Automatically install NuGet packages
 - ✅ Create the SQLite database (`app.db`) - *Note: Database files are excluded from git*
 - ✅ Apply all migrations
-- ✅ Start the web server on `http://localhost:5001`
+- ✅ Start the web server on `http://localhost:5000`
 
 ## ⚠️ Important Notes
 
@@ -50,14 +50,14 @@ That's it! The application will:
 
 ### GraphQL API
 
-- **Endpoint**: `http://localhost:5001/graphql`
+- **Endpoint**: `http://localhost:5000/graphql`
 - **Interactive IDE**: Open the GraphQL endpoint in your browser for Banana Cake Pop
 - **Queries**: `users`, `userById`, `userByUsername`, `activeUsers`
 - **Mutations**: `createUser`, `updateUser`, `deleteUser`, `toggleUserStatus`
 
 ### API Documentation
 
-- **Swagger UI**: `http://localhost:5001/swagger`
+- **Swagger UI**: `http://localhost:5000/swagger`
 - **GraphQL Schema**: Available in Banana Cake Pop IDE
 - **Full GraphQL Docs**: See `README-GraphQL.md`
 
@@ -67,7 +67,7 @@ That's it! The application will:
 
 ```bash
 # Create a user
-curl -X POST http://localhost:5001/api/users \
+curl -X POST http://localhost:5000/api/users \
   -H "Content-Type: application/json" \
   -d '{
     "username": "johndoe",
@@ -77,19 +77,19 @@ curl -X POST http://localhost:5001/api/users \
   }'
 
 # Get all users
-curl -X GET http://localhost:5001/api/users
+curl -X GET http://localhost:5000/api/users
 ```
 
 #### GraphQL API
 
 ```bash
 # Query all users
-curl -X POST http://localhost:5001/graphql \
+curl -X POST http://localhost:5000/graphql \
   -H "Content-Type: application/json" \
   -d '{"query": "{ users { id username email } }"}'
 
 # Create a user with GraphQL
-curl -X POST http://localhost:5001/graphql \
+curl -X POST http://localhost:5000/graphql \
   -H "Content-Type: application/json" \
   -d '{
     "query": "mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id username email } }",

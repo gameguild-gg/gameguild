@@ -17,7 +17,7 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-API_BASE="http://localhost:5001"
+API_BASE="http://localhost:5000"
 WEB_BASE="http://localhost:3000"
 TOTAL_TESTS=0
 PASSED_TESTS=0
@@ -57,7 +57,7 @@ run_test_section() {
 # Check prerequisites
 echo -e "${YELLOW}=== CHECKING PREREQUISITES ===${NC}"
 
-echo -n "🔍 Checking API server (localhost:5001)... "
+echo -n "🔍 Checking API server (localhost:5000)... "
 if curl -s "$API_BASE/api/program/published" > /dev/null 2>&1; then
     echo -e "${GREEN}✅ Available${NC}"
     API_AVAILABLE=true
@@ -234,7 +234,7 @@ else
     echo -e "Please review the failed sections above and check log files in /tmp/"
     echo
     echo "Common issues to check:"
-    echo "• Ensure both API (port 5001) and Web (port 3000) servers are running"
+    echo "• Ensure both API (port 5000) and Web (port 3000) servers are running"
     echo "• Verify Playwright is properly installed"
     echo "• Check network connectivity"
     echo "• Review browser console for JavaScript errors"

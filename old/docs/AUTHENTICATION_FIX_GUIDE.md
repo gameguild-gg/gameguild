@@ -3,7 +3,7 @@
 ## ❌ **Current ErrorMessage**
 
 ```
-ECONNREFUSED - Cannot connect to CMS backend on http://localhost:5001
+ECONNREFUSED - Cannot connect to CMS backend on http://localhost:5000
 ```
 
 The authentication is failing because the **CMS backend is not running**. Since we removed the development fallback, the
@@ -28,14 +28,14 @@ dotnet run
 ```
 Building...
 info: Microsoft.Hosting.Lifetime[14]
-      Now listening on: http://localhost:5001
+      Now listening on: http://localhost:5000
 info: Microsoft.Hosting.Lifetime[0]
       Application started. Press Ctrl+C to shut down.
 ```
 
 ### **Step 2: Verify CMS is Running**
 
-Open your browser and visit: **http://localhost:5001/health**
+Open your browser and visit: **http://localhost:5000/health**
 
 **Expected Response:**
 
@@ -70,11 +70,11 @@ dotnet restore
 dotnet run
 ```
 
-### **If Port 5001 is Busy**
+### **If Port 5000 is Busy**
 
 ```bash
-# Check what's using port 5001
-netstat -ano | findstr :5001
+# Check what's using port 5000
+netstat -ano | findstr :5000
 
 # Kill the process if needed (replace PID)
 taskkill /PID [PID] /F
@@ -94,7 +94,7 @@ dotnet run
 ### **Console Output (Frontend)**
 
 ```
-Attempting Google ID token validation with CMS backend: http://localhost:5001
+Attempting Google ID token validation with CMS backend: http://localhost:5000
 CMS backend authentication successful: { userId: ..., tenantId: ..., availableTenants: ... }
 ```
 
@@ -116,7 +116,7 @@ For the application to work, you need **both** services running:
 ```bash
 cd apps/cms
 dotnet run
-# Should show: Now listening on: http://localhost:5001
+# Should show: Now listening on: http://localhost:5000
 ```
 
 ### **Terminal 2: Web Frontend**
@@ -129,10 +129,10 @@ npm run dev
 
 ## 📋 **Quick Checklist**
 
-- [ ] CMS backend running on localhost:5001
+- [ ] CMS backend running on localhost:5000
 - [ ] Web frontend running on localhost:3000
-- [ ] Environment variable `NEXT_PUBLIC_API_URL=http://localhost:5001`
+- [ ] Environment variable `NEXT_PUBLIC_API_URL=http://localhost:5000`
 - [ ] Google OAuth credentials configured
-- [ ] No other service using port 5001
+- [ ] No other service using port 5000
 
 **Once the CMS backend is running, authentication should work perfectly!** 🚀

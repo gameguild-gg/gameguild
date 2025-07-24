@@ -129,7 +129,7 @@ function mapDisplayToAccessLevel(visibility: 'Private' | 'Public' | 'Restricted'
   }
 }
 
-const CMS_API_URL = environment.apiBaseUrl || 'http://localhost:5001';
+const CMS_API_URL = environment.apiBaseUrl || 'http://localhost:5000';
 
 // Helper function to get auth headers
 async function getAuthHeaders() {

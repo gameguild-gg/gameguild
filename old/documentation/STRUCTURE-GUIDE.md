@@ -99,9 +99,9 @@ DB_CONNECTION_STRING=Host=localhost;Database=gameguild_cms;Username=postgres;Pas
 
 ### 3. Test the API
 
-- **REST API**: `https://localhost:5001/users`
-- **GraphQL**: `https://localhost:5001/graphql`
-- **Swagger**: `https://localhost:5001/swagger`
+- **REST API**: `https://localhost:5000/users`
+- **GraphQL**: `https://localhost:5000/graphql`
+- **Swagger**: `https://localhost:5000/swagger`
 
 ### 4. Add More Modules
 

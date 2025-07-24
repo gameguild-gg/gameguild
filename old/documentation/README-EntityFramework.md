@@ -175,7 +175,7 @@ dotnet ef database update --environment Production
 
 ```bash
 # Create a user
-curl -X POST http://localhost:5001/api/users \
+curl -X POST http://localhost:5000/api/users \
   -H "Content-Type: application/json" \
   -d '{
     "username": "john_doe",
@@ -185,7 +185,7 @@ curl -X POST http://localhost:5001/api/users \
   }'
 
 # Get all users
-curl -X GET http://localhost:5001/api/users
+curl -X GET http://localhost:5000/api/users
 ```
 
 ## Benefits of This Approach
