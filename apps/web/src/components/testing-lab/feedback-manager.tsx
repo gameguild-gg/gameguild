@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, Eye, Filter, Flag, MessageSquare, Star, ThumbsDown, ThumbsUp, XCircle } from 'lucide-react';
+import { CheckCircle, Eye, Flag, MessageSquare, Star, ThumbsDown, ThumbsUp, XCircle } from 'lucide-react';
+import { FeedbackFilterControls } from './feedback-filter-controls';
 
 interface TestingFeedback {
   id: string;
@@ -64,12 +64,14 @@ export function FeedbackManager() {
   });
   const [selectedFeedback, setSelectedFeedback] = useState<TestingFeedback | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'flagged' | 'rejected'>('all');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>('table');
   const [sortBy, setSortBy] = useState<'date' | 'rating' | 'project'>('date');
 
   useEffect(() => {
     fetchFeedback();
-  }, [filter, sortBy]);
+  }, [statusFilter, sortBy]);
 
   const fetchFeedback = async () => {
     try {
@@ -159,7 +161,7 @@ export function FeedbackManager() {
     }
   };
 
-  const updateFeedbackStatus = async (feedbackId: string, status: 'approved' | 'flagged' | 'rejected', qualityRating?: 'positive' | 'negative') => {
+  const updateFeedbackStatus = async (feedbackId: string, status: 'approved' | 'flagged' | 'rejected', qualityRating?: 'positive' | 'negative' | 'neutral') => {
     try {
       // API call would go here
       setFeedback((prev) => prev.map((f) => (f.id === feedbackId ? { ...f, reviewStatus: status, qualityRating } : f)));
@@ -200,7 +202,19 @@ export function FeedbackManager() {
     return Array.from({ length: 5 }).map((_, i) => <Star key={i} className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`} />);
   };
 
-  const filteredFeedback = feedback.filter((f) => filter === 'all' || f.reviewStatus === filter);
+  const filteredFeedback = feedback.filter((f) => {
+    // Filter by status
+    const statusMatch = statusFilter.length === 0 || statusFilter.includes(f.reviewStatus);
+    
+    // Filter by search term
+    const searchMatch = !searchTerm || 
+      f.testingRequest.projectVersion.project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      f.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      f.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      f.testingRequest.title.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return statusMatch && searchMatch;
+  });
 
   if (loading) {
     return (
@@ -215,92 +229,79 @@ export function FeedbackManager() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white">Feedback Management</h1>
-          <p className="text-slate-400 mt-1">Review and manage testing feedback from students</p>
-        </div>
-        <div className="flex gap-3">
-          <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
-            <SelectTrigger className="w-40 bg-slate-700 border-slate-600 text-white">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Feedback</SelectItem>
-              <SelectItem value="pending">Pending Review</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="flagged">Flagged</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-            <SelectTrigger className="w-40 bg-slate-700 border-slate-600 text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date">Sort by Date</SelectItem>
-              <SelectItem value="rating">Sort by Rating</SelectItem>
-              <SelectItem value="project">Sort by Project</SelectItem>
-            </SelectContent>
-          </Select>
+          <h1 className="text-3xl font-bold">Feedback Management</h1>
+          <p className="text-muted-foreground mt-1">Review and manage testing feedback from students</p>
         </div>
       </div>
 
+      {/* Filter Controls */}
+      <FeedbackFilterControls
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        hideViewToggle={true}
+        onRefresh={fetchFeedback}
+      />
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+        <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-white">{stats.total}</div>
-              <div className="text-sm text-slate-400">Total</div>
+              <div className="text-2xl font-bold">{stats.total}</div>
+              <div className="text-sm text-muted-foreground">Total</div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+        <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-400">{stats.pending}</div>
-              <div className="text-sm text-slate-400">Pending</div>
+              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+              <div className="text-sm text-muted-foreground">Pending</div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+        <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-400">{stats.approved}</div>
-              <div className="text-sm text-slate-400">Approved</div>
+              <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
+              <div className="text-sm text-muted-foreground">Approved</div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+        <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-400">{stats.flagged}</div>
-              <div className="text-sm text-slate-400">Flagged</div>
+              <div className="text-2xl font-bold text-orange-600">{stats.flagged}</div>
+              <div className="text-sm text-muted-foreground">Flagged</div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+        <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-400">{stats.rejected}</div>
-              <div className="text-sm text-slate-400">Rejected</div>
+              <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
+              <div className="text-sm text-muted-foreground">Rejected</div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+        <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-400">{stats.averageRating.toFixed(1)}</div>
-              <div className="text-sm text-slate-400">Avg Rating</div>
+              <div className="text-2xl font-bold text-blue-600">{stats.averageRating.toFixed(1)}</div>
+              <div className="text-sm text-muted-foreground">Avg Rating</div>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Feedback List */}
-      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
             Feedback Submissions
           </CardTitle>
@@ -308,42 +309,40 @@ export function FeedbackManager() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-700">
-                <TableHead className="text-slate-300">Project</TableHead>
-                <TableHead className="text-slate-300">Tester</TableHead>
-                <TableHead className="text-slate-300">Rating</TableHead>
-                <TableHead className="text-slate-300">Context</TableHead>
-                <TableHead className="text-slate-300">Status</TableHead>
-                <TableHead className="text-slate-300">Quality</TableHead>
-                <TableHead className="text-slate-300">Submitted</TableHead>
-                <TableHead className="text-slate-300">Actions</TableHead>
+              <TableRow>
+                <TableHead>Project</TableHead>
+                <TableHead>Tester</TableHead>
+                <TableHead>Rating</TableHead>
+                <TableHead>Context</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Quality</TableHead>
+                <TableHead>Submitted</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredFeedback.map((item) => (
-                <TableRow key={item.id} className="border-slate-700">
-                  <TableCell className="text-white">
+                <TableRow key={item.id}>
+                  <TableCell>
                     <div>
                       <div className="font-medium">{item.testingRequest.projectVersion.project.title}</div>
-                      <div className="text-sm text-slate-400">v{item.testingRequest.projectVersion.versionNumber}</div>
+                      <div className="text-sm text-muted-foreground">v{item.testingRequest.projectVersion.versionNumber}</div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-slate-300">
+                  <TableCell>
                     <div>
                       <div>{item.user.name}</div>
-                      <div className="text-sm text-slate-400">{item.user.email}</div>
+                      <div className="text-sm text-muted-foreground">{item.user.email}</div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       {renderStars(item.feedbackData.rating)}
-                      <span className="ml-2 text-slate-300">{item.feedbackData.rating}/5</span>
+                      <span className="ml-2">{item.feedbackData.rating}/5</span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="text-slate-300">
-                      {item.testingContext}
-                    </Badge>
+                    <Badge variant="outline">{item.testingContext}</Badge>
                   </TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(item.reviewStatus)}>{item.reviewStatus}</Badge>
@@ -355,10 +354,10 @@ export function FeedbackManager() {
                         <span className="capitalize">{item.qualityRating}</span>
                       </div>
                     ) : (
-                      <span className="text-slate-500">-</span>
+                      <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-slate-400">{new Date(item.submittedAt).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-muted-foreground">{new Date(item.submittedAt).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
                       <Button size="sm" variant="outline" onClick={() => setSelectedFeedback(item)} className="h-8 w-8 p-0">
