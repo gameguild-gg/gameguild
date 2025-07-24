@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { BookOpen, Building2, FileText, LayoutDashboard, MessageSquare, Package, Settings, TestTube, Users } from 'lucide-react';
+import { BookOpen, Building2, Download, FileText, LayoutDashboard, MessageSquare, Package, Settings, TestTube, Users } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail } from '@/components/ui/sidebar';
 import { PlatformManagementSidebarContent } from '@/components/dashboard/platform-management-sidebar-content';
 import { ContentManagementSidebarContent } from '@/components/dashboard/content-management-sidebar-content';
@@ -36,11 +36,6 @@ const navigationData = {
       icon: Package,
     },
     {
-      name: 'Testing Lab',
-      url: '/dashboard/testing-lab',
-      icon: TestTube,
-    },
-    {
       name: 'Courses',
       url: '/dashboard/courses',
       icon: BookOpen,
@@ -49,6 +44,43 @@ const navigationData = {
       name: 'Reports',
       url: '/dashboard/reports',
       icon: FileText,
+    },
+  ],
+  testingLab: [
+    {
+      name: 'Overview',
+      url: '/dashboard/testing-lab/overview',
+      icon: LayoutDashboard,
+    },
+    {
+      name: 'Requests',
+      url: '/dashboard/testing-lab/requests',
+      icon: FileText,
+    },
+    {
+      name: 'Sessions',
+      url: '/dashboard/testing-lab/sessions',
+      icon: Users,
+    },
+    {
+      name: 'Feedback',
+      url: '/dashboard/testing-lab/feedback',
+      icon: MessageSquare,
+    },
+    {
+      name: 'Submit Project',
+      url: '/dashboard/testing-lab/submit',
+      icon: Package,
+    },
+    {
+      name: 'Downloads',
+      url: '/dashboard/testing-lab/downloads',
+      icon: Download,
+    },
+    {
+      name: 'Settings',
+      url: '/dashboard/testing-lab/settings',
+      icon: Settings,
     },
   ],
 };
@@ -61,7 +93,7 @@ export const DashboardSidebar = ({ tenants = [], ...props }: React.ComponentProp
       </SidebarHeader>
       <SidebarContent>
         <PlatformManagementSidebarContent items={navigationData.navMain} />
-        <ContentManagementSidebarContent items={navigationData.content} />
+        <ContentManagementSidebarContent items={navigationData.content} testingLabItems={navigationData.testingLab} />
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
