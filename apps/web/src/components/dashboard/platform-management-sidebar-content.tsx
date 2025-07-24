@@ -21,10 +21,17 @@ export function PlatformManagementSidebarContent({
       <SidebarMenu>
         {items.map((item) => (
           <SidebarMenuItem key={item.title}>
-            <SidebarMenuButton tooltip={item.title} isActive={item.isActive} asChild>
+            <SidebarMenuButton tooltip={item.title} isActive={item.isActive} size="lg" asChild>
               <Link href={item.url}>
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
+                {item.icon && (
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
+                    <item.icon className="size-4" />
+                  </div>
+                )}
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">{item.title}</span>
+                  <span className="truncate text-xs">Platform</span>
+                </div>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
