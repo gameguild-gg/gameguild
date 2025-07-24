@@ -16,14 +16,13 @@ export default async function Layout({ children }: PropsWithChildren): Promise<R
     tenants = tenantsData.tenants;
   } catch (error) {
     console.error('Failed to load tenants for sidebar:', error);
-    // Don't throw error, let TenantSwitcher handle the empty case with default tenant
+    // Don't throw error, let TenantSwitcher handle the empty case with the default tenant
   }
 
   return (
-    <div className="flex flex-1">
-      <SidebarProvider defaultOpen={defaultOpen} className="flex flex-col flex-0">
-        <DashboardSidebar tenants={tenants} />
-      </SidebarProvider>
+    <SidebarProvider defaultOpen={defaultOpen}>
+      <DashboardSidebar tenants={tenants} />
+
       <SidebarInset className="flex flex-col flex-1">
         <div className="flex flex-col flex-1 ">
           <DashboardHeader />
@@ -33,6 +32,6 @@ export default async function Layout({ children }: PropsWithChildren): Promise<R
           </div>
         </div>
       </SidebarInset>
-    </div>
+    </SidebarProvider>
   );
 }
