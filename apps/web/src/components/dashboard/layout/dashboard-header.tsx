@@ -54,7 +54,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
     .slice(0, 2);
 
   return (
-    <header className="sticky top-0 z-50 flex flex-row h-16 items-center border-b backdrop-blur-sm gap-4 px-4 md:px-8">
+    <header className="sticky top-0 z-50 flex flex-row h-16 items-center border-b backdrop-blur-sm gap-4 px-4 md:px-6">
       <div className="flex flex-1 justify-between content-between items-center gap-4">
         {/* Title Section */}
         <div className="">
@@ -98,11 +98,11 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
           {/* Notifications */}
           <NotificationDropdown className="text-slate-400 hover:text-white hover:bg-slate-800/50" />
 
-          {/* Settings */}
-          <Button variant="ghost" size="sm" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800/50">
-            <Settings className="h-4 w-4" />
-            <span className="sr-only">Settings</span>
-          </Button>
+          {/*/!* Settings *!/*/}
+          {/*<Button variant="ghost" size="sm" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800/50">*/}
+          {/*  <Settings className="h-4 w-4" />*/}
+          {/*  <span className="sr-only">Settings</span>*/}
+          {/*</Button>*/}
 
           {/* User Menu */}
           <DropdownMenu>

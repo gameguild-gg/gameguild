@@ -40,11 +40,6 @@ const navigationData = {
       url: '/dashboard/courses',
       icon: BookOpen,
     },
-    {
-      name: 'Reports',
-      url: '/dashboard/reports',
-      icon: FileText,
-    },
   ],
   testingLab: [
     {
@@ -53,29 +48,29 @@ const navigationData = {
       icon: LayoutDashboard,
     },
     {
-      name: 'Requests',
-      url: '/dashboard/testing-lab/requests',
-      icon: FileText,
-    },
-    {
       name: 'Sessions',
       url: '/dashboard/testing-lab/sessions',
       icon: Users,
     },
     {
-      name: 'Feedback',
+      name: 'Requests',
+      url: '/dashboard/testing-lab/requests',
+      icon: FileText,
+    },
+    {
+      name: 'Feedbacks',
       url: '/dashboard/testing-lab/feedback',
       icon: MessageSquare,
     },
+    // {
+    //   name: 'Submitted Projects',
+    //   url: '/dashboard/testing-lab/submit',
+    //   icon: Package,
+    // },
     {
-      name: 'Submit Project',
-      url: '/dashboard/testing-lab/submit',
-      icon: Package,
-    },
-    {
-      name: 'Downloads',
-      url: '/dashboard/testing-lab/downloads',
-      icon: Download,
+      name: 'Reports',
+      url: '/dashboard/testing-lab/reports',
+      icon: FileText,
     },
     {
       name: 'Settings',
