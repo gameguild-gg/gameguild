@@ -1,5 +1,5 @@
-import { TestingLabOverview } from '@/components/testing-lab/testing-lab-overview';
+import { redirect } from 'next/navigation';
 
-export default function TestingLabPage() {
-  return <TestingLabOverview />;
+export default async function Page(): Promise<void> {
+  redirect('/dashboard/testing-lab/overview');
 }
