@@ -1,185 +1,185 @@
 'use client';
 
-import { Editor } from "@/components/editor/lexical-editor"
-import { Button } from "@/components/editor/ui/button"
-import { Input } from "@/components/editor/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/editor/ui/dialog"
-import { Label } from "@/components/editor/ui/label"
-import { Save, SaveAll, HardDrive, Settings } from "lucide-react"
-import { useState, useEffect, useRef } from "react"
-import { toast } from "sonner"
-import { Sun, Moon } from "lucide-react"
-import type { LexicalEditor } from "lexical"
-import { OpenProjectDialog } from "@/components/editor/ui/editor/open-project-dialog"
-import { CreateProjectDialog } from "@/components/editor/ui/editor/create-project-dialog"
-import { EnhancedStorageAdapter } from "@/lib/storage/enhanced-storage-adapter"
-import { SyncSettingsDialog } from "@/components/editor/ui/editor/sync-settings-dialog"
-import { syncConfig } from "@/lib/sync/sync-config"
+import { Editor } from '@/components/editor/lexical-editor';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Save, SaveAll, HardDrive, Settings } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
+import { Sun, Moon } from 'lucide-react';
+import type { LexicalEditor } from 'lexical';
+import { OpenProjectDialog } from '@/components/editor/ui/editor/open-project-dialog';
+import { CreateProjectDialog } from '@/components/editor/ui/editor/create-project-dialog';
+import { EnhancedStorageAdapter } from '@/lib/storage/enhanced-storage-adapter';
+import { SyncSettingsDialog } from '@/components/editor/ui/editor/sync-settings-dialog';
+import { syncConfig } from '@/lib/sync/sync-config';
 
 interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
+  id: string;
+  name: string;
+  data: string;
+  tags: string[];
+  size: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Generate unique ID for projects
 function generateProjectId(): string {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID()
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
   }
   // Fallback for environments without crypto.randomUUID
-  return "proj_" + Date.now().toString(36) + "_" + Math.random().toString(36).substr(2, 9)
+  return 'proj_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
 }
 
 // IndexedDB configuration
-const DB_NAME = "GGEditorDB"
-const DB_VERSION = 1
-const STORE_NAME = "projects"
-const TAGS_STORE_NAME = "tags"
+const DB_NAME = 'GGEditorDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'projects';
+const TAGS_STORE_NAME = 'tags';
 
 // IndexedDB utility functions
 class IndexedDBStorage {
-  private db: IDBDatabase | null = null
+  private db: IDBDatabase | null = null;
 
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION)
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
 
       request.onerror = () => {
-        console.error("Failed to open IndexedDB:", request.error)
-        reject(request.error)
-      }
+        console.error('Failed to open IndexedDB:', request.error);
+        reject(request.error);
+      };
 
       request.onsuccess = () => {
-        this.db = request.result
-        console.log("IndexedDB initialized successfully")
-        resolve()
-      }
+        this.db = request.result;
+        console.log('IndexedDB initialized successfully');
+        resolve();
+      };
 
       request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result
+        const db = (event.target as IDBOpenDBRequest).result;
 
         // Create projects object store if it doesn't exist
         if (!db.objectStoreNames.contains(STORE_NAME)) {
-          const store = db.createObjectStore(STORE_NAME, { keyPath: "id" })
-          store.createIndex("name", "name", { unique: false })
-          store.createIndex("tags", "tags", { unique: false, multiEntry: true })
-          store.createIndex("createdAt", "createdAt", { unique: false })
-          store.createIndex("updatedAt", "updatedAt", { unique: false })
-          console.log("Created IndexedDB projects object store")
+          const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+          store.createIndex('name', 'name', { unique: false });
+          store.createIndex('tags', 'tags', { unique: false, multiEntry: true });
+          store.createIndex('createdAt', 'createdAt', { unique: false });
+          store.createIndex('updatedAt', 'updatedAt', { unique: false });
+          console.log('Created IndexedDB projects object store');
         }
 
         // Create tags object store if it doesn't exist
         if (!db.objectStoreNames.contains(TAGS_STORE_NAME)) {
-          const tagsStore = db.createObjectStore(TAGS_STORE_NAME, { keyPath: "name" })
-          tagsStore.createIndex("usageCount", "usageCount", { unique: false })
-          tagsStore.createIndex("createdAt", "createdAt", { unique: false })
-          console.log("Created IndexedDB tags object store")
+          const tagsStore = db.createObjectStore(TAGS_STORE_NAME, { keyPath: 'name' });
+          tagsStore.createIndex('usageCount', 'usageCount', { unique: false });
+          tagsStore.createIndex('createdAt', 'createdAt', { unique: false });
+          console.log('Created IndexedDB tags object store');
         }
-      }
-    })
+      };
+    });
   }
 
   async saveTags(tags: string[]): Promise<void> {
-    if (!this.db) throw new Error("IndexedDB not initialized")
+    if (!this.db) throw new Error('IndexedDB not initialized');
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([TAGS_STORE_NAME], "readwrite")
-      const store = transaction.objectStore(TAGS_STORE_NAME)
+      const transaction = this.db!.transaction([TAGS_STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(TAGS_STORE_NAME);
 
       const promises = tags.map((tag) => {
         return new Promise<void>((tagResolve, tagReject) => {
-          const getRequest = store.get(tag)
+          const getRequest = store.get(tag);
           getRequest.onsuccess = () => {
-            const existingTag = getRequest.result
+            const existingTag = getRequest.result;
             const tagData = {
               name: tag,
               usageCount: existingTag ? existingTag.usageCount + 1 : 1,
               createdAt: existingTag ? existingTag.createdAt : new Date().toISOString(),
               updatedAt: new Date().toISOString(),
-            }
+            };
 
-            const putRequest = store.put(tagData)
-            putRequest.onsuccess = () => tagResolve()
-            putRequest.onerror = () => tagReject(putRequest.error)
-          }
-          getRequest.onerror = () => tagReject(getRequest.error)
-        })
-      })
+            const putRequest = store.put(tagData);
+            putRequest.onsuccess = () => tagResolve();
+            putRequest.onerror = () => tagReject(putRequest.error);
+          };
+          getRequest.onerror = () => tagReject(getRequest.error);
+        });
+      });
 
       Promise.all(promises)
         .then(() => resolve())
-        .catch(reject)
-    })
+        .catch(reject);
+    });
   }
 
   async getAllTags(): Promise<Array<{ name: string; usageCount: number }>> {
-    if (!this.db) throw new Error("IndexedDB not initialized")
+    if (!this.db) throw new Error('IndexedDB not initialized');
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([TAGS_STORE_NAME], "readonly")
-      const store = transaction.objectStore(TAGS_STORE_NAME)
-      const request = store.getAll()
+      const transaction = this.db!.transaction([TAGS_STORE_NAME], 'readonly');
+      const store = transaction.objectStore(TAGS_STORE_NAME);
+      const request = store.getAll();
 
       request.onsuccess = () => {
-        const tags = request.result.sort((a, b) => b.usageCount - a.usageCount)
-        resolve(tags)
-      }
-      request.onerror = () => reject(request.error)
-    })
+        const tags = request.result.sort((a, b) => b.usageCount - a.usageCount);
+        resolve(tags);
+      };
+      request.onerror = () => reject(request.error);
+    });
   }
 
-  async searchProjects(searchTerm: string, tags: string[], filterMode: "all" | "any" = "any"): Promise<ProjectData[]> {
-    if (!this.db) throw new Error("IndexedDB not initialized")
+  async searchProjects(searchTerm: string, tags: string[], filterMode: 'all' | 'any' = 'any'): Promise<ProjectData[]> {
+    if (!this.db) throw new Error('IndexedDB not initialized');
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORE_NAME], "readonly")
-      const store = transaction.objectStore(STORE_NAME)
-      const request = store.getAll()
+      const transaction = this.db!.transaction([STORE_NAME], 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.getAll();
 
       request.onsuccess = () => {
-        let projects = request.result as ProjectData[]
+        let projects = request.result as ProjectData[];
 
         // Filter by search term (name)
         if (searchTerm) {
-          projects = projects.filter((project) => project.name.toLowerCase().includes(searchTerm.toLowerCase()))
+          projects = projects.filter((project) => project.name.toLowerCase().includes(searchTerm.toLowerCase()));
         }
 
         // Filter by tags
         if (tags.length > 0) {
           projects = projects.filter((project) => {
-            if (!project.tags || project.tags.length === 0) return false
+            if (!project.tags || project.tags.length === 0) return false;
 
-            if (filterMode === "all") {
+            if (filterMode === 'all') {
               // Project must have ALL selected tags
-              return tags.every((tag) => project.tags.includes(tag))
+              return tags.every((tag) => project.tags.includes(tag));
             } else {
               // Project must have ANY of the selected tags
-              return tags.some((tag) => project.tags.includes(tag))
+              return tags.some((tag) => project.tags.includes(tag));
             }
-          })
+          });
         }
 
         // Sort by updatedAt descending (most recent first)
-        projects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-        resolve(projects)
-      }
-      request.onerror = () => reject(request.error)
-    })
+        projects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        resolve(projects);
+      };
+      request.onerror = () => reject(request.error);
+    });
   }
 
   async save(id: string, name: string, data: string, tags: string[] = []): Promise<void> {
     if (!this.db) {
-      throw new Error("IndexedDB not initialized")
+      throw new Error('IndexedDB not initialized');
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORE_NAME], "readwrite")
-      const store = transaction.objectStore(STORE_NAME)
+      const transaction = this.db!.transaction([STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
 
       const projectData = {
         id: id,
@@ -189,155 +189,155 @@ class IndexedDBStorage {
         size: estimateSize(data),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      }
+      };
 
       // Check if project already exists to preserve createdAt
-      const getRequest = store.get(id)
+      const getRequest = store.get(id);
       getRequest.onsuccess = () => {
         if (getRequest.result) {
-          projectData.createdAt = getRequest.result.createdAt
+          projectData.createdAt = getRequest.result.createdAt;
         }
 
-        const putRequest = store.put(projectData)
+        const putRequest = store.put(projectData);
 
         putRequest.onsuccess = async () => {
           // Save tags to tags store
           if (tags.length > 0) {
             try {
-              await this.saveTags(tags)
+              await this.saveTags(tags);
             } catch (error) {
-              console.error("Failed to save tags:", error)
+              console.error('Failed to save tags:', error);
             }
           }
-          console.log(`Saved project "${name}" (${id}) to IndexedDB`)
-          resolve()
-        }
+          console.log(`Saved project "${name}" (${id}) to IndexedDB`);
+          resolve();
+        };
 
         putRequest.onerror = () => {
-          console.error("Failed to save to IndexedDB:", putRequest.error)
-          reject(putRequest.error)
-        }
-      }
+          console.error('Failed to save to IndexedDB:', putRequest.error);
+          reject(putRequest.error);
+        };
+      };
 
       getRequest.onerror = () => {
-        console.error("Failed to check existing project:", getRequest.error)
-        reject(getRequest.error)
-      }
-    })
+        console.error('Failed to check existing project:', getRequest.error);
+        reject(getRequest.error);
+      };
+    });
   }
 
   async load(id: string): Promise<ProjectData | null> {
     if (!this.db) {
-      throw new Error("IndexedDB not initialized")
+      throw new Error('IndexedDB not initialized');
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORE_NAME], "readonly")
-      const store = transaction.objectStore(STORE_NAME)
-      const request = store.get(id)
+      const transaction = this.db!.transaction([STORE_NAME], 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get(id);
 
       request.onsuccess = () => {
         if (request.result) {
-          console.log(`Loaded project "${request.result.name}" (${id}) from IndexedDB`)
-          resolve(request.result)
+          console.log(`Loaded project "${request.result.name}" (${id}) from IndexedDB`);
+          resolve(request.result);
         } else {
-          resolve(null)
+          resolve(null);
         }
-      }
+      };
 
       request.onerror = () => {
-        console.error("Failed to load from IndexedDB:", request.error)
-        reject(request.error)
-      }
-    })
+        console.error('Failed to load from IndexedDB:', request.error);
+        reject(request.error);
+      };
+    });
   }
 
   async delete(key: string): Promise<void> {
     if (!this.db) {
-      throw new Error("IndexedDB not initialized")
+      throw new Error('IndexedDB not initialized');
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORE_NAME], "readwrite")
-      const store = transaction.objectStore(STORE_NAME)
-      const request = store.delete(key)
+      const transaction = this.db!.transaction([STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.delete(key);
 
       request.onsuccess = () => {
-        console.log(`Deleted project "${key}" from IndexedDB`)
-        resolve()
-      }
+        console.log(`Deleted project "${key}" from IndexedDB`);
+        resolve();
+      };
 
       request.onerror = () => {
-        console.error("Failed to delete from IndexedDB:", request.error)
-        reject(request.error)
-      }
-    })
+        console.error('Failed to delete from IndexedDB:', request.error);
+        reject(request.error);
+      };
+    });
   }
 
   async list(): Promise<ProjectData[]> {
     if (!this.db) {
-      throw new Error("IndexedDB not initialized")
+      throw new Error('IndexedDB not initialized');
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORE_NAME], "readonly")
-      const store = transaction.objectStore(STORE_NAME)
-      const request = store.getAll()
+      const transaction = this.db!.transaction([STORE_NAME], 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.getAll();
 
       request.onsuccess = () => {
-        const projects = request.result as ProjectData[]
+        const projects = request.result as ProjectData[];
         // Sort by updatedAt descending (most recent first)
-        projects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-        resolve(projects)
-      }
+        projects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        resolve(projects);
+      };
 
       request.onerror = () => {
-        console.error("Failed to list projects from IndexedDB:", request.error)
-        reject(request.error)
-      }
-    })
+        console.error('Failed to list projects from IndexedDB:', request.error);
+        reject(request.error);
+      };
+    });
   }
 
   async getStorageInfo(): Promise<{ totalSize: number; projectCount: number }> {
     if (!this.db) {
-      throw new Error("IndexedDB not initialized")
+      throw new Error('IndexedDB not initialized');
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORE_NAME], "readonly")
-      const store = transaction.objectStore(STORE_NAME)
-      const request = store.getAll()
+      const transaction = this.db!.transaction([STORE_NAME], 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.getAll();
 
       request.onsuccess = () => {
-        const projects = request.result
-        let totalSize = 0
+        const projects = request.result;
+        let totalSize = 0;
 
         projects.forEach((project) => {
-          totalSize += project.size || estimateSize(project.data)
-        })
+          totalSize += project.size || estimateSize(project.data);
+        });
 
         resolve({
           totalSize,
           projectCount: projects.length,
-        })
-      }
+        });
+      };
 
       request.onerror = () => {
-        console.error("Failed to get storage info from IndexedDB:", request.error)
-        reject(request.error)
-      }
-    })
+        console.error('Failed to get storage info from IndexedDB:', request.error);
+        reject(request.error);
+      };
+    });
   }
 
   async getProjectInfo(id: string): Promise<{ size: number; createdAt: string; updatedAt: string } | null> {
     if (!this.db) {
-      throw new Error("IndexedDB not initialized")
+      throw new Error('IndexedDB not initialized');
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORE_NAME], "readonly")
-      const store = transaction.objectStore(STORE_NAME)
-      const request = store.get(id)
+      const transaction = this.db!.transaction([STORE_NAME], 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get(id);
 
       request.onsuccess = () => {
         if (request.result) {
@@ -345,17 +345,17 @@ class IndexedDBStorage {
             size: request.result.size || estimateSize(request.result.data),
             createdAt: request.result.createdAt || new Date().toISOString(),
             updatedAt: request.result.updatedAt || new Date().toISOString(),
-          })
+          });
         } else {
-          resolve(null)
+          resolve(null);
         }
-      }
+      };
 
       request.onerror = () => {
-        console.error("Failed to get project info from IndexedDB:", request.error)
-        reject(request.error)
-      }
-    })
+        console.error('Failed to get project info from IndexedDB:', request.error);
+        reject(request.error);
+      };
+    });
   }
 }
 
@@ -374,25 +374,23 @@ function formatSize(sizeInKB: number): string {
 }
 
 export default function Page() {
-  const [editorState, setEditorState] = useState<string>("")
-  const [currentProjectId, setCurrentProjectId] = useState<string>("")
-  const [currentProjectName, setCurrentProjectName] = useState<string>("")
-  const [saveAsDialogOpen, setSaveAsDialogOpen] = useState(false)
-  const [openDialogOpen, setOpenDialogOpen] = useState(false)
-  const [newProjectName, setNewProjectName] = useState("")
-  const [savedProjects, setSavedProjects] = useState<ProjectData[]>([])
-  const [isLoadingProject, setIsLoadingProject] = useState(false)
-  const [currentProjectSize, setCurrentProjectSize] = useState<number>(0)
-  const [totalStorageUsed, setTotalStorageUsed] = useState<number>(0)
-  const setLoadingRef = useRef<((loading: boolean) => void) | null>(null)
+  const [editorState, setEditorState] = useState<string>('');
+  const [currentProjectId, setCurrentProjectId] = useState<string>('');
+  const [currentProjectName, setCurrentProjectName] = useState<string>('');
+  const [saveAsDialogOpen, setSaveAsDialogOpen] = useState(false);
+  const [openDialogOpen, setOpenDialogOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [savedProjects, setSavedProjects] = useState<ProjectData[]>([]);
+  const [isLoadingProject, setIsLoadingProject] = useState(false);
+  const [currentProjectSize, setCurrentProjectSize] = useState<number>(0);
+  const [totalStorageUsed, setTotalStorageUsed] = useState<number>(0);
+  const setLoadingRef = useRef<((loading: boolean) => void) | null>(null);
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null);
 
   // Estado para modo escuro
-  const [isDark, setIsDark] = useState(
-    typeof window !== "undefined" ? document.documentElement.classList.contains("dark") : false,
-  )
+  const [isDark, setIsDark] = useState(typeof window !== 'undefined' ? document.documentElement.classList.contains('dark') : false);
 
   // Alternar tema
   const toggleTheme = () => {
@@ -467,65 +465,65 @@ export default function Page() {
   // Replace this line:
   // const dbStorage = useRef<IndexedDBStorage>(new IndexedDBStorage())
   // With this:
-  const dbStorage = useRef<EnhancedStorageAdapter>(new EnhancedStorageAdapter())
-  const [isDbInitialized, setIsDbInitialized] = useState(false)
+  const dbStorage = useRef<EnhancedStorageAdapter>(new EnhancedStorageAdapter());
+  const [isDbInitialized, setIsDbInitialized] = useState(false);
 
   // Add these state variables after the existing ones:
-  const [syncStats, setSyncStats] = useState<any>(null)
-  const [showSyncStatus, setShowSyncStatus] = useState(false)
-  const [showSyncSettingsDialog, setShowSyncSettingsDialog] = useState(false)
+  const [syncStats, setSyncStats] = useState<any>(null);
+  const [showSyncStatus, setShowSyncStatus] = useState(false);
+  const [showSyncSettingsDialog, setShowSyncSettingsDialog] = useState(false);
 
-  const editorRef = useRef<LexicalEditor | null>(null)
+  const editorRef = useRef<LexicalEditor | null>(null);
 
   // Tamanho recomendado em KB (500KB)
   const RECOMMENDED_SIZE_KB = 500;
 
   const [isFirstTime, setIsFirstTime] = useState(true);
 
-  const [projectTags, setProjectTags] = useState<string[]>([])
-  const [availableTags, setAvailableTags] = useState<Array<{ name: string; usageCount: number }>>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
-  const [totalProjects, setTotalProjects] = useState(0)
+  const [projectTags, setProjectTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<Array<{ name: string; usageCount: number }>>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([]);
+  const [totalProjects, setTotalProjects] = useState(0);
 
-  const [tagInput, setTagInput] = useState("")
-  const [showTagDropdown, setShowTagDropdown] = useState(false)
+  const [tagInput, setTagInput] = useState('');
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
 
   // Add new state for tag search
-  const [tagSearchInput, setTagSearchInput] = useState("")
+  const [tagSearchInput, setTagSearchInput] = useState('');
 
-  const [tagFilterMode, setTagFilterMode] = useState<"all" | "any">("any")
+  const [tagFilterMode, setTagFilterMode] = useState<'all' | 'any'>('any');
 
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   // Initialize IndexedDB and load projects
   useEffect(() => {
     const initDB = async () => {
       try {
-        await dbStorage.current.init()
-        setIsDbInitialized(true)
-        await loadSavedProjectsList()
-        await loadAvailableTags()
-        await updateStorageInfo()
+        await dbStorage.current.init();
+        setIsDbInitialized(true);
+        await loadSavedProjectsList();
+        await loadAvailableTags();
+        await updateStorageInfo();
       } catch (error) {
-        console.error("Failed to initialize IndexedDB:", error)
-        toast.error("Erro de armazenamento", {
-          description: "Não foi possível inicializar o banco de dados. Alguns recursos podem não funcionar.",
+        console.error('Failed to initialize IndexedDB:', error);
+        toast.error('Erro de armazenamento', {
+          description: 'Não foi possível inicializar o banco de dados. Alguns recursos podem não funcionar.',
           duration: 5000,
-          icon: "⚠️",
-        })
+          icon: '⚠️',
+        });
       }
-    }
+    };
 
-    initDB()
-  }, [])
+    initDB();
+  }, []);
 
   // Force open dialog on first visit
   useEffect(() => {
-    if (!isDbInitialized) return
+    if (!isDbInitialized) return;
 
     // Check if it's the first time (no current project and no saved projects)
     if (isFirstTime && !currentProjectName && savedProjects.length === 0) {
@@ -534,8 +532,8 @@ export default function Page() {
       // If there are saved projects but no current project, also show dialog
       setOpenDialogOpen(true);
     }
-    setIsFirstTime(false)
-  }, [savedProjects, currentProjectName, isFirstTime, isDbInitialized])
+    setIsFirstTime(false);
+  }, [savedProjects, currentProjectName, isFirstTime, isDbInitialized]);
 
   // Atualizar informações de armazenamento sempre que o editor mudar
   useEffect(() => {
@@ -547,11 +545,11 @@ export default function Page() {
 
   // Atualizar informações de armazenamento
   const updateStorageInfo = async () => {
-    if (!isDbInitialized) return
+    if (!isDbInitialized) return;
 
     try {
-      const storageInfo = await dbStorage.current.getStorageInfo()
-      setTotalStorageUsed(storageInfo.totalSize)
+      const storageInfo = await dbStorage.current.getStorageInfo();
+      setTotalStorageUsed(storageInfo.totalSize);
     } catch (error) {
       console.error('Error updating storage info:', error);
     }
@@ -560,196 +558,192 @@ export default function Page() {
   const storageAdapter = {
     save: async (id: string, name: string, data: string, tags: string[] = []) => {
       if (!id || !name || !data) {
-        console.warn("Invalid id, name or data")
-        return
+        console.warn('Invalid id, name or data');
+        return;
       }
 
       if (!isDbInitialized) {
-        throw new Error("Database not initialized")
+        throw new Error('Database not initialized');
       }
 
-      const originalSize = estimateSize(data)
-      console.log(`Saving project "${name}" (${id}) - Size: ${formatSize(originalSize)}`)
+      const originalSize = estimateSize(data);
+      console.log(`Saving project "${name}" (${id}) - Size: ${formatSize(originalSize)}`);
 
       try {
-        await dbStorage.current.save(id, name, data, tags)
-        await updateStorageInfo()
-        console.log(`Saved project "${name}" (${id}) successfully`)
+        await dbStorage.current.save(id, name, data, tags);
+        await updateStorageInfo();
+        console.log(`Saved project "${name}" (${id}) successfully`);
       } catch (error) {
-        console.error("Failed to save project:", error)
-        throw error
+        console.error('Failed to save project:', error);
+        throw error;
       }
     },
 
     load: async (id: string): Promise<ProjectData | null> => {
       if (!isDbInitialized) {
-        throw new Error("Database not initialized")
+        throw new Error('Database not initialized');
       }
 
       try {
-        const projectData = await dbStorage.current.load(id)
-        return projectData
+        const projectData = await dbStorage.current.load(id);
+        return projectData;
       } catch (error) {
-        console.error("Failed to load project:", error)
-        return null
+        console.error('Failed to load project:', error);
+        return null;
       }
     },
 
     delete: async (id: string) => {
       if (!isDbInitialized) {
-        throw new Error("Database not initialized")
+        throw new Error('Database not initialized');
       }
 
       try {
-        await dbStorage.current.delete(id)
-        await updateStorageInfo()
+        await dbStorage.current.delete(id);
+        await updateStorageInfo();
       } catch (error) {
-        console.error("Failed to delete project:", error)
-        throw error
+        console.error('Failed to delete project:', error);
+        throw error;
       }
     },
 
     list: async (): Promise<ProjectData[]> => {
       if (!isDbInitialized) {
-        return []
+        return [];
       }
 
       try {
-        const projects = await dbStorage.current.list()
-        return projects
+        const projects = await dbStorage.current.list();
+        return projects;
       } catch (error) {
-        console.error("Failed to list projects:", error)
-        return []
+        console.error('Failed to list projects:', error);
+        return [];
       }
     },
 
     getProjectInfo: async (id: string) => {
       if (!isDbInitialized) {
-        return null
+        return null;
       }
 
       try {
-        return await dbStorage.current.getProjectInfo(id)
+        return await dbStorage.current.getProjectInfo(id);
       } catch (error) {
-        console.error("Failed to get project info:", error)
-        return null
+        console.error('Failed to get project info:', error);
+        return null;
       }
     },
 
-    searchProjects: async (
-      searchTerm: string,
-      tags: string[],
-      filterMode: "all" | "any" = "any",
-    ): Promise<ProjectData[]> => {
+    searchProjects: async (searchTerm: string, tags: string[], filterMode: 'all' | 'any' = 'any'): Promise<ProjectData[]> => {
       if (!isDbInitialized) {
-        return []
+        return [];
       }
 
       try {
-        return await dbStorage.current.searchProjects(searchTerm, tags, filterMode)
+        return await dbStorage.current.searchProjects(searchTerm, tags, filterMode);
       } catch (error) {
-        console.error("Failed to search projects:", error)
-        return []
+        console.error('Failed to search projects:', error);
+        return [];
       }
     },
-  }
+  };
 
   const loadSavedProjectsList = async () => {
     try {
-      const projects = await storageAdapter.list()
-      setSavedProjects(projects)
+      const projects = await storageAdapter.list();
+      setSavedProjects(projects);
     } catch (error) {
-      console.error("Failed to load projects list:", error)
+      console.error('Failed to load projects list:', error);
     }
-  }
+  };
 
   const loadAvailableTags = async () => {
     try {
-      const tags = await dbStorage.current.getAllTags()
-      setAvailableTags(tags)
+      const tags = await dbStorage.current.getAllTags();
+      setAvailableTags(tags);
     } catch (error) {
-      console.error("Failed to load tags:", error)
+      console.error('Failed to load tags:', error);
     }
-  }
+  };
 
   useEffect(() => {
     const filterProjects = async () => {
-      if (!isDbInitialized) return
+      if (!isDbInitialized) return;
 
       try {
-        let projects: ProjectData[]
+        let projects: ProjectData[];
 
         if (searchTerm || selectedTags.length > 0) {
-          projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode)
+          projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode);
         } else {
-          projects = await storageAdapter.list()
+          projects = await storageAdapter.list();
         }
 
-        setTotalProjects(projects.length)
-        setFilteredProjects(projects)
-        setCurrentPage(1) // Reset to first page when filtering
+        setTotalProjects(projects.length);
+        setFilteredProjects(projects);
+        setCurrentPage(1); // Reset to first page when filtering
       } catch (error) {
-        console.error("Failed to filter projects:", error)
+        console.error('Failed to filter projects:', error);
       }
-    }
+    };
 
-    filterProjects()
-  }, [searchTerm, selectedTags, savedProjects, isDbInitialized, tagFilterMode])
+    filterProjects();
+  }, [searchTerm, selectedTags, savedProjects, isDbInitialized, tagFilterMode]);
 
   // Add this useEffect after the existing ones:
   useEffect(() => {
-    if (!isDbInitialized) return
+    if (!isDbInitialized) return;
 
     const updateSyncStats = async () => {
       try {
-        const stats = await dbStorage.current.getSyncStats()
-        setSyncStats(stats)
+        const stats = await dbStorage.current.getSyncStats();
+        setSyncStats(stats);
       } catch (error) {
-        console.error("Failed to get sync stats:", error)
+        console.error('Failed to get sync stats:', error);
       }
-    }
+    };
 
     // Update sync stats every 5 seconds
-    const interval = setInterval(updateSyncStats, 5000)
-    updateSyncStats() // Initial update
+    const interval = setInterval(updateSyncStats, 5000);
+    updateSyncStats(); // Initial update
 
     // Setup sync event listeners
     dbStorage.current.onSyncStart(() => {
-      console.log("Sync started")
-      updateSyncStats()
-    })
+      console.log('Sync started');
+      updateSyncStats();
+    });
 
     dbStorage.current.onSyncComplete((stats) => {
-      console.log("Sync completed:", stats)
-      updateSyncStats()
+      console.log('Sync completed:', stats);
+      updateSyncStats();
       if (stats.processed > 0) {
-        toast.success("Sincronização concluída", {
+        toast.success('Sincronização concluída', {
           description: `${stats.processed} projetos sincronizados`,
           duration: 3000,
-          icon: "🔄",
-        })
+          icon: '🔄',
+        });
       }
-    })
+    });
 
     dbStorage.current.onSyncError((error) => {
-      console.error("Sync error:", error)
-      updateSyncStats()
-      toast.error("Erro na sincronização", {
-        description: "Alguns projetos podem não estar sincronizados",
+      console.error('Sync error:', error);
+      updateSyncStats();
+      toast.error('Erro na sincronização', {
+        description: 'Alguns projetos podem não estar sincronizados',
         duration: 4000,
-        icon: "⚠️",
-      })
-    })
+        icon: '⚠️',
+      });
+    });
 
     return () => {
-      clearInterval(interval)
-    }
-  }, [isDbInitialized])
+      clearInterval(interval);
+    };
+  }, [isDbInitialized]);
 
   const handleSave = async () => {
     if (!currentProjectId) {
-      setSaveAsDialogOpen(true)
-      return
+      setSaveAsDialogOpen(true);
+      return;
     }
 
     // Check storage limit before saving
@@ -789,31 +783,31 @@ export default function Page() {
     }
 
     try {
-      await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags)
+      await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags);
 
       // Check storage usage after save and show appropriate notification
-      const usagePercentage = getStorageUsagePercentage()
+      const usagePercentage = getStorageUsagePercentage();
 
       if (storageLimit && usagePercentage >= 90) {
-        toast.warning("Projeto salvo - Pouco espaço", {
+        toast.warning('Projeto salvo - Pouco espaço', {
           description: `"${currentProjectName}" salvo. Espaço restante: ${(100 - usagePercentage).toFixed(1)}%`,
           duration: 4000,
           icon: '⚠️',
         });
       } else {
-        toast.success("Projeto salvo com sucesso", {
+        toast.success('Projeto salvo com sucesso', {
           description: `"${currentProjectName}" foi salvo no banco de dados`,
           duration: 3000,
-          icon: "💾",
-        })
+          icon: '💾',
+        });
       }
     } catch (error: any) {
-      console.error("Save error:", error)
-      toast.error("Erro ao salvar", {
-        description: "Não foi possível salvar o projeto. Tente novamente.",
+      console.error('Save error:', error);
+      toast.error('Erro ao salvar', {
+        description: 'Não foi possível salvar o projeto. Tente novamente.',
         duration: 4000,
-        icon: "❌",
-      })
+        icon: '❌',
+      });
     }
   };
 
@@ -838,7 +832,7 @@ export default function Page() {
     }
 
     // Check if project with same name already exists
-    const existingProjects = await storageAdapter.list()
+    const existingProjects = await storageAdapter.list();
     if (existingProjects.some((p) => p.name === newProjectName.trim())) {
       // Generate suggested name with version number
       let suggestedName = `${newProjectName.trim()}-v2`;
@@ -846,8 +840,8 @@ export default function Page() {
 
       // Keep incrementing until we find an available name
       while (existingProjects.some((p) => p.name === suggestedName)) {
-        counter++
-        suggestedName = `${newProjectName.trim()}-v${counter}`
+        counter++;
+        suggestedName = `${newProjectName.trim()}-v${counter}`;
       }
 
       toast.error('Nome já existe', {
@@ -885,115 +879,115 @@ export default function Page() {
     }
 
     try {
-      const newProjectId = generateProjectId()
-      await storageAdapter.save(newProjectId, newProjectName, stateToSave, projectTags)
-      setCurrentProjectId(newProjectId)
-      setCurrentProjectName(newProjectName)
-      setNewProjectName("")
-      setSaveAsDialogOpen(false)
-      await loadSavedProjectsList()
+      const newProjectId = generateProjectId();
+      await storageAdapter.save(newProjectId, newProjectName, stateToSave, projectTags);
+      setCurrentProjectId(newProjectId);
+      setCurrentProjectName(newProjectName);
+      setNewProjectName('');
+      setSaveAsDialogOpen(false);
+      await loadSavedProjectsList();
 
       // Check storage usage after save
-      const usagePercentage = getStorageUsagePercentage()
+      const usagePercentage = getStorageUsagePercentage();
 
       if (storageLimit && usagePercentage >= 90) {
-        toast.warning("Projeto criado - Pouco espaço", {
+        toast.warning('Projeto criado - Pouco espaço', {
           description: `"${newProjectName}" criado. Espaço restante: ${(100 - usagePercentage).toFixed(1)}%`,
           duration: 4000,
           icon: '⚠️',
         });
       } else {
-        toast.success("Novo projeto criado", {
+        toast.success('Novo projeto criado', {
           description: `"${newProjectName}" foi criado e salvo com sucesso`,
           duration: 3000,
-          icon: "🎉",
-        })
+          icon: '🎉',
+        });
       }
     } catch (error: any) {
-      console.error("Save as error:", error)
-      toast.error("Erro ao criar projeto", {
-        description: "Não foi possível criar o projeto. Tente novamente.",
+      console.error('Save as error:', error);
+      toast.error('Erro ao criar projeto', {
+        description: 'Não foi possível criar o projeto. Tente novamente.',
         duration: 4000,
-        icon: "❌",
-      })
+        icon: '❌',
+      });
     }
   };
 
   const handleOpen = async (projectId: string) => {
     try {
-      const projectData = await storageAdapter.load(projectId)
+      const projectData = await storageAdapter.load(projectId);
       if (projectData && editorRef.current) {
         try {
           // Ativar o estado de carregamento
           if (setLoadingRef.current) {
-            setLoadingRef.current(true)
+            setLoadingRef.current(true);
           }
 
-          const editorState = editorRef.current.parseEditorState(projectData.data)
-          editorRef.current.setEditorState(editorState)
+          const editorState = editorRef.current.parseEditorState(projectData.data);
+          editorRef.current.setEditorState(editorState);
 
           // Aguardar um pouco para que os nós sejam renderizados
-          await new Promise((resolve) => setTimeout(resolve, 100))
+          await new Promise((resolve) => setTimeout(resolve, 100));
 
           // Desativar o estado de carregamento
           if (setLoadingRef.current) {
-            setLoadingRef.current(false)
+            setLoadingRef.current(false);
           }
 
-          setCurrentProjectId(projectData.id)
-          setCurrentProjectName(projectData.name)
-          setProjectTags(projectData.tags || [])
-          setOpenDialogOpen(false)
-          setIsFirstTime(false) // Mark as no longer first time
-          toast.success("Projeto carregado", {
+          setCurrentProjectId(projectData.id);
+          setCurrentProjectName(projectData.name);
+          setProjectTags(projectData.tags || []);
+          setOpenDialogOpen(false);
+          setIsFirstTime(false); // Mark as no longer first time
+          toast.success('Projeto carregado', {
             description: `"${projectData.name}" foi aberto com sucesso`,
             duration: 2500,
-            icon: "📂",
-          })
+            icon: '📂',
+          });
         } catch (error) {
           // Desativar o estado de carregamento em caso de erro
           if (setLoadingRef.current) {
-            setLoadingRef.current(false)
+            setLoadingRef.current(false);
           }
-          toast.error("Erro ao carregar projeto", {
-            description: "O arquivo do projeto está corrompido ou em formato inválido",
+          toast.error('Erro ao carregar projeto', {
+            description: 'O arquivo do projeto está corrompido ou em formato inválido',
             duration: 4000,
-            icon: "❌",
-          })
+            icon: '❌',
+          });
         }
       } else {
-        toast.error("Projeto não encontrado", {
-          description: "Não foi possível localizar o arquivo do projeto",
+        toast.error('Projeto não encontrado', {
+          description: 'Não foi possível localizar o arquivo do projeto',
           duration: 3000,
-          icon: "🔍",
-        })
+          icon: '🔍',
+        });
       }
     } catch (error) {
-      console.error("Open error:", error)
-      toast.error("Erro ao abrir projeto", {
-        description: "Não foi possível abrir o projeto. Tente novamente.",
+      console.error('Open error:', error);
+      toast.error('Erro ao abrir projeto', {
+        description: 'Não foi possível abrir o projeto. Tente novamente.',
         duration: 4000,
-        icon: "❌",
-      })
+        icon: '❌',
+      });
     }
   };
 
   const handleConfirmDelete = (projectId: string, projectName: string) => {
-    setProjectToDelete({ id: projectId, name: projectName })
-    setDeleteDialogOpen(true)
-  }
+    setProjectToDelete({ id: projectId, name: projectName });
+    setDeleteDialogOpen(true);
+  };
 
   const handleDelete = async (projectId: string, projectName: string) => {
     try {
-      await storageAdapter.delete(projectId)
-      await loadSavedProjectsList()
+      await storageAdapter.delete(projectId);
+      await loadSavedProjectsList();
 
       // If we're deleting the currently active project, reset the editor
       if (currentProjectId === projectId) {
-        setCurrentProjectId("")
-        setCurrentProjectName("")
-        setProjectTags([])
-        setEditorState("")
+        setCurrentProjectId('');
+        setCurrentProjectName('');
+        setProjectTags([]);
+        setEditorState('');
 
         // Reset the editor to empty state
         if (editorRef.current) {
@@ -1001,22 +995,22 @@ export default function Page() {
             editorRef.current.parseEditorState(
               '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
             ),
-          )
+          );
         }
       }
 
-      toast.success("Projeto excluído", {
+      toast.success('Projeto excluído', {
         description: `"${projectName}" foi removido permanentemente`,
         duration: 3000,
         icon: '🗑️',
       });
     } catch (error) {
-      console.error("Delete error:", error)
-      toast.error("Erro ao excluir projeto", {
-        description: "Não foi possível excluir o projeto. Tente novamente.",
+      console.error('Delete error:', error);
+      toast.error('Erro ao excluir projeto', {
+        description: 'Não foi possível excluir o projeto. Tente novamente.',
         duration: 4000,
-        icon: "❌",
-      })
+        icon: '❌',
+      });
     }
   };
 
@@ -1026,14 +1020,14 @@ export default function Page() {
         editorRef.current.parseEditorState(
           '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
         ),
-      )
-      setCurrentProjectId("")
-      setCurrentProjectName("")
-      setProjectTags([])
-      setOpenDialogOpen(false)
-      setIsFirstTime(false) // Mark as no longer first time
-      toast.success("Novo projeto iniciado", {
-        description: "Editor limpo e pronto para criar conteúdo",
+      );
+      setCurrentProjectId('');
+      setCurrentProjectName('');
+      setProjectTags([]);
+      setOpenDialogOpen(false);
+      setIsFirstTime(false); // Mark as no longer first time
+      toast.success('Novo projeto iniciado', {
+        description: 'Editor limpo e pronto para criar conteúdo',
         duration: 2500,
         icon: '📝',
       });
@@ -1051,11 +1045,11 @@ export default function Page() {
 
   // Auto-save functionality
   useEffect(() => {
-    if (!autoSaveEnabled || !currentProjectId || !editorState || !isDbInitialized) return
+    if (!autoSaveEnabled || !currentProjectId || !editorState || !isDbInitialized) return;
 
     const autoSaveTimer = setTimeout(async () => {
       try {
-        await storageAdapter.save(currentProjectId, currentProjectName, editorState, projectTags)
+        await storageAdapter.save(currentProjectId, currentProjectName, editorState, projectTags);
         // Show a very subtle auto-save notification
         toast.success('Auto-salvo', {
           description: 'Alterações salvas automaticamente',
@@ -1077,8 +1071,8 @@ export default function Page() {
       }
     }, 2000); // Auto-save after 2 seconds of inactivity
 
-    return () => clearTimeout(autoSaveTimer)
-  }, [editorState, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized])
+    return () => clearTimeout(autoSaveTimer);
+  }, [editorState, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized]);
 
   const handleSetStorageLimit = () => {
     const limitValue = newStorageLimit.trim();
@@ -1131,16 +1125,16 @@ export default function Page() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (showTagDropdown) {
-        const target = event.target as Element
-        if (!target.closest(".relative")) {
-          setShowTagDropdown(false)
+        const target = event.target as Element;
+        if (!target.closest('.relative')) {
+          setShowTagDropdown(false);
         }
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [showTagDropdown])
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTagDropdown]);
 
   return (
     <>
@@ -1187,35 +1181,25 @@ export default function Page() {
                       disabled={!isDbInitialized}
                     >
                       <div
-                        className={`w-3 h-3 rounded-full ${
-                          autoSaveEnabled && isDbInitialized
-                            ? "bg-green-500 animate-pulse"
-                            : "bg-gray-400 dark:bg-gray-600"
-                        }`}
+                        className={`w-3 h-3 rounded-full ${autoSaveEnabled && isDbInitialized ? 'bg-green-500 animate-pulse' : 'bg-gray-400 dark:bg-gray-600'}`}
                       ></div>
                       <span
                         className={`text-sm font-medium ${
-                          autoSaveEnabled && isDbInitialized
-                            ? "text-green-700 dark:text-green-400"
-                            : "text-gray-500 dark:text-gray-300"
+                          autoSaveEnabled && isDbInitialized ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-300'
                         }`}
                       >
-                        {autoSaveEnabled && isDbInitialized ? "Auto-save" : "Manual"}
+                        {autoSaveEnabled && isDbInitialized ? 'Auto-save' : 'Manual'}
                       </span>
                     </button>
                     <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      {currentProjectName || "Untitled Project"}
-                    </h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{currentProjectName || 'Untitled Project'}</h2>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-300">
                     <div className="flex items-center gap-2">
                       <HardDrive className="w-4 h-4" />
                       <span className={getSizeIndicatorColor()}>{formatSize(currentProjectSize)}</span>
                       <span className="text-gray-400 dark:text-gray-500">/</span>
-                      <span className="text-gray-400 dark:text-gray-500">
-                        {formatSize(RECOMMENDED_SIZE_KB)} recommended
-                      </span>
+                      <span className="text-gray-400 dark:text-gray-500">{formatSize(RECOMMENDED_SIZE_KB)} recommended</span>
                     </div>
                     {!isDbInitialized && (
                       <>
@@ -1233,9 +1217,7 @@ export default function Page() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <span className="text-xs text-gray-500 dark:text-gray-300">Storage:</span>
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-100">
-                    {formatStorageSize(totalStorageUsed)}
-                  </span>
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-100">{formatStorageSize(totalStorageUsed)}</span>
                   <span className="text-xs text-gray-400 dark:text-gray-500">/</span>
                   <button
                     onClick={() => setShowStorageLimitDialog(true)}
@@ -1267,21 +1249,15 @@ export default function Page() {
                         className={`w-2 h-2 rounded-full ${
                           syncStats.isOnline
                             ? syncStats.isSyncing
-                              ? "bg-blue-500 animate-pulse"
-                              : "bg-green-500"
+                              ? 'bg-blue-500 animate-pulse'
+                              : 'bg-green-500'
                             : syncConfig.isEnabled()
-                              ? "bg-red-500"
-                              : "bg-gray-400"
+                              ? 'bg-red-500'
+                              : 'bg-gray-400'
                         }`}
                       ></div>
                       <span className="text-xs text-gray-500 dark:text-gray-300">
-                        {!syncConfig.isEnabled()
-                          ? "Sync Off"
-                          : syncStats.isOnline
-                            ? syncStats.isSyncing
-                              ? "Syncing..."
-                              : "Online"
-                            : "Offline"}
+                        {!syncConfig.isEnabled() ? 'Sync Off' : syncStats.isOnline ? (syncStats.isSyncing ? 'Syncing...' : 'Online') : 'Offline'}
                       </span>
                       {syncStats.queue.pending > 0 && (
                         <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-1.5 py-0.5 rounded-full">
@@ -1300,13 +1276,7 @@ export default function Page() {
                 )}
                 <div className="h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSave}
-                  className="gap-2 bg-transparent"
-                  disabled={!isDbInitialized}
-                >
+                <Button variant="outline" size="sm" onClick={handleSave} className="gap-2 bg-transparent" disabled={!isDbInitialized}>
                   <Save className="w-4 h-4" />
                   Save
                 </Button>
@@ -1358,10 +1328,10 @@ export default function Page() {
                   editorRef={editorRef}
                   setLoadingRef={setLoadingRef}
                   onProjectLoad={(projectData) => {
-                    setCurrentProjectId(projectData.id)
-                    setCurrentProjectName(projectData.name)
-                    setProjectTags(projectData.tags || [])
-                    setIsFirstTime(false)
+                    setCurrentProjectId(projectData.id);
+                    setCurrentProjectName(projectData.name);
+                    setProjectTags(projectData.tags || []);
+                    setIsFirstTime(false);
                   }}
                   onProjectsListUpdate={loadSavedProjectsList}
                   onCreateNew={() => setCreateDialogOpen(true)}
@@ -1442,17 +1412,17 @@ export default function Page() {
                     // Reset editor to empty state
                     if (editorRef.current) {
                       const emptyState =
-                        '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
-                      editorRef.current.setEditorState(editorRef.current.parseEditorState(emptyState))
+                        '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
+                      editorRef.current.setEditorState(editorRef.current.parseEditorState(emptyState));
                     }
 
-                    setCurrentProjectId(projectData.id)
-                    setCurrentProjectName(projectData.name)
-                    setProjectTags(projectData.tags)
+                    setCurrentProjectId(projectData.id);
+                    setCurrentProjectName(projectData.name);
+                    setProjectTags(projectData.tags);
                     setEditorState(
                       '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
-                    )
-                    setIsFirstTime(false)
+                    );
+                    setIsFirstTime(false);
                   }}
                   onProjectsListUpdate={loadSavedProjectsList}
                   onAvailableTagsUpdate={loadAvailableTags}
@@ -1481,9 +1451,7 @@ export default function Page() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
             <div className="p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
               <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Rich Formatting</h3>
-              <p className="text-sm text-blue-700 dark:text-blue-200">
-                Add headings, lists, links, and text formatting
-              </p>
+              <p className="text-sm text-blue-700 dark:text-blue-200">Add headings, lists, links, and text formatting</p>
             </div>
             <div className="p-4 bg-green-50 dark:bg-green-900 rounded-lg">
               <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">Media & Content</h3>
@@ -1491,9 +1459,7 @@ export default function Page() {
             </div>
             <div className="p-4 bg-purple-50 dark:bg-purple-900 rounded-lg">
               <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Interactive Elements</h3>
-              <p className="text-sm text-purple-700 dark:text-purple-200">
-                Create quizzes, callouts, and interactive content
-              </p>
+              <p className="text-sm text-purple-700 dark:text-purple-200">Create quizzes, callouts, and interactive content</p>
             </div>
           </div>
         </div>
@@ -1509,8 +1475,8 @@ export default function Page() {
               <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <span className="text-sm text-gray-600 dark:text-gray-300">Conexão:</span>
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${syncStats.isOnline ? "bg-green-500" : "bg-red-500"}`}></div>
-                  <span className="text-sm font-medium">{syncStats.isOnline ? "Online" : "Offline"}</span>
+                  <div className={`w-2 h-2 rounded-full ${syncStats.isOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-sm font-medium">{syncStats.isOnline ? 'Online' : 'Offline'}</span>
                 </div>
               </div>
 
@@ -1547,18 +1513,18 @@ export default function Page() {
                 <Button
                   onClick={async () => {
                     try {
-                      await dbStorage.current.retryFailedSync()
-                      toast.success("Tentando novamente", {
-                        description: "Itens falhados foram recolocados na fila",
+                      await dbStorage.current.retryFailedSync();
+                      toast.success('Tentando novamente', {
+                        description: 'Itens falhados foram recolocados na fila',
                         duration: 3000,
-                        icon: "🔄",
-                      })
+                        icon: '🔄',
+                      });
                     } catch (error) {
-                      toast.error("Erro ao tentar novamente", {
-                        description: "Não foi possível reprocessar os itens",
+                      toast.error('Erro ao tentar novamente', {
+                        description: 'Não foi possível reprocessar os itens',
                         duration: 4000,
-                        icon: "❌",
-                      })
+                        icon: '❌',
+                      });
                     }
                   }}
                   className="w-full"

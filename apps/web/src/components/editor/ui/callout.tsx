@@ -1,19 +1,7 @@
-"use client"
-import React from "react";
-import { cn } from "@/lib/utils"
-import {
-  AlertCircle,
-  Info,
-  CheckCircle,
-  AlertTriangle,
-  Flame,
-  HelpCircle,
-  Skull,
-  Bug,
-  List,
-  Quote,
-  FileText,
-} from "lucide-react"
+'use client';
+import React from 'react';
+import { cn } from '@/lib/utils';
+import { AlertCircle, Info, CheckCircle, AlertTriangle, Flame, HelpCircle, Skull, Bug, List, Quote, FileText } from 'lucide-react';
 
 export type CalloutType = 'note' | 'abstract' | 'info' | 'tip' | 'success' | 'question' | 'warning' | 'failure' | 'danger' | 'bug' | 'example' | 'quote';
 
