@@ -1,7 +1,7 @@
-import { Repository, StorageAdapter, StorageOptions } from './storage.types';
+import { Repository, StorageAdapter, StorageOptions } from './storage-types';
 
-import { MarkdownStorageAdapter } from './markdown-storage.adapter';
-import { ImageStorageAdapter } from '@/lib/sync/storage/image-storage.adapter';
+import { MarkdownStorageAdapter } from './markdown-storage-adapter';
+import { ImageStorageAdapter } from '@/lib/sync/storage/image-storage-adapter';
 // import { MarkdownStorageAdapter } from './markdown-storage.adapter';
 
 // import { ImageStorageAdapter } from './image-storage.adapter';
