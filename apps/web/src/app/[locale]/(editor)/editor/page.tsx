@@ -512,8 +512,8 @@ export default function Page() {
         await updateStorageInfo()
       } catch (error) {
         console.error("Failed to initialize IndexedDB:", error)
-        toast.error("Erro de armazenamento", {
-          description: "Não foi possível inicializar o banco de dados. Alguns recursos podem não funcionar.",
+        toast.error("Storage error", {
+          description: "Unable to initialize database. Some features may not work.",
           duration: 5000,
           icon: "⚠️",
         })
@@ -723,8 +723,8 @@ export default function Page() {
       console.log("Sync completed:", stats)
       updateSyncStats()
       if (stats.processed > 0) {
-        toast.success("Sincronização concluída", {
-          description: `${stats.processed} projetos sincronizados`,
+        toast.success("Synchronization completed", {
+          description: `${stats.processed} synchronized projects`,
           duration: 3000,
           icon: "🔄",
         })
@@ -734,8 +734,8 @@ export default function Page() {
     dbStorage.current.onSyncError((error) => {
       console.error("Sync error:", error)
       updateSyncStats()
-      toast.error("Erro na sincronização", {
-        description: "Alguns projetos podem não estar sincronizados",
+      toast.error("Synchronization error", {
+        description: "Some projects may not be synchronized",
         duration: 4000,
         icon: "⚠️",
       })
@@ -754,8 +754,8 @@ export default function Page() {
 
     // Check storage limit before saving
     if (isStorageAtLimit()) {
-      toast.error("Armazenamento lotado", {
-        description: "Limite de armazenamento atingido. Exclua projetos para liberar espaço",
+      toast.error("Overcrowded storage", {
+        description: "Storage limit reached. Delete projects to free up space.",
         duration: 5000,
         icon: "🚫",
       })
@@ -770,8 +770,8 @@ export default function Page() {
         stateToSave = JSON.stringify(currentState.toJSON())
       } catch (error) {
         console.error("Failed to get editor state:", error)
-        toast.error("Erro no editor", {
-          description: "Não foi possível obter o conteúdo do editor",
+        toast.error("Error in editor", {
+          description: "Could not get publisher content",
           duration: 4000,
           icon: "⚠️",
         })
@@ -780,8 +780,8 @@ export default function Page() {
     }
 
     if (!stateToSave || stateToSave.trim() === "") {
-      toast.error("Nada para salvar", {
-        description: "O editor está vazio. Adicione conteúdo antes de salvar",
+      toast.error("Nothing to save", {
+        description: "The editor is empty. Add content before saving.",
         duration: 3000,
         icon: "📄",
       })
@@ -795,22 +795,22 @@ export default function Page() {
       const usagePercentage = getStorageUsagePercentage()
 
       if (storageLimit && usagePercentage >= 90) {
-        toast.warning("Projeto salvo - Pouco espaço", {
-          description: `"${currentProjectName}" salvo. Espaço restante: ${(100 - usagePercentage).toFixed(1)}%`,
+        toast.warning("Saved Project - Little Space", {
+          description: `"${currentProjectName}" saved. Space remaining: ${(100 - usagePercentage).toFixed(1)}%`,
           duration: 4000,
           icon: "⚠️",
         })
       } else {
-        toast.success("Projeto salvo com sucesso", {
-          description: `"${currentProjectName}" foi salvo no banco de dados`,
+        toast.success("Project saved successfully", {
+          description: `"${currentProjectName}" was saved in the database.`,
           duration: 3000,
           icon: "💾",
         })
       }
     } catch (error: any) {
       console.error("Save error:", error)
-      toast.error("Erro ao salvar", {
-        description: "Não foi possível salvar o projeto. Tente novamente.",
+      toast.error("Error saving", {
+        description: "Could not save project. Please try again.",
         duration: 4000,
         icon: "❌",
       })
@@ -819,8 +819,8 @@ export default function Page() {
 
   const handleSaveAs = async () => {
     if (!newProjectName.trim()) {
-      toast.error("Nome obrigatório", {
-        description: "Por favor, digite um nome para o projeto",
+      toast.error("Name required", {
+        description: "Please enter a name for the project",
         duration: 3000,
         icon: "✏️",
       })
@@ -829,8 +829,8 @@ export default function Page() {
 
     // Check storage limit before saving new project
     if (isStorageAtLimit()) {
-      toast.error("Armazenamento lotado", {
-        description: "Limite de armazenamento atingido. Exclua projetos para liberar espaço",
+      toast.error("Storage Full", {
+        description: "Storage limit reached. Delete projects to free up space.",
         duration: 5000,
         icon: "🚫",
       })
@@ -850,8 +850,8 @@ export default function Page() {
         suggestedName = `${newProjectName.trim()}-v${counter}`
       }
 
-      toast.error("Nome já existe", {
-        description: `Já há projeto com o nome "${newProjectName.trim()}". Sugestão: ${suggestedName}`,
+      toast.error("Name already exists", {
+        description: `There is already a project named "${newProjectName.trim()}". Suggestion: ${suggestedName}`,
         duration: 5000,
         icon: "🚫",
       })
@@ -866,8 +866,8 @@ export default function Page() {
         stateToSave = JSON.stringify(currentState.toJSON())
       } catch (error) {
         console.error("Failed to get editor state:", error)
-        toast.error("Erro no editor", {
-          description: "Não foi possível obter o conteúdo do editor",
+        toast.error("Error in editor", {
+          description: "Could not get publisher content.",
           duration: 4000,
           icon: "⚠️",
         })
@@ -876,8 +876,8 @@ export default function Page() {
     }
 
     if (!stateToSave || stateToSave.trim() === "") {
-      toast.error("Nada para salvar", {
-        description: "O editor está vazio. Adicione conteúdo antes de salvar",
+      toast.error("Nothing to save", {
+        description: "The editor is empty. Add content before saving.",
         duration: 3000,
         icon: "📄",
       })
@@ -897,22 +897,22 @@ export default function Page() {
       const usagePercentage = getStorageUsagePercentage()
 
       if (storageLimit && usagePercentage >= 90) {
-        toast.warning("Projeto criado - Pouco espaço", {
-          description: `"${newProjectName}" criado. Espaço restante: ${(100 - usagePercentage).toFixed(1)}%`,
+        toast.warning("Project created - Little space", {
+          description: `"${newProjectName}" created. Remaining space: ${(100 - usagePercentage).toFixed(1)}%`,
           duration: 4000,
           icon: "⚠️",
         })
       } else {
-        toast.success("Novo projeto criado", {
-          description: `"${newProjectName}" foi criado e salvo com sucesso`,
+        toast.success("New project created", {
+          description: `"${newProjectName}" was created and saved successfully.`,
           duration: 3000,
           icon: "🎉",
         })
       }
     } catch (error: any) {
       console.error("Save as error:", error)
-      toast.error("Erro ao criar projeto", {
-        description: "Não foi possível criar o projeto. Tente novamente.",
+      toast.error("Error creating project", {
+        description: "Could not create project. Please try again.",
         duration: 4000,
         icon: "❌",
       })
@@ -945,8 +945,8 @@ export default function Page() {
           setProjectTags(projectData.tags || [])
           setOpenDialogOpen(false)
           setIsFirstTime(false) // Mark as no longer first time
-          toast.success("Projeto carregado", {
-            description: `"${projectData.name}" foi aberto com sucesso`,
+          toast.success("Project loaded", {
+            description: `"${projectData.name}" was opened successfully`,
             duration: 2500,
             icon: "📂",
           })
@@ -955,23 +955,23 @@ export default function Page() {
           if (setLoadingRef.current) {
             setLoadingRef.current(false)
           }
-          toast.error("Erro ao carregar projeto", {
-            description: "O arquivo do projeto está corrompido ou em formato inválido",
+          toast.error("Error loading project", {
+            description: "The project file is corrupt or in an invalid format",
             duration: 4000,
             icon: "❌",
           })
         }
       } else {
-        toast.error("Projeto não encontrado", {
-          description: "Não foi possível localizar o arquivo do projeto",
+        toast.error("Project not found", {
+          description: "Unable to locate project file",
           duration: 3000,
           icon: "🔍",
         })
       }
     } catch (error) {
       console.error("Open error:", error)
-      toast.error("Erro ao abrir projeto", {
-        description: "Não foi possível abrir o projeto. Tente novamente.",
+      toast.error("Error opening project", {
+        description: "Could not open project. Please try again",
         duration: 4000,
         icon: "❌",
       })
@@ -1005,15 +1005,15 @@ export default function Page() {
         }
       }
 
-      toast.success("Projeto excluído", {
-        description: `"${projectName}" foi removido permanentemente`,
+      toast.success("Deleted project", {
+        description: `"${projectName}" has been permanently removed`,
         duration: 3000,
         icon: "🗑️",
       })
     } catch (error) {
       console.error("Delete error:", error)
-      toast.error("Erro ao excluir projeto", {
-        description: "Não foi possível excluir o projeto. Tente novamente.",
+      toast.error("Error deleting project", {
+        description: "Could not delete project. Please try again.",
         duration: 4000,
         icon: "❌",
       })
@@ -1032,8 +1032,8 @@ export default function Page() {
       setProjectTags([])
       setOpenDialogOpen(false)
       setIsFirstTime(false) // Mark as no longer first time
-      toast.success("Novo projeto iniciado", {
-        description: "Editor limpo e pronto para criar conteúdo",
+      toast.success("New project started", {
+        description: "Clean editor ready to create content",
         duration: 2500,
         icon: "📝",
       })
@@ -1057,8 +1057,8 @@ export default function Page() {
       try {
         await storageAdapter.save(currentProjectId, currentProjectName, editorState, projectTags)
         // Show a very subtle auto-save notification
-        toast.success("Auto-salvo", {
-          description: "Alterações salvas automaticamente",
+        toast.success("Auto-saved", {
+          description: "Changes saved automatically",
           duration: 1500,
           icon: "💾",
           style: {
@@ -1069,8 +1069,8 @@ export default function Page() {
         console.log("Auto-saved project:", currentProjectName)
       } catch (error) {
         console.error("Auto-save failed:", error)
-        toast.error("Falha no auto-save", {
-          description: "Salve manualmente para garantir",
+        toast.error("Auto-save failed", {
+          description: "Save manually to ensure",
           duration: 2000,
           icon: "⚠️",
         })
@@ -1088,8 +1088,8 @@ export default function Page() {
       setStorageLimit(null)
       setNewStorageLimit("")
       setShowStorageLimitDialog(false)
-      toast.success("Limite removido", {
-        description: "Armazenamento agora é ilimitado",
+      toast.success("Limit removed", {
+        description: "Storage is now unlimited",
         duration: 3000,
         icon: "∞",
       })
@@ -1098,8 +1098,8 @@ export default function Page() {
 
     const limit = Number.parseFloat(limitValue)
     if (isNaN(limit) || limit <= 0) {
-      toast.error("Valor inválido", {
-        description: "Digite um número válido em MB ou deixe vazio para ilimitado",
+      toast.error("Invalid value", {
+        description: "Enter a valid number in MB or leave blank for unlimited",
         duration: 3000,
         icon: "❌",
       })
@@ -1109,8 +1109,8 @@ export default function Page() {
     // Check if current usage exceeds new limit
     const currentUsageMB = totalStorageUsed / 1024
     if (currentUsageMB > limit) {
-      toast.error("Limite muito baixo", {
-        description: `Uso atual (${formatStorageSize(totalStorageUsed)}) excede o limite proposto`,
+      toast.error("Very low limit", {
+        description: `Current usage (${formatStorageSize(totalStorageUsed)}) exceeds the proposed limit of ${limit}MB`,
         duration: 4000,
         icon: "⚠️",
       })
@@ -1120,8 +1120,8 @@ export default function Page() {
     setStorageLimit(limit)
     setNewStorageLimit("")
     setShowStorageLimitDialog(false)
-    toast.success("Limite configurado", {
-      description: `Limite de armazenamento definido para ${limit}MB`,
+    toast.success("Configured limit", {
+      description: `Storage limit set to ${limit}MB`,
       duration: 3000,
       icon: "📊",
     })
@@ -1382,11 +1382,11 @@ export default function Page() {
                 <Dialog open={showStorageLimitDialog} onOpenChange={setShowStorageLimitDialog}>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Configurar Limite de Armazenamento</DialogTitle>
+                      <DialogTitle>Configure Storage Limit</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="storage-limit">Limite em MB (deixe vazio para ilimitado)</Label>
+                        <Label htmlFor="storage-limit">Limit in MB (leave empty for unlimited)</Label>
                         <Input
                           id="storage-limit"
                           type="number"
@@ -1400,16 +1400,16 @@ export default function Page() {
 
                       <div className="p-3 bg-gray-50 rounded-lg space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Uso atual:</span>
+                          <span className="text-gray-600">Current use:</span>
                           <span className="font-medium">{formatStorageSize(totalStorageUsed)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Limite atual:</span>
+                          <span className="text-gray-600">Current limit:</span>
                           <span className="font-medium">{getStorageLimitDisplay()}</span>
                         </div>
                         {storageLimit && (
                           <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Uso:</span>
+                            <span className="text-gray-600">Use:</span>
                             <span
                               className={`font-medium ${
                                 getStorageUsagePercentage() >= 90
@@ -1426,17 +1426,17 @@ export default function Page() {
                       </div>
 
                       <div className="text-xs text-gray-500 space-y-1">
-                        <p>• Deixe vazio ou digite 0 para armazenamento ilimitado</p>
-                        <p>• Valores em MB (1024 KB = 1 MB)</p>
-                        <p>• Ao atingir 90%, criação de novos projetos será bloqueada</p>
-                        <p>• Ao atingir 100%, salvamento será bloqueado</p>
+                        <p>• Leave blank or enter 0 for unlimited storage</p>
+                        <p>• Values in MB (1024 KB = 1 MB)</p>
+                        <p>• Upon reaching 90%, new project creation will be blocked</p>
+                        <p>• Upon reaching 100%, saving will be blocked</p>
                       </div>
 
                       <div className="flex justify-end gap-2">
                         <Button variant="outline" onClick={() => setShowStorageLimitDialog(false)}>
-                          Cancelar
+                          Cancel
                         </Button>
-                        <Button onClick={handleSetStorageLimit}>Configurar</Button>
+                        <Button onClick={handleSetStorageLimit}>Configuration</Button>
                       </div>
                     </div>
                   </DialogContent>
@@ -1512,12 +1512,12 @@ export default function Page() {
       <Dialog open={showSyncStatus} onOpenChange={setShowSyncStatus}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Status de Sincronização</DialogTitle>
+            <DialogTitle>Synchronization Status</DialogTitle>
           </DialogHeader>
           {syncStats && (
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span className="text-sm text-gray-600 dark:text-gray-300">Conexão:</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">Conection:</span>
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${syncStats.isOnline ? "bg-green-500" : "bg-red-500"}`}></div>
                   <span className="text-sm font-medium">{syncStats.isOnline ? "Online" : "Offline"}</span>
@@ -1525,22 +1525,22 @@ export default function Page() {
               </div>
 
               <div className="space-y-2">
-                <h4 className="text-sm font-medium">Fila de Sincronização</h4>
+                <h4 className="text-sm font-medium">Sync Queue</h4>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="p-2 bg-blue-50 dark:bg-blue-900 rounded">
-                    <div className="font-medium text-blue-800 dark:text-blue-200">Pendente</div>
+                    <div className="font-medium text-blue-800 dark:text-blue-200">Pending</div>
                     <div className="text-blue-600 dark:text-blue-300">{syncStats.queue.pending}</div>
                   </div>
                   <div className="p-2 bg-yellow-50 dark:bg-yellow-900 rounded">
-                    <div className="font-medium text-yellow-800 dark:text-yellow-200">Processando</div>
+                    <div className="font-medium text-yellow-800 dark:text-yellow-200">Processing</div>
                     <div className="text-yellow-600 dark:text-yellow-300">{syncStats.queue.processing}</div>
                   </div>
                   <div className="p-2 bg-green-50 dark:bg-green-900 rounded">
-                    <div className="font-medium text-green-800 dark:text-green-200">Concluído</div>
+                    <div className="font-medium text-green-800 dark:text-green-200">Completed</div>
                     <div className="text-green-600 dark:text-green-300">{syncStats.queue.completed}</div>
                   </div>
                   <div className="p-2 bg-red-50 dark:bg-red-900 rounded">
-                    <div className="font-medium text-red-800 dark:text-red-200">Falhou</div>
+                    <div className="font-medium text-red-800 dark:text-red-200">Failed</div>
                     <div className="text-red-600 dark:text-red-300">{syncStats.queue.failed}</div>
                   </div>
                 </div>
@@ -1548,7 +1548,7 @@ export default function Page() {
 
               {syncStats.lastSync && (
                 <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">Última sincronização:</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Last sync:</span>
                   <div className="text-sm font-medium">{new Date(syncStats.lastSync).toLocaleString()}</div>
                 </div>
               )}
@@ -1558,14 +1558,14 @@ export default function Page() {
                   onClick={async () => {
                     try {
                       await dbStorage.current.retryFailedSync()
-                      toast.success("Tentando novamente", {
-                        description: "Itens falhados foram recolocados na fila",
+                      toast.success("Trying again", {
+                        description: "Failed items have been re-queued",
                         duration: 3000,
                         icon: "🔄",
                       })
                     } catch (error) {
-                      toast.error("Erro ao tentar novamente", {
-                        description: "Não foi possível reprocessar os itens",
+                      toast.error("Error trying again", {
+                        description: "Unable to reprocess items",
                         duration: 4000,
                         icon: "❌",
                       })
@@ -1574,13 +1574,13 @@ export default function Page() {
                   className="w-full"
                   variant="outline"
                 >
-                  Tentar Novamente Itens Falhados
+                  Retry Failed Items
                 </Button>
               )}
 
               <div className="flex justify-end">
                 <Button variant="outline" onClick={() => setShowSyncStatus(false)}>
-                  Fechar
+                  Close
                 </Button>
               </div>
             </div>
