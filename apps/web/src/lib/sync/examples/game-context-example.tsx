@@ -142,7 +142,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         dispatch({ type: 'LOAD_STATE', state: savedState });
       }
     };
-    
+
     loadGameOnMount();
   }, [contextIntegration]);
 

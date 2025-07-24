@@ -52,7 +52,7 @@ export function ContentManagementSidebarContent({
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
-        
+
         {/* Testing Lab - Show dropdown when collapsed, collapsible when expanded */}
         {state === 'collapsed' ? (
           <SidebarMenuItem>
