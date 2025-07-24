@@ -1,3 +1,6 @@
+export { Error } from './error';
+export { NotFound } from './not-found';
+
 // Error Boundary Components for Next.js 15+ and React 19
 // Optimized for SSR and modern React patterns
 
@@ -23,7 +26,7 @@ export {
 export { useErrorBoundary } from '../../hooks/useErrorBoundary';
 
 // Re-export error reporting utilities
-export { errorReporter, ErrorReporter, type ErrorReport } from '../../lib/errorReporting';
+export { errorReporter, ErrorReporter, type ErrorReport } from '../../../lib/errorReporting';
 
 // Default export for convenience - use SmartErrorBoundary for most cases
 export { SmartErrorBoundary as default } from './ErrorBoundaryProvider';
