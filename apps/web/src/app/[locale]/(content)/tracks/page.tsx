@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 // import { getTracksData } from '@/lib/tracks/actions';
 import { TrackProvider } from '@/lib/tracks/context/tracks.context';
-import { TrackFilters } from '@/components/tracks/track-filters';
-import { TrackGrid } from '@/components/tracks/track-grid';
+import { TrackFilters } from '@/components/courses/tracks/track-filters';
+import { TrackGrid } from '@/components/courses/tracks/track-grid';
 
 export const dynamic = 'force-dynamic';
 
