@@ -4,6 +4,7 @@ using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
 namespace GameGuild.Modules.Reputations;
@@ -29,6 +30,22 @@ public class UserReputationHistory : Resource {
   public Guid? UserId { get; set; }
 
   /// <summary>
+  /// The user reputation entity that was changed (for global user reputation tracking)
+  /// </summary>
+  [ForeignKey(nameof(UserReputationId))]
+  public UserReputation? UserReputation { get; set; }
+
+  public Guid? UserReputationId { get; set; }
+
+  /// <summary>
+  /// The user-tenant reputation entity that was changed (for tenant-specific reputation tracking)
+  /// </summary>
+  [ForeignKey(nameof(UserTenantReputationId))]
+  public UserTenantReputation? UserTenantReputation { get; set; }
+
+  public Guid? UserTenantReputationId { get; set; }
+
+  /// <summary>
   /// The user-tenant whose reputation changed (for tenant-specific reputation tracking)
   /// </summary>
   [ForeignKey(nameof(TenantPermissionId))]
@@ -40,7 +57,7 @@ public class UserReputationHistory : Resource {
   /// Polymorphic reference to the reputation entity that changed
   /// This can point to UserReputation, UserTenantReputation, or any future IReputation implementation
   /// Note: This is a computed property for convenience - the actual relationship is handled
-  /// through UserId (for UserReputation) or UserTenantId (for UserTenantReputation)
+  /// through UserReputationId (for UserReputation) or UserTenantReputationId (for UserTenantReputation)
   /// </summary>
   [NotMapped]
   public IReputation? Reputation { get; set; }
@@ -108,4 +125,72 @@ public class UserReputationHistory : Resource {
   /// When this reputation change occurred
   /// </summary>
   public DateTime OccurredAt { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>
+/// Entity Framework configuration for UserReputationHistory
+/// Contains complex configurations that cannot be expressed with simple data annotations
+/// </summary>
+public class UserReputationHistoryConfiguration : IEntityTypeConfiguration<UserReputationHistory> {
+  public void Configure(EntityTypeBuilder<UserReputationHistory> builder) {
+    // Check constraint for polymorphic relationship (can't be done with annotations)
+    builder.ToTable(
+      "UserReputationHistory",
+      t => t.HasCheckConstraint(
+        "CK_UserReputationHistory_UserOrUserTenant",
+        "(\"UserReputationId\" IS NOT NULL AND \"UserTenantReputationId\" IS NULL) OR (\"UserReputationId\" IS NULL AND \"UserTenantReputationId\" IS NOT NULL)"
+      )
+    );
+
+    // Configure an optional relationship with User (can't be done with annotations)
+    builder.HasOne(urh => urh.User).WithMany().HasForeignKey(urh => urh.UserId).OnDelete(DeleteBehavior.SetNull);
+
+    // Configure an optional relationship with UserReputation (can't be done with annotations)
+    builder.HasOne(urh => urh.UserReputation)
+           .WithMany(ur => ur.History)
+           .HasForeignKey(urh => urh.UserReputationId)
+           .OnDelete(DeleteBehavior.SetNull);
+
+    // Configure an optional relationship with UserTenantReputation (can't be done with annotations)
+    builder.HasOne(urh => urh.UserTenantReputation)
+           .WithMany(utr => utr.History)
+           .HasForeignKey(urh => urh.UserTenantReputationId)
+           .OnDelete(DeleteBehavior.SetNull);
+
+    // Configure an optional relationship with UserTenant (can't be done with annotations)
+    builder.HasOne(urh => urh.TenantPermission)
+           .WithMany()
+           .HasForeignKey(urh => urh.TenantPermissionId)
+           .OnDelete(DeleteBehavior.SetNull);
+
+    // Configure a relationship with ReputationAction (can't be done with annotations)
+    builder.HasOne(urh => urh.ReputationAction)
+           .WithMany(ra => ra.ReputationHistory)
+           .HasForeignKey(urh => urh.ReputationActionId)
+           .OnDelete(DeleteBehavior.SetNull);
+
+    // Configure a relationship with TriggeredByUser (can't be done with annotations)
+    builder.HasOne(urh => urh.TriggeredByUser)
+           .WithMany()
+           .HasForeignKey(urh => urh.TriggeredByUserId)
+           .OnDelete(DeleteBehavior.SetNull);
+
+    // Configure a relationship with PreviousLevel (can't be done with annotations)
+    builder.HasOne(urh => urh.PreviousLevel)
+           .WithMany()
+           .HasForeignKey(urh => urh.PreviousLevelId)
+           .OnDelete(DeleteBehavior.SetNull);
+
+    // Configure a relationship with NewLevel (can't be done with annotations)
+    builder.HasOne(urh => urh.NewLevel)
+           .WithMany()
+           .HasForeignKey(urh => urh.NewLevelId)
+           .OnDelete(DeleteBehavior.SetNull);
+
+    // Configure a polymorphic relationship with RelatedResource (can't be done with annotations)
+    builder.HasOne(urh => urh.RelatedResource)
+           .WithMany()
+           .HasForeignKey("RelatedResourceId")
+           .OnDelete(DeleteBehavior.SetNull);
+  }
 }

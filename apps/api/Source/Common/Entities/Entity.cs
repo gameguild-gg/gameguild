@@ -28,7 +28,7 @@ public abstract class Entity<TKey> : IEntity<TKey> where TKey : IEquatable<TKey>
 
   /// <summary>
   /// Version number for optimistic concurrency control
-  /// Uses ConcurrencyCheck for cross-database compatibility (PostgreSQL, SQLite, SQL Server)
+  /// Uses ConcurrencyCheck for cross-database compatibility (PostgreSQL, SQL Server)
   /// </summary>
   [ConcurrencyCheck]
   public virtual int Version { get; set; } = 0;
@@ -292,16 +292,16 @@ public class Entity : Entity<Guid> {
       case Dictionary<string, object?> dict: instance.SetProperties(dict); break;
 
       default: {
-        // Handle an anonymous object case
-        var properties = partial.GetType().GetProperties();
-        var propDict = new Dictionary<string, object?>();
+          // Handle an anonymous object case
+          var properties = partial.GetType().GetProperties();
+          var propDict = new Dictionary<string, object?>();
 
-        foreach (var prop in properties) propDict[prop.Name] = prop.GetValue(partial);
+          foreach (var prop in properties) propDict[prop.Name] = prop.GetValue(partial);
 
-        instance.SetProperties(propDict);
+          instance.SetProperties(propDict);
 
-        break;
-      }
+          break;
+        }
     }
 
     return instance;
