@@ -2,6 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useReducer } from 'react';
 import {
+  defaultErrorBoundaryState,
   ErrorBoundaryAction,
   ErrorBoundaryActionTypes,
   ErrorBoundaryContextValue,
@@ -11,7 +12,6 @@ import {
   ErrorLevel,
   ErrorLevels,
   ErrorState,
-  defaultErrorBoundaryState,
 } from './types';
 
 /**
@@ -110,7 +110,7 @@ const errorBoundaryReducer: ErrorBoundaryReducer = (state: ErrorState, action: E
       };
 
     default: {
-      console.error(`Unhandled action type: ${(action as any).type}`);
+      console.error(`Unhandled action type: ${(action as unknown).type}`);
       return state;
     }
   }
@@ -261,7 +261,7 @@ export function ErrorBoundaryProvider({
   );
 
   const propagateToParent = useCallback(
-    (error: Error, errorInfo) => {
+    (error: Error, errorInfo: ErrorInfo) => {
       if (isNested && parentContext && shouldPropagateUp) {
         parentContext.propagateToParent(error, errorInfo);
       }
