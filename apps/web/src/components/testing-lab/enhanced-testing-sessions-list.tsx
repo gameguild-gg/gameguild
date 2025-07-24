@@ -406,7 +406,6 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                 >
                   <DialogTrigger asChild>
                     <Button
-                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0 shadow-lg"
                       onClick={() => {
                         console.log('Schedule Session button clicked');
                       }}
@@ -430,7 +429,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                 >
                   <DialogTrigger asChild>
                     <Button
-                      className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white border-0 shadow-lg"
+                      variant="secondary"
                       onClick={() => {
                         console.log('Test Schedule Session button clicked');
                       }}
@@ -445,80 +444,80 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
 
               {/* Debug info */}
               {process.env.NODE_ENV === 'development' && (
-                <div className="text-xs text-slate-400 bg-slate-800 p-2 rounded">
+                <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
                   User: {session?.user?.email || 'No session'} | Role: {userRole.type} | isProfessor: {userRole.isProfessor.toString()}
                 </div>
               )}
 
-              <Button variant="outline" onClick={() => refreshSessions()} className="border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
+              <Button variant="outline" onClick={() => refreshSessions()}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
             </div>
-          </div>
+        </div>
 
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="bg-gradient-to-br from-blue-900/20 to-blue-800/10 border-blue-500/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-300 text-sm font-medium">Total Sessions</p>
-                    <p className="text-3xl font-bold text-white">{Array.isArray(sessions) ? sessions.length : 0}</p>
+                    <p className="text-sm font-medium text-muted-foreground">Total Sessions</p>
+                    <p className="text-3xl font-bold">{Array.isArray(sessions) ? sessions.length : 0}</p>
                   </div>
-                  <Calendar className="h-8 w-8 text-blue-400" />
+                  <Calendar className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <p className="text-blue-300/60 text-xs mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   {Array.isArray(sessions) ? sessions.filter((s) => s.status === 'scheduled').length : 0} scheduled
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-green-900/20 to-green-800/10 border-green-500/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-green-300 text-sm font-medium">Active Participants</p>
-                    <p className="text-3xl font-bold text-white">
+                    <p className="text-sm font-medium text-muted-foreground">Active Participants</p>
+                    <p className="text-3xl font-bold">
                       {Array.isArray(sessions) ? sessions.reduce((acc, s) => acc + s.registeredTesterCount, 0) : 0}
                     </p>
                   </div>
-                  <Users className="h-8 w-8 text-green-400" />
+                  <Users className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <p className="text-green-300/60 text-xs mt-2">Across all sessions</p>
+                <p className="text-xs text-muted-foreground mt-2">Across all sessions</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-900/20 to-purple-800/10 border-purple-500/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-300 text-sm font-medium">Projects Testing</p>
-                    <p className="text-3xl font-bold text-white">
+                    <p className="text-sm font-medium text-muted-foreground">Projects Testing</p>
+                    <p className="text-3xl font-bold">
                       {Array.isArray(sessions) ? sessions.reduce((acc, s) => acc + (s.testingRequests?.length || 0), 0) : 0}
                     </p>
                   </div>
-                  <Gamepad2 className="h-8 w-8 text-purple-400" />
+                  <Gamepad2 className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <p className="text-purple-300/60 text-xs mt-2">Games being tested</p>
+                <p className="text-xs text-muted-foreground mt-2">Games being tested</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-orange-900/20 to-orange-800/10 border-orange-500/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-orange-300 text-sm font-medium">Avg Attendance</p>
-                    <p className="text-3xl font-bold text-white">
+                    <p className="text-sm font-medium text-muted-foreground">Avg Attendance</p>
+                    <p className="text-3xl font-bold">
                       {Array.isArray(sessions) && sessions.length > 0
                         ? Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length)
                         : 0}
                       %
                     </p>
                   </div>
-                  <TrendingUp className="h-8 w-8 text-orange-400" />
+                  <TrendingUp className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <p className="text-orange-300/60 text-xs mt-2">Session participation</p>
+                <p className="text-xs text-muted-foreground mt-2">Session participation</p>
               </CardContent>
             </Card>
           </div>
