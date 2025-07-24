@@ -5,9 +5,9 @@ RUN apk update
 RUN apk add --no-cache libc6-compat
 
 # Build Stage.
-FROM base AS build-stage
+FROM base AS builder
 # Create app directory.
-WORKDIR /usr/src/app
+WORKDIR /app
 # Copy application dependency manifests to the container image.
 COPY package*.json ./
 # Generate package-lock.json.
@@ -23,31 +23,28 @@ RUN npm run build
 # Prune dev dependencies.
 RUN npm prune --production
 
-# Production Stage.
-FROM base AS production-stage
-# Set environment variables.
-ENV NODE_ENV production
-# Create app directory.
-WORKDIR /usr/src/app
-# Change ownership to node user.
-RUN chown -R node:node /usr/src/app
-# create a non-root user.
-USER node
-# Copy application dependency manifests to the container image.
-COPY --from=build-stage --chown=node:node /usr/src/app/package*.json ./
-# Copy application dependencies to the container image.
-COPY --from=build-stage --chown=node:node /usr/src/app/node_modules ./node_modules
-# Copy application build files to the container image.
-COPY --from=build-stage --chown=node:node /usr/src/app/.next/standalone ./
-# Copy static files generated during the build to the .next/static directory in the container image.
-COPY --from=build-stage --chown=node:node /usr/src/app/.next/static ./.next/static
-# Copy files from the "public" directory to the corresponding "public" directory in the container image.
-COPY --from=build-stage --chown=node:node /usr/src/app/public ./public
-# Define an argument for the port with a default value of 3000.
-ARG PORT=3000
-# Set an environment variable for the port using the ARG value.
-ENV PORT=${PORT}
-# Expose the port to inform Docker that the container will listen on the specified port.
-EXPOSE ${PORT}
-# Run the web service on container startup.
-CMD [ "npm", "run", "start" ]
+# Production image, copy all files and run next
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]

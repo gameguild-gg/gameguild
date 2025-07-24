@@ -38,34 +38,34 @@ public static class DependencyInjection {
 
     if (options.EnableSwagger)
       services.AddSwaggerGen(c => {
-          c.SwaggerDoc(
-            "v1",
-            new OpenApiInfo {
-              Title = options.ApiTitle,
-              Version = options.ApiVersion,
-              Description = "A comprehensive API for GameGuild platform with CQRS architecture",
-              Contact = options.Contact ?? new OpenApiContact { Name = "GameGuild Team", Email = "support@gameguild.com", },
-            }
-          );
+        c.SwaggerDoc(
+          "v1",
+          new OpenApiInfo {
+            Title = options.ApiTitle,
+            Version = options.ApiVersion,
+            Description = "A comprehensive API for GameGuild platform with CQRS architecture",
+            Contact = options.Contact ?? new OpenApiContact { Name = "GameGuild Team", Email = "support@gameguild.com", },
+          }
+        );
 
-          // Include XML comments for better documentation
-          var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-          var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
+        // Include XML comments for better documentation
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
 
-          if (File.Exists(xmlPath)) c.IncludeXmlComments(xmlPath);
-        }
+        if (File.Exists(xmlPath)) c.IncludeXmlComments(xmlPath);
+      }
       );
 
     // Controllers (for backward compatibility with existing REST endpoints)
     services.AddControllers()
             .AddJsonOptions(options => {
-                // Handle circular references in navigation properties
-                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-              }
+              // Handle circular references in navigation properties
+              options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+            }
             )
             .ConfigureApiBehaviorOptions(options => {
-                options.SuppressModelStateInvalidFilter = true; // We handle validation through MediatR
-              }
+              options.SuppressModelStateInvalidFilter = true; // We handle validation through MediatR
+            }
             );
 
     // Configure routing to use lowercase URLs
@@ -77,49 +77,49 @@ public static class DependencyInjection {
     // Exception Handling
     services.AddExceptionHandler<GlobalExceptionHandler>();
     services.AddProblemDetails(options => {
-        options.CustomizeProblemDetails = context => {
-          context.ProblemDetails.Instance = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}";
-          context.ProblemDetails.Extensions.TryAdd("traceId", context.HttpContext.TraceIdentifier);
-        };
-      }
+      options.CustomizeProblemDetails = context => {
+        context.ProblemDetails.Instance = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}";
+        context.ProblemDetails.Extensions.TryAdd("traceId", context.HttpContext.TraceIdentifier);
+      };
+    }
     );
 
     // CORS for frontend integration
     services.AddCors(corsOptions => {
-        corsOptions.AddDefaultPolicy(builder => {
-            builder
-              .WithOrigins(options.AllowedOrigins)
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
-          }
-        );
+      corsOptions.AddDefaultPolicy(builder => {
+        builder
+          .WithOrigins(options.AllowedOrigins)
+          .AllowAnyMethod()
+          .AllowAnyHeader()
+          .AllowCredentials();
       }
+      );
+    }
     );
 
     // Response Compression
     if (options.EnableResponseCompression)
       services.AddResponseCompression(compressionOptions => {
-          compressionOptions.EnableForHttps = true;
-          compressionOptions.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
-          compressionOptions.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
-        }
+        compressionOptions.EnableForHttps = true;
+        compressionOptions.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+        compressionOptions.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+      }
       );
 
     // Rate Limiting
     if (options.EnableRateLimiting)
       services.AddRateLimiter(limiterOptions => {
-          limiterOptions.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-          limiterOptions.AddFixedWindowLimiter(
-            "DefaultPolicy",
-            policyOptions => {
-              policyOptions.PermitLimit = options.RateLimitRequests;
-              policyOptions.Window = options.RateLimitWindow;
-              policyOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
-              policyOptions.QueueLimit = options.RateLimitQueueLimit;
-            }
-          );
-        }
+        limiterOptions.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        limiterOptions.AddFixedWindowLimiter(
+          "DefaultPolicy",
+          policyOptions => {
+            policyOptions.PermitLimit = options.RateLimitRequests;
+            policyOptions.Window = options.RateLimitWindow;
+            policyOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+            policyOptions.QueueLimit = options.RateLimitQueueLimit;
+          }
+        );
+      }
       );
 
     return services;
@@ -192,14 +192,14 @@ public static class DependencyInjection {
 
   /// <summary>
   /// Configures Entity Framework with the appropriate database provider.
-  /// Supports both SQLite for development and in-memory for testing.
+  /// Supports PostgreSQL for production and in-memory for testing.
   /// </summary>
   private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration) {
     var dbOptions = InfrastructureConfiguration.CreateDatabaseOptions(configuration);
 
     // Add DbContext factory for GraphQL DataLoaders with proper lifetime management
     services.AddDbContextFactory<ApplicationDbContext>(options => { InfrastructureConfiguration.ConfigureDbContext(options, dbOptions); });
-    
+
     // Add regular DbContext using the factory (this ensures compatible lifetimes)
     services.AddScoped<ApplicationDbContext>(provider => {
       var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
@@ -349,8 +349,8 @@ public static class DependencyInjection {
 
     // Add authorization if enabled
     if (options.EnableAuthorization) {
-      try { 
-        builder.AddDACAuthorization(); 
+      try {
+        builder.AddDACAuthorization();
         logger?.LogInformation("DAC Authorization enabled");
       }
       catch (Exception ex) {
@@ -607,27 +607,25 @@ public static class DependencyInjection {
   /// </summary>
   private static void ConfigureServerOptions(IRequestExecutorBuilder builder, GraphQLOptions options, ILogger? logger = null) {
     builder.ModifyOptions(opt => {
-        opt.RemoveUnreachableTypes = options.RemoveUnreachableTypes;
-        opt.EnsureAllNodesCanBeResolved = options.EnsureAllNodesCanBeResolved;
-        opt.StrictValidation = options.StrictValidation;
-        opt.EnableDirectiveIntrospection = options.EnableDirectiveIntrospection;
-      }
+      opt.RemoveUnreachableTypes = options.RemoveUnreachableTypes;
+      opt.EnsureAllNodesCanBeResolved = options.EnsureAllNodesCanBeResolved;
+      opt.StrictValidation = options.StrictValidation;
+      opt.EnableDirectiveIntrospection = options.EnableDirectiveIntrospection;
+    }
     );
 
     // Configure introspection
-    if (!options.EnableIntrospection)
-    {
-        builder.DisableIntrospection();
-        logger?.LogInformation("Introspection disabled for non-test environment");
+    if (!options.EnableIntrospection) {
+      builder.DisableIntrospection();
+      logger?.LogInformation("Introspection disabled for non-test environment");
     }
-    else
-    {
-        logger?.LogInformation("Introspection enabled (default HotChocolate behavior)");
+    else {
+      logger?.LogInformation("Introspection enabled (default HotChocolate behavior)");
     }
 
     // Configure request options for development vs production
-    builder.ModifyRequestOptions(opt => { 
-        opt.IncludeExceptionDetails = options.IncludeExceptionDetails; 
+    builder.ModifyRequestOptions(opt => {
+      opt.IncludeExceptionDetails = options.IncludeExceptionDetails;
     });
   }
 
@@ -904,21 +902,21 @@ public static class DependencyInjection {
       // Cache type scanning for better performance
       var allTypes = assemblies
                      .SelectMany(assembly => {
-                         try { return assembly.GetTypes(); }
-                         catch (ReflectionTypeLoadException ex) {
-                           // Handle assembly loading issues gracefully
-                           options.Logger?.LogWarning(ex, "Failed to load some types from assembly {AssemblyName}", assembly.GetName().Name);
+                       try { return assembly.GetTypes(); }
+                       catch (ReflectionTypeLoadException ex) {
+                         // Handle assembly loading issues gracefully
+                         options.Logger?.LogWarning(ex, "Failed to load some types from assembly {AssemblyName}", assembly.GetName().Name);
 
-                           return ex.Types.Where(t => t != null).Cast<Type>();
-                         }
-                         catch (Exception ex) {
-                           options.Logger?.LogError(ex, "Failed to load types from assembly {AssemblyName}", assembly.GetName().Name);
-
-                           if (options.ThrowOnRegistrationFailure) throw;
-
-                           return [];
-                         }
+                         return ex.Types.Where(t => t != null).Cast<Type>();
                        }
+                       catch (Exception ex) {
+                         options.Logger?.LogError(ex, "Failed to load types from assembly {AssemblyName}", assembly.GetName().Name);
+
+                         if (options.ThrowOnRegistrationFailure) throw;
+
+                         return [];
+                       }
+                     }
                      )
                      .Where(t => t is { IsClass: true, IsAbstract: false })
                      .ToArray();

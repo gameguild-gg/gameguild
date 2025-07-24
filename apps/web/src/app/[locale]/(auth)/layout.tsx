@@ -1,12 +1,12 @@
-import React, { PropsWithChildren } from 'react';
-import { redirect } from 'next/navigation';
-import { GalleryVerticalEnd } from 'lucide-react';
 import { auth } from '@/auth';
+import { GalleryVerticalEnd } from 'lucide-react';
+import { redirect } from 'next/navigation';
+import React, { PropsWithChildren } from 'react';
 
 export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
   const session = await auth();
 
-  if (session) redirect('/');
+  if (session) redirect('/dashboard');
 
   return (
     <div className="flex flex-col flex-1 items-center justify-center gap-6 p-6 md:p-10 min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
