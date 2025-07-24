@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { PropsWithChildren, useEffect } from 'react';
 import { ErrorProps } from '@/types';
 import Link from 'next/link';
 import { useErrorBoundaryContext } from './error-boundary-provider';
 
-export const Error = ({ error, reset }: ErrorProps): React.JSX.Element => {
-  const { reportError, state, clearAllErrors } = useErrorBoundaryContext();
+export const Error = ({ error, reset, children }: PropsWithChildren<ErrorProps>): React.JSX.Element => {
   const isDevelopment = process.env.NODE_ENV === 'development';
+  const { reportError, state, clearAllErrors } = useErrorBoundaryContext();
 
   useEffect(() => {
     // Report the error to the error boundary context
@@ -28,7 +28,8 @@ export const Error = ({ error, reset }: ErrorProps): React.JSX.Element => {
     state.errors.filter((e) => e.boundaryId === 'error-page').reduce((max, e) => Math.max(max, e.retryCount), 0) < (state.globalConfig.maxRetries || 3);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 p-4">
+    <div className="flex flex-col flex-1 relative items-center justify-center">
+      {children && <>{children}</>}
       <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-red-200 dark:border-red-800 p-8">
         <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 bg-red-100 dark:bg-red-900 rounded-full">
           <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
