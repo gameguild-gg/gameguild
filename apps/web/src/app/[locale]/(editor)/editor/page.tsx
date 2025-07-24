@@ -3,16 +3,13 @@
 import { Editor } from '@/components/editor/lexical-editor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { HardDrive, Moon, Save, SaveAll, Settings, Sun } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { LexicalEditor } from 'lexical';
-import { OpenProjectDialog } from '@/components/editor/ui/editor/open-project-dialog';
-import { CreateProjectDialog } from '@/components/editor/ui/editor/create-project-dialog';
 import { EnhancedStorageAdapter } from '@/lib/storage/enhanced-storage-adapter';
-import { syncConfig } from '@/lib/sync/sync-config';
 
 interface ProjectData {
   id: string;
@@ -193,7 +190,7 @@ export default function EditorPage() {
   const [currentProjectName, setCurrentProjectName] = useState<string>('Untitled Project');
   const [projectTags, setProjectTags] = useState<string[]>([]);
   const [editorState, setEditorState] = useState<string>('');
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(true);
+  const [autoSaveEnabled] = useState<boolean>(true);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [isDbInitialized, setIsDbInitialized] = useState<boolean>(false);
 
@@ -205,20 +202,27 @@ export default function EditorPage() {
   const [newStorageLimit, setNewStorageLimit] = useState<string>('');
 
   // Dialog states
-  const [showProjectDialog, setShowProjectDialog] = useState<boolean>(false);
-  const [showCreateDialog, setShowCreateDialog] = useState<boolean>(false);
   const [showSaveAsDialog, setShowSaveAsDialog] = useState<boolean>(false);
   const [newProjectName, setNewProjectName] = useState<string>('');
 
   // Refs
   const editorRef = useRef<LexicalEditor | null>(null);
   const dbStorage = useRef<IndexedDBStorage>(new IndexedDBStorage());
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
-  const storageAdapter = new EnhancedStorageAdapter({
-    storageQuotaKB: storageLimit ? storageLimit * 1024 : undefined,
-    compressionEnabled: true,
-    encryptionEnabled: false,
-  });
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const storageAdapter = new EnhancedStorageAdapter();
+
+  // Update storage information
+  const updateStorageInfo = useCallback(async () => {
+    if (!isDbInitialized) return;
+
+    try {
+      const info = await dbStorage.current.getStorageInfo();
+      setTotalStorageUsed(info.totalSize);
+      setProjectCount(info.projectCount);
+    } catch (error) {
+      console.error('Failed to get storage info:', error);
+    }
+  }, [isDbInitialized]);
 
   // Initialize IndexedDB
   useEffect(() => {
@@ -236,20 +240,7 @@ export default function EditorPage() {
     };
 
     initDB();
-  }, []);
-
-  // Update storage information
-  const updateStorageInfo = async () => {
-    if (!isDbInitialized) return;
-
-    try {
-      const info = await dbStorage.current.getStorageInfo();
-      setTotalStorageUsed(info.totalSize);
-      setProjectCount(info.projectCount);
-    } catch (error) {
-      console.error('Failed to get storage info:', error);
-    }
-  };
+  }, [updateStorageInfo]);
 
   // Check if storage is at limit
   const isStorageAtLimit = (): boolean => {
@@ -259,62 +250,65 @@ export default function EditorPage() {
   };
 
   // Save current project
-  const handleSave = async (editorState?: string) => {
-    if (!currentProjectName.trim()) {
-      toast.error('Name required', {
-        description: 'Please enter a project name before saving.',
-      });
-      return;
-    }
-
-    if (isStorageAtLimit()) {
-      toast.error('Overcrowded storage', {
-        description: 'Storage limit reached. Please delete some projects or increase the limit.',
-      });
-      return;
-    }
-
-    let stateToSave = editorState;
-    if (!stateToSave && editorRef.current) {
-      try {
-        const currentState = editorRef.current.getEditorState();
-        stateToSave = JSON.stringify(currentState.toJSON());
-      } catch (error) {
-        console.error('Failed to get editor state:', error);
-        toast.error('Error in editor', {
-          description: 'Failed to get current editor state.',
+  const handleSave = useCallback(
+    async (editorState?: string) => {
+      if (!currentProjectName.trim()) {
+        toast.error('Name required', {
+          description: 'Please enter a project name before saving.',
         });
         return;
       }
-    }
-
-    if (!stateToSave || stateToSave.trim() === '') {
-      toast.error('Nothing to save', {
-        description: 'The editor is empty. Add content before saving.',
-      });
-      return;
-    }
-
-    try {
-      await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags);
-      await updateStorageInfo();
 
       if (isStorageAtLimit()) {
-        toast.warning('Saved Project - Little Space', {
-          description: 'Project saved, but storage is nearly full.',
+        toast.error('Overcrowded storage', {
+          description: 'Storage limit reached. Please delete some projects or increase the limit.',
         });
-      } else {
-        toast.success('Project saved successfully', {
-          description: `"${currentProjectName}" was saved in the database.`,
+        return;
+      }
+
+      let stateToSave = editorState;
+      if (!stateToSave && editorRef.current) {
+        try {
+          const currentState = editorRef.current.getEditorState();
+          stateToSave = JSON.stringify(currentState.toJSON());
+        } catch (error) {
+          console.error('Failed to get editor state:', error);
+          toast.error('Error in editor', {
+            description: 'Failed to get current editor state.',
+          });
+          return;
+        }
+      }
+
+      if (!stateToSave || stateToSave.trim() === '') {
+        toast.error('Nothing to save', {
+          description: 'The editor is empty. Add content before saving.',
+        });
+        return;
+      }
+
+      try {
+        await dbStorage.current.save(currentProjectId, currentProjectName, stateToSave, projectTags);
+        await updateStorageInfo();
+
+        if (isStorageAtLimit()) {
+          toast.warning('Saved Project - Little Space', {
+            description: 'Project saved, but storage is nearly full.',
+          });
+        } else {
+          toast.success('Project saved successfully', {
+            description: `"${currentProjectName}" was saved in the database.`,
+          });
+        }
+      } catch (error) {
+        console.error('Save error:', error);
+        toast.error('Error saving', {
+          description: error instanceof Error ? error.message : 'Failed to save project.',
         });
       }
-    } catch (error: any) {
-      console.error('Save error:', error);
-      toast.error('Error saving', {
-        description: error.message || 'Failed to save project.',
-      });
-    }
-  };
+    },
+    [currentProjectName, currentProjectId, projectTags, isStorageAtLimit, updateStorageInfo],
+  );
 
   // Save as new project
   const handleSaveAs = async () => {
@@ -333,7 +327,7 @@ export default function EditorPage() {
     }
 
     try {
-      const existingProjects = await storageAdapter.list();
+      const existingProjects = await dbStorage.current.list();
       const nameExists = existingProjects.some((project) => project.name.toLowerCase() === newProjectName.toLowerCase());
 
       if (nameExists) {
@@ -366,11 +360,12 @@ export default function EditorPage() {
       }
 
       try {
-        await storageAdapter.save(newProjectId, newProjectName, stateToSave, projectTags);
+        await dbStorage.current.save(newProjectId, newProjectName, stateToSave, projectTags);
 
         // Update current project info
         setCurrentProjectId(newProjectId);
         setCurrentProjectName(newProjectName);
+        setProjectTags(projectTags);
         await updateStorageInfo();
 
         if (isStorageAtLimit()) {
@@ -385,16 +380,16 @@ export default function EditorPage() {
 
         setShowSaveAsDialog(false);
         setNewProjectName('');
-      } catch (error: any) {
+      } catch (error) {
         console.error('Save as error:', error);
         toast.error('Error creating project', {
-          description: error.message || 'Failed to create new project.',
+          description: error instanceof Error ? error.message : 'Failed to create new project.',
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Save as error:', error);
       toast.error('Error creating project', {
-        description: error.message || 'Failed to create new project.',
+        description: error instanceof Error ? error.message : 'Failed to create new project.',
       });
     }
   };
@@ -402,7 +397,7 @@ export default function EditorPage() {
   // Handle opening a project
   const handleOpen = async (projectId: string) => {
     try {
-      const projectData = await storageAdapter.load(projectId);
+      const projectData = await dbStorage.current.load(projectId);
       if (projectData) {
         // Update editor state
         setEditorState(projectData.data);
@@ -442,7 +437,7 @@ export default function EditorPage() {
   // Delete a project
   const handleDelete = async (projectId: string, projectName: string) => {
     try {
-      await storageAdapter.delete(projectId);
+      await dbStorage.current.delete(projectId);
       await updateStorageInfo();
 
       // Clear current project if it was deleted
@@ -452,7 +447,8 @@ export default function EditorPage() {
         setProjectTags([]);
         setEditorState('');
         if (editorRef.current) {
-          editorRef.current.setEditorState(editorRef.current.parseEditorState(null));
+          const emptyState = editorRef.current.parseEditorState('{"root":{"children":[],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
+          editorRef.current.setEditorState(emptyState);
         }
       }
 
@@ -474,7 +470,8 @@ export default function EditorPage() {
     setProjectTags([]);
     setEditorState('');
     if (editorRef.current) {
-      editorRef.current.setEditorState(editorRef.current.parseEditorState(null));
+      const emptyState = editorRef.current.parseEditorState('{"root":{"children":[],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
+      editorRef.current.setEditorState(emptyState);
     }
 
     toast.success('New project created', {
@@ -506,7 +503,7 @@ export default function EditorPage() {
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [editorState, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized]);
+  }, [editorState, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, handleSave]);
 
   // Storage limit management
   const handleSetStorageLimit = (limitValue: string) => {
@@ -578,9 +575,6 @@ export default function EditorPage() {
               New
             </Button>
 
-            {/* Open project */}
-            <OpenProjectDialog onProjectSelect={handleOpen} onProjectDelete={handleDelete} />
-
             {/* Save project */}
             <Button variant="ghost" size="sm" onClick={() => handleSave()} disabled={!currentProjectName.trim()} className="h-8 px-2">
               <Save className="h-4 w-4" />
@@ -590,16 +584,6 @@ export default function EditorPage() {
             <Button variant="ghost" size="sm" onClick={() => setShowSaveAsDialog(true)} className="h-8 px-2">
               <SaveAll className="h-4 w-4" />
             </Button>
-
-            {/* Create project dialog */}
-            <CreateProjectDialog
-              onProjectCreate={(name, tags) => {
-                setCurrentProjectId(generateProjectId());
-                setCurrentProjectName(name);
-                setProjectTags(tags);
-                handleSave();
-              }}
-            />
 
             {/* Theme toggle */}
             <Button variant="ghost" size="sm" onClick={() => setIsDarkMode(!isDarkMode)} className="h-8 px-2">
@@ -616,13 +600,7 @@ export default function EditorPage() {
 
       {/* Editor */}
       <div className="flex-1 overflow-hidden">
-        <Editor
-          ref={editorRef}
-          initialState={editorState}
-          onChange={(state) => setEditorState(state)}
-          placeholder="Start writing your content..."
-          className="h-full"
-        />
+        <Editor initialState={editorState} onChange={(state) => setEditorState(state)} placeholder="Start writing your content..." className="h-full" />
       </div>
 
       {/* Save As Dialog */}
