@@ -56,10 +56,10 @@ export function TestingRequestsList() {
         let data: TestingRequest[];
         if (userRole.isStudent) {
           // Students see available testing requests
-          data = await testingLabApi.getAvailableTestingRequests();
+          data = await testingLabApi.getAvailableTestingRequests(session?.accessToken);
         } else {
           // Professors/admins see their own requests (mock for now)
-          data = await testingLabApi.getMyTestingRequests();
+          data = await testingLabApi.getMyTestingRequests(session?.accessToken);
         }
         setRequests(data);
         setFilteredRequests(data);

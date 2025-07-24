@@ -15,10 +15,10 @@ import { ContentEditMenu } from '@/components/ui/content-edit-menu';
 import { EditorLoadingContext } from '../lexical-editor';
 
 export interface CalloutData {
-  calloutTitle: string
-  content: string
-  type: CalloutType
-  isNew?: boolean
+  calloutTitle: string;
+  content: string;
+  type: CalloutType;
+  isNew?: boolean;
 }
 
 export interface SerializedCalloutNode extends SerializedLexicalNode {
@@ -30,15 +30,15 @@ export interface SerializedCalloutNode extends SerializedLexicalNode {
 export class CalloutNode extends DecoratorNode<JSX.Element> {
   __data: CalloutData;
 
-  constructor(data: CalloutData, key?: string) {
-    super(key);
-    this.__data = {
-      title: data.title || '',
-      content: data.content || '',
-      type: data.type || 'note',
-      isNew: data.isNew,
-    };
-  }
+  // constructor(data: CalloutData, key?: string) {
+  //   super(key);
+  //   this.__data = {
+  //     title: data.title || '',
+  //     content: data.content || '',
+  //     type: data.type || 'note',
+  //     isNew: data.isNew,
+  //   };
+  // }
 
   static getType(): string {
     return 'callout';
@@ -49,13 +49,13 @@ export class CalloutNode extends DecoratorNode<JSX.Element> {
   }
 
   constructor(data: CalloutData, key?: string) {
-    super(key)
+    super(key);
     this.__data = {
-      calloutTitle: data.calloutTitle || "",
-      content: data.content || "",
-      type: data.type || "note",
+      calloutTitle: data.calloutTitle || '',
+      content: data.content || '',
+      type: data.type || 'note',
       isNew: data.isNew,
-    }
+    };
   }
 
   createDOM(): HTMLElement {
@@ -90,12 +90,12 @@ interface CalloutComponentProps {
 }
 
 function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
-  const [editor] = useLexicalComposerContext()
-  const isLoading = useContext(EditorLoadingContext)
-  const [isEditing, setIsEditing] = useState((data.isNew || false) && !isLoading)
-  const [calloutTitle, setcalloutTitle] = useState(data.calloutTitle || "")
-  const [content, setContent] = useState(data.content || "")
-  const [type, setType] = useState<CalloutType>(data.type || "note")
+  const [editor] = useLexicalComposerContext();
+  const isLoading = useContext(EditorLoadingContext);
+  const [isEditing, setIsEditing] = useState((data.isNew || false) && !isLoading);
+  const [calloutTitle, setcalloutTitle] = useState(data.calloutTitle || '');
+  const [content, setContent] = useState(data.content || '');
+  const [type, setType] = useState<CalloutType>(data.type || 'note');
 
   useEffect(() => {
     if (data.isNew) {
@@ -125,9 +125,9 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
   };
 
   const handlecalloutTitleChange = (newcalloutTitle: string) => {
-    setcalloutTitle(newcalloutTitle)
-    updateCallout({ calloutTitle: newcalloutTitle })
-  }
+    setcalloutTitle(newcalloutTitle);
+    updateCallout({ calloutTitle: newcalloutTitle });
+  };
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent);
@@ -236,9 +236,9 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
 
 export function $createCalloutNode(data: Partial<CalloutData> = {}): CalloutNode {
   return new CalloutNode({
-    calloutTitle: data.calloutTitle || "",
-    content: data.content || "",
-    type: data.type || "note",
+    calloutTitle: data.calloutTitle || '',
+    content: data.content || '',
+    type: data.type || 'note',
     isNew: true,
   });
 }

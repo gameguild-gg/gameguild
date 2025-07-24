@@ -1,11 +1,12 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 
 export const NotFound = (): React.JSX.Element => (
   <div>
     <h2>Not Found</h2>
-    <p>The page you're looking for doesn't exist or has been moved.</p>
+    <p>The page you&apos;re looking for doesn&apos;t exist or has been moved.</p>
     <div>
       {/* TODO: Add a search component here.*/}
       <p>Try searching for what you need or return to the homepage.</p>
@@ -17,7 +18,7 @@ export const NotFound = (): React.JSX.Element => (
     </div>
     <div>
       <p>If you believe this is an error, please contact support or try again later.</p>
-      <a href="/contact">Contact Support</a>
+      <Link href="/contact">Contact Support</Link>
       <p>Thank you for your patience!</p>
     </div>
   </div>
