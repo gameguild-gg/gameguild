@@ -2,7 +2,7 @@
 
 import React, { Component, ErrorInfo, ReactNode, startTransition } from 'react';
 import { logger } from '@/lib/logger';
-import { errorReporter, ErrorReport } from '@/lib/errorReporting';
+import { ErrorReport, errorReporter } from '@/lib/errorReporting';
 
 export interface RetryableErrorBoundaryProps {
   children: ReactNode;
