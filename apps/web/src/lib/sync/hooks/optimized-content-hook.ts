@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Content } from '@/types';
 import { useContent } from '@/components/content.context';
-import { useSync } from '@/lib/sync/sync.provider';
+import { useSync } from '../sync-provider';
 import { useSyncQueue } from '@/lib/sync/hooks/sync-queue';
 import { useCacheManager } from '@/lib/sync/hooks/cache-manager';
 
