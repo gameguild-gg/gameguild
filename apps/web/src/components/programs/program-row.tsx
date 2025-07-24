@@ -22,7 +22,7 @@ export function ProgramRow({ program }: ProgramRowProps) {
     if (!duration) return null;
     const hours = Math.floor(duration / 60);
     const minutes = duration % 60;
-    
+
     if (hours > 0) {
       return `${hours}h${minutes > 0 ? ` ${minutes}m` : ''}`;
     }
@@ -89,48 +89,48 @@ export function ProgramRow({ program }: ProgramRowProps) {
                 <Badge className={getVisibilityColor(program.visibility)}>{program.visibility}</Badge>
               </div>
 
-            {/* Metadata */}
-            <div className="flex flex-wrap gap-3 text-xs text-slate-400">
-              {program.difficulty && (
-                <div className="flex items-center gap-1">
-                  <Eye className="h-3 w-3" />
-                  {program.difficulty}
-                </div>
-              )}
-              
-              {formatDuration(program.duration) && (
-                <div className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {formatDuration(program.duration)}
-                </div>
-              )}
-              
-              <div className="flex items-center gap-1">
-                <DollarSign className="h-3 w-3" />
-                {formatPrice(program.price, program.currency)}
-              </div>
-              
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                {formatDistanceToNow(parseISO(program.createdAt), { addSuffix: true })}
-              </div>
-            </div>
-
-            {/* Tags */}
-            {program.tags && program.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {program.tags.slice(0, 4).map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-                {program.tags.length > 4 && (
-                  <Badge variant="secondary" className="text-xs">
-                    +{program.tags.length - 4}
-                  </Badge>
+              {/* Metadata */}
+              <div className="flex flex-wrap gap-3 text-xs text-slate-400">
+                {program.difficulty && (
+                  <div className="flex items-center gap-1">
+                    <Eye className="h-3 w-3" />
+                    {program.difficulty}
+                  </div>
                 )}
+
+                {formatDuration(program.duration) && (
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatDuration(program.duration)}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-1">
+                  <DollarSign className="h-3 w-3" />
+                  {formatPrice(program.price, program.currency)}
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  {formatDistanceToNow(parseISO(program.createdAt), { addSuffix: true })}
+                </div>
               </div>
-            )}
+
+              {/* Tags */}
+              {program.tags && program.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {program.tags.slice(0, 4).map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                  {program.tags.length > 4 && (
+                    <Badge variant="secondary" className="text-xs">
+                      +{program.tags.length - 4}
+                    </Badge>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </CardContent>

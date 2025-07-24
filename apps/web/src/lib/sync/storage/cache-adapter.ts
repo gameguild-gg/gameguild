@@ -74,7 +74,7 @@ export class CacheAPIAdapter extends BaseClientStorageAdapter {
 
     const keys = await this.cache.keys();
     const prefix = this.getRequestUrl('');
-    
+
     const deletePromises = keys.filter((request) => request.url.startsWith(prefix)).map((request) => this.cache!.delete(request));
 
     await Promise.all(deletePromises);
@@ -92,7 +92,7 @@ export class CacheAPIAdapter extends BaseClientStorageAdapter {
 
     const requests = await this.cache.keys();
     const prefix = this.getRequestUrl('');
-    
+
     return requests.filter((request) => request.url.startsWith(prefix)).map((request) => this.extractKeyFromUrl(request.url));
   }
 
@@ -131,7 +131,7 @@ export class CacheAPIAdapter extends BaseClientStorageAdapter {
       if (response) {
         try {
           const item: StorageItem<T> = await response.json();
-          
+
           // Check TTL
           if (!item.ttl || Date.now() <= item.timestamp + item.ttl) {
             result.set(key, item.value);

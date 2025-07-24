@@ -8,23 +8,27 @@ import { Loader2, RefreshCw, BookOpen, Users, BarChart3, TrendingUp } from 'luci
 
 export function CoursesOverviewContent() {
   const { state, getEnhancedCourses, syncWithServer } = useCoursesSync();
-  
+
   const courses = getEnhancedCourses();
-  
+
   // Calculate stats
   const totalCourses = courses.length;
-  const coursesByArea = courses.reduce((acc, course) => {
-    acc[course.area] = (acc[course.area] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  
-  const coursesByLevel = courses.reduce((acc, course) => {
-    const levelName = course.level === 1 ? 'Beginner' : 
-                     course.level === 2 ? 'Intermediate' : 
-                     course.level === 3 ? 'Advanced' : 'Arcane';
-    acc[levelName] = (acc[levelName] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const coursesByArea = courses.reduce(
+    (acc, course) => {
+      acc[course.area] = (acc[course.area] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  const coursesByLevel = courses.reduce(
+    (acc, course) => {
+      const levelName = course.level === 1 ? 'Beginner' : course.level === 2 ? 'Intermediate' : course.level === 3 ? 'Advanced' : 'Arcane';
+      acc[levelName] = (acc[levelName] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   const handleRefresh = async () => {
     await syncWithServer();
@@ -44,16 +48,14 @@ export function CoursesOverviewContent() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-semibold">Course Statistics</h2>
-          {state.syncStatus === 'syncing' && (
-            <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-          )}
+          {state.syncStatus === 'syncing' && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
           {state.pendingChanges.size > 0 && (
             <Badge variant="outline" className="text-orange-600">
               {state.pendingChanges.size} pending changes
             </Badge>
           )}
         </div>
-        
+
         <Button variant="outline" size="sm" onClick={handleRefresh}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
@@ -69,9 +71,7 @@ export function CoursesOverviewContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalCourses}</div>
-            <p className="text-xs text-muted-foreground">
-              Across all areas and levels
-            </p>
+            <p className="text-xs text-muted-foreground">Across all areas and levels</p>
           </CardContent>
         </Card>
 
@@ -81,12 +81,8 @@ export function CoursesOverviewContent() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold capitalize">
-              {Object.entries(coursesByArea).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A'}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {Object.entries(coursesByArea).sort(([,a], [,b]) => b - a)[0]?.[1] || 0} courses
-            </p>
+            <div className="text-2xl font-bold capitalize">{Object.entries(coursesByArea).sort(([, a], [, b]) => b - a)[0]?.[0] || 'N/A'}</div>
+            <p className="text-xs text-muted-foreground">{Object.entries(coursesByArea).sort(([, a], [, b]) => b - a)[0]?.[1] || 0} courses</p>
           </CardContent>
         </Card>
 
@@ -97,9 +93,7 @@ export function CoursesOverviewContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold capitalize">{state.syncStatus}</div>
-            <p className="text-xs text-muted-foreground">
-              {state.lastSyncTime ? `Last: ${state.lastSyncTime.toLocaleTimeString()}` : 'Never synced'}
-            </p>
+            <p className="text-xs text-muted-foreground">{state.lastSyncTime ? `Last: ${state.lastSyncTime.toLocaleTimeString()}` : 'Never synced'}</p>
           </CardContent>
         </Card>
 
@@ -110,9 +104,7 @@ export function CoursesOverviewContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{state.pendingChanges.size}</div>
-            <p className="text-xs text-muted-foreground">
-              Waiting to sync
-            </p>
+            <p className="text-xs text-muted-foreground">Waiting to sync</p>
           </CardContent>
         </Card>
       </div>
@@ -163,18 +155,10 @@ export function CoursesOverviewContent() {
             <div className="space-y-3">
               {courses.slice(0, 5).map((course) => (
                 <div key={course.id} className="flex items-start gap-3 p-3 border rounded-lg">
-                  {course.image && (
-                    <img
-                      src={course.image}
-                      alt={course.title}
-                      className="h-12 w-12 rounded object-cover"
-                    />
-                  )}
+                  {course.image && <img src={course.image} alt={course.title} className="h-12 w-12 rounded object-cover" />}
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium truncate">{course.title}</h4>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {course.description}
-                    </p>
+                    <p className="text-sm text-muted-foreground truncate">{course.description}</p>
                     <div className="flex gap-2 mt-2">
                       <Badge variant="outline" className="text-xs">
                         {course.area}

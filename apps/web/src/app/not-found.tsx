@@ -1,9 +1,9 @@
 import React from 'react';
 import { NotFound } from '@/components/errors/not-found';
 
-export default function Page(): React.JSX.Element {
+export default async function Page(): Promise<React.JSX.Element> {
   return (
-    // root not-found must include html and body tags.
+    // root not-found must include HTML and body tags.
     <html lang="en">
       <body>
         <NotFound />

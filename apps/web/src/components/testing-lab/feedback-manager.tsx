@@ -205,14 +205,15 @@ export function FeedbackManager() {
   const filteredFeedback = feedback.filter((f) => {
     // Filter by status
     const statusMatch = statusFilter.length === 0 || statusFilter.includes(f.reviewStatus);
-    
+
     // Filter by search term
-    const searchMatch = !searchTerm || 
+    const searchMatch =
+      !searchTerm ||
       f.testingRequest.projectVersion.project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       f.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       f.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       f.testingRequest.title.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     return statusMatch && searchMatch;
   });
 
