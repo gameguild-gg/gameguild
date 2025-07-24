@@ -15,13 +15,10 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
     // Get connection string from environment variable
     var connectionString =
       Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
-      "Data Source=app.db"; // Fallback to SQLite for design-time
+      "Host=localhost;Port=5432;Database=gameguild;Username=postgres;Password=postgres123"; // Default to PostgreSQL
 
-    // Configure database provider based on connection string
-    if (connectionString.Contains("Data Source=") || connectionString.Contains("DataSource="))
-      optionsBuilder.UseSqlite(connectionString);
-    else
-      optionsBuilder.UseNpgsql(connectionString);
+    // Always use PostgreSQL for migrations
+    optionsBuilder.UseNpgsql(connectionString);
 
     return new ApplicationDbContext(optionsBuilder.Options);
   }
