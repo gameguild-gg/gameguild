@@ -1,4 +1,6 @@
-export default function TestingLabSettingsPage() {
+import React from 'react';
+
+export default function Page(): React.JSX.Element {
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">

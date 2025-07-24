@@ -53,8 +53,11 @@ class ApiClient {
       console.error('🌐 [API CLIENT] Request error:', {
         url,
         error: error instanceof Error ? error.message : 'Unknown error',
+        errorType: error?.constructor?.name || 'Unknown',
         cause: (error as any)?.cause,
         stack: error instanceof Error ? error.stack : undefined,
+        baseUrl: this.baseUrl,
+        endpoint,
       });
       throw error;
     }

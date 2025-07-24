@@ -2,8 +2,7 @@
 
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { AlertCircle, ArrowRight, ChevronLeft, ChevronRight, Copy, Download, ExternalLink, Eye, ImageIcon, LayoutGrid, Mail, RotateCcw } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Eye, ImageIcon, LayoutGrid, RotateCcw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { SerializedEditorState } from 'lexical';
 import type { SerializedQuizNode } from '../nodes/quiz-node';
@@ -13,34 +12,13 @@ import type { SerializedHTMLNode } from '../nodes/html-node';
 import type { SerializedVideoNode } from '../nodes/video-node';
 import type { SerializedAudioNode } from '../nodes/audio-node';
 import DOMPurify from 'dompurify';
-
-import { useCallback, useRef, useState, useEffect } from "react"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import {
-  ExternalLink,
-  ImageIcon,
-  LayoutGrid,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  AlertCircle,
-  RotateCcw,
-} from "lucide-react"
-import ReactMarkdown from "react-markdown"
-import type { SerializedEditorState } from "lexical"
-import type { SerializedQuizNode } from "../nodes/quiz-node"
-import type { SerializedImageNode } from "../nodes/image-node"
-import type { SerializedMarkdownNode } from "../nodes/markdown-node"
-import type { SerializedHTMLNode } from "../nodes/html-node"
-import type { SerializedVideoNode } from "../nodes/video-node"
-import type { SerializedAudioNode } from "../nodes/audio-node"
-import DOMPurify from "dompurify"
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 
 // Adicione o import para o SerializedHeaderNode
-import type { SerializedHeaderNode } from "../nodes/header-node"
-import type { SerializedDividerNode } from "../nodes/divider-node"
+import type { SerializedHeaderNode } from '../nodes/header-node';
+import type { SerializedDividerNode } from '../nodes/divider-node';
 
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils';
 
 // Add the import for SerializedGalleryNode
 import type { SerializedGalleryNode } from '../nodes/gallery-node';
@@ -66,8 +44,8 @@ import { QuizDisplay } from '../ui/quiz/quiz-display';
 // Import the SourceCodeCore at the top with other imports
 import { SourceCodeCore } from '../nodes/source-code-core';
 
-import { PreviewCallout } from "./preview-components/preview-callout"
-import { PreviewButton } from "./preview-components/preview-button"
+import { PreviewCallout } from './preview-components/preview-callout';
+import { PreviewButton } from './preview-components/preview-button';
 
 // Função para detectar e extrair IDs de vídeos de diferentes plataformas
 function getVideoEmbedInfo(url: string): { type: string; id: string } | null {

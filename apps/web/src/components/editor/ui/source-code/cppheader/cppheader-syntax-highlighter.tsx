@@ -180,14 +180,14 @@ export function CppHeaderSyntaxHighlighter({ monaco, editor }: CppHeaderSyntaxHi
             ],
 
             // Preprocessor directives
-            [ /^\s*#\s*\w+/, 'keyword.directive' ],
+            [/^\s*#\s*\w+/, 'keyword.directive'],
 
             // Whitespace
             { include: '@whitespace' },
 
             // Delimiters and operators
-            [ /[{}()[\]]/, '@brackets' ],
-            [ /[<>](?!@symbols)/, '@brackets' ],
+            [/[{}()[\]]/, '@brackets'],
+            [/[<>](?!@symbols)/, '@brackets'],
             [
               /@symbols/,
               {
@@ -199,35 +199,35 @@ export function CppHeaderSyntaxHighlighter({ monaco, editor }: CppHeaderSyntaxHi
             ],
 
             // Numbers
-            [ /\d*\.\d+([eE][-+]?\d+)?/, 'number.float' ],
-            [ /0[xX][0-9a-fA-F]+/, 'number.hex' ],
-            [ /\d+/, 'number' ],
+            [/\d*\.\d+([eE][-+]?\d+)?/, 'number.float'],
+            [/0[xX][0-9a-fA-F]+/, 'number.hex'],
+            [/\d+/, 'number'],
 
             // Delimiter: after number because of .\d floats
-            [ /[;,.]/, 'delimiter' ],
+            [/[;,.]/, 'delimiter'],
 
             // Strings
-            [ /"([^"\\]|\\.)*$/, 'string.invalid' ], // non-terminated string
-            [ /"/, { token: 'string.quote', bracket: '@open', next: '@string' } ],
+            [/"([^"\\]|\\.)*$/, 'string.invalid'], // non-terminated string
+            [/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
 
             // Characters
-            [ /'[^\\']'/, 'string' ],
-            [ /(')(@escapes)(')/, [ 'string', 'string.escape', 'string' ] ],
-            [ /'/, 'string.invalid' ],
+            [/'[^\\']'/, 'string'],
+            [/(')(@escapes)(')/, ['string', 'string.escape', 'string']],
+            [/'/, 'string.invalid'],
           ],
 
           comment: [
-            [ /[^/*]+/, 'comment' ],
-            [ /\/\*/, 'comment', '@push' ], // nested comment
-            [ '\\*/', 'comment', '@pop' ],
-            [ /[/*]/, 'comment' ],
+            [/[^/*]+/, 'comment'],
+            [/\/\*/, 'comment', '@push'], // nested comment
+            ['\\*/', 'comment', '@pop'],
+            [/[/*]/, 'comment'],
           ],
 
           string: [
-            [ /[^\\"]+/, 'string' ],
-            [ /@escapes/, 'string.escape' ],
-            [ /\\./, 'string.escape.invalid' ],
-            [ /"/, { token: 'string.quote', bracket: '@close', next: '@pop' } ],
+            [/[^\\"]+/, 'string'],
+            [/@escapes/, 'string.escape'],
+            [/\\./, 'string.escape.invalid'],
+            [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }],
           ],
 
           whitespace: [
@@ -248,7 +248,7 @@ export function CppHeaderSyntaxHighlighter({ monaco, editor }: CppHeaderSyntaxHi
     return () => {
       // Cleanup if needed
     };
-  }, [ monaco, editor ]);
+  }, [monaco, editor]);
 
   return null;
 }

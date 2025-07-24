@@ -65,7 +65,7 @@ function App() {
 ### Functional Component Error Handling
 
 ```tsx
-import { useAsyncError, useErrorBoundary } from '@/hooks/useErrorBoundary';
+import { useErrorBoundary, useAsyncError } from '@/hooks/useErrorBoundary';
 
 function MyComponent() {
   const { captureError } = useErrorBoundary();
@@ -89,8 +89,8 @@ function MyComponent() {
 
   return (
     <div>
-      <button onClick={ handleClick }>Trigger Error</button>
-      <button onClick={ handleAsyncOperation }>Async Operation</button>
+      <button onClick={handleClick}>Trigger Error</button>
+      <button onClick={handleAsyncOperation}>Async Operation</button>
     </div>
   );
 }
