@@ -14,7 +14,7 @@ export default function GlobalError({ error, reset }: ErrorProps): React.JSX.Ele
   }, [error]);
 
   return (
-    // global-error must include html and body tags.
+    // global-error must include HTML and body tags.
     <html lang="en">
       <body>
         <div>

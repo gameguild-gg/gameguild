@@ -9,10 +9,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   BarChart3,
   Calendar,
@@ -296,45 +310,45 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
   const getStatusColor = (status: string | null | undefined) => {
     switch (status) {
       case 'scheduled':
-        return 'bg-blue-900/30 text-blue-300 border-blue-500/30';
+        return 'border-blue-500/20 text-blue-600 bg-blue-50 dark:bg-blue-950/20 dark:text-blue-400';
       case 'active':
-        return 'bg-green-900/30 text-green-300 border-green-500/30';
+        return 'border-green-500/20 text-green-600 bg-green-50 dark:bg-green-950/20 dark:text-green-400';
       case 'completed':
-        return 'bg-gray-900/30 text-gray-300 border-gray-500/30';
+        return 'border-gray-500/20 text-gray-600 bg-gray-50 dark:bg-gray-950/20 dark:text-gray-400';
       case 'cancelled':
-        return 'bg-red-900/30 text-red-300 border-red-500/30';
+        return 'border-red-500/20 text-red-600 bg-red-50 dark:bg-red-950/20 dark:text-red-400';
       default:
-        return 'bg-gray-900/30 text-gray-300 border-gray-500/30';
+        return 'border-gray-500/20 text-gray-600 bg-gray-50 dark:bg-gray-950/20 dark:text-gray-400';
     }
   };
 
   const getRegistrationTypeColor = (type: string) => {
     switch (type) {
       case 'tester':
-        return 'bg-green-900/30 text-green-300 border-green-500/30';
+        return 'border-green-500/20 text-green-600 bg-green-50 dark:bg-green-950/20 dark:text-green-400';
       case 'developer':
-        return 'bg-blue-900/30 text-blue-300 border-blue-500/30';
+        return 'border-blue-500/20 text-blue-600 bg-blue-50 dark:bg-blue-950/20 dark:text-blue-400';
       case 'observer':
-        return 'bg-purple-900/30 text-purple-300 border-purple-500/30';
+        return 'border-purple-500/20 text-purple-600 bg-purple-50 dark:bg-purple-950/20 dark:text-purple-400';
       default:
-        return 'bg-gray-900/30 text-gray-300 border-gray-500/30';
+        return 'border-gray-500/20 text-gray-600 bg-gray-50 dark:bg-gray-950/20 dark:text-gray-400';
     }
   };
 
   const getRegistrationStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return 'bg-green-900/30 text-green-300 border-green-500/30';
+        return 'border-green-500/20 text-green-600 bg-green-50 dark:bg-green-950/20 dark:text-green-400';
       case 'pending':
-        return 'bg-yellow-900/30 text-yellow-300 border-yellow-500/30';
+        return 'border-yellow-500/20 text-yellow-600 bg-yellow-50 dark:bg-yellow-950/20 dark:text-yellow-400';
       case 'cancelled':
-        return 'bg-red-900/30 text-red-300 border-red-500/30';
+        return 'border-red-500/20 text-red-600 bg-red-50 dark:bg-red-950/20 dark:text-red-400';
       case 'attended':
-        return 'bg-emerald-900/30 text-emerald-300 border-emerald-500/30';
+        return 'border-emerald-500/20 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 dark:text-emerald-400';
       case 'no-show':
-        return 'bg-orange-900/30 text-orange-300 border-orange-500/30';
+        return 'border-orange-500/20 text-orange-600 bg-orange-50 dark:bg-orange-950/20 dark:text-orange-400';
       default:
-        return 'bg-gray-900/30 text-gray-300 border-gray-500/30';
+        return 'border-gray-500/20 text-gray-600 bg-gray-50 dark:bg-gray-950/20 dark:text-gray-400';
     }
   };
 
@@ -537,81 +551,82 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
 
           {/* Sessions Display */}
           {filteredSessions.length === 0 ? (
-            <Card className="bg-slate-800/50 border-slate-600/70 backdrop-blur-sm shadow-lg">
+            <Card>
               <CardContent className="p-12 text-center">
-                <Calendar className="h-12 w-12 text-slate-500 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-slate-300 mb-2">No sessions found</h3>
-                <p className="text-slate-500">
+                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4"/>
+                <h3 className="text-xl font-semibold mb-2">No sessions found</h3>
+                <p className="text-muted-foreground">
                   {searchTerm || statusFilter.length > 0 ? 'Try adjusting your search or filters' : 'No testing sessions have been scheduled yet'}
                 </p>
               </CardContent>
             </Card>
           ) : viewMode === 'table' ? (
-            <Card className="bg-slate-800/50 border-slate-600/70 backdrop-blur-sm shadow-lg">
-              <div className="overflow-hidden rounded-lg border border-slate-600/50">
+            <Card>
+              <div className="rounded-md border">
                 <Table>
-                  <TableHeader className="bg-slate-800/50">
-                    <TableRow className="border-slate-700">
-                      <TableHead className="text-slate-300">Session</TableHead>
-                      <TableHead className="text-slate-300">Date</TableHead>
-                      <TableHead className="text-slate-300">Time</TableHead>
-                      <TableHead className="text-slate-300">Location</TableHead>
-                      <TableHead className="text-slate-300">Status</TableHead>
-                      <TableHead className="text-slate-300">Participants</TableHead>
-                      <TableHead className="text-slate-300">Manager</TableHead>
-                      <TableHead className="text-slate-300">Actions</TableHead>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Session</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Participants</TableHead>
+                      <TableHead>Manager</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredSessions.map((session) => (
-                      <TableRow key={session.id} className="border-slate-700 hover:bg-slate-800/30">
-                        <TableCell className="font-medium text-white">
+                      <TableRow key={ session.id }>
+                        <TableCell className="font-medium">
                           <div>
                             <div className="font-semibold">{session.sessionName}</div>
-                            <div className="text-sm text-slate-400">
+                            <div className="text-sm text-muted-foreground">
                               {session.testingRequests?.length || 0} project{(session.testingRequests?.length || 0) !== 1 ? 's' : ''}
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-white">
+                        <TableCell>
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-blue-400" />
+                            <Calendar className="h-4 w-4 text-muted-foreground"/>
                             <span>{formatDate(session.sessionDate)}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-white">
+                        <TableCell>
                           <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-purple-400" />
+                            <Clock className="h-4 w-4 text-muted-foreground"/>
                             <span>
                               {formatTime(session.startTime)} - {formatTime(session.endTime)}
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-white">
+                        <TableCell>
                           <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-green-400" />
+                            <MapPin className="h-4 w-4 text-muted-foreground"/>
                             <div>
                               <div className="font-medium">{session.location?.name || 'Unknown Location'}</div>
-                              <div className="text-xs text-slate-400">Capacity: {session.location?.capacity || 0}</div>
+                              <div
+                                className="text-xs text-muted-foreground">Capacity: { session.location?.capacity || 0 }</div>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-white">
+                        <TableCell>
                           <Badge variant="outline" className={getStatusColor(session.status)}>
                             {session.status ? session.status.charAt(0).toUpperCase() + session.status.slice(1) : 'Unknown'}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-white">
+                        <TableCell>
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <Users className="h-4 w-4 text-orange-400" />
+                              <Users className="h-4 w-4 text-muted-foreground"/>
                               <span className="font-medium">
                                 {session.registeredTesterCount}/{session.maxTesters}
                               </span>
                             </div>
-                            <div className="w-16 bg-slate-700 rounded-full h-1">
+                            <div className="w-16 bg-muted rounded-full h-1">
                               <div
-                                className={`h-1 rounded-full ${isSessionFull(session) ? 'bg-red-500' : 'bg-gradient-to-r from-blue-500 to-purple-500'}`}
+                                className={ `h-1 rounded-full ${ isSessionFull(session) ? 'bg-destructive' : 'bg-primary' }` }
                                 style={{
                                   width: `${Math.min(getSessionProgress(session), 100)}%`,
                                 }}
@@ -619,13 +634,14 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-white">
+                        <TableCell>
                           <div>
                             <div className="font-medium">{session.manager?.name || 'Unknown Manager'}</div>
-                            <div className="text-xs text-slate-400">{session.manager?.email || 'No email'}</div>
+                            <div
+                              className="text-xs text-muted-foreground">{ session.manager?.email || 'No email' }</div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-white">
+                        <TableCell>
                           <div className="flex gap-2">
                             <Button
                               variant="outline"
@@ -635,7 +651,6 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                                 setShowDetailDialog(true);
                                 fetchSessionRegistrations();
                               }}
-                              className="border-slate-600 bg-slate-700/50 text-slate-200 hover:bg-slate-600/50"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -646,7 +661,6 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                                 onClick={() => {
                                   console.log('Edit session:', session.id);
                                 }}
-                                className="border-slate-600 bg-slate-700/50 text-slate-200 hover:bg-slate-600/50"
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -704,7 +718,6 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
           )}
         </div>
       </div>
-    </div>
   );
 }
 
@@ -738,34 +751,34 @@ function SessionCard({
 }: SessionCardProps) {
   if (viewMode === 'list') {
     return (
-      <Card className="bg-gradient-to-r from-slate-800/50 to-slate-700/30 border-slate-600/70 backdrop-blur-sm hover:bg-slate-700/50 transition-all duration-300 shadow-lg hover:shadow-xl hover:border-slate-500/80">
+      <Card className="hover:bg-muted/50 transition-all duration-300">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6 flex-1">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                  <Calendar className="h-6 w-6 text-white" />
+                <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center">
+                  <Calendar className="h-6 w-6 text-primary-foreground"/>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">{session.sessionName}</h3>
-                  <p className="text-slate-400 text-sm">{session.manager?.name || 'Unknown Manager'}</p>
+                  <h3 className="text-lg font-semibold">{ session.sessionName }</h3>
+                  <p className="text-muted-foreground text-sm">{ session.manager?.name || 'Unknown Manager' }</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-6 text-sm">
-                <div className="flex items-center gap-2 text-slate-300">
+                <div className="flex items-center gap-2">
                   <CalendarDays className="h-4 w-4" />
                   {formatDate(session.sessionDate)}
                 </div>
-                <div className="flex items-center gap-2 text-slate-300">
+                <div className="flex items-center gap-2">
                   <Timer className="h-4 w-4" />
                   {formatTime(session.startTime)} - {formatTime(session.endTime)}
                 </div>
-                <div className="flex items-center gap-2 text-slate-300">
+                <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   {session.location?.name || 'Unknown Location'}
                 </div>
-                <div className="flex items-center gap-2 text-slate-300">
+                <div className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   {session.registeredTesterCount}/{session.maxTesters}
                 </div>
@@ -783,7 +796,7 @@ function SessionCard({
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
+                <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => onViewDetails(session)}>
                     <Eye className="h-4 w-4 mr-2" />
                     View Details
@@ -811,16 +824,18 @@ function SessionCard({
   }
 
   return (
-    <Card className="bg-gradient-to-br from-slate-800/50 to-slate-700/30 border-slate-600/70 backdrop-blur-sm hover:scale-[1.02] transition-all duration-300 group shadow-lg hover:shadow-xl hover:border-slate-500/80">
+    <Card className="hover:shadow-md transition-all duration-300 group">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Calendar className="h-5 w-5 text-white" />
+            <div
+              className="h-10 w-10 bg-primary rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Calendar className="h-5 w-5 text-primary-foreground"/>
             </div>
             <div>
-              <CardTitle className="text-white text-lg leading-tight">{session.sessionName}</CardTitle>
-              <CardDescription className="text-slate-400 text-sm">Managed by {session.manager?.name || 'Unknown Manager'}</CardDescription>
+              <CardTitle className="text-lg leading-tight">{ session.sessionName }</CardTitle>
+              <CardDescription className="text-sm">Managed
+                by { session.manager?.name || 'Unknown Manager' }</CardDescription>
             </div>
           </div>
 
@@ -830,7 +845,7 @@ function SessionCard({
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
+            <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onViewDetails(session)}>
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
@@ -856,59 +871,59 @@ function SessionCard({
       <CardContent className="space-y-4">
         {/* Session Info */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-slate-300 text-sm">
-            <CalendarDays className="h-4 w-4 text-blue-400" />
+          <div className="flex items-center gap-2 text-sm">
+            <CalendarDays className="h-4 w-4 text-muted-foreground"/>
             <span>{formatDate(session.sessionDate)}</span>
             <Badge variant="outline" className={getStatusColor(session.status)}>
               {session.status || 'Unknown'}
             </Badge>
           </div>
 
-          <div className="flex items-center gap-2 text-slate-300 text-sm">
-            <Timer className="h-4 w-4 text-purple-400" />
+          <div className="flex items-center gap-2 text-sm">
+            <Timer className="h-4 w-4 text-muted-foreground"/>
             <span>
               {formatTime(session.startTime)} - {formatTime(session.endTime)}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-slate-300 text-sm">
-            <MapPin className="h-4 w-4 text-green-400" />
+          <div className="flex items-center gap-2 text-sm">
+            <MapPin className="h-4 w-4 text-muted-foreground"/>
             <span>{session.location?.name || 'Unknown Location'}</span>
-            <span className="text-slate-500">({session.location?.capacity || 0} capacity)</span>
+            <span className="text-muted-foreground">({ session.location?.capacity || 0 } capacity)</span>
           </div>
         </div>
 
         {/* Registration Progress */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-300">Registration</span>
-            <span className="text-slate-400">
+            <span>Registration</span>
+            <span className="text-muted-foreground">
               {session.registeredTesterCount}/{session.maxTesters}
             </span>
           </div>
-          <div className="w-full bg-slate-700 rounded-full h-2">
+          <div className="w-full bg-muted rounded-full h-2">
             <div
               className={`h-2 rounded-full ${
-                isSessionFull(session) ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-blue-500 to-purple-500'
+                isSessionFull(session) ? 'bg-destructive' : 'bg-primary'
               }`}
               style={{ width: `${getSessionProgress(session)}%` }}
             />
           </div>
-          {isSessionFull(session) && <p className="text-xs text-red-400">Session is full</p>}
+          { isSessionFull(session) && <p className="text-xs text-destructive">Session is full</p> }
         </div>
 
         {/* Testing Requests */}
         {(session.testingRequests?.length || 0) > 0 && (
           <div className="space-y-2">
-            <p className="text-sm text-slate-300 font-medium">Testing Projects:</p>
+            <p className="text-sm font-medium">Testing Projects:</p>
             <div className="flex flex-wrap gap-1">
               {session.testingRequests?.slice(0, 2).map((request) => (
-                <Badge key={request.id} variant="outline" className="text-xs text-slate-300 border-slate-600">
+                <Badge key={ request.id } variant="secondary" className="text-xs">
                   {request.title}
                 </Badge>
               )) || []}
               {(session.testingRequests?.length || 0) > 2 && (
-                <Badge variant="outline" className="text-xs text-slate-400 border-slate-600">
+                <Badge variant="secondary" className="text-xs">
                   +{(session.testingRequests?.length || 0) - 2} more
                 </Badge>
               )}
@@ -921,14 +936,14 @@ function SessionCard({
           <Button
             size="sm"
             onClick={() => onViewDetails(session)}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0"
+            className="flex-1"
           >
             <Eye className="h-4 w-4 mr-2" />
             View Details
           </Button>
 
           {userRole.isStudent && isUpcoming(session) && !isSessionFull(session) && (
-            <Button size="sm" variant="outline" className="border-green-500/30 text-green-400 hover:bg-green-500/10">
+            <Button size="sm" variant="outline">
               Join
             </Button>
           )}
@@ -936,7 +951,7 @@ function SessionCard({
 
         {/* Additional Info */}
         {session.attendanceRate && (
-          <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-700">
+          <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
             <span>Avg Attendance: {session.attendanceRate}%</span>
             {session.averageRating && <span>Rating: {session.averageRating}/5</span>}
           </div>
@@ -1056,38 +1071,43 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
   };
 
   return (
-    <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle className="text-xl">Schedule New Testing Session</DialogTitle>
-        <DialogDescription className="text-slate-400">Create a new testing session for students to participate in game testing</DialogDescription>
-      </DialogHeader>
+    <Dialog open={ true } onOpenChange={ onClose }>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl">Schedule New Testing Session</DialogTitle>
+          <DialogDescription>Create a new testing session for students to participate in game
+            testing</DialogDescription>
+        </DialogHeader>
 
-      {errors.general && <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-300 text-sm">{errors.general}</div>}
-
-      <div className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="sessionName" className="text-slate-300">
-              Session Name <span className="text-red-400">*</span>
-            </Label>
-            <Input
-              id="sessionName"
-              placeholder="e.g., Block 3 Final Testing"
-              className="bg-slate-700/50 border-slate-600 text-white"
-              value={formData.sessionName}
-              onChange={(e) => setFormData({ ...formData, sessionName: e.target.value })}
-            />
-            {errors.sessionName && <p className="text-red-400 text-sm">{errors.sessionName}</p>}
+        { errors.general && (
+          <div className="bg-destructive/15 border border-destructive/50 rounded-lg p-3 text-destructive text-sm">
+            { errors.general }
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="testingRequest" className="text-slate-300">
-              Testing Request <span className="text-red-400">*</span>
-            </Label>
+        ) }
+
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="sessionName">
+                Session Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="sessionName"
+                placeholder="e.g., Block 3 Final Testing"
+                value={ formData.sessionName }
+                onChange={ (e) => setFormData({ ...formData, sessionName: e.target.value }) }
+              />
+              { errors.sessionName && <p className="text-destructive text-sm">{ errors.sessionName }</p> }
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="testingRequest">
+                Testing Request <span className="text-destructive">*</span>
+              </Label>
             <Select value={formData.testingRequestId} onValueChange={(value) => setFormData({ ...formData, testingRequestId: value })}>
-              <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+              <SelectTrigger>
                 <SelectValue placeholder="Select testing request" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
+              <SelectContent>
                 {testingRequests.length > 0 ? (
                   testingRequests.map((request) => (
                     <SelectItem key={request.id || `request-${Math.random()}`} value={request.id || ''}>
@@ -1101,19 +1121,17 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
                 )}
               </SelectContent>
             </Select>
-            {errors.testingRequestId && <p className="text-red-400 text-sm">{errors.testingRequestId}</p>}
+              { errors.testingRequestId && <p className="text-destructive text-sm">{ errors.testingRequestId }</p> }
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="location" className="text-slate-300">
-            Location
-          </Label>
+          <Label htmlFor="location">Location</Label>
           <Select value={formData.locationId} onValueChange={(value) => setFormData({ ...formData, locationId: value })}>
-            <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+            <SelectTrigger>
               <SelectValue placeholder="Select room" />
             </SelectTrigger>
-            <SelectContent className="bg-slate-800 border-slate-700">
+            <SelectContent>
               <SelectItem value="room-a204">Room A-204 (40 capacity)</SelectItem>
               <SelectItem value="room-b105">Room B-105 (32 capacity)</SelectItem>
               <SelectItem value="room-c301">Room C-301 (25 capacity)</SelectItem>
@@ -1124,54 +1142,48 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
 
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="sessionDate" className="text-slate-300">
-              Date <span className="text-red-400">*</span>
+            <Label htmlFor="sessionDate">
+              Date <span className="text-destructive">*</span>
             </Label>
             <Input
               id="sessionDate"
               type="date"
-              className="bg-slate-700/50 border-slate-600 text-white"
               value={formData.sessionDate}
               onChange={(e) => setFormData({ ...formData, sessionDate: e.target.value })}
             />
-            {errors.sessionDate && <p className="text-red-400 text-sm">{errors.sessionDate}</p>}
+            { errors.sessionDate && <p className="text-destructive text-sm">{ errors.sessionDate }</p> }
           </div>
           <div className="space-y-2">
-            <Label htmlFor="startTime" className="text-slate-300">
-              Start Time <span className="text-red-400">*</span>
+            <Label htmlFor="startTime">
+              Start Time <span className="text-destructive">*</span>
             </Label>
             <Input
               id="startTime"
               type="time"
-              className="bg-slate-700/50 border-slate-600 text-white"
               value={formData.startTime}
               onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
             />
-            {errors.startTime && <p className="text-red-400 text-sm">{errors.startTime}</p>}
+            { errors.startTime && <p className="text-destructive text-sm">{ errors.startTime }</p> }
           </div>
           <div className="space-y-2">
-            <Label htmlFor="endTime" className="text-slate-300">
-              End Time <span className="text-red-400">*</span>
+            <Label htmlFor="endTime">
+              End Time <span className="text-destructive">*</span>
             </Label>
             <Input
               id="endTime"
               type="time"
-              className="bg-slate-700/50 border-slate-600 text-white"
               value={formData.endTime}
               onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
             />
-            {errors.endTime && <p className="text-red-400 text-sm">{errors.endTime}</p>}
+            { errors.endTime && <p className="text-destructive text-sm">{ errors.endTime }</p> }
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description" className="text-slate-300">
-            Description
-          </Label>
+          <Label htmlFor="description">Description</Label>
           <Textarea
             id="description"
             placeholder="Provide details about this testing session..."
-            className="bg-slate-700/50 border-slate-600 text-white"
             rows={3}
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -1180,14 +1192,14 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="maxTesters" className="text-slate-300">
-              Maximum Testers <span className="text-red-400">*</span>
+            <Label htmlFor="maxTesters">
+              Maximum Testers <span className="text-destructive">*</span>
             </Label>
             <Select value={formData.maxTesters} onValueChange={(value) => setFormData({ ...formData, maxTesters: value })}>
-              <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+              <SelectTrigger>
                 <SelectValue placeholder="Select capacity" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
+              <SelectContent>
                 <SelectItem value="15">15 testers</SelectItem>
                 <SelectItem value="20">20 testers</SelectItem>
                 <SelectItem value="25">25 testers</SelectItem>
@@ -1196,17 +1208,15 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
                 <SelectItem value="50">50 testers (online)</SelectItem>
               </SelectContent>
             </Select>
-            {errors.maxTesters && <p className="text-red-400 text-sm">{errors.maxTesters}</p>}
+            { errors.maxTesters && <p className="text-destructive text-sm">{ errors.maxTesters }</p> }
           </div>
           <div className="space-y-2">
-            <Label htmlFor="sessionType" className="text-slate-300">
-              Session Type
-            </Label>
+            <Label htmlFor="sessionType">Session Type</Label>
             <Select value={formData.sessionType} onValueChange={(value) => setFormData({ ...formData, sessionType: value })}>
-              <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+              <SelectTrigger>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
+              <SelectContent>
                 <SelectItem value="regular">Regular Testing</SelectItem>
                 <SelectItem value="final">Final Presentation</SelectItem>
                 <SelectItem value="midterm">Midterm Review</SelectItem>
@@ -1215,29 +1225,24 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
             </Select>
           </div>
         </div>
-      </div>
 
-      <DialogFooter className="gap-2">
-        <Button type="button" variant="outline" onClick={onClose} className="border-slate-600" disabled={isSubmitting}>
-          Cancel
-        </Button>
-        <Button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-        >
-          {isSubmitting ? (
-            <>
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              Creating...
-            </>
-          ) : (
-            'Schedule Session'
-          )}
-        </Button>
-      </DialogFooter>
-    </DialogContent>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={ onClose } disabled={ isSubmitting }>
+              Cancel
+            </Button>
+            <Button type="button" onClick={ handleSubmit } disabled={ isSubmitting }>
+              { isSubmitting ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin"/>
+                  Creating...
+                </>
+              ) : (
+                'Schedule Session'
+              ) }
+            </Button>
+          </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1263,19 +1268,19 @@ function SessionDetailDialog({
 }: SessionDetailDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl flex items-center gap-3">
-            <Calendar className="h-6 w-6 text-blue-400" />
+            <Calendar className="h-6 w-6 text-primary"/>
             {session.sessionName}
           </DialogTitle>
-          <DialogDescription className="text-slate-400 text-base">
+          <DialogDescription className="text-base">
             {session.description || 'Detailed view of testing session participants and metrics'}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-slate-700/50">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="participants">Participants</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
@@ -1285,50 +1290,50 @@ function SessionDetailDialog({
           <TabsContent value="overview" className="space-y-6 mt-6">
             {/* Session Info Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="bg-slate-700/30 border-slate-600">
+              <Card>
                 <CardContent className="p-4 text-center">
-                  <Users className="h-8 w-8 text-blue-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-white">{session.registeredTesterCount}</div>
-                  <div className="text-sm text-slate-400">Testers</div>
+                  <Users className="h-8 w-8 text-primary mx-auto mb-2"/>
+                  <div className="text-2xl font-bold">{ session.registeredTesterCount }</div>
+                  <div className="text-sm text-muted-foreground">Testers</div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-700/30 border-slate-600">
+              <Card>
                 <CardContent className="p-4 text-center">
-                  <Gamepad2 className="h-8 w-8 text-green-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-white">{session.registeredProjectMemberCount}</div>
-                  <div className="text-sm text-slate-400">Developers</div>
+                  <Gamepad2 className="h-8 w-8 text-primary mx-auto mb-2"/>
+                  <div className="text-2xl font-bold">{ session.registeredProjectMemberCount }</div>
+                  <div className="text-sm text-muted-foreground">Developers</div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-700/30 border-slate-600">
+              <Card>
                 <CardContent className="p-4 text-center">
-                  <BarChart3 className="h-8 w-8 text-purple-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-white">{session.testingRequests?.length || 0}</div>
-                  <div className="text-sm text-slate-400">Projects</div>
+                  <BarChart3 className="h-8 w-8 text-primary mx-auto mb-2"/>
+                  <div className="text-2xl font-bold">{ session.testingRequests?.length || 0 }</div>
+                  <div className="text-sm text-muted-foreground">Projects</div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-700/30 border-slate-600">
+              <Card>
                 <CardContent className="p-4 text-center">
-                  <TrendingUp className="h-8 w-8 text-orange-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-white">{session.attendanceRate}%</div>
-                  <div className="text-sm text-slate-400">Expected</div>
+                  <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2"/>
+                  <div className="text-2xl font-bold">{ session.attendanceRate }%</div>
+                  <div className="text-sm text-muted-foreground">Expected</div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Session Details */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-slate-700/30 border-slate-600">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Session Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <CalendarDays className="h-5 w-5 text-blue-400" />
+                    <CalendarDays className="h-5 w-5 text-primary"/>
                     <div>
-                      <p className="text-white font-medium">
+                      <p className="font-medium">
                         {new Date(session.sessionDate).toLocaleDateString('en-US', {
                           weekday: 'long',
                           year: 'numeric',
@@ -1336,45 +1341,45 @@ function SessionDetailDialog({
                           day: 'numeric',
                         })}
                       </p>
-                      <p className="text-slate-400 text-sm">
+                      <p className="text-muted-foreground text-sm">
                         {session.startTime} - {session.endTime}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <MapPin className="h-5 w-5 text-green-400" />
+                    <MapPin className="h-5 w-5 text-primary"/>
                     <div>
-                      <p className="text-white font-medium">{session.location?.name || 'Unknown Location'}</p>
-                      <p className="text-slate-400 text-sm">Capacity: {session.location?.capacity || 0}</p>
+                      <p className="font-medium">{ session.location?.name || 'Unknown Location' }</p>
+                      <p className="text-muted-foreground text-sm">Capacity: { session.location?.capacity || 0 }</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Users className="h-5 w-5 text-purple-400" />
+                    <Users className="h-5 w-5 text-primary"/>
                     <div>
-                      <p className="text-white font-medium">{session.manager?.name || 'Unknown Manager'}</p>
-                      <p className="text-slate-400 text-sm">{session.manager?.email || 'No email'}</p>
+                      <p className="font-medium">{ session.manager?.name || 'Unknown Manager' }</p>
+                      <p className="text-muted-foreground text-sm">{ session.manager?.email || 'No email' }</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-700/30 border-slate-600">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Registration Status</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-300">Capacity</span>
-                      <span className="text-white">
+                      <span>Capacity</span>
+                      <span>
                         {session.registeredTesterCount}/{session.maxTesters}
                       </span>
                     </div>
-                    <div className="w-full bg-slate-600 rounded-full h-2">
+                    <div className="w-full bg-muted rounded-full h-2">
                       <div
-                        className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
+                        className="h-2 rounded-full bg-primary"
                         style={{ width: `${(session.registeredTesterCount / session.maxTesters) * 100}%` }}
                       />
                     </div>
@@ -1382,12 +1387,14 @@ function SessionDetailDialog({
 
                   <div className="pt-2 space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Confirmed</span>
-                      <span className="text-green-400">{registrations.filter((r) => r.status === 'confirmed').length}</span>
+                      <span className="text-muted-foreground">Confirmed</span>
+                      <span
+                        className="text-green-600">{ registrations.filter((r) => r.status === 'confirmed').length }</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Pending</span>
-                      <span className="text-yellow-400">{registrations.filter((r) => r.status === 'pending').length}</span>
+                      <span className="text-muted-foreground">Pending</span>
+                      <span
+                        className="text-yellow-600">{ registrations.filter((r) => r.status === 'pending').length }</span>
                     </div>
                   </div>
                 </CardContent>
@@ -1396,59 +1403,61 @@ function SessionDetailDialog({
           </TabsContent>
 
           <TabsContent value="participants" className="mt-6">
-            <Card className="bg-slate-700/30 border-slate-600">
+            <Card>
               <CardHeader>
                 <CardTitle>Registered Participants</CardTitle>
                 <CardDescription>Manage participant registrations and attendance</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border border-slate-600 rounded-lg overflow-hidden">
+                <div className="rounded-md border">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-slate-600 bg-slate-800/50">
-                        <TableHead className="text-slate-300">Participant</TableHead>
-                        <TableHead className="text-slate-300">Email</TableHead>
-                        <TableHead className="text-slate-300">Role</TableHead>
-                        <TableHead className="text-slate-300">Project</TableHead>
-                        <TableHead className="text-slate-300">Status</TableHead>
-                        <TableHead className="text-slate-300">Registered</TableHead>
-                        {userRole.isProfessor && <TableHead className="text-slate-300">Actions</TableHead>}
+                      <TableRow>
+                        <TableHead>Participant</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Project</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Registered</TableHead>
+                        { userRole.isProfessor && <TableHead>Actions</TableHead> }
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {registrations.map((registration) => (
-                        <TableRow key={registration.id} className="border-slate-600">
+                        <TableRow key={ registration.id }>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-medium">
+                              <div
+                                className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
                                 {registration.user.avatar || registration.user.name.charAt(0)}
                               </div>
-                              <span className="text-white">{registration.user.name}</span>
+                              <span>{ registration.user.name }</span>
                             </div>
                           </TableCell>
-                          <TableCell className="text-slate-300">{registration.user.email}</TableCell>
+                          <TableCell>{ registration.user.email }</TableCell>
                           <TableCell>
                             <Badge variant="outline" className={getRegistrationTypeColor(registration.registrationType)}>
                               {registration.registrationType}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-slate-300">{registration.project?.title || 'N/A'}</TableCell>
+                          <TableCell>{ registration.project?.title || 'N/A' }</TableCell>
                           <TableCell>
                             <Badge variant="outline" className={getRegistrationStatusColor(registration.status)}>
                               {registration.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-slate-400">{new Date(registration.registeredAt).toLocaleDateString()}</TableCell>
+                          <TableCell
+                            className="text-muted-foreground">{ new Date(registration.registeredAt).toLocaleDateString() }</TableCell>
                           {userRole.isProfessor && (
                             <TableCell>
                               <div className="flex gap-1">
                                 {registration.status === 'pending' && (
                                   <>
-                                    <Button size="sm" variant="outline" className="h-8 w-8 p-0 border-green-500/30 hover:bg-green-500/10">
-                                      <CheckCircle className="h-4 w-4 text-green-400" />
+                                    <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                                      <CheckCircle className="h-4 w-4 text-green-500"/>
                                     </Button>
-                                    <Button size="sm" variant="outline" className="h-8 w-8 p-0 border-red-500/30 hover:bg-red-500/10">
-                                      <XCircle className="h-4 w-4 text-red-400" />
+                                    <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                                      <XCircle className="h-4 w-4 text-red-500"/>
                                     </Button>
                                   </>
                                 )}
@@ -1468,7 +1477,7 @@ function SessionDetailDialog({
           </TabsContent>
 
           <TabsContent value="projects" className="mt-6">
-            <Card className="bg-slate-700/30 border-slate-600">
+            <Card>
               <CardHeader>
                 <CardTitle>Testing Projects</CardTitle>
                 <CardDescription>Games and projects being tested in this session</CardDescription>
@@ -1477,20 +1486,20 @@ function SessionDetailDialog({
                 {(session.testingRequests?.length || 0) > 0 ? (
                   <div className="grid gap-4">
                     {session.testingRequests?.map((request) => (
-                      <div key={request.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-600">
+                      <div key={ request.id } className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center gap-4">
-                          <div className="h-12 w-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
-                            <Gamepad2 className="h-6 w-6 text-white" />
+                          <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center">
+                            <Gamepad2 className="h-6 w-6 text-primary-foreground"/>
                           </div>
                           <div>
-                            <h4 className="text-white font-medium">{request.title}</h4>
-                            <p className="text-slate-400 text-sm">
+                            <h4 className="font-medium">{ request.title }</h4>
+                            <p className="text-muted-foreground text-sm">
                               Version {request.projectVersion.versionNumber} • {request.projectVersion.project.title}
                             </p>
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="border-slate-600">
+                          <Button size="sm" variant="outline">
                             <ExternalLink className="h-4 w-4 mr-2" />
                             View Project
                           </Button>
@@ -1500,9 +1509,9 @@ function SessionDetailDialog({
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <Gamepad2 className="h-12 w-12 text-slate-500 mx-auto mb-4" />
-                    <h3 className="text-slate-300 font-medium mb-2">No projects assigned</h3>
-                    <p className="text-slate-500">Projects will be assigned closer to the session date</p>
+                    <Gamepad2 className="h-12 w-12 text-muted-foreground mx-auto mb-4"/>
+                    <h3 className="font-medium mb-2">No projects assigned</h3>
+                    <p className="text-muted-foreground">Projects will be assigned closer to the session date</p>
                   </div>
                 )}
               </CardContent>
@@ -1512,44 +1521,44 @@ function SessionDetailDialog({
           <TabsContent value="analytics" className="mt-6">
             <div className="grid gap-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-slate-700/30 border-slate-600">
+                <Card>
                   <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold text-green-400 mb-2">{session.attendanceRate}%</div>
-                    <div className="text-slate-400">Expected Attendance</div>
+                    <div className="text-3xl font-bold text-green-600 mb-2">{ session.attendanceRate }%</div>
+                    <div className="text-muted-foreground">Expected Attendance</div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-slate-700/30 border-slate-600">
+                <Card>
                   <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold text-blue-400 mb-2">{session.averageRating}/5</div>
-                    <div className="text-slate-400">Avg Session Rating</div>
+                    <div className="text-3xl font-bold text-blue-600 mb-2">{ session.averageRating }/5</div>
+                    <div className="text-muted-foreground">Avg Session Rating</div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-slate-700/30 border-slate-600">
+                <Card>
                   <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold text-purple-400 mb-2">{session.feedbackCount}</div>
-                    <div className="text-slate-400">Feedback Responses</div>
+                    <div className="text-3xl font-bold text-purple-600 mb-2">{ session.feedbackCount }</div>
+                    <div className="text-muted-foreground">Feedback Responses</div>
                   </CardContent>
                 </Card>
               </div>
 
-              <Card className="bg-slate-700/30 border-slate-600">
+              <Card>
                 <CardHeader>
                   <CardTitle>Session Insights</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4 text-slate-300">
+                  <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <TrendingUp className="h-5 w-5 text-green-400" />
+                      <TrendingUp className="h-5 w-5 text-green-500"/>
                       <span>High attendance rate expected based on historical data</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Users className="h-5 w-5 text-blue-400" />
+                      <Users className="h-5 w-5 text-blue-500"/>
                       <span>Optimal tester-to-project ratio achieved</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <BarChart3 className="h-5 w-5 text-purple-400" />
+                      <BarChart3 className="h-5 w-5 text-purple-500"/>
                       <span>Session scheduled during peak availability window</span>
                     </div>
                   </div>
@@ -1560,16 +1569,16 @@ function SessionDetailDialog({
         </Tabs>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="border-slate-600">
+          <Button variant="outline" onClick={ onClose }>
             Close
           </Button>
           {userRole.isProfessor && (
             <>
-              <Button variant="outline" className="border-slate-600">
+              <Button variant="outline">
                 <Download className="h-4 w-4 mr-2" />
                 Export Data
               </Button>
-              <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+              <Button>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Session
               </Button>

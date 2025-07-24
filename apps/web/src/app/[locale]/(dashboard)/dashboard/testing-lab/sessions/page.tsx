@@ -23,7 +23,7 @@ interface SessionsPageProps {
 export default async function TestingSessionsPage({ searchParams }: SessionsPageProps) {
   const params = await searchParams;
   // Future implementation will use searchParams for: page, limit, search
-  
+
   try {
     const session = await auth();
 
@@ -34,7 +34,7 @@ export default async function TestingSessionsPage({ searchParams }: SessionsPage
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Testing Sessions</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">Manage testing sessions, coordinate activities, and track game testing progress.</p>
           </div>
-          
+
           <div className="flex items-center justify-center min-h-64">
             <div className="text-center">
               <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
@@ -47,7 +47,7 @@ export default async function TestingSessionsPage({ searchParams }: SessionsPage
 
     const sessionsData = await getTestingSessionsData();
     const sessions = sessionsData?.testingSessions || [];
-    
+
     // Convert API sessions to component format
     const convertedSessions = sessions.map((session: any) => ({
       ...session,

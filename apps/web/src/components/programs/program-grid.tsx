@@ -22,7 +22,7 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
     if (!duration) return null;
     const hours = Math.floor(duration / 60);
     const minutes = duration % 60;
-    
+
     if (hours > 0) {
       return `${hours}h${minutes > 0 ? ` ${minutes}m` : ''}`;
     }
@@ -81,55 +81,55 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
                 </div>
               </div>
             </CardHeader>
-          
-          <CardContent className="p-3">
-            <CardTitle className="line-clamp-2 text-base font-semibold text-slate-200 group-hover:text-white transition-colors">{program.title}</CardTitle>
-            
-            {program.shortDescription && <p className="mt-1.5 line-clamp-2 text-sm text-slate-400">{program.shortDescription}</p>}
 
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {program.difficulty && (
-                <div className="flex items-center gap-1 text-xs text-slate-400">
-                  <Eye className="h-3 w-3" />
-                  {program.difficulty}
-                </div>
-              )}
-              
-              {formatDuration(program.duration) && (
-                <div className="flex items-center gap-1 text-xs text-slate-400">
-                  <Clock className="h-3 w-3" />
-                  {formatDuration(program.duration)}
-                </div>
-              )}
-              
-              <div className="flex items-center gap-1 text-xs text-slate-400">
-                <DollarSign className="h-3 w-3" />
-                {formatPrice(program.price, program.currency)}
-              </div>
-            </div>
+            <CardContent className="p-3">
+              <CardTitle className="line-clamp-2 text-base font-semibold text-slate-200 group-hover:text-white transition-colors">{program.title}</CardTitle>
 
-            {program.tags && program.tags.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {program.tags.slice(0, 3).map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-                {program.tags.length > 3 && (
-                  <Badge variant="secondary" className="text-xs">
-                    +{program.tags.length - 3}
-                  </Badge>
+              {program.shortDescription && <p className="mt-1.5 line-clamp-2 text-sm text-slate-400">{program.shortDescription}</p>}
+
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {program.difficulty && (
+                  <div className="flex items-center gap-1 text-xs text-slate-400">
+                    <Eye className="h-3 w-3" />
+                    {program.difficulty}
+                  </div>
                 )}
-              </div>
-            )}
-          </CardContent>
 
-          <CardFooter className="px-3 pb-3 pt-0">
-            <div className="flex items-center gap-1 text-xs text-slate-400">
-              <Calendar className="h-3 w-3" />
-              {formatDistanceToNow(parseISO(program.createdAt), { addSuffix: true })}
-            </div>
-          </CardFooter>
+                {formatDuration(program.duration) && (
+                  <div className="flex items-center gap-1 text-xs text-slate-400">
+                    <Clock className="h-3 w-3" />
+                    {formatDuration(program.duration)}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-1 text-xs text-slate-400">
+                  <DollarSign className="h-3 w-3" />
+                  {formatPrice(program.price, program.currency)}
+                </div>
+              </div>
+
+              {program.tags && program.tags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {program.tags.slice(0, 3).map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                  {program.tags.length > 3 && (
+                    <Badge variant="secondary" className="text-xs">
+                      +{program.tags.length - 3}
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </CardContent>
+
+            <CardFooter className="px-3 pb-3 pt-0">
+              <div className="flex items-center gap-1 text-xs text-slate-400">
+                <Calendar className="h-3 w-3" />
+                {formatDistanceToNow(parseISO(program.createdAt), { addSuffix: true })}
+              </div>
+            </CardFooter>
           </Card>
         </Link>
       ))}

@@ -60,13 +60,14 @@ export function TestingSessionsManagement({ initialSessions = [] }: TestingSessi
 
   // Filter sessions based on search and status
   const filteredSessions = sessions.filter((session) => {
-    const matchesSearch = searchTerm === '' || 
+    const matchesSearch =
+      searchTerm === '' ||
       session.sessionName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       session.location?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       session.manager?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -132,9 +133,7 @@ export function TestingSessionsManagement({ initialSessions = [] }: TestingSessi
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-600 dark:text-blue-300 text-sm font-medium">Total Sessions</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {sessions.length}
-                </p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">{sessions.length}</p>
               </div>
               <Calendar className="h-8 w-8 text-blue-500 dark:text-blue-400" />
             </div>
@@ -147,9 +146,7 @@ export function TestingSessionsManagement({ initialSessions = [] }: TestingSessi
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-600 dark:text-green-300 text-sm font-medium">Active Testers</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {sessions.reduce((acc, s) => acc + s.registeredTesterCount, 0)}
-                </p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">{sessions.reduce((acc, s) => acc + s.registeredTesterCount, 0)}</p>
               </div>
               <Users className="h-8 w-8 text-green-500 dark:text-green-400" />
             </div>
@@ -162,9 +159,7 @@ export function TestingSessionsManagement({ initialSessions = [] }: TestingSessi
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-600 dark:text-purple-300 text-sm font-medium">Projects</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {sessions.reduce((acc, s) => acc + (s.registeredProjectCount || 0), 0)}
-                </p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">{sessions.reduce((acc, s) => acc + (s.registeredProjectCount || 0), 0)}</p>
               </div>
               <Gamepad2 className="h-8 w-8 text-purple-500 dark:text-purple-400" />
             </div>
@@ -178,10 +173,7 @@ export function TestingSessionsManagement({ initialSessions = [] }: TestingSessi
               <div>
                 <p className="text-orange-600 dark:text-orange-300 text-sm font-medium">Avg Attendance</p>
                 <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {sessions.length > 0
-                    ? Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length)
-                    : 0}
-                  %
+                  {sessions.length > 0 ? Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length) : 0}%
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-orange-500 dark:text-orange-400" />
@@ -197,9 +189,7 @@ export function TestingSessionsManagement({ initialSessions = [] }: TestingSessi
           <Calendar className="h-6 w-6 text-blue-600" />
           <div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Testing Sessions ({filteredSessions.length})</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Manage testing sessions and track participation
-            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Manage testing sessions and track participation</p>
           </div>
         </div>
 
@@ -242,25 +232,13 @@ export function TestingSessionsManagement({ initialSessions = [] }: TestingSessi
             </div>
 
             <div className="flex gap-2">
-              <Button 
-                variant={viewMode === 'grid' ? 'default' : 'outline'} 
-                size="sm" 
-                onClick={() => setViewMode('grid')}
-              >
+              <Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('grid')}>
                 Grid
               </Button>
-              <Button 
-                variant={viewMode === 'list' ? 'default' : 'outline'} 
-                size="sm" 
-                onClick={() => setViewMode('list')}
-              >
+              <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('list')}>
                 List
               </Button>
-              <Button 
-                variant={viewMode === 'table' ? 'default' : 'outline'} 
-                size="sm" 
-                onClick={() => setViewMode('table')}
-              >
+              <Button variant={viewMode === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('table')}>
                 Table
               </Button>
             </div>

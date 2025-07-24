@@ -26,7 +26,7 @@ export class IndexedDBAdapter extends BaseClientStorageAdapter {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        
+
         if (!db.objectStoreNames.contains(this.storeName)) {
           const store = db.createObjectStore(this.storeName, { keyPath: 'key' });
           store.createIndex('timestamp', 'timestamp', { unique: false });
@@ -181,19 +181,19 @@ export class IndexedDBAdapter extends BaseClientStorageAdapter {
       const store = transaction.objectStore(this.storeName);
 
       let completed = 0;
-      
+
       keys.forEach((key) => {
         const request = store.get(key);
         request.onsuccess = () => {
           if (request.result?.item) {
             const item = request.result.item as StorageItem<T>;
-            
+
             // Check TTL
             if (!item.ttl || Date.now() <= item.timestamp + item.ttl) {
               result.set(key, item.value);
             }
           }
-          
+
           completed++;
           if (completed === keys.length) {
             resolve(result);
@@ -239,7 +239,7 @@ export class IndexedDBAdapter extends BaseClientStorageAdapter {
             resolve(result);
           }
         };
-        
+
         request.onerror = () => {
           result.set(key, false);
           completed++;
