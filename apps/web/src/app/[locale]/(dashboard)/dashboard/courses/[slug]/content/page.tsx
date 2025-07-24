@@ -91,7 +91,7 @@ export default function CourseContentPage() {
       lessons: [],
       estimatedDuration: 0,
     };
-    setModules(prev => [...prev, newModule]);
+    setModules((prev) => [...prev, newModule]);
     setIsAddingModule(false);
   };
 
@@ -105,25 +105,21 @@ export default function CourseContentPage() {
       status: 'draft',
       visibility: 'public',
     };
-    
-    setModules(prev => prev.map(moduleItem => 
-      moduleItem.id === moduleId 
-        ? { ...moduleItem, lessons: [...moduleItem.lessons, newLesson] }
-        : moduleItem
-    ));
+
+    setModules((prev) => prev.map((moduleItem) => (moduleItem.id === moduleId ? { ...moduleItem, lessons: [...moduleItem.lessons, newLesson] } : moduleItem)));
     setIsAddingLesson(null);
   };
 
   const handleDeleteModule = (moduleId: string) => {
-    setModules(prev => prev.filter(moduleItem => moduleItem.id !== moduleId));
+    setModules((prev) => prev.filter((moduleItem) => moduleItem.id !== moduleId));
   };
 
   const handleDeleteLesson = (moduleId: string, lessonId: string) => {
-    setModules(prev => prev.map(moduleItem => 
-      moduleItem.id === moduleId 
-        ? { ...moduleItem, lessons: moduleItem.lessons.filter(lesson => lesson.id !== lessonId) }
-        : moduleItem
-    ));
+    setModules((prev) =>
+      prev.map((moduleItem) =>
+        moduleItem.id === moduleId ? { ...moduleItem, lessons: moduleItem.lessons.filter((lesson) => lesson.id !== lessonId) } : moduleItem,
+      ),
+    );
   };
 
   const getLessonTypeIcon = (type: MockLesson['type']) => {
@@ -160,14 +156,10 @@ export default function CourseContentPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">Course Content</h1>
-              <p className="text-sm text-muted-foreground">Manage modules, lessons, and course materials for "{state.title}"</p>
+              <p className="text-sm text-muted-foreground">Manage modules, lessons, and course materials for &ldquo;{state.title}&rdquo;</p>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setBulkEditMode(!bulkEditMode)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setBulkEditMode(!bulkEditMode)}>
                 {bulkEditMode ? 'Exit Bulk Edit' : 'Bulk Edit'}
               </Button>
               <Button onClick={() => setIsAddingModule(true)} size="sm">
@@ -197,24 +189,18 @@ export default function CourseContentPage() {
                   <div className="text-sm text-muted-foreground">Modules</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {modules.reduce((total, moduleItem) => total + moduleItem.lessons.length, 0)}
-                  </div>
+                  <div className="text-2xl font-bold text-primary">{modules.reduce((total, moduleItem) => total + moduleItem.lessons.length, 0)}</div>
                   <div className="text-sm text-muted-foreground">Lessons</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">
-                    {modules.reduce((total, moduleItem) => 
-                      total + moduleItem.lessons.reduce((lessonTotal, lesson) => lessonTotal + lesson.duration, 0), 0
-                    )}m
+                    {modules.reduce((total, moduleItem) => total + moduleItem.lessons.reduce((lessonTotal, lesson) => lessonTotal + lesson.duration, 0), 0)}m
                   </div>
                   <div className="text-sm text-muted-foreground">Total Duration</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">
-                    {modules.reduce((total, moduleItem) => 
-                      total + moduleItem.lessons.filter(lesson => lesson.status === 'published').length, 0
-                    )}
+                    {modules.reduce((total, moduleItem) => total + moduleItem.lessons.filter((lesson) => lesson.status === 'published').length, 0)}
                   </div>
                   <div className="text-sm text-muted-foreground">Published</div>
                 </div>
@@ -230,23 +216,10 @@ export default function CourseContentPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {bulkEditMode && (
-                        <input
-                          type="checkbox"
-                          checked={selectedItems.has(moduleItem.id)}
-                          onChange={() => toggleSelection(moduleItem.id)}
-                          className="rounded"
-                        />
+                        <input type="checkbox" checked={selectedItems.has(moduleItem.id)} onChange={() => toggleSelection(moduleItem.id)} className="rounded" />
                       )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleModule(moduleItem.id)}
-                        className="p-0 h-auto"
-                      >
-                        {expandedModules.has(moduleItem.id) ? 
-                          <ChevronDown className="h-4 w-4" /> : 
-                          <ChevronRight className="h-4 w-4" />
-                        }
+                      <Button variant="ghost" size="sm" onClick={() => toggleModule(moduleItem.id)} className="p-0 h-auto">
+                        {expandedModules.has(moduleItem.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                       </Button>
                       <div>
                         <div className="flex items-center gap-2">
@@ -258,17 +231,11 @@ export default function CourseContentPage() {
                             {moduleItem.estimatedDuration}m
                           </Badge>
                         </div>
-                        {moduleItem.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{moduleItem.description}</p>
-                        )}
+                        {moduleItem.description && <p className="text-sm text-muted-foreground mt-1">{moduleItem.description}</p>}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsAddingLesson(moduleItem.id)}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => setIsAddingLesson(moduleItem.id)}>
                         <Plus className="h-4 w-4 mr-1" />
                         Add Lesson
                       </Button>
@@ -291,10 +258,7 @@ export default function CourseContentPage() {
                             <Move className="h-4 w-4 mr-2" />
                             Move Module
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDeleteModule(moduleItem.id)}
-                            className="text-red-600"
-                          >
+                          <DropdownMenuItem onClick={() => handleDeleteModule(moduleItem.id)} className="text-red-600">
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete Module
                           </DropdownMenuItem>
@@ -309,24 +273,14 @@ export default function CourseContentPage() {
                     <CardContent className="pt-0">
                       <div className="space-y-2 pl-6 border-l-2 border-border">
                         {moduleItem.lessons.map((lesson, index) => (
-                          <div
-                            key={lesson.id}
-                            className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50"
-                          >
+                          <div key={lesson.id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50">
                             <div className="flex items-center gap-3">
                               {bulkEditMode && (
-                                <input
-                                  type="checkbox"
-                                  checked={selectedItems.has(lesson.id)}
-                                  onChange={() => toggleSelection(lesson.id)}
-                                  className="rounded"
-                                />
+                                <input type="checkbox" checked={selectedItems.has(lesson.id)} onChange={() => toggleSelection(lesson.id)} className="rounded" />
                               )}
                               <div className="flex items-center gap-2">
                                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm text-muted-foreground font-mono">
-                                  {index + 1}
-                                </span>
+                                <span className="text-sm text-muted-foreground font-mono">{index + 1}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 {getLessonTypeIcon(lesson.type)}
@@ -340,13 +294,9 @@ export default function CourseContentPage() {
                                       <Clock className="h-3 w-3 mr-1" />
                                       {lesson.duration}m
                                     </Badge>
-                                    {lesson.visibility === 'private' && (
-                                      <EyeOff className="h-3 w-3 text-muted-foreground" />
-                                    )}
+                                    {lesson.visibility === 'private' && <EyeOff className="h-3 w-3 text-muted-foreground" />}
                                   </div>
-                                  {lesson.description && (
-                                    <p className="text-sm text-muted-foreground">{lesson.description}</p>
-                                  )}
+                                  {lesson.description && <p className="text-sm text-muted-foreground">{lesson.description}</p>}
                                 </div>
                               </div>
                             </div>
@@ -377,10 +327,7 @@ export default function CourseContentPage() {
                                     <ArrowDown className="h-4 w-4 mr-2" />
                                     Move Down
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    onClick={() => handleDeleteLesson(moduleItem.id, lesson.id)}
-                                    className="text-red-600"
-                                  >
+                                  <DropdownMenuItem onClick={() => handleDeleteLesson(moduleItem.id, lesson.id)} className="text-red-600">
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     Delete Lesson
                                   </DropdownMenuItem>
@@ -393,12 +340,7 @@ export default function CourseContentPage() {
                           <div className="text-center py-8 text-muted-foreground">
                             <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
                             <p>No lessons in this module yet</p>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setIsAddingLesson(moduleItem.id)}
-                              className="mt-2"
-                            >
+                            <Button variant="outline" size="sm" onClick={() => setIsAddingLesson(moduleItem.id)} className="mt-2">
                               Add First Lesson
                             </Button>
                           </div>
@@ -415,9 +357,7 @@ export default function CourseContentPage() {
                 <CardContent className="text-center py-12">
                   <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
                   <h3 className="text-lg font-semibold mb-2">No modules created yet</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Start building your course by creating your first module
-                  </p>
+                  <p className="text-muted-foreground mb-4">Start building your course by creating your first module</p>
                   <Button onClick={() => setIsAddingModule(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create First Module
@@ -434,36 +374,26 @@ export default function CourseContentPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Module</DialogTitle>
-            <DialogDescription>
-              Create a new module to organize your course content
-            </DialogDescription>
+            <DialogDescription>Create a new module to organize your course content</DialogDescription>
           </DialogHeader>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            handleAddModule({
-              title: formData.get('title') as string,
-              description: formData.get('description') as string,
-            });
-          }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              handleAddModule({
+                title: formData.get('title') as string,
+                description: formData.get('description') as string,
+              });
+            }}
+          >
             <div className="space-y-4">
               <div>
                 <Label htmlFor="module-title">Module Title</Label>
-                <Input
-                  id="module-title"
-                  name="title"
-                  placeholder="e.g., Introduction to Game Development"
-                  required
-                />
+                <Input id="module-title" name="title" placeholder="e.g., Introduction to Game Development" required />
               </div>
               <div>
                 <Label htmlFor="module-description">Description</Label>
-                <Textarea
-                  id="module-description"
-                  name="description"
-                  placeholder="Brief description of what this module covers..."
-                  rows={3}
-                />
+                <Textarea id="module-description" name="description" placeholder="Brief description of what this module covers..." rows={3} />
               </div>
             </div>
             <DialogFooter className="mt-6">
@@ -481,30 +411,25 @@ export default function CourseContentPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Lesson</DialogTitle>
-            <DialogDescription>
-              Create a new lesson for your module
-            </DialogDescription>
+            <DialogDescription>Create a new lesson for your module</DialogDescription>
           </DialogHeader>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            if (!isAddingLesson) return;
-            const formData = new FormData(e.currentTarget);
-            handleAddLesson(isAddingLesson, {
-              title: formData.get('title') as string,
-              description: formData.get('description') as string,
-              type: formData.get('type') as MockLesson['type'],
-              duration: parseInt(formData.get('duration') as string) || 30,
-            });
-          }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!isAddingLesson) return;
+              const formData = new FormData(e.currentTarget);
+              handleAddLesson(isAddingLesson, {
+                title: formData.get('title') as string,
+                description: formData.get('description') as string,
+                type: formData.get('type') as MockLesson['type'],
+                duration: parseInt(formData.get('duration') as string) || 30,
+              });
+            }}
+          >
             <div className="space-y-4">
               <div>
                 <Label htmlFor="lesson-title">Lesson Title</Label>
-                <Input
-                  id="lesson-title"
-                  name="title"
-                  placeholder="e.g., Setting up your development environment"
-                  required
-                />
+                <Input id="lesson-title" name="title" placeholder="e.g., Setting up your development environment" required />
               </div>
               <div>
                 <Label htmlFor="lesson-type">Lesson Type</Label>
@@ -524,23 +449,11 @@ export default function CourseContentPage() {
               </div>
               <div>
                 <Label htmlFor="lesson-duration">Duration (minutes)</Label>
-                <Input
-                  id="lesson-duration"
-                  name="duration"
-                  type="number"
-                  defaultValue={30}
-                  min={1}
-                  max={180}
-                />
+                <Input id="lesson-duration" name="duration" type="number" defaultValue={30} min={1} max={180} />
               </div>
               <div>
                 <Label htmlFor="lesson-description">Description</Label>
-                <Textarea
-                  id="lesson-description"
-                  name="description"
-                  placeholder="Brief description of what this lesson covers..."
-                  rows={3}
-                />
+                <Textarea id="lesson-description" name="description" placeholder="Brief description of what this lesson covers..." rows={3} />
               </div>
             </div>
             <DialogFooter className="mt-6">
