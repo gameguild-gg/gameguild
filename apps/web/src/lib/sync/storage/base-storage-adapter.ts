@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { StorageAdapter, StorageEvent, StorageEventHandler, StorageIndex, StorageMetadata, StorageOptions, StorageResult } from './storage.types';
+import { StorageAdapter, StorageEvent, StorageEventHandler, StorageIndex, StorageMetadata, StorageOptions, StorageResult } from './storage-types';
 
 // Base abstract storage adapter with optimized operations
 export abstract class BaseStorageAdapter<T = unknown> extends EventEmitter implements StorageAdapter<T> {

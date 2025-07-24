@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { Content } from '@/types';
-import { StorageStats } from '@/lib/tree/sync.types';
+import { StorageStats } from '../sync-types';
 
 // Ultra-fast memory cache implementation
 class UltraFastMemoryCache {
