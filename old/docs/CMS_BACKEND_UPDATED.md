@@ -55,7 +55,7 @@ const response = await apiClient.googleIdTokenSignIn({
 ### **Prerequisites**
 
 1. **CMS Backend**: Update with the new changes and restart
-2. **Environment**: Ensure `NEXT_PUBLIC_API_URL=http://localhost:5001`
+2. **Environment**: Ensure `NEXT_PUBLIC_API_URL=http://localhost:5000`
 3. **Google OAuth**: Valid credentials in `.env.local`
 
 ### **Test Steps**

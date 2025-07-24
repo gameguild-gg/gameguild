@@ -131,7 +131,7 @@ fetchCourse();
 
 const fetchProgramContent = async (programId: string) => {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const response = await fetch(`${ apiUrl }/api/program/${ programId }/content`);
 
     if (response.ok) {
@@ -147,7 +147,7 @@ const handleAddLesson = async () => {
   try {
     if (!course?.id) return;
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const response = await fetch(`${ apiUrl }/api/program/${ course.id }/content`, {
       method: 'POST',
       headers: {

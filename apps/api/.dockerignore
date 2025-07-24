@@ -23,3 +23,21 @@
 **/values.dev.yaml
 LICENSE
 README.md
+
+# .NET build outputs - DO NOT INCLUDE IN DOCKER CONTEXT
+bin/
+obj/
+# Database files
+*.db
+*.db-shm
+*.db-wal
+# Logs
+logs/
+*.log
+# Cache and temp
+.cache/
+temp/
+tmp/
+# IDE files
+.idea/
+.vscode/

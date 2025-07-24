@@ -5,16 +5,16 @@ echo "================================="
 
 # Test 1: GET /api/projects (should return empty array initially)
 echo "1. Testing GET /api/projects"
-curl -s -X GET http://localhost:5001/api/projects \
+curl -s -X GET http://localhost:5000/api/projects \
   -H "Content-Type: application/json" | jq . || echo "No jq available, raw response:"
-curl -s -X GET http://localhost:5001/api/projects \
+curl -s -X GET http://localhost:5000/api/projects \
   -H "Content-Type: application/json"
 
 echo -e "\n"
 
 # Test 2: POST /api/projects (create a new project)
 echo "2. Testing POST /api/projects"
-NEW_PROJECT=$(curl -s -X POST http://localhost:5001/api/projects \
+NEW_PROJECT=$(curl -s -X POST http://localhost:5000/api/projects \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Test Game Project",
@@ -36,18 +36,18 @@ echo -e "\n"
 
 # Test 3: GET /api/projects (should now return the created project)
 echo "3. Testing GET /api/projects (after creation)"
-curl -s -X GET http://localhost:5001/api/projects \
-  -H "Content-Type: application/json" | jq . 2>/dev/null || curl -s -X GET http://localhost:5001/api/projects
+curl -s -X GET http://localhost:5000/api/projects \
+  -H "Content-Type: application/json" | jq . 2>/dev/null || curl -s -X GET http://localhost:5000/api/projects
 
 echo -e "\n"
 
 # Test 4: GraphQL query
 echo "4. Testing GraphQL query"
-curl -s -X POST http://localhost:5001/graphql \
+curl -s -X POST http://localhost:5000/graphql \
   -H "Content-Type: application/json" \
   -d '{
     "query": "{ projects { id title description status visibility createdAt } }"
-  }' | jq . 2>/dev/null || curl -s -X POST http://localhost:5001/graphql \
+  }' | jq . 2>/dev/null || curl -s -X POST http://localhost:5000/graphql \
   -H "Content-Type: application/json" \
   -d '{"query": "{ projects { id title description status visibility createdAt } }"}'
 

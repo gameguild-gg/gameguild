@@ -25,7 +25,7 @@ functionality:
 
 ### 🧪 Test Flow
 
-1. **Start CMS Backend**: `dotnet run` in `apps/cms` (localhost:5001)
+1. **Start CMS Backend**: `dotnet run` in `apps/cms` (localhost:5000)
 2. **Start Web App**: `npm run dev` in `apps/web` (localhost:3000)
 3. **Visit**: `http://localhost:3000`
 4. **Check CMS Status**: See if backend is reachable
@@ -37,7 +37,7 @@ functionality:
 **Before Sign-In:**
 
 - CMS connectivity status (Connected/Disconnected)
-- API URL: http://localhost:5001
+- API URL: http://localhost:5000
 - Sign-in button that now works
 
 **After Sign-In:**
@@ -54,7 +54,7 @@ The test page now shows:
 
 ```
 CMS Backend Status: [Connected/Disconnected]
-API URL: http://localhost:5001
+API URL: http://localhost:5000
 [Test Connection] button
 ```
 
@@ -94,7 +94,7 @@ public async Task<IActionResult> GoogleIdTokenValidation([FromBody] GoogleIdToke
 
 - ✅ `auth.config.ts`: Temporary authentication bypass
 - ✅ `page.tsx`: CMS connectivity testing
-- ✅ `.env.local`: Updated API URL to localhost:5001
+- ✅ `.env.local`: Updated API URL to localhost:5000
 - ✅ ErrorMessage handling and logging improvements
 
 ## 🎉 Ready to Test!
