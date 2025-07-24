@@ -52,7 +52,6 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
                   <TenantProvider>
                     {/*TODO: Move this to a better place*/}
                     {/*<ThemeToggle />*/}
-
                     {children}
                     {/*TODO: Move this to a better place*/}
                     {/*<FeedbackFloatingButton />*/}
