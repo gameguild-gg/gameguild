@@ -39,10 +39,15 @@ export function ContentManagementSidebarContent({
       <SidebarMenu>
         {items.map((item) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton tooltip={item.name} asChild>
+            <SidebarMenuButton tooltip={item.name} size="lg" asChild>
               <Link href={item.url}>
-                <item.icon />
-                <span>{item.name}</span>
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
+                  <item.icon className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">{item.name}</span>
+                  <span className="truncate text-xs">Content</span>
+                </div>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -53,9 +58,14 @@ export function ContentManagementSidebarContent({
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton tooltip="Testing Lab">
-                  <TestTube />
-                  <span>Testing Lab</span>
+                <SidebarMenuButton tooltip="Testing Lab" size="lg">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
+                    <TestTube className="size-4" />
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">Testing Lab</span>
+                    <span className="truncate text-xs">Development</span>
+                  </div>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 rounded-lg" align="start" side={isMobile ? 'bottom' : 'right'} sideOffset={4}>
@@ -63,8 +73,13 @@ export function ContentManagementSidebarContent({
                 {testingLabItems.map((subItem) => (
                   <DropdownMenuItem key={subItem.name} asChild>
                     <Link href={subItem.url} className="gap-2 p-2">
-                      <subItem.icon className="size-4" />
-                      {subItem.name}
+                      <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
+                        <subItem.icon className="size-4" />
+                      </div>
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <span className="truncate font-semibold">{subItem.name}</span>
+                        <span className="truncate text-xs">Testing Lab</span>
+                      </div>
                     </Link>
                   </DropdownMenuItem>
                 ))}
@@ -75,9 +90,14 @@ export function ContentManagementSidebarContent({
           <Collapsible asChild className="group/collapsible">
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip="Testing Lab">
-                  <TestTube />
-                  <span>Testing Lab</span>
+                <SidebarMenuButton tooltip="Testing Lab" size="lg">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
+                    <TestTube className="size-4" />
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">Testing Lab</span>
+                    <span className="truncate text-xs">Development</span>
+                  </div>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
@@ -87,7 +107,9 @@ export function ContentManagementSidebarContent({
                     <SidebarMenuSubItem key={subItem.name}>
                       <SidebarMenuSubButton asChild>
                         <Link href={subItem.url}>
-                          <subItem.icon />
+                          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
+                            <subItem.icon className="size-4" />
+                          </div>
                           <span>{subItem.name}</span>
                         </Link>
                       </SidebarMenuSubButton>
