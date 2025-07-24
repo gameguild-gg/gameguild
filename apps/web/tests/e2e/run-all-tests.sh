@@ -15,7 +15,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-API_BASE="http://localhost:5001"
+API_BASE="http://localhost:5000"
 TOTAL_TESTS=0
 PASSED_TESTS=0
 
@@ -56,7 +56,7 @@ if [ "$api_status" -eq 200 ]; then
     API_AVAILABLE=true
 else
     echo -e "${RED}❌ API server is not accessible (Status: $api_status)${NC}"
-    echo "Please ensure the API server is running on http://localhost:5001"
+    echo "Please ensure the API server is running on http://localhost:5000"
     API_AVAILABLE=false
 fi
 

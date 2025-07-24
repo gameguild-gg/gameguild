@@ -16,19 +16,19 @@ echo "Testing API endpoints..."
 
 # Test the health of the API
 echo "Testing /projects endpoint..."
-curl -s -w "HTTP Status: %{http_code}\n" http://localhost:5001/projects
+curl -s -w "HTTP Status: %{http_code}\n" http://localhost:5000/projects
 
 echo ""
 
 # Test GraphQL endpoint
 echo "Testing /graphql endpoint..."
-curl -s -w "HTTP Status: %{http_code}\n" http://localhost:5001/graphql
+curl -s -w "HTTP Status: %{http_code}\n" http://localhost:5000/graphql
 
 echo ""
 
 # Test Swagger endpoint
 echo "Testing /swagger endpoint..."
-curl -s -w "HTTP Status: %{http_code}\n" http://localhost:5001/swagger
+curl -s -w "HTTP Status: %{http_code}\n" http://localhost:5000/swagger
 
 echo ""
 

@@ -96,7 +96,7 @@ We've implemented **Option 1** for development purposes. The auth configuration 
 
 ## 📋 Testing Steps
 
-1. **Start CMS Backend**: `dotnet run` in `apps/cms` (port 5001)
+1. **Start CMS Backend**: `dotnet run` in `apps/cms` (port 5000)
 2. **Start Web App**: `npm run dev` in `apps/web` (port 3000)
 3. **Open Test Page**: `http://localhost:3000`
 4. **Check CMS Status**: Should show connectivity test results
@@ -117,7 +117,7 @@ For **production implementation**, recommend **Option 2**:
 
 - `apps/web/src/configs/auth.config.ts` - Temporary auth bypass
 - `apps/web/src/app/[locale]/page.tsx` - CMS connectivity testing
-- `apps/web/.env.local` - Updated API URL to localhost:5001
+- `apps/web/.env.local` - Updated API URL to localhost:5000
 - `apps/web/src/docs/AUTH_INTEGRATION_ISSUE.md` - This documentation
 
 The integration now works for **development and testing purposes**. The frontend components, server actions, and UI are

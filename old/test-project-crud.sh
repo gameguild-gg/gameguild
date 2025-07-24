@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Test script for Project CRUD operations
-CMS_URL="http://localhost:5001"
+CMS_URL="http://localhost:5000"
 
 echo "=== Testing Project CRUD Operations ==="
 echo

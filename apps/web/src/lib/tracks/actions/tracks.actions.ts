@@ -103,7 +103,7 @@ function getFallbackTracksData(): TracksData {
 export async function getTracksData(): Promise<TracksData> {
   try {
     // Use the existing Programs API to get all published programs
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/program/published`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/program/published`, {
       cache: 'no-store',
     });
 

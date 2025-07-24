@@ -57,7 +57,7 @@ export async function getUsersData(page: number = 1, limit: number = 20, search?
       };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const skip = (page - 1) * limit;
 
     if (search) {
@@ -156,7 +156,7 @@ export async function getUserById(id: string): Promise<User | null> {
       return null;
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/users/${id}`, {
       headers: {
@@ -213,7 +213,7 @@ export async function createUser(prevState: ActionState, formData: FormData): Pr
       return { success: false, error: 'Please provide a valid email address' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/users`, {
       method: 'POST',
@@ -274,7 +274,7 @@ export async function updateUser(id: string, prevState: ActionState, formData: F
       return { success: false, error: 'Please provide a valid email address' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/users/${id}`, {
       method: 'PUT',
@@ -322,7 +322,7 @@ export async function deleteUser(id: string): Promise<{ success: boolean; error?
       return { success: false, error: 'Authentication required' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/users/${id}?softDelete=true`, {
       method: 'DELETE',
@@ -370,7 +370,7 @@ export async function toggleUserStatus(
       return { success: false, error: 'Authentication required' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/api/users/${id}`, {
       method: 'PUT',
@@ -427,7 +427,7 @@ export async function bulkUpdateUsers(
       return { success: false, error: 'Authentication required' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     const response = await fetch(`${apiUrl}/users/bulk`, {
       method: 'PUT',
@@ -475,7 +475,7 @@ export async function searchUsers(query: string, limit: number = 10): Promise<Us
       return [];
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     // Use the UserProfiles endpoint with searchTerm parameter
     const response = await fetch(`${apiUrl}/api/userprofiles?searchTerm=${encodeURIComponent(query)}&take=${limit}&includeDeleted=false`, {
@@ -554,7 +554,7 @@ export async function bulkActivateUsers(
       return { success: false, error: 'Authentication required' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const params = new URLSearchParams();
     if (reason) params.append('reason', reason);
 
@@ -606,7 +606,7 @@ export async function bulkDeactivateUsers(
       return { success: false, error: 'Authentication required' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const params = new URLSearchParams();
     if (reason) params.append('reason', reason);
 
@@ -759,7 +759,7 @@ export async function getUserStatistics(
       };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const params = new URLSearchParams();
 
     if (fromDate) params.append('fromDate', fromDate);
