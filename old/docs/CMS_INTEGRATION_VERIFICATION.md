@@ -4,7 +4,7 @@
 
 ### 1. Environment Configuration
 
-- **Backend URL**: Updated `NEXT_PUBLIC_API_URL` in `.env.local` to `http://localhost:5001`
+- **Backend URL**: Updated `NEXT_PUBLIC_API_URL` in `.env.local` to `http://localhost:5000`
 - **Environment Config**: `apps/web/src/configs/environment.ts` properly reads from `process.env.NEXT_PUBLIC_API_URL`
 
 ### 2. Authentication Setup
@@ -72,7 +72,7 @@
 
 ### Prerequisites
 
-1. **CMS Backend Running**: Ensure CMS is running on `http://localhost:5001`
+1. **CMS Backend Running**: Ensure CMS is running on `http://localhost:5000`
 2. **Environment Variables**: Verify all required env vars in `.env.local`
 3. **Google OAuth**: Ensure Google Client ID/Secret are configured
 
@@ -97,7 +97,7 @@
 
 ### Core Configuration
 
-- `apps/web/.env.local` - Updated API URL to localhost:5001
+- `apps/web/.env.local` - Updated API URL to localhost:5000
 - `apps/web/src/configs/environment.ts` - Environment configuration
 - `apps/web/src/configs/auth.config.ts` - NextAuth.js configuration
 - `apps/web/src/auth.ts` - Auth instance
@@ -145,7 +145,7 @@
 
 ## 🚀 Next Steps
 
-1. **Start CMS Backend**: Ensure it's running on port 5001
+1. **Start CMS Backend**: Ensure it's running on port 5000
 2. **Test Integration**: Use the test page to verify all functionality
 3. **Monitor Console**: Check browser console for any errors
 4. **Verify Database**: Ensure CMS database is properly configured

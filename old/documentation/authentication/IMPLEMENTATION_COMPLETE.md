@@ -62,12 +62,12 @@ if (!token.refreshToken) {
 ## 🔧 Configuration Verified
 
 ✅ **Environment Variables**: 
-- `NEXT_PUBLIC_API_URL=http://localhost:5001`
+- `NEXT_PUBLIC_API_URL=http://localhost:5000`
 - `NEXTAUTH_SECRET` set properly
 - `NEXTAUTH_URL=http://localhost:3000`
 
 ✅ **Backend API**: 
-- Running on port 5001 ✓
+- Running on port 5000 ✓
 - Refresh token endpoint responding ✓
 
 ✅ **Session Storage**: 
@@ -105,7 +105,7 @@ Add `<AuthDebug />` to any page to monitor authentication state in real-time.
 fetch('/api/auth/session').then(r => r.json()).then(console.log)
 
 # Test API connectivity  
-curl http://localhost:5001/api/auth/refresh-token -X POST -H "Content-Type: application/json" -d '{}'
+curl http://localhost:5000/api/auth/refresh-token -X POST -H "Content-Type: application/json" -d '{}'
 ```
 
 ## 📝 Files Modified

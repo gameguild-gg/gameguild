@@ -73,7 +73,7 @@ The seeding runs automatically when the application starts up for the first time
 Use the admin endpoint to manually trigger seeding:
 
 ```bash
-curl -X POST http://localhost:5001/api/admin/seed
+curl -X POST http://localhost:5000/api/admin/seed
 ```
 
 ### Option 3: Test Script

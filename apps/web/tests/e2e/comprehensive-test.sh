@@ -3,7 +3,7 @@
 # Comprehensive E2E Test Script for Game Guild API and Web Integration
 # Tests both API endpoints and web application slug-based navigation
 
-API_BASE="http://localhost:5001"
+API_BASE="http://localhost:5000"
 WEB_BASE="http://localhost:3000"
 TOTAL_TESTS=0
 PASSED_TESTS=0

@@ -3,7 +3,7 @@
 # E2E API Test Script for Game Guild API
 # Tests the slug-based program endpoints
 
-API_BASE="http://localhost:5001"
+API_BASE="http://localhost:5000"
 TOTAL_TESTS=0
 PASSED_TESTS=0
 
