@@ -1,4 +1,5 @@
 import { Locale } from 'next-intl';
+import { ReactNode } from 'react';
 
 export type RequiredFields<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 export type OptionalFields<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
@@ -9,6 +10,8 @@ export type ParamsWithLocale<P = unknown> = P & { locale: Locale };
 export type ParamsWithSlug<P = unknown> = P & { slug: string };
 
 export type PropsWithSlugParams<P = unknown> = P & { params: ParamsWithSlug };
+
+export type PropsWithModal<P = unknown> = P & { modal?: ReactNode };
 
 export type PropsWithLocaleParams<P = unknown> = P & {
   params: Promise<ParamsWithLocale>;
