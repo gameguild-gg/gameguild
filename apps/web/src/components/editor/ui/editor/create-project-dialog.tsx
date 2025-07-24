@@ -38,7 +38,6 @@ interface CreateProjectDialogProps {
 export function CreateProjectDialog({
   open,
   onOpenChange,
-  isDbInitialized,
   storageAdapter,
   availableTags,
   onProjectCreate,
