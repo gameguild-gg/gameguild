@@ -39,15 +39,8 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 # Change ownership to node user.
 RUN chown -R node:node /app
-
-#COPY --from=builder /app/public ./public
-
 # Automatically leverage output traces to reduce image size.
 # https://nextjs.org/docs/advanced-features/output-file-tracing.
-# Copy application dependency manifests to the container image.
-COPY --from=builder --chown=node:node /app/apps/web/package*.json ./
-# Copy application dependencies to the container image.
-COPY --from=builder --chown=node:node /app/apps/web/node_modules ./node_modules
 # Copy application build files to the container image.
 COPY --from=builder --chown=node:node /app/apps/web/.next/standalone ./
 # Copy static files generated during the build to the .next/static directory in the container image.
