@@ -3,8 +3,8 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Code, Play, Settings } from 'lucide-react';
 import type { EditMenuOption } from '@/components/ui/content-edit-menu';
-import type { CodeFile, LanguageType, ProgrammingLanguage } from '../ui/source-code/types';
-import { SourceCodeRenderer } from '../ui/source-code/source-code-renderer';
+import type { CodeFile, LanguageType, ProgrammingLanguage } from '../../../editor/ui/source-code/types';
+import { SourceCodeRenderer } from '../../../editor/ui/source-code/source-code-renderer';
 import { EditorLoadingContext } from '../lexical-editor';
 
 // Import hooks

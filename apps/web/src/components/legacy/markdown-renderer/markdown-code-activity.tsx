@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CodeLanguage, RunnerStatus } from '@/components/code/types';
-import { useCode } from '@/components/code/use-code';
+import { CodeLanguage, RunnerStatus } from '@/components/content/coding/types';
+import { useCode } from '@/components/content/coding/use-code';
 import { Card } from '@/components/ui/card';
 import Editor, { OnMount } from '@monaco-editor/react';
 import { Play } from 'lucide-react';
