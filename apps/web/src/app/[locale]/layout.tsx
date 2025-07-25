@@ -13,6 +13,7 @@ import { environment } from '@/configs/environment';
 import { auth } from '@/auth';
 import { routing } from '@/i18n/routing';
 import { PropsWithLocaleParams } from '@/types';
+import { Toaster } from '@/components/ui/sonner';
 
 // TODO: Uncomment this when you have the metadata fetching logic ready.
 // export async function generateMetadata({ params }: PropsWithLocaleParams): Promise<Metadata> {
@@ -55,6 +56,7 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
                     {children}
                     {/*TODO: Move this to a better place*/}
                     {/*<FeedbackFloatingButton />*/}ø
+                    <Toaster />
                   </TenantProvider>
                 </SessionProvider>
               </Web3Provider>
