@@ -3,7 +3,7 @@
 import { useCallback, useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createTenantClient, deleteTenantClient, updateTenantClient } from '@/lib/tenants/tenants.client-actions';
-import { TenantResponse } from '@/lib/tenants/types';
+import { Tenant } from '@/lib/tenants/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,15 +17,15 @@ import { Switch } from '@/components/ui/switch';
 import { Edit, Loader2, MoreHorizontal, Plus, RefreshCw, Trash2, Building } from 'lucide-react';
 
 interface TenantManagementContentProps {
-  initialTenants: TenantResponse[];
+  initialTenants: Tenant[];
   isAdmin?: boolean;
 }
 
 export function TenantManagementContent({ initialTenants, isAdmin = false }: TenantManagementContentProps) {
   const router = useRouter();
-  const [tenants] = useState<TenantResponse[]>(initialTenants);
+  const [tenants] = useState<Tenant[]>(initialTenants);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingTenant, setEditingTenant] = useState<TenantResponse | null>(null);
+  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [tenantToDelete, setTenantToDelete] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);

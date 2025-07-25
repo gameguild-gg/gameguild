@@ -1,4 +1,4 @@
-import type { TenantResponse } from '@/lib/tenants';
+import type { TenantResponse } from '@/components/tenant';
 
 declare module 'next-auth' {
   interface Session {
@@ -8,8 +8,8 @@ declare module 'next-auth' {
       email: string;
       image?: string;
     };
-    currentTenant?: TenantResponse;
-    availableTenants?: TenantResponse[];
+    currentTenant?: Tenant;
+    availableTenants?: Tenant[];
     accessToken?: string;
   }
 
@@ -24,8 +24,8 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT {
     userId?: string;
-    currentTenant?: TenantResponse;
-    availableTenants?: TenantResponse[];
+    currentTenant?: Tenant;
+    availableTenants?: Tenant[];
     accessToken?: string;
   }
 }

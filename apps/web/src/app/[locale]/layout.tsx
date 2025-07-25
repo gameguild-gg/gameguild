@@ -7,7 +7,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { WebVitals } from '@/components/analytics';
 import { ThemeProvider } from '@/components/theme';
 import { Web3Provider } from '@/components/web3/web3-context';
-import { TenantProvider } from '@/lib/tenants';
+import { TenantProvider } from '@/components/tenant';
 import { ErrorBoundaryProvider } from '@/components/common/error/error-boundary-provider';
 import { environment } from '@/configs/environment';
 import { auth } from '@/auth';

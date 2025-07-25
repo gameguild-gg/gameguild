@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { TenantService } from '@/lib/tenants/tenant.service';
-import { CreateTenantRequest, TenantResponse } from '@/lib/tenants/types';
+import { CreateTenantRequest, Tenant } from '@/lib/tenants/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +16,7 @@ import { Trash2 } from 'lucide-react';
 
 export function TenantManagementComponent() {
   const { data: session } = useSession();
-  const [tenants, setTenants] = useState<TenantResponse[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);

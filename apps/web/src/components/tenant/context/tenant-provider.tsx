@@ -2,7 +2,7 @@
 
 import React, { createContext, Dispatch, PropsWithChildren, useCallback, useContext, useEffect, useReducer } from 'react';
 import { useSession } from 'next-auth/react';
-import type { TenantResponse } from '@/lib/tenants';
+import type { TenantResponse } from '../types';
 
 export const TenantActionType = {
   SET_CURRENT_TENANT: 'SET_CURRENT_TENANT',

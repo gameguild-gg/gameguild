@@ -1,7 +1,7 @@
 import { auth } from '@/auth';
 import { TenantManagementContent } from '@/components/tenant/management/tenant-management-content';
 import { getTenantsData } from '@/lib/tenants/tenants.actions';
-import { TenantResponse } from '@/lib/tenants/types';
+import { Tenant } from '@/lib/tenants/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 
@@ -21,7 +21,7 @@ export default async function TenantManagementPage() {
     );
   }
 
-  let tenants: TenantResponse[] = [];
+  let tenants: Tenant[] = [];
   let error: string | null = null;
   let isAdminMode = false;
 

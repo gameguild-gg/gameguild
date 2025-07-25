@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useTenant } from '../../components/tenant/context/tenant-provider';
+import { useTenant } from './context/tenant-provider';
 import type { TenantResponse } from './types';
 
 /**
