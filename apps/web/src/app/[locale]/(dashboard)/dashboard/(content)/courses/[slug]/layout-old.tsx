@@ -8,7 +8,18 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
 // Inner component that has access to the course editor context
-function CourseLayoutContent({ children, slug }: PropsWithChildren & { slug: string }) {
+function Courseimport React, { PropsWithChildren } from 'react';
+import { CourseManagementProvider } from '@/lib/courses/context/course-management.context';
+import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
+
+export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
+  return (
+    <ErrorBoundary fallback={<div className="text-red-500">Failed to load courses interface</div>}>
+      <CourseManagementProvider>{children}</CourseManagementProvider>
+    </ErrorBoundary>
+  );
+}
+LayoutContent({ children, slug }: PropsWithChildren & { slug: string }) {
   const { loadCourseFromAPI, state } = useCourseEditor();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

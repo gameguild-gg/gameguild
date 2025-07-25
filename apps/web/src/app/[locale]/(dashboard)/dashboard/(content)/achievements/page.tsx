@@ -102,8 +102,8 @@ async function AchievementsContent({ searchParams }: AchievementsPageProps) {
   const statistics = statisticsResult.data;
 
   return (
-    <div className="flex flex-col flex-1 space-y-6">
-      <div className="flex flex-1 justify-between items-center">
+    <div className="flex flex-col flex-1 space-y-6 items-center">
+      <div className="flex flex-1 ">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Achievements</h1>
           <p className="text-gray-600">Manage achievements and user progress</p>
