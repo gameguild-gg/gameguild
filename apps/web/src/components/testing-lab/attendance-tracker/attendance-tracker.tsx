@@ -7,33 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, CheckCircle, FileDown, Filter, Search, Users, XCircle } from 'lucide-react';
-
-interface AttendanceRecord {
-  id: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    studentId?: string;
-  };
-  session: {
-    id: string;
-    sessionName: string;
-    sessionDate: string;
-    startTime: string;
-    endTime: string;
-    location: {
-      name: string;
-    };
-  };
-  attendanceStatus: 'present' | 'absent' | 'late' | 'excused';
-  checkInTime?: string;
-  checkOutTime?: string;
-  gamesTestingCompleted: number;
-  feedbackSubmitted: number;
-  notes?: string;
-}
+import { Calendar, CheckCircle, FileDown, Search, Users } from 'lucide-react';
 
 interface StudentProgress {
   user: {
@@ -72,16 +46,17 @@ interface AttendanceStats {
 }
 
 interface AttendanceTrackerProps {
-  studentData?: unknown[];
-  sessionData?: unknown[];
-  sessionInfo?: {
-    id: string;
-    sessionName: string;
+  data: {
+    students: unknown[];
+    sessions: unknown[];
+    session?: {
+      id: string;
+      sessionName: string;
+    };
   };
 }
 
-export function AttendanceTracker({ studentData = [], sessionData = [], sessionInfo }: AttendanceTrackerProps = {}) {
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+export function AttendanceTracker({ data }: AttendanceTrackerProps) {
   const [studentProgress, setStudentProgress] = useState<StudentProgress[]>([]);
   const [sessionAttendance, setSessionAttendance] = useState<SessionAttendance[]>([]);
   const [stats, setStats] = useState<AttendanceStats>({
@@ -103,7 +78,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
       setLoading(true);
 
       // Transform student data to component format
-      const transformedStudentData = studentData.map((student: unknown) => {
+      const transformedStudentData = data.students.map((student: unknown) => {
         const studentRecord = student as {
           id: string;
           name: string;
@@ -132,7 +107,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
       });
 
       // Transform session data to component format
-      const transformedSessionData = sessionData.map((session: unknown) => {
+      const transformedSessionData = data.sessions.map((session: unknown) => {
         const sessionRecord = session as {
           id: string;
           sessionName: string;
@@ -161,45 +136,25 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
       setStudentProgress(transformedStudentData);
       setSessionAttendance(transformedSessionData);
 
-      // Create mock attendance records for display
-      const mockAttendance: AttendanceRecord[] = [
-        {
-          id: 'att1',
-          user: {
-            id: 'user1',
-            name: 'John Doe',
-            email: 'john.doe@mymail.champlain.edu',
-            studentId: 'STU001',
-          },
-          session: {
-            id: 'session1',
-            sessionName: sessionInfo?.sessionName || 'Testing Session',
-            sessionDate: '2024-12-15',
-            startTime: '14:00',
-            endTime: '16:00',
-            location: {
-              name: 'Room 101',
-            },
-          },
-          attendanceStatus: 'late',
-          checkInTime: '2024-12-15T14:25:00Z',
-          checkOutTime: '2024-12-15T16:00:00Z',
-          gamesTestingCompleted: 2,
-          feedbackSubmitted: 2,
-          notes: 'Arrived 25 minutes late due to previous class',
-        },
-      ];
-
-      setAttendanceRecords(mockAttendance);
-
       // Calculate stats
       const totalSessions = transformedSessionData.length || 12;
-      const totalAttendees = mockAttendance.filter((a) => a.attendanceStatus === 'present' || a.attendanceStatus === 'late').length;
+      const totalAttendees = transformedSessionData.reduce((sum: number, s: unknown) => {
+        const session = s as { studentsAttended: number };
+        return sum + session.studentsAttended;
+      }, 0);
       const averageAttendance =
         transformedSessionData.length > 0
-          ? Math.round(transformedSessionData.reduce((sum, s) => sum + s.attendanceRate, 0) / transformedSessionData.length)
+          ? Math.round(
+              transformedSessionData.reduce((sum: number, s: unknown) => {
+                const session = s as { attendanceRate: number };
+                return sum + session.attendanceRate;
+              }, 0) / transformedSessionData.length,
+            )
           : 75;
-      const onTrackStudents = transformedStudentData.filter((p) => p.isOnTrack).length;
+      const onTrackStudents = transformedStudentData.filter((p: unknown) => {
+        const student = p as { isOnTrack: boolean };
+        return student.isOnTrack;
+      }).length;
       const totalStudents = transformedStudentData.length;
 
       setStats({
@@ -214,7 +169,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
     } finally {
       setLoading(false);
     }
-  }, [studentData, sessionData, sessionInfo]);
+  }, [data]);
 
   // Filter functions
   const filteredStudentProgress = studentProgress.filter((student) => {
@@ -228,36 +183,6 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
     const matchesSession = selectedSession === 'all' || session.id === selectedSession;
     return matchesSearch && matchesSession;
   });
-
-  const getAttendanceStatusColor = (status: string) => {
-    switch (status) {
-      case 'present':
-        return 'bg-green-100 text-green-800';
-      case 'absent':
-        return 'bg-red-100 text-red-800';
-      case 'late':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'excused':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'present':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'late':
-        return <CheckCircle className="h-4 w-4 text-yellow-500" />;
-      case 'absent':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'excused':
-        return <CheckCircle className="h-4 w-4 text-blue-500" />;
-      default:
-        return <XCircle className="h-4 w-4 text-gray-500" />;
-    }
-  };
 
   if (loading) {
     return (
@@ -275,7 +200,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
       {/* Title */}
       <div className="flex flex-col space-y-2">
         <h1 className="text-3xl font-bold">Attendance Tracker</h1>
-        {sessionInfo && <p className="text-muted-foreground">Attendance data for session: {sessionInfo.sessionName}</p>}
+        {data.session && <p className="text-muted-foreground">Attendance data for session: {data.session.sessionName}</p>}
       </div>
 
       {/* Stats Cards */}
