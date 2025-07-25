@@ -11,7 +11,7 @@ export default async function Page(): Promise<React.JSX.Element> {
   return (
     <DashboardPage>
       <DashboardPageHeader>
-        <DashboardPageTitle>Course Overview</DashboardPageTitle>
+        <DashboardPageTitle>Course</DashboardPageTitle>
         <DashboardPageDescription></DashboardPageDescription>
       </DashboardPageHeader>
       <DashboardPageContent></DashboardPageContent>
