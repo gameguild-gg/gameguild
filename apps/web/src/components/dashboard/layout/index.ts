@@ -1,4 +1,4 @@
 export { Dashboard } from '../dashboard';
 export { DashboardProvider } from './dashboard-provider';
-export { DashboardSidebar } from '../dashboard-sidebar';
+export { DashboardSidebar } from '../common/ui/dashboard-sidebar';
 export { DashboardHeader } from './dashboard-header';
