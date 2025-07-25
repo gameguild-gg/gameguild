@@ -7,7 +7,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { WebVitals } from '@/components/analytics';
 import { ThemeProvider } from '@/components/theme';
 import { Web3Provider } from '@/components/web3/web3-context';
-import { TenantProvider } from '@/lib/tenants/tenant-provider';
+import { TenantProvider } from '@/lib/tenants';
 import { ErrorBoundaryProvider } from '@/components/common/error/error-boundary-provider';
 import { environment } from '@/configs/environment';
 import { auth } from '@/auth';
@@ -49,12 +49,12 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
               {/* TODO: If the session has a user and it has signed-in by a web3 address then try to connect to the wallet address. */}
               <Web3Provider>
                 <SessionProvider session={session}>
-                  <TenantProvider>
+                  <TenantProvider initialState={{ currentTenant: session?.currentTenant, availableTenants: session?.availableTenants }}>
                     {/*TODO: Move this to a better place*/}
                     {/*<ThemeToggle />*/}
                     {children}
                     {/*TODO: Move this to a better place*/}
-                    {/*<FeedbackFloatingButton />*/}
+                    {/*<FeedbackFloatingButton />*/}ø
                   </TenantProvider>
                 </SessionProvider>
               </Web3Provider>

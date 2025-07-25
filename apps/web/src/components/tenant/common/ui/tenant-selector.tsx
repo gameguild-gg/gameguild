@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useTenant } from './tenant-provider';
+import { useTenant } from '../../context/tenant-provider';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Check, Loader2 } from 'lucide-react';
 
