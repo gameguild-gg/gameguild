@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useTenant } from '@/lib/tenants/tenant-provider';
+import { useTenant } from '@/components/tenant/context/tenant-provider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 
