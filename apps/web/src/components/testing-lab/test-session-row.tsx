@@ -7,9 +7,9 @@ import { Calendar, Clock, Gamepad2, Monitor, Star, Trophy, Users } from 'lucide-
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { RewardChip } from './reward-chip';
-import { StatusChip } from './status-chip';
-import { LocationChip } from './location-chip';
+import { RewardChip } from '@/components/testing-lab/common/ui/reward-chip';
+import { StatusChip } from '@/components/testing-lab/common/ui/status-chip';
+import { LocationChip } from './common/ui/location-chip';
 
 interface TestSessionRowProps {
   sessions: TestSession[];

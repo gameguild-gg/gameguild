@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { testingLabApi } from '@/lib/api/testing-lab/testing-lab-api';
 import { Calendar, CheckCircle, FileDown, Filter, Search, Users, XCircle } from 'lucide-react';
 
 interface AttendanceRecord {
@@ -72,7 +71,16 @@ interface AttendanceStats {
   totalStudents: number;
 }
 
-export function AttendanceTracker() {
+interface AttendanceTrackerProps {
+  studentData?: unknown[];
+  sessionData?: unknown[];
+  sessionInfo?: {
+    id: string;
+    sessionName: string;
+  };
+}
+
+export function AttendanceTracker({ studentData = [], sessionData = [], sessionInfo }: AttendanceTrackerProps = {}) {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [studentProgress, setStudentProgress] = useState<StudentProgress[]>([]);
   const [sessionAttendance, setSessionAttendance] = useState<SessionAttendance[]>([]);
@@ -83,504 +91,396 @@ export function AttendanceTracker() {
     onTrackStudents: 0,
     totalStudents: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedSession, setSelectedSession] = useState<string>('all');
   const [selectedBlock, setSelectedBlock] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'sessions' | 'students'>('sessions');
 
+  // Process the data from props
   useEffect(() => {
-    fetchAttendanceData();
-  }, [selectedSession, selectedBlock]);
-
-  const fetchAttendanceData = async () => {
     try {
       setLoading(true);
 
-      // Load attendance data from API
-      try {
-        const studentData = await testingLabApi.getStudentAttendanceReport();
-        const sessionData = await testingLabApi.getSessionAttendanceReport();
+      // Transform student data to component format
+      const transformedStudentData = studentData.map((student: unknown) => {
+        const studentRecord = student as {
+          id: string;
+          name: string;
+          email: string;
+          team: string;
+          totalSessions: number;
+          gamesTested: number;
+          status: string;
+        };
 
-        // Transform API data to component format
-        setStudentProgress(
-          studentData.map((student) => ({
-            user: {
-              id: student.id,
-              name: student.name,
-              email: student.email,
-              studentId: student.team,
-            },
-            totalSessionsScheduled: student.totalSessions,
-            totalSessionsAttended: student.totalSessions,
-            attendanceRate: Math.round((student.totalSessions / Math.max(student.totalSessions, 1)) * 100),
-            totalGamesTermd: student.gamesTested,
-            totalFeedbackSubmitted: student.gamesTested,
-            currentBlock: 3, // Default to current block
-            isOnTrack: student.status === 'onTrack',
-          })),
-        );
-
-        setSessionAttendance(
-          sessionData.map((session) => ({
-            id: session.id,
-            sessionName: session.sessionName,
-            date: session.date,
-            location: session.location,
-            totalCapacity: session.totalCapacity,
-            studentsRegistered: session.studentsRegistered,
-            studentsAttended: session.studentsAttended,
-            attendanceRate: session.attendanceRate,
-            gamesTested: session.gamesTested,
-          })),
-        );
-      } catch (apiError) {
-        console.error('API call failed, using mock data:', apiError);
-        // Fallback to mock data
-        const mockAttendance: AttendanceRecord[] = [
-          {
-            id: 'att1',
-            user: {
-              id: 'user1',
-              name: 'John Doe',
-              email: 'john.doe@mymail.champlain.edu',
-              studentId: 'STU001',
-            },
-            session: {
-              id: 'session1',
-              sessionName: 'Block 3 Testing Session',
-              sessionDate: '2024-12-15',
-              startTime: '14:00',
-              endTime: '16:00',
-              location: { name: 'Room A-204' },
-            },
-            attendanceStatus: 'present',
-            checkInTime: '2024-12-15T14:05:00Z',
-            checkOutTime: '2024-12-15T15:55:00Z',
-            gamesTestingCompleted: 3,
-            feedbackSubmitted: 3,
+        return {
+          user: {
+            id: studentRecord.id,
+            name: studentRecord.name,
+            email: studentRecord.email,
+            studentId: studentRecord.team,
           },
-          {
-            id: 'att2',
-            user: {
-              id: 'user2',
-              name: 'Jane Smith',
-              email: 'jane.smith@mymail.champlain.edu',
-              studentId: 'STU002',
-            },
-            session: {
-              id: 'session1',
-              sessionName: 'Block 3 Testing Session',
-              sessionDate: '2024-12-15',
-              startTime: '14:00',
-              endTime: '16:00',
-              location: { name: 'Room A-204' },
-            },
-            attendanceStatus: 'late',
-            checkInTime: '2024-12-15T14:25:00Z',
-            checkOutTime: '2024-12-15T16:00:00Z',
-            gamesTestingCompleted: 2,
-            feedbackSubmitted: 2,
-            notes: 'Arrived 25 minutes late due to previous class',
+          totalSessionsScheduled: studentRecord.totalSessions,
+          totalSessionsAttended: studentRecord.totalSessions,
+          attendanceRate: Math.round((studentRecord.totalSessions / Math.max(studentRecord.totalSessions, 1)) * 100),
+          totalGamesTermd: studentRecord.gamesTested,
+          totalFeedbackSubmitted: studentRecord.gamesTested,
+          currentBlock: 3, // Default to current block
+          isOnTrack: studentRecord.status === 'onTrack',
+        };
+      });
+
+      // Transform session data to component format
+      const transformedSessionData = sessionData.map((session: unknown) => {
+        const sessionRecord = session as {
+          id: string;
+          sessionName: string;
+          date: string;
+          location: string;
+          totalCapacity: number;
+          studentsRegistered: number;
+          studentsAttended: number;
+          attendanceRate: number;
+          gamesTested: number;
+        };
+
+        return {
+          id: sessionRecord.id,
+          sessionName: sessionRecord.sessionName,
+          date: sessionRecord.date,
+          location: sessionRecord.location,
+          totalCapacity: sessionRecord.totalCapacity,
+          studentsRegistered: sessionRecord.studentsRegistered,
+          studentsAttended: sessionRecord.studentsAttended,
+          attendanceRate: sessionRecord.attendanceRate,
+          gamesTested: sessionRecord.gamesTested,
+        };
+      });
+
+      setStudentProgress(transformedStudentData);
+      setSessionAttendance(transformedSessionData);
+
+      // Create mock attendance records for display
+      const mockAttendance: AttendanceRecord[] = [
+        {
+          id: 'att1',
+          user: {
+            id: 'user1',
+            name: 'John Doe',
+            email: 'john.doe@mymail.champlain.edu',
+            studentId: 'STU001',
           },
-        ];
-
-        const mockProgress: StudentProgress[] = [
-          {
-            user: {
-              id: 'user1',
-              name: 'John Doe',
-              email: 'john.doe@mymail.champlain.edu',
-              studentId: 'STU001',
+          session: {
+            id: 'session1',
+            sessionName: sessionInfo?.sessionName || 'Testing Session',
+            sessionDate: '2024-12-15',
+            startTime: '14:00',
+            endTime: '16:00',
+            location: {
+              name: 'Room 101',
             },
-            totalSessionsAttended: 8,
-            totalSessionsScheduled: 10,
-            totalGamesTermd: 24,
-            totalFeedbackSubmitted: 24,
-            currentBlock: 3,
-            attendanceRate: 80,
-            isOnTrack: true,
           },
-          {
-            user: {
-              id: 'user2',
-              name: 'Jane Smith',
-              email: 'jane.smith@mymail.champlain.edu',
-              studentId: 'STU002',
-            },
-            totalSessionsAttended: 6,
-            totalSessionsScheduled: 10,
-            totalGamesTermd: 18,
-            totalFeedbackSubmitted: 16,
-            currentBlock: 3,
-            attendanceRate: 60,
-            isOnTrack: false,
-          },
-        ];
+          attendanceStatus: 'late',
+          checkInTime: '2024-12-15T14:25:00Z',
+          checkOutTime: '2024-12-15T16:00:00Z',
+          gamesTestingCompleted: 2,
+          feedbackSubmitted: 2,
+          notes: 'Arrived 25 minutes late due to previous class',
+        },
+      ];
 
-        setAttendanceRecords(mockAttendance);
-        setStudentProgress(mockProgress);
+      setAttendanceRecords(mockAttendance);
 
-        // Calculate stats
-        const totalSessions = 12;
-        const totalAttendees = mockAttendance.filter((a) => a.attendanceStatus === 'present' || a.attendanceStatus === 'late').length;
-        const averageAttendance = 75; // Mock calculation
-        const onTrackStudents = mockProgress.filter((p) => p.isOnTrack).length;
-        const totalStudents = mockProgress.length;
+      // Calculate stats
+      const totalSessions = transformedSessionData.length || 12;
+      const totalAttendees = mockAttendance.filter((a) => a.attendanceStatus === 'present' || a.attendanceStatus === 'late').length;
+      const averageAttendance =
+        transformedSessionData.length > 0
+          ? Math.round(transformedSessionData.reduce((sum, s) => sum + s.attendanceRate, 0) / transformedSessionData.length)
+          : 75;
+      const onTrackStudents = transformedStudentData.filter((p) => p.isOnTrack).length;
+      const totalStudents = transformedStudentData.length;
 
-        setStats({
-          totalSessions,
-          totalAttendees,
-          averageAttendance,
-          onTrackStudents,
-          totalStudents,
-        });
-      }
+      setStats({
+        totalSessions,
+        totalAttendees,
+        averageAttendance,
+        onTrackStudents,
+        totalStudents,
+      });
     } catch (error) {
-      console.error('Error fetching attendance data:', error);
+      console.error('Error processing attendance data:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [studentData, sessionData, sessionInfo]);
+
+  // Filter functions
+  const filteredStudentProgress = studentProgress.filter((student) => {
+    const matchesSearch =
+      student.user.name.toLowerCase().includes(searchTerm.toLowerCase()) || student.user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
+  });
+
+  const filteredSessionAttendance = sessionAttendance.filter((session) => {
+    const matchesSearch = session.sessionName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSession = selectedSession === 'all' || session.id === selectedSession;
+    return matchesSearch && matchesSession;
+  });
 
   const getAttendanceStatusColor = (status: string) => {
     switch (status) {
       case 'present':
-        return 'bg-green-600/20 text-green-400';
-      case 'late':
-        return 'bg-yellow-600/20 text-yellow-400';
+        return 'bg-green-100 text-green-800';
       case 'absent':
-        return 'bg-red-600/20 text-red-400';
+        return 'bg-red-100 text-red-800';
+      case 'late':
+        return 'bg-yellow-100 text-yellow-800';
       case 'excused':
-        return 'bg-blue-600/20 text-blue-400';
+        return 'bg-blue-100 text-blue-800';
       default:
-        return 'bg-gray-600/20 text-gray-400';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const exportAttendanceReport = () => {
-    // Mock export functionality
-    const csvContent = [
-      [
-        'Student Name',
-        'Student ID',
-        'Email',
-        'Sessions Attended',
-        'Sessions Scheduled',
-        'Attendance Rate',
-        'Games Tested',
-        'Feedback Submitted',
-        'On Track',
-      ].join(','),
-      ...studentProgress.map((p) =>
-        [
-          p.user.name,
-          p.user.studentId || '',
-          p.user.email,
-          p.totalSessionsAttended,
-          p.totalSessionsScheduled,
-          `${p.attendanceRate}%`,
-          p.totalGamesTermd,
-          p.totalFeedbackSubmitted,
-          p.isOnTrack ? 'Yes' : 'No',
-        ].join(','),
-      ),
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `attendance-report-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'present':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'late':
+        return <CheckCircle className="h-4 w-4 text-yellow-500" />;
+      case 'absent':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'excused':
+        return <CheckCircle className="h-4 w-4 text-blue-500" />;
+      default:
+        return <XCircle className="h-4 w-4 text-gray-500" />;
+    }
   };
-
-  const filteredRecords = attendanceRecords.filter(
-    (record) =>
-      (selectedSession === 'all' || record.session.id === selectedSession) &&
-      (searchTerm === '' ||
-        record.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.user.studentId?.toLowerCase().includes(searchTerm.toLowerCase())),
-  );
-
-  const filteredProgress = studentProgress.filter(
-    (progress) =>
-      searchTerm === '' ||
-      progress.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      progress.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      progress.user.studentId?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading attendance data...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Attendance Tracking</h1>
-          <p className="text-slate-400 mt-1">Monitor student attendance and testing progress</p>
-        </div>
-        <div className="flex gap-3">
-          <Button onClick={exportAttendanceReport} variant="outline">
-            <FileDown className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
-          <Select value={viewMode} onValueChange={(value: 'sessions' | 'students') => setViewMode(value)}>
-            <SelectTrigger className="w-40 bg-slate-700 border-slate-600 text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="sessions">Session View</SelectItem>
-              <SelectItem value="students">Student Progress</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Title */}
+      <div className="flex flex-col space-y-2">
+        <h1 className="text-3xl font-bold">Attendance Tracker</h1>
+        {sessionInfo && <p className="text-muted-foreground">Attendance data for session: {sessionInfo.sessionName}</p>}
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white">{stats.totalSessions}</div>
-              <div className="text-sm text-slate-400">Total Sessions</div>
-            </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Sessions</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalSessions}</div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-400">{stats.averageAttendance}%</div>
-              <div className="text-sm text-slate-400">Avg Attendance</div>
-            </div>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Attendees</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalAttendees}</div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-400">{stats.onTrackStudents}</div>
-              <div className="text-sm text-slate-400">On Track</div>
-            </div>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Attendance</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.averageAttendance}%</div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white">{stats.totalStudents}</div>
-              <div className="text-sm text-slate-400">Total Students</div>
-            </div>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">On Track Students</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.onTrackStudents}</div>
+            <p className="text-xs text-muted-foreground">of {stats.totalStudents} total</p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-400">4</div>
-              <div className="text-sm text-slate-400">Blocks Total</div>
-            </div>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Export Data</CardTitle>
+            <FileDown className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" size="sm" className="w-full">
+              <FileDown className="h-4 w-4 mr-2" />
+              Export
+            </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-4 items-center">
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-            <Input
-              placeholder="Search students..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-slate-700 border-slate-600 text-white"
-            />
+      {/* Controls */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex items-center space-x-2 flex-1">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search students or sessions..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="flex-1" />
+        </div>
+
+        <div className="flex gap-2">
+          <Select value={selectedSession} onValueChange={setSelectedSession}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by session" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sessions</SelectItem>
+              {sessionAttendance.map((session) => (
+                <SelectItem key={session.id} value={session.id}>
+                  {session.sessionName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedBlock} onValueChange={setSelectedBlock}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Block" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Blocks</SelectItem>
+              <SelectItem value="1">Block 1</SelectItem>
+              <SelectItem value="2">Block 2</SelectItem>
+              <SelectItem value="3">Block 3</SelectItem>
+              <SelectItem value="4">Block 4</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="flex border rounded-lg">
+            <Button variant={viewMode === 'students' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('students')} className="rounded-r-none">
+              Students
+            </Button>
+            <Button variant={viewMode === 'sessions' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('sessions')} className="rounded-l-none">
+              Sessions
+            </Button>
           </div>
         </div>
-        {viewMode === 'sessions' && (
-          <>
-            <Select value={selectedSession} onValueChange={setSelectedSession}>
-              <SelectTrigger className="w-48 bg-slate-700 border-slate-600 text-white">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sessions</SelectItem>
-                <SelectItem value="session1">Block 3 Testing Session</SelectItem>
-                <SelectItem value="session2">Block 2 Testing Session</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={selectedBlock} onValueChange={setSelectedBlock}>
-              <SelectTrigger className="w-32 bg-slate-700 border-slate-600 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Blocks</SelectItem>
-                <SelectItem value="1">Block 1</SelectItem>
-                <SelectItem value="2">Block 2</SelectItem>
-                <SelectItem value="3">Block 3</SelectItem>
-                <SelectItem value="4">Block 4</SelectItem>
-              </SelectContent>
-            </Select>
-          </>
-        )}
       </div>
 
-      {/* Session View */}
-      {viewMode === 'sessions' && (
-        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+      {/* Content based on view mode */}
+      {viewMode === 'students' ? (
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Session Attendance Records
-            </CardTitle>
+            <CardTitle>Student Progress</CardTitle>
+            <CardDescription>Track individual student attendance and testing progress</CardDescription>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent>
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-700">
-                  <TableHead className="text-slate-300">Student</TableHead>
-                  <TableHead className="text-slate-300">Session</TableHead>
-                  <TableHead className="text-slate-300">Status</TableHead>
-                  <TableHead className="text-slate-300">Check In/Out</TableHead>
-                  <TableHead className="text-slate-300">Games Tested</TableHead>
-                  <TableHead className="text-slate-300">Feedback</TableHead>
-                  <TableHead className="text-slate-300">Notes</TableHead>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Attendance Rate</TableHead>
+                  <TableHead>Sessions</TableHead>
+                  <TableHead>Games Tested</TableHead>
+                  <TableHead>Feedback</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRecords.map((record) => (
-                  <TableRow key={record.id} className="border-slate-700">
-                    <TableCell className="text-white">
+                {filteredStudentProgress.map((student) => (
+                  <TableRow key={student.user.id}>
+                    <TableCell className="font-medium">
                       <div>
-                        <div className="font-medium">{record.user.name}</div>
-                        <div className="text-sm text-slate-400">{record.user.studentId}</div>
+                        <div>{student.user.name}</div>
+                        {student.user.studentId && <div className="text-sm text-muted-foreground">{student.user.studentId}</div>}
                       </div>
                     </TableCell>
-                    <TableCell className="text-slate-300">
-                      <div>
-                        <div className="font-medium">{record.session.sessionName}</div>
-                        <div className="text-sm text-slate-400">
-                          {new Date(record.session.sessionDate).toLocaleDateString()} • {record.session.location.name}
+                    <TableCell className="text-sm text-muted-foreground">{student.user.email}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="w-20 bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full ${
+                              student.attendanceRate >= 80 ? 'bg-green-500' : student.attendanceRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${student.attendanceRate}%` }}
+                          />
                         </div>
+                        <span className="text-sm">{student.attendanceRate}%</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getAttendanceStatusColor(record.attendanceStatus)}>{record.attendanceStatus}</Badge>
+                      {student.totalSessionsAttended}/{student.totalSessionsScheduled}
                     </TableCell>
-                    <TableCell className="text-slate-300">
-                      {record.checkInTime && record.checkOutTime ? (
-                        <div className="text-sm">
-                          <div>
-                            In:{' '}
-                            {new Date(record.checkInTime).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </div>
-                          <div>
-                            Out:{' '}
-                            {new Date(record.checkOutTime).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-slate-500">-</span>
-                      )}
+                    <TableCell>{student.totalGamesTermd}</TableCell>
+                    <TableCell>{student.totalFeedbackSubmitted}</TableCell>
+                    <TableCell>
+                      <Badge variant={student.isOnTrack ? 'default' : 'destructive'}>{student.isOnTrack ? 'On Track' : 'At Risk'}</Badge>
                     </TableCell>
-                    <TableCell className="text-white text-center">{record.gamesTestingCompleted}</TableCell>
-                    <TableCell className="text-white text-center">{record.feedbackSubmitted}</TableCell>
-                    <TableCell className="text-slate-400 text-sm max-w-48 truncate">{record.notes || '-'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
-      )}
-
-      {/* Student Progress View */}
-      {viewMode === 'students' && (
-        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+      ) : (
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Student Progress Overview
-            </CardTitle>
-            <CardDescription className="text-slate-400">Track individual student progress and completion requirements</CardDescription>
+            <CardTitle>Session Attendance</CardTitle>
+            <CardDescription>View attendance rates and statistics for each testing session</CardDescription>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent>
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-700">
-                  <TableHead className="text-slate-300">Student</TableHead>
-                  <TableHead className="text-slate-300">Attendance</TableHead>
-                  <TableHead className="text-slate-300">Games Tested</TableHead>
-                  <TableHead className="text-slate-300">Feedback</TableHead>
-                  <TableHead className="text-slate-300">Current Block</TableHead>
-                  <TableHead className="text-slate-300">Progress</TableHead>
+                <TableRow>
+                  <TableHead>Session</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Capacity</TableHead>
+                  <TableHead>Registered</TableHead>
+                  <TableHead>Attended</TableHead>
+                  <TableHead>Attendance Rate</TableHead>
+                  <TableHead>Games Tested</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProgress.map((progress) => (
-                  <TableRow key={progress.user.id} className="border-slate-700">
-                    <TableCell className="text-white">
-                      <div>
-                        <div className="font-medium">{progress.user.name}</div>
-                        <div className="text-sm text-slate-400">{progress.user.studentId}</div>
-                        <div className="text-xs text-slate-500">{progress.user.email}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="text-white">
-                          {progress.totalSessionsAttended}/{progress.totalSessionsScheduled}
-                        </div>
-                        <div className="text-sm">
-                          <Badge className={progress.attendanceRate >= 75 ? 'bg-green-600/20 text-green-400' : 'bg-red-600/20 text-red-400'}>
-                            {progress.attendanceRate}%
-                          </Badge>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-white text-center">
-                      {progress.totalGamesTermd}
-                      <div className="text-xs text-slate-400">
-                        {progress.totalGamesTermd >= 8 * progress.currentBlock ? '✓' : `Need ${8 * progress.currentBlock - progress.totalGamesTermd} more`}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-white text-center">
-                      {progress.totalFeedbackSubmitted}
-                      <div className="text-xs text-slate-400">{progress.totalFeedbackSubmitted >= progress.totalGamesTermd ? '✓' : 'Incomplete'}</div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="outline" className="text-slate-300">
-                        Block {progress.currentBlock}/4
-                      </Badge>
-                    </TableCell>
+                {filteredSessionAttendance.map((session) => (
+                  <TableRow key={session.id}>
+                    <TableCell className="font-medium">{session.sessionName}</TableCell>
+                    <TableCell>{session.date}</TableCell>
+                    <TableCell>{session.location}</TableCell>
+                    <TableCell>{session.totalCapacity}</TableCell>
+                    <TableCell>{session.studentsRegistered}</TableCell>
+                    <TableCell>{session.studentsAttended}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {progress.isOnTrack ? (
-                          <div className="flex items-center gap-1 text-green-400">
-                            <CheckCircle className="h-4 w-4" />
-                            <span className="text-sm">On Track</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 text-red-400">
-                            <XCircle className="h-4 w-4" />
-                            <span className="text-sm">Behind</span>
-                          </div>
-                        )}
+                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full ${
+                              session.attendanceRate >= 80 ? 'bg-green-500' : session.attendanceRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${session.attendanceRate}%` }}
+                          />
+                        </div>
+                        <span className="text-sm">{session.attendanceRate}%</span>
                       </div>
                     </TableCell>
+                    <TableCell>{session.gamesTested}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
