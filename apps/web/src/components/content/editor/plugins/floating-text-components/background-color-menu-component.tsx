@@ -4,7 +4,7 @@ import { useCallback } from 'react';
 import { $getSelection, $isRangeSelection } from 'lexical';
 import { Paintbrush } from 'lucide-react';
 import { DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { ColorPalette } from '@/components/editor/ui/color-palette';
+import { ColorPalette } from '@/components/content/editor/ui/color-palette';
 
 interface BackgroundColorMenuComponentProps {
   editor: any;
