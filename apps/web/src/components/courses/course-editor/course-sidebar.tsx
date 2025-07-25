@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { useCourseEditor } from '@/lib/courses/course-editor.context';
+import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 

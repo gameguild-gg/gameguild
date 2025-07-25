@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, BookOpen, DollarSign, Eye, FileText, Image, Save, Settings } from 'lucide-react';
 import Link from 'next/link';
-import { useCourseEditor } from '@/lib/courses/course-editor.context';
+import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { GeneralDetailsSection } from './sections/general-details-section';
 import { ThumbnailMediaSection } from './sections/thumbnail-media-section';
 import { SalesShowcaseSection } from './sections/sales-showcase-section';
@@ -24,7 +24,7 @@ const SECTIONS = [
   { id: 'settings', label: 'Settings', icon: Settings, description: 'Publishing, access, advanced' },
 ] as const;
 
-export function CourseEditor({ courseSlug, isCreating = false }: CourseEditorProps) {
+export function CourseEditor({ slug, isCreating = false }: CourseEditorProps) {
   const { state, validate } = useCourseEditor();
   const [activeSection, setActiveSection] = useState<string>('general');
 
