@@ -1,7 +1,7 @@
 'use client';
 
-import * as React from 'react';
-import { ChevronsUpDown, Plus, Building } from 'lucide-react';
+import React from 'react';
+import { Building, ChevronsUpDown, Plus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import {
@@ -19,7 +19,7 @@ interface TenantSwitcherProps {
   initialTenants?: TenantResponse[];
 }
 
-export function TenantSwitcher({ initialTenants = [] }: TenantSwitcherProps) {
+export const TenantSwitcher = ({ initialTenants = [] }: TenantSwitcherProps): React.JSX.Element => {
   const { data: session } = useSession();
   const { isMobile } = useSidebar();
 
@@ -136,4 +136,4 @@ export function TenantSwitcher({ initialTenants = [] }: TenantSwitcherProps) {
       </SidebarMenuItem>
     </SidebarMenu>
   );
-}
+};
