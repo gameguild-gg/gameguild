@@ -1,24 +1,18 @@
-import { Suspense } from 'react';
-import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
+import React from 'react';
+import { notFound } from 'next/navigation';
+import { TestingSessionDetails } from '@/components/testing-lab/testing-session-details';
+import { PropsWithSlugParams } from '@/types';
 
-import { TestingRequestList } from '@/components/testing-lab/testing-request-list';
+export default async function Page({ params }: PropsWithSlugParams): Promise<React.JSX.Element> {
+  const { slug } = await params;
+  // Todo: Replace with actual data fetching logic.
+  const testingSession = await getTestingSessionBySlug(slug);
 
-function LoadingFallback() {
+  if (!testingSession) notFound();
+
   return (
-    <div className="flex items-center justify-center min-h-[400px]">
-      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-    </div>
-  );
-}
-
-export default function RequestsPage() {
-  return (
-    <div className="container mx-auto px-6 py-8">
-      <ErrorBoundary fallback={<div className="text-red-500">Failed to load testing requests interface</div>}>
-        <Suspense fallback={<LoadingFallback />}>
-          <TestingRequestList />
-        </Suspense>
-      </ErrorBoundary>
-    </div>
+    <>
+      <TestingSessionDetails data={testingSession} />
+    </>
   );
 }
