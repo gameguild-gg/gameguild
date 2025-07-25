@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import { Loader2 } from 'lucide-react';
 import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
 import { auth } from '@/auth';
-import { EnhancedTestingSessionsList } from '@/components/testing-lab/enhanced-testing-sessions-list';
+import { EnhancedTestingSessionsList } from '@/components/testing-lab/sessions/enhanced-testing-sessions-list';
 import { getTestingSessionsData } from '@/lib/testing-lab/testing-lab.actions';
 
 export const metadata: Metadata = {

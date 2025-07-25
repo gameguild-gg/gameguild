@@ -7,7 +7,7 @@ import { Calendar, Clock, Gamepad2, Monitor, Star, Trophy, Users } from 'lucide-
 import { format } from 'date-fns';
 import { Link, useRouter } from '@/i18n/navigation';
 import { RewardChip } from '@/components/testing-lab/common/ui/reward-chip';
-import { LocationChip } from './common/ui/location-chip';
+import { LocationChip } from '../common/ui/location-chip';
 
 interface TestSessionTableProps {
   sessions: TestSession[];

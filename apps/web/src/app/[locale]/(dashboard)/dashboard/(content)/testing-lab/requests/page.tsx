@@ -1,5 +1,5 @@
 import React from 'react';
-import { TestingRequestList } from '@/components/testing-lab/testing-request-list';
+import { TestingRequestList } from '@/components/testing-lab/requests/testing-request-list';
 import { getTestingRequests } from '@/lib/testing-lab/testing-lab.actions';
 
 export default async function Page(): Promise<React.JSX.Element> {

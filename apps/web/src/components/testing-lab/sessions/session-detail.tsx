@@ -25,7 +25,7 @@ import { format } from 'date-fns';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useState, useEffect, useCallback } from 'react';
 import Autoplay from 'embla-carousel-autoplay';
-import { JoinProcess } from './join/join-process';
+import { JoinProcess } from '../join/join-process';
 
 interface SessionDetailProps {
   session: TestSession;

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Download, FileText, MessageSquare, Play, Users } from 'lucide-react';
 import Link from 'next/link';
 import type { TestingRequest } from '@/lib/api/generated/types.gen';
-import { RequestFilterControls } from '../request-filter-controls';
+import { RequestFilterControls } from './request-filter-controls';
 
 interface UserRole {
   type: 'student' | 'professor' | 'admin';

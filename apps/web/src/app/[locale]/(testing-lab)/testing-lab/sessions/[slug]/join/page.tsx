@@ -1,4 +1,4 @@
-import { JoinProcessModal } from '@/components/testing-lab/join-process-modal';
+import { JoinProcessModal } from '@/components/testing-lab/join/join-process-modal';
 
 export default function JoinPage() {
   return (
