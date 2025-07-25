@@ -18,6 +18,11 @@ export const navigationData = {
       url: '/dashboard/users',
       icon: Users,
     },
+    {
+      title: 'Achievements',
+      url: '/dashboard/achievements',
+      icon: FileText,
+    },
   ],
   content: [
     {
