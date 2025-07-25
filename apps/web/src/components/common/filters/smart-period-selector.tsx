@@ -339,4 +339,4 @@ function getCurrentWeek(date: Date): number {
 }
 
 // Export the legacy component for backward compatibility
-export { PeriodSelector } from '../../filters/period-selector';
+export { PeriodSelector } from './period-selector';

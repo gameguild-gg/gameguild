@@ -4,7 +4,7 @@ import { SessionSearchBar } from './session-search-bar';
 import { SessionStatusFilter } from './session-status-filter';
 import { SessionTypeFilter } from './session-type-filter';
 import { SessionViewToggle } from './session-view-toggle';
-import { PeriodSelector } from '@/components/filters/period-selector';
+import { PeriodSelector } from '@/components/common/filters/period-selector';
 
 interface SessionFilterControlsProps {
   searchTerm: string;
