@@ -7,7 +7,6 @@ export const navigationData = {
       title: 'Overview',
       url: '/dashboard/overview',
       icon: LayoutDashboard,
-      isActive: true,
     },
     {
       title: 'Tenants',

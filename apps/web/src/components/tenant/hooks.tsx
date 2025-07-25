@@ -22,7 +22,7 @@ export function useTenantUtils() {
         return availableTenants.find((tenant) => tenant.id === tenantId);
       },
 
-      // Check if current user has access to tenant
+      // Check if the current user has access to tenant
       hasAccessToTenant: (tenantId: string): boolean => {
         return availableTenants.some((tenant) => tenant.id === tenantId && tenant.isActive);
       },
@@ -32,17 +32,17 @@ export function useTenantUtils() {
         return availableTenants.filter((tenant) => tenant.isActive);
       },
 
-      // Check if current tenant is active
+      // Check if the current tenant is active
       isCurrentTenantActive: (): boolean => {
         return currentTenant?.isActive === true;
       },
 
-      // Get tenant display name with fallback
+      // Get a tenant display name with fallback
       getTenantDisplayName: (tenant?: Tenant | null): string => {
         return tenant?.name || 'Unknown Tenant';
       },
 
-      // Check if user has multiple tenants available
+      // Check if a user has multiple tenants available
       hasMultipleTenants: (): boolean => {
         return availableTenants.length > 1;
       },
