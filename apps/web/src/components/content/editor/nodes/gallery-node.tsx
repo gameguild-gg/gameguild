@@ -8,7 +8,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { Check, Crop, ImageIcon, Maximize, Plus, Settings, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { MediaUploadDialog, type MediaUploadResult } from '@/components/editor/ui/media-upload-dialog';
+import { MediaUploadDialog, type MediaUploadResult } from '@/components/content/editor/ui/media-upload-dialog';
 import { ContentEditMenu, type EditMenuOption } from '@/components/ui/content-edit-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';

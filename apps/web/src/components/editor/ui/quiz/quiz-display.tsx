@@ -1,6 +1,6 @@
 'use client';
 import { QuizFeedback } from './quiz-feedback';
-import type { FillBlankAlternative, QuestionType, QuizAnswer } from '../../nodes/quiz-node';
+import type { FillBlankAlternative, QuestionType, QuizAnswer } from '../../../content/editor/nodes/quiz-node';
 
 interface QuizDisplayProps {
   question: string;

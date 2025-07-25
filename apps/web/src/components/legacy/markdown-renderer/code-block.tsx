@@ -5,8 +5,8 @@ import { Play } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CodeLanguage, FileMap, RunnerStatus } from '@/components/code/types';
-import { useCode } from '@/components/code/use-code';
+import { CodeLanguage, FileMap, RunnerStatus } from '@/components/content/coding/types';
+import { useCode } from '@/components/content/coding/use-code';
 
 export type CodeInterfaceProps = {
   height?: number;

@@ -3,6 +3,16 @@
  * Handles error tracking and analytics integration
  */
 
+// Type declarations for global window properties
+declare global {
+  interface Window {
+    Sentry?: {
+      captureException: (error: Error, context?: Record<string, unknown>) => void;
+    };
+    gtag?: (command: string, action: string, parameters?: Record<string, unknown>) => void;
+  }
+}
+
 export interface ErrorReport {
   error: {
     name: string;

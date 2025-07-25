@@ -1,10 +1,11 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useReducer } from 'react';
+import React, { createContext, useCallback, useContext, useReducer, ErrorInfo } from 'react';
 import {
   defaultErrorBoundaryState,
   ErrorBoundaryAction,
   ErrorBoundaryActionTypes,
+  ErrorBoundaryConfig,
   ErrorBoundaryContextValue,
   ErrorBoundaryProviderProps,
   ErrorBoundaryReducer,
@@ -110,7 +111,7 @@ const errorBoundaryReducer: ErrorBoundaryReducer = (state: ErrorState, action: E
       };
 
     default: {
-      console.error(`Unhandled action type: ${(action as unknown).type}`);
+      console.error(`Unhandled action type: ${(action as { type: string }).type}`);
       return state;
     }
   }
@@ -231,11 +232,11 @@ export function ErrorBoundaryProvider({
   );
 
   const reportError = useCallback(
-    (error: Error, errorInfo = { componentStack: '' }, boundaryId?: string, level: ErrorLevel = ErrorLevels.COMPONENT) => {
+    (error: Error, errorInfo?: ErrorInfo, boundaryId?: string, level: ErrorLevel = ErrorLevels.COMPONENT) => {
       // Report to local state
       dispatch({
         type: ErrorBoundaryActionTypes.REPORT_ERROR,
-        payload: { error, errorInfo, boundaryId: boundaryId || autoScopeId, level },
+        payload: { error, errorInfo: errorInfo || { componentStack: '' }, boundaryId: boundaryId || autoScopeId, level },
       });
 
       // Propagate to parent if enabled and not isolated
@@ -248,7 +249,7 @@ export function ErrorBoundaryProvider({
         console.error(`Error reported to analytics ${isNested ? `(nested: ${autoScopeId})` : '(global)'}:`, {
           error: error.message,
           stack: error.stack,
-          componentStack: errorInfo.componentStack,
+          componentStack: errorInfo?.componentStack || '',
           boundaryId: boundaryId || autoScopeId,
           level,
           timestamp: new Date().toISOString(),
@@ -278,7 +279,7 @@ export function ErrorBoundaryProvider({
   }, []);
 
   const updateConfig = useCallback(
-    (newConfig) => {
+    (newConfig: Partial<ErrorBoundaryConfig>) => {
       dispatch({ type: ErrorBoundaryActionTypes.UPDATE_CONFIG, payload: newConfig });
 
       // Persist configuration to localStorage (client-side only)
