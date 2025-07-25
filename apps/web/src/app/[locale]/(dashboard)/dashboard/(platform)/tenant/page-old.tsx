@@ -1,12 +1,12 @@
 import { TenantManagementContent } from '@/components/tenant/management/tenant-management-content';
 import { getTenantsData, getUserTenants } from '@/lib/tenants/tenants.actions';
-import { TenantResponse } from '@/lib/tenants/types';
+import { Tenant } from '@/lib/tenants/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 
 export default function TenantManagementPage() {
   const { data: session } = useSession();
-  const [tenants, setTenants] = useState<TenantResponse[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdminMode, setIsAdminMode] = useState(false);

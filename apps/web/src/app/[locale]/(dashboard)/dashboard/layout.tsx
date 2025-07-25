@@ -3,14 +3,14 @@ import { cookies } from 'next/headers';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { DashboardHeader, DashboardSidebar } from '@/components/dashboard/layout';
 import { getTenantsData } from '@/lib/tenants/tenants.actions';
-import { TenantResponse } from '@/lib/tenants/types';
+import { Tenant } from '@/lib/tenants/types';
 
 export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true';
 
   // Fetch tenants for the sidebar
-  let tenants: TenantResponse[] = [];
+  let tenants: Tenant[] = [];
   try {
     const tenantsData = await getTenantsData();
     tenants = tenantsData.tenants;
