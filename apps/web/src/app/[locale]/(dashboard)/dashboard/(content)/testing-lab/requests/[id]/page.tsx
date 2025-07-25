@@ -13,6 +13,7 @@ import {
 
 export default async function Page({ params }: PropsWithIdParams): Promise<React.JSX.Element> {
   const { id } = await params;
+
   const testingRequest = await getTestingRequestById(id);
 
   if (!testingRequest) notFound();
