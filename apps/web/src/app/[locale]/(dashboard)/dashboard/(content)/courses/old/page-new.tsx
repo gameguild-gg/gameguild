@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { getCourseBySlug } from '@/lib/courses/actions';
 import { Course } from '@/components/legacy/types/courses';
-import { CourseEditorProvider } from '@/lib/courses/course-editor.context';
+import { CourseEditorProvider } from '@/components/courses/editor/context/course-editor-provider';
 import { CourseEditor } from '@/components/courses/course-editor/course-editor';
 import { Skeleton } from '@/components/ui/skeleton';
 

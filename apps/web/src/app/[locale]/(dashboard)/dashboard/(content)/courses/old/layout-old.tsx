@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import React, { PropsWithChildren, useEffect, useState } from 'react';
-import { CourseEditorProvider, useCourseEditor } from '@/lib/courses/course-editor.context';
+import { CourseEditorProvider, useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { CourseSidebar } from '@/components/courses/course-editor/course-sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';

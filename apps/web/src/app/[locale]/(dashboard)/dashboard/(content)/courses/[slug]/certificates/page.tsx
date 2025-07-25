@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Award, GripVertical, Plus, Search, Target, Trash2, TrendingUp, X } from 'lucide-react';
-import type { CourseCertificate, CourseSkill } from '@/lib/courses/course-editor.context';
-import { useCourseEditor } from '@/lib/courses/course-editor.context';
+import type { CourseCertificate, CourseSkill } from '@/components/courses/editor/context/course-editor-provider';
+import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { useState } from 'react';
 
 // Mock data for available skills (in a real app, this would come from an API)
@@ -103,7 +103,7 @@ const SKILL_LEVELS = [
 
 const SKILL_CATEGORIES = ['Programming', 'Frontend', 'Backend', 'Data', 'Tools', 'Quality', 'DevOps', 'Design', 'Business'];
 
-export default function CertificatesPage() {
+export default function Page() {
   const {
     state,
     addRequiredSkill,

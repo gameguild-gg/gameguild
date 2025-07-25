@@ -30,7 +30,7 @@ import {
   Trash2,
   Video,
 } from 'lucide-react';
-import { useCourseEditor } from '@/lib/courses/course-editor.context';
+import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { useState } from 'react';
 
 // Mock data types for content structure
