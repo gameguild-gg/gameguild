@@ -1,4 +1,4 @@
-import type { TenantResponse } from '@/components/tenant';
+import type { Tenant } from '@/components/tenant';
 
 declare module 'next-auth' {
   interface Session {

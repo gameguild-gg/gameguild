@@ -10,7 +10,7 @@ export interface UpdateTenantRequest {
   isActive?: boolean;
 }
 
-export interface TenantResponse {
+export interface Tenant {
   id: string;
   name: string;
   description?: string;
