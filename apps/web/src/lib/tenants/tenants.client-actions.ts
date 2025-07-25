@@ -1,11 +1,11 @@
 // Client-safe tenant actions that don't use revalidateTag
 import { auth } from '@/auth';
-import { TenantResponse } from '@/lib/tenants/types';
+import { Tenant } from '@/lib/tenants/types';
 
 interface ActionState {
   success: boolean;
   error?: string;
-  tenant?: TenantResponse;
+  tenant?: Tenant;
 }
 
 /**
@@ -46,7 +46,7 @@ export async function getTenantsDataClient(page: number = 1, limit: number = 20,
       throw new Error(`Failed to fetch tenants: ${response.status} ${response.statusText}`);
     }
 
-    const tenants: TenantResponse[] = await response.json();
+    const tenants: Tenant[] = await response.json();
 
     return {
       tenants,

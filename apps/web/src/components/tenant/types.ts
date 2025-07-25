@@ -19,9 +19,23 @@ export interface TenantResponse {
   updatedAt?: string;
 }
 
-export interface TenantUser {
+export interface TenantSummary {
+  id: string;
+  name: string;
+  isActive: boolean;
+  memberCount?: number;
+  projectCount?: number;
+}
+
+export interface TenantMember {
+  id: string;
   userId: string;
   tenantId: string;
-  roles: string[];
-  isActive: boolean;
+  role: 'owner' | 'admin' | 'member';
+  joinedAt: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
