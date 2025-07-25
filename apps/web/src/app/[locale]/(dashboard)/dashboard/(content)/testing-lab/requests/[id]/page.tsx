@@ -1,6 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { TestingRequestDetails } from '@/components/testing-lab/testing-request-details';
+import { TestingRequestDetails } from '@/components/testing-lab';
 import { getTestingRequestById } from '@/lib/testing-lab/testing-lab.actions';
 import { PropsWithIdParams } from '@/types';
 
