@@ -1,8 +1,35 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode, startTransition } from 'react';
-import { logger } from '@/lib/logger';
-import { ErrorReport, errorReporter } from '@/lib/errorReporting';
+
+// Simple logger implementation
+const logger = {
+  error: (message: string, data?: unknown) => {
+    console.error(message, data);
+  },
+};
+
+// Simple error report interfaces and implementation
+interface ErrorReport {
+  id: string;
+  error: Error;
+  timestamp: number;
+  level: string;
+  componentStack?: string;
+}
+
+const errorReporter = {
+  createErrorReport: (error: Error, context?: { componentStack?: string }, level = 'component') => ({
+    id: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    error,
+    timestamp: Date.now(),
+    level,
+    componentStack: context?.componentStack,
+  }),
+  reportError: async (report: ErrorReport) => {
+    console.error('Error Report:', report);
+  },
+};
 
 export interface RetryableErrorBoundaryProps {
   children: ReactNode;

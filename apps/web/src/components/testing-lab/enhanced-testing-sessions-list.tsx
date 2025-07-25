@@ -1225,11 +1225,12 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
             </Select>
           </div>
         </div>
+        </div>
 
-          <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={ onClose } disabled={ isSubmitting }>
-              Cancel
-            </Button>
+        <DialogFooter className="gap-2">
+          <Button type="button" variant="outline" onClick={ onClose } disabled={ isSubmitting }>
+            Cancel
+          </Button>
             <Button type="button" onClick={ handleSubmit } disabled={ isSubmitting }>
               { isSubmitting ? (
                 <>

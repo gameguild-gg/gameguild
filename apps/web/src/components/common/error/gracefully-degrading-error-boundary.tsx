@@ -1,7 +1,13 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode, startTransition } from 'react';
-import { logger } from '@/lib/logger'; // Assuming you have a logger utility
+
+// Simple logger implementation
+const logger = {
+  error: (message: string, data?: unknown) => {
+    console.error(message, data);
+  },
+};
 
 export interface ErrorBoundaryProps {
   children: ReactNode;
