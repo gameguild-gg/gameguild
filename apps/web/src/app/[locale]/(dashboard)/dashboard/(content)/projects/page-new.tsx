@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import { ProjectManagementContent } from '@/components/projects/project-management-content';
+import { ProjectManagementContent } from '@/components/project/project-management-content';
 import { getProjectsData } from '@/lib/projects/projects.actions';
 import type { Project } from '@/lib/api/generated/types.gen';
 import { Alert, AlertDescription } from '@/components/ui/alert';
