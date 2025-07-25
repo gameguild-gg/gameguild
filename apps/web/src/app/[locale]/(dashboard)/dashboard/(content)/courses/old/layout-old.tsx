@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import React, { PropsWithChildren, useEffect, useState } from 'react';
 import { CourseEditorProvider, useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
-import { CourseSidebar } from '@/components/courses/course-editor/course-sidebar';
+import { CourseEditorSidebar } from '@/components/courses/editor/ui/course-editor-sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
@@ -100,7 +100,7 @@ LayoutContent({ children, slug }: PropsWithChildren & { slug: string }) {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <CourseSidebar />
+        <CourseEditorSidebar />
         <SidebarInset className="flex-1">
           <main className="flex-1">{children}</main>
         </SidebarInset>
