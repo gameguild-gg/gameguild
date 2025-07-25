@@ -1,8 +1,8 @@
 import { TestSession } from '@/lib/api/testing-lab/test-sessions';
 import { TestingLabHero } from './testing-lab-hero';
-import { TestingLabStats } from './testing-lab-stats';
+import { TestingLabStats } from '../management/testing-lab-stats';
 import { TestingLabHowItWorks } from './testing-lab-how-it-works';
-import { FloatingIcons } from './floating-icons';
+import { FloatingIcons } from '../common/ui/floating-icons';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -26,7 +26,7 @@ export function TestingLabLanding({ testSessions }: TestingLabLandingProps) {
             variant="ghost"
             className="bg-slate-900/20 backdrop-blur-md border border-slate-700/50 text-slate-200 hover:text-white hover:bg-slate-800/30 hover:border-slate-600/50 transition-all duration-200"
           >
-            <Link href="/">
+            <Link href="/apps/web/public">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
             </Link>

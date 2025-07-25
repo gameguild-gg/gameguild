@@ -1,6 +1,6 @@
 'use client';
 
-import { FilterOption, MultiSelectFilter, SearchBar, ViewModeToggle } from '../common/filters';
+import { FilterOption, MultiSelectFilter, SearchBar, ViewModeToggle } from '../../common/filters';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Download } from 'lucide-react';
 

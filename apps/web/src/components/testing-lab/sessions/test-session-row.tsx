@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { RewardChip } from '@/components/testing-lab/common/ui/reward-chip';
 import { StatusChip } from '@/components/testing-lab/common/ui/status-chip';
-import { LocationChip } from './common/ui/location-chip';
+import { LocationChip } from '../common/ui/location-chip';
 
 interface TestSessionRowProps {
   sessions: TestSession[];

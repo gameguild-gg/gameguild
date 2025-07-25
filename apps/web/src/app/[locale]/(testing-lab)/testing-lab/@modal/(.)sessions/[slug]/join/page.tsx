@@ -3,7 +3,7 @@
 import { useRouter } from '@/i18n/navigation';
 import { useEffect, useState, use, useCallback } from 'react';
 import { getTestSessionBySlug, TestSession } from '@/lib/api/testing-lab/test-sessions';
-import { JoinProcessModal } from '@/components/testing-lab/join-process-modal';
+import { JoinProcessModal } from '@/components/testing-lab/join/join-process-modal';
 
 interface JoinModalProps {
   params: Promise<{

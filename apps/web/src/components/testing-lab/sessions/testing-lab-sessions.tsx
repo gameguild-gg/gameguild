@@ -1,12 +1,12 @@
 'use client';
 
 import { TestSession } from '@/lib/api/testing-lab/test-sessions';
-import { SessionNavigation } from './sessions/session-navigation';
-import { SessionHeader } from './sessions/session-header';
-import { SessionContent } from './sessions/session-content';
-import { SessionEmptyState } from './sessions/session-empty-state';
-import { useResponsiveViewMode } from '../common/hooks/use-responsive-view-mode';
-import { TestingLabActiveFilters, TestingLabFilterControls, TestingLabFilterProvider, useTestingLabFilters } from './filters';
+import { SessionNavigation } from './session-navigation';
+import { SessionHeader } from './session-header';
+import { SessionContent } from './session-content';
+import { SessionEmptyState } from './session-empty-state';
+import { useResponsiveViewMode } from '../../common/hooks/use-responsive-view-mode';
+import { TestingLabActiveFilters, TestingLabFilterControls, TestingLabFilterProvider, useTestingLabFilters } from '../filters';
 
 interface TestingLabSessionsProps {
   testSessions: TestSession[];

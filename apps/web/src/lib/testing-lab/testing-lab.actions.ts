@@ -1039,14 +1039,17 @@ export async function getTestingAttendanceBySession(slug: string) {
     // Filter attendance data related to this session
     // Note: This is a mock implementation - you may need to adjust based on actual API structure
     return {
-      students: studentData,
+      students: Array.isArray(studentData) ? studentData : [],
       sessions: Array.isArray(sessionData_)
         ? sessionData_.filter((s: unknown) => {
             const session = s as { sessionId?: string };
             return session.sessionId === sessionData.id;
           })
         : [],
-      session: sessionData,
+      session: {
+        id: sessionData.id || '',
+        sessionName: sessionData.sessionName || 'Unknown Session',
+      },
     };
   } catch (error) {
     console.error('Error fetching session attendance data:', error);
