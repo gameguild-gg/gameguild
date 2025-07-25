@@ -1,4 +1,4 @@
-import { useWeb3 } from '@/components/web3/use-web3';
+import { useWeb3 } from '@/components/web3/hooks/use-web3';
 
 export function useConnectToWallet() {
   const { connect } = useWeb3();
