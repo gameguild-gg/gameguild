@@ -26,38 +26,92 @@ interface TestingFeedbackListProps {
   };
 }
 
-export function TestingFeedbackList({ data }: TestingFeedbackListProps) {
-  const [feedback, setFeedback] = useState<TestingFeedback[]>(data.testingFeedbacks);
-  const [stats, setStats] = useState<FeedbackStats>({
-    total: data.total,
-    pending: 0,
-    approved: 0,
-    flagged: 0,
-    rejected: 0,
-    averageRating: 0,
-  });
+'use client';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { MessageSquare, Eye, Flag, ThumbsUp, ThumbsDown, Star } from 'lucide-react';
+import { TestingFeedback } from '@/lib/generated/index';
+
+interface TestingFeedbackListProps {
+  data: TestingFeedback[];
+}
+
+export default function TestingFeedbackList({ data = [] }: TestingFeedbackListProps) {
+  const [feedback, setFeedback] = useState<TestingFeedback[]>(data);
   const [selectedFeedback, setSelectedFeedback] = useState<TestingFeedback | null>(null);
   const [loading, setLoading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>('table');
-  const [sortBy, setSortBy] = useState<'date' | 'rating' | 'project'>('date');
 
   // Update feedback when data prop changes
   useEffect(() => {
-    setFeedback(data.testingFeedbacks);
-    
-    // Calculate stats
-    const feedbackList = data.testingFeedbacks;
-    const total = feedbackList.length;
-    const pending = 0; // These would need to be calculated based on actual feedback status
-    const approved = 0;
-    const flagged = 0;
-    const rejected = 0;
-    const averageRating = feedbackList.reduce((sum, f) => sum + (f.overallRating || 0), 0) / (total || 1);
-
-    setStats({ total, pending, approved, flagged, rejected, averageRating });
+    setFeedback(data);
   }, [data]);
+
+  // Helper functions for rendering
+  const renderStars = (rating: number | undefined) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <Star
+          key={i}
+          className={`h-4 w-4 ${i <= (rating || 0) ? 'text-yellow-400 fill-current' : 'text-slate-600'}`}
+        />
+      );
+    }
+    return stars;
+  };
+
+  const getStatusColor = (isReported: boolean | undefined) => {
+    return isReported ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+  };
+
+  const updateFeedbackStatus = async (id: string, status: string) => {
+    try {
+      console.log(`Updating feedback ${id} to ${status}`);
+      // TODO: Implement API call to update feedback status
+      setSelectedFeedback(null);
+    } catch (error) {
+      console.error('Error updating feedback status:', error);
+    }
+  };
+
+  // Statistics
+  const stats = useMemo(() => {
+    const total = feedback.length;
+    const reported = feedback.filter(f => f.isReported).length;
+    const active = total - reported;
+    const averageRating = feedback.length > 0 
+      ? feedback.reduce((sum, f) => sum + (f.overallRating || 0), 0) / feedback.length 
+      : 0;
+
+    return {
+      total,
+      active,
+      reported,
+      averageRating
+    };
+  }, [feedback]);
+
+  // Filtering logic
+  const filteredFeedback = feedback.filter((item) => {
+    if (searchTerm) {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      const matchesSearch = 
+        item.testingRequest?.title?.toLowerCase().includes(lowerSearchTerm) ||
+        item.additionalNotes?.toLowerCase().includes(lowerSearchTerm) ||
+        item.id?.toString().includes(lowerSearchTerm);
+      
+      if (!matchesSearch) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   const updateFeedbackStatus = async (feedbackId: string, status: 'approved' | 'flagged' | 'rejected') => {
     try {
