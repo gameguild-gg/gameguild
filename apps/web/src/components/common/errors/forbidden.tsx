@@ -28,7 +28,7 @@ export default function Forbidden({
         <CardContent className="space-y-6">
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild>
-              <Link href="/">
+              <Link href="/apps/web/public">
                 <Home className="h-4 w-4 mr-2" />
                 Go Home
               </Link>
@@ -39,7 +39,7 @@ export default function Forbidden({
             </Button>
             {showLoginButton && (
               <Button variant="outline" asChild>
-                <Link href="/auth/signin">
+                <Link href="/auth/sign-in">
                   <LogIn className="h-4 w-4 mr-2" />
                   Sign In
                 </Link>
