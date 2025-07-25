@@ -3,7 +3,7 @@ export { SessionStatusFilter } from './session-status-filter';
 export { SessionTypeFilter } from './session-type-filter';
 export { SessionViewToggle } from './session-view-toggle';
 export { SessionActiveFilters } from './session-active-filters';
-export { SessionHeader } from './session-header';
+export { TestingSessionsHeader } from './landing/testing-sessions-header';
 export { SessionEmptyState } from './session-empty-state';
 export { SessionFilterControls } from './session-filter-controls';
 export { SessionNavigation } from './session-navigation';
