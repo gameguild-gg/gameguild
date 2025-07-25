@@ -1,8 +1,7 @@
 'use client';
 
-import { useCallback, useActionState, useEffect, useState } from 'react';
+import { useActionState, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createTenant, deleteTenant, updateTenant } from '@/lib/tenants/tenant.actions';
 import { Tenant } from '@/lib/tenants/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Edit, Loader2, MoreHorizontal, Plus, RefreshCw, Trash2, Building } from 'lucide-react';
+import { Building, Edit, Loader2, MoreHorizontal, Plus, RefreshCw, Trash2 } from 'lucide-react';
 
 interface TenantManagementContentProps {
   initialTenants: Tenant[];
