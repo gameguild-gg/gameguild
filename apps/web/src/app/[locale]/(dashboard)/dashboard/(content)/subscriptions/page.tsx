@@ -1,10 +1,10 @@
 import React, { Suspense } from 'react';
-import { getUserSubscriptions, getAllSubscriptions, getSubscriptionStatistics } from '@/lib/subscriptions/subscriptions.actions';
+import { getAllSubscriptions, getSubscriptionStatistics, getUserSubscriptions } from '@/lib/subscriptions/subscriptions.actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, CreditCard, Users, DollarSign, TrendingUp, Eye, X, RotateCcw } from 'lucide-react';
+import { CreditCard, DollarSign, Eye, Plus, RotateCcw, TrendingUp, Users, X } from 'lucide-react';
 import Link from 'next/link';
 
 interface SubscriptionsPageProps {
