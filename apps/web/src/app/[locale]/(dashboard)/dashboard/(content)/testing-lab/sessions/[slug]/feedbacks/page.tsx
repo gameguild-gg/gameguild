@@ -3,6 +3,13 @@ import { notFound } from 'next/navigation';
 import { TestingFeedbackList } from '@/components/testing-lab';
 import { getTestingFeedbacksBySession, getTestingSessionBySlug } from '@/lib/testing-lab/testing-lab.actions';
 import { PropsWithSlugParams } from '@/types';
+import {
+  DashboardPage,
+  DashboardPageContent,
+  DashboardPageDescription,
+  DashboardPageHeader,
+  DashboardPageTitle,
+} from '@/components/dashboard/common/ui/dashboard-page';
 
 export default async function Page({ params }: PropsWithSlugParams): Promise<React.JSX.Element> {
   const { slug } = await params;
@@ -14,8 +21,14 @@ export default async function Page({ params }: PropsWithSlugParams): Promise<Rea
   const testingFeedbacks = await getTestingFeedbacksBySession(slug);
 
   return (
-    <div className="container">
-      <TestingFeedbackList data={testingFeedbacks} />
-    </div>
+    <DashboardPage>
+      <DashboardPageHeader>
+        <DashboardPageTitle>Testing Feedbacks</DashboardPageTitle>
+        <DashboardPageDescription></DashboardPageDescription>
+      </DashboardPageHeader>
+      <DashboardPageContent>
+        <TestingFeedbackList data={testingFeedbacks} />
+      </DashboardPageContent>
+    </DashboardPage>
   );
 }
