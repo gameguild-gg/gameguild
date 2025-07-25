@@ -54,20 +54,16 @@ export function TestingRequestList() {
     const fetchRequests = async () => {
       setLoading(true);
       try {
-        let data: TestingRequest[];
-        if (userRole.isStudent) {
-          // Students see available testing requests
-          data = await testingLabApi.getAvailableTestingRequests(session?.accessToken);
-        } else {
-          // Professors/admins see their own requests (mock for now)
-          data = await testingLabApi.getMyTestingRequests(session?.accessToken);
-        }
+        // Use the new server action
+        const response = await getTestingRequests();
+        const data = response.testingRequests;
         setRequests(data);
         setFilteredRequests(data);
       } catch (error) {
         console.error('Failed to load testing requests:', error);
-        // Fallback to mock data
-        const mockData: TestingRequest[] = [
+        // Fallback to empty array
+        setRequests([]);
+        setFilteredRequests([]);
           {
             id: '1',
             title: 'Space Adventure v1.2',
