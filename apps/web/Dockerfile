@@ -2,7 +2,7 @@ FROM node:18-alpine AS base
 # Update system image.
 RUN apk update
 # Install system image dependencies.
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat curl
 
 # Build Stage.
 FROM base AS builder
@@ -26,19 +26,32 @@ COPY apps/web/ ./apps/web/
 WORKDIR /app/apps/web
 # Build app.
 RUN npm run build 
-# Prune dev dependencies from the web app
+# Prune dev dependencies from the web app.
 RUN npm prune --production
 
 # Production Stage.
 FROM base AS runner
+# Create app directory.
+WORKDIR /app
 # Set environment variables.
 ENV NODE_ENV production
-# Create app directory.
-WORKDIR /usr/src/app
+# Disable telemetry to prevent Next.js from collecting anonymous usage data.
+ENV NEXT_TELEMETRY_DISABLED=1
+# Create a non-root group for running the application.
+# The group is created with a specific GID (1001) to ensure consistent permissions.
+# This is important for security and to avoid running the application as root.
+RUN addgroup --system --gid 1001 nodejs
+# Create a non-root user for running the application.
+# The user is created with a specific UID (1001) to ensure consistent permissions.
+# This is important for security and to avoid running the application as root.
+RUN adduser --system --uid 1001 nextjs
 # Change ownership to node user.
 RUN chown -R node:node /usr/src/app
-# create a non-root user.
-USER node
+
+COPY --from=builder /app/public ./public
+
+# Automatically leverage output traces to reduce image size.
+# https://nextjs.org/docs/advanced-features/output-file-tracing.
 # Copy application dependency manifests to the container image.
 COPY --from=builder --chown=node:node /app/apps/web/package*.json ./
 # Copy application dependencies to the container image.
@@ -51,9 +64,12 @@ COPY --from=builder --chown=node:node /app/apps/web/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/apps/web/public ./public
 # Define an argument for the port with a default value of 3000.
 ARG PORT=3000
-# Set an environment variable for the port using the ARG value.
-ENV PORT=${PORT}
 # Expose the port to inform Docker that the container will listen on the specified port.
 EXPOSE ${PORT}
+# Set an environment variable for the port using the ARG value.
+ENV PORT=${PORT}
+# server.js is created by next build from the standalone output
+# https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
+ENV HOSTNAME="0.0.0.0"
 # Run the web service on container startup.
-CMD [ "npm", "run", "start" ]
+CMD ["node", "server.js"]
