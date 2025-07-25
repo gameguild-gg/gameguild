@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useTenant } from '../../context/tenant-provider';
+import { useTenant } from '@/components/tenant';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Check, Loader2 } from 'lucide-react';
 
@@ -12,7 +12,7 @@ interface TenantSelectorProps {
   showStatus?: boolean;
 }
 
-export function TenantSelector({ className, placeholder = 'Select tenant', showStatus = true }: TenantSelectorProps) {
+export const TenantSelector = ({ className, placeholder = 'Select tenant', showStatus = true }: TenantSelectorProps): React.JSX.Element => {
   const { currentTenant, availableTenants, switchCurrentTenant, loading, error } = useTenant();
 
   const handleTenantChange = async (tenantId: string) => {
@@ -78,7 +78,7 @@ export function TenantSelector({ className, placeholder = 'Select tenant', showS
       </Select>
     </div>
   );
-}
+};
 
 export function TenantInfo({ className }: { className?: string }) {
   const { currentTenant, loading } = useTenant();

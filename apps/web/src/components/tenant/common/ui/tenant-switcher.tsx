@@ -24,8 +24,6 @@ export const TenantSwitcher = (): React.JSX.Element => {
     name: 'Game Guild',
     description: 'Default',
     isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
   };
 
   // Use available tenants from context, fallback to default
