@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from '@/i18n/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState, use, useCallback } from 'react';
 import { getTestSessionBySlug, TestSession } from '@/lib/api/testing-lab/test-sessions';
 import { JoinProcessModal } from '@/components/testing-lab/join/join-process-modal';
