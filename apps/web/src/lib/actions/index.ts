@@ -29,7 +29,7 @@ export * from '../posts/posts.actions';
 export * from '../products/products.actions';
 
 // Tenant actions
-export * from '../tenants/tenants.actions';
+export * from '../tenants/tenant.actions';
 
 // Subscription actions
 export * from '../subscriptions/subscriptions.actions';

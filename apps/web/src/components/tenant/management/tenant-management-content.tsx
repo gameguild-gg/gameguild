@@ -2,7 +2,7 @@
 
 import { useCallback, useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createTenantClient, deleteTenantClient, updateTenantClient } from '@/lib/tenants/tenants.client-actions';
+import { createTenant, deleteTenant, updateTenant } from '@/lib/tenants/tenant.actions';
 import { Tenant } from '@/lib/tenants/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
